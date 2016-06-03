@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-05-02
+ * Modified    : 2016-06-03
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -253,6 +253,12 @@ class LOVD_Object {
         // No longer to this through $aForm, because when importing,
         //  we do have data to check but no $aForm entry linked to it.
         foreach ($aData as $sFieldname => $sFieldvalue) {
+
+            if (!is_string($sFieldvalue)) {
+                // Checks below currently do not handle non-string values.
+                continue;
+            }
+
             $sNameClean = preg_replace('/^\d{' . $_SETT['objectid_length']['transcripts'] . '}_/', '', $sFieldname); // Remove prefix (transcriptid) that LOVD_TranscriptVariants puts there.
             if (isset($aHeaders[$sFieldname])) {
                 $sHeader = $aHeaders[$sFieldname];
