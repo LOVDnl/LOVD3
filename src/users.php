@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-03-21
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-09
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -540,8 +540,11 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    // Check form (IP address allow list).
+    lovd_includeJS('inc-js-submit-userform.php');
 
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
           '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
 
     // Array which will make up the form table.
@@ -668,9 +671,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    // Check form (IP address allow list).
+    lovd_includeJS('inc-js-submit-userform.php');
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
