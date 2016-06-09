@@ -46,6 +46,7 @@ function lovd_checkForm ()
         if (window.confirm('Are you sure you want to restrict access to your account using this IP address?\nYou can then not access your account from a different computer, or if your computer changes its address.')) {
             return true;
         } else {
+            oIPField.focus();
             return false;
         }
     } else {

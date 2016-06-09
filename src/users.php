@@ -449,6 +449,15 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         $_CONF['location_url'] . $_PE[0] . '/' . $nID . "\n\n";
                 }
 
+                // If the user has a specific IP address allow list, warn this user.
+                if (!empty($_POST['allowed_ip']) && $_POST['allowed_ip'] != '*') {
+                    // A certain set of IPs has been specified by the person creating the account.
+                    $sMessage .= 'Note that a restriction has been placed on this account by limiting access to this account from only the IP address(es) specified at the bottom of this email. ' .
+                                 'This might cause you to be unable to log in, even if you have the correct username and password. ' .
+                                 'If this restriction was an error, please log into your account and empty the IP address list field. ' .
+                                 'If you have problems logging in, please contact the LOVD\'s manager.' . "\n\n";
+                }
+
                 $sMessage .= 'Regards,' . "\n" .
                     '    LOVD system at ' . $_CONF['institute'] . "\n\n";
 
@@ -471,6 +480,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         'reference' => 'Reference',
                         'username' => 'Username',
                         'password_1' => 'Password',
+                        'allowed_ip' => 'Allowed IPs',
                     );
                 if ($_POST['orcid_id'] == 'none') {
                     unset($aMailFields['orcid_id']);
@@ -530,7 +540,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
     if (GET) {
         print('      To ' . (ACTION == 'create'? 'create a new user' : 'register as a new submitter') . ', please fill out the form below.<BR>' . "\n" .
-            '      <BR>' . "\n\n");
+              '      <BR>' . "\n\n");
     }
 
     if (ACTION == 'register') {
