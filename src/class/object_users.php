@@ -274,7 +274,14 @@ class LOVD_User extends LOVD_Object {
                 // Check given security IP range.
                 if ($bIP && !lovd_validateIP($aData['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     // This IP range is not allowing the current IP to connect. This ain't right.
-                    lovd_errorAdd('allowed_ip', 'Your current IP address is not matched by the given IP range. This would mean you would not be able to get access to LOVD with this IP range.');
+                    // If IP address is actually IPv6, then complain that we can't restrict at all.
+                    // Otherwise, be clear the current setting just doesn't match.
+                    if (strpos($_SERVER['REMOTE_ADDR'], ':') !== false) {
+                        // IPv6...
+                        lovd_errorAdd('allowed_ip', 'Your current IP address is IPv6 (' . $_SERVER['REMOTE_ADDR'] . '), which is not supported by LOVD to restrict access to your account.');
+                    } else {
+                        lovd_errorAdd('allowed_ip', 'Your current IP address is not matched by the given IP range. This would mean you would not be able to get access to LOVD with this IP range.');
+                    }
                 }
             }
 
@@ -364,7 +371,7 @@ class LOVD_User extends LOVD_Object {
                         'hr',
              'level' => array('Level', ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Submitters</B> can submit, but not publish information in the database. Submitters can also create their own accounts, you don\'t need to do this for them.<BR><BR>In LOVD 3.0, <B>Curators</B> are Submitter-level users with Curator rights on certain genes. To create a Curator account, you need to create a Submitter and then grant this user rights on the necessary genes.', 'select', 'level', 1, $aUserLevels, false, false, false),
                         array('Allowed IP address list (optional)', 'To help prevent others to try and guess the username/password combination, you can restrict access to the account to a number of IP addresses or ranges.', 'text', 'allowed_ip', 20),
-                        array('', '', 'note', 'Default value: *<BR><I>Your current IP address: ' . $_SERVER['REMOTE_ADDR'] . '</I><BR><B>Please be extremely careful using this setting.</B> Using this setting too strictly, can deny the user access to LOVD, even if the correct credentials have been provided.<BR>Set to \'*\' to allow all IP addresses, use \'-\' to specify a range and use \';\' to separate addresses or ranges.'),
+                        array('', '', 'note', 'Default value: *<BR>' . (strpos($_SERVER['REMOTE_ADDR'], ':') !== false? '' : '<I>Your current IP address: ' . $_SERVER['REMOTE_ADDR'] . '</I><BR>') . '<B>Please be extremely careful using this setting.</B> Using this setting too strictly, can deny the user access to LOVD, even if the correct credentials have been provided.<BR>Set to \'*\' to allow all IP addresses, use \'-\' to specify a range and use \';\' to separate addresses or ranges.'),
             'locked' => array('Locked', '', 'checkbox', 'locked'),
                         'hr',
 'authorization_skip' => 'skip',
