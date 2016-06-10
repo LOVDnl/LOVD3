@@ -198,11 +198,7 @@
         </testsuite>
     </testsuites>
     <listeners>
-        <listener class="LOVDScreenshotListener" file="LOVDScreenshotListener.php">
-            <arguments>
-                <string>../test_results/error_screenshots</string>
-            </arguments>
-        </listener>
+        <listener class="LOVDScreenshotListener" file="LOVDScreenshotListener.php" />
     </listeners>
 
 </phpunit>

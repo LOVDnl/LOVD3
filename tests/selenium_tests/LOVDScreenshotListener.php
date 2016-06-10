@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-05-30
+ * Modified    : 2016-06-10
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -34,8 +34,12 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
 
     protected $directory;
 
-    public function __construct($directory)
+    public function __construct($directory=null)
     {
+        if (is_null($directory)) {
+            $relDir = dirname(__FILE__) . '/../test_results/error_screenshots';
+            $directory = realpath($relDir);
+        }
         $this->directory = $directory;
     }
 
@@ -51,8 +55,8 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
 
     private function storeAScreenshot(PHPUnit_Framework_Test $test)
     {
-        if ($test instanceof LOVDSeleniumWebdriverBaseTestCase)
-        {
+        if ($test instanceof LOVDSeleniumWebdriverBaseTestCase &&
+            $test->driver instanceof \Facebook\WebDriver\Remote\RemoteWebDriver) {
             try {
                 $file = $this->directory . '/' . get_class($test) . '__' . $test->getName() . '__' . date('Y-m-d\TH-i-s') . '.png';
                 $test->driver->takeScreenshot($file);
