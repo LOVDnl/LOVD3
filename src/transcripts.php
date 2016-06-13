@@ -331,7 +331,7 @@ if (ACTION == 'create') {
                             'id_protein_ensembl' => '',
                             'id_protein_uniprot' => '',
                             'position_c_mrna_start' => $zData['transcriptPositions'][$sTranscript]['cTransStart'],
-                            'position_c_mrna_end' => $zData['transcriptPositions'][$sTranscript]['cTransEnd'],
+                            'position_c_mrna_end' => $zData['transcriptPositions'][$sTranscript]['cTransEnd'], // Is actually sortableTransEnd.
                             'position_c_cds_end' => $zData['transcriptPositions'][$sTranscript]['cCDSStop'],
                             'position_g_mrna_start' => $zData['transcriptPositions'][$sTranscript]['chromTransStart'],
                             'position_g_mrna_end' => $zData['transcriptPositions'][$sTranscript]['chromTransEnd'],
