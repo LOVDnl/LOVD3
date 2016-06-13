@@ -7,7 +7,7 @@
  * Modified    : 2016-05-12
  * For LOVD    : 3.0-16
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -61,15 +61,16 @@ EMAILDOC
 
 
 
-function lovd_mailNewColleagues($sUserID, $sUserFullname, $aNewColleagues) {
+function lovd_mailNewColleagues ($sUserID, $sUserFullname, $aNewColleagues)
+{
     // Send an email to users with an ID in $aNewColleagues, letting them know
     // the user denoted by $sUserID has shared access to his data with them.
-    require_once 'inc-lib-form.php';
+    require_once ROOT_PATH . 'inc-lib-form.php';
     global $_DB, $_SETT;
 
-    if (count($aNewColleagues) == 0) {
+    if (!is_array($aNewColleagues) || !$aNewColleagues) {
         // Nothing to be done.
-        return;
+        return false;
     }
 
     $sApplicationURL = lovd_getInstallURL();
@@ -82,7 +83,7 @@ function lovd_mailNewColleagues($sUserID, $sUserFullname, $aNewColleagues) {
     $sColleagueQuery = 'SELECT id, name, email FROM ' . TABLE_USERS . ' WHERE id IN ' . $sPlaceholders;
     $result = $_DB->query($sColleagueQuery, $aNewColleagues);
 
-    while (($zColleague = $result->fetch(PDO::FETCH_ASSOC)) !== false) {
+    while (($zColleague = $result->fetchAssoc()) !== false) {
         $sRecipientAccountURL = $sApplicationURL . 'users/' . $zColleague['id'];
 
         // Setup mail text and fill placeholders.
@@ -102,7 +103,8 @@ function lovd_mailNewColleagues($sUserID, $sUserFullname, $aNewColleagues) {
 
 
 
-function lovd_shareAccessForm($sUserID, $sUserListID, $bAllowGrantEdit=true) {
+function lovd_shareAccessForm ($sUserID, $sUserListID, $bAllowGrantEdit = true)
+{
     // Returns HTML for form to share access of a user's objects with another
     // user.
 
@@ -117,10 +119,9 @@ function lovd_shareAccessForm($sUserID, $sUserListID, $bAllowGrantEdit=true) {
                  u.name,
                  c.allow_edit
                FROM ' . TABLE_COLLEAGUES . ' AS c
-               LEFT JOIN lovd_v3_users AS u ON (u.id = c.userid_to)
-               WHERE c.userid_from = ?;';
-    $colleagues = $_DB->query($sQuery, array($sUserID));
-    $aColleagues = $colleagues->fetchAllAssoc();
+                LEFT JOIN ' . TABLE_USERS . ' AS u ON (u.id = c.userid_to)
+               WHERE c.userid_from = ?';
+    $aColleagues = $_DB->query($sQuery, array($sUserID))->fetchAllAssoc();
 
     $sEditStyleAttribute = $bAllowGrantEdit ? '' : 'display: none;';
 
@@ -195,7 +196,7 @@ DOCCOL;
     // Construct list of colleagues
     $sColleaguesHTML = '';
     foreach ($aColleagues as $aUserFields) {
-        $sChecked = $aUserFields['allow_edit'] == '1'? 'checked' : '';
+        $sChecked = ($aUserFields['allow_edit'] == '1'? 'checked' : '');
         $sColleaguesHTML .= sprintf($sTableColleaguesRow, $aUserFields['id'], $aUserFields['name'],
                                     $sChecked, $sEditStyleAttribute);
     }
@@ -205,7 +206,8 @@ DOCCOL;
 
 
 
-function lovd_setColleagues($sUserID, $sUserName, $aColleagues, $bAllowGrantEdit=true) {
+function lovd_setColleagues ($sUserID, $sUserName, $aColleagues, $bAllowGrantEdit = true)
+{
     // Removes all existing colleagues for user $sUserID and replaces them with
     // all IDs in $aColleagues.
     // Throws an exception (Exception) when something goes wrong.
@@ -228,7 +230,7 @@ function lovd_setColleagues($sUserID, $sUserName, $aColleagues, $bAllowGrantEdit
         $_DB->beginTransaction();
 
         // Delete all current colleague records with given user in 'from' field.
-        $_DB->query('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from=?;', array($sUserID));
+        $_DB->query('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?', array($sUserID));
 
         if (count($aColleagues) > 0) {
             // Build parts for multi-row insert query.

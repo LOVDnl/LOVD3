@@ -613,7 +613,9 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
 
 
 
-function lovd_isColleagueOfOwner($sType, $Data, $bMustHaveEditPermission=true) {
+
+function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true)
+{
     // Checks if the current user (specified by global $_AUTH) is owner of the
     // data objects.
     // Params:
@@ -635,10 +637,10 @@ function lovd_isColleagueOfOwner($sType, $Data, $bMustHaveEditPermission=true) {
         $Data = array($Data);
     }
 
-    $colleagueTypeFlag = (!$bMustHaveEditPermission) ? LOVDColleagueType::CAN_EDIT :
-                                                       LOVDColleagueType::ALL;
+    $colleagueTypeFlag = (!$bMustHaveEditPermission? LOVDColleagueType::CAN_EDIT :
+                                                     LOVDColleagueType::ALL);
     $aOwnerIDs = lovd_getColleagues($colleagueTypeFlag);
-    if (count($aOwnerIDs) == 0) {
+    if (!$aOwnerIDs) {
         // No colleagues that give this user the enough permissions.
         return false;
     }
@@ -650,24 +652,23 @@ function lovd_isColleagueOfOwner($sType, $Data, $bMustHaveEditPermission=true) {
         'phenotype' => TABLE_PHENOTYPES,
         'screening' => TABLE_SCREENINGS);
 
-    if (!array_key_exists($sType, $aTablesByType)) {
+    if (!isset($aTablesByType[$sType])) {
         // Unknown data type, return false by default.
         return false;
     }
 
-    $query = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
+    $sQ = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
         $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders . ')';
-    $oResult = $_DB->query($query, array_merge($Data, $aOwnerIDs));
+    $q = $_DB->query($sQ, array_merge($Data, $aOwnerIDs));
 
-    return $oResult !== false && intval($oResult->fetchColumn()) == count($Data);
+    return ($q !== false && intval($q->fetchColumn()) == count($Data));
 }
 
 
 
 
 
-
-function lovd_isOwner($sType, $Data)
+function lovd_isOwner ($sType, $Data)
 {
     // Checks if the current user (specified by global $_AUTH) is owner of the
     // data objects.
@@ -696,17 +697,18 @@ function lovd_isOwner($sType, $Data)
                            'phenotype' => TABLE_PHENOTYPES,
                            'screening' => TABLE_SCREENINGS);
 
-    if (!array_key_exists($sType, $aTablesByType)) {
+    if (!isset($aTablesByType[$sType])) {
         // Unknown data type, return false by default.
         return false;
     }
 
-    $query = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
+    $sQ = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
              $sDataPlaceholders . ' AND (owned_by = ? OR created_by = ?)';
-    $oResult = $_DB->query($query, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
+    $q = $_DB->query($sQ, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
 
-    return $oResult !== false && intval($oResult->fetchColumn()) == count($Data);
+    return ($q !== false && intval($q->fetchColumn()) == count($Data));
 }
+
 
 
 

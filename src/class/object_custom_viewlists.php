@@ -5,7 +5,7 @@
  *
  * Created     : 2011-08-15
  * Modified    : 2016-05-11
- * For LOVD    : 3.0-15
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>

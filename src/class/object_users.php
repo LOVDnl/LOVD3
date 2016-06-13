@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-04-07
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-13
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -85,8 +85,8 @@ class LOVD_User extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (u.created_by = uc.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id)' .
-                                           'LEFT OUTER JOIN ' . TABLE_COLLEAGUES . ' AS col ON (u.id = col.userid_from)' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_COLLEAGUES . ' AS col ON (u.id = col.userid_from) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ucol ON (col.userid_to = ucol.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'u.id';
 
@@ -489,7 +489,7 @@ class LOVD_User extends LOVD_Object {
                 $zData['ownes_'] = $sOwnes;
             }
 
-            $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' users';
+            $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
             $zData['colleagues_'] = $this->lovd_getObjectLinksHTML($zData['colleagues'], 'users/%s');
 
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);

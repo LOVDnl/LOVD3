@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2009-10-19
- * Modified    : 2016-05-11
+ * Created     : 2016-05-11
+ * Modified    : 2016-06-13
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -28,9 +28,7 @@
  *
  *************/
 
-
-Class LOVDColleagueType {
-
+class LOVDColleagueType {
     // Colleagues that have edit permissions.
     const CAN_EDIT = 1;
 
@@ -42,7 +40,11 @@ Class LOVDColleagueType {
 }
 
 
-function lovd_getColleagues($nType=0) {
+
+
+
+function lovd_getColleagues ($nType = 0)
+{
     global $_AUTH;
 
     $aOut = array();
@@ -51,11 +53,16 @@ function lovd_getColleagues($nType=0) {
         return $aOut;
     }
 
-    foreach ($_AUTH['colleagues_from'] as $sID => $sAllowEdit) {
-        if (($nType & LOVDColleagueType::CAN_EDIT) && $sAllowEdit == '1') {
-            $aOut[] = $sID;
+    // If we're looking for the entire list, don't bother looping it.
+    if ($nType == LOVDColleagueType::ALL) {
+        return array_keys($_AUTH['colleagues_from']);
+    }
+
+    foreach ($_AUTH['colleagues_from'] as $nID => $bAllowEdit) {
+        if (($nType & LOVDColleagueType::CAN_EDIT) && $bAllowEdit) {
+            $aOut[] = $nID;
         } elseif ($nType & LOVDColleagueType::CANNOT_EDIT) {
-            $aOut[] = $sID;
+            $aOut[] = $nID;
         }
     }
     return $aOut;

@@ -515,6 +515,7 @@ $_TABLES =
          array(
                 'TABLE_COUNTRIES' => TABLEPREFIX . '_countries',
                 'TABLE_USERS' => TABLEPREFIX . '_users',
+                'TABLE_COLLEAGUES' => TABLEPREFIX . '_colleagues',
                 'TABLE_CHROMOSOMES' => TABLEPREFIX . '_chromosomes',
                 'TABLE_GENES' => TABLEPREFIX . '_genes',
                 'TABLE_CURATES' => TABLEPREFIX . '_users2genes',
@@ -542,7 +543,6 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
-                'TABLE_COLLEAGUES' => TABLEPREFIX . '_colleagues',
 
                 // VERSIONING TABLES
                 //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',

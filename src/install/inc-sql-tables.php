@@ -104,6 +104,17 @@ $aTableSQL =
     CONSTRAINT ' . TABLE_USERS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
 
+         , 'TABLE_COLLEAGUES' =>
+             'CREATE TABLE ' . TABLE_COLLEAGUES . '(
+    userid_from SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+    userid_to   SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
+    allow_edit  BOOLEAN NOT NULL DEFAULT 0,
+    CONSTRAINT `PRIMARY` PRIMARY KEY (userid_from, userid_to),
+    INDEX (userid_to),
+    CONSTRAINT ' . TABLE_COLLEAGUES .  '_fk_userid_from FOREIGN KEY (userid_from) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_COLLEAGUES . '_fk_userid_to FOREIGN KEY (userid_to) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE)
+    ' . $sSettings
+
         , 'TABLE_CHROMOSOMES' =>
    'CREATE TABLE ' . TABLE_CHROMOSOMES . ' (
     name VARCHAR(2) NOT NULL,
@@ -709,18 +720,7 @@ $aTableSQL =
     installed_date DATE NOT NULL,
     updated_date DATE,
     PRIMARY KEY (id))
-    ' . $sSettings,
-
-    'TABLE_COLLEAGUES' =>
-    'CREATE TABLE ' . TABLE_COLLEAGUES . '(
-    userid_from SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    userid_to   SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-    allow_edit  BOOLEAN NOT NULL DEFAULT 0,
-    CONSTRAINT `PRIMARY` PRIMARY KEY (userid_from, userid_to),
-    INDEX (userid_to),
-    CONSTRAINT ' . TABLE_COLLEAGUES .  '_fk_userid_from FOREIGN KEY (userid_from) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT ' . TABLE_COLLEAGUES . '_fk_userid_to FOREIGN KEY (userid_to) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE
-    ) ' . $sSettings
+    ' . $sSettings
           );
 
 // DMD_SPECIFIC;
