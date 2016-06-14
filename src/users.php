@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-05-12
+ * Modified    : 2016-06-14
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,7 +33,6 @@
 
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
-require ROOT_PATH . 'inc-lib-users.php';
 
 if ($_AUTH) {
     // If authorized, check for updates.
@@ -159,7 +158,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     // URL: /users?create
-    // URL: users?register
+    // URL: /users?register
     // Create a new user, or self-register a new submitter.
 
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
@@ -598,7 +597,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Require special clearance, if user is not editing himself.
-    // Neccessary level depends on level of user. Special case.
+    // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
@@ -713,7 +712,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Require special clearance, if user is not editing himself.
-    // Neccessary level depends on level of user. Special case.
+    // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
@@ -969,7 +968,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
-    // users/00001?boot
+    // URL: /users/00001?boot
     // Throw a user out of the system.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -1011,8 +1010,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'unlock'))) {
-    // users/00001?lock
-    // users/00001?unlock
+    // URL: /users/00001?lock
+    // URL: /users/00001?unlock
     // Lock / unlock a user.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -1060,7 +1059,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
-    // URL: users/00001?submissions
+    // URL: /users/00001?submissions
     // Manage unfinished submissions
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -1131,10 +1130,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
+    // URL: /users/00001?share_access
     // Let the user share access to his objects to other users.
-    // e.g.: users/000123?share_access
 
     define('LOG_EVENT', 'ShareAccess');
+    require ROOT_PATH . 'inc-lib-users.php';
 
     // Boolean flag setting whether users can give edit-permissions to their colleagues.
     $bAllowGrantEdit = true;
@@ -1147,28 +1147,30 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
                  u.name,
                  u.level
                FROM ' . TABLE_USERS . ' AS u
-               WHERE u.id = ?;';
+               WHERE u.id = ?';
     $zData = $_DB->query($sNameQuery, array($sID))->fetchAssoc();
 
     // Require special clearance, if user is not editing himself.
-    // Neccessary level depends on level of user. Special case.
+    // Necessary level depends on level of user. Special case.
     if ($sID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         lovd_showPageAccessDenied();
         exit;
     }
 
     $bSuccessfulUpdate = false;
-    if (isset($_REQUEST['colleagues']) && is_array($_REQUEST['colleagues'])) {
-        // Form submitted
+    if (POST) {
+        if (!isset($_POST['colleagues']) || !is_array($_POST['colleagues'])) {
+            $_POST['colleagues'] = array();
+        }
+        if (!isset($_POST['allow_edit']) || !is_array($_POST['allow_edit'])) {
+            $_POST['allow_edit'] = array();
+        }
 
         // Remove duplicates and combine with edit permissions.
-        $aColleagueIDs = array_unique($_REQUEST['colleagues']);
+        $aColleagueIDs = array_unique($_POST['colleagues']);
         $aColleagues = array();
         foreach ($aColleagueIDs as $sColleagueID) {
-            $bAllowEdit = false;
-            if (in_array($sColleagueID, $_REQUEST['allow_edit'])) {
-                $bAllowEdit = true;
-            }
+            $bAllowEdit = in_array($sColleagueID, $_POST['allow_edit']);
             $aColleagues[] = array('id' => $sColleagueID, 'allow_edit' => $bAllowEdit);
         }
 

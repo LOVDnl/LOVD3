@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-05-12
+ * Modified    : 2016-06-14
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -123,7 +124,7 @@ function lovd_shareAccessForm ($sUserID, $sUserListID, $bAllowGrantEdit = true)
                WHERE c.userid_from = ?';
     $aColleagues = $_DB->query($sQuery, array($sUserID))->fetchAllAssoc();
 
-    $sEditStyleAttribute = $bAllowGrantEdit ? '' : 'display: none;';
+    $sEditStyleAttribute = ($bAllowGrantEdit? '' : 'display: none;');
 
     // HTML for row in colleague list. This contains 4 string directives:
     // 1=user's ID, 2=user's name, 3=attribute for edit checkbox (e.g.
@@ -206,6 +207,7 @@ DOCCOL;
 
 
 
+
 function lovd_setColleagues ($sUserID, $sUserName, $aColleagues, $bAllowGrantEdit = true)
 {
     // Removes all existing colleagues for user $sUserID and replaces them with
@@ -222,7 +224,7 @@ function lovd_setColleagues ($sUserID, $sUserName, $aColleagues, $bAllowGrantEdi
         }
     }
 
-    $sOldColleaguesQuery = 'SELECT userid_to FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from=?;';
+    $sOldColleaguesQuery = 'SELECT userid_to FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?';
     $aOldColleagueIDs = $_DB->query($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
     $aColleagueIDs = array();
 
@@ -232,7 +234,7 @@ function lovd_setColleagues ($sUserID, $sUserName, $aColleagues, $bAllowGrantEdi
         // Delete all current colleague records with given user in 'from' field.
         $_DB->query('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?', array($sUserID));
 
-        if (count($aColleagues) > 0) {
+        if (count($aColleagues)) {
             // Build parts for multi-row insert query.
             $sPlaceholders = '(?,?,?)' . str_repeat(',(?,?,?)', count($aColleagues)-1);
             $aData = array();
@@ -261,16 +263,18 @@ function lovd_setColleagues ($sUserID, $sUserName, $aColleagues, $bAllowGrantEdi
     lovd_mailNewColleagues($sUserID, $sUserName, $aNewColleagueIDs);
 
     // Write to log.
-    $sMessage = 'updated colleagues for user (' . $sUserID . ') with (' .
+    $sMessage = 'Updated colleagues for user #' . $sUserID . ' with (' .
         join(', ', $aColleagueIDs) . ')';
     lovd_writeLog('Event', LOG_EVENT, $sMessage);
 }
 
 
 
-function lovd_showPageAccessDenied() {
-    // Show a page saying access denied.
 
+
+function lovd_showPageAccessDenied ()
+{
+    // Show a page saying access denied.
     global $_T;
 
     $_T->printHeader();
