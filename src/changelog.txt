@@ -5,8 +5,19 @@
  *************/
 
 /**************************
- * 3.0 Build 15 (r...)
- * 2016-03-..
+ * 3.0 Build 16 ()
+ * 2016-06-..
+ *********/
+ * Fixed bug; RNA prediction of a variant affecting splicing was 'r.(?)' instead
+   of 'r.spl?'.
+ * Protein prediction for non-coding transcripts now defaults to "-".
+ * Fixed bug; Variants with both a chromosomal DBID and a gene's DBID, were
+   assigned new gene-specific DBIDs, instead of reusing the existing one.
+
+
+/**************************
+ * 3.0 Build 15 (tag:3.0-15)
+ * 2016-05-02
  *********/
  * Fixed bug; During update import the file processing was not stopped after too
    many errors. The message "Too many errors, stopping file processing." was
@@ -61,8 +72,7 @@
    counts also for non-authorized users.
  * Fixed bug; Automatic filling of certain password fields in forms is now
    blocked and a fake text field is used to capture auto-filled usernames.
-   Closes #30: "Prevent browsers from auto-filling usernames in data entry
-   forms".
+   Closes #27: "Issues with browsers remembering user's username and password".
  * Fixed bug; Fixed the "View uncurated variants" link in the drop-down menu of
    the Configuration tab as it didn't show all uncurated variants, and changed
    its name to "Variants that require attention".
@@ -70,9 +80,45 @@
    Configuration area".
  * Fixed bug; You couldn't switch to a different transcript on the unique
    variant view.
+ * When assigning or changing the curators for a certain gene, the LOVD logs now
+   contain information on the exact changes.
+   Closes #25: "Improve logging when changing curator rights".
  * Added second confirmation step on deletion of gene and disease. The
    confirmation warning shows how many related entities are going to be
    removed.
+   Closes #29: "No proper warnings when deleting a gene or a disease".
+ * Improved error message when the genomic DNA field of a variant is left empty.
+   Closes #39: "Transcript variant entry form: warning on empty *Genomic DNA
+   change* unclear".
+ * LOVD now links to the new bug tracking system on fatal query errors.
+   Closes #42: "Message report error links to old ticket system".
+ * When viewing another user's unfinished submissions, now links are provided to
+   the data detailed view.
+   Closes #43: "Viewlist of submissions for user does not link anywhere".
+ * You can now assign data to the LOVD user when editing or when importing data.
+   Closes #52: "Import fails for records with user id = 0".
+ * Fixed bug; When editing a gene through an update import, often LOVD would
+   complain about the genomic reference field without proper reason.
+   Closes #6: "Message: Please select a valid entry from the 'refseq_genomic'
+   selection box should not be displayed".
+ * Implemented speed optimization in one specific LOVD database function.
+ * Fixed bug; The Owner information on data listings wasn't shown for users that
+   had quotes in one of the account fields.
+   Closes #54: "Tooltip fails to display if quotes are present".
+   (thanks to Anthony Marty, Melbourne Genomics Health Alliance, for reporting)
+ * Fixed bug; Multiple search terms with quotes sometimes resulted in an error
+   message.
+   Closes #17: "Your search column contains incorrect search expression syntax
+   at: Protein".
+ * Implemented an optimization in LOVD when showing data listings, which should
+   speed up any data listing. Currently dropped the maximum number of results to
+   still allow sorting on. If speed problems remain, we will reinstate a maximum
+   number of results to still allow to sort on.
+   Closes #9: "Update objects.php to optimize ViewList queries so we can get rid
+   of the SQL_CALC_FOUND_ROWS as much as possible".
+ * Fixed bug; During import, numeric references to object IDs were not properly
+   checked to be numeric.
+   Closes #7: "Check referring numeric IDs in import files".
 
 
 /**************************

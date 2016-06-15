@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2013-02-20
- * For LOVD    : 3.0-03
+ * Modified    : 2016-06-09
+ * For LOVD    : 3.0-16
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -63,7 +63,18 @@ if (!empty($_POST)) {
                 // Instead of having inc-auth.php stop the user when his IP is not allowed to log in, it's better to do that here.
                 if ($zUser['allowed_ip'] && !lovd_validateIP($zUser['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
-                    lovd_errorAdd('', 'Your current IP address does not allow you access using this username.');
+
+                    // Provide manager information, so that the user knows where to go for help.
+                    $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? ORDER BY name', array(LEVEL_MANAGER))->fetchAllAssoc();
+                    if (!$aManagers) {
+                        $aManagers = array($_SETT['admin']);
+                    }
+                    $sManagers = 'For technical assistance, please contact ' . (count($aManagers) == 1? 'the system\'s manager' : 'one of the system\'s managers') . ':';
+                    foreach ($aManagers as $aManager) {
+                        $sManagers .= '<BR><A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($aManager['email'])) . '">' . $aManager['name'] . '</A>';
+                    }
+
+                    lovd_errorAdd('', 'Your current IP address does not allow you access using this username. ' . $sManagers);
                 }
 
 

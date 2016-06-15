@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-02-08
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-09
+ * For LOVD    : 3.0-16
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -449,6 +449,15 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         $_CONF['location_url'] . $_PE[0] . '/' . $nID . "\n\n";
                 }
 
+                // If the user has a specific IP address allow list, warn this user.
+                if (!empty($_POST['allowed_ip']) && $_POST['allowed_ip'] != '*') {
+                    // A certain set of IPs has been specified by the person creating the account.
+                    $sMessage .= 'Note that a restriction has been placed on this account by limiting access to this account from only the IP address(es) specified at the bottom of this email. ' .
+                                 'This might cause you to be unable to log in, even if you have the correct username and password. ' .
+                                 'If this restriction was an error, please log into your account and empty the IP address list field. ' .
+                                 'If you have problems logging in, please contact the LOVD\'s manager.' . "\n\n";
+                }
+
                 $sMessage .= 'Regards,' . "\n" .
                     '    LOVD system at ' . $_CONF['institute'] . "\n\n";
 
@@ -471,6 +480,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         'reference' => 'Reference',
                         'username' => 'Username',
                         'password_1' => 'Password',
+                        'allowed_ip' => 'Allowed IPs',
                     );
                 if ($_POST['orcid_id'] == 'none') {
                     unset($aMailFields['orcid_id']);
@@ -530,7 +540,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
     if (GET) {
         print('      To ' . (ACTION == 'create'? 'create a new user' : 'register as a new submitter') . ', please fill out the form below.<BR>' . "\n" .
-            '      <BR>' . "\n\n");
+              '      <BR>' . "\n\n");
     }
 
     if (ACTION == 'register') {
@@ -540,8 +550,11 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    // Check form (IP address allow list).
+    lovd_includeJS('inc-js-submit-userform.php');
 
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
           '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
 
     // Array which will make up the form table.
@@ -668,9 +681,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
+    // Check form (IP address allow list).
+    lovd_includeJS('inc-js-submit-userform.php');
 
     // Table.
-    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(
@@ -1089,7 +1104,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         $_DATA = new LOVD_Individual();
         $_GET['search_individualid'] = implode('|', $aUnfinished);
         $_GET['page_size'] = '10';
-        $_DATA->setRowLink('Individuals_submissions', ($_AUTH['id'] == $nID? 'submit/individual/' . $_DATA->sRowID : ''));
+        if ($_AUTH['id'] == $nID) {
+            $_DATA->setRowLink('Individuals_submissions', 'submit/individual/' . $_DATA->sRowID);
+        } else {
+            $_DATA->setRowLink('Individuals_submissions', 'individuals/' . $_DATA->sRowID);
+        }
         $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true);
         unset($_GET['search_individualid']);
     } else {
@@ -1103,7 +1122,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         $_DATA = new LOVD_Screening();
         $_GET['search_screeningid'] = implode('|', $aUnfinished);
         $_GET['page_size'] = '10';
-        $_DATA->setRowLink('Screenings_submissions', ($_AUTH['id'] == $nID? 'submit/screening/' . $_DATA->sRowID : ''));
+        if ($_AUTH['id'] == $nID) {
+            $_DATA->setRowLink('Screenings_submissions', 'submit/screening/' . $_DATA->sRowID);
+        } else {
+            $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
+        }
         $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true);
     } else {
         lovd_showInfoTable('No submissions of variant screenings found!', 'stop');

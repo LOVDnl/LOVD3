@@ -5,11 +5,9 @@ doc/tex/manual.out
 doc/tex/manual.toc
 src/_sett
 src/refseq
-src/lib/flot/__excanvas
-src/lib/flot/__flot
-src/lib/jQuery/__jquery
-src/lib/jeegoocontext/__jeegoocontext
 src/config.ini.php
 tests/test_results/error_screenshots
 tests/test_results/reports
-tests/phpunit_selenium
+vendor
+composer.lock
+__*

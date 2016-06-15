@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-17
+ * Modified    : 2016-05-30
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -432,7 +432,7 @@ function lovd_fetchDBID ($aData)
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
                     // If the symbol of the option is the same, but the number is lower(not including 000000), take it.
                     $sDBID = $sDBIDoption;
-                } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDnewSymbol, $aGenes)) {
+                } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDoptionSymbol, $aGenes)) {
                     // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
                     $sDBID = $sDBIDoption;
                 } elseif (substr($sDBIDnewSymbol, 0, 3) == 'chr' && substr($sDBIDoptionSymbol, 0, 3) != 'chr') {

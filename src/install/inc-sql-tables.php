@@ -29,10 +29,6 @@
  *
  *************/
 
-// STILL TODO:
-// variant <-> pathogenicity <-> disease? Link pathogenicity specifically to one of the phenotypes or diseases?
-// Functional assays / computer predictions, hoe toevoegen??? Aan variant én aan individual???
-
 // IDs:
 // WARNING: If editing any of these, also edit $_SETT['objectid_length']!
 // userid SMALLINT(5) UNSIGNED (65K)
@@ -46,10 +42,10 @@
 // colid VARCHAR(100) (100 characters)
 // linkid TINYINT(3) UNSIGNED (255)
 
-// DMD_SPECIFIC
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', '../');
     require ROOT_PATH . 'inc-init.php';
+    lovd_requireAUTH(LEVEL_MANAGER);
 }
 
 $sSettings = 'ENGINE=InnoDB,
@@ -711,7 +707,6 @@ $aTableSQL =
     ' . $sSettings
           );
 
-// DMD_SPECIFIC;
 if (lovd_getProjectFile() == '/install/inc-sql-tables.php') {
     header('Content-type: text/plain; charset=UTF-8');
     var_dump($aTableSQL);
