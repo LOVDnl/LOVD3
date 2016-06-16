@@ -1267,7 +1267,7 @@ class LOVD_Object {
                 if ($sColType == 'DATETIME') {
                     $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
                 } else {
-                    $sSearch = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                    $sSearch = preg_replace_callback('/("[^"]*")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
                 }
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
@@ -1641,13 +1641,13 @@ class LOVD_Object {
 
         // Process search fields (i.e. $_GET['search_...'] values) for viewlist.
         list($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes) = $this->processViewListSearchArgs();
-
         if ($WHERE) {
             $this->aSQLViewList['WHERE'] .= ($this->aSQLViewList['WHERE']? ' AND ' : '') . $WHERE;
         }
         if ($HAVING) {
             $this->aSQLViewList['HAVING'] .= ($this->aSQLViewList['HAVING']? ' AND ' : '') . $HAVING;
         }
+
         // SORT: Current settings, also implementing XSS check.
         if (!empty($_GET['order']) && $_GET['order'] === strip_tags($_GET['order'])) {
             $aOrder = explode(',', $_GET['order']);
@@ -1681,6 +1681,7 @@ class LOVD_Object {
         } elseif ($aOrder[0] == 'VariantOnTranscript/DNA') {
             $sSQLOrderBy = 'position_c_start ' . $aOrder[1] . ', position_c_start_intron ' . $aOrder[1] . ', position_c_end ' . $aOrder[1] . ', position_c_end_intron ' . $aOrder[1] . ', `VariantOnTranscript/DNA` ' . $aOrder[1];
         }
+        // At this point, we're not sure if we'll actually use the ORDER BY at all.
         $this->aSQLViewList['ORDER_BY'] = $sSQLOrderBy . (empty($this->aSQLViewList['ORDER_BY'])? '' : ', ' . $this->aSQLViewList['ORDER_BY']);
 
 
@@ -1778,7 +1779,6 @@ class LOVD_Object {
 
         $nTotal = 0; // Overwrites the previous $nTotal.
         if (!count($aBadSyntaxColumns)) {
-
             if ($bFRSubmit) {
                 // User has submitted Find&Replace form, apply changes.
                 $this->applyColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
@@ -1789,7 +1789,6 @@ class LOVD_Object {
                 $nFRRowsAffected = $this->previewColumnFindAndReplace($sFRFieldname,
                     $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue, $aFROptions);
             }
-
 
             // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
             // function, but we'll try to avoid that due to extreme slowness in some cases.
@@ -1822,12 +1821,6 @@ class LOVD_Object {
             // FIXME: If this count takes longer than 1s, we don't estimate anymore like we used to (see line 1543).
             if (true || !isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
                 $t = microtime(true);
-                $aQueryOptions = array(
-                    'sLimit' => '0',
-                    'bSQL_CALC_FOUND_ROWS' => true
-                );
-                list($sSQLZeroLimit, $_) = $this->generateViewListSelectQuerySQL($aQueryOptions);
-                $_DB->query($sSQLZeroLimit, $aArgs);
                 // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
                 $nTotal = $this->getRowCountForViewList($this->aSQLViewList, $aArgs);
                 $tQ = microtime(true) - $t;
@@ -1859,7 +1852,13 @@ class LOVD_Object {
                         // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
                         // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
                         // of the query.
-                        list($sSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
+                        $sSQL = $this->buildSQL(array(
+                            'SELECT' => $this->aSQLViewList['SELECT'],
+                            'FROM' => $this->aSQLViewList['FROM'],
+                            'WHERE' => $this->aSQLViewList['WHERE'],
+                            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+                            'HAVING' => $this->aSQLViewList['HAVING'],
+                        ));
                         $q = $_DB->query($sSQL, $aArgs);
                         while ($zData = $q->fetchAssoc()) {
                             $zData = $this->generateRowID($zData);
@@ -1896,7 +1895,6 @@ class LOVD_Object {
             $sSelectSortField = null;
             // ORDER BY will only occur when we estimate we have time for it.
             if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= $_SETT['lists']['max_sortable_rows']) {
-                $sSelectSortField = $this->aSQLViewList['ORDER_BY'];
                 $bSortableVL = true;
             } else {
                 // Not sortable, indicate this on the VL...
@@ -1904,6 +1902,7 @@ class LOVD_Object {
                 $bSortableVL = false;
                 // 2013-07-03; 3.0-07; However, we do try and sort because in principle, the order is random and this may cause confusion while paginating.
                 //   So, as a result we'll try and sort on the PK. We attempt to determine this from the GROUP BY or ID col in the VL columns list.
+                $sCol = '';
                 if (isset($this->aSQLViewList['GROUP_BY'])) {
                     $sCol = $this->aSQLViewList['GROUP_BY'];
                 } elseif ($this->aColumnsViewList['id']) {
@@ -1911,26 +1910,19 @@ class LOVD_Object {
                 } elseif ($this->aColumnsViewList['id_']) {
                     $sCol = $this->aColumnsViewList['id_']['db'][0];
                 }
-                if ($sCol) {
-                    $sSelectSortField = $sCol;
-                }
+                $this->aSQLViewList['ORDER_BY'] = $sCol;
             }
 
-            $nSelectLimit = null;
             if (!$bHideNav && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
                 // We have a problem here, because we don't know how many hits there are,
                 // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
                 // of hits AFTER we run the whole query. This means we should just assume
                 // the page number is possible.
-                $nSelectLimit = lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
+                $this->aSQLViewList['LIMIT'] = lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
             }
 
-            $aQueryOptions = array(
-                'sSortFieldName' => $sSelectSortField,
-                'sLimit' => $nSelectLimit
-            );
-            list($sSQL, $_) = $this->generateViewListSelectQuerySQL($aQueryOptions);
+            $sSQL = $this->buildSQL($this->aSQLViewList);
 
             // Run the viewList query.
             // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
