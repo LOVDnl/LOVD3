@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-03
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-16
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -131,7 +131,7 @@ class LOVD_Object {
 
 
     private function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
-                                                $aOptions) {
+                                                $aArgs, $aOptions) {
         // Perform a find and replace action for given field name (column).
 
         global $_DB, $_AUTH;
@@ -139,8 +139,14 @@ class LOVD_Object {
         // Determine field name from select query.
         list($_, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
 
-        // Construct replace statement using viewlist's select query.
-        list($sSelectSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
+        // Construct replace statement using viewlist's select query, without ORDER BY and LIMIT.
+        $sSelectSQL = $this->buildSQL(array(
+            'SELECT' => $this->aSQLViewList['SELECT'],
+            'FROM' => $this->aSQLViewList['FROM'],
+            'WHERE' => $this->aSQLViewList['WHERE'],
+            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+            'HAVING' => $this->aSQLViewList['HAVING'],
+        ));
         $sSubqueryAlias = 'subq';
         $sReplaceStmt = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
             $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
@@ -513,60 +519,6 @@ class LOVD_Object {
         return $sReplaceStmt;
     }
 
-
-
-
-
-    private function generateViewListSelectQuerySQL($aOptions = array())
-    {
-        // Generate a select query and arguments for a viewlist, parameters are passed through
-        // $aOptions:
-        // - key: 'sSortFieldName'      If string, value will be used in the ORDER BY clause.
-        // - key: 'nLimit'              If integer, value will be used in the LIMIT clause
-        // - key: 'SQL_CALC_FOUND_ROWS' If true, flag SQL_CALC_FOUND_ROWS will be set in query.
-        //
-        // Returns a 2-element array:
-        // array( 0 => SQL statement as string
-        //        1 => Arguments for placeholders in SQL as an array of strings )
-
-        list($sSearchWhere, $sSearchHaving, $aArgs, $_, $_) = $this->processViewListSearchArgs();
-        $sSQL = 'SELECT ';
-
-        if (array_key_exists('bSQL_CALC_FOUND_ROWS', $aOptions) && $aOptions['bSQL_CALC_FOUND_ROWS']) {
-            $sSQL .= ' SQL_CALC_FOUND_ROWS ';
-        }
-
-        $sSQL .= $this->aSQLViewList['SELECT'] . ' FROM ' . $this->aSQLViewList['FROM'];
-        if ($this->aSQLViewList['WHERE'] && $sSearchWhere) {
-            $sSQL .= ' WHERE ' . $this->aSQLViewList['WHERE'] . ' AND ' . $sSearchWhere;
-        } else if ($this->aSQLViewList['WHERE']) {
-            $sSQL .= ' WHERE ' . $this->aSQLViewList['WHERE'];
-        } else if ($sSearchWhere) {
-            $sSQL .= ' WHERE ' . $sSearchWhere;
-        }
-
-        if ($this->aSQLViewList['GROUP_BY']) {
-            $sSQL .= ' GROUP BY ' . $this->aSQLViewList['GROUP_BY'];
-        }
-
-        if ($this->aSQLViewList['HAVING'] && $sSearchHaving) {
-            $sSQL .= ' HAVING ' . $this->aSQLViewList['HAVING'] . ' AND ' . $sSearchHaving;
-        } else if ($this->aSQLViewList['HAVING']) {
-            $sSQL .= ' HAVING ' . $this->aSQLViewList['HAVING'];
-        } else if ($sSearchHaving) {
-            $sSQL .= ' HAVING ' . $sSearchHaving;
-        }
-
-        if (array_key_exists('sSortFieldName', $aOptions) &&
-            !is_null($aOptions['sSortFieldName'])) {
-            $sSQL .= ' ORDER BY ' . $aOptions['sSortFieldName'];
-        }
-
-        if (array_key_exists('sLimit', $aOptions) && !is_null($aOptions['sLimit'])) {
-            $sSQL .= ' LIMIT ' . strval($aOptions['sLimit']);
-        }
-        return array($sSQL, array_merge($aArgs['WHERE'], $aArgs['HAVING']));
-    }
 
 
 
@@ -1159,7 +1111,7 @@ class LOVD_Object {
 
 
     private function previewColumnFindAndReplace ($sFRFieldname, $sFRFieldDisplayname,
-                                                  $sFRSearchValue, $sFRReplaceValue, $aOptions)
+                                                  $sFRSearchValue, $sFRReplaceValue, $aArgs, $aOptions)
     {
         // Append a field to the viewlist showing a preview of changes for a
         // find and replace (F&R) action. Returns the number of rows that will
@@ -1177,8 +1129,14 @@ class LOVD_Object {
         // an alias.
         list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
 
-        // Run query with search field to compute number of affected rows.
-        list($sSelectSQL, $aArgs) = $this->generateViewListSelectQuerySQL();
+        // Run query with search field to compute number of affected rows, skipping ORDER BY and LIMIT.
+        $sSelectSQL = $this->buildSQL(array(
+            'SELECT' => $this->aSQLViewList['SELECT'],
+            'FROM' => $this->aSQLViewList['FROM'],
+            'WHERE' => $this->aSQLViewList['WHERE'],
+            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+            'HAVING' => $this->aSQLViewList['HAVING'],
+        ));
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
                                                                $sFRFieldname, $aOptions);
         $oResult = $_DB->query('SELECT count(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
@@ -1194,7 +1152,6 @@ class LOVD_Object {
         $sPreviewFieldDisplayname = $sFRFieldDisplayname . '_FR';
 
         // Edit sql in $this->aSQLViewList to include an F&R column.
-        // Fixme: move modification of aSQLViewList to generateViewListSelectQuerySQL()
         $this->aSQLViewList['SELECT'] .= ",\n";
         $this->aSQLViewList['SELECT'] .= $sReplaceStmt . ' AS `' . $sPreviewFieldname . '`';
 
@@ -1779,15 +1736,18 @@ class LOVD_Object {
 
         $nTotal = 0; // Overwrites the previous $nTotal.
         if (!count($aBadSyntaxColumns)) {
+            // Build argument list.
+            $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
+
             if ($bFRSubmit) {
                 // User has submitted Find&Replace form, apply changes.
                 $this->applyColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
-                                                 $aFROptions);
+                                                 $aArgs, $aFROptions);
             } else if ($bFRPreview) {
                 // User clicked 'preview' in Find&Replace form, add F&R changes as a separate
                 // column in the query.
                 $nFRRowsAffected = $this->previewColumnFindAndReplace($sFRFieldname,
-                    $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue, $aFROptions);
+                    $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue, $aArgs, $aFROptions);
             }
 
             // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
@@ -1798,15 +1758,6 @@ class LOVD_Object {
             // Last checked 2010-01-25, by Ivo Fokkema.
             $_DB->query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
             $_DB->beginTransaction();
-
-            // Build argument list.
-            $aArgs = array();
-            foreach ($aArguments['WHERE'] as $aArg) {
-                $aArgs[] = $aArg;
-            }
-            foreach($aArguments['HAVING'] as $aArg) {
-                $aArgs[] = $aArg;
-            }
 
             // For ALL viewlists, we store the number of hits that we get, including the current filters.
             // For large tables, getting a count can take a long time (especially when using SQL_CALC_FOUND_ROWS).
@@ -1892,7 +1843,6 @@ class LOVD_Object {
                 }
             }
 
-            $sSelectSortField = null;
             // ORDER BY will only occur when we estimate we have time for it.
             if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= $_SETT['lists']['max_sortable_rows']) {
                 $bSortableVL = true;
@@ -2117,7 +2067,6 @@ FROptions
             print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sObject . ' Quick Download format ### This file can not be imported ###' . "\r\n");
             // FIXME: this has to be done better, we can't see what we're filtering for, because it's in the arguments!
             $sFilter = $WHERE . ($WHERE && $HAVING? ' AND ' : '') . $HAVING;
-            $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
             if ($sFilter) {
                 if (count($aArgs) == substr_count($sFilter, '?')) {
                     foreach ($aArgs as $sArg) {
