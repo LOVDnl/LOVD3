@@ -1146,7 +1146,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $sNameQuery = 'SELECT
                      u.name,
                      u.level,
-                     u.institute
+                     u.institute,
+                     u.email
                    FROM ' . TABLE_USERS . ' AS u
                    WHERE u.id = ?';
     $zData = $_DB->query($sNameQuery, array($sID))->fetchAssoc();
@@ -1158,7 +1159,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         exit;
     }
 
-    $bSuccessfulUpdate = false;
+    $_T->printHeader();
+    $_T->printTitle('Sharing access');
+
     if (POST) {
         if (!isset($_POST['colleagues']) || !is_array($_POST['colleagues'])) {
             $_POST['colleagues'] = array();
@@ -1175,20 +1178,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
             $aColleagues[] = array('id' => $sColleagueID, 'allow_edit' => $bAllowEdit);
         }
 
-        try {
-            lovd_setColleagues($sID, $zData['name'], $zData['institute'], $aColleagues,
-                               $bAllowGrantEdit);
-            $bSuccessfulUpdate = true;
-        } catch (Exception $e) {
-            $sErrMsg = 'Something went wrong while saving the list of users. Please notify the
-                        administrators if this problem persists.';
-            lovd_displayError('ERR_SET_COLLEAGUES', $sErrMsg);
-        }
-    }
-
-    $_T->printHeader();
-    $_T->printTitle('Sharing access');
-    if ($bSuccessfulUpdate) {
+        lovd_setColleagues($sID, $zData['name'], $zData['institute'], $zData['email'],
+                           $aColleagues, $bAllowGrantEdit);
         lovd_showInfoTable('Saved changes successfully.', 'information');
     }
 

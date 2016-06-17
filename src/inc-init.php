@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-05-04
+ * Modified    : 2016-06-17
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,6 +82,10 @@ if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
     define('FORMAT', $aFormats[0]);
 }
 header('Content-type: ' . FORMAT . '; charset=UTF-8');
+
+define('COLLEAGUE_CAN_EDIT', 1);    // Colleagues that have edit permissions.
+define('COLLEAGUE_CANNOT_EDIT', 2); // Colleagues that have no edit permissions.
+define('COLLEAGUE_ALL', 3);         // All colleagues.
 
 define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
 define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!

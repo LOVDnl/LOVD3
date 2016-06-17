@@ -61,8 +61,36 @@ EMAILDOC
 );
 
 
+// Email body to be sent to users of whom access has been shared (in
+// case somebody else granted them).
+// 1. Sharer's name
+// 2. Granter's name
+// 3. Granter's institute
+// 4. Granter's email
+// 5. List of recipient names and institutions (newline separated).
+// 6. URL of sharer's user account
+define('EMAIL_SHARER_NEW_COLLEAGUE', <<<EMAILDOC
+Dear %1\$s,
 
-function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $aNewColleagues)
+%2\$s (%3\s) has granted access to your data to
+the following people:
+%5\$s
+
+If you think this was a mistake, please contact %2\$s
+(%4\$s). You can also manage the permissions yourself from
+your account page:
+%6\$s
+
+Kind regards,
+    LOVD system at Leiden University Medical Center
+EMAILDOC
+);
+
+
+
+
+function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $sUserEmail,
+                                 $aNewColleagues)
 {
     // Send an email to users with an ID in $aNewColleagues, letting them know
     // the user denoted by $sUserID has shared access to his data with them.
@@ -74,6 +102,12 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $aNe
         return false;
     }
 
+    // Fetch names/email addresses for new colleagues.
+    $sPlaceholders = '(?' . str_repeat(',?', count($aNewColleagues)-1) . ')';
+    $sColleagueQuery = 'SELECT id, name, institute, email FROM ' . TABLE_USERS . ' WHERE id IN ' .
+        $sPlaceholders;
+    $zColleagues = $_DB->query($sColleagueQuery, $aNewColleagues)->fetchAllAssoc();
+
     $sApplicationURL = lovd_getInstallURL();
     $sGranterFullname = $_AUTH['name'];
     $sGranterInstitute = $_AUTH['institute'];
@@ -82,18 +116,31 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $aNe
 
     if ($sUserID == $_AUTH['id']) {
         // User who is granting permissions is the same as who's data is being shared.
+
         $sResourceDescription = 'their data';
     } else {
+        // Somebody else (e.g. a manager) is granting access to someone else's data.
+
         $sResourceDescription = 'data of ' . $sUserFullname . ' (' . $sUserInstitute . ')';
+
+        // Send notification email to the one who's data is being shared.
+        $aSharerEmails = explode("\r\n", $sUserEmail);
+        $sSharerEmail = isset($aSharerEmails[0])? $aSharerEmails[0] : '';
+        $aRecipients = array();
+        foreach ($zColleagues as $zColleague) {
+            $aRecipients[] = '* ' . $zColleague['name'] . ' (' . $zColleague['institute'] . ')';
+        }
+        $sRecipients = join("\n", $aRecipients);
+        $sSharerAccountURL = $sApplicationURL . 'users/' . $sUserID;
+        $sSharerMailbody = sprintf(EMAIL_SHARER_NEW_COLLEAGUE, $sUserFullname, $_AUTH['name'],
+                                   $_AUTH['institute'], $sGranterEmail, $sRecipients,
+                                   $sSharerAccountURL);
+        lovd_sendMail(array(array($sUserFullname, $sSharerEmail)), 'LOVD access sharing',
+                      $sSharerMailbody, $_SETT['email_headers'], false, false);
     }
 
-    // Fetch names/email addresses for new colleagues.
-    $sPlaceholders = '(?' . str_repeat(',?', count($aNewColleagues)-1) . ')';
-    $sColleagueQuery = 'SELECT id, name, email FROM ' . TABLE_USERS . ' WHERE id IN ' .
-                       $sPlaceholders;
-    $result = $_DB->query($sColleagueQuery, $aNewColleagues);
 
-    while (($zColleague = $result->fetchAssoc()) !== false) {
+    foreach ($zColleagues as $zColleague) {
         $sRecipientAccountURL = $sApplicationURL . 'users/' . $zColleague['id'];
 
         // Setup mail text and fill placeholders.
@@ -218,7 +265,7 @@ DOCCOL;
 
 
 
-function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $aColleagues,
+function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserEmail, $aColleagues,
                              $bAllowGrantEdit = true)
 {
     // Removes all existing colleagues for user $sUserID and replaces them with
@@ -230,7 +277,7 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $aColle
     if (!$bAllowGrantEdit) {
         foreach ($aColleagues as $aColleague) {
             if ($aColleague['allow_edit']) {
-                throw new Exception('Not allowed to grant edit permissions.');
+                lovd_displayError('ShareAccess', 'Not allowed to grant edit permissions.');
             }
         }
     }
@@ -239,39 +286,30 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $aColle
     $aOldColleagueIDs = $_DB->query($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
     $aColleagueIDs = array();
 
-    try {
-        $_DB->beginTransaction();
+    $_DB->beginTransaction();
 
-        // Delete all current colleague records with given user in 'from' field.
-        $_DB->query('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?', array($sUserID));
+    // Delete all current colleague records with given user in 'from' field.
+    $_DB->query('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?', array($sUserID));
 
-        if (count($aColleagues)) {
-            // Build parts for multi-row insert query.
-            $sPlaceholders = '(?,?,?)' . str_repeat(',(?,?,?)', count($aColleagues)-1);
-            $aData = array();
-            foreach ($aColleagues as $aColleague) {
-                array_push($aColleagueIDs, $aColleague['id']);
-                array_push($aData, $sUserID, $aColleague['id'], $aColleague['allow_edit']);
-            }
-
-            $_DB->query('INSERT INTO ' . TABLE_COLLEAGUES . ' (userid_from, userid_to, allow_edit) VALUES ' .
-                $sPlaceholders, $aData);
+    if (count($aColleagues)) {
+        // Build parts for multi-row insert query.
+        $sPlaceholders = '(?,?,?)' . str_repeat(',(?,?,?)', count($aColleagues)-1);
+        $aData = array();
+        foreach ($aColleagues as $aColleague) {
+            array_push($aColleagueIDs, $aColleague['id']);
+            array_push($aData, $sUserID, $aColleague['id'], $aColleague['allow_edit']);
         }
-        $_DB->commit();
 
-    } catch (Exception $e) {
-        $_DB->rollBack();
-        $sMessage = 'Failed to update shared access for user (' . $sUserID . '), caused by: ' .
-            $e->getMessage();
-        lovd_writeLog('Error', LOG_EVENT, $sMessage);
-        throw new Exception($sMessage);
+        $_DB->query('INSERT INTO ' . TABLE_COLLEAGUES .
+                    ' (userid_from, userid_to, allow_edit) VALUES ' . $sPlaceholders, $aData);
     }
+    $_DB->commit();
 
     // Notify only the newly added colleagues by email.
     // Note: call array_values() on the parameter array to make sure the
     // indices are normalized to what PDO expects.
     $aNewColleagueIDs = array_values(array_diff($aColleagueIDs, $aOldColleagueIDs));
-    lovd_mailNewColleagues($sUserID, $sUserFullname, $sUserInsititute, $aNewColleagueIDs);
+    lovd_mailNewColleagues($sUserID, $sUserFullname, $sUserInsititute, $sUserEmail, $aNewColleagueIDs);
 
     // Write to log.
     $sMessage = 'Updated colleagues for user #' . $sUserID . ' with (' .

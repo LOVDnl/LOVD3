@@ -32,17 +32,6 @@
 
 
 
-// Colleagues that have edit permissions.
-const LOVD_COLLEAGUE_CAN_EDIT = 1;
-
-// Colleagues that have no edit permissions.
-const LOVD_COLLEAGUE_CANNOT_EDIT = 2;
-
-// All colleagues.
-const LOVD_COLLEAGUE_ALL = 3;
-
-
-
 
 function lovd_calculateVersion ($sVersion)
 {
@@ -681,8 +670,8 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
         $Data = array($Data);
     }
 
-    $colleagueTypeFlag = (!$bMustHaveEditPermission? LOVDColleagueType::CAN_EDIT :
-                                                     LOVDColleagueType::ALL);
+    $colleagueTypeFlag = ($bMustHaveEditPermission? LOVD_COLLEAGUE_CAN_EDIT :
+                                                    LOVD_COLLEAGUE_ALL);
     $aOwnerIDs = lovd_getColleagues($colleagueTypeFlag);
     if (!$aOwnerIDs) {
         // No colleagues that give this user the enough permissions.
