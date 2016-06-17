@@ -312,8 +312,19 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
     lovd_mailNewColleagues($sUserID, $sUserFullname, $sUserInsititute, $sUserEmail, $aNewColleagueIDs);
 
     // Write to log.
-    $sMessage = 'Updated colleagues for user #' . $sUserID . ' with (' .
-        join(', ', $aColleagueIDs) . ')';
+    $aColleagueIDsAdded = array_values(array_diff($aColleagueIDs, $aOldColleagueIDs));
+    $aColleagueIdsRemoved = array_values(array_diff($aOldColleagueIDs, $aColleagueIDs));
+    $sMessage = 'Updated colleagues for user #' . $sUserID . "\nAdded: ";
+    for ($i = 0; $i < count($aColleagueIDsAdded); $i++) {
+        $aColleagueIDsAdded[$i] = 'user #' . $aColleagueIDsAdded[$i];
+    }
+    $sMessage .= $aColleagueIDsAdded? join(', ', $aColleagueIDsAdded) : 'none';
+    $sMessage .= "\nRemoved: ";
+    for ($i = 0; $i < count($aColleagueIdsRemoved); $i++) {
+        $aColleagueIdsRemoved[$i] = 'user #' . $aColleagueIdsRemoved[$i];
+    }
+    $sMessage .= $aColleagueIdsRemoved? join(', ', $aColleagueIdsRemoved) : 'none';
+    $sMessage .= "\n";
     lovd_writeLog('Event', LOG_EVENT, $sMessage);
 }
 
@@ -321,13 +332,23 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
 
 
 
-function lovd_showPageAccessDenied ()
+function lovd_showPageAccessDenied ($sLogMessage = null, $sPageTitle = 'Access denied',
+                                    $sInfoText = 'You do not have access to this content.')
 {
     // Show a page saying access denied.
     global $_T;
 
     $_T->printHeader();
-    $_T->printTitle('Access denied');
-    lovd_showInfoTable('You do not have access to this content.', 'warning');
+
+    if (!is_null($sPageTitle)) {
+        $_T->printTitle($sPageTitle);
+    } else {
+        $_T->printTitle();
+    }
+
+    if (!is_null($sLogMessage)) {
+        lovd_writeLog('Error', 'HackAttempt', $sLogMessage);
+    }
+    lovd_showInfoTable($sInfoText, 'stop');
     $_T->printFooter();
 }

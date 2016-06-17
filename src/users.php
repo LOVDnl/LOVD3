@@ -33,6 +33,7 @@
 
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+require ROOT_PATH . 'inc-lib-users.php';
 
 if ($_AUTH) {
     // If authorized, check for updates.
@@ -129,7 +130,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     }
 
-    if ($_AUTH['id'] == $nID || $_AUTH['level'] >= LEVEL_MANAGER) {
+    if ($_AUTH['id'] == $nID || $_AUTH['level'] > $zData['level']) {
         $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to your entries with other users', 1);
     }
 
@@ -601,11 +602,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
-        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-        $_T->printFooter();
+        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' .
+                                  $_SETT['user_levels'][$zData['level']] . ')');
         exit;
     }
 
@@ -716,11 +714,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
-        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-        $_T->printFooter();
+        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         exit;
     }
 
@@ -814,11 +808,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     if ($zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_writeLog('Error', 'HackAttempt', 'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
-        lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
-        $_T->printFooter();
+        lovd_showPageAccessDenied('Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
         exit;
     }
 
@@ -984,11 +974,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        $_T->printHeader();
-        $_T->printTitle('Boot user #' . $nID);
-
-        lovd_showInfoTable('No such ID!', 'stop');
-        $_T->printFooter();
+        lovd_showPageAccessDenied(null, 'Boot user #' . $nID, 'No such ID!');
         exit;
     }
 
@@ -1028,10 +1014,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_showInfoTable('No such ID!', 'stop');
-        $_T->printFooter();
+        lovd_showPageAccessDenied(null, null, 'No such ID!');
         exit;
 
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
@@ -1134,7 +1117,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Let the user share access to his objects to other users.
 
     define('LOG_EVENT', 'ShareAccess');
-    require ROOT_PATH . 'inc-lib-users.php';
 
     // Boolean flag setting whether users can give edit-permissions to their colleagues.
     $bAllowGrantEdit = true;
