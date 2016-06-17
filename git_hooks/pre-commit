@@ -72,7 +72,11 @@ def check_files(files, checks):
         if SRC_REGEX.search(filename) is None:
             # Skip non-source files.
             continue
-        flink = open(filename, "r")
+        try:
+            flink = open(filename, "r")
+        except OSError as e:
+            # Cannot open file, assume it's deleted in the commit.
+            continue
 
         validation = [False] * len(checks)
         linecount = 0
@@ -95,6 +99,7 @@ def check_files(files, checks):
                 if not validated:
                     output.append("{}: {}".format(filename, check["msg"]))
         flink.close()
+
     
     return len(output) == 0, output
 

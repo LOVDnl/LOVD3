@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-06-14
+ * Modified    : 2016-06-17
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,27 +33,27 @@
 // someone's data. The text contains wildcards for the following information:
 // 1. Recipient's name
 // 2. LOVD installation identifier (url)
-// 3. Sender's name (user who shares access to their data)
-// 4. Sender's user ID
-// 5. URL to recipient's user account
-// 6. List of administrator names and email addresses
+// 3. Granter's name (user who granted the permissions)
+// 4. Granter's institute
+// 5. Granter's email address
+// 6. Shared resource (either 'data of Name (Institute)' or if the granter
+//    is sharing their own data: 'their data')
+// 7. URL to recipient's user account
 define('EMAIL_NEW_COLLEAGUE', <<<EMAILDOC
 Dear %1\$s,
 
-Someone has given you access to their data in LOVD located at:
+%3\$s (%4\$s) has given you access to
+%6\$s in LOVD located at:
 %2\$s
-
-You can now view and edit all data owned by %3\$s (%4\$s).
 
 If you know this person, you can consider to share access to them so
 they can view and edit your data. You can do so by going to your
-account, click "Share access to your entries with other users", select
-the appropriate user accounts and click "save".
-Access your account here: %5\$s
+account page, click "Share access to your entries with other users",
+select the appropriate user accounts and click "save".
+Access your account here: %7\$s
 
-If you think this email is not intended for you, please let us know by
-contacting the administrator:
-%6\$s
+If you think this email is not intended for you, please contact the
+sender: %3\$s %5\$s
 
 Kind regards,
     LOVD system at Leiden University Medical Center
@@ -62,12 +62,12 @@ EMAILDOC
 
 
 
-function lovd_mailNewColleagues ($sUserID, $sUserFullname, $aNewColleagues)
+function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $aNewColleagues)
 {
     // Send an email to users with an ID in $aNewColleagues, letting them know
     // the user denoted by $sUserID has shared access to his data with them.
     require_once ROOT_PATH . 'inc-lib-form.php';
-    global $_DB, $_SETT;
+    global $_DB, $_SETT, $_AUTH;
 
     if (!is_array($aNewColleagues) || !$aNewColleagues) {
         // Nothing to be done.
@@ -75,13 +75,22 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $aNewColleagues)
     }
 
     $sApplicationURL = lovd_getInstallURL();
-    $aAdminEmails = preg_split('/(\r\n|\r|\n)+/', trim($_SETT['admin']['email']));
-    $sAdminContact = $_SETT['admin']['name'] . ', ' . $aAdminEmails[0] . "\n";
+    $sGranterFullname = $_AUTH['name'];
+    $sGranterInstitute = $_AUTH['institute'];
+    $aGranterEmails = explode("\r\n", $_AUTH['email']);
+    $sGranterEmail = isset($aGranterEmails[0])? $aGranterEmails[0] : '';
 
+    if ($sUserID == $_AUTH['id']) {
+        // User who is granting permissions is the same as who's data is being shared.
+        $sResourceDescription = 'their data';
+    } else {
+        $sResourceDescription = 'data of ' . $sUserFullname . ' (' . $sUserInstitute . ')';
+    }
 
     // Fetch names/email addresses for new colleagues.
     $sPlaceholders = '(?' . str_repeat(',?', count($aNewColleagues)-1) . ')';
-    $sColleagueQuery = 'SELECT id, name, email FROM ' . TABLE_USERS . ' WHERE id IN ' . $sPlaceholders;
+    $sColleagueQuery = 'SELECT id, name, email FROM ' . TABLE_USERS . ' WHERE id IN ' .
+                       $sPlaceholders;
     $result = $_DB->query($sColleagueQuery, $aNewColleagues);
 
     while (($zColleague = $result->fetchAssoc()) !== false) {
@@ -89,14 +98,15 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $aNewColleagues)
 
         // Setup mail text and fill placeholders.
         $sMailBody = sprintf(EMAIL_NEW_COLLEAGUE, $zColleague['name'], $sApplicationURL,
-            $sUserFullname, $sUserID, $sRecipientAccountURL, $sAdminContact);
+            $sGranterFullname, $sGranterInstitute, $sGranterEmail, $sResourceDescription,
+            $sRecipientAccountURL);
 
         // Only use Windows-style line endings, so that it looks good on all platforms.
         $sMailBody = str_replace("\n", "\r\n", $sMailBody);
 
         // Note: email field is new-line separated list of email addresses.
         lovd_sendMail(array(array($zColleague['name'], $zColleague['email'])),
-                      'LOVD access sharing', $sMailBody, $_SETT['email_headers'], false);
+                      'LOVD access sharing', $sMailBody, $_SETT['email_headers'], false, false);
     }
 }
 
@@ -208,7 +218,8 @@ DOCCOL;
 
 
 
-function lovd_setColleagues ($sUserID, $sUserName, $aColleagues, $bAllowGrantEdit = true)
+function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $aColleagues,
+                             $bAllowGrantEdit = true)
 {
     // Removes all existing colleagues for user $sUserID and replaces them with
     // all IDs in $aColleagues.
@@ -260,7 +271,7 @@ function lovd_setColleagues ($sUserID, $sUserName, $aColleagues, $bAllowGrantEdi
     // Note: call array_values() on the parameter array to make sure the
     // indices are normalized to what PDO expects.
     $aNewColleagueIDs = array_values(array_diff($aColleagueIDs, $aOldColleagueIDs));
-    lovd_mailNewColleagues($sUserID, $sUserName, $aNewColleagueIDs);
+    lovd_mailNewColleagues($sUserID, $sUserFullname, $sUserInsititute, $aNewColleagueIDs);
 
     // Write to log.
     $sMessage = 'Updated colleagues for user #' . $sUserID . ' with (' .

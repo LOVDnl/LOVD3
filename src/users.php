@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-06-14
+ * Modified    : 2016-06-17
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -489,7 +489,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                 $sSubject = 'LOVD account registration'; // Don't just change this; lovd_sendMail() is parsing it.
 
                 // Send mail.
-                $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], $_CONF['send_admin_submissions'], $aCc);
+                $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], true, $_CONF['send_admin_submissions'], $aCc);
             } else {
                 $bMail = 0; // Does not evaluate to True (mention we've sent the email), but doesn't equal False either (mention we failed to send the email).
             }
@@ -1144,10 +1144,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
 
     // Get the current user's full name to use in interface/e-mail.
     $sNameQuery = 'SELECT
-                 u.name,
-                 u.level
-               FROM ' . TABLE_USERS . ' AS u
-               WHERE u.id = ?';
+                     u.name,
+                     u.level,
+                     u.institute
+                   FROM ' . TABLE_USERS . ' AS u
+                   WHERE u.id = ?';
     $zData = $_DB->query($sNameQuery, array($sID))->fetchAssoc();
 
     // Require special clearance, if user is not editing himself.
@@ -1175,7 +1176,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         }
 
         try {
-            lovd_setColleagues($sID, $zData['name'], $aColleagues, $bAllowGrantEdit);
+            lovd_setColleagues($sID, $zData['name'], $zData['institute'], $aColleagues,
+                               $bAllowGrantEdit);
             $bSuccessfulUpdate = true;
         } catch (Exception $e) {
             $sErrMsg = 'Something went wrong while saving the list of users. Please notify the

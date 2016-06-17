@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-05-11
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-17
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -29,6 +29,20 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+
+
+// Colleagues that have edit permissions.
+const LOVD_COLLEAGUE_CAN_EDIT = 1;
+
+// Colleagues that have no edit permissions.
+const LOVD_COLLEAGUE_CANNOT_EDIT = 2;
+
+// All colleagues.
+const LOVD_COLLEAGUE_ALL = 3;
+
+
+
 
 function lovd_calculateVersion ($sVersion)
 {
@@ -211,6 +225,36 @@ function lovd_generateRandomID ($l = 10)
     $nStart = mt_rand(0, 32-$l);
     return substr(md5(microtime()), $nStart, $l);
 }
+
+
+
+
+
+function lovd_getColleagues ($nType = 0)
+{
+    global $_AUTH;
+
+    $aOut = array();
+
+    if (!isset($_AUTH) || !isset($_AUTH['colleagues_from'])) {
+        return $aOut;
+    }
+
+    // If we're looking for the entire list, don't bother looping it.
+    if ($nType == LOVD_COLLEAGUE_ALL) {
+        return array_keys($_AUTH['colleagues_from']);
+    }
+
+    foreach ($_AUTH['colleagues_from'] as $nID => $bAllowEdit) {
+        if (($nType & LOVD_COLLEAGUE_CAN_EDIT) && $bAllowEdit) {
+            $aOut[] = $nID;
+        } elseif ($nType & LOVD_COLLEAGUE_CANNOT_EDIT) {
+            $aOut[] = $nID;
+        }
+    }
+    return $aOut;
+}
+
 
 
 

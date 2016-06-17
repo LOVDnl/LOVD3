@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2015-09-04
- * For LOVD    : 3.0-14
+ * Modified    : 2016-06-17
+ * For LOVD    : 3.0-16
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -91,7 +92,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
             // For submitters, we need to take the FIRST email address only.
             if (isset($zData['submitterid'])) {
-                $aEmail = preg_split('/(\r\n|\r|\n)+/', trim($zData['email']));
+                $aEmail = explode("\r\n", trim($zData['email']));
                 $zData['email'] = $aEmail[0];
             }
 
@@ -125,7 +126,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $sSubject = 'LOVD password reset'; // Don't just change this; lovd_sendMail() is parsing it.
 
             // Send mail.
-            $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], $_CONF['send_admin_submissions']);
+            $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], true, $_CONF['send_admin_submissions']);
 
             // Thank the user...
             $_T->printHeader();
