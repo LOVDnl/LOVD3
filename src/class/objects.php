@@ -4,13 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
-<<<<<<< HEAD
  * Modified    : 2016-07-13
  * For LOVD    : 3.0-17
-=======
- * Modified    : 2016-06-16
- * For LOVD    : 3.0-16
->>>>>>> Removed generateViewListSelectQuerySQL() in favor of buildSQL().
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -2048,6 +2043,7 @@ FROptions
 
                     $bSortable   = !empty($aCol['db'][1]) && $bSortableVL; // If we can't sort at all, nothing is sortable.
                     $bSearchable = !empty($aCol['db'][2]);
+                    $nAllowFindAndReplace = (int) (strpos($sField, '/') !== false); // Later allow other columns as well, such as owned_by or statusid or so.
                     $sImg = '';
                     $sAlt = '';
                     if ($bSortable && $aOrder[0] == $sField) {
@@ -2055,8 +2051,8 @@ FROptions
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
                     print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
-                                'data-custom="' . (isset($aCol['custom'])? $aCol['custom'] : '') . '" data-fieldname="' . $sField .
-                                '" data-displayname="' . $aCol['view'][0] .'" >' . "\n" .
+                                 ' data-allowfnr="' . $nAllowFindAndReplace . '" data-fieldname="' . $sField . '"' .
+                                 ' data-displayname="' . $aCol['view'][0] . '">' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .

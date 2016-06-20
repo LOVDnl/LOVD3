@@ -555,11 +555,11 @@ function lovd_FRColumnSelector (sViewListID)
         // Place divs overlaying table columns to get column selection.
         var overlayDiv = $().add('<div class="vl_overlay"></div>');
         var ePos = $(this).offset();
-        var bIsCustomColumn = $(this).data('custom') == '1';
+        var bAllowFindAndReplace = $(this).data('allowfnr') == '1';
 
         // Show 'not-allowed' cursor type for non-custom columns.
         var overlayCursor = 'not-allowed';
-        if (bIsCustomColumn) {
+        if (bAllowFindAndReplace) {
             overlayCursor = 'pointer';
         }
 
@@ -574,7 +574,7 @@ function lovd_FRColumnSelector (sViewListID)
         });
 
         // Only make custom columns selectable.
-        if (bIsCustomColumn) {
+        if (bAllowFindAndReplace) {
             var oCurrentOptions = {
                 sFieldname: $(this).data('fieldname'),
                 sDisplayname: $(this).data('displayname'),
