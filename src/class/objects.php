@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-16
+ * Modified    : 2016-06-20
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2034,6 +2034,7 @@ FROptions
 
                     $bSortable   = !empty($aCol['db'][1]) && $bSortableVL; // If we can't sort at all, nothing is sortable.
                     $bSearchable = !empty($aCol['db'][2]);
+                    $nAllowFindAndReplace = (int) (strpos($sField, '/') !== false); // Later allow other columns as well, such as owned_by or statusid or so.
                     $sImg = '';
                     $sAlt = '';
                     if ($bSortable && $aOrder[0] == $sField) {
@@ -2041,8 +2042,8 @@ FROptions
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
                     print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
-                                'data-custom="' . (isset($aCol['custom'])? $aCol['custom'] : '') . '" data-fieldname="' . $sField .
-                                '" data-displayname="' . $aCol['view'][0] .'" >' . "\n" .
+                                 ' data-allowfnr="' . $nAllowFindAndReplace . '" data-fieldname="' . $sField . '"' .
+                                 ' data-displayname="' . $aCol['view'][0] . '">' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
