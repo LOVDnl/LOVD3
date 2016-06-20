@@ -137,7 +137,7 @@ class LOVD_Object {
         global $_DB, $_AUTH;
 
         // Determine field name from select query.
-        list($_, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+        list(, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
 
         // Construct replace statement using viewlist's select query, without ORDER BY and LIMIT.
         $sSelectSQL = $this->buildSQL(array(
@@ -151,6 +151,7 @@ class LOVD_Object {
         $sReplaceStmt = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
             $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
+        // FIXME: This check should be done earlier, not just when running it.
         if (!isset($this->sTable) || !defined($this->sTable)) {
             // No table is defined for this object, it is unclear what table to
             // perform find and replace on.
@@ -160,17 +161,7 @@ class LOVD_Object {
             return;
         }
 
-        // Check whether given field name is an active custom column.
-        $oResult = $_DB->query('SELECT c.id FROM ' . TABLE_COLS . ' AS c JOIN ' .
-                               TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?;',
-                               array($sFieldname));
-        if (count($oResult->fetchAll()) == 0) {
-            // Given field name is not an active custom column.
-            $sErr = 'Cannot apply find & replace to column "' . $sFieldname . '".';
-            lovd_displayError('LOVD_ERR_INVALID_CUSTOM_COL', $sErr);
-            return;
-        }
-
+        // FIXME: This check should be done earlier, not just when running it.
         // Check user authorization needed to perform find and replace action.
         // Fixme: check if authorization level is correctly set for viewlist data.
         if ($_AUTH['level'] < LEVEL_CURATOR) {
@@ -452,14 +443,16 @@ class LOVD_Object {
     {
         // Return an SQL search condition for given search string, field name and match options.
         // Default is to match the search string anywhere in the field.
-        $sFRSearchCondition = $sTablename . '.`' . $sFieldname . '` LIKE "%' . $sFRSearchValue . '%"';
+
+        $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
+        $sFRSearchCondition = $sCompositeFieldname . ' LIKE "%' . $sFRSearchValue . '%"';
         if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
             // Match search string at beginning of field.
-            $sFRSearchCondition = 'SUBSTRING(' . $sTablename . '.`' . $sFieldname . '`, 1, ' .
+            $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', 1, ' .
                                   strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
         } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
             // Match search string at end of field.
-            $sFRSearchCondition = 'SUBSTRING(' . $sTablename . '.`' . $sFieldname . '`, -' .
+            $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', -' .
                                   strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
         }
         return $sFRSearchCondition;
@@ -484,13 +477,14 @@ class LOVD_Object {
             return '"' . $sFRReplaceValue . '"';
         }
 
-        // Default is to replace occurrances anywhere in the field.
-        $sReplaceStmt = 'REPLACE(' . $sTablename . '.`' . $sFieldname . '`, "' . $sFRSearchValue .
+        $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
+
+        // Default is to replace occurrences anywhere in the field.
+        $sReplaceStmt = 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue .
                         '", "' . $sFRReplaceValue . '")';
 
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sTablename,
                                                                $sFieldname, $aOptions);
-        $sCompositeFieldname = $sTablename . '.`' . $sFieldname . '`';
         $nSearchStrLen = strlen($sFRSearchValue);
         if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
             // Match search string at beginning of field.
@@ -847,52 +841,40 @@ class LOVD_Object {
 
 
 
-    private function getTableAndFieldNameFromSelect($sFRFieldname)
+    private function getTableAndFieldNameFromSelect ($sFRFieldname)
     {
         // Try to translate UI field name to fieldname and tablename in the database based on
         // the SQL query definitions. (note that a field name returned by the interface (returned
         // by the select query) may be different from the fieldname in the table due to aliases).
 
-        // Default return values.
-        $sFieldname = $sFRFieldname;
-        $sTablename = null;
+        // FIXME: This function no longer does what it says it does. Rename it.
 
-        // Match $sFRFieldname as field or alias
-        $match = array();
-        preg_match('/((?<table>[\w`]+)\.)?((?<field>[\w`]+)\sAS\s)?' . preg_quote($sFRFieldname, '/') . '/i',
-                   $this->aSQLViewList['SELECT'], $match);
-        if (count($match) > 0) {
-            if (isset($match['table']) && !empty($match['table'])) {
-                $sTablename = $match['table'];
-            }
-
-            if (isset($match['field']) && !empty($match['field'])) {
-                $sFieldname = $match['field'];
-            }
-        } else {
-            // $sFRFieldname is not explicitly named in select statement.
-
-            preg_match('/([\w`]+).\*/', $this->aSQLViewList['SELECT'], $match);
-            if (count($match) >= 2) {
-                // Assume $sFRFieldname is part of 'tablename.*' selection.
-                $sTablename = $match[1];
-            }
+        // All columns for Find & Replace *must* be defined in the column's list.
+        // Check if column exists there. If not, display an error.
+        if (!isset($this->aColumnsViewList[$sFRFieldname])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on undefined field name "' . $sFRFieldname . '".');
         }
 
-        if ($sFieldname == $sFRFieldname) {
-            // Field name could not be found in select query. Check that input
-            // follows custom column naming rules in order to counter SQL
-            // injections. These rules are specified to the user on page
-            // columns?create
-            if (!preg_match('/^[a-zA-Z_\/_]+$/', $sFieldname)) {
-                $sErr = 'Request contains invalid field name "' . $sFieldname . '".';
-                lovd_displayError('LOVD_ERR_INVALID_FR_FIELD_NAME', $sErr);
-                exit;
-            }
+        // Column should be configured to allow Find & Replace.
+        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
         }
+
+        // Column name in the database may be a function, but
+        // those columns should not have 'allowfnr' set to true.
+        $sTableName = '';
+        $sFieldName = $this->aColumnsViewList[$sFRFieldname]['db'][0];
+        if (preg_match('/^(\w+)\.(\w+)$/', $sFieldName, $sRegs)) {
+            $sTableName = $aRegs[1];
+            $sFieldName = $aRegs[2];
+        }
+
+        // Because we will append the name of the column with something to
+        // create the preview column, we need to trim any backticks off.
+        $sFieldName = trim($sFieldName, '`');
 
         // Note: tablename may be an alias.
-        return array($sTablename, $sFieldname);
+        return array($sTableName, $sFieldName);
     }
 
 
@@ -2034,7 +2016,7 @@ FROptions
 
                     $bSortable   = !empty($aCol['db'][1]) && $bSortableVL; // If we can't sort at all, nothing is sortable.
                     $bSearchable = !empty($aCol['db'][2]);
-                    $nAllowFindAndReplace = (int) (strpos($sField, '/') !== false); // Later allow other columns as well, such as owned_by or statusid or so.
+                    $nAllowFindAndReplace = (int) !empty($aCol['allowfnr']); // Later allow other columns as well, such as owned_by or statusid or so.
                     $sImg = '';
                     $sAlt = '';
                     if ($bSortable && $aOrder[0] == $sField) {
