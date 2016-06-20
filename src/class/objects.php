@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-03
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-20
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -125,6 +125,65 @@ class LOVD_Object {
             }
         }
         return $zData;
+    }
+
+
+
+
+    private function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
+                                                $aArgs, $aOptions) {
+        // Perform a find and replace action for given field name (column).
+
+        global $_DB, $_AUTH;
+
+        // Determine field name from select query.
+        list(, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+
+        // Construct replace statement using viewlist's select query, without ORDER BY and LIMIT.
+        $sSelectSQL = $this->buildSQL(array(
+            'SELECT' => $this->aSQLViewList['SELECT'],
+            'FROM' => $this->aSQLViewList['FROM'],
+            'WHERE' => $this->aSQLViewList['WHERE'],
+            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+            'HAVING' => $this->aSQLViewList['HAVING'],
+        ));
+        $sSubqueryAlias = 'subq';
+        $sReplaceStmt = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
+            $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
+
+        // FIXME: This check should be done earlier, not just when running it.
+        if (!isset($this->sTable) || !defined($this->sTable)) {
+            // No table is defined for this object, it is unclear what table to
+            // perform find and replace on.
+            $sErr = 'Cannot run update query for object with unknown table (object=' .
+                get_class($this) . ').';
+            lovd_displayError('LOVD_ERR_UNKOWN_TABLE', $sErr);
+            return;
+        }
+
+        // FIXME: This check should be done earlier, not just when running it.
+        // Check user authorization needed to perform find and replace action.
+        // Fixme: check if authorization level is correctly set for viewlist data.
+        if ($_AUTH['level'] < LEVEL_CURATOR) {
+            $sErr = 'You do not have authorization to perform this action.';
+            lovd_displayError('LOVD_ERR_AUTH_FR', $sErr);
+            return;
+        }
+
+        // ID field to connect rows from the original viewlist select query with rows in the
+        // update query.
+        // Note: this is hard-coded for now, meaning that each table must have this as its
+        // ID field and each viewlist select query must include it. A more involved approach
+        // would be to get the primary key in a separate query and include that in both the
+        // update query and select subquery.
+        $sIDField = 'id';
+
+        // Construct and apply update query.
+        $sUpdateSQL = 'UPDATE ' . constant($this->sTable) .  ', (' . $sSelectSQL . ') AS ' .
+                      $sSubqueryAlias . ' SET ' . constant($this->sTable) . '.`' . $sFieldname .
+                      '`=' . $sReplaceStmt . ' WHERE ' . constant($this->sTable) . '.' . $sIDField .
+                      ' = ' . $sSubqueryAlias . '.' . $sIDField;
+        $_DB->query($sUpdateSQL, $aArgs);
     }
 
 
@@ -373,6 +432,85 @@ class LOVD_Object {
             }
         }
         return $zData;
+    }
+
+
+
+
+
+    private function generateFRSearchCondition($sFRSearchValue, $sTablename, $sFieldname,
+                                               $aOptions)
+    {
+        // Return an SQL search condition for given search string, field name and match options.
+        // Default is to match the search string anywhere in the field.
+
+        $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
+        $sFRSearchCondition = $sCompositeFieldname . ' LIKE "%' . $sFRSearchValue . '%"';
+        if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+            // Match search string at beginning of field.
+            $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', 1, ' .
+                                  strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
+        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
+            // Match search string at end of field.
+            $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', -' .
+                                  strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
+        }
+        return $sFRSearchCondition;
+    }
+
+
+
+
+
+    private function generateViewListFRReplaceStatement($sTablename, $sFieldname, $sFRSearchValue,
+                                                        $sFRReplaceValue, $aOptions)
+    {
+        // Return a SQL REPLACE statement for given field name and options.
+        // Params:
+        // - $sTableName        Name of the table.
+        // - $sFieldname        Name of the table's field on which replace will be called.
+        // - $sFRSearchValue    Find & replace search value.
+        // - $sFRReplaceValue   Find & replace replace value.
+        // - $aOptions          Array with options on how to perform replace.
+
+        if (isset($aOptions['bFRReplaceAll']) && $aOptions['bFRReplaceAll']) {
+            return '"' . $sFRReplaceValue . '"';
+        }
+
+        $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
+
+        // Default is to replace occurrences anywhere in the field.
+        $sReplaceStmt = 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue .
+                        '", "' . $sFRReplaceValue . '")';
+
+        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sTablename,
+                                                               $sFieldname, $aOptions);
+        $nSearchStrLen = strlen($sFRSearchValue);
+        if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+            // Match search string at beginning of field.
+            // E.g.:
+            // CASE WHEN SUBSTRING(table.`field`, 1, 6) = "search"
+            // THEN CONCAT("replace", SUBSTRING(table.`field`, 6))
+            // ELSE table.`field` END
+            $sReplaceStmt = 'CASE WHEN ' . $sFRSearchCondition . ' THEN CONCAT("' .
+                            $sFRReplaceValue . '", SUBSTRING(' . $sCompositeFieldname . ', ' .
+                            strval($nSearchStrLen + 1) . ')) ELSE ' . $sCompositeFieldname .
+                            ' END ';
+
+        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
+            // Match search string at end of field.
+            // E.g.:
+            // CASE WHEN SUBSTRING(table.`field`, - 6) = "search"
+            // THEN CONCAT(SUBSTRING(table.`field`, 1, CHAR_LENGTH(table.`field`) - 6), "replace")
+            // ELSE table.`field` END
+            $sReplaceStmt = 'CASE WHEN ' . $sFRSearchCondition . ' THEN CONCAT(' .
+                'SUBSTRING(' . $sCompositeFieldname . ', 1, CHAR_LENGTH(' . $sCompositeFieldname .
+                ') - ' . strval($nSearchStrLen) . '), "' . $sFRReplaceValue . '") ELSE ' .
+                $sCompositeFieldname . ' END ';
+        }
+
+        // Return replace statement.
+        return $sReplaceStmt;
     }
 
 
@@ -703,6 +841,45 @@ class LOVD_Object {
 
 
 
+    private function getTableAndFieldNameFromSelect ($sFRFieldname)
+    {
+        // Try to translate UI field name to fieldname and tablename in the database based on
+        // the SQL query definitions. (note that a field name returned by the interface (returned
+        // by the select query) may be different from the fieldname in the table due to aliases).
+
+        // FIXME: This function no longer does what it says it does. Rename it.
+
+        // All columns for Find & Replace *must* be defined in the column's list.
+        // Check if column exists there. If not, display an error.
+        if (!isset($this->aColumnsViewList[$sFRFieldname])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on undefined field name "' . $sFRFieldname . '".');
+        }
+
+        // Column should be configured to allow Find & Replace.
+        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
+        }
+
+        // Column name in the database may be a function, but
+        // those columns should not have 'allowfnr' set to true.
+        $sTableName = '';
+        $sFieldName = $this->aColumnsViewList[$sFRFieldname]['db'][0];
+        if (preg_match('/^(\w+)\.(\w+)$/', $sFieldName, $sRegs)) {
+            $sTableName = $aRegs[1];
+            $sFieldName = $aRegs[2];
+        }
+
+        // Because we will append the name of the column with something to
+        // create the preview column, we need to trim any backticks off.
+        $sFieldName = trim($sFieldName, '`');
+
+        // Note: tablename may be an alias.
+        return array($sTableName, $sFieldName);
+    }
+
+
+
+
     function insertEntry ($aData, $aFields = array())
     {
         // Inserts data in $aData into the database, using only fields defined in $aFields.
@@ -913,6 +1090,230 @@ class LOVD_Object {
     }
 
 
+
+
+    private function previewColumnFindAndReplace ($sFRFieldname, $sFRFieldDisplayname,
+                                                  $sFRSearchValue, $sFRReplaceValue, $aArgs, $aOptions)
+    {
+        // Append a field to the viewlist showing a preview of changes for a
+        // find and replace (F&R) action. Returns the number of rows that will
+        // be affected by the F&R.
+        // Params:
+        // sFRFieldname         Name of field on which F&R to preview.
+        // sFRFieldDisplayname  Display name of field for F&R.
+        // sFRSearchValue       Search string.
+        // sFRReplaceValue      Replace value.
+        // aOptions             F&R options (e.g. match type)
+
+        global $_DB;
+
+        // Try to discover the tablename and fieldname, as $sFRFieldname may be
+        // an alias.
+        list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+
+        // Run query with search field to compute number of affected rows, skipping ORDER BY and LIMIT.
+        $sSelectSQL = $this->buildSQL(array(
+            'SELECT' => $this->aSQLViewList['SELECT'],
+            'FROM' => $this->aSQLViewList['FROM'],
+            'WHERE' => $this->aSQLViewList['WHERE'],
+            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+            'HAVING' => $this->aSQLViewList['HAVING'],
+        ));
+        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
+                                                               $sFRFieldname, $aOptions);
+        $oResult = $_DB->query('SELECT count(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
+                               $sFRSearchCondition, $aArgs);
+        $nAffectedRows = intval($oResult->fetchColumn());
+
+        // Construct replace statement.
+        $sReplaceStmt = $this->generateViewListFRReplaceStatement($sTablename, $sFieldname,
+            $sFRSearchValue, $sFRReplaceValue, $aOptions);
+
+        // Set names for preview column.
+        $sPreviewFieldname = $sFRFieldname . '_FR';
+        $sPreviewFieldDisplayname = $sFRFieldDisplayname . '_FR';
+
+        // Edit sql in $this->aSQLViewList to include an F&R column.
+        $this->aSQLViewList['SELECT'] .= ",\n";
+        $this->aSQLViewList['SELECT'] .= $sReplaceStmt . ' AS `' . $sPreviewFieldname . '`';
+
+        // Add description of preview-field in $this->aColumnsViewList based on original field.
+        $aFRColValues = $this->aColumnsViewList[$sFRFieldname];
+        if (!isset($aFRColValues['view'])) {
+            $aFRColValues['view'] = array($sPreviewFieldDisplayname, 160, 'class="FRPreview"');
+        } else {
+            $aFRColValues['view'][0] = $sPreviewFieldDisplayname;
+        }
+        $aFRColValues['db'] = array($sFRFieldname);
+
+        // Place preview column just behind column where F&R is performed on.
+        $this->aColumnsViewList = lovd_arrayInsertAfter($sFRFieldname, $this->aColumnsViewList,
+            $sPreviewFieldname, $aFRColValues);
+
+        return $nAffectedRows;
+    }
+
+
+
+
+
+    private function processViewListSearchArgs()
+    {
+        // Generate WHERE and HAVING statements for search field content in viewlist.
+        // Returns an array with:
+        // - $WHERE         Array of strings to be added to the WHERE clause of the viewlist query.
+        // - $HAVING        Array of strings to be added to the HAVING clause of the query.
+        // - $aArguments    Array of arrays with arguments for placeholders in WHERE and HAVING
+        //                  clauses.
+        // - $aBadSyntaxColumns ?
+        // - $aColTypes     ?
+
+        global $_INI;
+
+        // SEARCH: Advanced text search.
+        $WHERE = '';
+        $HAVING = '';
+        $aArguments = array(
+            'WHERE' => array(),
+            'HAVING' => array()
+        );
+        $aBadSyntaxColumns = array();
+        $aColTypes = array(); // For describing the search expressions in the mouseover of the input field.
+        foreach ($this->aColumnsViewList as $sColumn => $aCol) {
+            if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
+                $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false ? 'HAVING' : 'WHERE');
+                if ($aCol['db'][2] !== true) {
+                    // Column type of an alias is given by LOVD.
+                    $sColType = $aCol['db'][2];
+                } else {
+                    if (preg_match('/^[a-z0-9]{1,3}\.[a-z_]+$/i', $aCol['db'][0])) {
+                        list($sAlias, $sColName) = explode('.', $aCol['db'][0]);
+                        if (preg_match('/(' . TABLEPREFIX . '_[a-z0-9_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches)) {
+                            $sTable = $aMatches[1];
+                        } else {
+                            // Alias was not valid, default col type to TEXT.
+                            $sTable = '';
+                        }
+                    } else {
+                        $sColName = trim($aCol['db'][0], '`');
+                        $sTable = constant($this->sTable);
+                    }
+                    $sColType = lovd_getColumnType($sTable, $sColName);
+                }
+                $aColTypes[$sColumn] = $sColType;
+                // Allow for searches where the order of words is forced by enclosing the values with double quotes;
+                // Replace spaces in sentences between double quotes so they don't get exploded.
+                if ($sColType == 'DATETIME') {
+                    $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
+                } else {
+                    $sSearch = preg_replace_callback('/("[^"]*")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                }
+                $aWords = explode(' ', $sSearch);
+                foreach ($aWords as $sWord) {
+                    if ($sWord !== '') {
+                        $sWord = lovd_escapeSearchTerm($sWord);
+                        $aOR = (preg_match('/^[^|]+(\|[^|]+)+$/', $sWord) ? explode('|', $sWord) : array($sWord));
+                        $$CLAUSE .= ($$CLAUSE ? ' AND ' : '') . (!empty($aOR[1]) ? '(' : '');
+                        foreach ($aOR as $nTerm => $sTerm) {
+                            $$CLAUSE .= ($nTerm ? ' OR ' : '');
+                            switch ($sColType) {
+                                case 'DECIMAL_UNSIGNED':
+                                case 'DECIMAL':
+                                case 'FLOAT_UNSIGNED':
+                                case 'FLOAT':
+                                case 'INT_UNSIGNED':
+                                case 'INT':
+                                    if (preg_match('/^([><]=?|!)?(-?\d+(\.\d+)?)$/', $sTerm, $aMatches)) {
+                                        $sOperator = $aMatches[1];
+                                        $sTerm = $aMatches[2];
+                                        if ($sOperator) {
+                                            $sOperator = (substr($sOperator, 0, 1) == '!' ? '!=' : $sOperator);
+                                        } else {
+                                            $sOperator = '=';
+                                        }
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ' . ($_INI['database']['driver'] != 'sqlite' ? '?' : 'CAST(? AS NUMERIC)') . ($sOperator == '!=' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $aArguments[$CLAUSE][] = $sTerm;
+                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
+                                        // Numeric fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'NULL';
+                                    } elseif ($aCol['view']) {
+                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    }
+                                    break;
+                                case 'DATE':
+                                case 'DATETIME':
+                                    if (preg_match('/^([><]=?|!)?(\d{4})(?:(-\d{2})' . ($sColType == 'DATETIME' ? '(?:(-\d{2})(?:( \d{2})(?:(:\d{2})(:\d{2})?)?)?)?)?' : '(-\d{2})?)?') . '$/', $sTerm, $aMatches)) {
+                                        @list(, $sOperator, $nYear, $nMonth, $nDay, $nHour, $nMinute, $nSecond) = $aMatches;
+                                        if (!checkdate(($nMonth ? substr($nMonth, 1) : '01'), ($nDay ? substr($nDay, 1) : '01'), $nYear) && $aCol['view']) {
+                                            $aBadSyntaxColumns[] = $aCol['view'][0];
+                                        }
+                                        if (((isset($nHour) && ($nHour < 0 || $nHour > 23)) || (isset($nMinute) && ($nMinute < 0 || $nMinute > 59)) || (isset($nSecond) && ($nSecond < 0 || $nSecond > 59))) && $aCol['view']) {
+                                            $aBadSyntaxColumns[] = $aCol['view'][0];
+                                        }
+                                        // Create $aTerms arrays, pre-filled with date components. These components will be overwritten later by $aMatches, if they are given by the user.
+                                        switch ($sOperator) {
+                                            case '>':
+                                            case '<=':
+                                                $aTerms = array(3 => '-12', '-31', ' 23', ':59', ':59'); // FIXME; some databases may not like this on DATE columns.
+                                                break;
+                                            case '<':
+                                            case '>=':
+                                                $aTerms = array(3 => '-01', '-01', ' 00', ':00', ':00'); // FIXME; some databases may not like this on DATE columns.
+                                                break;
+                                            case '!':
+                                            default:
+                                                if (($sColType == 'DATE' && isset($nDay)) || ($sColType == 'DATETIME' && isset($nSecond))) {
+                                                    $sOperator .= '='; // != or =
+                                                } else {
+                                                    $sOperator = ($sOperator == '!' ? 'NOT ' : '') . 'LIKE';
+                                                }
+                                                $aTerms = array(3 => '', '', '', '', '');
+                                                break;
+                                        }
+                                        unset($aMatches[0], $aMatches[1]);
+                                        // Replace our default date components by the ones given by the user.
+                                        $aTerms = $aMatches + $aTerms;
+                                        ksort($aTerms);
+                                        $sTerms = implode($aTerms);
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $aArguments[$CLAUSE][] = $sTerms . (substr($sOperator, -4) == 'LIKE' ? '%' : '');
+                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
+                                        // DATE(TIME) fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'NULL';
+                                    } elseif ($aCol['view']) {
+                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    }
+                                    break;
+                                default:
+                                    if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
+                                        $sOperator = (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'LIKE';
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $aArguments[$CLAUSE][] = '%' . $aMatches[1] . '%';
+                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
+                                        $bNot = (substr($sTerm, 0, 1) == '!');
+                                        if ($bNot) {
+                                            $$CLAUSE .= '(' . $aCol['db'][0] . ' != "" AND ' . $aCol['db'][0] . ' IS NOT NULL)';
+                                        } else {
+                                            $$CLAUSE .= '(' . $aCol['db'][0] . ' = "" OR ' . $aCol['db'][0] . ' IS NULL)';
+                                        }
+                                    } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
+                                        $sOperator = (substr($sTerm, 0, 1) == '!' ? '!=' : '=');
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!=' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        // 2013-07-25; 3.0-07; When not using LIKE, undo escaping done by lovd_escapeSearchTerm().
+                                        $aArguments[$CLAUSE][] = str_replace(array('\%', '\_'), array('%', '_'), $aMatches[1]);
+                                    } elseif ($aCol['view']) {
+                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    }
+                                    break;
+                            }
+                        }
+                        $$CLAUSE .= (!empty($aOR[1]) ? ')' : '');
+                    }
+                }
+            }
+        }
+        return array($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes);
+    }
 
 
 
@@ -1129,8 +1530,14 @@ class LOVD_Object {
 
 
 
-    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false, $bHideNav = false, $bOptions = false, $bOnlyRows = false)
+    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false,
+                       $bHideNav = false, $bOptions = false, $bOnlyRows = false,
+                       $bFindReplace = false)
     {
+        // Show a viewlist for the current object.
+        // Params:
+        // bFindReplace     if true, find & replace option is shown in viewlist options menu.
+
         // Views list of entries in the database, allowing search.
         global $_DB, $_INI, $_SETT;
 
@@ -1171,155 +1578,15 @@ class LOVD_Object {
             return 0;
         }
 
-        // SEARCH: Advanced text search.
-        $WHERE = '';
-        $HAVING = '';
-        $aArguments = array(
-                        'WHERE' => array(),
-                        'HAVING' => array()
-                           );
-        $aBadSyntaxColumns = array();
-        $aColTypes = array(); // For describing the search expressions in the mouseover of the input field.
-        foreach ($this->aColumnsViewList as $sColumn => $aCol) {
-            if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
-                $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false? 'HAVING' : 'WHERE');
-                if ($aCol['db'][2] !== true) {
-                    // Column type of an alias is given by LOVD.
-                    $sColType = $aCol['db'][2];
-                } else {
-                    if (preg_match('/^[a-z0-9]{1,3}\.[a-z_]+$/i', $aCol['db'][0])) {
-                        list($sAlias, $sColName) = explode('.', $aCol['db'][0]);
-                        if (preg_match('/(' . TABLEPREFIX . '_[a-z0-9_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches)) {
-                            $sTable = $aMatches[1];
-                        } else {
-                            // Alias was not valid, default col type to TEXT.
-                            $sTable = '';
-                        }
-                    } else {
-                        $sColName = trim($aCol['db'][0], '`');
-                        $sTable = constant($this->sTable);
-                    }
-                    $sColType = lovd_getColumnType($sTable, $sColName);
-                }
-                $aColTypes[$sColumn] = $sColType;
-                // Allow for searches where the order of words is forced by enclosing the values with double quotes;
-                // Replace spaces in sentences between double quotes so they don't get exploded.
-                if ($sColType == 'DATETIME') {
-                    $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
-                } else {
-                    $sSearch = preg_replace_callback('/("[^"]*")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
-                }
-                $aWords = explode(' ', $sSearch);
-                foreach ($aWords as $sWord) {
-                    if ($sWord !== '') {
-                        $sWord = lovd_escapeSearchTerm($sWord);
-                        $aOR = (preg_match('/^[^|]+(\|[^|]+)+$/', $sWord)? explode('|', $sWord) : array($sWord));
-                        $$CLAUSE .= ($$CLAUSE? ' AND ' : '') . (!empty($aOR[1])? '(' : '');
-                        foreach ($aOR as $nTerm => $sTerm) {
-                            $$CLAUSE .= ($nTerm? ' OR ' : '');
-                            switch ($sColType) {
-                                case 'DECIMAL_UNSIGNED':
-                                case 'DECIMAL':
-                                case 'FLOAT_UNSIGNED':
-                                case 'FLOAT':
-                                case 'INT_UNSIGNED':
-                                case 'INT':
-                                    if (preg_match('/^([><]=?|!)?(-?\d+(\.\d+)?)$/', $sTerm, $aMatches)) {
-                                        $sOperator = $aMatches[1];
-                                        $sTerm = $aMatches[2];
-                                        if ($sOperator) {
-                                            $sOperator = (substr($sOperator, 0, 1) == '!'? '!=' : $sOperator);
-                                        } else {
-                                            $sOperator = '=';
-                                        }
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ' . ($_INI['database']['driver'] != 'sqlite'? '?' : 'CAST(? AS NUMERIC)') . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = $sTerm;
-                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
-                                        // Numeric fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
-                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
-                                    } elseif ($aCol['view']) {
-                                        $aBadSyntaxColumns[] = $aCol['view'][0];
-                                    }
-                                    break;
-                                case 'DATE':
-                                case 'DATETIME':
-                                    if (preg_match('/^([><]=?|!)?(\d{4})(?:(-\d{2})' . ($sColType == 'DATETIME'? '(?:(-\d{2})(?:( \d{2})(?:(:\d{2})(:\d{2})?)?)?)?)?' : '(-\d{2})?)?') . '$/', $sTerm, $aMatches)) {
-                                        @list(, $sOperator, $nYear, $nMonth, $nDay, $nHour, $nMinute, $nSecond) = $aMatches;
-                                        if (!checkdate(($nMonth? substr($nMonth, 1) : '01'), ($nDay? substr($nDay, 1) : '01'), $nYear) && $aCol['view']) {
-                                            $aBadSyntaxColumns[] = $aCol['view'][0];
-                                        }
-                                        if (((isset($nHour) && ($nHour < 0 || $nHour > 23)) || (isset($nMinute) && ($nMinute < 0 || $nMinute > 59)) || (isset($nSecond) && ($nSecond < 0 || $nSecond > 59))) && $aCol['view']) {
-                                            $aBadSyntaxColumns[] = $aCol['view'][0];
-                                        }
-                                        // Create $aTerms arrays, pre-filled with date components. These components will be overwritten later by $aMatches, if they are given by the user.
-                                        switch ($sOperator) {
-                                            case '>':
-                                            case '<=':
-                                                $aTerms = array(3 => '-12', '-31', ' 23', ':59', ':59'); // FIXME; some databases may not like this on DATE columns.
-                                                break;
-                                            case '<':
-                                            case '>=':
-                                                $aTerms = array(3 => '-01', '-01', ' 00', ':00', ':00'); // FIXME; some databases may not like this on DATE columns.
-                                                break;
-                                            case '!':
-                                            default:
-                                                if (($sColType == 'DATE' && isset($nDay)) || ($sColType == 'DATETIME' && isset($nSecond))) {
-                                                    $sOperator .= '='; // != or =
-                                                } else {
-                                                    $sOperator = ($sOperator == '!'? 'NOT ' : '') . 'LIKE';
-                                                }
-                                                $aTerms = array(3 => '', '', '', '', '');
-                                                break;
-                                        }
-                                        unset($aMatches[0], $aMatches[1]);
-                                        // Replace our default date components by the ones given by the user.
-                                        $aTerms = $aMatches + $aTerms;
-                                        ksort($aTerms);
-                                        $sTerms = implode($aTerms);
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = $sTerms . (substr($sOperator, -4) == 'LIKE'? '%' : '');
-                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
-                                        // DATE(TIME) fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
-                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
-                                    } elseif ($aCol['view']) {
-                                        $aBadSyntaxColumns[] = $aCol['view'][0];
-                                    }
-                                    break;
-                                default:
-                                    if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
-                                        $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = '%' . $aMatches[1] . '%';
-                                    } elseif (preg_match('/^!?=""$/', $sTerm)) {
-                                        $bNot = (substr($sTerm, 0, 1) == '!');
-                                        if ($bNot) {
-                                            $$CLAUSE .= '(' . $aCol['db'][0] . ' != "" AND ' . $aCol['db'][0] . ' IS NOT NULL)';
-                                        } else {
-                                            $$CLAUSE .= '(' . $aCol['db'][0] . ' = "" OR ' . $aCol['db'][0] . ' IS NULL)';
-                                        }
-                                    } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
-                                        $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        // 2013-07-25; 3.0-07; When not using LIKE, undo escaping done by lovd_escapeSearchTerm().
-                                        $aArguments[$CLAUSE][] = str_replace(array('\%', '\_'), array('%', '_'), $aMatches[1]);
-                                    } elseif ($aCol['view']) {
-                                        $aBadSyntaxColumns[] = $aCol['view'][0];
-                                    }
-                                    break;
-                            }
-                        }
-                        $$CLAUSE .= (!empty($aOR[1])? ')' : '');
-                    }
-                }
-            }
-        }
-
+        // Process search fields (i.e. $_GET['search_...'] values) for viewlist.
+        list($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes) = $this->processViewListSearchArgs();
         if ($WHERE) {
             $this->aSQLViewList['WHERE'] .= ($this->aSQLViewList['WHERE']? ' AND ' : '') . $WHERE;
         }
         if ($HAVING) {
             $this->aSQLViewList['HAVING'] .= ($this->aSQLViewList['HAVING']? ' AND ' : '') . $HAVING;
         }
+
         // SORT: Current settings, also implementing XSS check.
         if (!empty($_GET['order']) && $_GET['order'] === strip_tags($_GET['order'])) {
             $aOrder = explode(',', $_GET['order']);
@@ -1353,6 +1620,7 @@ class LOVD_Object {
         } elseif ($aOrder[0] == 'VariantOnTranscript/DNA') {
             $sSQLOrderBy = 'position_c_start ' . $aOrder[1] . ', position_c_start_intron ' . $aOrder[1] . ', position_c_end ' . $aOrder[1] . ', position_c_end_intron ' . $aOrder[1] . ', `VariantOnTranscript/DNA` ' . $aOrder[1];
         }
+        // At this point, we're not sure if we'll actually use the ORDER BY at all.
         $this->aSQLViewList['ORDER_BY'] = $sSQLOrderBy . (empty($this->aSQLViewList['ORDER_BY'])? '' : ', ' . $this->aSQLViewList['ORDER_BY']);
 
 
@@ -1415,8 +1683,55 @@ class LOVD_Object {
             $aSessionViewList['row_link'] = $this->sRowLink; // Implies array creation.
         }
 
+        // Process input values regarding find & replace.
+        // User clicked submit.
+        $bFRSubmit =            isset($_GET['FRSubmitClicked_' . $sViewListID]) &&
+                                $_GET['FRSubmitClicked_' . $sViewListID] == '1';
+        // User clicked preview.
+        $bFRPreview =           isset($_GET['FRPreviewClicked_' . $sViewListID]) &&
+                                $_GET['FRPreviewClicked_' . $sViewListID] == '1';
+        // Selected field name for replace.
+        $sFRFieldname =         isset($_GET['FRFieldname_' . $sViewListID])?
+                                $_GET['FRFieldname_' . $sViewListID] : null;
+        // Display name of selected field.
+        $sFRFieldDisplayname =  isset($_GET['FRFieldDisplayname_' . $sViewListID])?
+                                $_GET['FRFieldDisplayname_' . $sViewListID] : null;
+        // Search query for find & replace.
+        $sFRSearchValue =       isset($_GET['FRSearch_' . $sViewListID])?
+                                $_GET['FRSearch_' . $sViewListID] : null;
+        // Replace value for find & replace.
+        $sFRReplaceValue =      isset($_GET['FRReplace_' . $sViewListID])?
+                                $_GET['FRReplace_' . $sViewListID] : null;
+        // Type of matching.
+        $sFRMatchType =         isset($_GET['FRMatchType_' . $sViewListID])?
+                                $_GET['FRMatchType_' . $sViewListID] : null;
+        // Flag stating whether all field content sould be replaced.
+        $bFRReplaceAll =        isset($_GET['FRReplaceAll_' . $sViewListID]) &&
+                                $_GET['FRReplaceAll_' . $sViewListID] == '1';
+        // Predicted affected row count.
+        $nFRRowsAffected = null;
+        // Find & replace options parameter.
+        $aFROptions = array(
+            'sFRMatchType' =>   $sFRMatchType,
+            'bFRReplaceAll' =>  $bFRReplaceAll
+        );
+
         $nTotal = 0; // Overwrites the previous $nTotal.
         if (!count($aBadSyntaxColumns)) {
+            // Build argument list.
+            $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
+
+            if ($bFRSubmit) {
+                // User has submitted Find&Replace form, apply changes.
+                $this->applyColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
+                                                 $aArgs, $aFROptions);
+            } else if ($bFRPreview) {
+                // User clicked 'preview' in Find&Replace form, add F&R changes as a separate
+                // column in the query.
+                $nFRRowsAffected = $this->previewColumnFindAndReplace($sFRFieldname,
+                    $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue, $aArgs, $aFROptions);
+            }
+
             // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
             // function, but we'll try to avoid that due to extreme slowness in some cases.
             // getRowCountForViewList() will take care of that.
@@ -1425,15 +1740,6 @@ class LOVD_Object {
             // Last checked 2010-01-25, by Ivo Fokkema.
             $_DB->query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
             $_DB->beginTransaction();
-
-            // Build argument list.
-            $aArgs = array();
-            foreach ($aArguments['WHERE'] as $aArg) {
-                $aArgs[] = $aArg;
-            }
-            foreach($aArguments['HAVING'] as $aArg) {
-                $aArgs[] = $aArg;
-            }
 
             // For ALL viewlists, we store the number of hits that we get, including the current filters.
             // For large tables, getting a count can take a long time (especially when using SQL_CALC_FOUND_ROWS).
@@ -1448,6 +1754,7 @@ class LOVD_Object {
             // FIXME: If this count takes longer than 1s, we don't estimate anymore like we used to (see line 1543).
             if (true || !isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
                 $t = microtime(true);
+                // Now, get the total number of hits if no LIMIT was used. Note that $nTotal gets overwritten here.
                 $nTotal = $this->getRowCountForViewList($this->aSQLViewList, $aArgs);
                 $tQ = microtime(true) - $t;
                 $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
@@ -1466,14 +1773,6 @@ class LOVD_Object {
                 $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
                 $bSQLCALCFOUNDROWS = true;
             }
-            $sSQL = 'SELECT ' . $this->aSQLViewList['SELECT'] .
-                   ' FROM ' . $this->aSQLViewList['FROM'] .
-                (!$this->aSQLViewList['WHERE']? '' :
-                   ' WHERE ' . $this->aSQLViewList['WHERE']) .
-                (!$this->aSQLViewList['GROUP_BY']? '' :
-                   ' GROUP BY ' . $this->aSQLViewList['GROUP_BY']) .
-                (!$this->aSQLViewList['HAVING']? '' :
-                   ' HAVING ' . $this->aSQLViewList['HAVING']);
 
             if ($bOptions) {
                 // If the session variable does not exist, create it!
@@ -1486,6 +1785,13 @@ class LOVD_Object {
                         // If the select all button was clicked, fetch all entries and mark them as 'checked' in session.
                         // This query is the same as the viewList query, but without the ORDER BY and LIMIT, so that we can get the full result
                         // of the query.
+                        $sSQL = $this->buildSQL(array(
+                            'SELECT' => $this->aSQLViewList['SELECT'],
+                            'FROM' => $this->aSQLViewList['FROM'],
+                            'WHERE' => $this->aSQLViewList['WHERE'],
+                            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+                            'HAVING' => $this->aSQLViewList['HAVING'],
+                        ));
                         $q = $_DB->query($sSQL, $aArgs);
                         while ($zData = $q->fetchAssoc()) {
                             $zData = $this->generateRowID($zData);
@@ -1521,7 +1827,6 @@ class LOVD_Object {
 
             // ORDER BY will only occur when we estimate we have time for it.
             if ($aSessionViewList['counts'][$sFilterMD5]['t'] < 1 && $aSessionViewList['counts'][$sFilterMD5]['n'] <= $_SETT['lists']['max_sortable_rows']) {
-                $sSQL .= ' ORDER BY ' . $this->aSQLViewList['ORDER_BY'];
                 $bSortableVL = true;
             } else {
                 // Not sortable, indicate this on the VL...
@@ -1529,7 +1834,7 @@ class LOVD_Object {
                 $bSortableVL = false;
                 // 2013-07-03; 3.0-07; However, we do try and sort because in principle, the order is random and this may cause confusion while paginating.
                 //   So, as a result we'll try and sort on the PK. We attempt to determine this from the GROUP BY or ID col in the VL columns list.
-                $sCol= '';
+                $sCol = '';
                 if (isset($this->aSQLViewList['GROUP_BY'])) {
                     $sCol = $this->aSQLViewList['GROUP_BY'];
                 } elseif ($this->aColumnsViewList['id']) {
@@ -1537,9 +1842,7 @@ class LOVD_Object {
                 } elseif ($this->aColumnsViewList['id_']) {
                     $sCol = $this->aColumnsViewList['id_']['db'][0];
                 }
-                if ($sCol) {
-                    $sSQL .= ' ORDER BY ' . $sCol;
-                }
+                $this->aSQLViewList['ORDER_BY'] = $sCol;
             }
 
             if (!$bHideNav && FORMAT == 'text/html') {
@@ -1548,8 +1851,10 @@ class LOVD_Object {
                 // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
                 // of hits AFTER we run the whole query. This means we should just assume
                 // the page number is possible.
-                $sSQL .= ' LIMIT ' . lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
+                $this->aSQLViewList['LIMIT'] = lovd_pagesplitInit(); // Function requires variable names $_GET['page'] and $_GET['page_size'].
             }
+
+            $sSQL = $this->buildSQL($this->aSQLViewList);
 
             // Run the viewList query.
             // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
@@ -1647,6 +1952,56 @@ class LOVD_Object {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
+                // 'checked' attribute values for find & replace menu options.
+                $sFRMatchtypeCheck1 = (!isset($sFRMatchType) || $sFRMatchType == '1')? 'checked' : '';
+                $sFRMatchtypeCheck2 = ($sFRMatchType == '2')? 'checked' : '';
+                $sFRMatchtypeCheck3 = ($sFRMatchType == '3')? 'checked' : '';
+                $sFRReplaceAllCheck = $bFRReplaceAll? 'checked' : '';
+                $sFRRowsAffected = (!is_null($nFRRowsAffected))? strval($nFRRowsAffected) : '';
+
+                // Print options menu for find & replace (hidden by default).
+                print(<<<FROptions
+<DIV id="viewlistFRFormContainer_$sViewListID" class="optionsmenu" style="display: none;">
+    <SPAN>Find &amp; Replace for column
+        <B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>
+        <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
+               value="$sFRFieldname" />
+        <INPUT id="FRFieldDisplayname_$sViewListID" type="hidden"
+               name="FRFieldDisplayname_$sViewListID" value="$sFRFieldDisplayname" />
+        <INPUT id="FRRowsAffected_$sViewListID" type="hidden" value="$sFRRowsAffected" />
+    </SPAN>
+    <BR />
+    <TABLE>
+        <TR>
+            <TD>Text to find</TD>
+            <TD>
+                <INPUT type="text" name="FRSearch_$sViewListID" value="$sFRSearchValue"
+                       style="width: 110px" />
+            </TD>
+            <TD>
+                <INPUT type="radio" name="FRMatchType_$sViewListID" value="1" $sFRMatchtypeCheck1 />Match anywhere
+                <INPUT type="radio" name="FRMatchType_$sViewListID" value="2" $sFRMatchtypeCheck2 />Match at beginning of field
+                <INPUT type="radio" name="FRMatchType_$sViewListID" value="3" $sFRMatchtypeCheck3 />Match at end of field
+            </TD>
+        </TR>
+        <TR>
+            <TD>Replace with</TD>
+            <TD>
+                <INPUT type="text" name="FRReplace_$sViewListID" value="$sFRReplaceValue"
+                       style="width: 110px" />
+            </TD>
+            <TD>
+                <INPUT type="checkbox" name="FRReplaceAll_$sViewListID" value="1" $sFRReplaceAllCheck />Replace everything in field
+            </TD>
+        </TR>
+    </TABLE>
+    <INPUT id="FRPreview_$sViewListID" type="button" value="preview" />
+    <INPUT id="FRCancel_$sViewListID" type="button" value="cancel" />
+    <INPUT id="FRSubmit_$sViewListID" type="button" value="submit" />
+</DIV>
+FROptions
+                );
+
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                       '        <THEAD>' . "\n" .
@@ -1661,13 +2016,15 @@ class LOVD_Object {
 
                     $bSortable   = !empty($aCol['db'][1]) && $bSortableVL; // If we can't sort at all, nothing is sortable.
                     $bSearchable = !empty($aCol['db'][2]);
+                    $nAllowFindAndReplace = (int) !empty($aCol['allowfnr']); // Later allow other columns as well, such as owned_by or statusid or so.
                     $sImg = '';
                     $sAlt = '';
                     if ($bSortable && $aOrder[0] == $sField) {
                         $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
-                    print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') . '>' . "\n" .
+                    print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
+                                 ' data-allowfnr="' . $nAllowFindAndReplace . '" data-fieldname="' . $sField . '">' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
@@ -1692,7 +2049,6 @@ class LOVD_Object {
             print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sObject . ' Quick Download format ### This file can not be imported ###' . "\r\n");
             // FIXME: this has to be done better, we can't see what we're filtering for, because it's in the arguments!
             $sFilter = $WHERE . ($WHERE && $HAVING? ' AND ' : '') . $HAVING;
-            $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
             if ($sFilter) {
                 if (count($aArgs) == substr_count($sFilter, '?')) {
                     foreach ($aArgs as $sArg) {
@@ -1857,19 +2213,62 @@ class LOVD_Object {
                   '        // This has to be run when the document has finished loading everything, because only then can it get the proper width from IE7 and lower!' . "\n" .
                   '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
             if ($bOptions) {
-                print("\n" .
-                      '        // If menu\'s UL doesn\'t exist yet, create it.' . "\n" .
-                      '        if ($(\'#viewlistMenu_' . $sViewListID . '\').attr(\'id\') == undefined) {' . "\n" .
-                      '          var oUL = window.document.createElement(\'ul\');' . "\n" .
-                      '          oUL.setAttribute(\'id\', \'viewlistMenu_' . $sViewListID . '\');' . "\n" .
-                      '          oUL.className = \'jeegoocontext jeegooviewlist\';' . "\n" .
-                      '          window.document.body.appendChild(oUL);' . "\n" .
-                      '        }' . "\n" .
-                      '        // Fix the top border that could not be set through jeegoo\'s style.css.' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').attr(\'style\', \'border-top : 1px solid #000;\');' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').prepend(\'<LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'all\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>Select all <SPAN>entries</SPAN></A></LI><LI class="icon"><A click="check_list[\\\'' . $sViewListID . '\\\'] = \\\'none\\\'; lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\');"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Unselect all</A></LI>\');' . "\n" .
-                      '        $(\'#viewlistMenu_' . $sViewListID . '\').append(\'<LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', true);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries (summary data)</A></LI><LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){lovd_AJAX_viewListDownload(\\\'' . $sViewListID . '\\\', false);});"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download selected entries (summary data)</A></LI>\');' . "\n" .
-                      '        lovd_activateMenu(\'' . $sViewListID . '\');' . "\n\n");
+
+                $sFRMenuOption = '';
+                if ($bFindReplace) {
+                    // Add find & replace menu item to viewlist options menu.
+                    $sFRMenuOption = <<<FRITEM
+'            <LI class="icon">' +
+'                <A click="lovd_FRColumnSelector(\'$sViewListID\');">' +
+'                    <SPAN class="icon" style=""></SPAN>' +
+'                    Find and replace text in column' +
+'                </A>' +
+'            </LI>' +
+FRITEM;
+                }
+
+                print(<<<OPMENU
+        // If menu's UL doesn't exist yet, create it.
+        if ($('#viewlistMenu_$sViewListID').attr('id') == undefined) {
+          var oUL = window.document.createElement('ul');
+          oUL.setAttribute('id', 'viewlistMenu_$sViewListID');
+          oUL.className = 'jeegoocontext jeegooviewlist';
+          window.document.body.appendChild(oUL);
+        }
+        // Fix the top border that could not be set through jeegoo's style.css.
+        $('#viewlistMenu_$sViewListID').attr('style', 'border-top : 1px solid #000;');
+        $('#viewlistMenu_$sViewListID').prepend(
+'            <LI class="icon">' +
+'                <A click="check_list[\'$sViewListID\'] = \'all\'; lovd_AJAX_viewListSubmit(\'$sViewListID\');">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/check.png);"></SPAN>' +
+'                    Select all <SPAN>entries</SPAN>' +
+'                </A>' +
+'            </LI>' +
+'            <LI class="icon">' +
+'                <A click="check_list[\'$sViewListID\'] = \'none\'; lovd_AJAX_viewListSubmit(\'$sViewListID\');">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>' +
+'                    Unselect all' +
+'                </A>' +
+'            </LI>' +
+$sFRMenuOption
+'            ');
+        $('#viewlistMenu_$sViewListID').append(
+'            <LI class="icon">' +
+'                <A click="lovd_AJAX_viewListSubmit(\'$sViewListID\', function(){lovd_AJAX_viewListDownload(\'$sViewListID\', true);});">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>' +
+'                    Download all entries (summary data)' +
+'                </A>' +
+'            </LI>' +
+'            <LI class="icon">' +
+'                <A click="lovd_AJAX_viewListSubmit(\'$sViewListID\', function(){lovd_AJAX_viewListDownload(\'$sViewListID\', false);});">' +
+'                    <SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>' +
+'                    Download selected entries (summary data)' +
+'                </A>' +
+'            </LI>');
+        lovd_activateMenu('$sViewListID');
+OPMENU
+);
+
             }
             print('        check_list[\'' . $sViewListID . '\'] = [];' . "\n" .
                   '      </SCRIPT>' . "\n\n");
