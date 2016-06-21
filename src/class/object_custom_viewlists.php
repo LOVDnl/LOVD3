@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-05-11
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -211,7 +211,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
 
                         // Construct list of user IDs for current user and users who share access with him.
-                        $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(LOVDColleagueType::ALL));
+                        $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                         $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 
                         $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . '(vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';
@@ -377,7 +377,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
 
                             // Construct list of user IDs for current user and users who share access with him.
-                            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(LOVDColleagueType::ALL));
+                            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                             $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 
                             $aSQL['FROM'] .= ' AND (i.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR i.created_by = "' . $_AUTH['id'] . '" OR i.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';

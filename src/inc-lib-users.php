@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-06-17
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -161,7 +161,7 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $sUs
 
 
 
-function lovd_shareAccessForm ($sUserID, $sUserListID, $bAllowGrantEdit = true)
+function lovd_colleagueTableHTML ($sUserID, $sUserListID, $aColleagues = null, $bAllowGrantEdit = true)
 {
     // Returns HTML for form to share access of a user's objects with another
     // user.
@@ -169,17 +169,18 @@ function lovd_shareAccessForm ($sUserID, $sUserListID, $bAllowGrantEdit = true)
     global $_DB;
 
     require_once ROOT_PATH . 'inc-lib-form.php';
-    require_once ROOT_PATH . 'class/object_users.php';
 
-    // Get colleagues of given user from database.
-    $sQuery = 'SELECT
-                 u.id,
-                 u.name,
-                 c.allow_edit
-               FROM ' . TABLE_COLLEAGUES . ' AS c
-                LEFT JOIN ' . TABLE_USERS . ' AS u ON (u.id = c.userid_to)
-               WHERE c.userid_from = ?';
-    $aColleagues = $_DB->query($sQuery, array($sUserID))->fetchAllAssoc();
+    if (is_null($aColleagues)) {
+        // Get colleagues of given user from database.
+        $sQuery = 'SELECT
+                     u.id,
+                     u.name,
+                     c.allow_edit
+                   FROM ' . TABLE_COLLEAGUES . ' AS c
+                    LEFT JOIN ' . TABLE_USERS . ' AS u ON (u.id = c.userid_to)
+                   WHERE c.userid_from = ?';
+        $aColleagues = $_DB->query($sQuery, array($sUserID))->fetchAllAssoc();
+    }
 
     $sEditStyleAttribute = ($bAllowGrantEdit? '' : 'display: none;');
 
@@ -189,7 +190,8 @@ function lovd_shareAccessForm ($sUserID, $sUserListID, $bAllowGrantEdit = true)
     // Note: this is to be parsed by sprintf(), so remember to escape %-signs.
     $sTableColleaguesRow = <<<DOCCOLROW
 <LI id="li_%1\$s">
-    <INPUT type="hidden" name="colleagues[]" value="%1\$s">
+    <INPUT type="hidden" name="colleagues[]" value="%1\$s" />
+    <INPUT type="hidden" name="colleague_name[]" value="%2\$s" />
     <TABLE width="100%%">
         <TR>
             <TD>%2\$s (#%1\$s)</TD>
@@ -218,20 +220,15 @@ DOCCOLROW;
         <TH width="30">&nbsp;</TH>
     </TR>
 </TABLE>
-<FORM action="users/$sUserID?share_access" method="post">
 <UL id="$sUserListID" class="sortable" style="margin-top : 0px; width : 550px;">
 %1\$s
 </UL>
-<INPUT type="submit" value="Save">
-<SPAN>&nbsp;</SPAN>
-<INPUT type="submit" value="Cancel" onclick="window.location.href=\'users/$sUserID\'; return false;" style="border : 1px solid #FF4422;">
-</FORM>
-<BR />
 <SCRIPT type='text/javascript'>
 function lovd_addUserShareAccess(viewlistItem) {
     $('#$sUserListID').append(
         '<LI id="li_' + viewlistItem.ID + '">' +
             '<INPUT type="hidden" name="colleagues[]" value="' + viewlistItem.ID + '">' +
+            '<INPUT type="hidden" name="colleague_name[]" value="' + viewlistItem.Name + '">' +
             '<TABLE width="100%%">' +
                 '<TR>' +
                     '<TD>' + viewlistItem.Name + ' (#' + viewlistItem.ID + ')</TD>' +
@@ -258,7 +255,8 @@ DOCCOL;
         $sColleaguesHTML .= sprintf($sTableColleaguesRow, $aUserFields['id'], $aUserFields['name'],
                                     $sChecked, $sEditStyleAttribute);
     }
-    return sprintf($sTableColleagues, $sColleaguesHTML, $sEditStyleAttribute);
+    $sFullHTML = sprintf($sTableColleagues, $sColleaguesHTML, $sEditStyleAttribute);
+    return array($aColleagues, $sFullHTML);
 }
 
 

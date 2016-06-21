@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2016-06-17
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -163,7 +163,7 @@ class LOVD_Custom extends LOVD_Object {
             }
 
             // Construct list of user IDs for current user and users who share access with him.
-            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(LOVDColleagueType::ALL));
+            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
             $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 
             $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by IN (' . $sOwnerIDsSQL . '))') . '';

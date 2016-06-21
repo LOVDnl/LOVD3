@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-06-17
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -230,14 +230,14 @@ function lovd_getColleagues ($nType = 0)
     }
 
     // If we're looking for the entire list, don't bother looping it.
-    if ($nType == LOVD_COLLEAGUE_ALL) {
+    if ($nType == COLLEAGUE_ALL) {
         return array_keys($_AUTH['colleagues_from']);
     }
 
     foreach ($_AUTH['colleagues_from'] as $nID => $bAllowEdit) {
-        if (($nType & LOVD_COLLEAGUE_CAN_EDIT) && $bAllowEdit) {
+        if (($nType & COLLEAGUE_CAN_EDIT) && $bAllowEdit) {
             $aOut[] = $nID;
-        } elseif ($nType & LOVD_COLLEAGUE_CANNOT_EDIT) {
+        } elseif ($nType & COLLEAGUE_CANNOT_EDIT) {
             $aOut[] = $nID;
         }
     }
@@ -670,8 +670,7 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
         $Data = array($Data);
     }
 
-    $colleagueTypeFlag = ($bMustHaveEditPermission? LOVD_COLLEAGUE_CAN_EDIT :
-                                                    LOVD_COLLEAGUE_ALL);
+    $colleagueTypeFlag = ($bMustHaveEditPermission? COLLEAGUE_CAN_EDIT : COLLEAGUE_ALL);
     $aOwnerIDs = lovd_getColleagues($colleagueTypeFlag);
     if (!$aOwnerIDs) {
         // No colleagues that give this user the enough permissions.

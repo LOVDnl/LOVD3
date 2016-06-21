@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-02-26
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1770,12 +1770,13 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             lovd_AJAX_viewListHideRow(sViewListID, nID);
             objViewListF.total.value --;
             lovd_AJAX_viewListUpdateEntriesString(sViewListID);
-            lovd_AJAX_viewListAddNextRow(sViewListID);
-
             // Also change the search terms in the viewList such that submitting it will not reshow this item.
             objViewListF.search_id.value += ' !' + nID;
             // Does an ltrim, too. But trim() doesn't work in IE < 9.
             objViewListF.search_id.value = objViewListF.search_id.value.replace(/^\s*/, '');
+
+            lovd_AJAX_viewListAddNextRow(sViewListID);
+
             return true;
         }
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-04-20
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -140,6 +140,8 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
             if (objHTTP.readyState == 4) {
                 if (objHTTP.status == 200) {
                     if (objHTTP.responseText.length > 100) {
+                        // Fixme: check if code below can be replaced by just appending the response to the table.
+
                         // Successfully retrieved stuff.
                         var sResponse = objHTTP.responseText;
                         // Clone last TR and fill in the new response data and returns the row.
@@ -484,9 +486,12 @@ window.onload = function ()
 
 
 
-function lovd_selectViewlistRow(sViewlistID, sRowID, callback) {
+function lovd_selectViewlistRow(sViewlistID, sRowID, callback, bRemoveFromVL=true) {
     // Select item at row (sRowID) of viewlist (sViewlistID) and provide the
-    // item to a callback function (callback) as an object.
+    // item to a callback function (callback) as an object. If bRemoveFromVL is
+    // true, the selected item will be removed from the viewlist and the
+    // viewlist will be updated (extending the view to the original number of
+    // rows and making sure the deleted item will not re-occur).
 
     // Collect table headings
     var aHeadings = [];
@@ -507,6 +512,19 @@ function lovd_selectViewlistRow(sViewlistID, sRowID, callback) {
     for (var i=0;i < aHeadings.length; i++) {
         callbackArg[aHeadings[i]] = aFields[i];
     }
+
+    var oViewlistForm = $('#viewlistForm_' + sViewlistID).get(0);
+
+    // Change the search terms in the viewList such that submitting it will not reshow this item.
+    oViewlistForm.search_id.value += ' !' + sRowID;
+    // Does an ltrim, too. But trim() doesn't work in IE < 9.
+    oViewlistForm.search_id.value = oViewlistForm.search_id.value.replace(/^\s*/, '');
+
+    lovd_AJAX_viewListHideRow(sViewlistID, sRowID);
+    oViewlistForm.total.value--;
+    lovd_AJAX_viewListUpdateEntriesString(sViewlistID);
+    lovd_AJAX_viewListAddNextRow(sViewlistID);
+
 
     // Function call to callback with the viewlist row as argument. Format:
     // {'fieldname': 'cell-value'}

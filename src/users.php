@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-06-17
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1115,6 +1115,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // URL: /users/00001?share_access
     // Let the user share access to his objects to other users.
+    require_once ROOT_PATH . 'class/object_users.php';
+    require ROOT_PATH . 'inc-lib-form.php';
 
     define('LOG_EVENT', 'ShareAccess');
 
@@ -1141,12 +1143,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         exit;
     }
 
-    $_T->printHeader();
-    $_T->printTitle('Sharing access');
+    lovd_errorClean();
+
+    $aColleagues = null;
 
     if (POST) {
+
         if (!isset($_POST['colleagues']) || !is_array($_POST['colleagues'])) {
             $_POST['colleagues'] = array();
+        }
+        if (!isset($_POST['colleague_name']) || !is_array($_POST['colleague_name'])) {
+            $_POST['colleague_name'] = array();
         }
         if (!isset($_POST['allow_edit']) || !is_array($_POST['allow_edit'])) {
             $_POST['allow_edit'] = array();
@@ -1154,23 +1161,50 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
 
         // Remove duplicates and combine with edit permissions.
         $aColleagueIDs = array_unique($_POST['colleagues']);
+        $nColleagueCount = count($aColleagueIDs);
         $aColleagues = array();
-        foreach ($aColleagueIDs as $sColleagueID) {
-            $bAllowEdit = in_array($sColleagueID, $_POST['allow_edit']);
-            $aColleagues[] = array('id' => $sColleagueID, 'allow_edit' => $bAllowEdit);
+        for ($i = 0; $i < $nColleagueCount; $i++) {
+            $bAllowEdit = in_array($aColleagueIDs[$i], $_POST['allow_edit']);
+            $aColleagues[] = array('id' => $aColleagueIDs[$i],
+                                   'name' => $_POST['colleague_name'][$i],
+                                   'allow_edit' => $bAllowEdit);
         }
 
-        lovd_setColleagues($sID, $zData['name'], $zData['institute'], $zData['email'],
-                           $aColleagues, $bAllowGrantEdit);
-        lovd_showInfoTable('Saved changes successfully.', 'information');
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        } elseif ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            // User had to enter his/her password for authorization.
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+
+            lovd_setColleagues($sID, $zData['name'], $zData['institute'], $zData['email'],
+                $aColleagues, $bAllowGrantEdit);
+
+            // Confirmation page and redirect.
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
+
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('Successfully updated sharing permissions!', 'success');
+
+            $_T->printFooter();
+            exit;
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
     }
 
-    lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $sID . ')</B> shares access to all
-                       data owned by him with the users listed below.', 'information');
+    list($aColleagues, $sColTable) = lovd_colleagueTableHTML($sID, $sUserListID, $aColleagues,
+                                                             $bAllowGrantEdit);
 
-    print(lovd_shareAccessForm($sID, $sUserListID, $bAllowGrantEdit));
+    $_T->printHeader();
+    $_T->printTitle('Sharing access');
 
-    $_T->printTitle('Select other users', 'H4');
+    lovd_errorPrint();
+
     lovd_showInfoTable('To share access with other users, find the user in the list below, click on
                        the user to add him to the selection. Then click <B>save</B> to save the
                        changes.', 'information');
@@ -1178,11 +1212,32 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Set number of items per page for viewlist.
     $_GET['page_size'] = 10;
 
+    // Set filter for viewlist to hide current colleagues and the user being viewed.
+    $_GET['search_id'] = '!' . $sID;
+    foreach ($aColleagues as $aColleague) {
+        $_GET['search_id'] .= ' !' . $aColleague['id'];
+    }
+
     // Show viewlist to select new users to share access with.
     $_DATA = new LOVD_User();
-    $_DATA->setRowLink('users_share_access', 'javascript:lovd_selectViewlistRow("{{ViewListID}}",
-            "{{ID}}", lovd_addUserShareAccess); return false;');
+    $_DATA->setRowLink('users_share_access',
+        'javascript:lovd_selectViewlistRow("{{ViewListID}}", "{{ID}}", lovd_addUserShareAccess); return false;');
     $_DATA->viewList($sUserListID, array('status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
+
+    lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $sID . ')</B> shares access to all
+                       data owned by him with the users listed below.', 'information');
+
+    print('<FORM action="users/' . $sID . '?share_access" method="post">');
+    // Array which will make up the form table.
+    $aForm = array(
+        array('POST', '', '', '', '0%', '0', '100%'),
+        array('', '', 'print', $sColTable),
+        array('', '', 'print', 'Enter your password for authorization'),
+        array('', '', 'password', 'password', 20),
+        array('', '', 'print', '<INPUT type="submit" value="Save access permissions">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+    );
+    lovd_viewForm($aForm);
+    print('</FORM>');
 
     $_T->printFooter();
     exit;
