@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-05-02
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-22
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -793,7 +793,7 @@ if (POST) {
 
             // General default values.
             // Owned By.
-            if (in_array('owned_by', $aSection['allowed_columns']) && (!isset($aLine['owned_by']) || $aLine['owned_by'] === '')) {
+            if (in_array('owned_by', $aSection['allowed_columns']) && (!isset($aLine['owned_by']) || $aLine['owned_by'] === '') && $sMode != 'update') {
                 // Owned_by not filled in, and not set to LOVD (0) either. Set to user.
                 $aLine['owned_by'] = $_AUTH['id'];
             }

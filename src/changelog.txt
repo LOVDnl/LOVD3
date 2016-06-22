@@ -13,6 +13,10 @@
  * Protein prediction for non-coding transcripts now defaults to "-".
  * Fixed bug; Variants with both a chromosomal DBID and a gene's DBID, were
    assigned new gene-specific DBIDs, instead of reusing the existing one.
+ * Fixed bug; When updating data using the update through import beta feature
+   and leaving the owned_by field out of the file or empty, LOVD would overwrite
+   the existing value with the ID of the user importing the file.
+   Closes #66: "Update import always wants to edit the owned_by field".
 
 
 /**************************
