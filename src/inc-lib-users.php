@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-06-21
+ * Modified    : 2016-06-23
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -190,13 +190,13 @@ function lovd_colleagueTableHTML ($sUserID, $sUserListID, $aColleagues = null, $
     // Note: this is to be parsed by sprintf(), so remember to escape %-signs.
     $sTableColleaguesRow = <<<DOCCOLROW
 <LI id="li_%1\$s">
-    <INPUT type="hidden" name="colleagues[]" value="%1\$s" />
-    <INPUT type="hidden" name="colleague_name[]" value="%2\$s" />
+    <INPUT type="hidden" name="colleagues[]" value="%1\$s">
+    <INPUT type="hidden" name="colleague_name[]" value="%2\$s">
     <TABLE width="100%%">
         <TR>
             <TD>%2\$s (#%1\$s)</TD>
             <TD style="width: 100; text-align: right;">
-                <INPUT type="checkbox" name="allow_edit[]" value="%1\$s" %3\$s style="%4\$s" />
+                <INPUT type="checkbox" name="allow_edit[]" value="%1\$s" %3\$s style="%4\$s">
             </TD>
             <TD width="30" align="right">
                 <A href="#" onclick="$('#li_%1\$s').remove(); return false;" title="Remove">
@@ -216,7 +216,7 @@ DOCCOLROW;
 <TABLE class="sortable_head" style="width : 552px;">
     <TR>
         <TH>Name</TH>
-        <TH style="width: 100; text-align: right;"><SPAN style="%2\$s\$" />Allow edit</SPAN></TH>
+        <TH style="width: 100; text-align: right;"><SPAN style="%2\$s\$">Allow edit</SPAN></TH>
         <TH width="30">&nbsp;</TH>
     </TR>
 </TABLE>
@@ -237,7 +237,7 @@ function lovd_addUserShareAccess (aUser)
                 '<TR>' +
                     '<TD>' + aUser.name + ' (#' + aUser.id + ')</TD>' +
                     '<TD style="width: 100; text-align: right;">' +
-                        '<INPUT type="checkbox" name="allow_edit[]" value="' + aUser.id + '" style="%2\$s" />' +
+                        '<INPUT type="checkbox" name="allow_edit[]" value="' + aUser.id + '" style="%2\$s">' +
                     '</TD>' +
                     '<TD width="30" align="right">' +
                         '<A href="#" onclick="$(\'#li_' + aUser.id + '\').remove(); return false;" title="Remove user">' +

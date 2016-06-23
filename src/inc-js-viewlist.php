@@ -502,7 +502,7 @@ function lovd_passAndRemoveViewListRow (sViewListID, sRowID, aRowData, callback)
     oViewListForm.search_id.value = oViewListForm.search_id.value.replace(/^\s*/, '');
 
     lovd_AJAX_viewListHideRow(sViewListID, sRowID);
-    oViewListForm.total.value--;
+    oViewListForm.total.value --;
     lovd_AJAX_viewListUpdateEntriesString(sViewListID);
     lovd_AJAX_viewListAddNextRow(sViewListID);
 
