@@ -1000,9 +1000,20 @@ if (POST) {
                 $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
                 $aSection['object']->checkFields($aLine, $zData);
                 for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
+                    // When updating, if a error is triggered by a field that is
+                    // not in the file, then this error is unrelated to the data
+                    // currently being processed so we should ignore the error.
+                    if ($sMode == 'update' && !empty($_ERROR['fields'][$i]) && !isset($aLine[$_ERROR['fields'][$i]])) {
+                        // Ignoring error!
+                        unset($_ERROR['fields'][$i], $_ERROR['messages'][$i]);
+                        continue;
+                    }
                     $_ERROR['fields'][$i] = ''; // It wants to highlight a field that's not here right now.
                     $_ERROR['messages'][$i] = 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $_ERROR['messages'][$i];
                 }
+                // Clean array so that next time we loop it (next data line), we won't see empty spaces.
+                $_ERROR['fields'] = array_values($_ERROR['fields']);
+                $_ERROR['messages'] = array_values($_ERROR['messages']);
             }
 
             // General checks: numerical ID, have we seen the ID before, owned_by, created_* and edited_*.
@@ -1077,14 +1088,14 @@ if (POST) {
                         // break: None of the following checks have to be done because column is not imported.
                         break;
                     }
-                    // Following checks are not present in checkfields because they come from the data type wizard. And therefore repeated here.
+                    // Following checks are not present in checkFields() because they come from the data type wizard. And therefore repeated here.
                     // Col_order; numeric and 0 <= col_order <= 255.
                     if ($aLine['col_order'] === '') {
                         $aLine['col_order'] = 0;
                     } elseif (!ctype_digit($aLine['col_order']) || $aLine['col_order'] < 0 || $aLine['col_order'] > 255) {
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Incorrect value for field \'col_order\', which needs to be numeric, between 0 and 255.');
                     }
-                    // All integer columns that are checkboxes on the form, are turned into empty strings by checkFields, but we'll verify them here.
+                    // All integer columns that are checkboxes on the form, are turned into empty strings by checkFields(), but we'll verify them here.
                     // FIXME: Define this array elsewhere?
                     foreach (array('standard', 'mandatory', 'public_view', 'public_add', 'allow_count_all') as $sCol) {
                         if ($aLine[$sCol] === '') {
@@ -1186,16 +1197,16 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Import file contains OMIM ID for disease ' . $aLine['name'] . ', while OMIM ID is missing in database.');
                         }
                         if ($rDiseaseIdOmim && (($rDiseaseIdOmim[1] == $aLine['id_omim']) || ($rDiseaseIdOmim[1] && !$aLine['id_omim']) || (!$rDiseaseIdOmim[1] && !$aLine['id_omim']))) {
-                            // Some error added in checkfields should be removed because soft messages are used.
+                            // Some error added in checkFields() should be removed because soft messages are used.
                             $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with the same name!', $_ERROR['messages']);
-                            // when key is false, no errors are set in checkfields.
+                            // When key is false, no errors are set in checkFields().
                             if ($nKey !== false) {
                                 unset($_ERROR['messages'][$nKey]);
                                 $_ERROR['messages'] = array_values($_ERROR['messages']);
                             }
 
                             $nKey = array_search('Error (' . $sCurrentSection . ', line ' . $nLine . '): Another disease already exists with this OMIM ID!', $_ERROR['messages']);
-                            // when key is false, no errors are set in checkfields.
+                            // When key is false, no errors are set in checkFields().
                             if ($nKey !== false) {
                                 unset($_ERROR['messages'][$nKey]);
                                 $_ERROR['messages'] = array_values($_ERROR['messages']);
