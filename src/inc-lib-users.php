@@ -199,7 +199,7 @@ function lovd_colleagueTableHTML ($sUserID, $sUserListID, $aColleagues = null, $
                 <INPUT type="checkbox" name="allow_edit[]" value="%1\$s" %3\$s style="%4\$s">
             </TD>
             <TD width="30" align="right">
-                <A href="#" onclick="$('#li_%1\$s').remove(); return false;" title="Remove">
+                <A href="#" onclick="lovd_removeUserShareAccess('$sUserListID', '%1\$s'); return false;" title="Remove">
                     <IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0">
                 </A>
             </TD>
@@ -240,13 +240,34 @@ function lovd_addUserShareAccess (aUser)
                         '<INPUT type="checkbox" name="allow_edit[]" value="' + aUser.id + '" style="%2\$s">' +
                     '</TD>' +
                     '<TD width="30" align="right">' +
-                        '<A href="#" onclick="$(\'#li_' + aUser.id + '\').remove(); return false;" title="Remove user">' +
+                        '<A href="#" onclick="lovd_removeUserShareAccess(\'$sUserListID\', \'' + aUser.id + '\'); return false;" title="Remove user">' +
                             '<IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0">' +
                         '</A>' +
                     '</TD>' +
                 '</TR>' +
             '</TABLE>' +
         '</LI>');
+}
+
+
+
+function lovd_removeUserShareAccess (sViewListID, nID)
+{
+    // Removes user from the list of colleagues and reloads the VL with the user
+    //  back in there.
+
+    objViewListF = document.getElementById('viewlistForm_' + sViewListID);
+    objLI = document.getElementById('li_' + nID);
+
+    // First remove from block, simply done (no fancy animation).
+    objLI.parentNode.removeChild(objLI);
+
+    // Reset the viewList.
+    // Does an ltrim, too. But trim() doesn't work in IE < 9.
+    objViewListF.search_id.value = objViewListF.search_id.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
+    lovd_AJAX_viewListSubmit(sViewListID);
+
+    return true;
 }
 </SCRIPT>
 DOCCOL;
