@@ -34,6 +34,8 @@ Website:
   - How to store and select the license; should we just store the license code, or store the attributes of the license - allowed to share, allowed for commercial parties, etc.
   - The Flickr search site (search.flickr.com) has an example of how a search could look like - so not for license, but for ``I want data that I can edit, that I can use commercially'', etc.
   - Storage could still anyways be one column (bit column), but it makes it a bit more simple for the querying method.
+  - Once we have licenses, add a message to the footer similar to (taken from the Ubuntu forums, 2016-06-23):
+    User contributions on this site are licensed under the Creative Commons Attribution Share Alike 4.0 International License. For details and our forum data attribution, retention and privacy policy, see here.
 - Multiple builds: (LOVD 3.5): We should add the flag on which genome is leading also to the transcript side.
 - Email (registration): Add a header similar to "NOTE: this mail contains your password, do not forward to others"
 - Emails: "was previously empty" is also given when "0" is changed to "" (at least in a text field), and that's not correct.
