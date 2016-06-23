@@ -224,19 +224,23 @@ DOCCOLROW;
 %1\$s
 </UL>
 <SCRIPT type='text/javascript'>
-function lovd_addUserShareAccess(viewlistItem) {
+function lovd_addUserShareAccess (aUser)
+{
+    // Adds user to the list of colleagues.
+    // FIXME: How do we standardize this in such a way, that we don't duplicate
+    //  the code for this LI? It's currently in PHP and JS.
     $('#$sUserListID').append(
-        '<LI id="li_' + viewlistItem.ID + '">' +
-            '<INPUT type="hidden" name="colleagues[]" value="' + viewlistItem.ID + '">' +
-            '<INPUT type="hidden" name="colleague_name[]" value="' + viewlistItem.Name + '">' +
+        '<LI id="li_' + aUser.id + '">' +
+            '<INPUT type="hidden" name="colleagues[]" value="' + aUser.id + '">' +
+            '<INPUT type="hidden" name="colleague_name[]" value="' + aUser.name + '">' +
             '<TABLE width="100%%">' +
                 '<TR>' +
-                    '<TD>' + viewlistItem.Name + ' (#' + viewlistItem.ID + ')</TD>' +
+                    '<TD>' + aUser.name + ' (#' + aUser.id + ')</TD>' +
                     '<TD style="width: 100; text-align: right;">' +
-                        '<INPUT type="checkbox" name="allow_edit[]" value="' + viewlistItem.ID + '" style="%2\$s" />' +
+                        '<INPUT type="checkbox" name="allow_edit[]" value="' + aUser.id + '" style="%2\$s" />' +
                     '</TD>' +
                     '<TD width="30" align="right">' +
-                        '<A href="#" onclick="$(\'#li_' + viewlistItem.ID + '\').remove(); return false;" title="Remove user">' +
+                        '<A href="#" onclick="$(\'#li_' + aUser.id + '\').remove(); return false;" title="Remove user">' +
                             '<IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0">' +
                         '</A>' +
                     '</TD>' +
@@ -244,7 +248,6 @@ function lovd_addUserShareAccess(viewlistItem) {
             '</TABLE>' +
         '</LI>');
 }
-
 </SCRIPT>
 DOCCOL;
 

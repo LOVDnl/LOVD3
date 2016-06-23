@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-06-21
+ * Modified    : 2016-06-23
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -486,49 +486,28 @@ window.onload = function ()
 
 
 
-function lovd_selectViewlistRow(sViewlistID, sRowID, callback, bRemoveFromVL=true) {
-    // Select item at row (sRowID) of viewlist (sViewlistID) and provide the
-    // item to a callback function (callback) as an object. If bRemoveFromVL is
-    // true, the selected item will be removed from the viewlist and the
-    // viewlist will be updated (extending the view to the original number of
-    // rows and making sure the deleted item will not re-occur).
+function lovd_passAndRemoveViewListRow (sViewListID, sRowID, aRowData, callback)
+{
+    // Select item at row (sRowID) of ViewList (sViewListID), pass its data (as
+    // received) to the callback function (callback). The selected item will be
+    // removed from the ViewList and the ViewList will be updated (extending the
+    // view to the original number of rows and making sure the deleted item will
+    // not re-occur).
 
-    // Collect table headings
-    var aHeadings = [];
-    $('#viewlistDiv_' + sViewlistID).find('thead th').each(function(index) {
-        aHeadings.push($(this).text().trim());
-    });
+    var oViewListForm = $('#viewlistForm_' + sViewListID).get(0);
 
-    var aFields = [];
-    $('#' + sRowID).find('td').each(function (index) {
-        aFields.push($(this).text().trim());
-    });
-
-    if (aHeadings.length != aFields.length) {
-        throw 'Error: unable to select row from viewlist properly.';
-    }
-
-    var callbackArg = {};
-    for (var i=0;i < aHeadings.length; i++) {
-        callbackArg[aHeadings[i]] = aFields[i];
-    }
-
-    var oViewlistForm = $('#viewlistForm_' + sViewlistID).get(0);
-
-    // Change the search terms in the viewList such that submitting it will not reshow this item.
-    oViewlistForm.search_id.value += ' !' + sRowID;
+    // Change the search terms in the ViewList such that submitting it will not reshow this item.
+    oViewListForm.search_id.value += ' !' + sRowID;
     // Does an ltrim, too. But trim() doesn't work in IE < 9.
-    oViewlistForm.search_id.value = oViewlistForm.search_id.value.replace(/^\s*/, '');
+    oViewListForm.search_id.value = oViewListForm.search_id.value.replace(/^\s*/, '');
 
-    lovd_AJAX_viewListHideRow(sViewlistID, sRowID);
-    oViewlistForm.total.value--;
-    lovd_AJAX_viewListUpdateEntriesString(sViewlistID);
-    lovd_AJAX_viewListAddNextRow(sViewlistID);
+    lovd_AJAX_viewListHideRow(sViewListID, sRowID);
+    oViewListForm.total.value--;
+    lovd_AJAX_viewListUpdateEntriesString(sViewListID);
+    lovd_AJAX_viewListAddNextRow(sViewListID);
 
-
-    // Function call to callback with the viewlist row as argument. Format:
-    // {'fieldname': 'cell-value'}
-    callback(callbackArg);
+    // Function call to callback with the ViewList row as argument.
+    callback(aRowData);
 }
 
 

@@ -209,7 +209,6 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
                     // If no collaborator, hide lines with hidden variants!
                     if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
-
                         // Construct list of user IDs for current user and users who share access with him.
                         $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                         $sOwnerIDsSQL = join(', ', $aOwnerIDs);
@@ -375,7 +374,6 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
                         // If no collaborator, hide hidden individuals (from the join, don't hide the line)!
                         if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
-
                             // Construct list of user IDs for current user and users who share access with him.
                             $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                             $sOwnerIDsSQL = join(', ', $aOwnerIDs);

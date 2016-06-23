@@ -1221,7 +1221,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Show viewlist to select new users to share access with.
     $_DATA = new LOVD_User();
     $_DATA->setRowLink('users_share_access',
-        'javascript:lovd_selectViewlistRow("{{ViewListID}}", "{{ID}}", lovd_addUserShareAccess); return false;');
+        'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}"}, lovd_addUserShareAccess); return false;');
     $_DATA->viewList($sUserListID, array('status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
 
     lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $sID . ')</B> shares access to all
