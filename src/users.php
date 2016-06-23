@@ -131,7 +131,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     }
 
     if ($_AUTH['id'] == $nID || $_AUTH['level'] > $zData['level']) {
-        $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to your entries with other users', 1);
+        $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to ' . ($_AUTH['id'] == $nID? 'your' : 'user\'s') . ' entries with other users', 1);
     }
 
     lovd_showJGNavigation($aNavigation, 'Users');
@@ -602,8 +602,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
+        // FIXME: This function and its use is a bit messy.
         lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' .
-                                  $_SETT['user_levels'][$zData['level']] . ')');
+                                  $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to edit this user. This event has been logged.');
         exit;
     }
 
@@ -714,7 +717,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to edit this user. This event has been logged.');
         exit;
     }
 
@@ -808,7 +814,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     if ($zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        lovd_showPageAccessDenied('Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied('Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to delete this user. This event has been logged.');
         exit;
     }
 
@@ -962,6 +971,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // Throw a user out of the system.
 
     $nID = sprintf('%05d', $_PE[1]);
+    define('PAGE_TITLE', 'Boot user #' . $nID);
     define('LOG_EVENT', 'UserBoot');
 
     // Require manager clearance.
@@ -974,7 +984,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        lovd_showPageAccessDenied(null, 'Boot user #' . $nID, 'No such ID!');
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
         exit;
     }
 
@@ -1014,7 +1025,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        lovd_showPageAccessDenied(null, null, 'No such ID!');
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
         exit;
 
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
@@ -1115,16 +1127,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // URL: /users/00001?share_access
     // Let the user share access to his objects to other users.
+
+    $nID = sprintf('%05d', $_PE[1]);
+    define('PAGE_TITLE', 'Sharing access');
+    define('LOG_EVENT', 'ShareAccess');
+
     require_once ROOT_PATH . 'class/object_users.php';
     require ROOT_PATH . 'inc-lib-form.php';
 
-    define('LOG_EVENT', 'ShareAccess');
-
     // Boolean flag setting whether users can give edit-permissions to their colleagues.
     $bAllowGrantEdit = true;
-
-    $sID = sprintf('%05d', $_PE[1]);
-    $sUserListID = 'user_share_access_' . $sID;
+    $sUserListID = 'user_share_access_' . $nID;
 
     // Get the current user's full name to use in interface/e-mail.
     $sNameQuery = 'SELECT
@@ -1134,20 +1147,24 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
                      u.email
                    FROM ' . TABLE_USERS . ' AS u
                    WHERE u.id = ?';
-    $zData = $_DB->query($sNameQuery, array($sID))->fetchAssoc();
+    $zData = $_DB->query($sNameQuery, array($nID))->fetchAssoc();
 
     // Require special clearance, if user is not editing himself.
     // Necessary level depends on level of user. Special case.
-    if ($sID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
-        lovd_showPageAccessDenied();
+    if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
+        // This is a hack-attempt.
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied('Tried to share access of user ID ' . $nID . ' (' .
+            $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to edit this user. This event has been logged.');
         exit;
     }
-
-    lovd_errorClean();
 
     $aColleagues = null;
 
     if (POST) {
+        lovd_errorClean();
 
         if (!isset($_POST['colleagues']) || !is_array($_POST['colleagues'])) {
             $_POST['colleagues'] = array();
@@ -1178,12 +1195,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         }
 
         if (!lovd_error()) {
-
-            lovd_setColleagues($sID, $zData['name'], $zData['institute'], $zData['email'],
+            lovd_setColleagues($nID, $zData['name'], $zData['institute'], $zData['email'],
                 $aColleagues, $bAllowGrantEdit);
 
             // Confirmation page and redirect.
-            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
 
             $_T->printHeader();
             $_T->printTitle();
@@ -1197,11 +1213,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         }
     }
 
-    list($aColleagues, $sColTable) = lovd_colleagueTableHTML($sID, $sUserListID, $aColleagues,
+    list($aColleagues, $sColTable) = lovd_colleagueTableHTML($nID, $sUserListID, $aColleagues,
                                                              $bAllowGrantEdit);
 
     $_T->printHeader();
-    $_T->printTitle('Sharing access');
+    $_T->printTitle();
 
     lovd_errorPrint();
 
@@ -1213,7 +1229,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_GET['page_size'] = 10;
 
     // Set filter for viewlist to hide current colleagues and the user being viewed.
-    $_GET['search_id'] = '!' . $sID;
+    $_GET['search_id'] = '!' . $nID;
     foreach ($aColleagues as $aColleague) {
         $_GET['search_id'] .= ' !' . $aColleague['id'];
     }
@@ -1224,17 +1240,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}"}, lovd_addUserShareAccess); return false;');
     $_DATA->viewList($sUserListID, array('id', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
 
-    lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $sID . ')</B> shares access to all
+    lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $nID . ')</B> shares access to all
                        data owned by him with the users listed below.', 'information');
 
-    print('<FORM action="users/' . $sID . '?share_access" method="post">');
+    print('<FORM action="users/' . $nID . '?share_access" method="post">' . "\n");
     // Array which will make up the form table.
+    print($sColTable . "\n");
     $aForm = array(
         array('POST', '', '', '', '0%', '0', '100%'),
-        array('', '', 'print', $sColTable),
         array('', '', 'print', 'Enter your password for authorization'),
         array('', '', 'password', 'password', 20),
-        array('', '', 'print', '<INPUT type="submit" value="Save access permissions">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $sID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+        array('', '', 'print', '<INPUT type="submit" value="Save access permissions">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
     );
     lovd_viewForm($aForm);
     print('</FORM>');

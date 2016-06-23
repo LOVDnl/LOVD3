@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-06-21
+ * Modified    : 2016-06-23
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -219,8 +219,10 @@ function lovd_generateRandomID ($l = 10)
 
 
 
-function lovd_getColleagues ($nType = 0)
+function lovd_getColleagues ($nType = COLLEAGUE_ALL)
 {
+    // Return IDs of the users that share their data with the user currently
+    //  logged in.
     global $_AUTH;
 
     $aOut = array();
@@ -666,6 +668,11 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
 
     global $_DB;
 
+    if (!in_array($sType, array('individual', 'phenotype', 'screening', 'variant'))) {
+        // Unknown data type, return false by default.
+        return false;
+    }
+
     if (!is_array($Data)) {
         $Data = array($Data);
     }
@@ -679,17 +686,7 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
     $sColleaguePlaceholders = '(?' . str_repeat(', ?', count($aOwnerIDs) - 1) . ')';
     $sDataPlaceholders = '(?' . str_repeat(', ?', count($Data) - 1) . ')';
 
-    $aTablesByType = array('variant' => TABLE_VARIANTS,
-        'individual' => TABLE_INDIVIDUALS,
-        'phenotype' => TABLE_PHENOTYPES,
-        'screening' => TABLE_SCREENINGS);
-
-    if (!isset($aTablesByType[$sType])) {
-        // Unknown data type, return false by default.
-        return false;
-    }
-
-    $sQ = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
+    $sQ = 'SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sType) . 'S') . ' WHERE id IN ' .
         $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders . ')';
     $q = $_DB->query($sQ, array_merge($Data, $aOwnerIDs));
 
@@ -718,23 +715,18 @@ function lovd_isOwner ($sType, $Data)
         return false;
     }
 
+    if (!in_array($sType, array('individual', 'phenotype', 'screening', 'variant'))) {
+        // Unknown data type, return false by default.
+        return false;
+    }
+
     if (!is_array($Data)) {
         $Data = array($Data);
     }
 
     $sDataPlaceholders = '(?' . str_repeat(', ?', count($Data) - 1) . ')';
 
-    $aTablesByType = array('variant' => TABLE_VARIANTS,
-                           'individual' => TABLE_INDIVIDUALS,
-                           'phenotype' => TABLE_PHENOTYPES,
-                           'screening' => TABLE_SCREENINGS);
-
-    if (!isset($aTablesByType[$sType])) {
-        // Unknown data type, return false by default.
-        return false;
-    }
-
-    $sQ = 'SELECT COUNT(*) FROM ' . $aTablesByType[$sType] . ' WHERE id IN ' .
+    $sQ = 'SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sType) . 'S') . ' WHERE id IN ' .
              $sDataPlaceholders . ' AND (owned_by = ? OR created_by = ?)';
     $q = $_DB->query($sQ, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
 

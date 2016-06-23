@@ -42,21 +42,21 @@
 define('EMAIL_NEW_COLLEAGUE', <<<EMAILDOC
 Dear %1\$s,
 
-%3\$s (%4\$s) has given you access to
-%6\$s in LOVD located at:
+%3\$s (%4\$s) has given you access to %6\$s in LOVD located at:
 %2\$s
 
 If you know this person, you can consider to share access to them so
 they can view and edit your data. You can do so by going to your
 account page, click "Share access to your entries with other users",
 select the appropriate user accounts and click "save".
-Access your account here: %7\$s
+Access your account here:
+%7\$s
 
 If you think this email is not intended for you, please contact the
-sender: %3\$s %5\$s
+sender: %3\$s (%5\$s)
 
 Kind regards,
-    LOVD system at Leiden University Medical Center
+    LOVD system at {$_CONF['institute']}
 EMAILDOC
 );
 
@@ -72,17 +72,15 @@ EMAILDOC
 define('EMAIL_SHARER_NEW_COLLEAGUE', <<<EMAILDOC
 Dear %1\$s,
 
-%2\$s (%3\s) has granted access to your data to
-the following people:
+%2\$s (%3\s) has granted access to your data to the following people:
 %5\$s
 
-If you think this was a mistake, please contact %2\$s
-(%4\$s). You can also manage the permissions yourself from
-your account page:
+If you think this was a mistake, please contact %2\$s (%4\$s).
+You can also manage the permissions yourself from your account page:
 %6\$s
 
 Kind regards,
-    LOVD system at Leiden University Medical Center
+    LOVD system at {$_CONF['institute']}
 EMAILDOC
 );
 
@@ -116,11 +114,9 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $sUs
 
     if ($sUserID == $_AUTH['id']) {
         // User who is granting permissions is the same as who's data is being shared.
-
         $sResourceDescription = 'their data';
     } else {
         // Somebody else (e.g. a manager) is granting access to someone else's data.
-
         $sResourceDescription = 'data of ' . $sUserFullname . ' (' . $sUserInstitute . ')';
 
         // Send notification email to the one who's data is being shared.
@@ -139,7 +135,7 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $sUs
                       $sSharerMailbody, $_SETT['email_headers'], false, false);
     }
 
-
+    // Now loop through new colleagues to send them all one email.
     foreach ($zColleagues as $zColleague) {
         $sRecipientAccountURL = $sApplicationURL . 'users/' . $zColleague['id'];
 
@@ -147,9 +143,6 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $sUs
         $sMailBody = sprintf(EMAIL_NEW_COLLEAGUE, $zColleague['name'], $sApplicationURL,
             $sGranterFullname, $sGranterInstitute, $sGranterEmail, $sResourceDescription,
             $sRecipientAccountURL);
-
-        // Only use Windows-style line endings, so that it looks good on all platforms.
-        $sMailBody = str_replace("\n", "\r\n", $sMailBody);
 
         // Note: email field is new-line separated list of email addresses.
         lovd_sendMail(array(array($zColleague['name'], $zColleague['email'])),
@@ -184,6 +177,8 @@ function lovd_colleagueTableHTML ($sUserID, $sUserListID, $aColleagues = null, $
 
     $sEditStyleAttribute = ($bAllowGrantEdit? '' : 'display: none;');
 
+    // FIXME: This looks a bit messy. Perhaps we can work with some kind of
+    //  templating system to make this cleaner.
     // HTML for row in colleague list. This contains 4 string directives:
     // 1=user's ID, 2=user's name, 3=attribute for edit checkbox (e.g.
     // "checked" or an empty string), 4=css style for the edit checkbox.
@@ -292,8 +287,6 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
 {
     // Removes all existing colleagues for user $sUserID and replaces them with
     // all IDs in $aColleagues.
-    // Throws an exception (Exception) when something goes wrong.
-
     global $_DB;
 
     if (!$bAllowGrantEdit) {
@@ -306,7 +299,7 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
 
     $sOldColleaguesQuery = 'SELECT userid_to FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?';
     $aOldColleagueIDs = $_DB->query($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
-    $aColleagueIDs = array();
+    $aColleagueIDs = array(); // Array with new colleague IDs, to see who's new and who's removed.
 
     $_DB->beginTransaction();
 
@@ -316,9 +309,9 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
     if (count($aColleagues)) {
         // Build parts for multi-row insert query.
         $sPlaceholders = '(?,?,?)' . str_repeat(',(?,?,?)', count($aColleagues)-1);
-        $aData = array();
+        $aData = array(); // Arguments for query.
         foreach ($aColleagues as $aColleague) {
-            array_push($aColleagueIDs, $aColleague['id']);
+            $aColleagueIDs[] = $aColleague['id'];
             array_push($aData, $sUserID, $aColleague['id'], $aColleague['allow_edit']);
         }
 
@@ -334,18 +327,17 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
     lovd_mailNewColleagues($sUserID, $sUserFullname, $sUserInsititute, $sUserEmail, $aNewColleagueIDs);
 
     // Write to log.
-    $aColleagueIDsAdded = array_values(array_diff($aColleagueIDs, $aOldColleagueIDs));
-    $aColleagueIdsRemoved = array_values(array_diff($aOldColleagueIDs, $aColleagueIDs));
+    $aColleagueIDsRemoved = array_values(array_diff($aOldColleagueIDs, $aColleagueIDs));
     $sMessage = 'Updated colleagues for user #' . $sUserID . "\nAdded: ";
-    for ($i = 0; $i < count($aColleagueIDsAdded); $i++) {
-        $aColleagueIDsAdded[$i] = 'user #' . $aColleagueIDsAdded[$i];
+    for ($i = 0; $i < count($aNewColleagueIDs); $i++) {
+        $aNewColleagueIDs[$i] = 'user #' . $aNewColleagueIDs[$i];
     }
-    $sMessage .= $aColleagueIDsAdded? join(', ', $aColleagueIDsAdded) : 'none';
+    $sMessage .= $aNewColleagueIDs? join(', ', $aNewColleagueIDs) : 'none';
     $sMessage .= "\nRemoved: ";
-    for ($i = 0; $i < count($aColleagueIdsRemoved); $i++) {
-        $aColleagueIdsRemoved[$i] = 'user #' . $aColleagueIdsRemoved[$i];
+    for ($i = 0; $i < count($aColleagueIDsRemoved); $i++) {
+        $aColleagueIDsRemoved[$i] = 'user #' . $aColleagueIDsRemoved[$i];
     }
-    $sMessage .= $aColleagueIdsRemoved? join(', ', $aColleagueIdsRemoved) : 'none';
+    $sMessage .= ($aColleagueIDsRemoved? join(', ', $aColleagueIDsRemoved) : 'none');
     $sMessage .= "\n";
     lovd_writeLog('Event', LOG_EVENT, $sMessage);
 }
