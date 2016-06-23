@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2016-02-05
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-23
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -34,23 +35,17 @@ require ROOT_PATH . 'inc-init.php';
 require ROOT_PATH . 'inc-lib-variants.php';
 session_write_close();
 
-$aGenes = lovd_getGeneList();
-
-// First check if $_GET is filled, to avoid errors and notices.
-if (empty($_GET['variant']) || empty($_GET['gene'])) {
+// For protein prediction a transcript identifier and variant description
+// are mandatory. Either a mitochondrial gene or a reference sequence
+// identifier is also required.
+if (empty($_GET['transcript']) || !isset($_GET['variant']) ||
+    (!isset($_GET['gene']) && !isset($_GET['reference']))) {
     die(json_encode(AJAX_DATA_ERROR));
-}
-
-$sGene = $_GET['gene'];
-$sVariant = $_GET['variant'];
-// If gene is defined in the mito_genes_aliases in file inc-init.php use the NCBI gene symbol.
-if (isset($_SETT['mito_genes_aliases'][$_GET['gene']])) {
-    $sGene = $_SETT['mito_genes_aliases'][$_GET['gene']];
-    $sVariant = str_replace($_GET['gene'], $sGene, $_GET['variant']);
 }
 
 // This check must be done after a possible check for mitochondrial genes.
 // Else we might check for a gene name with a mitochondrial gene alias name.
+$aGenes = lovd_getGeneList();
 if (!in_array($_GET['gene'], $aGenes)) {
     die(json_encode(AJAX_DATA_ERROR));
 }
@@ -61,6 +56,7 @@ if (!$_AUTH) {
     die(json_encode(AJAX_NO_AUTH));
 }
 
-$aResult = lovd_getRNAProteinPrediction($sVariant, $sGene);
+$aResult = lovd_getRNAProteinPrediction($_GET['reference'], $_GET['gene'], $_GET['transcript'],
+                                        $_GET['variant']);
 print(json_encode($aResult));
 ?>

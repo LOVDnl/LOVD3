@@ -13,6 +13,10 @@
  * Protein prediction for non-coding transcripts now defaults to "-".
  * Fixed bug; Variants with both a chromosomal DBID and a gene's DBID, were
    assigned new gene-specific DBIDs, instead of reusing the existing one.
+ * Fixed bug; LOVD used to store identifiers for transcript variants that were
+   unstable. Now, protein prediction is done with an NCBI accession number as
+   identifier for the transcript variant.
+   Closes #76: "Unstable identifiers for transcript variants"
 
 
 /**************************

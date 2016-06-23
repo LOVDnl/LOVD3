@@ -37,7 +37,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumBaseTestCase
         $this->select("name=00000001_effect_reported", "label=Probably affects function");
         $this->select("name=00000001_effect_concluded", "label=Probably does not affect function");
         $this->select("name=allele", "label=Maternal (confirmed)");
-        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[10].value");
+        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[11].value");
         $this->assertEquals("g.70443619G>A", $this->getExpression($GenomicDnaChange));
         $this->click("link=PubMed");
         $this->type("name=VariantOnGenome/Reference", "{PMID:[2011]:[2150333]}");
