@@ -62,4 +62,10 @@ if (!isset($_INI['test']['root_url'])) {
 }
 define('ROOT_URL', $_INI['test']['root_url']);
 
+// Check if XDebug session should be started.
+$bConfigXDebug = isset($_INI['test']['xdebug_enabled']) &&
+                 $_INI['test']['xdebug_enabled'] == 'true';
+define('XDEBUG_ENABLED', $bConfigXDebug);
+$bXDebugStatus = false;
+
 set_include_path(get_include_path() . PATH_SEPARATOR . ROOT_PATH . '/tests/selenium_tests');

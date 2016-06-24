@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-05-30
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-17
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -594,7 +594,7 @@ function lovd_matchUsername ($s)
 
 
 
-function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $aCc = array(), $aBcc = array())
+function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwdAdmin = true, $aCc = array(), $aBcc = array())
 {
     // Format:
     // $aTo, $aCc, $aBcc = array(
@@ -653,10 +653,10 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bFwdAdmin = true, $
         $sSubject = 'FW: ' . $sSubject;
         // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
         $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
-        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), false);
+        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders ? PHP_EOL . $sAdditionalHeaders : ''), $bHalt, false);
     } elseif (!$bMail) {
         // $sSubject is used here as it can always be used to describe the email type. This function also logs the email error.
-        lovd_emailError(LOG_EVENT, $sSubject, $sTo, true);
+        lovd_emailError(LOG_EVENT, $sSubject, $sTo, $bHalt);
     }
 
     return $bMail;

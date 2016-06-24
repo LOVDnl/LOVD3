@@ -22,6 +22,10 @@
    Closes #53: "Importing records fails on existing fields in database".
  * Updated copyright notice in the page footer to clarify the copyright covers
    the software, not the contents of the database.
+ * Added possibility for sharing access to one's data with others. One can
+   make another user a 'colleague' and let them view (and optionally edit)
+   their submissions.
+   Closes #76: "Unstable identifiers for transcript variants bug major"
 
 
 /**************************

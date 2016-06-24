@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-06-09
+ * Modified    : 2016-06-23
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,6 +33,7 @@
 
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+require ROOT_PATH . 'inc-lib-users.php';
 
 if ($_AUTH) {
     // If authorized, check for updates.
@@ -128,6 +129,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // Managers and up, not viewing own account, not higher level than other user.
         $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     }
+
+    if ($_AUTH['id'] == $nID || $_AUTH['level'] > $zData['level']) {
+        $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to ' . ($_AUTH['id'] == $nID? 'your' : 'user\'s') . ' entries with other users', 1);
+    }
+
     lovd_showJGNavigation($aNavigation, 'Users');
 
 
@@ -153,7 +159,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     // URL: /users?create
-    // URL: users?register
+    // URL: /users?register
     // Create a new user, or self-register a new submitter.
 
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
@@ -494,7 +500,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                 $sSubject = 'LOVD account registration'; // Don't just change this; lovd_sendMail() is parsing it.
 
                 // Send mail.
-                $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], $_CONF['send_admin_submissions'], $aCc);
+                $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], true, $_CONF['send_admin_submissions'], $aCc);
             } else {
                 $bMail = 0; // Does not evaluate to True (mention we've sent the email), but doesn't equal False either (mention we failed to send the email).
             }
@@ -553,7 +559,6 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     // Check form (IP address allow list).
     lovd_includeJS('inc-js-submit-userform.php');
 
-    // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
           '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
 
@@ -605,15 +610,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Require special clearance, if user is not editing himself.
-    // Neccessary level depends on level of user. Special case.
+    // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
-        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-        $_T->printFooter();
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' .
+                                  $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to edit this user. This event has been logged.');
         exit;
     }
 
@@ -722,15 +727,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     require ROOT_PATH . 'inc-lib-form.php';
 
     // Require special clearance, if user is not editing himself.
-    // Neccessary level depends on level of user. Special case.
+    // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_writeLog('Error', 'HackAttempt', 'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
-        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
-        $_T->printFooter();
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to edit this user. This event has been logged.');
         exit;
     }
 
@@ -824,11 +828,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     if ($zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_writeLog('Error', 'HackAttempt', 'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
-        lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
-        $_T->printFooter();
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied('Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to delete this user. This event has been logged.');
         exit;
     }
 
@@ -978,10 +981,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
-    // users/00001?boot
+    // URL: /users/00001?boot
     // Throw a user out of the system.
 
     $nID = sprintf('%05d', $_PE[1]);
+    define('PAGE_TITLE', 'Boot user #' . $nID);
     define('LOG_EVENT', 'UserBoot');
 
     // Require manager clearance.
@@ -994,11 +998,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        $_T->printHeader();
-        $_T->printTitle('Boot user #' . $nID);
-
-        lovd_showInfoTable('No such ID!', 'stop');
-        $_T->printFooter();
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
         exit;
     }
 
@@ -1020,8 +1021,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'unlock'))) {
-    // users/00001?lock
-    // users/00001?unlock
+    // URL: /users/00001?lock
+    // URL: /users/00001?unlock
     // Lock / unlock a user.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -1038,10 +1039,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_showInfoTable('No such ID!', 'stop');
-        $_T->printFooter();
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
         exit;
 
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
@@ -1069,7 +1068,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
-    // URL: users/00001?submissions
+    // URL: /users/00001?submissions
     // Manage unfinished submissions
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -1135,4 +1134,143 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     $_T->printFooter();
     exit;
 }
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
+    // URL: /users/00001?share_access
+    // Let the user share access to his objects to other users.
+
+    $nID = sprintf('%05d', $_PE[1]);
+    define('PAGE_TITLE', 'Sharing access');
+    define('LOG_EVENT', 'ShareAccess');
+
+    require_once ROOT_PATH . 'class/object_users.php';
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    // Boolean flag setting whether users can give edit-permissions to their colleagues.
+    $bAllowGrantEdit = true;
+    $sUserListID = 'user_share_access_' . $nID;
+
+    // Get the current user's full name to use in interface/e-mail.
+    $sNameQuery = 'SELECT
+                     u.name,
+                     u.level,
+                     u.institute,
+                     u.email
+                   FROM ' . TABLE_USERS . ' AS u
+                   WHERE u.id = ?';
+    $zData = $_DB->query($sNameQuery, array($nID))->fetchAssoc();
+
+    // Require special clearance, if user is not editing himself.
+    // Necessary level depends on level of user. Special case.
+    if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
+        // This is a hack-attempt.
+        // FIXME: This function and its use is a bit messy.
+        lovd_showPageAccessDenied('Tried to share access of user ID ' . $nID . ' (' .
+            $_SETT['user_levels'][$zData['level']] . ')',
+            PAGE_TITLE,
+            'Not allowed to edit this user. This event has been logged.');
+        exit;
+    }
+
+    $aColleagues = null;
+
+    if (POST) {
+        lovd_errorClean();
+
+        if (!isset($_POST['colleagues']) || !is_array($_POST['colleagues'])) {
+            $_POST['colleagues'] = array();
+        }
+        if (!isset($_POST['colleague_name']) || !is_array($_POST['colleague_name'])) {
+            $_POST['colleague_name'] = array();
+        }
+        if (!isset($_POST['allow_edit']) || !is_array($_POST['allow_edit'])) {
+            $_POST['allow_edit'] = array();
+        }
+
+        // Remove duplicates and combine with edit permissions.
+        $aColleagueIDs = array_unique($_POST['colleagues']);
+        $nColleagueCount = count($aColleagueIDs);
+        $aColleagues = array();
+        for ($i = 0; $i < $nColleagueCount; $i++) {
+            $bAllowEdit = in_array($aColleagueIDs[$i], $_POST['allow_edit']);
+            $aColleagues[] = array('id' => $aColleagueIDs[$i],
+                                   'name' => $_POST['colleague_name'][$i],
+                                   'allow_edit' => $bAllowEdit);
+        }
+
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+        } elseif ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            // User had to enter his/her password for authorization.
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+        }
+
+        if (!lovd_error()) {
+            lovd_setColleagues($nID, $zData['name'], $zData['institute'], $zData['email'],
+                $aColleagues, $bAllowGrantEdit);
+
+            // Confirmation page and redirect.
+            header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
+
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('Successfully updated sharing permissions!', 'success');
+
+            $_T->printFooter();
+            exit;
+        } else {
+            // Because we're sending the data back to the form, I need to unset the password fields!
+            unset($_POST['password']);
+        }
+    }
+
+    list($aColleagues, $sColTable) = lovd_colleagueTableHTML($nID, $sUserListID, $aColleagues,
+                                                             $bAllowGrantEdit);
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    lovd_errorPrint();
+
+    lovd_showInfoTable('To share access with other users, find the user in the list below, click on
+                       the user to add him to the selection. Then click <B>save</B> to save the
+                       changes.', 'information');
+
+    // Set number of items per page for viewlist.
+    $_GET['page_size'] = 10;
+
+    // Set filter for viewlist to hide current colleagues and the user being viewed.
+    $_GET['search_id'] = '!' . $nID;
+    foreach ($aColleagues as $aColleague) {
+        $_GET['search_id'] .= ' !' . $aColleague['id'];
+    }
+
+    // Show viewlist to select new users to share access with.
+    $_DATA = new LOVD_User();
+    $_DATA->setRowLink('users_share_access',
+        'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}"}, lovd_addUserShareAccess); return false;');
+    $_DATA->viewList($sUserListID, array('id', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
+
+    lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $nID . ')</B> shares access to all
+                       data owned by him with the users listed below.', 'information');
+
+    print('<FORM action="users/' . $nID . '?share_access" method="post">' . "\n");
+    // Array which will make up the form table.
+    print($sColTable . "\n");
+    $aForm = array(
+        array('POST', '', '', '', '0%', '0', '100%'),
+        array('', '', 'print', 'Enter your password for authorization'),
+        array('', '', 'password', 'password', 20),
+        array('', '', 'print', '<INPUT type="submit" value="Save access permissions">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . $_PE[0] . '/' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
+    );
+    lovd_viewForm($aForm);
+    print('</FORM>');
+
+    $_T->printFooter();
+    exit;
+}
+
 ?>

@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-02-05
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-21
+ * For LOVD    : 3.0-16
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -209,7 +209,11 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
                     // If no collaborator, hide lines with hidden variants!
                     if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
-                        $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . '(vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by = "' . $_AUTH['id'] . '"') . ')';
+                        // Construct list of user IDs for current user and users who share access with him.
+                        $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
+                        $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+
+                        $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . '(vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';
                     }
                     break;
 
@@ -370,7 +374,11 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
                         // If no collaborator, hide hidden individuals (from the join, don't hide the line)!
                         if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
-                            $aSQL['FROM'] .= ' AND (i.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR i.created_by = "' . $_AUTH['id'] . '" OR i.owned_by = "' . $_AUTH['id'] . '"') . ')';
+                            // Construct list of user IDs for current user and users who share access with him.
+                            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
+                            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+
+                            $aSQL['FROM'] .= ' AND (i.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR i.created_by = "' . $_AUTH['id'] . '" OR i.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';
                         }
                         $aSQL['FROM'] .= ')';
                     }

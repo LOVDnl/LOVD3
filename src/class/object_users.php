@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-09
+ * Modified    : 2016-06-13
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -76,6 +76,7 @@ class LOVD_User extends LOVD_Object {
                                            '(u.login_attempts >= 3) AS locked, ' .
                                            'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
                                            'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
+                                           'GROUP_CONCAT(DISTINCT col.userid_to, ";", ucol.name SEPARATOR ";;") AS __colleagues,' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
@@ -84,7 +85,9 @@ class LOVD_User extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (u.created_by = uc.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_COLLEAGUES . ' AS col ON (u.id = col.userid_from) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ucol ON (col.userid_to = ucol.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'u.id';
 
         // SQL code for viewing a list of users.
@@ -121,6 +124,7 @@ class LOVD_User extends LOVD_Object {
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
                         'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'colleagues_' => '', // Other users that may access this user's data.
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
                         'status_' => array('Status', LEVEL_MANAGER),
@@ -491,6 +495,9 @@ class LOVD_User extends LOVD_Object {
                 $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
                 $zData['ownes_'] = $sOwnes;
             }
+
+            $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
+            $zData['colleagues_'] = $this->lovd_getObjectLinksHTML($zData['colleagues'], 'users/%s');
 
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');

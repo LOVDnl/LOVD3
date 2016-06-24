@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-01-29
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-23
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -28,6 +29,9 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+
+
 
 function lovd_calculateVersion ($sVersion)
 {
@@ -210,6 +214,38 @@ function lovd_generateRandomID ($l = 10)
     $nStart = mt_rand(0, 32-$l);
     return substr(md5(microtime()), $nStart, $l);
 }
+
+
+
+
+
+function lovd_getColleagues ($nType = COLLEAGUE_ALL)
+{
+    // Return IDs of the users that share their data with the user currently
+    //  logged in.
+    global $_AUTH;
+
+    $aOut = array();
+
+    if (!isset($_AUTH) || !isset($_AUTH['colleagues_from'])) {
+        return $aOut;
+    }
+
+    // If we're looking for the entire list, don't bother looping it.
+    if ($nType == COLLEAGUE_ALL) {
+        return array_keys($_AUTH['colleagues_from']);
+    }
+
+    foreach ($_AUTH['colleagues_from'] as $nID => $bAllowEdit) {
+        if (($nType & COLLEAGUE_CAN_EDIT) && $bAllowEdit) {
+            $aOut[] = $nID;
+        } elseif ($nType & COLLEAGUE_CANNOT_EDIT) {
+            $aOut[] = $nID;
+        }
+    }
+    return $aOut;
+}
+
 
 
 
@@ -568,19 +604,15 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             return lovd_isAuthorized('gene', $aGenes, $bSetUserLevel);
         case 'variant':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'individual':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'phenotype':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         case 'screening':
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
-            $bOwner = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ') AND (owned_by = ? OR created_by = ?)', array_merge($Data, array($_AUTH['id'], $_AUTH['id'])))->fetchColumn();
             break;
         default:
             return false;
@@ -592,15 +624,16 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         // Level has already been set by recursive call.
         return 1;
     }
-    // Check for ownership.
-    if ($bOwner && $_CONF['allow_submitter_mods']) {
+
+    $bOwner = lovd_isOwner($sType, $Data);
+    if (($bOwner || lovd_isColleagueOfOwner($sType, $Data, true)) && $_CONF['allow_submitter_mods']) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_OWNER;
         }
         return 1;
     }
     // Collaborator OR Owner, but not allowed to edit own entries.
-    if ($Auth === 0 || $bOwner) {
+    if ($Auth === 0 || $bOwner || lovd_isColleagueOfOwner($sType, $Data, false)) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_COLLABORATOR;
         }
@@ -610,6 +643,94 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         $_AUTH['level'] = LEVEL_SUBMITTER;
     }
     return false;
+}
+
+
+
+
+
+function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true)
+{
+    // Checks if the current user (specified by global $_AUTH) is owner of the
+    // data objects.
+    // Params:
+    // $sType       Type of the data object to check (string)
+    // $Data        ID of object (string) or array of IDs of multiple objects
+    //              (array of strings). Returns true if user is a colleague of
+    //              some owner for ALL of the objects.
+    // $bMustHaveEditPermission
+    //              Flag, if true this function returns only true if the
+    //              current user is a colleague of the owner of $Data with
+    //              explicit edit permission as defined by field 'allow_edit'
+    //              in TABLE_COLLEAGUES.
+    // Return: True if all of the objects of type $sType with an ID in $Data
+    //         are owned or created by a colleague of the current user.
+
+    global $_DB;
+
+    if (!in_array($sType, array('individual', 'phenotype', 'screening', 'variant'))) {
+        // Unknown data type, return false by default.
+        return false;
+    }
+
+    if (!is_array($Data)) {
+        $Data = array($Data);
+    }
+
+    $colleagueTypeFlag = ($bMustHaveEditPermission? COLLEAGUE_CAN_EDIT : COLLEAGUE_ALL);
+    $aOwnerIDs = lovd_getColleagues($colleagueTypeFlag);
+    if (!$aOwnerIDs) {
+        // No colleagues that give this user the enough permissions.
+        return false;
+    }
+    $sColleaguePlaceholders = '(?' . str_repeat(', ?', count($aOwnerIDs) - 1) . ')';
+    $sDataPlaceholders = '(?' . str_repeat(', ?', count($Data) - 1) . ')';
+
+    $sQ = 'SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sType) . 'S') . ' WHERE id IN ' .
+        $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders . ')';
+    $q = $_DB->query($sQ, array_merge($Data, $aOwnerIDs));
+
+    return ($q !== false && intval($q->fetchColumn()) == count($Data));
+}
+
+
+
+
+
+function lovd_isOwner ($sType, $Data)
+{
+    // Checks if the current user (specified by global $_AUTH) is owner of the
+    // data objects.
+    // Params:
+    // $sType       Type of the data object to check (string)
+    // $Data        ID of object (string) or array of IDs of multiple objects
+    //              (array of strings). Returns true if user is owner for ALL
+    //              of the objects.
+    // Return: True if all of the objects of type $sType with an ID in $Data
+    //         are owned or created by current user.
+    global $_AUTH, $_DB;
+
+    if (!isset($_AUTH) || !$_AUTH) {
+        // No authentication -- cannot be owner of anything.
+        return false;
+    }
+
+    if (!in_array($sType, array('individual', 'phenotype', 'screening', 'variant'))) {
+        // Unknown data type, return false by default.
+        return false;
+    }
+
+    if (!is_array($Data)) {
+        $Data = array($Data);
+    }
+
+    $sDataPlaceholders = '(?' . str_repeat(', ?', count($Data) - 1) . ')';
+
+    $sQ = 'SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sType) . 'S') . ' WHERE id IN ' .
+             $sDataPlaceholders . ' AND (owned_by = ? OR created_by = ?)';
+    $q = $_DB->query($sQ, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
+
+    return ($q !== false && intval($q->fetchColumn()) == count($Data));
 }
 
 

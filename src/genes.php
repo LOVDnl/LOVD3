@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-05-12
+ * Modified    : 2016-06-21
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1686,7 +1686,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             $_GET['search_id'] = '!0';
         }
         $_GET['page_size'] = 10;
-        $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_authorizeUser(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_name}}\', \'{{zData_level}}\'); return false;');
+        $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}", level: "{{zData_level}}"}, lovd_authorizeUser); return false;');
         $_DATA->viewList('Genes_AuthorizeUser', array('id', 'status_', 'last_login_', 'created_date_'), true); // Create known viewListID for lovd_unauthorizeUser().
 
 
@@ -1752,30 +1752,16 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 <?php
     if (ACTION == 'authorize') {
 ?>
-        function lovd_authorizeUser (sViewListID, nID, sName, nLevel)
+        function lovd_authorizeUser (aData)
         {
-            // Moves the user to the Authorized Users block and removes the row from the viewList.
-            objViewListF = document.getElementById('viewlistForm_' + sViewListID);
-            objElement = document.getElementById(nID);
-            objElement.style.cursor = 'progress';
+            // Creates the user to the Authorized Users block.
 
             objUsers = document.getElementById('curator_list');
             oLI = document.createElement('LI');
-            oLI.id = 'li_' + nID;
-            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + nID + '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' + sName + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + nID + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + nLevel + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + nID + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'Genes_AuthorizeUser\', \'' + nID + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
+            oLI.id = 'li_' + aData.id;
+            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + aData.id + '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' + aData.name + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + aData.id + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + aData.level + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + aData.id + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'Genes_AuthorizeUser\', \'' + aData.id + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
             objUsers.appendChild(oLI);
 
-            // Then, remove this row from the table.
-            objElement.style.cursor = '';
-            lovd_AJAX_viewListHideRow(sViewListID, nID);
-            objViewListF.total.value --;
-            lovd_AJAX_viewListUpdateEntriesString(sViewListID);
-            lovd_AJAX_viewListAddNextRow(sViewListID);
-
-            // Also change the search terms in the viewList such that submitting it will not reshow this item.
-            objViewListF.search_id.value += ' !' + nID;
-            // Does an ltrim, too. But trim() doesn't work in IE < 9.
-            objViewListF.search_id.value = objViewListF.search_id.value.replace(/^\s*/, '');
             return true;
         }
 
