@@ -160,13 +160,14 @@ function lovd_checkHGVS (e)
 
 
 
-function jq_escape( jqstr ) {
+function jq_escape (jqstr)
+{
     // Escape characters in jQuery selectors (e.g. '/' becomes '\\/').
     // Based on: https://learn.jquery.com/using-jquery-core/faq/how-do-i-select-an-element-by-an-id-that-has-characters-used-in-css-notation/
     if (typeof(jqstr) == 'string') {
         return jqstr.replace(/(:|\.|\[|\]|,|\/)/g, "\\$1");
     }
-    return '';
+    return jqstr;
 }
 
 
