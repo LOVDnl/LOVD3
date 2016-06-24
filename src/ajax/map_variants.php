@@ -437,10 +437,7 @@ if (!empty($aVariants)) {
                                 }
 
                                 // Get the p. description too.
-                                // FIXME: When mapping multiple variants in one gene, this query is repeated for each variants. Store ID?
-//                                $sTranscriptNum = $_DB->query('SELECT id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sTranscriptNM))->fetchColumn();
                                 // This takes about 0.9-1.1 second...
-//                                $sVariant = $sRefseqUD . '(' . $aTranscript['gene'] . '_v' . $sTranscriptNum . '):' . $aSQL[1][7];
                                 $aPrediction = lovd_getRNAProteinPrediction($sRefseqUD, $aTranscript['gene'], $sTranscriptNM, $aSQL[1][7]);
 
                                 $aSQL[1][8] = (empty($aPrediction['predict']['RNA'])? '' : $aPrediction['predict']['RNA']);
@@ -664,7 +661,6 @@ if (!empty($aVariants)) {
                     }
 
                     // Get the p. description too.
-//                    $sVariant = $sRefseqUD . '(' . $sSymbol . '_v' . $aFieldsTranscript['id_mutalyzer'] . '):' . $aVariantOnTranscriptSQL[1][7];
                     $aPrediction = lovd_getRNAProteinPrediction($sRefseqUD, $sSymbol,
                         $aFieldsTranscript['id_ncbi'], $aVariantOnTranscriptSQL[1][7]);
 

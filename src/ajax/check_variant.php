@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-25
- * Modified    : 2016-06-23
+ * Modified    : 2016-06-24
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -38,8 +38,8 @@ session_write_close();
 // For protein prediction a transcript identifier and variant description
 // are mandatory. Either a mitochondrial gene or a reference sequence
 // identifier is also required.
-if (empty($_GET['transcript']) || !isset($_GET['variant']) ||
-    (!isset($_GET['gene']) && !isset($_GET['reference']))) {
+if (empty($_GET['transcript']) || empty($_GET['variant']) ||
+    (empty($_GET['gene']) && empty($_GET['reference']))) {
     die(json_encode(AJAX_DATA_ERROR));
 }
 

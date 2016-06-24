@@ -5,7 +5,6 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
 {
     public function testPostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividual()
     {
-        $this->open(ROOT_URL . "/src/genes/IVD");
         $this->open(ROOT_URL . "/src/screenings/IVD");
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/IVD$/', $this->getLocation()));
         $this->click("css=#0000000002 > td.ordered");

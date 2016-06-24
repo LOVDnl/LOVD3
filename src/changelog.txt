@@ -13,10 +13,15 @@
  * Protein prediction for non-coding transcripts now defaults to "-".
  * Fixed bug; Variants with both a chromosomal DBID and a gene's DBID, were
    assigned new gene-specific DBIDs, instead of reusing the existing one.
- * Fixed bug; LOVD used to store identifiers for transcript variants that were
-   unstable. Now, protein prediction is done with an NCBI accession number as
-   identifier for the transcript variant.
-   Closes #76: "Unstable identifiers for transcript variants"
+ * Fixed bug; LOVD used to store Mutalyzer identifiers for transcript variants,
+   but they were found to be unstable. Now, Mutalyzer has a new feature that
+   works around this and now protein prediction in LOVD is done with an NCBI
+   accession number as identifier for the transcript variant.
+   Closes #76: "Unstable identifiers for transcript variants".
+ * Clarified that the gene list during variant submission only shows genes with
+   transcripts.
+ * The currently selected gene is now also updated when the "all screenings for
+   gene" page is loaded.
 
 
 /**************************
