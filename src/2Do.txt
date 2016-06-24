@@ -7,7 +7,7 @@ If bugs have been closed, mark them in the changelog.
 git pull, git commit, git log, git tag -a -m 'Tag 3.0-15' '3.0-15', git push, git push --tags
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
-Update download.php, news.php (mark closed bugs), package_update.php, sync docs dirs. Update trac. Update Facebook & twitter.
+Update download.php, news.php (mark closed bugs), package_update.php, sync docs dirs. Update GitHub. Update Facebook & Twitter.
 
 Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)

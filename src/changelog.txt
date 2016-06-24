@@ -30,7 +30,7 @@
  * Added possibility for sharing access to one's data with others. One can
    make another user a 'colleague' and let them view (and optionally edit)
    their submissions.
-   Closes #76: "Unstable identifiers for transcript variants bug major"
+   Closes #51: "Sharing permissions".
  * Fixed bug; LOVD used to store Mutalyzer identifiers for transcript variants,
    but they were found to be unstable. Now, Mutalyzer has a new feature that
    works around this and now protein prediction in LOVD is done with an NCBI
