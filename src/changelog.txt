@@ -4,6 +4,16 @@
  *
  *************/
 
+ /**************************
+ * 3.0 Build 16 ()
+ * 2016-06-..
+ *********/
+ * Added possibility for sharing access to one's data with others. One can
+   make another user a 'colleague' and let them view (and optionally edit)
+   their submissions.
+   Closes #76: "Unstable identifiers for transcript variants bug major"
+
+
 /**************************
  * 3.0 Build 15 (tag:3.0-15)
  * 2016-05-02
