@@ -5,14 +5,19 @@
  *************/
 
 /**************************
- * 3.0 Build 16 ()
- * 2016-06-..
+ * 3.0 Build 16 (tag:3.0-16)
+ * 2016-06-24
  *********/
  * Fixed bug; RNA prediction of a variant affecting splicing was 'r.(?)' instead
    of 'r.spl?'.
  * Protein prediction for non-coding transcripts now defaults to "-".
  * Fixed bug; Variants with both a chromosomal DBID and a gene's DBID, were
    assigned new gene-specific DBIDs, instead of reusing the existing one.
+ * Added multiple clarifications on the user account form and in the emails sent
+   by LOVD to new submitters about the IP address allow list. Users setting that
+   field are also now warned about the risks.
+   Closes #69: "Clarify IP allow list functionality on form and confirmation
+   email".
  * Fixed bug; When updating data using the update through import beta feature
    and leaving the owned_by field out of the file or empty, LOVD would overwrite
    the existing value with the ID of the user importing the file.
