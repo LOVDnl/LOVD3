@@ -44,11 +44,11 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumBaseTestCase
         $this->select("name=00000002_effect_reported", "label=Probably affects function");
         $this->select("name=00000002_effect_concluded", "label=Probably does not affect function");
         $this->type("name=00000003_VariantOnTranscript/Exon", "3");
-        $DnaChange = $this->getEval("window.document.getElementById('variantForm').elements[11].value");
+        $DnaChange = $this->getEval("window.document.getElementById('variantForm').elements[12].value");
         $this->assertEquals("c.62T>A", $this->getExpression($DnaChange));
-        $RnaChange2 = $this->getEval("window.document.getElementById('variantForm').elements[13].value");
+        $RnaChange2 = $this->getEval("window.document.getElementById('variantForm').elements[14].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $this->getExpression($RnaChange2)));
-        $ProteinChange2 = $this->getEval("window.document.getElementById('variantForm').elements[14].value");
+        $ProteinChange2 = $this->getEval("window.document.getElementById('variantForm').elements[15].value");
         $this->assertEquals("p.(Leu21Gln)", $this->getExpression($ProteinChange2));
         $this->select("name=00000003_effect_reported", "label=Probably affects function");
         $this->select("name=00000003_effect_concluded", "label=Probably does not affect function");
