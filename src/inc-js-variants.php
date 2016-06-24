@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2016-06-23
+ * Modified    : 2016-06-24
  * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -124,6 +124,8 @@ function lovd_checkHGVS (e)
                         // Only enable the mapping buttons when there are transcripts added to this variant.
                         oVariantDNA.siblings('button:eq(0)').show();
                         oProtein.siblings('button:eq(0)').show();
+                        // Hide possible 'view prediction button'
+                        $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
                     }
                 }
             });
@@ -139,6 +141,8 @@ function lovd_checkHGVS (e)
             // Only enable the mapping buttons when there are transcripts added to this variant.
             oVariantDNA.siblings('button:eq(0)').show();
             oProtein.siblings('button:eq(0)').show();
+            // Hide possible 'view prediction button'
+            $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
         }
 
     } else {
@@ -152,6 +156,18 @@ function lovd_checkHGVS (e)
     return false;
 }
 
+
+
+
+
+function jq_escape( jqstr ) {
+    // Escape characters in jQuery selectors (e.g. '/' becomes '\\/').
+    // Based on: https://learn.jquery.com/using-jquery-core/faq/how-do-i-select-an-element-by-an-id-that-has-characters-used-in-css-notation/
+    if (typeof(jqstr) == 'string') {
+        return jqstr.replace(/(:|\.|\[|\]|,|\/)/g, "\\$1");
+    }
+    return '';
+}
 
 
 
@@ -446,6 +462,7 @@ function lovd_getProteinChange (oElement)
                 $('<button>View prediction</button>')
                     .appendTo(oThisProtein.parent())
                     .attr({
+                        id: oThisProtein.attr('name') + '_view_prediction',
                         onclick: 'lovd_openWindow("' + aData['mutalyzer_url'] + '"); return false;'
                     }).show();
             }

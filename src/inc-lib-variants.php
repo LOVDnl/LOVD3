@@ -50,7 +50,7 @@ if (!defined('ROOT_PATH')) {
  */
 function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, $sVariant)
 {
-    global $_CONF;
+    global $_CONF, $_SETT;
 
     // Needs to be a require_once in case other code has already included this, and also for repeated calls to this function.
     require_once ROOT_PATH . 'class/soap_client.php';
@@ -151,8 +151,9 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 
         // Loop over legend records to find transcript name (v-number).
         foreach ($oOutput->legend->LegendRecord as $oRecord) {
-            if ($oRecord->id == $sNCBITranscriptID && substr($oRecord->name, -4, 1) == 'v') {
-                // Generate protein isoform name (i-number) from transcript name (v-number).
+            if (isset($oRecord->id) && $oRecord->id == $sNCBITranscriptID &&
+                substr($oRecord->name, -4, 1) == 'v') {
+                // Generate protein isoform name (i-number) from transcript name (v-number)
                 $sMutProteinName = str_replace('_v', '_i', $oRecord->name);
                 break;
             }
