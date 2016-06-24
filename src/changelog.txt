@@ -26,6 +26,15 @@
    make another user a 'colleague' and let them view (and optionally edit)
    their submissions.
    Closes #76: "Unstable identifiers for transcript variants bug major"
+ * Fixed bug; LOVD used to store Mutalyzer identifiers for transcript variants,
+   but they were found to be unstable. Now, Mutalyzer has a new feature that
+   works around this and now protein prediction in LOVD is done with an NCBI
+   accession number as identifier for the transcript variant.
+   Closes #76: "Unstable identifiers for transcript variants".
+ * Clarified that the gene list during variant submission only shows genes with
+   transcripts.
+ * The currently selected gene is now also updated when the "all screenings for
+   gene" page is loaded.
 
 
 /**************************

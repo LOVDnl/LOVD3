@@ -38,5 +38,12 @@ class AddVCFFileToIVAIndividualTest extends LOVDSeleniumBaseTestCase
             $this->assertNotContains("of 25 variants", $this->getBodyText());
             sleep(1);
         }
+
+        // Test whether a variant was parsed correctly via mutalyzer.
+        $this->open(ROOT_URL . '/src/genes/ARSD');
+        $this->waitForPageToLoad();
+        $this->click('//tr[@class="data"]/td[text()="X"]');
+        $this->waitForPageToLoad();
+        $this->assertContains('p.(Gln318His)', $this->getBodyText());
     }
 }

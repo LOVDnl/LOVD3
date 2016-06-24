@@ -30,7 +30,7 @@ class AddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSeleniumBaseTes
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $this->getExpression($RnaChange)));
         $ProteinChange = $this->getEval("window.document.getElementById('variantForm').elements[5].value");
         $this->assertEquals("p.(Gly12Cys)", $this->getExpression($ProteinChange));
-        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[9].value");
+        $GenomicDnaChange = $this->getEval("window.document.getElementById('variantForm').elements[10].value");
         $this->assertEquals("g.70443591G>T", $this->getExpression($GenomicDnaChange));
         $this->select("name=00000001_effect_reported", "label=Effect unknown");
         $this->select("name=allele", "label=Maternal (confirmed)");
