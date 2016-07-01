@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-13
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-01
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -74,8 +74,8 @@ class LOVD_User extends LOVD_Object {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
                                            '(u.login_attempts >= 3) AS locked, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
+                                           'GROUP_CONCAT(DISTINCT CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
+                                           'GROUP_CONCAT(DISTINCT CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
                                            'GROUP_CONCAT(DISTINCT col.userid_to, ";", ucol.name SEPARATOR ";;") AS __colleagues,' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .

@@ -5,6 +5,15 @@
  *************/
 
 /**************************
+ * 3.0 Build 17 ()
+ * 2016-...
+ *********/
+ * Fixed bug; Impossible for users of level submitter to browse the user list
+   on the access sharing page.
+ * Fixed bug; Repeated gene names on user acccount pages.
+
+
+/**************************
  * 3.0 Build 16 (tag:3.0-16)
  * 2016-06-24
  *********/
