@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-17
- * For LOVD    : 3.0-16
+ * Modified    : 2016-06-30
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -813,7 +813,7 @@ function lovd_viewForm ($a,
     $nFormWidth = 760;
     if (!(!empty($a[1][0]) && $a[1][0] == 'fieldset')) {
         // Table should only be printed when the first field is not a fieldset definition, that definition will close and open a new table.
-        print('        <TABLE border="0" cellpadding="0" cellspacing="1" width="' . $nFormWidth . '">');
+        print('        <TABLE class="lovdform" border="0" cellpadding="0" cellspacing="1" width="' . $nFormWidth . '">');
     }
 
     // Now loop the array with fields, to print them on the screen.
