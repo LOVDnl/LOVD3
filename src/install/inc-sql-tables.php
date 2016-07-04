@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2016-06-14
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-04
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -185,6 +185,7 @@ $aTableSQL =
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     geneid VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
+    remarks TEXT,
     id_mutalyzer TINYINT(3) UNSIGNED ZEROFILL,
     id_ncbi VARCHAR(255) NOT NULL,
     id_ensembl VARCHAR(255) NOT NULL,
