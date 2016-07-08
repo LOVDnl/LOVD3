@@ -107,6 +107,9 @@ define('WEBDRIVER_POLL_INTERVAL_DEFAULT', 1000);
 // Time webdriver waits on DOM elements with every call (in seconds)
 define('WEBDRIVER_IMPLICIT_WAIT', 10);
 
+// Time to wait when no expected condition can be set (in seconds)
+define('SELENIUM_TEST_SLEEP', 10);
+
 function getWebDriverInstance()
 {
     // Provide a re-usable webdriver for selenium tests.

@@ -32,7 +32,7 @@ script:
   
   # This is a travis test. This test if travis is working as expected. 
   # Two test are done which are independent of LOVD.
-  - vendor/bin/phpunit ./tests/travis/tests/
+  - vendor/bin/phpunit --configuration ./tests/selenium_tests/phpunit.xml ./tests/travis/tests/
 
   # Run all test suites.
   - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/selenium_tests/phpunit.xml

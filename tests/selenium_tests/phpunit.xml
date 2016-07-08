@@ -8,7 +8,7 @@
             <file>shared_tests/create_user_curator.php</file>
             <file>admin_tests/make_user_curator_IVD.php</file>
             <file>shared_tests/create_user_submitter.php</file>
-            <file>shared/create_disease_IVA.php</file>
+            <file>shared_tests/create_disease_IVA.php</file>
             <file>admin_tests/create_individual_diagnosed_with_Healthy_Control.php</file>
             <file>admin_tests/add_phenotype_info_to_healthy_individual.php</file>
             <file>admin_tests/add_screening_to_healthy_individual.php</file>
