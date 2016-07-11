@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-02
- * Modified    : 2016-05-30
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-11
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -31,6 +31,7 @@
 
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
+use \Facebook\WebDriver\Exception\WebDriverException;
 use \Facebook\WebDriver\Remote\LocalFileDetector;
 
 
@@ -147,5 +148,21 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         // attribute with name $attrName.
         $this->driver->executeScript('arguments[0].removeAttribute(arguments[1]);',
                                      array($element, $attrName));
+    }
+
+
+    protected function  clickNoTimeout($element) {
+        // Invoke click() on $element, but ignore any potential timeout. This
+        // can be used for long page loads where one may want to set an
+        // explicit wait limit later in the code.
+        try {
+            $element->click();
+        } catch (WebDriverException $e) {
+            if (strpos($e->getMessage(), 'Operation timed out') === false) {
+                // Not a timeout, but a different reason for failing, rethrow
+                // the exception.
+                throw $e;
+            }
+        }
     }
 }

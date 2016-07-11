@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-05-30
- * Modified    : 2016-06-01
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-11
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -70,7 +70,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $continueButton->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=1&sent=true$/', $this->driver->getCurrentURL()));
         $nextButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Next >>']"));
-        $nextButton->click();
+        $this->clickNoTimeout($nextButton);
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=2$/', $this->driver->getCurrentURL()));
         $nextButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Next >>']"));
         $nextButton->click();
