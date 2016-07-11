@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-06-10
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-11
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -63,8 +63,8 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
                 $this->log('Screenshot captured.', $file);
             } catch (Exception $e) {
                 $file = $this->directory . '/' . get_class($test) . '__' . $test->getName() . '__' . date('Y-m-d\TH-i-s') . '.txt';
-                file_put_contents($file, "Screenshot generation doesn't work." . "\n"
-                    . $e->getMessage() . "\n"
+                file_put_contents($file, "Screenshot generation doesn't work." . PHP_EOL
+                    . $e->getMessage() . PHP_EOL
                     . $e->getTraceAsString());
                 $this->log('Failed to capture screenshot.', $file);
             }
@@ -72,7 +72,7 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
     }
 
     private function log($message, $path) {
-        print($message . "\nSee file: " . $path);
+        fwrite(STDERR, $message . PHP_EOL . "See file: " . $path . PHP_EOL);
     }
 
     public function addIncompleteTest(PHPUnit_Framework_Test $test, Exception $e, $time) {}
