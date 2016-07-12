@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-07-11
+ * Modified    : 2016-07-12
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -30,9 +30,11 @@
 
 
 class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
-    // Based on "../../vendor/phpunit/phpunit-selenium/PHPUnit/Extensions/Selenium2TestCase/ScreenshotListener.php";
+    // Takes a screenshot on failing tests.
+    // Based on PHPUnit's Selenium2TestCase/ScreenshotListener.php
 
     protected $directory;
+    protected $screenshots;
 
     public function __construct($directory=null)
     {
@@ -41,6 +43,7 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
             $directory = realpath($relDir);
         }
         $this->directory = $directory;
+        $this->screenshots = array();
     }
 
     public function addError(PHPUnit_Framework_Test $test, Exception $e, $time)
@@ -60,20 +63,30 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
             try {
                 $file = $this->directory . '/' . get_class($test) . '__' . $test->getName() . '__' . date('Y-m-d\TH-i-s') . '.png';
                 $test->driver->takeScreenshot($file);
-                $this->log('Screenshot captured.', $file);
+                $this->screenshots[] = $file;
             } catch (Exception $e) {
                 $file = $this->directory . '/' . get_class($test) . '__' . $test->getName() . '__' . date('Y-m-d\TH-i-s') . '.txt';
                 file_put_contents($file, "Screenshot generation doesn't work." . PHP_EOL
                     . $e->getMessage() . PHP_EOL
                     . $e->getTraceAsString());
-                $this->log('Failed to capture screenshot.', $file);
+                $this->screenshots[] = $file;
             }
         }
     }
 
-    private function log($message, $path) {
-        fwrite(STDERR, $message . PHP_EOL . "See file: " . $path . PHP_EOL);
+
+    public function endTestSuite(PHPUnit_Framework_TestSuite $suite)
+    {
+        // Print log of screenshots to stderr.
+        if (is_array($this->screenshots) && count($this->screenshots) > 0) {
+            fwrite(STDERR, ' Screenshots taken: ' . implode(' ', $this->screenshots));
+        }
+        // Always print a newline to make the output look consistent when
+        // STDOUT and STDERR are mingled (e.g. on Travis).
+        fwrite(STDERR, PHP_EOL);
+        $this->screenshots = array();
     }
+
 
     public function addIncompleteTest(PHPUnit_Framework_Test $test, Exception $e, $time) {}
     public function addSkippedTest(PHPUnit_Framework_Test $test, Exception $e, $time) {}
@@ -81,5 +94,4 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
     public function startTest(PHPUnit_Framework_Test $test) {}
     public function endTest(PHPUnit_Framework_Test $test, $time) {}
     public function startTestSuite(PHPUnit_Framework_TestSuite $suite) {}
-    public function endTestSuite(PHPUnit_Framework_TestSuite $suite) {}
 }
