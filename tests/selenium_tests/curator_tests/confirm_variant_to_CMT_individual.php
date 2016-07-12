@@ -1,4 +1,33 @@
 <?php
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2016
+ * Modified    : 2016-07-12
+ * For LOVD    : 3.0-17
+ *
+ * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
@@ -59,8 +88,9 @@ class ConfirmVariantToCMTIndividualTest extends LOVDSeleniumWebdriverBaseTestCas
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Save variant list']"));
         $element->click();
-        
-        $this->assertEquals("Successfully confirmed the variant entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        
+
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Confirm variant"));
+        $text = $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText();
+        $this->assertEquals("Successfully confirmed the variant entry!", $text);
     }
 }
