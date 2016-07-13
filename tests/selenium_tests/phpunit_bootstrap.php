@@ -29,14 +29,14 @@
  *************/
 
 // Set up global constants and include path for running tests.
-define('ROOT_PATH', realpath(__DIR__ . '/../../'));
+define('ROOT_PATH', realpath(__DIR__ . '/../../src') . '/');
 
 // Code below to parse the config file is a near copy of that in inc-init.php.
 // inc-init.php cannot simply be included here because this code is run from
 // the command line. Moving that code to a library is not trivial as it
 // produces HTML error messages.
 // Fixme: Refactor config file parsing code in inc-init.php to allow usage here
-define('CONFIG_URI', ROOT_PATH . '/src/config.ini.php');
+define('CONFIG_URI', ROOT_PATH . 'config.ini.php');
 if (!$aConfig = file(CONFIG_URI)) {
     throw new Exception('Init', 'Can\'t open config.ini.php');
 }
