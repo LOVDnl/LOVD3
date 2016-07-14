@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-06-23
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-14
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1243,7 +1243,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_GET['page_size'] = 10;
 
     // Set filter for viewlist to hide current colleagues and the user being viewed.
-    $_GET['search_id'] = '!' . $nID;
+    $_GET['search_userid'] = '!' . $nID;
     foreach ($aColleagues as $aColleague) {
         $_GET['search_id'] .= ' !' . $aColleague['id'];
     }
@@ -1252,7 +1252,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_DATA = new LOVD_User();
     $_DATA->setRowLink('users_share_access',
         'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}"}, lovd_addUserShareAccess); return false;');
-    $_DATA->viewList($sUserListID, array('id', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
+    // The columns hidden here are also specified (enforced) in ajax/viewlist.php to make sure Submitters can't hack their way into the users table.
+    $_DATA->viewList($sUserListID, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
 
     lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $nID . ')</B> shares access to all
                        data owned by him with the users listed below.', 'information');
