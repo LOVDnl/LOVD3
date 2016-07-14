@@ -96,7 +96,7 @@ class AccessSharingSubmitterTest extends LOVDSeleniumBaseTestCase
         $this->waitForElementPresent($sMenuItemSelector, '8000');
         $this->click($sMenuItemSelector);
 
-        $sUserSelector = '//td[text()="' . $sSubName2 . '"]';
+        $sUserSelector = '//a[text()="' . $sSubName2 . '"]';
         $this->waitForElementPresent($sUserSelector, '8000');
         $this->click($sUserSelector);
 

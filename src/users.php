@@ -1245,7 +1245,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Set filter for viewlist to hide current colleagues and the user being viewed.
     $_GET['search_userid'] = '!' . $nID;
     foreach ($aColleagues as $aColleague) {
-        $_GET['search_id'] .= ' !' . $aColleague['id'];
+        $_GET['search_userid'] .= ' !' . $aColleague['id'];
     }
 
     // Show viewlist to select new users to share access with.
