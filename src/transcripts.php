@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2016-07-04
+ * Modified    : 2016-07-14
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -480,7 +480,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Fields to be used.
             $aFields = array('edited_by', 'edited_date');
 
-            // Add all input fields from object's getForm()
+            // Add all input fields from object's getForm().
             foreach ($_DATA->getForm() as $aFormField) {
                 if (count($aFormField) >= 4 && in_array($aFormField[2],
                     array('text', 'file', 'password', 'textarea', 'select', 'checkbox'))) {

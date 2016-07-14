@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-07-04
+ * Modified    : 2016-07-14
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -432,7 +432,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             ENGINE=InnoDB, DEFAULT CHARACTER SET utf8',
                      ),
                  '3.0-16a' =>
-                    array('ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN remarks TEXT'),
+                    array('ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN remarks TEXT NOT NULL DEFAULT "" AFTER id_protein_uniprot'),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

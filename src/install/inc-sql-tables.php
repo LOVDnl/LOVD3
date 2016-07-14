@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2016-07-04
+ * Modified    : 2016-07-14
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -185,13 +185,13 @@ $aTableSQL =
     id MEDIUMINT(8) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     geneid VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    remarks TEXT,
     id_mutalyzer TINYINT(3) UNSIGNED ZEROFILL,
     id_ncbi VARCHAR(255) NOT NULL,
     id_ensembl VARCHAR(255) NOT NULL,
     id_protein_ncbi VARCHAR(255) NOT NULL,
     id_protein_ensembl VARCHAR(255) NOT NULL,
     id_protein_uniprot VARCHAR(8) NOT NULL,
+    remarks TEXT NOT NULL DEFAULT "",
     position_c_mrna_start SMALLINT(5) NOT NULL,
     position_c_mrna_end MEDIUMINT(8) UNSIGNED NOT NULL,
     position_c_cds_end MEDIUMINT(8) UNSIGNED NOT NULL,
