@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-06-23
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-14
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -767,6 +767,74 @@ function lovd_magicUnquoteAll ()
     lovd_magicUnquote($_POST);
     lovd_magicUnquote($_COOKIE);
 }
+
+
+
+
+
+function lovd_parseConfigFile($sConfigFile)
+{
+    // Config file exists?
+    if (!file_exists($sConfigFile)) {
+        lovd_displayError('Init', 'Can\'t find config.ini.php');
+    }
+
+    // Config file readable?
+    if (!is_readable($sConfigFile)) {
+        lovd_displayError('Init', 'Can\'t read config.ini.php');
+    }
+
+    // Open config file.
+    if (!$aConfig = file($sConfigFile)) {
+        lovd_displayError('Init', 'Can\'t open config.ini.php');
+    }
+
+
+    // Parse config file.
+    $_INI = array();
+    unset($aConfig[0]); // The first line is the PHP code with the exit() call.
+
+    $sKey = '';
+    foreach ($aConfig as $nLine => $sLine) {
+        // Go through the file line by line.
+        $sLine = trim($sLine);
+
+        // Empty line or comment.
+        if (!$sLine || substr($sLine, 0, 1) == '#') {
+            continue;
+        }
+
+        // New section.
+        if (preg_match('/^\[([A-Z][A-Z_ ]+[A-Z])\]$/i', $sLine, $aRegs)) {
+            $sKey = $aRegs[1];
+            $_INI[$sKey] = array();
+            continue;
+        }
+
+        // Setting.
+        if (preg_match('/^([A-Z_]+) *=(.*)$/i', $sLine, $aRegs)) {
+            list(, $sVar, $sVal) = $aRegs;
+            $sVal = trim($sVal, ' "\'“”');
+
+            if (!$sVal) {
+                $sVal = false;
+            }
+
+            // Set value in array.
+            if ($sKey) {
+                $_INI[$sKey][$sVar] = $sVal;
+            } else {
+                $_INI[$sVar] = $sVal;
+            }
+
+        } else {
+            // Couldn't parse value.
+            lovd_displayError('Init', 'Error parsing config file at line ' . ($nLine + 1));
+        }
+    }
+    return $_INI;
+}
+
 
 
 

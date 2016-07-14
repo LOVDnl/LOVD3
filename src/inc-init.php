@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-07-04
+ * Modified    : 2016-07-14
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -371,65 +371,8 @@ $_T = new LOVD_Template();
 // We define CONFIG_URI as the location of the config file.
 define('CONFIG_URI', ROOT_PATH . 'config.ini.php');
 
-// Config file exists?
-if (!file_exists(CONFIG_URI)) {
-    lovd_displayError('Init', 'Can\'t find config.ini.php');
-}
+$_INI = lovd_parseConfigFile(CONFIG_URI);
 
-// Config file readable?
-if (!is_readable(CONFIG_URI)) {
-    lovd_displayError('Init', 'Can\'t read config.ini.php');
-}
-
-// Open config file.
-if (!$aConfig = file(CONFIG_URI)) {
-    lovd_displayError('Init', 'Can\'t open config.ini.php');
-}
-
-
-
-// Parse config file.
-$_INI = array();
-unset($aConfig[0]); // The first line is the PHP code with the exit() call.
-
-$sKey = '';
-foreach ($aConfig as $nLine => $sLine) {
-    // Go through the file line by line.
-    $sLine = trim($sLine);
-
-    // Empty line or comment.
-    if (!$sLine || substr($sLine, 0, 1) == '#') {
-        continue;
-    }
-
-    // New section.
-    if (preg_match('/^\[([A-Z][A-Z_ ]+[A-Z])\]$/i', $sLine, $aRegs)) {
-        $sKey = $aRegs[1];
-        $_INI[$sKey] = array();
-        continue;
-    }
-
-    // Setting.
-    if (preg_match('/^([A-Z_]+) *=(.*)$/i', $sLine, $aRegs)) {
-        list(,$sVar, $sVal) = $aRegs;
-        $sVal = trim($sVal, ' "\'“”');
-
-        if (!$sVal) {
-            $sVal = false;
-        }
-
-        // Set value in array.
-        if ($sKey) {
-            $_INI[$sKey][$sVar] = $sVal;
-        } else {
-            $_INI[$sVar] = $sVal;
-        }
-
-    } else {
-        // Couldn't parse value.
-        lovd_displayError('Init', 'Error parsing config file at line ' . ($nLine + 1));
-    }
-}
 
 // We now have the $_INI variable filled according to the file's contents.
 // Check the settings' values to see if they are valid.
