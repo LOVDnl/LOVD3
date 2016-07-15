@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-07-13
+ * Modified    : 2016-07-15
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,13 +42,7 @@ function setMutalyzerServiceURL($sURL)
         'QUERY_STRING' => '',
         'REQUEST_METHOD' => 'GET',
     ));
-    // Temporarily hide errors (including inc-init.php will show some about
-    // headers already been sent).
-    ini_set('display_errors', '0');
-    ini_set('log_errors', '0');
-    require ROOT_PATH . 'inc-init.php';
-    ini_set('display_errors', '1');
-    ini_set('log_errors', '1');
+    require_once ROOT_PATH . 'inc-init.php';
 
     $result = $_DB->query('UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url=?', array($sURL));
 

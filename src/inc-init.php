@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-07-14
+ * Modified    : 2016-07-15
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,7 +37,7 @@ if (!defined('ROOT_PATH')) {
 }
 
 // Require library standard functions.
-require ROOT_PATH . 'inc-lib-init.php';
+require_once ROOT_PATH . 'inc-lib-init.php';
 
 // Define module path.
 // FIXME; do we still need this?
