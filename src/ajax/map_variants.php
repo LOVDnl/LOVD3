@@ -487,7 +487,8 @@ if (!empty($aVariants)) {
 
                 // Get UD.
                 try {
-                    $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
+//                    $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
+                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
                     $sRef = $sRefseqUD;
                 } catch (SoapFault $e) {} // Silent error.
                 if (!is_string($sRefseqUD) || substr($sRefseqUD, 0, 3) != 'UD_') {
