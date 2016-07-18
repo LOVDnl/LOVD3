@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-07-15
+ * Modified    : 2016-07-18
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -27,6 +27,43 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+
+
+use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
+use \Facebook\WebDriver\Remote\RemoteWebDriver;
+
+
+function getWebDriverInstance()
+{
+    // Provide a re-usable webdriver for selenium tests.
+
+    global $_INI;
+    static $webDriver;
+
+    if (!isset($webDriver)) {
+        // Create Firefox webdriver
+        $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
+        $webDriver = RemoteWebDriver::create('http://localhost:4444/wd/hub', $capabilities,
+            WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
+            WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
+
+        // Set time for trying to access DOM elements
+        $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
+
+        if (isset($_INI['test']['xdebug_enabled']) && $_INI['test']['xdebug_enabled'] == 'true') {
+            // Enable remote debugging by setting XDebug session cookie.
+            $webDriver->manage()->addCookie(array(
+                'name' => 'XDEBUG_SESSION',
+                'value' => 'selenium'));
+        }
+    }
+    return $webDriver;
+}
+
+
+
+
 
 
 function setMutalyzerServiceURL($sURL)

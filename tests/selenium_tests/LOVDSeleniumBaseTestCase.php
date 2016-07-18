@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-02
- * Modified    : 2016-07-11
+ * Modified    : 2016-07-18
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -28,6 +28,8 @@
  *
  *************/
 
+
+require_once 'inc-lib-test.php';
 
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
