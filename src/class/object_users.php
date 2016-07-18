@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-07-01
+ * Modified    : 2016-07-14
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -139,6 +139,9 @@ class LOVD_User extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
+                        'userid' => array(
+                                    'view' => false,
+                                    'db'   => array('u.id', 'ASC', true)),
                         'id' => array(
                                     'view' => array('ID', 45),
                                     'db'   => array('u.id', 'ASC', true)),

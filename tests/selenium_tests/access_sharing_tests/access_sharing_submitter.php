@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-06-21
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-14
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -96,7 +96,7 @@ class AccessSharingSubmitterTest extends LOVDSeleniumBaseTestCase
         $this->waitForElementPresent($sMenuItemSelector, '8000');
         $this->click($sMenuItemSelector);
 
-        $sUserSelector = '//td[text()="' . $sSubUsername2 . '"]';
+        $sUserSelector = '//a[text()="' . $sSubName2 . '"]';
         $this->waitForElementPresent($sUserSelector, '8000');
         $this->click($sUserSelector);
 
