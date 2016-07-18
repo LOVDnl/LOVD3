@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-20
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-13
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1236,8 +1236,10 @@ class LOVD_Object {
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // Numeric fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
                                         $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'NULL';
-                                    } elseif ($aCol['view']) {
-                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    } else {
+                                        // Bad syntax! Report. LOVD doesn't actually complain about bad syntax columns
+                                        // when they're not viewed, but we do need that var to be filled.
+                                        $aBadSyntaxColumns[] = $aCol[($aCol['view']? 'view' : 'db')][0];
                                     }
                                     break;
                                 case 'DATE':
@@ -1280,8 +1282,10 @@ class LOVD_Object {
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // DATE(TIME) fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
                                         $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'NULL';
-                                    } elseif ($aCol['view']) {
-                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    } else {
+                                        // Bad syntax! Report. LOVD doesn't actually complain about bad syntax columns
+                                        // when they're not viewed, but we do need that var to be filled.
+                                        $aBadSyntaxColumns[] = $aCol[($aCol['view']? 'view' : 'db')][0];
                                     }
                                     break;
                                 default:
@@ -1301,8 +1305,10 @@ class LOVD_Object {
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!=' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         // 2013-07-25; 3.0-07; When not using LIKE, undo escaping done by lovd_escapeSearchTerm().
                                         $aArguments[$CLAUSE][] = str_replace(array('\%', '\_'), array('%', '_'), $aMatches[1]);
-                                    } elseif ($aCol['view']) {
-                                        $aBadSyntaxColumns[] = $aCol['view'][0];
+                                    } else {
+                                        // Bad syntax! Report. LOVD doesn't actually complain about bad syntax columns
+                                        // when they're not viewed, but we do need that var to be filled.
+                                        $aBadSyntaxColumns[] = $aCol[($aCol['view']? 'view' : 'db')][0];
                                     }
                                     break;
                             }
