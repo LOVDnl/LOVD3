@@ -11,6 +11,8 @@
  * Fixed bug; Impossible for users of level submitter to browse the user list
    on the access sharing page.
  * Fixed bug; Repeated gene names on user account pages.
+ * Fixed bug; Query errors could occur when performing incorrect searches in
+   hidden columns.
 
 
 /**************************
