@@ -27,6 +27,12 @@ Prioritize:
 Website:
 - Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
 
+- Publish LOVD software together with data:
+  - Setup a data package with recent gene and transcript data (and possibly 
+    standard custom column configuration)
+  - Allow fast import of the data package during or after LOVD installation.
+  - Possibly use mysqldump/mysqlimport or extend LOVD import format to include 
+    genes and transcripts
 - Internationalization (student project?):
   - Create internationalized LOVD instance, put all text in a translation (.po?) file, starting with template.php (menus), objects.php, etc.
   - Later page headers, custom columns, statuses, page's texts, etc.
