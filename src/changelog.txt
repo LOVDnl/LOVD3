@@ -11,6 +11,9 @@
  * Fixed bug; Impossible for users of level submitter to browse the user list
    on the access sharing page.
  * Fixed bug; Repeated gene names on user acccount pages.
+ * Added a "remarks" field for transcript. This may for example be used to
+   denote why a certain transcript was chosen.
+   Closes #77: "Comment on transcript".
 
 
 /**************************
