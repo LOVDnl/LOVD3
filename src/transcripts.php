@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2016-07-12
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-18
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -478,9 +478,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array(
-                            'id_ensembl', 'id_protein_ensembl', 'id_protein_uniprot', 'edited_by', 'edited_date',
-                            );
+            $aFields = array('id_ensembl', 'id_protein_ensembl', 'id_protein_uniprot', 'remarks',
+                             'edited_by', 'edited_date');
 
             // Prepare values.
             $_POST['edited_by'] = $_AUTH['id'];

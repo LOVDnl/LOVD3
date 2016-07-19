@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2016-02-10
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-04
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -106,6 +106,7 @@ class LOVD_Transcript extends LOVD_Object {
                         'id_protein_ensembl' => 'Protein - Ensembl ID',
                         'id_protein_uniprot' => 'Protein - Uniprot ID',
                         'exon_table' => 'Exon/intron information',
+                        'remarks' => 'Remarks',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -181,6 +182,7 @@ class LOVD_Transcript extends LOVD_Object {
                            array('Transcript Ensembl ID', '', 'text', 'id_ensembl', 10),
                            array('Protein Ensembl ID', '', 'text', 'id_protein_ensembl', 10),
                            array('Protein Uniprot ID', '', 'text', 'id_protein_uniprot', 10),
+                           array('Remarks', '', 'textarea', 'remarks', 50, 5),
                            'hr',
                            'skip',
                   );
