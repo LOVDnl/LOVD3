@@ -498,7 +498,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
             $_T->printHeader();
             $_T->printTitle();
-            lovd_showInfoTable('Successfully edited the gene information entry!', 'success');
+            lovd_showInfoTable('Successfully edited the transcript!', 'success');
 
             $_T->printFooter();
             exit;

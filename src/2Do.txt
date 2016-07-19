@@ -12,10 +12,11 @@ Update download.php, news.php (mark closed bugs), package_update.php, sync docs 
 Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /antwerpen/ heeft aangepaste .htaccess.
+/DNA_profiles/ heeft aangepaste index.php.
 /my_genome/ heeft een aangepaste ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, class/template.php, individuals.php, screenings.php, submit.php, variants.php. Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste class/graphs.php en class/template.php.
+/shared/ heeft een aangepaste class/graphs.php, class/template.php en import.php.
 /VKGL/ heeft aangepaste .htaccess.
-/whole_genome/ heeft aangepaste files (class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, users.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
+/whole_genome/ heeft aangepaste files (class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, users.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 /whole_genome_mirror/ heeft aangepaste files (zie hierboven), NOOIT ZOMAAR OVERSCHRIJVEN!!! (MAG WEL VAN WHOLE_GENOME, excl. de config.ini)
 After updating all installations, send email to team with all improvements summarized.
 
@@ -26,6 +27,12 @@ Prioritize:
 Website:
 - Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
 
+- Publish LOVD software together with data:
+  - Setup a data package with recent gene and transcript data (and possibly 
+    standard custom column configuration)
+  - Allow fast import of the data package during or after LOVD installation.
+  - Possibly use mysqldump/mysqlimport or extend LOVD import format to include 
+    genes and transcripts
 - Internationalization (student project?):
   - Create internationalized LOVD instance, put all text in a translation (.po?) file, starting with template.php (menus), objects.php, etc.
   - Later page headers, custom columns, statuses, page's texts, etc.
