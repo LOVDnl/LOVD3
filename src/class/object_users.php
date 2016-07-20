@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-06-13
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-20
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -349,7 +349,7 @@ class LOVD_User extends LOVD_Object {
         // Array which will make up the form table.
         $this->aFormData =
                  array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('POST', '', '', '', '35%', '14', '65%'),
                         array('', '', 'print', '<B>User details</B>'),
                         'hr',
                         array('Name', '', 'text', 'name', 30),

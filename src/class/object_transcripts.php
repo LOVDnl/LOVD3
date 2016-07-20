@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2016-02-10
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-20
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -175,7 +175,7 @@ class LOVD_Transcript extends LOVD_Object {
         // Array which will make up the form table.
         $this->aFormData =
                  array(
-                           array('POST', '', '', '', '40%', '14', '60%'),
+                           array('POST', '', '', '', '35%', '14', '65%'),
                            array('', '', 'print', '<B>General information</B>'),
                            'hr',
                            array('Transcript Ensembl ID', '', 'text', 'id_ensembl', 10),

@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-02-08
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-20
+ * For LOVD    : 3.0-17
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -250,7 +250,7 @@ class LOVD_Disease extends LOVD_Object {
         // Array which will make up the form table.
         $this->aFormData =
                  array(
-                        array('POST', '', '', '', '50%', '14', '50%'),
+                        array('POST', '', '', '', '35%', '14', '65%'),
                         array('', '', 'print', '<B>Disease information</B>'),
                         'hr',
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
