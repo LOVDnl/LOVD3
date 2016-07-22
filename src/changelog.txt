@@ -16,6 +16,9 @@
    Closes #77: "Comment on transcript".
  * Fixed bug; Query errors could occur when performing incorrect searches in
    hidden columns.
+ * Fixed bug; Error when updating individuals panel from import file.
+   Closes #67: "Import: Panel_size of individual in panelid field not checked
+   properly"
 
 
 /**************************

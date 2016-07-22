@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-06-22
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-22
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1313,13 +1313,14 @@ if (POST) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'Panel ID\' can not link to itself; this field is used to indicate to which panel this individual belongs.');
                         }
 
-                        // If individual ID exists in DB, then retrieve panel number from DB.
-                        // If it doesn't exist in DB retrieve panel number from parsed data.
+                        // A panel from the import file is preferred, as that describes the new
+                        // panel size to which the new records must conform.
                         $nPanel = false;
-                        if ($bPanelInDB) {
-                            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aLine['panelid']))->fetchColumn();
-                        } elseif ($bPanelInFile) {
+                        if ($bPanelInFile) {
                             $nPanel = $aParsed['Individuals']['data'][(int) $aLine['panelid']]['panel_size'];
+                        } elseif ($bPanelInDB) {
+                            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS .
+                                                  ' WHERE id = ?', array($aLine['panelid']))->fetchColumn();
                         }
 
                         if ($nPanel !== false && $nPanel == 1) {
