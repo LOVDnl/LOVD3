@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-02-18
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-25
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -1418,7 +1418,11 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
             $sSQL .= ' ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name';
-            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+
+            $aPossibleTargets = array_map(
+                function ($sInput) {
+                    return lovd_shortenString($sInput, 75);
+                }, $_DB->query($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         }
 
@@ -1655,7 +1659,7 @@ if (!isset($_GET['in_window'])) {
 
     // Array which will make up the form table.
     $aForm = array(
-                    array('POST', '', '', '', '40%', '14', '60%'),
+                    array('POST', '', '', '', '35%', '14', '65%'),
                   );
 
     if ($aTableInfo['shared']) {
@@ -1755,7 +1759,10 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
             $sSQL .= ' ORDER BY d.symbol';
-            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+            $aPossibleTargets = array_map(
+                function ($sInput) {
+                    return lovd_shortenString($sInput, 75);
+                }, $_DB->query($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         }
 
@@ -1927,7 +1934,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
     // Array which will make up the form table.
     $aForm = array(
-                    array('POST', '', '', '', '40%', 14, '60%')
+                    array('POST', '', '', '', '35%', 14, '65%')
                   );
 
     if ($aTableInfo['shared']) {
