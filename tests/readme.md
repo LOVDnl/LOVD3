@@ -13,7 +13,11 @@ Authors     : Daan Asscheman <D.Asscheman@LUMC.nl>
 
 Functional and unit tests for LOVD are implemented using
 [Selenium](http://www.seleniumhq.org/), [PHPUnit](https://phpunit.de/)
-and [php-webdriver](https://github.com/facebook/php-webdriver). This 
+and [php-webdriver](https://github.com/facebook/php-webdriver). The 
+necessary PHP packages are listed in the `composer.json` file in the 
+project's top-level directory. If you have the 
+[Composer](https://getcomposer.org/) dependency manager, you can run 
+`composer install` from that directory to install the packages. This 
 document describes how the LOVD tests are configured and how they can
 be used.
 
