@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-07-13
+ * Modified    : 2016-07-27
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -473,44 +473,43 @@ class LOVD_Object {
         // - $sFRReplaceValue   Find & replace replace value.
         // - $aOptions          Array with options on how to perform replace.
 
-        if (isset($aOptions['bFRReplaceAll']) && $aOptions['bFRReplaceAll']) {
-            return '"' . $sFRReplaceValue . '"';
-        }
-
-        $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
-
-        // Default is to replace occurrences anywhere in the field.
-        $sReplaceStmt = 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue .
-                        '", "' . $sFRReplaceValue . '")';
-
-        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sTablename,
-                                                               $sFieldname, $aOptions);
         $nSearchStrLen = strlen($sFRSearchValue);
-        if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
-            // Match search string at beginning of field.
+        $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
+        $sReplacement = $sFRReplaceValue;
+
+        if (!isset($aOptions['sFRMatchType']) || $aOptions['sFRMatchType'] == '1') {
+            // Default is to replace occurrences anywhere in the field.
+            return 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue . '", "' .
+                   $sFRReplaceValue . '")';
+        } else if (isset($aOptions['bFRReplaceAll']) && $aOptions['bFRReplaceAll']) {
+            // Whole field is replaced with a single value.
+            $sReplacement = '"' . $sFRReplaceValue . '"';
+        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+            // Replace search string at beginning of field.
             // E.g.:
             // CASE WHEN SUBSTRING(table.`field`, 1, 6) = "search"
             // THEN CONCAT("replace", SUBSTRING(table.`field`, 6))
             // ELSE table.`field` END
-            $sReplaceStmt = 'CASE WHEN ' . $sFRSearchCondition . ' THEN CONCAT("' .
-                            $sFRReplaceValue . '", SUBSTRING(' . $sCompositeFieldname . ', ' .
-                            strval($nSearchStrLen + 1) . ')) ELSE ' . $sCompositeFieldname .
-                            ' END ';
+            $sReplacement = 'CONCAT("' . $sFRReplaceValue . '", SUBSTRING(' .
+                            $sCompositeFieldname . ', ' . strval($nSearchStrLen + 1) . '))';
 
         } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
-            // Match search string at end of field.
+            // Replace search string at end of field.
             // E.g.:
             // CASE WHEN SUBSTRING(table.`field`, - 6) = "search"
             // THEN CONCAT(SUBSTRING(table.`field`, 1, CHAR_LENGTH(table.`field`) - 6), "replace")
             // ELSE table.`field` END
-            $sReplaceStmt = 'CASE WHEN ' . $sFRSearchCondition . ' THEN CONCAT(' .
-                'SUBSTRING(' . $sCompositeFieldname . ', 1, CHAR_LENGTH(' . $sCompositeFieldname .
-                ') - ' . strval($nSearchStrLen) . '), "' . $sFRReplaceValue . '") ELSE ' .
-                $sCompositeFieldname . ' END ';
+            $sReplacement = 'CONCAT(' . 'SUBSTRING(' . $sCompositeFieldname . ', 1, CHAR_LENGTH(' .
+                            $sCompositeFieldname . ') - ' . strval($nSearchStrLen) . '), "' .
+                            $sFRReplaceValue . '")';
         }
 
+        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sTablename,
+                                                               $sFieldname, $aOptions);
+
         // Return replace statement.
-        return $sReplaceStmt;
+        return 'CASE WHEN ' . $sFRSearchCondition . ' THEN ' . $sReplacement . ' ELSE ' .
+               $sCompositeFieldname . ' END ';
     }
 
 
