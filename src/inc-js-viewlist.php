@@ -489,17 +489,6 @@ function lovd_activateMenu (sViewListID)
 
 
 
-function lovd_clearFROptionsElement (sViewListID)
-{
-    // Clear the find & replace options form.
-    var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
-    FRoptions.find('input[type=text]').val('');
-    FRoptions.find('input[type=checkbox]').removeAttr('checked');
-    var radioButtons = FRoptions.find('input[type=radio]');
-    radioButtons.removeAttr('checked');
-    // Check the first radio button (as default value)
-    radioButtons.first().attr('checked', true);
-}
 
 
 
@@ -511,7 +500,7 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
     // Bind actions to cancel, preview and submit buttons.
     var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
     FRoptions.find('#FRCancel_' + sViewListID).on('click', function () {
-        lovd_FRCancel(sViewListID);
+        lovd_FRCleanup(sViewListID);
     });
 
     FRoptions.find('#FRPreview_' + sViewListID).on('click', function () {
@@ -706,19 +695,26 @@ function lovd_FRPreview (sViewListID, oOptions)
 
 
 
-function lovd_FRCancel (sViewListID, bSubmitVL)
+function lovd_FRCleanup (sViewListID, bSubmitVL)
 {
-    // Clear any user interface elements relating to find & replace for the
-    // given viewlist.
-    if (typeof bSubmitVL != 'undefined' && bSubmitVL) {
+    // Cleanup HTML from find & replace (form values + preview viewlist column).
+
+    // Clear the find & replace options form.
+    var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
+    FRoptions.find('input[type=text]').val('');
+    FRoptions.find('input[type=checkbox]').removeAttr('checked');
+    var radioButtons = FRoptions.find('input[type=radio]');
+    radioButtons.removeAttr('checked');
+    // Check the first radio button (as default value)
+    radioButtons.first().attr('checked', true);
+
+    // Hide F&R options form.
+    $(FRoptions).hide();
+
+    if (bSubmitVL || typeof bSubmitVL == 'undefined') {
         // Reload the viewlist to remove a potential preview column.
         lovd_AJAX_viewListSubmit(sViewListID);
     }
-
-    // Clear all settings and displayed elements concerning find & replace.
-    lovd_clearFROptionsElement(sViewListID);
-    var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
-    $(sFRcontainerSelector).hide();
 
     // Hide all tooltips.
     $('div[role="tooltip"]').remove();
@@ -736,7 +732,7 @@ function lovd_FRSubmit (sViewListID, oOptions)
     oGetParams['FRSubmitClicked_' + sViewListID] = 1;
     lovd_AJAX_viewListSubmit(sViewListID, function() {
         // Call cancel afterwards to clean up.
-        lovd_FRCancel(sViewListID, false);
+        lovd_FRCleanup(sViewListID, false);
     }, oGetParams);
 }
 
