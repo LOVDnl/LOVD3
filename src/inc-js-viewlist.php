@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-06-23
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-27
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -489,6 +489,20 @@ function lovd_activateMenu (sViewListID)
 
 
 
+function lovd_clearFROptionsElement (sViewListID)
+{
+    // Clear the find & replace options form.
+    var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
+    FRoptions.find('input[type=text]').val('');
+    FRoptions.find('input[type=checkbox]').removeAttr('checked');
+    var radioButtons = FRoptions.find('input[type=radio]');
+    radioButtons.removeAttr('checked');
+    // Check the first radio button (as default value)
+    radioButtons.first().attr('checked', true);
+}
+
+
+
 function lovd_getFROptionsElement (sViewListID, oOptions)
 {
     // Display find & replace options menu, set its options and return it as a
@@ -702,7 +716,7 @@ function lovd_FRCancel (sViewListID, bSubmitVL)
     }
 
     // Clear all settings and displayed elements concerning find & replace.
-    lovd_getFROptionsElement(sViewListID, {});
+    lovd_clearFROptionsElement(sViewListID);
     var sFRcontainerSelector = '#viewlistFRFormContainer_' + sViewListID;
     $(sFRcontainerSelector).hide();
 
