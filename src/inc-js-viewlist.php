@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-07-27
+ * Modified    : 2016-07-28
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -112,6 +112,13 @@ function lovd_AJAX_processViewListHash ()
 
 // List for recording checkbox changes in viewLists.
 var check_list = [];
+
+// State object for Find & Replace, holding per viewlist information on what
+// phase of the F&R process we are (sPhase = 'none' | 'column_selection' |
+// 'input' | 'preview'), whether the F&R options form and buttons should
+// be shown (i.e. 'bShowMenu', 'bShowPreview' and 'bShowSubmit').
+var FRState = {};
+
 
 function lovd_AJAX_viewListAddNextRow (sViewListID)
 {
@@ -285,6 +292,7 @@ function lovd_AJAX_viewListSubmit (sViewListID, callBack, oGetParams) {
                         oDiv.innerHTML = objHTTP.responseText;
                         lovd_stretchInputs(sViewListID);
                         lovd_activateMenu(sViewListID);
+                        lovd_FRShowOptionsMenu(sViewListID);
 <?php
 if (!isset($_GET['nohistory'])) {
 ?>
@@ -357,6 +365,12 @@ if (!isset($_GET['nohistory'])) {
             sGET += (sGET? '&' : '') + 'ids_changed=' + sIDlist;
             check_list[sViewListID] = [];
         }
+
+        // Append potential find & replace preview action to GET parameters.
+        if (FRState.hasOwnProperty(sViewListID) && FRState[sViewListID]['phase'] == 'preview') {
+            sGET += (sGET? '&' : '') + 'FRPreviewClicked_' + sViewListID + '=1';
+        }
+
         objHTTP.open('GET', '<?php echo lovd_getInstallURL() . 'ajax/viewlist.php?'; ?>' + sGET, true);
         objHTTP.send(null);
     }
@@ -490,10 +504,14 @@ function lovd_activateMenu (sViewListID)
 
 
 
-function lovd_getFROptionsElement (sViewListID, oOptions)
+function lovd_getFROptionsElement (sViewListID)
 {
     // Display find & replace options menu, set its options and return it as a
     // jQuery object.
+    
+    if (!FRState.hasOwnProperty(sViewListID)) {
+        FRState[sViewListID] = {};
+    }
 
     // Bind actions to cancel, preview and submit buttons.
     var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
@@ -502,37 +520,37 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
     });
 
     FRoptions.find('#FRPreview_' + sViewListID).on('click', function () {
-        lovd_FRPreview(sViewListID, oOptions);
+        lovd_FRPreview(sViewListID);
     });
 
     FRoptions.find('#FRSubmit_' + sViewListID).on('click', function () {
-        lovd_FRSubmit(sViewListID, oOptions);
+        lovd_FRSubmit(sViewListID);
     });
 
     // Hide/show buttons based on options.
-    if (typeof oOptions.showSubmit == 'undefined' || !oOptions.showSubmit) {
+    if (typeof FRState[sViewListID].bShowSubmit == 'undefined' || !FRState[sViewListID].bShowSubmit) {
         FRoptions.find('#FRSubmit_' + sViewListID).hide();
     } else {
         FRoptions.find('#FRSubmit_' + sViewListID).show();
     }
-    if (typeof oOptions.showPreview == 'undefined' || !oOptions.showPreview) {
+    if (typeof FRState[sViewListID].bShowPreview == 'undefined' || !FRState[sViewListID].bShowPreview) {
         FRoptions.find('#FRPreview_' + sViewListID).hide();
     } else {
         FRoptions.find('#FRPreview_' + sViewListID).show();
     }
 
     // Set selected column name (and display name) in menu text.
-    if (oOptions.hasOwnProperty('sDisplayname')) {
-        FRoptions.find('#viewlistFRColDisplay_' + sViewListID).html(oOptions['sDisplayname']);
-        FRoptions.find('#FRFieldDisplayname_' + sViewListID).val(oOptions['sDisplayname']);
+    if (FRState[sViewListID].hasOwnProperty('sDisplayname')) {
+        FRoptions.find('#viewlistFRColDisplay_' + sViewListID).html(FRState[sViewListID]['sDisplayname']);
+        FRoptions.find('#FRFieldDisplayname_' + sViewListID).val(FRState[sViewListID]['sDisplayname']);
     }
-    if (oOptions.hasOwnProperty('sFieldname')) {
-        FRoptions.find('#FRFieldname_' + sViewListID).val(oOptions['sFieldname']);
+    if (FRState[sViewListID].hasOwnProperty('sFieldname')) {
+        FRoptions.find('#FRFieldname_' + sViewListID).val(FRState[sViewListID]['sFieldname']);
     }
 
     // Set the option menu width equal to the viewlist's width
     var sVLWidth = $('#viewlistTable_' + sViewListID).outerWidth();
-    FRoptions.outerWidth(sVLWidth).show();
+    FRoptions.outerWidth(sVLWidth);
 
     return FRoptions;
 }
@@ -542,6 +560,11 @@ function lovd_getFROptionsElement (sViewListID, oOptions)
 function lovd_FRColumnSelector (sViewListID)
 {
     // Show a find & replace column selector for the given viewlist.
+
+    if (!FRState.hasOwnProperty(sViewListID)) {
+        FRState[sViewListID] = {};
+    }
+    FRState[sViewListID]['phase'] = 'column_selection';
 
     var sViewListDivSelector = '#viewlistDiv_' + sViewListID;
     if ($(sViewListDivSelector).length == 0) {
@@ -580,8 +603,9 @@ function lovd_FRColumnSelector (sViewListID)
             var oCurrentOptions = {
                 sFieldname: $(this).data('fieldname'),
                 sDisplayname: $(this).text().trim(),
-                showPreview: true,
-                showSubmit: false
+                phase: 'input',
+                bShowPreview: true,
+                bShowSubmit: false
             };
             overlayDiv.on('click', function () {
                 $('.vl_overlay').remove();
@@ -620,57 +644,67 @@ function lovd_FRColumnSelector (sViewListID)
 
 
 
-function lovd_FRShowOptionsMenu (sViewListID, oOptions)
+function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
 {
     // Display the options menu for column-wise find & replace in the given
     // viewlist.
-    lovd_getFROptionsElement(sViewListID, oOptions);
+    if (!FRState.hasOwnProperty(sViewListID)) {
+        FRState[sViewListID] = {'phase': 'none'};
+    }
+    if (typeof oNewOptions != 'undefined') {
+        $.extend(FRState[sViewListID], oNewOptions);
+    }
 
-    // Display a tooltip for the options menu.
-    $('#viewlistFRColDisplay_' + sViewListID).tooltip({
-        items: '#viewlistFRColDisplay_' + sViewListID,
-        content: 'Specify find & replace options',
-        position: {
-            my: 'left bottom',
-            at: 'left-40 top-15',
-            using: function(position, feedback) {
-                $(this).css(position);
-                $('<DIV>')
-                    .addClass('arrow')
-                    .addClass(feedback.vertical)
-                    .addClass(feedback.horizontal)
-                    .appendTo(this);
-                $(this).removeClass('ui-widget-content');
+    if (FRState[sViewListID]['phase'] == 'input' || FRState[sViewListID]['phase'] == 'preview') {
+        var FROptions = lovd_getFROptionsElement(sViewListID);
+        FROptions.show();
+    }
+
+    if (FRState[sViewListID]['phase'] == 'input') {
+        // Display a tooltip for the options menu.
+        $('#viewlistFRColDisplay_' + sViewListID).tooltip({
+            items: '#viewlistFRColDisplay_' + sViewListID,
+            content: 'Specify find & replace options',
+            position: {
+                my: 'left bottom',
+                at: 'left-40 top-15',
+                using: function (position, feedback) {
+                    $(this).css(position);
+                    $('<DIV>')
+                        .addClass('arrow')
+                        .addClass(feedback.vertical)
+                        .addClass(feedback.horizontal)
+                        .appendTo(this);
+                    $(this).removeClass('ui-widget-content');
+                }
             }
-        }
-    }).tooltip('open');
+        }).tooltip('open');
+    }
 }
 
 
 
-function lovd_FRPreview (sViewListID, oOptions)
+function lovd_FRPreview (sViewListID)
 {
     // Show a preview for find & replace for the given viewlist ID and options.
+
+    if (!FRState.hasOwnProperty(sViewListID)) {
+        FRState[sViewListID] = {};
+    }
+    FRState[sViewListID]['phase'] = 'preview';
+    FRState[sViewListID]['bShowSubmit'] = true;
 
     // Hide all current tooltips.
     $('div[role="tooltip"]').remove();
 
-    // Set GET parameter indicating that user clicked preview.
-    var oGetParams = {};
-    oGetParams['FRPreviewClicked_' + sViewListID] = 1;
-
     // Submit the current viewlist with find & replace options.
     lovd_AJAX_viewListSubmit(sViewListID, function() {
-        // Update the options menu and show the submit button.
-        oOptions['showSubmit'] = true;
-        var FRoptions = lovd_getFROptionsElement(sViewListID, oOptions);
-        $('#viewlistFRFormContainer_' + sViewListID).show();
-
         // Get the predicted number of affected rows from the retrieved HTML.
         var sFRRowsAffected = $('#FRRowsAffected_' + sViewListID).val();
 
         // Show tooltip above column with changes about to be applied.
-        var FRPreviewHeader = $('th[data-fieldname="' + oOptions['sFieldname'] + '_FR' + '"]');
+        var FRPreviewHeader = $('th[data-fieldname="' + FRState[sViewListID]['sFieldname'] +
+                                '_FR' + '"]');
         FRPreviewHeader.tooltip({
             items: 'th',
             content: 'Preview changes (' + sFRRowsAffected + ' rows affected)',
@@ -688,7 +722,7 @@ function lovd_FRPreview (sViewListID, oOptions)
                 }
             }
         }).tooltip('open');
-    }, oGetParams);
+    });
 }
 
 
@@ -696,6 +730,9 @@ function lovd_FRPreview (sViewListID, oOptions)
 function lovd_FRCleanup (sViewListID, bSubmitVL)
 {
     // Cleanup HTML from find & replace (form values + preview viewlist column).
+
+    // Clear F&R state.
+    FRState[sViewListID] = {phase: 'none'};
 
     // Clear the find & replace options form.
     var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
@@ -720,7 +757,7 @@ function lovd_FRCleanup (sViewListID, bSubmitVL)
 
 
 
-function lovd_FRSubmit (sViewListID, oOptions)
+function lovd_FRSubmit (sViewListID)
 {
     // Submit a find & replace action for the given viewlist.
 
