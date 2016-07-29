@@ -639,6 +639,10 @@ function lovd_FRColumnSelector (sViewListID)
                             .addClass(feedback.horizontal)
                             .appendTo(this);
                         $(this).removeClass('ui-widget-content');
+                        $(this).on('click', function () {
+                            // Remove tooltip when clicking on it
+                            overlayDiv.tooltip('destroy');
+                        });
                     }
                 }
             }).tooltip('open');
@@ -666,7 +670,8 @@ function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
 
     if (FRState[sViewListID]['phase'] == 'input') {
         // Display a tooltip for the options menu.
-        $('#viewlistFRColDisplay_' + sViewListID).tooltip({
+        var displayNameElement = $('#viewlistFRColDisplay_' + sViewListID);
+        displayNameElement.tooltip({
             items: '#viewlistFRColDisplay_' + sViewListID,
             content: 'Specify find & replace options',
             position: {
@@ -680,6 +685,10 @@ function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
+                    $(this).on('click', function () {
+                        // Remove tooltip when clicking on it
+                        displayNameElement.tooltip('destroy');
+                    });
                 }
             }
         }).tooltip('open');
@@ -709,13 +718,13 @@ function lovd_FRPreview (sViewListID)
 
         // Show tooltip above column with changes about to be applied.
         var FRPreviewHeader = $('th[data-fieldname="' + FRState[sViewListID]['sFieldname'] +
-                                '_FR' + '"]');
+                                '_FR' + '"] > img');
         FRPreviewHeader.tooltip({
             items: 'th',
             content: 'Preview changes (' + sFRRowsAffected + ' rows affected)',
             position: {
                 my: 'center bottom',
-                at: 'center top',
+                at: 'center top-15',
                 using: function(position, feedback) {
                     $(this).css(position);
                     $('<DIV>')
@@ -724,6 +733,10 @@ function lovd_FRPreview (sViewListID)
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
+                    $(this).on('click', function () {
+                        // Remove tooltip when clicking on it
+                        FRPreviewHeader.tooltip('destroy');
+                    });
                 }
             }
         }).tooltip('open');
