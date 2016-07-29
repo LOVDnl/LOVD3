@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-07-28
+ * Modified    : 2016-07-29
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -116,7 +116,9 @@ var check_list = [];
 // State object for Find & Replace, holding per viewlist information on what
 // phase of the F&R process we are (sPhase = 'none' | 'column_selection' |
 // 'input' | 'preview'), whether the F&R options form and buttons should
-// be shown (i.e. 'bShowMenu', 'bShowPreview' and 'bShowSubmit').
+// be shown (i.e. 'bShowMenu', 'bShowPreview' and 'bShowSubmit') and other
+// related information (e.g. 'sFRRowsAffected' is the number of rows that
+// will be affected by F&R)
 var FRState = {};
 
 
@@ -703,6 +705,7 @@ function lovd_FRPreview (sViewListID)
     lovd_AJAX_viewListSubmit(sViewListID, function() {
         // Get the predicted number of affected rows from the retrieved HTML.
         var sFRRowsAffected = $('#FRRowsAffected_' + sViewListID).val();
+        FRState[sViewListID]['sFRRowsAffected'] = sFRRowsAffected;
 
         // Show tooltip above column with changes about to be applied.
         var FRPreviewHeader = $('th[data-fieldname="' + FRState[sViewListID]['sFieldname'] +
@@ -725,6 +728,28 @@ function lovd_FRPreview (sViewListID)
             }
         }).tooltip('open');
     });
+}
+
+
+
+
+function lovd_FRShowConfirmation (sViewListID)
+{
+    if (!FRState.hasOwnProperty(sViewListID)) {
+        FRState[sViewListID] = {};
+    }
+
+    var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
+    FRoptions.before(
+        '<table border="0" cellpadding="2" cellspacing="0" width="100%" class="info" style="margin: 10px">' +
+            '<tbody><tr>' +
+                '<td valign="top" align="center" width="40">' +
+                    '<img src="gfx/lovd_information.png" alt="Information" title="Information"' +
+                          ' width="32" height="32" style="margin : 4px;">' +
+                '</td><td valign="middle">' +
+                    'Find & Replace applied to column "' + FRState[sViewListID]['sDisplayname'] +
+                    '" for ' + FRState[sViewListID]['sFRRowsAffected'] + ' records.' +
+        '</td></tr></tbody></table>');
 }
 
 
@@ -768,7 +793,10 @@ function lovd_FRSubmit (sViewListID)
     var oGetParams = {};
     oGetParams['FRSubmitClicked_' + sViewListID] = 1;
     lovd_AJAX_viewListSubmit(sViewListID, function() {
-        // Call cancel afterwards to clean up.
+        // Show confirmation
+        lovd_FRShowConfirmation(sViewListID);
+
+        // Clean up F&R settings menu.
         lovd_FRCleanup(sViewListID, false);
     }, oGetParams);
 }
