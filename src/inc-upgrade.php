@@ -433,6 +433,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      ),
                  '3.0-16a' =>
                     array('ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN remarks TEXT NOT NULL DEFAULT "" AFTER id_protein_uniprot'),
+                 '3.0-16b' =>
+                    array('ALTER TABLE ' . TABLE_DISEASES .
+                               ' ADD COLUMN tissue  VARCHAR(255) NOT NULL DEFAULT "" AFTER id_omim',
+                          'ALTER TABLE ' . TABLE_DISEASES .
+                               ' ADD COLUMN features TEXT NOT NULL AFTER tissue',
+                          'ALTER TABLE ' . TABLE_DISEASES .
+                               ' ADD COLUMN remarks TEXT NOT NULL AFTER features',
+                        ),
                  '3.0-16c' =>
                     array(
                         'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN allow_submitter_registration BOOLEAN NOT NULL DEFAULT 1 AFTER include_in_listing',

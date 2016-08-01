@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-07-20
+ * Modified    : 2016-08-03
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,6 +37,8 @@ if (!defined('ROOT_PATH')) {
 }
 // Require parent class definition.
 require_once ROOT_PATH . 'class/objects.php';
+
+require_once ROOT_PATH . 'inc-lib-diseases.php';
 
 
 
@@ -104,6 +106,9 @@ class LOVD_Disease extends LOVD_Object {
                         'individuals' => 'Individuals reported having this disease',
                         'phenotypes_' => 'Phenotype entries for this disease',
                         'genes_' => 'Associated with',
+                        'tissue' => 'Associated tissue',
+                        'features' => 'Disease features',
+                        'remarks' => 'Remarks',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
@@ -134,6 +139,12 @@ class LOVD_Disease extends LOVD_Object {
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
                                     'db'   => array('_genes', false, 'TEXT')),
+                        'tissue' => array(
+                                    'view' => array('Associated tissue', 160),
+                                    'db'   => array('tissue', false, 'TEXT')),
+                        'features' => array(
+                                    'view' => array('Disease features', 200),
+                                    'db'   => array('features', false, 'TEXT')),
                       );
         $this->sSortDefault = 'symbol';
 
@@ -225,7 +236,7 @@ class LOVD_Disease extends LOVD_Object {
             return parent::getForm();
         }
 
-        global $_DB, $_AUTH;
+        global $_DB, $_AUTH, $DISEASE_TISSUES;
 
         // Get list of genes, to connect disease to gene.
         if ($_AUTH['level'] == LEVEL_CURATOR) {
@@ -247,6 +258,9 @@ class LOVD_Disease extends LOVD_Object {
         }
         $nFieldSize = (count($aGenesForm) < 15? count($aGenesForm) : 15);
 
+        // Create array with keys and values as tissue strings as source for select box.
+        $aTissueSelectValues = array_combine($DISEASE_TISSUES, $DISEASE_TISSUES);
+
         // Array which will make up the form table.
         $this->aFormData =
                  array(
@@ -256,6 +270,10 @@ class LOVD_Disease extends LOVD_Object {
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
                         array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
+                        array('Associated tissue', '', 'select', 'tissue', 1, $aTissueSelectValues,
+                              true, false, false),
+                        array('Disease features', '', 'textarea', 'features', 50, 5),
+                        array('Remarks', '', 'textarea', 'remarks', 50, 5),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to genes (optional)</B>'),
