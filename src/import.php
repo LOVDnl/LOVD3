@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-07-22
+ * Modified    : 2016-08-08
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1003,7 +1003,7 @@ if (POST) {
                     // When updating, if a error is triggered by a field that is
                     // not in the file, then this error is unrelated to the data
                     // currently being processed so we should ignore the error.
-                    if ($sMode == 'update' && !empty($_ERROR['fields'][$i]) && !isset($aLine[$_ERROR['fields'][$i]])) {
+                    if ($sMode == 'update' && !empty($_ERROR['fields'][$i]) && !in_array($_ERROR['fields'][$i], $aColumns)) {
                         // Ignoring error!
                         unset($_ERROR['fields'][$i], $_ERROR['messages'][$i]);
                         continue;

@@ -285,7 +285,7 @@ class LOVD_Gene extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
-              
+
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             if (lovd_getProjectFile() == '/import.php') {

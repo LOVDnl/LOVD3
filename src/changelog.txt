@@ -19,6 +19,9 @@
  * Fixed bug; Error when updating individuals panel from import file.
    Closes #67: "Import: Panel_size of individual in panelid field not checked
    properly"
+ * Fixed bug; The previous bug fix #53, about LOVD complaining about fields not
+   in the file when running an update import, was not implemented properly.
+   Closes #53: "Importing records fails on existing fields in database".
 
 
 /**************************
