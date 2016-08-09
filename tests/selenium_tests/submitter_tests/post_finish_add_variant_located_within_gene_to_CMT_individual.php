@@ -43,7 +43,7 @@ class PostFinishAddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSelen
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange));
         $ProteinChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
         $this->assertEquals("p.(Val84Asp)", $ProteinChange);
-        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[9].value");
+        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[10].value");
         $this->assertEquals("g.70443808T>A", $GenomicDnaChange);
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();

@@ -47,7 +47,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="allele"]/option[text()="Maternal (confirmed)"]'));
         $option->click();
-        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[10].value");
+        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[11].value");
         $this->assertEquals("g.70443619G>A", $GenomicDnaChange);
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();

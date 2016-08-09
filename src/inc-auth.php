@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2012-08-23
- * For LOVD    : 3.0-beta-08
+ * Modified    : 2016-06-17
+ * For LOVD    : 3.0-16
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -59,6 +60,18 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         // Decode saved work.
         // FIXME; Later when we add a decent json_decode library, we want to remove the unserialize() part.
         $_AUTH['saved_work'] = (!empty($_AUTH['saved_work'])? ($_AUTH['saved_work']{0} == 'a'? unserialize($_AUTH['saved_work']) : json_decode($_AUTH['saved_work'])) : array());
+
+        // Get an array of IDs of users that share their permissions with current user.
+        $q = $_DB->query('SELECT userid_from, allow_edit FROM ' . TABLE_COLLEAGUES .
+                        ' WHERE userid_to = ?', array($_AUTH['id']), false);
+        if ($q === false) {
+            // Query to TABLE_COLLEAGUES failed (note: this table was introduced in 3.0-14e).
+            // FIXME: This if can be removed (and the above query made required)
+            // when we stop supporting upgrading from 3.0-15 or before.
+            $_AUTH['colleagues_from'] = array();
+        } else {
+            $_AUTH['colleagues_from'] = $q->fetchAllCombine();
+        }
     }
 }
 

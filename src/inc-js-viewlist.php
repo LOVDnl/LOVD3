@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2015-09-21
- * For LOVD    : 3.0-14
+ * Modified    : 2016-06-23
+ * For LOVD    : 3.0-16
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -139,6 +140,8 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
             if (objHTTP.readyState == 4) {
                 if (objHTTP.status == 200) {
                     if (objHTTP.responseText.length > 100) {
+                        // Fixme: check if code below can be replaced by just appending the response to the table.
+
                         // Successfully retrieved stuff.
                         var sResponse = objHTTP.responseText;
                         // Clone last TR and fill in the new response data and returns the row.
@@ -480,3 +483,32 @@ window.onload = function ()
 <?php
 }
 ?>
+
+
+
+function lovd_passAndRemoveViewListRow (sViewListID, sRowID, aRowData, callback)
+{
+    // Select item at row (sRowID) of ViewList (sViewListID), pass its data (as
+    // received) to the callback function (callback). The selected item will be
+    // removed from the ViewList and the ViewList will be updated (extending the
+    // view to the original number of rows and making sure the deleted item will
+    // not re-occur).
+
+    var oViewListForm = $('#viewlistForm_' + sViewListID).get(0);
+
+    // Change the search terms in the ViewList such that submitting it will not reshow this item.
+    oViewListForm.search_id.value += ' !' + sRowID;
+    // Does an ltrim, too. But trim() doesn't work in IE < 9.
+    oViewListForm.search_id.value = oViewListForm.search_id.value.replace(/^\s*/, '');
+
+    lovd_AJAX_viewListHideRow(sViewListID, sRowID);
+    oViewListForm.total.value --;
+    lovd_AJAX_viewListUpdateEntriesString(sViewListID);
+    lovd_AJAX_viewListAddNextRow(sViewListID);
+
+    // Function call to callback with the ViewList row as argument.
+    callback(aRowData);
+}
+
+
+

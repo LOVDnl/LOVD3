@@ -43,6 +43,7 @@ script:
   - vendor/bin/phpunit -v --testsuite manager_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite temp_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
 
 after_failure:
   - ./tests/upload_test_results.sh

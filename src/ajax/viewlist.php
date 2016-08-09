@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2015-05-12
- * For LOVD    : 3.0-14
+ * Modified    : 2016-07-14
+ * For LOVD    : 3.0-17
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -54,7 +55,7 @@ $aNeededLevel =
                 'Shared_Column' => LEVEL_CURATOR,
                 'Transcript' => 0,
                 'Transcript_Variant' => 0,
-                'User' => LEVEL_MANAGER,
+                'User' => LEVEL_SUBMITTER, // Certain fields will be forcefully removed, though.
               );
 if (isset($aNeededLevel[$_GET['object']])) {
     $nNeededLevel = $aNeededLevel[$_GET['object']];
@@ -99,6 +100,14 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
     }
 }
 
+// 2016-07-14; 3.0-17; Submitters should not be allowed to retrieve more
+// information about users than the info the access sharing page gives them.
+$aColsToSkip = (!empty($_GET['skip'])? $_GET['skip'] : array());
+if ($_GET['object'] == 'User' && $_AUTH['level'] == LEVEL_SUBMITTER) {
+    // Force removal of certain columns, regardless of this has been requested or not.
+    $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
+}
+
 // Require special clearance?
 if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
     // If not authorized, die with error message.
@@ -138,7 +147,6 @@ if (in_array($_GET['object'], array('Custom_ViewList', 'Phenotype', 'Shared_Colu
 }
 require $sFile;
 $_GET['object'] = 'LOVD_' . str_replace('_', '', $_GET['object']); // FIXME; test dit op een windows, test case-insensitivity.
-$aColsToSkip = (!empty($_GET['skip'])? $_GET['skip'] : array());
 $_DATA = new $_GET['object']($sObjectID, $nID);
 // Set $bHideNav to false always, since this ajax request could only have been sent if there were navigation buttons.
 $_DATA->viewList($_GET['viewlistid'], $aColsToSkip, (!empty($_GET['nohistory'])? true : false), (!empty($_GET['hidenav'])? true : false), (!empty($_GET['options'])? true : false), (!empty($_GET['only_rows'])? true : false));

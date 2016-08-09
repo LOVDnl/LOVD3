@@ -40,7 +40,7 @@ class AddVariantLocatedWithinGeneToIVAIndividualTest extends LOVDSeleniumWebdriv
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange));
         $ProteinChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
         $this->assertEquals("p.(Met115Ile)", $ProteinChange);
-        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[10].value");
+        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[11].value");
         $this->assertEquals("g.40702876G>T", $GenomicDnaChange);
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();

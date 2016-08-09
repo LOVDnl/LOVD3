@@ -49,5 +49,11 @@ class AddVCFFileToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->assertNotContains("of 25 variants", $this->driver->findElement(WebDriverBy::tagName("body"))->getText());
             sleep(1);
         }
+
+        // Test whether a variant was parsed correctly via mutalyzer.
+        $this->driver->get(ROOT_URL . '/src/genes/ARSD');
+        $element = $this->driver->findElement(WebDriverBy::xpath('//tr[@class="data"]/td[text()="X"]'));
+        $element->click();
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('//td[text()="p.(Gln318His)"]')));
     }
 }

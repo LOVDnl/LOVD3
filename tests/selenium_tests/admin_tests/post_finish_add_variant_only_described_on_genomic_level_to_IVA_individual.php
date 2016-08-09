@@ -8,7 +8,7 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
 {
     public function testPostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividual()
     {
-        $this->driver->get(ROOT_URL . "/src");
+        $this->driver->get(ROOT_URL . "/src/screenings/IVD");
         $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/IVD$/', $this->driver->getCurrentURL()));

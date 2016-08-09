@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2016-03-15
- * For LOVD    : 3.0-15
+ * Modified    : 2016-06-24
+ * For LOVD    : 3.0-16
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -124,6 +124,8 @@ function lovd_checkHGVS (e)
                         // Only enable the mapping buttons when there are transcripts added to this variant.
                         oVariantDNA.siblings('button:eq(0)').show();
                         oProtein.siblings('button:eq(0)').show();
+                        // Hide possible 'view prediction button'
+                        $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
                     }
                 }
             });
@@ -139,6 +141,8 @@ function lovd_checkHGVS (e)
             // Only enable the mapping buttons when there are transcripts added to this variant.
             oVariantDNA.siblings('button:eq(0)').show();
             oProtein.siblings('button:eq(0)').show();
+            // Hide possible 'view prediction button'
+            $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
         }
 
     } else {
@@ -152,6 +156,19 @@ function lovd_checkHGVS (e)
     return false;
 }
 
+
+
+
+
+function jq_escape (jqstr)
+{
+    // Escape characters in jQuery selectors (e.g. '/' becomes '\\/').
+    // Based on: https://learn.jquery.com/using-jquery-core/faq/how-do-i-select-an-element-by-an-id-that-has-characters-used-in-css-notation/
+    if (typeof(jqstr) == 'string') {
+        return jqstr.replace(/(:|\.|\[|\]|,|\/)/g, "\\$1");
+    }
+    return jqstr;
+}
 
 
 
@@ -311,12 +328,14 @@ function lovd_getProteinChange (oElement)
     // Collect the corresponding transcript variant information, because Mutalyzer needs it to make a prediction.
     var nTranscriptID = $(oThisProtein).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>);
     var oThisDNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/DNA"]');
-    var sVariantNotation = aUDrefseqs[aTranscripts[nTranscriptID][1]] + '(' + aTranscripts[nTranscriptID][1] + '_v' + aTranscripts[nTranscriptID][2] + '):' + $(oThisDNA).val();
     var oThisRNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/RNA"]');
     $(oThisRNA).attr('value', '');
     $(oThisRNA).removeClass();
 
-    $.get('ajax/check_variant.php', { variant: sVariantNotation, gene: aTranscripts[nTranscriptID][1] },
+    $.get('ajax/check_variant.php', { reference: aUDrefseqs[aTranscripts[nTranscriptID][1]],
+                                      gene: aTranscripts[nTranscriptID][1],
+                                      transcript: aTranscripts[nTranscriptID][0],
+                                      variant: $(oThisDNA).val()},
         function(aData, sStatus) {
             if (aData.length == 1 || aData['mutalyzer_error']) {
                 // Either Mutalyzer says No, our regexp didn't match with the full variant notation or user lost $_AUTH.
@@ -402,7 +421,17 @@ function lovd_getProteinChange (oElement)
                                 onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessages) + '\');',
                                 onmouseout: 'lovd_hideToolTip();'
                             }).show();
+
+                            // Add warning colors to RNA and protein input fields.
+                            $(oThisRNA).attr('class', 'warn');
+                            $(oThisProtein).attr('class', 'warn');
+                            $(oThisProtein).siblings('img:first').attr({
+                                src: 'gfx/check_orange.png',
+                                alt: 'Encountered a warning during protein prediction!',
+                                title: 'Encountered a warning during protein prediction!'
+                            }).show();
                         }
+
                     } else {
                         // No warnings or errors returned by Mutalyzer.
                         $(oThisDNA).siblings('img:first').attr({
@@ -410,22 +439,33 @@ function lovd_getProteinChange (oElement)
                             alt: 'HGVS compliant!',
                             title : 'HGVS compliant!'
                         }).show();
+
+                        $(oThisProtein).siblings('img:first').attr({
+                            src: 'gfx/check.png',
+                            alt: 'Prediction OK!',
+                            title: 'Prediction OK! Click to see result on Mutalyzer.'
+                        }).show();
                     }
                     $(oThisRNA).attr('value', aData['predict']['RNA']);
                     $(oThisProtein).attr('value', aData['predict']['protein']);
                     lovd_highlightInput(oThisRNA);
                     lovd_highlightInput(oThisProtein);
 
-                    $(oThisProtein).siblings('img:first').attr({
-                        src: 'gfx/check.png',
-                        // FIXME: We can't point to the mutalyzer link stored in $_CONF unless we include inc-init.php.
-                        onclick: 'lovd_openWindow("https://www.mutalyzer.nl/check?name=' + escape(sVariantNotation).replace('+', '%2B') + '&standalone=1");',
-                        style: 'cursor : pointer',
-                        alt: 'Prediction OK!',
-                        title: 'Prediction OK! Click to see result on Mutalyzer.'
-                    }).show();
                     $(oThisProtein).siblings('button:eq(0)').hide();
                 }
+            }
+
+            if (typeof(aData['mutalyzer_url']) != 'undefined' &&
+                !$(oThisProtein).siblings('button').is(':visible')) {
+
+                // Show button-link to mutalyzer namechecker. (only if no other button (e.g.
+                // 'predict') is shown).
+                $('<button>View prediction</button>')
+                    .appendTo(oThisProtein.parent())
+                    .attr({
+                        id: oThisProtein.attr('name') + '_view_prediction',
+                        onclick: 'lovd_openWindow("' + aData['mutalyzer_url'] + '"); return false;'
+                    }).show();
             }
         },"json"
     );

@@ -120,7 +120,7 @@ if ($_GET['step'] == 1) {
             $aGenBank = lovd_php_file($sFileID);
 
             if (!$aGenBank) {
-                lovd_errorAdd('symbol', 'We couldn\'t retreive the reference sequence file for this gene. Please try again later.');
+                lovd_errorAdd('symbol', 'We couldn\'t retrieve the reference sequence file for this gene. Please try again later.');
 
             } else {
                 // Select mRNA and CDS field based on transcript and protein id's.

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-02-17
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-14
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -74,8 +74,9 @@ class LOVD_User extends LOVD_Object {
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'u.*, ' .
                                            '(u.login_attempts >= 3) AS locked, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
-                                           'GROUP_CONCAT(CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
+                                           'GROUP_CONCAT(DISTINCT CASE u2g.allow_edit WHEN "1" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _curates, ' .
+                                           'GROUP_CONCAT(DISTINCT CASE u2g.allow_edit WHEN "0" THEN u2g.geneid END ORDER BY u2g.geneid SEPARATOR ";") AS _collaborates, ' .
+                                           'GROUP_CONCAT(DISTINCT col.userid_to, ";", ucol.name SEPARATOR ";;") AS __colleagues,' .
                                            'c.name AS country_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_, ' .
@@ -84,7 +85,9 @@ class LOVD_User extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (u.created_by = uc.id) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id)';
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (u.edited_by = ue.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_COLLEAGUES . ' AS col ON (u.id = col.userid_from) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ucol ON (col.userid_to = ucol.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'u.id';
 
         // SQL code for viewing a list of users.
@@ -121,6 +124,7 @@ class LOVD_User extends LOVD_Object {
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
                         'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'colleagues_' => '', // Other users that may access this user's data.
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
                         'status_' => array('Status', LEVEL_MANAGER),
@@ -135,6 +139,9 @@ class LOVD_User extends LOVD_Object {
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
                  array(
+                        'userid' => array(
+                                    'view' => false,
+                                    'db'   => array('u.id', 'ASC', true)),
                         'id' => array(
                                     'view' => array('ID', 45),
                                     'db'   => array('u.id', 'ASC', true)),
@@ -274,7 +281,14 @@ class LOVD_User extends LOVD_Object {
                 // Check given security IP range.
                 if ($bIP && !lovd_validateIP($aData['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     // This IP range is not allowing the current IP to connect. This ain't right.
-                    lovd_errorAdd('allowed_ip', 'Your current IP address is not matched by the given IP range. This would mean you would not be able to get access to LOVD with this IP range.');
+                    // If IP address is actually IPv6, then complain that we can't restrict at all.
+                    // Otherwise, be clear the current setting just doesn't match.
+                    if (strpos($_SERVER['REMOTE_ADDR'], ':') !== false) {
+                        // IPv6...
+                        lovd_errorAdd('allowed_ip', 'Your current IP address is IPv6 (' . $_SERVER['REMOTE_ADDR'] . '), which is not supported by LOVD to restrict access to your account.');
+                    } else {
+                        lovd_errorAdd('allowed_ip', 'Your current IP address is not matched by the given IP range. This would mean you would not be able to get access to LOVD with this IP range.');
+                    }
                 }
             }
 
@@ -363,8 +377,8 @@ class LOVD_User extends LOVD_Object {
                         array('', '', 'print', '<B>Security</B>'),
                         'hr',
              'level' => array('Level', ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Submitters</B> can submit, but not publish information in the database. Submitters can also create their own accounts, you don\'t need to do this for them.<BR><BR>In LOVD 3.0, <B>Curators</B> are Submitter-level users with Curator rights on certain genes. To create a Curator account, you need to create a Submitter and then grant this user rights on the necessary genes.', 'select', 'level', 1, $aUserLevels, false, false, false),
-                        array('Allowed IP address list', 'To help prevent others to try and guess the username/password combination, you can restrict access to the account to a number of IP addresses or ranges.', 'text', 'allowed_ip', 20),
-                        array('', '', 'note', '<I>Your current IP address: ' . $_SERVER['REMOTE_ADDR'] . '</I><BR><B>Please be extremely careful using this setting.</B> Using this setting too strictly, can deny the user access to LOVD, even if the correct credentials have been provided.<BR>Set to \'*\' to allow all IP addresses, use \'-\' to specify a range and use \';\' to separate addresses or ranges.'),
+                        array('Allowed IP address list (optional)', 'To help prevent others to try and guess the username/password combination, you can restrict access to the account to a number of IP addresses or ranges.', 'text', 'allowed_ip', 20),
+                        array('', '', 'note', 'Default value: *<BR>' . (strpos($_SERVER['REMOTE_ADDR'], ':') !== false? '' : '<I>Your current IP address: ' . $_SERVER['REMOTE_ADDR'] . '</I><BR>') . '<B>Please be extremely careful using this setting.</B> Using this setting too strictly, can deny the user access to LOVD, even if the correct credentials have been provided.<BR>Set to \'*\' to allow all IP addresses, use \'-\' to specify a range and use \';\' to separate addresses or ranges.'),
             'locked' => array('Locked', '', 'checkbox', 'locked'),
                         'hr',
 'authorization_skip' => 'skip',
@@ -484,6 +498,9 @@ class LOVD_User extends LOVD_Object {
                 $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
                 $zData['ownes_'] = $sOwnes;
             }
+
+            $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
+            $zData['colleagues_'] = $this->lovd_getObjectLinksHTML($zData['colleagues'], 'users/%s');
 
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');

@@ -196,6 +196,11 @@
             <file>temp_tests/confirm_variant_to_IVA_individual.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
+        <testsuite name="access_sharing_tests">
+            <file>shared_tests/install_LOVD.php</file>
+            <file>shared_tests/create_users_submitter.php</file>
+            <file>access_sharing_tests/access_sharing_submitter.php</file>
+        </testsuite>
     </testsuites>
     <listeners>
         <listener class="LOVDScreenshotListener" file="LOVDScreenshotListener.php" />
