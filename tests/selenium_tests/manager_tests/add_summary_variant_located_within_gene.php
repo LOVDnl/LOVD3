@@ -53,11 +53,11 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000002_effect_concluded"]/option[text()="Probably does not affect function"]'));
         $option->click();
         $this->enterValue(WebDriverBy::name("00000003_VariantOnTranscript/Exon"), "3");
-        $DnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[11].value");
+        $DnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[12].value");
         $this->assertEquals("c.62T>A", $DnaChange);
-        $RnaChange2 = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[13].value");
+        $RnaChange2 = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[14].value");
         $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange2));
-        $ProteinChange2 = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[14].value");
+        $ProteinChange2 = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[15].value");
         $this->assertEquals("p.(Leu21Gln)", $ProteinChange2);
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000003_effect_reported"]/option[text()="Probably affects function"]'));
         $option->click();
