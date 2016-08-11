@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-06-10
- * For LOVD    : 3.0-15
+ * Modified    : 2016-08-11
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -110,7 +110,7 @@ define('WEBDRIVER_MAX_WAIT_DEFAULT', 120);
 define('WEBDRIVER_POLL_INTERVAL_DEFAULT', 1000);
 
 // Time webdriver waits on DOM elements with every call (in seconds)
-define('WEBDRIVER_IMPLICIT_WAIT', 10);
+define('WEBDRIVER_IMPLICIT_WAIT', 30);
 
 // Time to wait when no expected condition can be set (in seconds)
 define('SELENIUM_TEST_SLEEP', 10);
