@@ -17,7 +17,6 @@ class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create disease information entry']"));
         $element->click();
         
-        $this->assertEquals("Successfully created the disease information entry!",
-            $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        $this->assertEquals("Successfully created the disease information entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
 }

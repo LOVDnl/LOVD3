@@ -1,19 +1,16 @@
 <?php
 
-class admin_tests extends PHPUnit_Extensions_SeleniumTestCase
+require_once 'LOVDSeleniumBaseTestCase.php';
+
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class admin_tests extends LOVDSeleniumWebdriverBaseTestCase
 {
-    protected function setUp()
-    {
-        $this->setBrowser('*firefox');
-        $this->setBrowserUrl('http://localhost/');
-        $this->shareSession(true);
-    }
 
     public function testLoadPage()
     {
-        $this->open('http://localhost/LOVD3/tests/travis/simpleTest.html');
-        $this->waitForPageToLoad ( "30000" );
-        $this->assertTitle('phpunit selenium test');
+        $this->driver->get(ROOT_URL . "/tests/travis/simpleTest.html");
+        $this->waitUntil(WebDriverExpectedCondition::titleContains('phpunit selenium test'));
     }
 }
 ?>

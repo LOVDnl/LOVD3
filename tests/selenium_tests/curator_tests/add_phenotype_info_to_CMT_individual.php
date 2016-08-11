@@ -1,21 +1,33 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class AddPhenotypeInfoToCMTIndividualTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class AddPhenotypeInfoToCMTIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testAddPhenotypeInfoToCMTIndividual()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/', $this->getLocation()));
-        $this->click("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000001$/', $this->getLocation()));
-        $this->type("name=Phenotype/Additional", "Additional phenotype information");
-        $this->select("name=Phenotype/Inheritance", "label=Familial");
-        $this->select("name=owned_by", "label=LOVD3 Admin (#00001)");
-        $this->select("name=statusid", "label=Public");
-        $this->click("//input[@value='Create phenotype information entry']");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Successfully created the phenotype entry!", $this->getText("css=table[class=info]"));
-        $this->waitForPageToLoad("4000");
+
+        // Wait for redirect
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
+
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/', $this->driver->getCurrentURL()));
+        $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
+        $element->click();
+        
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000001$/', $this->driver->getCurrentURL()));
+        $this->enterValue(WebDriverBy::name("Phenotype/Additional"), "Additional phenotype information");
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="Phenotype/Inheritance"]/option[text()="Familial"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
+        $option->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
+        $option->click();
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create phenotype information entry']"));
+        $element->click();
+        
+        $this->assertEquals("Successfully created the phenotype entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        
     }
 }

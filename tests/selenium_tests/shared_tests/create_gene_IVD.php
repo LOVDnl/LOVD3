@@ -1,26 +1,28 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class CreateGeneIVDTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCreateGeneIVD()
     {
-        $this->open(ROOT_URL . "/src/logout");
-        $this->open(ROOT_URL . "/src/login");
-        $this->type("name=username", "admin");
-        $this->type("name=password", "test1234");
-        $this->click("//input[@value='Log in']");
-        $this->waitForPageToLoad("30000");
-        $this->open(ROOT_URL . "/src/genes?create");
-        $this->type("name=hgnc_id", "IVD");
-        $this->click("//input[@value='Continue »']");
-        $this->waitForPageToLoad("120000");
-        $this->addSelection("name=active_transcripts[]", "label=transcript variant 1 (NM_002225.3)");
-        $this->click("name=show_hgmd");
-        $this->click("name=show_genecards");
-        $this->click("name=show_genetests");
-        $this->click("//input[@value='Create gene information entry']");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Successfully created the gene information entry!", $this->getText("css=table[class=info]"));
+        $this->driver->get(ROOT_URL . "/src/genes?create");
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::name("hgnc_id")));
+        $this->enterValue(WebDriverBy::name("hgnc_id"), "IVD");
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
+        $element->click();
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="active_transcripts[]"]/option[text()="transcript variant 1 (NM_002225.3)"]'));
+        $option->click();
+        $element = $this->driver->findElement(WebDriverBy::name("show_hgmd"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::name("show_genecards"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::name("show_genetests"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create gene information entry']"));
+        $element->click();
+        $this->assertEquals("Successfully created the gene information entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
 }

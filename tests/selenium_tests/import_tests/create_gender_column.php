@@ -1,16 +1,22 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class CreateGenderColumnTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class CreateGenderColumnTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCreateGenderColumn()
     {
-        $this->open(ROOT_URL . "/src/columns/Individual/Gender");
-        $this->click("id=viewentryOptionsButton_Columns");
-        $this->click("link=Enable column");
-        $this->waitForPageToLoad("30000");
-        $this->type("name=password", "test1234");
-        $this->click("//input[@value='Add/enable custom data column Individual/Gender']");
-        $this->waitForPageToLoad("30000");
+        $this->driver->get(ROOT_URL . "/src/columns/Individual/Gender");
+        $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Columns"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::linkText("Enable column"));
+        $element->click();
+        
+        $this->enterValue(WebDriverBy::name("password"), "test1234");
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Add/enable custom data column Individual/Gender']"));
+        $element->click();
+        
     }
 }

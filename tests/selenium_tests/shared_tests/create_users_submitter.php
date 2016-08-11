@@ -30,7 +30,9 @@
 
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class CreateUsersSubmitterTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+
+class CreateUsersSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
 {
 
     /**
@@ -38,23 +40,27 @@ class CreateUsersSubmitterTest extends LOVDSeleniumBaseTestCase
      */
     public function testCreateUserSubmitter($sName, $sEmail, $sUsername, $sPassword)
     {
-        $this->open(ROOT_URL . "/src/users?create&no_orcid");
-        $this->type("name=name", $sName);
-        $this->type("name=institute", "Leiden University Medical Center");
-        $this->type("name=department", "Human Genetics");
-        $this->type("name=address", "Einthovenweg 20\n2333 ZC Leiden");
-        $this->type("name=email", $sEmail);
-        $this->type("name=username", $sUsername);
-        $this->type("name=password_1", $sPassword);
-        $this->type("name=password_2", $sPassword);
-        $this->select("name=countryid", "label=Netherlands");
-        $this->type("name=city", "Leiden");
-        $this->select("name=level", "Submitter");
-        $this->click("name=send_email");
-        $this->type("name=password", "test1234");
-        $this->click("//input[@value='Create user']");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Successfully created the user account!", $this->getText("css=table[class=info]"));
+        $this->driver->get(ROOT_URL . "/src/users?create&no_orcid");
+        $this->enterValue(WebDriverBy::name("name"), $sName);
+        $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
+        $this->enterValue(WebDriverBy::name("department"), "Human Genetics");
+        $this->enterValue(WebDriverBy::name("address"), "Einthovenweg 20\n2333 ZC Leiden");
+        $this->enterValue(WebDriverBy::name("email"), $sEmail);
+        $this->enterValue(WebDriverBy::name("username"), $sUsername);
+        $this->enterValue(WebDriverBy::name("password_1"), $sPassword);
+        $this->enterValue(WebDriverBy::name("password_2"), $sPassword);
+        $countryOption = $this->driver->findElement(WebDriverBy::xpath('//select[@name="countryid"]/option[text()="Netherlands"]'));
+        $countryOption->click();
+        $this->enterValue(WebDriverBy::name("city"), "Leiden");
+        $levelOption = $this->driver->findElement(WebDriverBy::xpath('//select[@name="level"]/option[text()="Submitter"]'));
+        $levelOption->click();
+        $this->uncheck(WebDriverBy::name("send_email"));
+        $this->enterValue(WebDriverBy::name("password"), "test1234");
+        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create user']"));
+        $element->click();
+
+        $infoBox = $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"));
+        $this->assertEquals("Successfully created the user account!", $infoBox->getText());
     }
 
 

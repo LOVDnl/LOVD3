@@ -1,11 +1,14 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class AuthorizationTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class AuthorizationTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testAuthorization()
     {
-        $this->open(ROOT_URL . "/tests/unit_tests/authorization.php");
-        $this->assertEquals("Complete, all successful.", $this->getText("css=pre"));
+        $this->driver->get(ROOT_URL . "/tests/unit_tests/authorization.php");
+        $this->assertEquals("Complete, all successful.", $this->driver->findElement(WebDriverBy::cssSelector("pre"))->getText());
     }
 }

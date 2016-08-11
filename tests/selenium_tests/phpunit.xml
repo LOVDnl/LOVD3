@@ -2,12 +2,13 @@
     <testsuites>
         <testsuite name="admin_tests">
             <file>shared_tests/install_LOVD.php</file>
+            <file>shared_tests/login_as_admin.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>admin_tests/create_user_manager.php</file>
-            <file>admin_tests/create_user_curator.php</file>
+            <file>shared_tests/create_user_curator.php</file>
             <file>admin_tests/make_user_curator_IVD.php</file>
-            <file>admin_tests/create_user_submitter.php</file>
-            <file>admin_tests/create_disease_IVA.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
+            <file>shared_tests/create_disease_IVA.php</file>
             <file>admin_tests/create_individual_diagnosed_with_Healthy_Control.php</file>
             <file>admin_tests/add_phenotype_info_to_healthy_individual.php</file>
             <file>admin_tests/add_screening_to_healthy_individual.php</file>
@@ -39,10 +40,10 @@
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
             <file>authorization_tests/create_user_collaborator.php</file>
-            <file>authorization_tests/create_user_submitter.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
             <file>authorization_tests/create_user_owner.php</file>
-            <file>authorization_tests/create_gene_IVD.php</file>
-            <file>authorization_tests/create_disease_IVA.php</file>
+            <file>shared_tests/create_gene_IVD.php</file>
+            <file>shared_tests/create_disease_IVA.php</file>
             <file>authorization_tests/create_individual_diagnosed_with_IVA.php</file>
             <file>authorization_tests/add_screening_to_IVA_individual.php</file>
             <file>authorization_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
@@ -144,6 +145,7 @@
         </testsuite>
         <testsuite name="import_tests">
             <file>shared_tests/install_LOVD.php</file>
+            <file>shared_tests/login_as_admin.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>import_tests/create_gender_column.php</file>
             <file>import_tests/create_disease_IVA.php</file>
@@ -200,4 +202,8 @@
             <file>access_sharing_tests/access_sharing_submitter.php</file>
         </testsuite>
     </testsuites>
+    <listeners>
+        <listener class="LOVDScreenshotListener" file="LOVDScreenshotListener.php" />
+    </listeners>
+
 </phpunit>

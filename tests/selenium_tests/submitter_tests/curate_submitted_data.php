@@ -1,39 +1,53 @@
 <?php
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-class CurateSubmittedDataTest extends LOVDSeleniumBaseTestCase
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
+
+class CurateSubmittedDataTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCurateSubmittedData()
     {
-        $this->click("id=tab_variants");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants$/', $this->getLocation()));
-        $this->click("link=0000000001");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000001$/', $this->getLocation()));
-        $this->assertEquals("Pending", $this->getText("//tr[13]/td/span"));
-        $this->click("id=viewentryOptionsButton_Variants");
-        $this->click("link=Publish (curate) variant entry");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Public", $this->getText("//tr[13]/td/span"));
-        $this->click("link=00000001");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000001$/', $this->getLocation()));
-        $this->assertEquals("Pending", $this->getText("//tr[8]/td"));
-        $this->click("id=viewentryOptionsButton_Individuals");
-        $this->click("link=Publish (curate) individual entry");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Public", $this->getText("//tr[8]/td"));
-        $this->click("id=tab_variants");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants$/', $this->getLocation()));
-        $this->click("link=0000000002");
-        $this->waitForPageToLoad("30000");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000002$/', $this->getLocation()));
-        $this->assertEquals("Pending", $this->getText("//tr[13]/td/span"));
-        $this->click("id=viewentryOptionsButton_Variants");
-        $this->click("link=Publish (curate) variant entry");
-        $this->waitForPageToLoad("30000");
-        $this->assertEquals("Public", $this->getText("//tr[13]/td/span"));
+        $element = $this->driver->findElement(WebDriverBy::id("tab_variants"));
+        $element->click();
+        
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants$/', $this->driver->getCurrentURL()));
+        $element = $this->driver->findElement(WebDriverBy::linkText("0000000001"));
+        $element->click();
+        
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000001$/', $this->driver->getCurrentURL()));
+        $this->assertEquals("Pending", $this->driver->findElement(WebDriverBy::xpath("//tr[13]/td/span"))->getText());
+        $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Variants"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::linkText("Publish (curate) variant entry"));
+        $element->click();
+        
+        $this->assertEquals("Public", $this->driver->findElement(WebDriverBy::xpath("//tr[13]/td/span"))->getText());
+        $element = $this->driver->findElement(WebDriverBy::linkText("00000001"));
+        $element->click();
+        
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000001$/', $this->driver->getCurrentURL()));
+        $this->assertEquals("Pending", $this->driver->findElement(WebDriverBy::xpath("//tr[8]/td"))->getText());
+        $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Individuals"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::linkText("Publish (curate) individual entry"));
+        $element->click();
+        
+        $this->assertEquals("Public", $this->driver->findElement(WebDriverBy::xpath("//tr[8]/td"))->getText());
+        $element = $this->driver->findElement(WebDriverBy::id("tab_variants"));
+        $element->click();
+        
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants$/', $this->driver->getCurrentURL()));
+        $element = $this->driver->findElement(WebDriverBy::linkText("0000000002"));
+        $element->click();
+        
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000002$/', $this->driver->getCurrentURL()));
+        $this->assertEquals("Pending", $this->driver->findElement(WebDriverBy::xpath("//tr[13]/td/span"))->getText());
+        $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Variants"));
+        $element->click();
+        $element = $this->driver->findElement(WebDriverBy::linkText("Publish (curate) variant entry"));
+        $element->click();
+        
+        $this->assertEquals("Public", $this->driver->findElement(WebDriverBy::xpath("//tr[13]/td/span"))->getText());
     }
 }

@@ -4,9 +4,9 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class LoginAsCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
+class LoginAsAdminTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testLoginAsCollaborator()
+    public function testLoginAsAdmin()
     {
         $this->driver->get(ROOT_URL . "/src/logout");
 
@@ -17,11 +17,11 @@ class LoginAsCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
         sleep(SELENIUM_TEST_SLEEP);
 
         $this->driver->get(ROOT_URL . "/src/login");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/login$/', $this->driver->getCurrentURL()));
-        $this->enterValue(WebDriverBy::name("username"), "collaborator");
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::name("username")));
+        $this->enterValue(WebDriverBy::name("username"), "admin");
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
         $element->click();
-        
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('//b[text()="Welcome, LOVD3 Admin"]')));
     }
 }
