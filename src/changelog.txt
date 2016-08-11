@@ -22,6 +22,9 @@
  * Fixed bug; The previous bug fix #53, about LOVD complaining about fields not
    in the file when running an update import, was not implemented properly.
    Closes #53: "Importing records fails on existing fields in database".
+ * Fixed bug; The proxy server settings were often ignored by LOVD, and proxy
+   servers could not be used when using HTTPS, such as with Mutalyzer resources.
+   (thanks to Jorge Oliveira, Centro Hospitalar do Porto, for reporting)
 
 
 /**************************
