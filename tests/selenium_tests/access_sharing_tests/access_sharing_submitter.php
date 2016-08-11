@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-08-10
+ * Modified    : 2016-08-11
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,6 +130,7 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath($sUserSelector)));
         $userRow = $this->driver->findElement(WebDriverBy::xpath($sUserSelector));
         $userRow->click();
+        $this->enterValue(WebDriverBy::name('password'), $sSubPass1);
 
         $saveButton = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Save access permissions"]'));
         $saveButton->click();
@@ -154,5 +155,8 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/individuals/' . $sIndividualID);
         $header = $this->driver->findElement(WebDriverBy::xpath('//h2[@class="LOVD"]'));
         $this->assertEquals($header->getText(), 'View individual #' . $sIndividualID);
+        $nonpubFieldHead = $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr[4]/th'));
+        var_dump($nonpubFieldHead->getText());
+        $this->assertEquals($nonpubFieldHead->getText(), 'Remarks (non public)');
     }
 }
