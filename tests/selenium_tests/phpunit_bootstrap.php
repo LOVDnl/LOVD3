@@ -53,7 +53,7 @@ define('XDEBUG_ENABLED', $bConfigXDebug);
 $bXDebugStatus = false;
 
 
-set_include_path(get_include_path() . PATH_SEPARATOR . ROOT_PATH . '/tests/selenium_tests');
+set_include_path(get_include_path() . PATH_SEPARATOR . ROOT_PATH . '../tests/selenium_tests');
 
 use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
