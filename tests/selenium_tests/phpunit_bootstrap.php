@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-08-11
+ * Modified    : 2016-08-12
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -34,15 +34,11 @@ define('ROOT_PATH', realpath(__DIR__ . '/../../src') . '/');
 require_once ROOT_PATH . 'inc-lib-init.php';
 
 // Get configuration settings.
-define('CONFIG_URI', ROOT_PATH . 'config.ini.php');
-if (!$aConfig = file(CONFIG_URI)) {
-    throw new Exception('Init', 'Can\'t open config.ini.php');
-}
-$_INI = lovd_parseConfigFile(CONFIG_URI);
+$_INI = lovd_parseConfigFile(ROOT_PATH . 'config.ini.php');
 
 // Get root URL from config file.
 if (!isset($_INI['test']['root_url'])) {
-    throw new Exception('Failed to initialize ROOT_URL from ' . CONFIG_URI);
+    throw new Exception('Failed to initialize ROOT_URL from ' . ROOT_PATH . 'config.ini.php');
 }
 define('ROOT_URL', $_INI['test']['root_url']);
 
