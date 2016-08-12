@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-08-11
+ * Modified    : 2016-08-12
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -807,7 +807,8 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
             $aOptions['http']['request_fulluri'] = true;
         }
         if (substr($sURL, 0, 5) == 'https') {
-            $aOptions['ssl'] = array('allow_self_signed' => 1, 'SNI_enabled' => 1, 'SNI_server_name' => parse_url($sURL, PHP_URL_HOST));
+            $aOptions['ssl'] = array('allow_self_signed' => 1, 'SNI_enabled' => 1, (PHP_VERSION_ID >= 50600? 'peer_name' : 'SNI_server_name') => parse_url($sURL, PHP_URL_HOST));
+            $aOptions['http']['request_fulluri'] = false; // Somehow this breaks when testing through squid3 and using HTTPS.
         }
 
         return @file($sURL, FILE_IGNORE_NEW_LINES, stream_context_create($aOptions));
