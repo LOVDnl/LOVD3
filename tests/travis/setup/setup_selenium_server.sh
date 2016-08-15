@@ -5,19 +5,20 @@
 ## Then the selenium server is downloaded and started. 
 ## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
-serverFile=selenium-server-standalone-2.50.1.jar
+serverFile=selenium-server-standalone-2.53.1.jar
+chromeDriverSrc=http://chromedriver.storage.googleapis.com/2.23/chromedriver_linux64.zip
 
 phpVersion=`php -v`
 
 echo "Installing dependencies"
 composer install
 
-echo "check firefox version"
-firefox --version
+#echo "check firefox version"
+#firefox --version
 
 echo "Download Selenium"
 if [ ! -f $serverFile ]; then
-    wget http://selenium-release.storage.googleapis.com/2.50/$serverFile
+    wget http://selenium-release.storage.googleapis.com/2.53/$serverFile
 fi
 if [ ! -e ${serverFile} ]; then
     echo "Cannot find Selenium Server!"
@@ -25,19 +26,25 @@ if [ ! -e ${serverFile} ]; then
     exit
 fi
 
+echo "Download chromedriver"
+driverArchive=${chromeDriverSrc##*/}
+curl $chromeDriverSrc > $driverArchive
+if [ ! -f $driverArchive ]; then
+    echo "Download of $chromeDriverSrc failed. Aborting."
+    exit
+fi
+unzip $driverArchive
+if [ ! -f "chromedriver" ]; then
+    echo "Failed installing chromedriver. Aborting."
+    exit
+fi
+
 echo "Starting xvfb and Selenium"
 export DISPLAY=:99.0
 
-## You can start the selenium in two ways. The second method prints all selenium 
-## server logs in travis. This might give long logs errors. Therefore the first 
-## method is preferred. The second one might be convenient when debugging.
-# 1:
-sudo xvfb-run java -jar $serverFile > /tmp/selenium.log &
-
-# 2:
 #sh -e /etc/init.d/xvfb start
 #sleep 3
-#sudo java -jar $serverFile -port 4444 > /tmp/selenium.log &
+sudo java -jar $serverFile -port 4444 -Djava.net.preferIPv4Stack=true -Dwebdriver.chrome.driver=chromedriver > /tmp/selenium.log 2> /tmp/selenium_error.log &
 
 sleep 3
 

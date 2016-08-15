@@ -31,8 +31,14 @@ sudo a2enmod rewrite
 ## Setting the home directory for localhost.
 # setup_apache.sh assumes that the files are in a folder with this pattern: /githubaccount/projectname/
 echo 'Set localhost directory.'
-sudo sed -i -e "s,/var/www,/home/travis/build/${GITHUBACCOUNT},g" /etc/apache2/sites-available/default
-sudo sed -i -e "s,AllowOverride[ ]None,AllowOverride All,g" /etc/apache2/sites-available/default
+sudo sed -i -e "s,/var/www/html,/home/travis/build/${GITHUBACCOUNT},g" /etc/apache2/sites-available/000-default.conf
+sudo sed -i -e "s,/var/www,/home/travis/build/${GITHUBACCOUNT},g" /etc/apache2/apache2.conf
+sudo sed -i -e "s,AllowOverride[ ]None,AllowOverride All,g" /etc/apache2/apache2.conf
+
+# Make all source files readable and all source dirs executable.
+# (requirement of Apache)
+sudo chmod -R +r /home/travis
+sudo find /home/travis -type d -exec chmod +x {} \;
 
 echo 'Install mail agent.'
 # Pass the -y flag to suppress interactive requests.
