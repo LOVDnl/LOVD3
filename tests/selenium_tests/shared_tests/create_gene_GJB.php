@@ -8,8 +8,10 @@ class CreateGeneGJBTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCreateGeneGJB()
     {
-        $element = $this->driver->findElement(WebDriverBy::id("tab_genes"));
-        $element->click();
+        // Mouse hover over genes tab, to make 'create a new gene entry' link visible.
+        $tabElement = $this->driver->findElement(WebDriverBy::id("tab_genes"));
+        $this->driver->getMouse()->mouseMove($tabElement->getCoordinates());
+
         $element = $this->driver->findElement(WebDriverBy::linkText("Create a new gene entry"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes[\s\S]create$/', $this->driver->getCurrentURL()));

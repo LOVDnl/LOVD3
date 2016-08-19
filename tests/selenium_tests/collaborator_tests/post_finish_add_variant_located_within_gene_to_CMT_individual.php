@@ -12,8 +12,12 @@ class PostFinishAddVariantLocatedWithinGeneToCMTTest extends LOVDSeleniumWebdriv
         $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000003$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
-        $element->click();
+
+        // Move mouse to Screenings tab and click 'view all screenings' option.
+        $tabElement = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
+        $this->driver->getMouse()->mouseMove($tabElement->getCoordinates());
+        $allVariantsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all screenings'));
+        $allVariantsLink->click();
         
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings$/', $this->driver->getCurrentURL()));
 //        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
