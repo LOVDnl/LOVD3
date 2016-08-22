@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-08-03
+ * Modified    : 2016-08-22
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -78,6 +78,7 @@ class LOVD_Disease extends LOVD_Object {
                                            '(SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i2d.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') AS individuals, ' .
                                            '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
                                            'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
+                                           'd.tissue AS _tissues,' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_DISEASES . ' AS d ' .
@@ -91,7 +92,8 @@ class LOVD_Disease extends LOVD_Object {
                                           '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
                                           '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
                                           'COUNT(g2d.geneid) AS gene_count, ' .
-                                          'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes';
+                                          'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes,' .
+                                          'd.tissue AS _tissues';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
         $this->aSQLViewList['WHERE']    = 'd.id > 0';
@@ -106,7 +108,7 @@ class LOVD_Disease extends LOVD_Object {
                         'individuals' => 'Individuals reported having this disease',
                         'phenotypes_' => 'Phenotype entries for this disease',
                         'genes_' => 'Associated with',
-                        'tissue' => 'Associated tissue',
+                        'tissues' => 'Associated tissues',
                         'features' => 'Disease features',
                         'remarks' => 'Remarks',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
@@ -139,8 +141,8 @@ class LOVD_Disease extends LOVD_Object {
                         'genes_' => array(
                                     'view' => array('Associated with genes', 200),
                                     'db'   => array('_genes', false, 'TEXT')),
-                        'tissue' => array(
-                                    'view' => array('Associated tissue', 160),
+                        'tissues' => array(
+                                    'view' => array('Associated tissues', 160),
                                     'db'   => array('tissue', false, 'TEXT')),
                         'features' => array(
                                     'view' => array('Disease features', 200),
@@ -258,9 +260,6 @@ class LOVD_Disease extends LOVD_Object {
         }
         $nFieldSize = (count($aGenesForm) < 15? count($aGenesForm) : 15);
 
-        // Create array with keys and values as tissue strings as source for select box.
-        $aTissueSelectValues = array_combine($DISEASE_TISSUES, $DISEASE_TISSUES);
-
         // Array which will make up the form table.
         $this->aFormData =
                  array(
@@ -270,8 +269,8 @@ class LOVD_Disease extends LOVD_Object {
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
                         array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
-                        array('Associated tissue', '', 'select', 'tissue', 1, $aTissueSelectValues,
-                              true, false, false),
+                        array('Associated tissues', '', 'select', 'tissue', 10, $DISEASE_TISSUES,
+                              false, true, false),
                         array('Disease features', '', 'textarea', 'features', 50, 5),
                         array('Remarks', '', 'textarea', 'remarks', 50, 5),
                         'hr',
@@ -300,6 +299,8 @@ class LOVD_Disease extends LOVD_Object {
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
+
+        $zData['tissues'] = join(', ', $zData['tissues']);
 
         if ($sView == 'list') {
             $zData['row_id'] = $zData['id'];

@@ -948,11 +948,25 @@ function lovd_viewForm ($a,
 
                 if (is_array($oData)) {
                     // Array input.
+                    $bInOptGroup = false; // Used to determine if we are in an option group.
                     foreach ($oData as $key => $val) {
-                        // We have to cast the $key to string because PHP made integers of them, if they were integer strings.
-                        $bSelected = ((!$bMultiple && (string) $GLOBALS['_' . $sMethod][$sName] === (string) $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string) $key, $GLOBALS['_' . $sMethod][$sName], true)));
-                        print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
+                        // Create option groups for select boxes.
+                        if (substr($key, 0, 8) == 'optgroup') {
+                            // This handles the creation of option groups.
+                            // To add option groups include array values above each group as follows array('optgroup1' => 'Group 1 Name').
+
+                            // If we are in an option group then we need to close it before we start a new option group.
+                            print(($bInOptGroup? '' : "\n" . $sNewLine . '</OPTGROUP>') . "\n" .
+                                $sNewLine . '  <OPTGROUP label="' . htmlspecialchars($val) . '">');
+                            $bInOptGroup = true;
+                        } else {
+                            // We have to cast the $key to string because PHP made integers of them, if they were integer strings.
+                            $bSelected = ((!$bMultiple && (string)$GLOBALS['_' . $sMethod][$sName] === (string)$key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string)$key, $GLOBALS['_' . $sMethod][$sName], true)));
+                            print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected ? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
+                        }
                     }
+                    // If we are still in an option group then lets close it.
+                    print($bInOptGroup? '' : "\n" . $sNewLine . '</OPTGROUP>');
                 }
 
                 print('</SELECT>');
