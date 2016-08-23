@@ -8,7 +8,25 @@ php:
   - 5.6
   # aliased to a recent 7.x version
   - 7.0
-  
+
+env:
+  # Let Selenium use Firefox driver.
+  - LOVD_SELENIUM_DRIVER=firefox
+  # Let Selenium use Chrome driver.
+  - LOVD_SELENIUM_DRIVER=chrome
+
+matrix:
+  exclude:
+    # Exclude some combinations of php version and selenium driver.
+    - php: 5.4
+      env: LOVD_SELENIUM_DRIVER=chrome
+    - php: 5.5
+      env: LOVD_SELENIUM_DRIVER=firefox
+    - php: 5.6
+      env: LOVD_SELENIUM_DRIVER=chrome
+    - php: 7.0
+      env: LOVD_SELENIUM_DRIVER=firefox
+
 sudo: required
 dist: trusty
 

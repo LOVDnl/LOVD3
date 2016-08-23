@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-08-11
+ * Modified    : 2016-08-23
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -127,25 +127,28 @@ function getWebDriverInstance()
 
     if (!isset($webDriver)) {
 
-        // Fixme: make firefox driver configurable (e.g. via 2nd phpunit config)
-        // Create Firefox webdriver
-//        $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
-//        $webDriver = RemoteWebDriver::create('http://127.0.0.1:4444/wd/hub', $capabilities,
-//            WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
-//            WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
+        $driverType = getenv('LOVD_SELENIUM_DRIVER');
 
-        // This is the documented way of starting the chromedriver, but it fails. (at least
-        // on my machine with version 2.23)
-        // putenv('webdriver.chrome.driver=/usr/share/chromedriver');
-        // $webDriver = ChromeDriver::start();
+        if ($driverType == 'chrome') {
+            // This is the documented way of starting the chromedriver, but it fails. (at least
+            // on my machine with version 2.23)
+            // putenv('webdriver.chrome.driver=/usr/share/chromedriver');
+            // $webDriver = ChromeDriver::start();
 
-        // Start the chrome driver through the selenium server.
-        $host = 'http://localhost:4444/wd/hub';
-        $options = new ChromeOptions();
-        $options->addArguments(array('--no-sandbox'));
-        $capabilities = DesiredCapabilities::chrome();
-        $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
-        $webDriver = RemoteWebDriver::create($host, $capabilities);
+            // Start the chrome driver through the selenium server.
+            $host = 'http://localhost:4444/wd/hub';
+            $options = new ChromeOptions();
+            $options->addArguments(array('--no-sandbox'));
+            $capabilities = DesiredCapabilities::chrome();
+            $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
+            $webDriver = RemoteWebDriver::create($host, $capabilities);
+        } else {
+            // Create Firefox webdriver
+            $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
+            $webDriver = RemoteWebDriver::create('http://127.0.0.1:4444/wd/hub', $capabilities,
+                                                 WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
+                                                 WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
+        }
 
         // Set time for trying to access DOM elements
         $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
