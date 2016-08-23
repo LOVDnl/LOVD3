@@ -128,6 +128,7 @@ function getWebDriverInstance()
     if (!isset($webDriver)) {
 
         $driverType = getenv('LOVD_SELENIUM_DRIVER');
+        $host = 'http://localhost:4444/wd/hub';
 
         if ($driverType == 'chrome') {
             // This is the documented way of starting the chromedriver, but it fails. (at least
@@ -136,7 +137,7 @@ function getWebDriverInstance()
             // $webDriver = ChromeDriver::start();
 
             // Start the chrome driver through the selenium server.
-            $host = 'http://localhost:4444/wd/hub';
+            fwrite(STDERR, 'Connecting to Chrome driver via Selenium at ' . $host);
             $options = new ChromeOptions();
             $options->addArguments(array('--no-sandbox'));
             $capabilities = DesiredCapabilities::chrome();
@@ -144,6 +145,7 @@ function getWebDriverInstance()
             $webDriver = RemoteWebDriver::create($host, $capabilities);
         } else {
             // Create Firefox webdriver
+            fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host);
             $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
             $webDriver = RemoteWebDriver::create('http://127.0.0.1:4444/wd/hub', $capabilities,
                                                  WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
