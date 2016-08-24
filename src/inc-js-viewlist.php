@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-07-29
+ * Modified    : 2016-08-24
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -561,6 +561,86 @@ function lovd_getFROptionsElement (sViewListID)
 
 
 
+
+function lovd_FRShowOverlayColumn(index, targetTH, sOverlayClassname, tableHeight,
+                              sViewListDivSelector)
+{
+    // Show an overlay element for the viewlist column denoted by targetTH.
+    // The overlay element is given class sOverlayClassname and has a height
+    // equal to tableHeight. index is the number of the current column in the
+    // viewlist.
+
+    // Place DIVs overlaying table columns to get column selection.
+    var overlayDiv = $().add('<DIV class="' + sOverlayClassname + '"></DIV>');
+    var ePos = $(targetTH).offset();
+    var bAllowFindAndReplace = $(targetTH).data('allowfnr') == '1';
+
+    // Show 'not-allowed' cursor type for non-custom columns.
+    var overlayCursor = 'not-allowed';
+    if (bAllowFindAndReplace) {
+        overlayCursor = 'pointer';
+    }
+
+    // Position div over current column.
+    overlayDiv.css({
+        position: 'absolute',
+        top: ePos.top,
+        left: ePos.left,
+        height: tableHeight,
+        width: $(targetTH).outerWidth() + 1,
+        cursor: overlayCursor
+    });
+
+    // Only make custom columns selectable.
+    if (bAllowFindAndReplace) {
+        var oCurrentOptions = {
+            sFieldname: $(targetTH).data('fieldname'),
+            sDisplayname: $(targetTH).text().trim(),
+            phase: 'input',
+            bShowPreview: true,
+            bShowSubmit: false
+        };
+        overlayDiv.on('click', function () {
+            $('.' + sOverlayClassname).remove();
+            lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
+        });
+    } else {
+        overlayDiv.on('click', function () {
+            alert('This column is not available for Find & Replace.');
+        });
+    }
+
+    $(sViewListDivSelector).append(overlayDiv);
+
+    if (index == 0) {
+        // Show tooltip near first column.
+        overlayDiv.tooltip({
+            items: '.' + sOverlayClassname,
+            content: 'Select a column to use for Find & Replace',
+            position: {
+                my: 'left bottom',
+                at: 'right top',
+                using: function(position, feedback) {
+                    $(this).css(position);
+                    $('<DIV>')
+                        .addClass('arrow')
+                        .addClass(feedback.vertical)
+                        .addClass(feedback.horizontal)
+                        .appendTo(this);
+                    $(this).removeClass('ui-widget-content');
+                    $(this).on('click', function () {
+                        // Remove tooltip when clicking on it
+                        overlayDiv.tooltip('destroy');
+                    });
+                }
+            }
+        }).tooltip('open');
+    }
+}
+
+
+
+
 function lovd_FRColumnSelector (sViewListID)
 {
     // Show a find & replace column selector for the given viewlist.
@@ -580,74 +660,24 @@ function lovd_FRColumnSelector (sViewListID)
     var sVLTableSelector = '#viewlistTable_' + sViewListID;
     var tableHeight = $(sVLTableSelector).css('height');
 
-    $(sVLTableSelector).find('th').each(function(index) {
-        // Place DIVs overlaying table columns to get column selection.
-        var overlayDiv = $().add('<DIV class="vl_overlay"></DIV>');
-        var ePos = $(this).offset();
-        var bAllowFindAndReplace = $(this).data('allowfnr') == '1';
-
-        // Show 'not-allowed' cursor type for non-custom columns.
-        var overlayCursor = 'not-allowed';
-        if (bAllowFindAndReplace) {
-            overlayCursor = 'pointer';
-        }
-
-        // Position div over current column.
-        overlayDiv.css({
-            position: 'absolute',
-            top: ePos.top,
-            left: ePos.left,
-            height: tableHeight,
-            width: $(this).outerWidth() + 1,
-            cursor: overlayCursor
-        });
-
-        // Only make custom columns selectable.
-        if (bAllowFindAndReplace) {
-            var oCurrentOptions = {
-                sFieldname: $(this).data('fieldname'),
-                sDisplayname: $(this).text().trim(),
-                phase: 'input',
-                bShowPreview: true,
-                bShowSubmit: false
-            };
-            overlayDiv.on('click', function () {
-                $('.vl_overlay').remove();
-                lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
-            });
-        } else {
-            overlayDiv.on('click', function () {
-                alert('This column is not available for Find & Replace.');
-            });
-        }
-
-        $(sViewListDivSelector).append(overlayDiv);
-
-        if (index == 0) {
-            // Show tooltip near first column.
-            overlayDiv.tooltip({
-                items: '.vl_overlay',
-                content: 'Select a column to use for Find & Replace',
-                position: {
-                    my: 'left bottom',
-                    at: 'right top',
-                    using: function(position, feedback) {
-                        $(this).css(position);
-                        $('<DIV>')
-                            .addClass('arrow')
-                            .addClass(feedback.vertical)
-                            .addClass(feedback.horizontal)
-                            .appendTo(this);
-                        $(this).removeClass('ui-widget-content');
-                        $(this).on('click', function () {
-                            // Remove tooltip when clicking on it
-                            overlayDiv.tooltip('destroy');
-                        });
-                    }
-                }
-            }).tooltip('open');
-        }
+    // Overlay each column in the viewlist with a clickable element to select
+    // it.
+    var sOverlayClassname = 'vl_overlay';
+    $(sVLTableSelector).find('th').each(function (index) {
+        lovd_FRShowOverlayColumn(index, this, sOverlayClassname, tableHeight,
+                                 sViewListDivSelector);
     });
+
+    // Capture clicks outside the column overlays to cancel the F&R action.
+    $(document).on('click', function(event) {
+        if (!$(event.target).closest('.' + sOverlayClassname).length) {
+            // Remove viewlist column overlays.
+            $('.' + sOverlayClassname).remove();
+
+            // Remove page-wide click event capture.
+            $(document).off('click');
+        }
+    })
 }
 
 
