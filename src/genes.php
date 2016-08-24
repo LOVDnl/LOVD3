@@ -708,7 +708,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                 require ROOT_PATH . 'class/soap_client.php';
                 $_Mutalyzer = new LOVD_SoapClient();
                 try {
-//                    $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sID, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
                     $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
                     $_POST['refseq_UD'] = $sRefseqUD;
                     $aFields[] = 'refseq_UD';

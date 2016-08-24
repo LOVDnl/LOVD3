@@ -1684,7 +1684,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     // Get UDID from Mutalyzer.
                                     $sRefseqUD = '';
                                     try {
-//                                        $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sSymbol, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
                                         $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
                                     } catch (SoapFault $e) {} // Sometimes we don't have mapping information for the gene, and thus no slice.
 
