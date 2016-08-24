@@ -42,6 +42,8 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $this->uncheck(WebDriverBy::name("ignore_00000003"));
         $this->enterValue(WebDriverBy::name("00000002_VariantOnTranscript/Exon"), "3");
         $this->enterValue(WebDriverBy::name("00000003_VariantOnTranscript/Exon"), "3");
+        $this->enterValue(WebDriverBy::name("00000004_VariantOnTranscript/Exon"), "3");
+        $this->enterValue(WebDriverBy::name("00000005_VariantOnTranscript/Exon"), "3");
         $this->enterValue(WebDriverBy::name("00000002_VariantOnTranscript/DNA"), "c.62T>C");
         $element = $this->driver->findElement(WebDriverBy::cssSelector("button.mapVariant"));
         $element->click();
@@ -72,8 +74,9 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="allele"]/option[text()="Maternal (confirmed)"]'));
         $option->click();
-        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[21].value");
-        $this->assertEquals("g.2843789A>G", $GenomicDnaChange);
+//        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[19].value");
+        $GenomicDNAChange = $this->driver->findElement(WebDriverBy::name('VariantOnGenome/DNA'));
+        $this->assertEquals("g.2843789A>G", $GenomicDNAChange->getAttribute('value'));
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");

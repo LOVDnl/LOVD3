@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-06-21
- * For LOVD    : 3.0-16
+ * Modified    : 2016-07-15
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -708,7 +708,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                 require ROOT_PATH . 'class/soap_client.php';
                 $_Mutalyzer = new LOVD_SoapClient();
                 try {
-                    $sRefseqUD = $_Mutalyzer->sliceChromosomeByGene(array('geneSymbol' => $sID, 'organism' => 'Man', 'upStream' => '5000', 'downStream' => '2000'))->sliceChromosomeByGeneResult;
+                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
                     $_POST['refseq_UD'] = $sRefseqUD;
                     $aFields[] = 'refseq_UD';
                 } catch (SoapFault $e) {} // Silent error.
