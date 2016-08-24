@@ -813,7 +813,7 @@ function lovd_viewForm ($a,
     $nFormWidth = 760;
     if (!(!empty($a[1][0]) && $a[1][0] == 'fieldset')) {
         // Table should only be printed when the first field is not a fieldset definition, that definition will close and open a new table.
-        print('        <TABLE class="lovdform" border="0" cellpadding="0" cellspacing="1" width="' . $nFormWidth . '">');
+        print('        <TABLE border="0" cellpadding="0" cellspacing="1" width="' . $nFormWidth . '" class="dataform">');
     }
 
     // Now loop the array with fields, to print them on the screen.
