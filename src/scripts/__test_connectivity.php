@@ -46,14 +46,14 @@ Proxy server " . ($bProxyCanBeBypassed? 'CAN' : 'CAN NOT') . " be bypassed.
 // Testing connection to file on LOVD.nl.
 print("
 ================================================================================
-Opening remote file over HTTP, using " . ($bFopenWrappers? 'fopen() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return large positive number:
+Opening remote file over HTTP, using " . ($bFopenWrappers? 'our file() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return large positive number:
 ");
 var_dump(strlen(implode("\n", lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt'))));
 
 // Testing connection to HGNC.
 print("
 ================================================================================
-Contacting HGNC over HTTP, using " . ($bFopenWrappers? 'fopen() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return IVD gene data:
+Contacting HGNC over HTTP, using " . ($bFopenWrappers? 'our file() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return IVD gene data:
 ");
 var_dump(lovd_php_file('http://rest.genenames.org/search/symbol/IVD', false, '', 'Accept: application/json'));
 
@@ -66,14 +66,14 @@ Contacting Mutalyzer over HTTPS, using fsockopen() fallback, should return IVD m
 var_dump(lovd_php_file($sURL));
 print("
 ================================================================================
-Contacting Mutalyzer over HTTPS, using fopen() wrapper, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
+Contacting Mutalyzer over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
 ");
 var_dump(file($sURL, FILE_IGNORE_NEW_LINES));
 
 // Checking SNI_server_name / peer_name.
 print("
 ================================================================================
-Contacting LOVD server over HTTPS, using fopen() wrapper, testing SNI_server_name vs peer_name settings, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return a large positive number')) . ":
+Contacting LOVD server over HTTPS, using our file() wrapper, testing SNI_server_name vs peer_name settings, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : 'return a large positive number') . ":
 ");
 var_dump(strlen(implode("\n", lovd_php_file('https://grenada.lumc.nl/'))));
 
@@ -82,7 +82,10 @@ print("
 ================================================================================
 Contacting Mutalyzer over HTTPS, using SOAP implementation, should return IVD mapping data:
 ");
+ini_set('soap.wsdl_cache_enabled',0);
+ini_set('soap.wsdl_cache_ttl',0);
 require ROOT_PATH . 'class/soap_client.php';
 $_Mutalyzer = new LOVD_SoapClient();
+$_Mutalyzer->__setLocation($_CONF['mutalyzer_soap_url'] . '?wsdl');
 var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
 ?>

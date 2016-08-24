@@ -49,7 +49,8 @@ class LOVD_SoapClient extends SoapClient {
         $sHostname = parse_url($_CONF['mutalyzer_soap_url'], PHP_URL_HOST);
         // Mutalyzer's Apache server doesn't like SSL requests coming in through a proxy, if these settings are not configured.
         // The new Mutalyzer server (scheduled to be released in September, 2014) does not have this issue, but still works with these settings enabled.
-        $oContext = stream_context_create(array('ssl' => array('allow_self_signed' => 1, 'SNI_enabled' => 1, (PHP_VERSION_ID >= 50600? 'peer_name' : 'SNI_server_name') => $sHostname)));
+//        $oContext = stream_context_create(array('ssl' => array('allow_self_signed' => 1, 'SNI_enabled' => 1, (PHP_VERSION_ID >= 50600? 'peer_name' : 'SNI_server_name') => $sHostname)));
+        $oContext = stream_context_create(array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
         $aOptions =
             array(
                 'features' => SOAP_SINGLE_ELEMENT_ARRAYS, // Makes sure we ALWAYS get an array back, even if there is just one element returned (saves us a lot is_array() checks).
