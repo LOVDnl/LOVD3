@@ -507,6 +507,27 @@ function lovd_activateMenu (sViewListID)
 
 
 
+function onNextDocumentClick(callback) {
+    // Call callback function on next click anywhere on the page.
+
+    $(document).on('click.onNextDocumentClick', function() {
+        // Remove event binding.
+        $(document).off('click.onNextDocumentClick');
+        callback();
+    });
+}
+
+
+
+
+function closeAllTooltips() {
+    // Remove tooltip elements from DOM.
+    $('div[role="tooltip"]').remove();
+}
+
+
+
+
 
 function lovd_getFROptionsElement (sViewListID)
 {
@@ -628,10 +649,7 @@ function lovd_FRShowOverlayColumn(index, targetTH, sOverlayClassname, tableHeigh
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
-                    $(this).on('click', function () {
-                        // Remove tooltip when clicking on it
-                        overlayDiv.tooltip('destroy');
-                    });
+                    onNextDocumentClick(closeAllTooltips);
                 }
             }
         }).tooltip('open');
@@ -669,13 +687,13 @@ function lovd_FRColumnSelector (sViewListID)
     });
 
     // Capture clicks outside the column overlays to cancel the F&R action.
-    $(document).on('click', function(event) {
+    $(document).on('click.columnSelector', function(event) {
         if (!$(event.target).closest('.' + sOverlayClassname).length) {
             // Remove viewlist column overlays.
             $('.' + sOverlayClassname).remove();
 
             // Remove page-wide click event capture.
-            $(document).off('click');
+            $(document).off('click.columnSelector');
         }
     })
 }
@@ -715,10 +733,7 @@ function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
-                    $(this).on('click', function () {
-                        // Remove tooltip when clicking on it
-                        displayNameElement.tooltip('destroy');
-                    });
+                    onNextDocumentClick(closeAllTooltips);
                 }
             }
         }).tooltip('open');
@@ -736,9 +751,6 @@ function lovd_FRPreview (sViewListID)
     }
     FRState[sViewListID]['phase'] = 'preview';
     FRState[sViewListID]['bShowSubmit'] = true;
-
-    // Hide all current tooltips.
-    $('div[role="tooltip"]').remove();
 
     // Submit the current viewlist with find & replace options.
     lovd_AJAX_viewListSubmit(sViewListID, function() {
@@ -763,10 +775,7 @@ function lovd_FRPreview (sViewListID)
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
-                    $(this).on('click', function () {
-                        // Remove tooltip when clicking on it
-                        FRPreviewHeader.tooltip('destroy');
-                    });
+                    onNextDocumentClick(closeAllTooltips);
                 }
             }
         }).tooltip('open');
@@ -822,7 +831,7 @@ function lovd_FRCleanup (sViewListID, bSubmitVL, afterSubmitCallback)
     }
 
     // Hide all tooltips.
-    $('div[role="tooltip"]').remove();
+    closeAllTooltips();
 }
 
 
