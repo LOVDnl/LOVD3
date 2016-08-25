@@ -158,7 +158,7 @@ class LOVD_Object {
             // perform find and replace on.
             $sErr = 'Cannot run update query for object with unknown table (object=' .
                 get_class($this) . ').';
-            lovd_displayError('LOVD_ERR_UNKOWN_TABLE', $sErr);
+            lovd_displayError('FindAndReplace', $sErr);
             return;
         }
 
@@ -167,7 +167,7 @@ class LOVD_Object {
         // Fixme: check if authorization level is correctly set for viewlist data.
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             $sErr = 'You do not have authorization to perform this action.';
-            lovd_displayError('LOVD_ERR_AUTH_FR', $sErr);
+            lovd_displayError('FindAndReplace', $sErr);
             return;
         }
 
