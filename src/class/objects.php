@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-07-27
+ * Modified    : 2016-08-25
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,9 +130,10 @@ class LOVD_Object {
 
 
 
-    private function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
+    public function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
                                                 $aArgs, $aOptions) {
         // Perform a find and replace action for given field name (column).
+        // Return false if update query fails.
 
         global $_DB, $_AUTH;
 
@@ -183,7 +184,7 @@ class LOVD_Object {
                       $sSubqueryAlias . ' SET ' . constant($this->sTable) . '.`' . $sFieldname .
                       '`=' . $sReplaceStmt . ' WHERE ' . constant($this->sTable) . '.' . $sIDField .
                       ' = ' . $sSubqueryAlias . '.' . $sIDField;
-        $_DB->query($sUpdateSQL, $aArgs);
+        return $_DB->query($sUpdateSQL, $aArgs);
     }
 
 
@@ -1130,7 +1131,7 @@ class LOVD_Object {
 
         // Set names for preview column.
         $sPreviewFieldname = $sFRFieldname . '_FR';
-        $sPreviewFieldDisplayname = $sFRFieldDisplayname . '_FR';
+        $sPreviewFieldDisplayname = $sFRFieldDisplayname . '_(PREVIEW)';
 
         // Edit sql in $this->aSQLViewList to include an F&R column.
         $this->aSQLViewList['SELECT'] .= ",\n";
@@ -1156,7 +1157,7 @@ class LOVD_Object {
 
 
 
-    private function processViewListSearchArgs()
+    public function processViewListSearchArgs($aRequest)
     {
         // Generate WHERE and HAVING statements for search field content in viewlist.
         // Returns an array with:
@@ -1179,7 +1180,7 @@ class LOVD_Object {
         $aBadSyntaxColumns = array();
         $aColTypes = array(); // For describing the search expressions in the mouseover of the input field.
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
-            if (!empty($aCol['db'][2]) && isset($_GET['search_' . $sColumn]) && trim($_GET['search_' . $sColumn]) !== '') {
+            if (!empty($aCol['db'][2]) && isset($aRequest['search_' . $sColumn]) && trim($aRequest['search_' . $sColumn]) !== '') {
                 $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false ? 'HAVING' : 'WHERE');
                 if ($aCol['db'][2] !== true) {
                     // Column type of an alias is given by LOVD.
@@ -1203,9 +1204,9 @@ class LOVD_Object {
                 // Allow for searches where the order of words is forced by enclosing the values with double quotes;
                 // Replace spaces in sentences between double quotes so they don't get exploded.
                 if ($sColType == 'DATETIME') {
-                    $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($_GET['search_' . $sColumn]));
+                    $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($aRequest['search_' . $sColumn]));
                 } else {
-                    $sSearch = preg_replace_callback('/("[^"]*")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($_GET['search_' . $sColumn]));
+                    $sSearch = preg_replace_callback('/("[^"]*")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($aRequest['search_' . $sColumn]));
                 }
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
@@ -1584,7 +1585,7 @@ class LOVD_Object {
         }
 
         // Process search fields (i.e. $_GET['search_...'] values) for viewlist.
-        list($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes) = $this->processViewListSearchArgs();
+        list($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes) = $this->processViewListSearchArgs($_GET);
         if ($WHERE) {
             $this->aSQLViewList['WHERE'] .= ($this->aSQLViewList['WHERE']? ' AND ' : '') . $WHERE;
         }
@@ -1689,9 +1690,6 @@ class LOVD_Object {
         }
 
         // Process input values regarding find & replace.
-        // User clicked submit.
-        $bFRSubmit =            isset($_GET['FRSubmitClicked_' . $sViewListID]) &&
-                                $_GET['FRSubmitClicked_' . $sViewListID] == '1';
         // User clicked preview.
         $bFRPreview =           isset($_GET['FRPreviewClicked_' . $sViewListID]) &&
                                 $_GET['FRPreviewClicked_' . $sViewListID] == '1';
@@ -1726,11 +1724,7 @@ class LOVD_Object {
             // Build argument list.
             $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
 
-            if ($bFRSubmit) {
-                // User has submitted Find&Replace form, apply changes.
-                $this->applyColumnFindAndReplace($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
-                                                 $aArgs, $aFROptions);
-            } else if ($bFRPreview) {
+            if ($bFRPreview) {
                 // User clicked 'preview' in Find&Replace form, add F&R changes as a separate
                 // column in the query.
                 $nFRRowsAffected = $this->previewColumnFindAndReplace($sFRFieldname,
@@ -2005,7 +1999,12 @@ class LOVD_Object {
     </TABLE>
     <INPUT id="FRPreview_$sViewListID" type="button" value="preview" />
     <INPUT id="FRCancel_$sViewListID" type="button" value="cancel" />
-    <INPUT id="FRSubmit_$sViewListID" type="button" value="submit" />
+    <DIV id="FRSubmitDiv_$sViewListID">
+        <BR>
+        Enter your password to apply find and replace:<BR> 
+        <INPUT type="password" name="password" size="20" />
+        <INPUT id="FRSubmit_$sViewListID" type="submit" value="submit" />
+    </DIV>
 </DIV>
 FROptions
                 );

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-08-24
+ * Modified    : 2016-08-25
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -533,9 +533,9 @@ function lovd_getFROptionsElement (sViewListID)
 
     // Hide/show buttons based on options.
     if (typeof FRState[sViewListID].bShowSubmit == 'undefined' || !FRState[sViewListID].bShowSubmit) {
-        FRoptions.find('#FRSubmit_' + sViewListID).hide();
+        FRoptions.find('#FRSubmitDiv_' + sViewListID).hide();
     } else {
-        FRoptions.find('#FRSubmit_' + sViewListID).show();
+        FRoptions.find('#FRSubmitDiv_' + sViewListID).show();
     }
     if (typeof FRState[sViewListID].bShowPreview == 'undefined' || !FRState[sViewListID].bShowPreview) {
         FRoptions.find('#FRPreview_' + sViewListID).hide();
@@ -563,7 +563,7 @@ function lovd_getFROptionsElement (sViewListID)
 
 
 function lovd_FRShowOverlayColumn(index, targetTH, sOverlayClassname, tableHeight,
-                              sViewListDivSelector)
+                                  sViewListID, sViewListDivSelector)
 {
     // Show an overlay element for the viewlist column denoted by targetTH.
     // The overlay element is given class sOverlayClassname and has a height
@@ -665,7 +665,7 @@ function lovd_FRColumnSelector (sViewListID)
     var sOverlayClassname = 'vl_overlay';
     $(sVLTableSelector).find('th').each(function (index) {
         lovd_FRShowOverlayColumn(index, this, sOverlayClassname, tableHeight,
-                                 sViewListDivSelector);
+                                 sViewListID, sViewListDivSelector);
     });
 
     // Capture clicks outside the column overlays to cancel the F&R action.
@@ -776,7 +776,7 @@ function lovd_FRPreview (sViewListID)
 
 
 
-function lovd_FRShowConfirmation (sViewListID)
+function lovd_FRShowConfirmation (sViewListID, sDisplayname, sFRRowsAffected)
 {
     if (!FRState.hasOwnProperty(sViewListID)) {
         FRState[sViewListID] = {};
@@ -790,14 +790,14 @@ function lovd_FRShowConfirmation (sViewListID)
                     '<img src="gfx/lovd_information.png" alt="Information" title="Information"' +
                           ' width="32" height="32" style="margin : 4px;">' +
                 '</td><td valign="middle">' +
-                    'Find & Replace applied to column "' + FRState[sViewListID]['sDisplayname'] +
-                    '" for ' + FRState[sViewListID]['sFRRowsAffected'] + ' records.' +
+                    'Find & Replace applied to column "' + sDisplayname + '" for ' +
+                    sFRRowsAffected + ' records.' +
         '</td></tr></tbody></table>');
 }
 
 
 
-function lovd_FRCleanup (sViewListID, bSubmitVL)
+function lovd_FRCleanup (sViewListID, bSubmitVL, afterSubmitCallback)
 {
     // Cleanup HTML from find & replace (form values + preview viewlist column).
 
@@ -818,7 +818,7 @@ function lovd_FRCleanup (sViewListID, bSubmitVL)
 
     if (bSubmitVL || typeof bSubmitVL == 'undefined') {
         // Reload the viewlist to remove a potential preview column.
-        lovd_AJAX_viewListSubmit(sViewListID);
+        lovd_AJAX_viewListSubmit(sViewListID, afterSubmitCallback);
     }
 
     // Hide all tooltips.
@@ -829,19 +829,46 @@ function lovd_FRCleanup (sViewListID, bSubmitVL)
 
 function lovd_FRSubmit (sViewListID)
 {
+    // Check if password field is empty.
+    var sViewlistFormSelector = '#viewlistForm_' + sViewListID;
+    if ($(sViewlistFormSelector).find(':password').val() == '') {
+        alert('Please fill in your password to authorize.');
+        return false;
+    }
+
     // Submit a find & replace action for the given viewlist.
+    var postResponse = $.post('<?php echo lovd_getInstallURL() . 'ajax/viewlist.php?applyFR'; ?>',
+                              $(sViewlistFormSelector).serialize(), null, 'text');
 
-    // Add a GET parameter to the AJAX request to indicate the user has pushed
-    // submit.
-    var oGetParams = {};
-    oGetParams['FRSubmitClicked_' + sViewListID] = 1;
-    lovd_AJAX_viewListSubmit(sViewListID, function() {
-        // Show confirmation
-        lovd_FRShowConfirmation(sViewListID);
+    var sDisplayname = '';
+    var sFRRowsAffected = '';
+    if (FRState.hasOwnProperty(sViewListID)) {
+        sDisplayname = FRState[sViewListID]['sDisplayname'];
+        sFRRowsAffected = FRState[sViewListID]['sFRRowsAffected'];
+    }
 
-        // Clean up F&R settings menu.
-        lovd_FRCleanup(sViewListID, false);
-    }, oGetParams);
+    postResponse.done(function(sData) {
+        // Fixme: consider requiring inc-init.php to use AJAX_* constants for checking response.
+        if (sData === '1') {
+            // Clean up F&R settings menu.
+            lovd_FRCleanup(sViewListID, true, function() {
+                // Show confirmation after cleanup.
+                lovd_FRShowConfirmation(sViewListID, sDisplayname, sFRRowsAffected);
+            });
+        } else if (sData === '8') {
+            alert('You do not have authorization to perform this action. Did you enter your ' +
+                  'password correctly?');
+        } else {
+            alert('Something went wrong while applying find and replace.');
+        }
+    })
+    .fail(function() {
+        alert('Something went wrong while applying find and replace.');
+    })
+    .always(function() {
+        // clear password field.
+        $(sViewlistFormSelector).find(':password').val('');
+    });
 }
 
 
