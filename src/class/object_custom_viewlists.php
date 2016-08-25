@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-07-12
+ * Modified    : 2016-07-20
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -191,7 +191,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                         }
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)';
                     } else {
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog ON (';
+                        // 2016-07-20; 3.0-17; Added FORCE INDEX because MySQL optimized the Full data view
+                        // differently, resulting in immense temporary tables filling up the disk.
+                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog FORCE INDEX FOR JOIN (PRIMARY) ON (';
                         $nKeyVOT = array_search('VariantOnTranscript', $aObjects);
                         if ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.

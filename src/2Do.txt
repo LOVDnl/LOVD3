@@ -27,12 +27,6 @@ Prioritize:
 Website:
 - Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
 
-- Publish LOVD software together with data:
-  - Setup a data package with recent gene and transcript data (and possibly 
-    standard custom column configuration)
-  - Allow fast import of the data package during or after LOVD installation.
-  - Possibly use mysqldump/mysqlimport or extend LOVD import format to include 
-    genes and transcripts
 - Internationalization (student project?):
   - Create internationalized LOVD instance, put all text in a translation (.po?) file, starting with template.php (menus), objects.php, etc.
   - Later page headers, custom columns, statuses, page's texts, etc.
@@ -254,6 +248,8 @@ Website:
 - Curate all option? Geeft popup met vinkje wel/niet alles mee cureren (phenotypes, individuals, etc). Daarna met progress bar de boel cureren... Ajax request output in popup?
 - Per variant de mapping opties kunnen veranderen? Tijdens submissie van genomische var met een vinkje mapping aanzetten?
 - Connect existing variant to existing individual; kies individual via viewlist in new window, daarna kies screening?
+- Create better graphs, submitter locations, etc (student project?)
+  + Submitters from country, IPs visiting (Jeroen knows a package which does that), maybe more specific submitter locations based on city as well?
 
 - Beta-09:
   - Submitter register: confirm email ter beveiliging tegen spam?
