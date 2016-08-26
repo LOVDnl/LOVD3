@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-08-25
+ * Modified    : 2016-08-26
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -138,7 +138,7 @@ class LOVD_Object {
         global $_DB, $_AUTH;
 
         // Determine field name from select query.
-        list(, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+        list(, $sFieldname) = $this->getTableAndFieldNameFromViewListCols($sFRFieldname);
 
         // Construct replace statement using viewlist's select query, without ORDER BY and LIMIT.
         $sSelectSQL = $this->buildSQL(array(
@@ -841,13 +841,11 @@ class LOVD_Object {
 
 
 
-    private function getTableAndFieldNameFromSelect ($sFRFieldname)
+    private function getTableAndFieldNameFromViewListCols ($sFRFieldname)
     {
         // Try to translate UI field name to fieldname and tablename in the database based on
         // the SQL query definitions. (note that a field name returned by the interface (returned
         // by the select query) may be different from the fieldname in the table due to aliases).
-
-        // FIXME: This function no longer does what it says it does. Rename it.
 
         // All columns for Find & Replace *must* be defined in the column's list.
         // Check if column exists there. If not, display an error.
@@ -864,7 +862,7 @@ class LOVD_Object {
         // those columns should not have 'allowfnr' set to true.
         $sTableName = '';
         $sFieldName = $this->aColumnsViewList[$sFRFieldname]['db'][0];
-        if (preg_match('/^(\w+)\.(\w+)$/', $sFieldName, $sRegs)) {
+        if (preg_match('/^(\w+)\.(\w+)$/', $sFieldName, $aRegs)) {
             $sTableName = $aRegs[1];
             $sFieldName = $aRegs[2];
         }
@@ -1109,7 +1107,7 @@ class LOVD_Object {
 
         // Try to discover the tablename and fieldname, as $sFRFieldname may be
         // an alias.
-        list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromSelect($sFRFieldname);
+        list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromViewListCols($sFRFieldname);
 
         // Run query with search field to compute number of affected rows, skipping ORDER BY and LIMIT.
         $sSelectSQL = $this->buildSQL(array(

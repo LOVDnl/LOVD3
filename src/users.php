@@ -1114,7 +1114,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'individuals/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true);
+        $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true, false, true);
         unset($_GET['search_individualid']);
     } else {
         lovd_showInfoTable('No submissions of individuals found!', 'stop');
@@ -1132,7 +1132,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true);
+        $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true, false, true);
     } else {
         lovd_showInfoTable('No submissions of variant screenings found!', 'stop');
     }
