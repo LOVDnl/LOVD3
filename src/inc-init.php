@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-08-25
+ * Modified    : 2016-08-26
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -476,6 +476,10 @@ mb_internal_encoding('UTF-8');
 if ($_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
     // Must be two-step, since $_CONF can be false and therefore does not have ->fetchAssoc().
     $_CONF = $_CONF->fetchAssoc();
+    if ($_CONF) {
+        // See if the database is read-only at the moment, due to an announcement with the configuration.
+        $_CONF['lovd_read_only'] = (bool) $_DB->query('SELECT COUNT(*) FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW() AND lovd_read_only = 1')->fetchColumn();
+    }
 }
 if (!$_CONF) {
     // Basic configuration, in case we're not installed properly.
@@ -596,6 +600,17 @@ header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version
 if (!defined('NOT_INSTALLED')) {
     // Load session data.
     require ROOT_PATH . 'inc-auth.php';
+
+    // If we're read only, log user out when lower than Manager.
+    if ($_AUTH && $_CONF['lovd_read_only'] && $_AUTH['level'] < LEVEL_MANAGER) {
+        // We won't let the user know, because this usually only happens when a
+        //  new message has appeared that sets the installation to read-only.
+        // So let's hope the new message on the screen attracks attention and
+        //  that it speaks for itself.
+        // (In principle, it can also happen when an existing message is edited
+        //   to lock the installation.)
+        $_AUTH = false;
+    }
 
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'

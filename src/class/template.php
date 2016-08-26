@@ -8,7 +8,7 @@
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -583,9 +583,9 @@ function lovd_mapVariants ()
 
 <?php
 // Check for announcements.
-$zAnnouncements = $_DB->query('SELECT type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()')->fetchAllAssoc();
+$zAnnouncements = $_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()')->fetchAllAssoc();
 foreach ($zAnnouncements as $zAnnouncement) {
-    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', '', false);
+    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? '' : 'announcements/' . $zAnnouncement['id']), false);
 }
 ?>
 
@@ -632,7 +632,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
-                print('      ' . (!$_CONF['allow_submitter_registration']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                print('      ' . (!$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
                     '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }
