@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-06-23
- * For LOVD    : 3.0-15
+ * Modified    : 2016-08-26
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -621,7 +621,8 @@ function lovd_mapVariants ()
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
-                print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A>' . "\n");
+                print('      ' . (!$_CONF['allow_submitter_registration']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                    '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }
 

@@ -5,8 +5,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-02-03
- * For LOVD    : 3.0-15
+ * Modified    : 2016-08-26
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -626,7 +626,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
                 // Empty port number, insert NULL instead of 0.
                 $_POST['proxy_port'] = NULL;
             }
-            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['proxy_username'], $_POST['proxy_password'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], "", $_POST['send_stats'], $_POST['include_in_listing'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
+            $q = $_DB->query('INSERT INTO ' . TABLE_CONFIG . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', array($_POST['system_title'], $_POST['institute'], $_POST['location_url'], $_POST['email_address'], $_POST['send_admin_submissions'], $_POST['api_feed_history'], $_POST['refseq_build'], $_POST['proxy_host'], $_POST['proxy_port'], $_POST['proxy_username'], $_POST['proxy_password'], $_POST['logo_uri'], $_POST['mutalyzer_soap_url'], "", $_POST['send_stats'], $_POST['include_in_listing'], $_POST['allow_submitter_registration'], $_POST['lock_users'], $_POST['allow_unlock_accounts'], $_POST['allow_submitter_mods'], $_POST['allow_count_hidden_entries'], $_POST['use_ssl'], $_POST['use_versioning'], $_POST['lock_uninstall']), false, true);
             if (!$q) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .
