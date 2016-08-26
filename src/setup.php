@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2013-05-17
- * For LOVD    : 3.0-05
+ * Modified    : 2016-08-26
+ * For LOVD    : 3.0-17
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -209,6 +209,11 @@ $aItems =
                  array(
                         array('variants?create', 'lovd_variants_create.png', 'Create new variant', 'Create a new variant.'),
                         array('variants', 'lovd_variants.png', 'View all variants', 'Manage variants.'),
+                      ),
+            'Announcements' =>
+                 array(
+                        array('announcements?create', 'lovd_announcements_create.png', 'Create new announcement', 'Create a new announcement.'),
+                        array('announcements', 'lovd_information.png', 'View all announcements', 'Manage system announcements.'),
                       ),
 /*
 // Export central repository format.

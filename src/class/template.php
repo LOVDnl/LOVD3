@@ -194,6 +194,9 @@ class LOVD_Template {
                                 '/import' => array('menu_import.png', 'Import data', LEVEL_MANAGER),
                                 'hr',
                                 '/logs' => array('menu_logs.png', 'View system logs', LEVEL_MANAGER),
+                                'hr',
+                                '/announcements?create' => array('lovd_form_information.png', 'Create a new system announcement', LEVEL_MANAGER),
+                                '/announcements' => array('lovd_form_information.png', 'View system announcements', LEVEL_MANAGER),
                               ),
                         'docs' => 'LOVD documentation',
 //                         array(
