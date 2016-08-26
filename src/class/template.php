@@ -581,6 +581,14 @@ function lovd_mapVariants ()
 
 <BODY style="margin : 0px;">
 
+<?php
+// Check for announcements.
+$zAnnouncements = $_DB->query('SELECT type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()')->fetchAllAssoc();
+foreach ($zAnnouncements as $zAnnouncement) {
+    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', '', false);
+}
+?>
+
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
 
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
