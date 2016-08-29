@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-08-26
+ * Modified    : 2016-08-29
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -159,7 +159,7 @@ class LOVD_Object {
             $sErr = 'Cannot run update query for object with unknown table (object=' .
                 get_class($this) . ').';
             lovd_displayError('FindAndReplace', $sErr);
-            return;
+            return false;
         }
 
         // FIXME: This check should be done earlier, not just when running it.
@@ -168,7 +168,7 @@ class LOVD_Object {
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             $sErr = 'You do not have authorization to perform this action.';
             lovd_displayError('FindAndReplace', $sErr);
-            return;
+            return false;
         }
 
         // ID field to connect rows from the original viewlist select query with rows in the
@@ -179,11 +179,36 @@ class LOVD_Object {
         // update query and select subquery.
         $sIDField = 'id';
 
+        $sTablename = constant($this->sTable);
+
+        // Apply find & replace search condition so that only changed records will be updated.
+        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
+                                                               $sFRFieldname, $aOptions);
+
         // Construct and apply update query.
-        $sUpdateSQL = 'UPDATE ' . constant($this->sTable) .  ', (' . $sSelectSQL . ') AS ' .
-                      $sSubqueryAlias . ' SET ' . constant($this->sTable) . '.`' . $sFieldname .
-                      '`=' . $sReplaceStmt . ' WHERE ' . constant($this->sTable) . '.' . $sIDField .
-                      ' = ' . $sSubqueryAlias . '.' . $sIDField;
+        $sUpdateSQL = 'UPDATE ' . $sTablename .  ', (' . $sSelectSQL . ') AS ' .
+            $sSubqueryAlias . ' SET ' . $sTablename . '.`' . $sFieldname .
+            '`=' . $sReplaceStmt . ', ' . $sTablename . '.edited_by=?, ' . $sTablename .
+            '.edited_date=? WHERE ' . $sFRSearchCondition . ' AND ' . $sTablename . '.' .
+            $sIDField . ' = ' . $sSubqueryAlias . '.' . $sIDField;
+
+        if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
+            // Update edited_by/-date fields of variant on genome table if query changes values on
+            // variant on transcript.
+            $sUpdateSQL = 'UPDATE ' . TABLE_VARIANTS .  ' vog INNER JOIN ' .
+                          TABLE_VARIANTS_ON_TRANSCRIPTS . ' vot ON vog.id = vot.id, (' .
+                          $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET ' .
+                          TABLE_VARIANTS_ON_TRANSCRIPTS . '.`' . $sFieldname . '`=' .
+                          $sReplaceStmt . ', ' . TABLE_VARIANTS . '.edited_by=?, ' .
+                          TABLE_VARIANTS . '.edited_date=? WHERE ' . $sFRSearchCondition .
+                          ' AND ' . $sTablename . '.' . $sIDField . ' = ' . $sSubqueryAlias .
+                          '.' . $sIDField;
+        }
+
+        // Add edit fields to SQL arguments.
+        $aArgs[] = $_AUTH['id'];
+        $aArgs[] = date('Y-m-d H:i:s');
+
         return $_DB->query($sUpdateSQL, $aArgs);
     }
 
