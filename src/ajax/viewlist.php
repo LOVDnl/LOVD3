@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2016-08-25
+ * Modified    : 2016-08-29
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -167,6 +167,14 @@ if (POST && ACTION == 'applyFR') {
 
     // Setup search filters before applying find & replace.
     list($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes) = $_DATA->processViewListSearchArgs($_POST);
+
+    // Update where/having clauses based on search filters (needed for LOVD_Object->buildSQL())
+    if ($WHERE) {
+        $_DATA->aSQLViewList['WHERE'] .= ($_DATA->aSQLViewList['WHERE']? ' AND ' : '') . $WHERE;
+    }
+    if ($HAVING) {
+        $_DATA->aSQLViewList['HAVING'] .= ($_DATA->aSQLViewList['HAVING']? ' AND ' : '') . $HAVING;
+    }
     $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
     $result = $_DATA->applyColumnFindAndReplace($_POST['FRFieldname_' . $sViewListID],
                                                 $_POST['FRSearch_' . $sViewListID],
