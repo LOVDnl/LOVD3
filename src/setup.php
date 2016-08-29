@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2016-08-26
+ * Modified    : 2016-08-29
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -212,7 +212,7 @@ $aItems =
                       ),
             'Announcements' =>
                  array(
-                        array('announcements?create', 'lovd_announcements_create.png', 'Create new announcement', 'Create a new announcement.'),
+                        array('announcements?create', 'lovd_announcements_create.png', 'Create new announcement', 'Create a new announcement, optionally making LOVD read-only.'),
                         array('announcements', 'lovd_information.png', 'View all announcements', 'Manage system announcements.'),
                       ),
 /*

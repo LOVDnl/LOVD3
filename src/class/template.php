@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-08-26
+ * Modified    : 2016-08-29
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -582,8 +582,13 @@ function lovd_mapVariants ()
 <BODY style="margin : 0px;">
 
 <?php
-// Check for announcements.
-$zAnnouncements = $_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()')->fetchAllAssoc();
+// Check for announcements. Ignore errors, in case the table doesn't exist yet.
+$qAnnouncements = @$_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
+if ($qAnnouncements) {
+    $zAnnouncements = $qAnnouncements->fetchAllAssoc();
+} else {
+    $zAnnouncements = array();
+}
 foreach ($zAnnouncements as $zAnnouncement) {
     lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? '' : 'announcements/' . $zAnnouncement['id']), false);
 }
