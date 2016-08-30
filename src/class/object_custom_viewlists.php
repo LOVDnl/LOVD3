@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-08-10
+ * Modified    : 2016-08-30
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,7 +46,7 @@ class LOVD_CustomViewList extends LOVD_Object {
     // This class extends the basic Object class and it handles pre-configured custom viewLists.
     var $sObject = 'Custom_ViewList';
     var $nOtherID = 0; // Some objects (like DistanceToVar) need an additional ID.
-    var $aColumns = array();
+    var $aColumns = array(); // Custom columns grouped by object type.
     var $aCustomLinks = array();
     var $nCount = 0; // Necessary for tricking Objects::getCount() that is run in viewList().
 
@@ -111,7 +111,9 @@ class LOVD_CustomViewList extends LOVD_Object {
             if (is_null($z['public_view'])) {
                 $z['public_view'] = array();
             }
-            $this->aColumns[$z['id']] = $z;
+            // Store columns by object type (note: use reset() to get string of ID before '/')
+            $aObjectIDFields = explode('/', $z['id']);
+            $this->aColumns[reset($aObjectIDFields)][$z['id']] = $z;
         }
         if ($_AUTH) {
             $_AUTH['allowed_to_view'] = array_merge($_AUTH['curates'], $_AUTH['collaborates']);
@@ -182,14 +184,12 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['ORDER_BY'] = 'vog.chromosome ASC, vog.position_g_start';
                     } elseif ($nKeyVOTUnique !== false && $nKeyVOTUnique < $nKey) {
                         // For the unique variant view a GROUP_CONCAT must be done for the variantOnGenome fields.
-                        foreach ($this->aColumns as $sCol => $aCol) {
-                            if (substr($sCol, 0, 15) == 'VariantOnGenome') {
-                                // Here all VariantOnGenome columns are grouped with GROUP_CONCAT. In prepareData(),
-                                // these fields are exploded and the elements are counted, limiting the grouped values
-                                // to a certain length. To recognize the separate items, ;; is used as a separator.
-                                // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
-                                $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
-                            }
+                        foreach ($this->aColumns['VariantOnGenome'] as $sCol => $aCol) {
+                            // Here all VariantOnGenome columns are grouped with GROUP_CONCAT. In prepareData(),
+                            // these fields are exploded and the elements are counted, limiting the grouped values
+                            // to a certain length. To recognize the separate items, ;; is used as a separator.
+                            // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
+                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
                         }
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)';
                     } else {
@@ -236,10 +236,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // Sort GROUP_CONCAT() based on transcript name. We'll have to join Transcripts for that.
                         //   That will break if somebody wants to join transcripts themselves, but why would somebody want that?
                         $sGCOrderBy = 't.geneid, t.id_ncbi';
-                        foreach ($this->aColumns as $sCol => $aCol) {
-                            if (substr($sCol, 0, 19) == 'VariantOnTranscript') {
-                                $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT ' . ($sCol != 'VariantOnTranscript/DNA'? '`' . $sCol . '`' : 'CONCAT(t.id_ncbi, ":", `' . $sCol . '`)') . ' ORDER BY ' . $sGCOrderBy . ' SEPARATOR ", ") AS `' . $sCol . '`';
-                            }
+                        foreach ($this->aColumns['VariantOnTranscript'] as $sCol => $aCol) {
+                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT ' . ($sCol != 'VariantOnTranscript/DNA'? '`' . $sCol . '`' : 'CONCAT(t.id_ncbi, ":", `' . $sCol . '`)') . ' ORDER BY ' . $sGCOrderBy . ' SEPARATOR ", ") AS `' . $sCol . '`';
                         }
                         // If we're joining to Scr2Var, we're showing the Individual- and Screening-specific views, and we want to show a gene as well.
                         //   We can't use _geneid below, because LOVD will explode that into an array.
@@ -285,14 +283,12 @@ class LOVD_CustomViewList extends LOVD_Object {
 
                     $aSQL['GROUP_BY'] = '`position_c_start`, `position_c_start_intron`, `position_c_end`, `position_c_end_intron`, vot_clean_dna_change'; // Necessary for GROUP_CONCAT(), such as in Screening.
 
-                    foreach ($this->aColumns as $sCol => $aCol) {
-                        if (substr($sCol, 0, 19) == 'VariantOnTranscript') {
-                            // Here all VariantOnTranscript columns are grouped with GROUP_CONCAT. In prepareData(),
-                            // these fields are exploded and the elements are counted, limiting the grouped values
-                            // to a certain length. To recognize the separate items, ;; is used as a separator.
-                            // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
-                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
-                        }
+                    foreach ($this->aColumns['VariantOnTranscript'] as $sCol => $aCol) {
+                        // Here all VariantOnTranscript columns are grouped with GROUP_CONCAT. In prepareData(),
+                        // these fields are exploded and the elements are counted, limiting the grouped values
+                        // to a certain length. To recognize the separate items, ;; is used as a separator.
+                        // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
+                        $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
                     }
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS et ON (vot.effectid = et.id)';
                     break;
@@ -306,11 +302,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['ORDER_BY'] = 's.id';
                     } else {
                         // SELECT will be different: we will GROUP_CONCAT the whole lot, per column.
-                        $sGCOrderBy = (isset($this->aColumns['Screening/Date'])? '`Screening/Date`' : 'id');
-                        foreach ($this->aColumns as $sCol => $aCol) {
-                            if (substr($sCol, 0, 9) == 'Screening') {
-                                $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT `' . $sCol . '` ORDER BY s.' . $sGCOrderBy . ' SEPARATOR ";") AS `' . $sCol . '`';
-                            }
+                        $sGCOrderBy = (isset($this->aColumns['Screening']['Screening/Date'])? '`Screening/Date`' : 'id');
+                        foreach ($this->aColumns['Screening'] as $sCol => $aCol) {
+                            $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT `' . $sCol . '` ORDER BY s.' . $sGCOrderBy . ' SEPARATOR ";") AS `' . $sCol . '`';
                         }
                         $nKeyVOG = array_search('VariantOnGenome', $aObjects);
                         $nKeyVOT = array_search('VariantOnTranscript', $aObjects);
@@ -612,8 +606,8 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
             // The custom columns.
-            foreach ($this->aColumns as $sColID => $aCol) {
-                if (strpos($sColID, str_replace('Unique', '', $sObject) . '/') === 0) {
+            if (isset($this->aColumns[str_replace('Unique', '', $sObject)])) {
+                foreach ($this->aColumns[str_replace('Unique', '', $sObject)] as $sColID => $aCol) {
                     $bAlignRight = preg_match('/^(DEC|FLOAT|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
 
                     $this->aColumnsViewList[$sColID] =
@@ -687,8 +681,10 @@ class LOVD_CustomViewList extends LOVD_Object {
             $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
             $aCols = explode(';', $aLink['colids']);
             foreach ($aCols as $sColID) {
-                if (isset($this->aColumns[$sColID])) {
-                    $this->aColumns[$sColID]['custom_links'][] = $aLink['id'];
+                foreach ($aObjects as $sObject) {
+                    if (isset($this->aColumns[$sObject][$sColID])) {
+                        $this->aColumns[$sObject][$sColID]['custom_links'][] = $aLink['id'];
+                    }
                 }
             }
             $this->aCustomLinks[$aLink['id']] = $aLink;
@@ -732,22 +728,29 @@ class LOVD_CustomViewList extends LOVD_Object {
             $zData['VariantOnGenome/dbSNP'] = preg_replace('/(rs\d+)/', '<SPAN' . ($sView != 'list'? '' : ' onclick="cancelParentEvent(event);"') . '><A href="http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=' . "$1" . '" target="_blank">' . "$1" . '</A></SPAN>', $zData['VariantOnGenome/dbSNP']);
         }
 
-        foreach ($this->aColumns as $sCol => $aCol) {
-            if ($_AUTH['level'] < LEVEL_MANAGER && !$this->nID && substr($sCol, 0, 19) == 'VariantOnTranscript') {
-                // Not a special authorized person, no gene selected, VOT column.
-                // A column that has been disabled for this gene, may still show its value to collaborators and higher.
-                if ((!$_AUTH || !in_array($zData['geneid'], $_AUTH['allowed_to_view'])) && ((is_array($zData['geneid']) && count(array_diff($zData['geneid'], $aCol['public_view']))) || (!is_array($zData['geneid']) && !in_array($zData['geneid'], $aCol['public_view'])))) {
-                    $zData[$sCol] = '';
+        if (isset($this->aColumns['VariantOnTranscript'])) {
+            foreach ($this->aColumns['VariantOnTranscript'] as $sCol => $aCol) {
+                if ($_AUTH['level'] < LEVEL_MANAGER && !$this->nID) {
+                    // Not a special authorized person, no gene selected, VOT column.
+                    // A column that has been disabled for this gene, may still show its value to collaborators and higher.
+                    if ((!$_AUTH || !in_array($zData['geneid'], $_AUTH['allowed_to_view'])) && ((is_array($zData['geneid']) && count(array_diff($zData['geneid'], $aCol['public_view']))) || (!is_array($zData['geneid']) && !in_array($zData['geneid'], $aCol['public_view'])))) {
+                        $zData[$sCol] = '';
+                    }
                 }
             }
-            if (!empty($aCol['custom_links'])) {
-                foreach ($aCol['custom_links'] as $nLink) {
-                    $sRegexpPattern = $this->aCustomLinks[$nLink]['regexp_pattern'];
-                    $sReplaceText = $this->aCustomLinks[$nLink]['replace_text'];
-                    if ($sView == 'list') {
-                        $sReplaceText = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . str_replace('"', '\\\'', $sReplaceText) . '\', this);">' . strip_tags($sReplaceText) . '</SPAN>';
+        }
+
+        foreach ($this->aColumns as $sObject => $aObjectColumns) {
+            foreach ($aObjectColumns as $aCol) {
+                if (!empty($aCol['custom_links'])) {
+                    foreach ($aCol['custom_links'] as $nLink) {
+                        $sRegexpPattern = $this->aCustomLinks[$nLink]['regexp_pattern'];
+                        $sReplaceText = $this->aCustomLinks[$nLink]['replace_text'];
+                        if ($sView == 'list') {
+                            $sReplaceText = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . str_replace('"', '\\\'', $sReplaceText) . '\', this);">' . strip_tags($sReplaceText) . '</SPAN>';
+                        }
+                        $zData[$aCol['id']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['id']]);
                     }
-                    $zData[$aCol['id']] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData[$aCol['id']]);
                 }
             }
         }
