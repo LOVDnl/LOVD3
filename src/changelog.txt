@@ -22,6 +22,10 @@
  * Fixed bug; The previous bug fix #53, about LOVD complaining about fields not
    in the file when running an update import, was not implemented properly.
    Closes #53: "Importing records fails on existing fields in database".
+ * Added the option to block submitter registrations.
+ * Added the option to create announcements within LOVD.
+ * Described these two options to the manual, and added a new chapter "Updating
+   LOVD".
 
 
 /**************************
