@@ -35,15 +35,15 @@ script:
   - vendor/bin/phpunit --configuration ./tests/selenium_tests/phpunit.xml ./tests/travis/tests/
 
   # Run all test suites.
-#  - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/selenium_tests/phpunit.xml
-#  - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/selenium_tests/phpunit.xml
-#  - vendor/bin/phpunit -v --testsuite collaborator_tests --configuration ./tests/selenium_tests/phpunit.xml
-#  - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/selenium_tests/phpunit.xml
-#  - vendor/bin/phpunit -v --testsuite import_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite collaborator_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite import_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite manager_tests --configuration ./tests/selenium_tests/phpunit.xml
-#  - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
-#  - vendor/bin/phpunit -v --testsuite temp_tests --configuration ./tests/selenium_tests/phpunit.xml
-#  - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite temp_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
 
 after_failure:
   - ./tests/upload_test_results.sh
