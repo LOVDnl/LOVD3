@@ -6,21 +6,15 @@ use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class TestReadOnlyState extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testTestReadOnlyState()
+    public function testTestReadOnlyState ()
     {
         // Test that LOVD is in the read-only state.
 
         // First, log out of any session that might exist at this time.
         $this->driver->get(ROOT_URL . '/src/logout');
 
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-
         // There should be no link to register yourself.
-        // This call takes quite some times, because of the timeout that we have set if elements are not found immediately (normally needed if pages load slowly).
+        // This call takes quite some time, because of the timeout that we have set if elements are not found immediately (normally needed if pages load slowly).
         $this->assertFalse((bool) count($this->driver->findElements(WebDriverBy::xpath('//a/b[text()="Register as submitter"]'))));
 
         $this->driver->get(ROOT_URL . '/src/login');

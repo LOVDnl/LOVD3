@@ -9,6 +9,7 @@ class CreateAnnouncementReadOnly extends LOVDSeleniumWebdriverBaseTestCase
     public function testCreateAnnouncementReadOnly()
     {
         // Create an announcement, that switches LOVD into the read-only state.
+        // This test assumes you're logged in as manager or admin.
         $sAnnouncement = 'This is a test announcement. LOVD will be closed for registrations, and lower level users can not log in.';
 
         $this->driver->get(ROOT_URL . '/src/announcements?create');

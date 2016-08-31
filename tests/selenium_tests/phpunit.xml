@@ -141,6 +141,7 @@
             <file>manager_tests/post_finish_add_screening_to_CMT_individual.php</file>
             <file>manager_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
             <file>manager_tests/delete_gene_GJB.php</file>
+            <file>manager_tests/test_block_submitter_registration.php</file>
             <file>manager_tests/create_announcement_readonly.php</file>
             <file>manager_tests/test_read_only_state.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
