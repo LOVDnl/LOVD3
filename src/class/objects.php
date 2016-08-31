@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-08-29
+ * Modified    : 2016-08-31
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -153,16 +153,6 @@ class LOVD_Object {
             $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
         // FIXME: This check should be done earlier, not just when running it.
-        if (!isset($this->sTable) || !defined($this->sTable)) {
-            // No table is defined for this object, it is unclear what table to
-            // perform find and replace on.
-            $sErr = 'Cannot run update query for object with unknown table (object=' .
-                get_class($this) . ').';
-            lovd_displayError('FindAndReplace', $sErr);
-            return false;
-        }
-
-        // FIXME: This check should be done earlier, not just when running it.
         // Check user authorization needed to perform find and replace action.
         // Fixme: check if authorization level is correctly set for viewlist data.
         if ($_AUTH['level'] < LEVEL_CURATOR) {
@@ -177,9 +167,33 @@ class LOVD_Object {
         // ID field and each viewlist select query must include it. A more involved approach
         // would be to get the primary key in a separate query and include that in both the
         // update query and select subquery.
-        $sIDField = 'id';
+        $sIDField = $sSubqueryIDField = 'id';
 
-        $sTablename = constant($this->sTable);
+        // Get tablename for update query.
+        $sTablename = null;
+
+        if ($this instanceof LOVD_CustomViewList) {
+            $sCat = lovd_getCategoryCustomColFromName($sFRFieldname);
+            $aTableInfo = lovd_getTableInfoByCategory($sCat);
+            if ($aTableInfo !== false) {
+                $sTablename = $aTableInfo['table_sql'];
+
+                // Assume standard naming of id fields in custom viewlists:
+                // table alias + "id" (e.g. "votid" or "sid").
+                $sSubqueryIDField = $aTableInfo['table_alias'] . 'id';
+            }
+        } else if (isset($this->sTable) && defined($this->sTable)) {
+            $sTablename = constant($this->sTable);
+        }
+
+        if (is_null($sTablename)) {
+            // No table is defined for this object, it is unclear what table to
+            // perform find and replace on.
+            $sErr = 'Cannot run update query for object with unknown table (object=' .
+                get_class($this) . ', fieldname=' . $sFRFieldname . ').';
+            lovd_displayError('FindAndReplace', $sErr);
+            return false;
+        }
 
         // Apply find & replace search condition so that only changed records will be updated.
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
@@ -190,7 +204,7 @@ class LOVD_Object {
             $sSubqueryAlias . ' SET ' . $sTablename . '.`' . $sFieldname .
             '`=' . $sReplaceStmt . ', ' . $sTablename . '.edited_by=?, ' . $sTablename .
             '.edited_date=? WHERE ' . $sFRSearchCondition . ' AND ' . $sTablename . '.' .
-            $sIDField . ' = ' . $sSubqueryAlias . '.' . $sIDField;
+            $sIDField . ' = ' . $sSubqueryAlias . '.' . $sSubqueryIDField;
 
         if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
             // Update edited_by/-date fields of variant on genome table if query changes values on
@@ -202,7 +216,7 @@ class LOVD_Object {
                           $sReplaceStmt . ', ' . TABLE_VARIANTS . '.edited_by=?, ' .
                           TABLE_VARIANTS . '.edited_date=? WHERE ' . $sFRSearchCondition .
                           ' AND ' . $sTablename . '.' . $sIDField . ' = ' . $sSubqueryAlias .
-                          '.' . $sIDField;
+                          '.' . $sSubqueryIDField;
         }
 
         // Add edit fields to SQL arguments.
@@ -887,7 +901,7 @@ class LOVD_Object {
         // those columns should not have 'allowfnr' set to true.
         $sTableName = '';
         $sFieldName = $this->aColumnsViewList[$sFRFieldname]['db'][0];
-        if (preg_match('/^(\w+)\.(\w+)$/', $sFieldName, $aRegs)) {
+        if (preg_match('/^([A-Za-z0-9_`]+)\.([A-Za-z0-9_`\/]+)$/', $sFieldName, $aRegs)) {
             $sTableName = $aRegs[1];
             $sFieldName = $aRegs[2];
         }

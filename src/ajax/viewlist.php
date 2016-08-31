@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2016-08-29
+ * Modified    : 2016-08-31
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -159,9 +159,9 @@ if (POST && ACTION == 'applyFR') {
     $aFROptions['bFRReplaceAll'] = isset($_POST['FRReplaceAll_' . $sViewListID])?
         $_POST['FRReplaceAll_' . $sViewListID] : null;
 
-    if (empty($_POST['FRFieldname_' . $sViewListID]) ||
-        empty($_POST['FRSearch_' . $sViewListID]) ||
-        empty($_POST['FRReplace_' . $sViewListID])) {
+    if (!isset($_POST['FRFieldname_' . $sViewListID]) ||
+        !isset($_POST['FRSearch_' . $sViewListID]) ||
+        !isset($_POST['FRReplace_' . $sViewListID])) {
         die(AJAX_DATA_ERROR);
     }
 

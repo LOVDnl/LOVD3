@@ -37,6 +37,7 @@ if (!defined('ROOT_PATH')) {
 }
 // Require parent class definition.
 require_once ROOT_PATH . 'class/objects.php';
+require_once ROOT_PATH . 'inc-lib-columns.php';
 
 
 
@@ -111,9 +112,10 @@ class LOVD_CustomViewList extends LOVD_Object {
             if (is_null($z['public_view'])) {
                 $z['public_view'] = array();
             }
-            // Store columns by object type (note: reset() is used to get string of ID before '/')
-            $aObjectIDFields = explode('/', $z['id']);
-            $this->aColumns[reset($aObjectIDFields)][$z['id']] = $z;
+
+            // Store columns by object type
+            $sCategory = lovd_getCategoryCustomColFromName($z['id']);
+            $this->aColumns[$sCategory][$z['id']] = $z;
         }
         if ($_AUTH) {
             $_AUTH['allowed_to_view'] = array_merge($_AUTH['curates'], $_AUTH['collaborates']);
@@ -183,7 +185,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.chromosome, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') .
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vog.id AS vogid, vog.chromosome, a.name AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', eg.name AS vog_effect' : '') .
                                        (in_array('Individual', $aObjects) || in_array('VariantOnTranscriptUnique', $aObjects)? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') . (in_array('VariantOnTranscriptUnique', $aObjects)? '' : ', dsg.id AS var_statusid, dsg.name AS var_status') . $sCustomCols;
                     $nKeyVOTUnique = array_search('VariantOnTranscriptUnique', $aObjects);
                     if (!$aSQL['FROM']) {
@@ -233,7 +235,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscript':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.transcriptid, vot.position_c_start, vot.position_c_start_intron, vot.position_c_end, vot.position_c_end_intron, et.name as vot_effect' . $sCustomCols;
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid, vot.transcriptid, vot.position_c_start, vot.position_c_start_intron, vot.position_c_end, vot.position_c_end_intron, et.name as vot_effect' . $sCustomCols;
                     $nKeyVOG = array_search('VariantOnGenome', $aObjects);
                     if (!$aSQL['FROM']) {
                         // First data table in query.
@@ -276,7 +278,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscriptUnique':
-                    $aSQL['SELECT'] = 'vot.id AS row_id, vot.transcriptid'; // To ensure other table's id columns don't interfere.
+                    $aSQL['SELECT'] = 'vot.id AS row_id, vot.id AS votid, vot.transcriptid'; // To ensure other table's id columns don't interfere.
                     // To group variants together that belong together (regardless of minor textual differences, we replace parentheses, remove the "c.", and trim for question marks.
                     // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change';
@@ -287,7 +289,6 @@ class LOVD_CustomViewList extends LOVD_Object {
                     // In prepareData() the lowest var_statusid is used to determine the coloring.
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id ASC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status';
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
-                    $aSQL['SELECT'] .= $sCustomCols;
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
                     // FIXME: On large databases, we might want to skip this, since a COUNT(*) on InnoDB tables isn't fast at all, and nCount doesn't need to be specific at all.
@@ -356,7 +357,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'Individual':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.panel_size, i.owned_by, GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, dsi.id AS ind_statusid, dsi.name AS ind_status' . $sCustomCols;
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'i.id AS iid, i.panel_size, i.owned_by, GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, dsi.id AS ind_statusid, dsi.name AS ind_status' . $sCustomCols;
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';

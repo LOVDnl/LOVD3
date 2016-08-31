@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2012-02-06
- * For LOVD    : 3.0-beta-02
+ * Modified    : 2016-08-31
+ * For LOVD    : 3.0-17
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -61,6 +62,28 @@ function lovd_describeFormType ($zData) {
 
 
 
+function lovd_getCategoryCustomColFromName ($sName)
+{
+    // Returns category (object type) for custom column fieldname. Fieldname
+    // may be anything used in code or SQL to refer to that column.
+    // Examples:
+    //      "Phenotype/Age" => "Phenotype"
+    //      "vot.`VariantOnTranscript/DNA`" => "VariantOnTranscript"
+    //      "`VariantOnTranscript/Enzyme/Kinase_activity`" =>
+    //          "VariantOnTranscript"
+
+    preg_match('/^(\w+\.)?`?(\w+)\/.+$/', $sName, $aMatches);
+    if ($aMatches) {
+        return $aMatches[2];
+    }
+
+    // Unable to parse name.
+    return false;
+}
+
+
+
+
 function lovd_getTableInfoByCategory ($sCategory)
 {
     // Returns information on the LOVD table that holds the data for this given
@@ -72,6 +95,7 @@ function lovd_getTableInfoByCategory ($sCategory)
                      array(
                             'table_sql' => TABLE_INDIVIDUALS,
                             'table_name' => 'Individual',
+                            'table_alias' => 'i',
                             'shared' => false,
                             'unit' => '',
                           ),
@@ -79,6 +103,7 @@ function lovd_getTableInfoByCategory ($sCategory)
                      array(
                             'table_sql' => TABLE_PHENOTYPES,
                             'table_name' => 'Phenotype',
+                            'table_alias' => 'p',
                             'shared' => true,
                             'unit' => 'disease', // Is also used to determine the key (diseaseid).
                           ),
@@ -86,6 +111,7 @@ function lovd_getTableInfoByCategory ($sCategory)
                      array(
                             'table_sql' => TABLE_SCREENINGS,
                             'table_name' => 'Screening',
+                            'table_alias' => 's',
                             'shared' => false,
                             'unit' => '',
                           ),
@@ -93,6 +119,7 @@ function lovd_getTableInfoByCategory ($sCategory)
                      array(
                             'table_sql' => TABLE_VARIANTS,
                             'table_name' => 'Genomic Variant',
+                            'table_alias' => 'vog',
                             'shared' => false,
                             'unit' => '',
                           ),
@@ -100,6 +127,7 @@ function lovd_getTableInfoByCategory ($sCategory)
                      array(
                             'table_sql' => TABLE_VARIANTS_ON_TRANSCRIPTS,
                             'table_name' => 'Transcript Variant',
+                            'table_alias' => 'vot',
                             'shared' => true,
                             'unit' => 'gene', // Is also used to determine the key (geneid).
                           ),
