@@ -24,8 +24,8 @@
    Closes #53: "Importing records fails on existing fields in database".
  * Added the option to block submitter registrations.
  * Added the option to create announcements within LOVD.
- * Described these two options to the manual, and added a new chapter "Updating
-   LOVD".
+ * Described these two new features in the manual, and added a new chapter
+   "Updating LOVD".
 
 
 /**************************
