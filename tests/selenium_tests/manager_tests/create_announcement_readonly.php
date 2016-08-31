@@ -6,7 +6,7 @@ use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class CreateAnnouncementReadOnly extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testCreateAnnouncementReadOnly()
+    public function testCreateAnnouncementReadOnly ()
     {
         // Create an announcement, that switches LOVD into the read-only state.
         // This test assumes you're logged in as manager or admin.
