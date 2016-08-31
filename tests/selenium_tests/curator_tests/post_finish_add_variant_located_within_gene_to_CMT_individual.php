@@ -12,9 +12,13 @@ class PostFinishAddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSelen
         $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000005$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
-        $element->click();
-        
+
+        // Move mouse to Screenings tab and click 'view all screenings' option.
+        $tabElement = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
+        $this->driver->getMouse()->mouseMove($tabElement->getCoordinates());
+        $allScreeningsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all screenings'));
+        $allScreeningsLink->click();
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings$/', $this->driver->getCurrentURL()));
 //        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
         $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='0000000002']"));
@@ -61,6 +65,10 @@ class PostFinishAddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSelen
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
+
+        // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
+        $this->driver->getMouse()->mouseMove(null, 200, 200);
+
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "0.09");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));

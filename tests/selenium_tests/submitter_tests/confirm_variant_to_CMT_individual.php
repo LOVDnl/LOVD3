@@ -58,9 +58,7 @@ class ConfirmVariantToCMTIndividualTest extends LOVDSeleniumWebdriverBaseTestCas
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Save variant list']"));
         $element->click();
 
-        $confirmElementSelector = WebDriverBy::xpath(
-            '//td[text()="Successfully confirmed the variant entry!"]');
-        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(
-            $confirmElementSelector));
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('//td[text()="Successfully confirmed the variant entry!"]')));
+        
     }
 }

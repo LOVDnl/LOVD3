@@ -48,6 +48,10 @@ class AddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSeleniumWebdriv
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
+
+        // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
+        $this->driver->getMouse()->mouseMove(null, 200, 200);
+
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "0.003");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));

@@ -11,8 +11,12 @@ class PostFinishAddScreeningToCMTIndividualTest extends LOVDSeleniumWebdriverBas
         $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000004$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
-        $element->click();
+
+        // Move mouse to Screenings tab and click 'view all screenings' option.
+        $tabElement = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
+        $this->driver->getMouse()->mouseMove($tabElement->getCoordinates());
+        $allIndividualsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all individuals'));
+        $allIndividualsLink->click();
         
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));

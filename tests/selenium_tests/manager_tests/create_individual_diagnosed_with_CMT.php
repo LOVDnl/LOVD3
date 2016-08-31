@@ -19,6 +19,10 @@ class CreateIndividualDiagnosedWithCMTTest extends LOVDSeleniumWebdriverBaseTest
         $this->enterValue(WebDriverBy::name("Individual/Lab_ID"), "12345CMT");
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
+
+        // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
+        $this->driver->getMouse()->mouseMove(null, 200, 200);
+
         $this->enterValue(WebDriverBy::name("Individual/Reference"), "{PMID:[2011]:[21520333]}");
         $this->enterValue(WebDriverBy::name("Individual/Remarks"), "No Remarks");
         $this->enterValue(WebDriverBy::name("Individual/Remarks_Non_Public"), "Still no remarks");

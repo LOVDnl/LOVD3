@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-08-12
+ * Modified    : 2016-08-23
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,9 +50,6 @@ $bXDebugStatus = false;
 
 
 set_include_path(get_include_path() . PATH_SEPARATOR . ROOT_PATH . '../tests/selenium_tests');
-
-use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
-use \Facebook\WebDriver\Remote\RemoteWebDriver;
 
 
 // Max time for webdriver to wait for a condition by default (in seconds)

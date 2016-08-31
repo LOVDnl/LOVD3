@@ -8,14 +8,38 @@ php:
   - 5.6
   # aliased to a recent 7.x version
   - 7.0
-  
-addons:
-  firefox: "40.0"
+
+env:
+  # Let Selenium use Firefox driver.
+  - LOVD_SELENIUM_DRIVER=firefox
+  # Let Selenium use Chrome driver.
+  - LOVD_SELENIUM_DRIVER=chrome
+
+matrix:
+  exclude:
+    # Exclude some combinations of php version and selenium driver.
+    - php: 5.4
+      env: LOVD_SELENIUM_DRIVER=chrome
+    - php: 5.5
+      env: LOVD_SELENIUM_DRIVER=firefox
+    - php: 5.6
+      env: LOVD_SELENIUM_DRIVER=chrome
+    - php: 7.0
+      env: LOVD_SELENIUM_DRIVER=firefox
 
 sudo: required
+dist: trusty
+
+addons:
+  apt:
+    packages:
+    - mysql-server-5.6
+    - mysql-client-core-5.6
+    - mysql-client-5.6
 
 before_install:
-  - ./tests/travis/setup/setup_mysql.sh
+ - ./tests/travis/setup/setup_chrome.sh
+ - ./tests/travis/setup/setup_mysql.sh
 
 before_script:
   - ./tests/travis/setup/setup_apache.sh --githubaccount=LOVDnl

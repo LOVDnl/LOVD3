@@ -30,8 +30,11 @@
 
 
 
-use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
+use \Facebook\WebDriver\Chrome\ChromeOptions;
+use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
+use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
+
 
 
 function getWebDriverInstance()
@@ -42,16 +45,39 @@ function getWebDriverInstance()
     static $webDriver;
 
     if (!isset($webDriver)) {
-        // Create Firefox webdriver
-        $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
-        $webDriver = RemoteWebDriver::create('http://localhost:4444/wd/hub', $capabilities,
-            WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
-            WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
+
+        $driverType = getenv('LOVD_SELENIUM_DRIVER');
+        $host = 'http://localhost:4444/wd/hub';
+
+        if ($driverType == 'chrome') {
+            // This is the documented way of starting the chromedriver, but it fails. (at least
+            // on my machine with version 2.23)
+            // putenv('webdriver.chrome.driver=/usr/share/chromedriver');
+            // $webDriver = ChromeDriver::start();
+
+            // Start the chrome driver through the selenium server.
+            fwrite(STDERR, 'Connecting to Chrome driver via Selenium at ' . $host);
+            $options = new ChromeOptions();
+            $options->addArguments(array('--no-sandbox'));
+            $capabilities = DesiredCapabilities::chrome();
+            $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
+            $webDriver = RemoteWebDriver::create($host, $capabilities);
+        } else {
+            // Create Firefox webdriver
+            fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host);
+            $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
+            $webDriver = RemoteWebDriver::create('http://127.0.0.1:4444/wd/hub', $capabilities,
+                WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
+                WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
+        }
 
         // Set time for trying to access DOM elements
         $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
 
         if (isset($_INI['test']['xdebug_enabled']) && $_INI['test']['xdebug_enabled'] == 'true') {
+            // Load page of target host. This is necessary to set a cookie.
+            $webDriver->get(ROOT_URL . '/src/');
+
             // Enable remote debugging by setting XDebug session cookie.
             $webDriver->manage()->addCookie(array(
                 'name' => 'XDEBUG_SESSION',

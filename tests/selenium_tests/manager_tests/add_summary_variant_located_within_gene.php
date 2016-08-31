@@ -100,6 +100,10 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $this->assertEquals("g.2843789A>T", $GenomicDNAChange->getAttribute('value'));
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
+
+        // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
+        $this->driver->getMouse()->mouseMove(null, 200, 200);
+
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "55/18000");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Affects function"]'));
