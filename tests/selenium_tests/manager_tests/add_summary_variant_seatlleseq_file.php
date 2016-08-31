@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016
- * Modified    : 2016-07-11
+ * Modified    : 2016-07-13
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,7 +57,7 @@ class AddSummaryVariantSeatlleseqFileTest extends LOVDSeleniumWebdriverBaseTestC
         $element->click();
         
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create&type=SeattleSeq$/', $this->driver->getCurrentURL()));
-        $this->enterValue(WebDriverBy::name("variant_file"), ROOT_PATH . "/tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
+        $this->enterValue(WebDriverBy::name("variant_file"), ROOT_PATH . "../tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="hg_build"]/option[text()="hg19"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="dbSNP_column"]/option[text()="VariantOnGenome/Reference"]'));

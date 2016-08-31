@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-06-23
- * For LOVD    : 3.0-16
+ * Modified    : 2016-08-24
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -767,6 +767,153 @@ function lovd_magicUnquoteAll ()
     lovd_magicUnquote($_POST);
     lovd_magicUnquote($_COOKIE);
 }
+
+
+
+
+
+function lovd_parseConfigFile($sConfigFile)
+{
+    // Config file exists?
+    if (!file_exists($sConfigFile)) {
+        lovd_displayError('Init', 'Can\'t find config.ini.php');
+    }
+
+    // Config file readable?
+    if (!is_readable($sConfigFile)) {
+        lovd_displayError('Init', 'Can\'t read config.ini.php');
+    }
+
+    // Open config file.
+    if (!$aConfig = file($sConfigFile)) {
+        lovd_displayError('Init', 'Can\'t open config.ini.php');
+    }
+
+
+    // Parse config file.
+    $_INI = array();
+    unset($aConfig[0]); // The first line is the PHP code with the exit() call.
+
+    $sKey = '';
+    foreach ($aConfig as $nLine => $sLine) {
+        // Go through the file line by line.
+        $sLine = trim($sLine);
+
+        // Empty line or comment.
+        if (!$sLine || substr($sLine, 0, 1) == '#') {
+            continue;
+        }
+
+        // New section.
+        if (preg_match('/^\[([A-Z][A-Z_ ]+[A-Z])\]$/i', $sLine, $aRegs)) {
+            $sKey = $aRegs[1];
+            $_INI[$sKey] = array();
+            continue;
+        }
+
+        // Setting.
+        if (preg_match('/^([A-Z_]+) *=(.*)$/i', $sLine, $aRegs)) {
+            list(, $sVar, $sVal) = $aRegs;
+            $sVal = trim($sVal, ' "\'“”');
+
+            if (!$sVal) {
+                $sVal = false;
+            }
+
+            // Set value in array.
+            if ($sKey) {
+                $_INI[$sKey][$sVar] = $sVal;
+            } else {
+                $_INI[$sVar] = $sVal;
+            }
+
+        } else {
+            // Couldn't parse value.
+            lovd_displayError('Init', 'Error parsing config file at line ' . ($nLine + 1));
+        }
+    }
+
+    // We now have the $_INI variable filled according to the file's contents.
+    // Check the settings' values to see if they are valid.
+    $aConfigValues =
+        array(
+            'database' =>
+                array(
+                    'driver' =>
+                        array(
+                            'required' => true,
+                            'default'  => 'mysql',
+                            'pattern'  => '/^[a-z]+$/',
+                            'values' => array('mysql' => 'MySQL', 'sqlite' => 'SQLite'),
+                        ),
+                    'hostname' =>
+                        array(
+                            'required' => true,
+                            'default'  => 'localhost',
+                            // Also include hostname:port and :/path/to/socket values.
+                            'pattern'  => '/^([0-9a-z][-0-9a-z.]*[0-9a-z](:[0-9]+)?|:[-0-9a-z.\/]+)$/i',
+                        ),
+                    'username' =>
+                        array(
+                            'required' => true,
+                        ),
+                    'password' =>
+                        array(
+                            'required' => false, // XAMPP and other systems have 'root' without password as default!
+                        ),
+                    'database' =>
+                        array(
+                            'required' => true,
+                        ),
+                    'table_prefix' =>
+                        array(
+                            'required' => true,
+                            'default'  => 'lovd',
+                            'pattern'  => '/^[A-Z0-9_]+$/i',
+                        ),
+                ),
+        );
+
+    // SQLite doesn't need an username and password...
+    if (isset($_INI['database']['driver']) && $_INI['database']['driver'] == 'sqlite') {
+        unset($aConfigValues['database']['username']);
+        unset($aConfigValues['database']['password']);
+    }
+
+    foreach ($aConfigValues as $sSection => $aVars) {
+        foreach ($aVars as $sVar => $aVar) {
+            if (!isset($_INI[$sSection][$sVar]) || !$_INI[$sSection][$sVar]) {
+                // Nothing filled in...
+
+                if (isset($aVar['default']) && $aVar['default']) {
+                    // Set default value.
+                    $_INI[$sSection][$sVar] = $aVar['default'];
+                } elseif (isset($aVar['required']) && $aVar['required']) {
+                    // No default value, required setting not filled in.
+                    lovd_displayError('Init', 'Error parsing config file: missing required value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
+                }
+
+            } else {
+                // Value is present in $_INI.
+                if (isset($aVar['pattern']) && !preg_match($aVar['pattern'], $_INI[$sSection][$sVar])) {
+                    // Error: a pattern is available, but it doesn't match the input!
+                    lovd_displayError('Init', 'Error parsing config file: incorrect value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
+
+                } elseif (isset($aVar['values']) && is_array($aVar['values'])) {
+                    // Value must be present in list of possible values.
+                    $_INI[$sSection][$sVar] = strtolower($_INI[$sSection][$sVar]);
+                    if (!array_key_exists($_INI[$sSection][$sVar], $aVar['values'])) {
+                        // Error: a value list is available, but it doesn't match the input!
+                        lovd_displayError('Init', 'Error parsing config file: incorrect value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
+                    }
+                }
+            }
+        }
+    }
+
+    return $_INI;
+}
+
 
 
 

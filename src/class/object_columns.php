@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-02-11
- * For LOVD    : 3.0-15
+ * Modified    : 2016-07-20
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Mark Kroon MSc. <M.Kroon@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -268,7 +268,7 @@ class LOVD_Column extends LOVD_Object {
         // Array which will make up the form table.
         $this->aFormData =
                  array(
-                        array('POST', '', '', '', '60%', '14', '40%'),
+                        array('POST', '', '', '', '35%', '14', '65%'),
                         array('', '', 'print', '<B>Column name and descriptions</B>'),
                         'hr',
           'category' => array('', '', 'print', '<I>Selected category: ' . $_POST['category'] . '</I>'),

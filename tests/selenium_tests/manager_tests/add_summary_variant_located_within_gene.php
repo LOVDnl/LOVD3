@@ -1,4 +1,33 @@
 <?php
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2016
+ * Modified    : 2016-07-18
+ * For LOVD    : 3.0-17
+ *
+ * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
@@ -53,6 +82,8 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000002_effect_concluded"]/option[text()="Probably does not affect function"]'));
         $option->click();
         $this->enterValue(WebDriverBy::name("00000003_VariantOnTranscript/Exon"), "3");
+        $this->enterValue(WebDriverBy::name("00000004_VariantOnTranscript/Exon"), "3");
+        $this->enterValue(WebDriverBy::name("00000005_VariantOnTranscript/Exon"), "3");
         $DnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[12].value");
         $this->assertEquals("c.62T>A", $DnaChange);
         $RnaChange2 = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[14].value");
@@ -65,8 +96,8 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="allele"]/option[text()="Maternal (confirmed)"]'));
         $option->click();
-        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[21].value");
-        $this->assertEquals("g.2843789A>T", $GenomicDnaChange);
+        $GenomicDNAChange = $this->driver->findElement(WebDriverBy::name('VariantOnGenome/DNA'));
+        $this->assertEquals("g.2843789A>T", $GenomicDNAChange->getAttribute('value'));
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
 
