@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-08-31
+ * Modified    : 2016-09-01
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -211,11 +211,9 @@ class LOVD_Object {
             // variant on transcript.
             $sUpdateSQL = 'UPDATE ' . TABLE_VARIANTS .  ' vog INNER JOIN ' .
                           TABLE_VARIANTS_ON_TRANSCRIPTS . ' vot ON vog.id = vot.id, (' .
-                          $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET ' .
-                          TABLE_VARIANTS_ON_TRANSCRIPTS . '.`' . $sFieldname . '`=' .
-                          $sReplaceStmt . ', ' . TABLE_VARIANTS . '.edited_by=?, ' .
-                          TABLE_VARIANTS . '.edited_date=? WHERE ' . $sFRSearchCondition .
-                          ' AND ' . $sTablename . '.' . $sIDField . ' = ' . $sSubqueryAlias .
+                          $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET vot.`' . $sFieldname .
+                          '`=' . $sReplaceStmt . ', vog.edited_by=?, vog.edited_date=? WHERE ' .
+                          $sFRSearchCondition . ' AND vot.' . $sIDField . ' = ' . $sSubqueryAlias .
                           '.' . $sSubqueryIDField;
         }
 
