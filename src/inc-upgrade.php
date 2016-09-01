@@ -435,11 +435,9 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                     array('ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN remarks TEXT NOT NULL DEFAULT "" AFTER id_protein_uniprot'),
                  '3.0-16b' =>
                     array('ALTER TABLE ' . TABLE_DISEASES .
-                               ' ADD COLUMN tissues  TEXT NOT NULL AFTER id_omim',
-                          'ALTER TABLE ' . TABLE_DISEASES .
-                               ' ADD COLUMN features TEXT NOT NULL AFTER tissues',
-                          'ALTER TABLE ' . TABLE_DISEASES .
-                               ' ADD COLUMN remarks TEXT NOT NULL AFTER features',
+                               ' ADD COLUMN tissues  TEXT NOT NULL AFTER id_omim, 
+                                 ADD COLUMN features TEXT NOT NULL AFTER tissues,
+                                 ADD COLUMN remarks TEXT NOT NULL AFTER features',
                         ),
                  '3.0-16c' =>
                     array(

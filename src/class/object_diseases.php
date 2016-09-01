@@ -38,7 +38,89 @@ if (!defined('ROOT_PATH')) {
 // Require parent class definition.
 require_once ROOT_PATH . 'class/objects.php';
 
-require_once ROOT_PATH . 'inc-lib-diseases.php';
+// List of tissues selectable for being affected by a disease.
+$_SETT['disease_tissues'] = array(
+    'optgroup_brain' => 'Brain',
+    'brain' => 'brain',
+    'lateral ventricle' => 'lateral ventricle',
+    'cerebral cortex' => 'cerebral cortex',
+    'cerebellum' => 'cerebellum',
+    'hippocampus' => 'hippocampus',
+
+    'optgroup_face' => 'Face',
+    'face' => 'face',
+    'eyes' => 'eyes',
+    'ears' => 'ears',
+    'nose' => 'nose',
+    'mouth' => 'mouth',
+
+    'optgroup_head_internal' => 'Head (internal)',
+    'nasopharynx' => 'nasopharynx',
+    'oral mucosa' => 'oral mucosa',
+    'salivary gland' => 'salivary gland',
+    'tonsil' => 'tonsil',
+    'thyroid gland' => 'thyroid gland',
+    'parathyroid gland' => 'parathyroid gland',
+
+    'optgroup_limbs' => 'Limbs',
+    'shoulders' => 'shoulders',
+    'arms' => 'arms',
+    'elbows' => 'elbows',
+    'wrist' => 'wrist',
+    'hands' => 'hands',
+    'fingers' => 'fingers',
+    'legs' => 'legs',
+    'knees' => 'knees',
+    'ankles' => 'ankles',
+    'feet' => 'feet',
+    'toes' => 'toes',
+
+    'optgroup_trunk_internal' => 'Trunk (internal)',
+    'spine' => 'spine',
+    'hips' => 'hips',
+    'bronchus' => 'bronchus',
+    'lung' => 'lung',
+    'esophagus' => 'esophagus',
+    'heart muscle' => 'heart muscle',
+    'lymph node' => 'lymph node',
+    'stomach' => 'stomach',
+    'liver' => 'liver',
+    'adrenal gland' => 'adrenal gland',
+    'spleen' => 'spleen',
+    'kidney' => 'kidney',
+    'gallbladder' => 'gallbladder',
+    'pancreas' => 'pancreas',
+    'duodenum' => 'duodenum',
+    'small intestine' => 'small intestine',
+    'colon' => 'colon',
+    'appendix' => 'appendix',
+    'urinary bladder' => 'urinary bladder',
+    'rectum' => 'rectum',
+
+    'optgroup_feminine' => 'Feminine tissues',
+    'breast' => 'breast',
+    'placenta' => 'placenta',
+    'fallopian tube' => 'fallopian tube',
+    'ovary' => 'ovary',
+    'uterus' => 'uterus',
+    'cervix, uterine' => 'cervix, uterine',
+    'vagina' => 'vagina',
+
+    'optgroup_masculine' => 'Masculine tissues',
+    'seminal vesicle' => 'seminal vesicle',
+    'prostate' => 'prostate',
+    'epididymis' => 'epididymis',
+    'testis' => 'testis',
+
+    'optgroup_other' => 'Other',
+    'skeletal muscle' => 'skeletal muscle',
+    'smooth muscle' => 'smooth muscle',
+    'hair' => 'hair',
+    'skin' => 'skin',
+    'bone marrow' => 'bone marrow',
+    'bones (skeleton)' => 'bones (skeleton)',
+    'soft tissue' => 'soft tissue',
+);
 
 
 
@@ -142,10 +224,10 @@ class LOVD_Disease extends LOVD_Object {
                                     'db'   => array('_genes', false, 'TEXT')),
                         'tissues' => array(
                                     'view' => array('Associated tissues', 160),
-                                    'db'   => array('tissues', false, 'TEXT')),
+                                    'db'   => array('tissues', false, true)),
                         'features' => array(
                                     'view' => array('Disease features', 200),
-                                    'db'   => array('features', false, 'TEXT')),
+                                    'db'   => array('features', false, true)),
                       );
         $this->sSortDefault = 'symbol';
 
@@ -237,7 +319,7 @@ class LOVD_Disease extends LOVD_Object {
             return parent::getForm();
         }
 
-        global $_DB, $_AUTH, $DISEASE_TISSUES;
+        global $_DB, $_AUTH, $_SETT;
 
         // Get list of genes, to connect disease to gene.
         if ($_AUTH['level'] == LEVEL_CURATOR) {
@@ -268,7 +350,7 @@ class LOVD_Disease extends LOVD_Object {
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
                         array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
-                        array('Associated tissues', '', 'select', 'tissues', 10, $DISEASE_TISSUES,
+                        array('Associated tissues', '', 'select', 'tissues', 10, $_SETT['disease_tissues'],
                               false, true, false),
                         array('Disease features', '', 'textarea', 'features', 50, 5),
                         array('Remarks', '', 'textarea', 'remarks', 50, 5),

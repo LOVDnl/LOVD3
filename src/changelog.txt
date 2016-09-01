@@ -26,7 +26,7 @@
  * Added the option to create announcements within LOVD.
  * Described these two new features in the manual, and added a new chapter
    "Updating LOVD".
- * Added new fields "tissues", "features" and "remarks" to diseases objects.
+ * Added new fields "tissues", "features" and "remarks" to diseases.
    Closes #101: "New columns for diseases viewlist: tissue, alias, remarks".
 
 
