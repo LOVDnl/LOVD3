@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2016-07-14
+ * Modified    : 2016-08-25
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -663,6 +663,7 @@ $aTableSQL =
     omim_apikey VARCHAR(40) NOT NULL,
     send_stats BOOLEAN NOT NULL,
     include_in_listing BOOLEAN NOT NULL,
+    allow_submitter_registration BOOLEAN NOT NULL DEFAULT 1,
     lock_users BOOLEAN NOT NULL,
     allow_unlock_accounts BOOLEAN NOT NULL,
     allow_submitter_mods BOOLEAN NOT NULL,
@@ -684,6 +685,25 @@ $aTableSQL =
     update_released_date DATE,
     installed_date DATE NOT NULL,
     updated_date DATE)
+    ' . $sSettings
+
+         , 'TABLE_ANNOUNCEMENTS' =>
+   'CREATE TABLE ' . TABLE_ANNOUNCEMENTS . ' (
+    id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
+    type VARCHAR(15) NOT NULL DEFAULT "information",
+    announcement TEXT NOT NULL DEFAULT "",
+    start_date DATETIME NOT NULL DEFAULT "0000-00-00 00:00:00",
+    end_date DATETIME NOT NULL DEFAULT "9999-12-31 23:59:59",
+    lovd_read_only BOOLEAN NOT NULL DEFAULT 0,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
+    created_date DATETIME NOT NULL,
+    edited_by SMALLINT(5) UNSIGNED ZEROFILL,
+    edited_date DATETIME,
+    PRIMARY KEY (id),
+    INDEX (created_by),
+    INDEX (edited_by),
+    CONSTRAINT ' . TABLE_ANNOUNCEMENTS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_ANNOUNCEMENTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
     ' . $sSettings
 
          , 'TABLE_SOURCES' =>

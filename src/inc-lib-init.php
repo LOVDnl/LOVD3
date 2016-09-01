@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-08-24
+ * Modified    : 2016-08-26
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1189,7 +1189,7 @@ function lovd_showDialog ($sID, $sTitle, $sMessage, $sType = 'information', $aSe
 
 
 
-function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%', $sHref = '')
+function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%', $sHref = '', $bBR = true)
 {
     $aTypes =
              array(
@@ -1212,7 +1212,7 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
     print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
           '        <TR>' . "\n" .
           '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
-          '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE><BR>' . "\n\n");
+          '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE>' . (!$bBR? '' : '<BR>') . "\n\n");
 }
 
 

@@ -4,7 +4,7 @@ php:
   - 5.4
   # aliased to a recent 5.5.x version
   - 5.5
-  # aliased to a recent 5.6.xversion  
+  # aliased to a recent 5.6.xversion
   - 5.6
   # aliased to a recent 7.x version
   - 7.0
@@ -48,13 +48,13 @@ before_script:
   - phpenv config-rm xdebug.ini
 
 script:
-  # Use phpunit or vendor/bin/phpunit to start tests.  
-  # vendor/bin/phpunit is the best option to run the tests. Because this one 
-  # is installed via composer. 
-  # Not running phpunit installed via composer gives errors, has to do with the 
-  # versions of the dependencies. 
-  
-  # This is a travis test. This test if travis is working as expected. 
+  # Use phpunit or vendor/bin/phpunit to start tests.
+  # vendor/bin/phpunit is the best option to run the tests. Because this one
+  # is installed via composer.
+  # Not running phpunit installed via composer gives errors, has to do with the
+  # versions of the dependencies.
+
+  # This is a travis test. This test if travis is working as expected.
   # Two test are done which are independent of LOVD.
   - vendor/bin/phpunit --configuration ./tests/selenium_tests/phpunit.xml ./tests/travis/tests/
 
@@ -79,5 +79,5 @@ notifications:
       - M.Kroon@lumc.nl
    on_success: never
    ## [always|never|change] # default: change
-   on_failure: always 
+   on_failure: always
    ## [always|never|change] # default: always

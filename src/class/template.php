@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-06-23
- * For LOVD    : 3.0-15
+ * Modified    : 2016-08-29
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -194,6 +194,9 @@ class LOVD_Template {
                                 '/import' => array('menu_import.png', 'Import data', LEVEL_MANAGER),
                                 'hr',
                                 '/logs' => array('menu_logs.png', 'View system logs', LEVEL_MANAGER),
+                                'hr',
+                                '/announcements?create' => array('lovd_form_information.png', 'Create a new system announcement', LEVEL_MANAGER),
+                                '/announcements' => array('lovd_form_information.png', 'View system announcements', LEVEL_MANAGER),
                               ),
                         'docs' => 'LOVD documentation',
 //                         array(
@@ -578,6 +581,19 @@ function lovd_mapVariants ()
 
 <BODY style="margin : 0px;">
 
+<?php
+// Check for announcements. Ignore errors, in case the table doesn't exist yet.
+$qAnnouncements = @$_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
+if ($qAnnouncements) {
+    $zAnnouncements = $qAnnouncements->fetchAllAssoc();
+} else {
+    $zAnnouncements = array();
+}
+foreach ($zAnnouncements as $zAnnouncement) {
+    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? '' : 'announcements/' . $zAnnouncement['id']), false);
+}
+?>
+
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
 
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
@@ -621,7 +637,8 @@ function lovd_mapVariants ()
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
-                print('      <A href="users?register"><B>Register as submitter</B></A> | <A href="login"><B>Log in</B></A>' . "\n");
+                print('      ' . (!$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                    '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }
 

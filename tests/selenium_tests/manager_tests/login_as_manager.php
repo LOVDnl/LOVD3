@@ -22,6 +22,5 @@ class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
         $element->click();
-        
     }
 }

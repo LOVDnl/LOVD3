@@ -13,7 +13,7 @@ class CreateUserManagerTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
         $this->enterValue(WebDriverBy::name("department"), "Human Genetics");
         $this->enterValue(WebDriverBy::name("address"), "Einthovenweg 20\n2333 ZC Leiden");
-        $this->enterValue(WebDriverBy::name("email"), "d.asscheman@lumc.nl");
+        $this->enterValue(WebDriverBy::name("email"), "manager@lovd.nl");
         $this->enterValue(WebDriverBy::name("username"), "manager");
         $this->enterValue(WebDriverBy::name("password_1"), "test1234");
         $this->enterValue(WebDriverBy::name("password_2"), "test1234");

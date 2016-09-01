@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2016-06-09
- * For LOVD    : 3.0-16
+ * Modified    : 2016-08-26
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
@@ -117,6 +117,13 @@ if (!empty($_POST)) {
 
 
 
+                // User is logged in, but system is set to read only.
+                elseif (lovd_verifyPassword($_POST['password'], $zUser['password']) && $_CONF['lovd_read_only'] && $zUser['level'] < LEVEL_MANAGER) {
+                    lovd_errorAdd('', 'This installation is currently configured to be read-only. Your user level is not sufficient to log in.');
+                }
+
+
+
                 // Finally, log in user if the correct password has been given.
                 elseif (lovd_verifyPassword($_POST['password'], $zUser['password'])) {
                     // Successfully logging in!
@@ -205,6 +212,10 @@ if (!$_AUTH) {
         } else {
             $_POST['referer'] = '';
         }
+    }
+
+    if ($_CONF['lovd_read_only']) {
+        lovd_showInfoTable('This installation is currently configured to be read-only. Only Managers and higher level users can log in.', 'warning');
     }
 
     lovd_errorPrint();

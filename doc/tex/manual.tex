@@ -735,7 +735,8 @@ The LOVD system settings allow you to adapt your LOVD installation to your prefe
 For instance by changing the installation's displayed name or email address (general settings),
  proxy server settings (connection settings), settings on statistics, or the security settings.
 
-To view or edit the LOVD system settings, click on the ``Setup'' tab, then on ``View and change LOVD System settings (...)'',
+To view or edit the LOVD system settings, click on the ``Setup'' tab,
+ then on ``View and change LOVD System settings (...)'',
 or move your mouse over the ``Setup'' tab and click the ``LOVD system settings'' menu option from the dropdown list.
 
 
@@ -764,13 +765,15 @@ or move your mouse over the ``Setup'' tab and click the ``LOVD system settings''
    we recommend that you use a valid address to make sure that bounces of emails sent from LOVD
    (to submitters or curators) are still caught by someone, so that they can be handled.
   \item[Forward messages to database admin] \hfill \\
-  With this setting enabled, LOVD will forward messages to the database administrator about submitter registrations, submissions, and such.
+  With this setting enabled, LOVD will forward messages to the database administrator about submitter registrations,
+   submissions, and such.
   \item[Human Build to map to (UCSC/NCBI)] \hfill \\
   This value can only be set during installation, and cannot be changed later.
   It defines on which version of the Human Build (hg18/Build 36.1 or hg19/GRCh37) genomic variants are described.
   Links to the UCSC and Ensembl genome browsers and the NCBI sequence viewer also depend on this setting.
   \\
-  From LOVD 3.0-beta-07, the hg18 setting is no longer available for new LOVD installations, although it will remain to be supported.
+  From LOVD 3.0-beta-07, the hg18 setting is no longer available for new LOVD installations,
+   although it will remain to be supported.
   When hg20 will come out, LOVD will start supporting multiple genome builds per installation.
   \item[List database changes in feed for how long?] \hfill \\
   \emph{Note: Not yet implemented!}
@@ -821,14 +824,16 @@ We use this information to see how many LOVDs there are worldwide, which version
 \begin{description}
   \item[Send statistics] \hfill \\
   When this setting is enabled, LOVD will collect general usage statistics and send this to us.
-  The following information is sent: the number of submitters, genes, individuals, variants and unique variants in your system.
+  The following information is sent: the number of submitters,
+   genes, individuals, variants and unique variants in your system.
   No specific information is sent, just the numbers.
   \hypertarget{item:include_in_listing}{}
   \item[Include in the global LOVD listing] \hfill \\ %% FIXME; When LOVD 3.0 site has such a list, use that URL here.
   On our website, we keep a \href{http://www.lovd.nl/2.0/index_list.php}{list of public LOVD installations}.
   This list is also feeding our \href{http://www.lovd.nl/LSDBs}{worldwide LSDB list},
    through which submitters can locate databases for a specific gene to submit data to.
-  If you enable the ``Include in the global LOVD listing'' setting, your LOVD installation will send us all the information we need to build these lists:
+  If you enable the ``Include in the global LOVD listing'' setting,
+   your LOVD installation will send us all the information we need to build these lists:
    the LOVD installation's name, the URL, the available gene databases, the date of last update of the gene databases,
    the disease abbreviations and names of the diseases related to these genes and finally the names,
    institutes and email addresses of the curators of these gene databases.
@@ -841,14 +846,24 @@ We use this information to see how many LOVDs there are worldwide, which version
 \subsection{Security settings}
 In this section you can control some security settings of LOVD.
 \begin{description}
+  \item[Allow submitter registration?] \hfill \\
+  Enabling this setting allows submitters to create their own accounts in your LOVD installation.
+  Having it enabled is the default setting, and this could not be disabled prior to LOVD 3.0-17.
+  \\
+  Note, that submitters can never register when your LOVD installation is set to read-only
+   because of an active announcement with the read-only setting enabled.
+  See the \hyperlink{sec:announcements}{Announcements section} for more information.
   \item[Lock users after 3rd failed login?] \hfill \\
-  With this setting enabled, submitters, curators and managers will be locked out of the system after they have provided the wrong password three times.
-  A manager or, in the case of a locked manager, the database administrator needs to unlock the user's account once it's locked.
+  With this setting enabled, submitters, curators and managers will be locked out
+   of the system after they have provided the wrong password three times.
+  A manager or, in the case of a locked manager, the database administrator
+   needs to unlock the user's account once it's locked.
   \\
   This does \emph{not} affect the database administrator account.
   \item[Allow (locked) users to retrieve a new password?] \hfill \\
   If a submitter, curator, or manager has lost his password, enabling this ``I forgot my password''
-   feature allows them to receive a unlocking code in their email with which they can unlock their account and choose a new password.
+   feature allows them to receive a unlocking code in their email with which
+    they can unlock their account and choose a new password.
   \item[Enable submitters to change data?] \hfill \\
   This setting allows submitters to make changes to data previously submitted by them or assigned to them.
   % FIXME: implement!
@@ -972,6 +987,105 @@ Please note that deleting log entries can not be undone.
 
 
 \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
+\hypertarget{sec:announcements}{}
+\section{Announcements}
+\label{sec:announcements}
+For messages meant for visitors and users of your LOVD installation, you can create announcements.
+They will appear on the top of every page, can automatically appear and disappear on a requested date and time,
+ and can optionally make LOVD \emph{read-only}, disallowing submitter registrations and users lower than Managers
+ to log into LOVD.
+
+
+
+\subsection{Creating a new announcement}
+\label{ssec:announcements_create}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 17
+  \end{leftbar}
+\end{wrapfigure}
+To create a new announcement, click the ``Create a new announcement, optionally making LOVD read-only'' link in the
+ Setup area, or click the ``Create a new system announcement'' link in the Setup tab drop-down menu.
+
+\subsubsection{Announcement details}
+Creating an announcement does not require many fields.
+\begin{description}
+  \item[Announcement type] \hfill \\
+  This defines the icon next to the announcement. An \emph{Information} dialog has an information icon,
+   a \emph{Question} dialog has a question mark, a \emph{Warning} dialog has an exclamation mark.
+  \item[Announcement text] \hfill \\
+  Type here the announcement itself.
+  If you choose to make LOVD read-only as well, be sure to let users know from when they will be able to log in again.
+  \item[Start date] \hfill \\
+  Use this field to create an announcement before it should be online.
+  The announcement will be active only after this date and time.
+  If you leave this field empty, the current time will be selected, and the announcement will be shown immediately.
+  To deactivate an announcement, put a date in the future, like 9999-12-31.
+  \item[End date] \hfill \\
+  Use this field to automatically let an announcement disappear at a certain date or time.
+  If you leave this field empty, the end date will be set to 9999-12-31 23:59:59.
+  To deactivate an announcement, put a date in the past here.
+  \item[Make LOVD read-only?] \hfill \\
+  Enabling this feature blocks logins and submitter registrations when this announcement is active.
+  Only Managers and up will still be able to log into LOVD.
+  Users of a lower level that are active when this announcement activates, will be logged out.
+  A true read-only state is currently not enforced; Managers can still make changes to all data.
+  Use this feature when the server is undergoing maintenance, for instance.
+  If you want to make LOVD read-only, but only in the future, set a date in the future in ``Start date'',
+   and make sure you make an extra announcement that introduces the downtime.
+\end{description}
+
+After completing the form, click the ``Create announcement'' button.
+If the ``Start date'' field was empty or a day in the past, and the ``End date'' was empty or a date in the future,
+ the announcement will be visible immediately.
+For Manager level users and up, announcements are clickable, and they link to their detailed view,
+ making it easy for Managers to find active announcements.
+
+
+
+\subsection{Editing an announcement}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 17
+  \end{leftbar}
+\end{wrapfigure}
+To edit an announcement, click the announcement on the top of the page if it's active to go to its detailed view
+ directly, or go to the list of announcements by using the ``Manage system announcements'' link in the Setup area
+ or the ``View system announcements'' in the Setup tab drop-down menu, after which you can click the announcement.
+On the detailed view, open the ``Options'' menu, and click ``Edit announcement''.
+Complete the form to update the announcement.
+If you wish to disable to announcement, edit the ``Start date'' field to be a date in the future,
+ or edit the ``End date'' field to be a date in the past.
+For details on all fields, see section ``\hyperlink{ssec:announcements_create}{\nameref{ssec:announcements_create}}''.
+
+
+
+\subsection{Deleting an announcement}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Manager\\
+    Available from: LOVD 3.0 Build 17
+  \end{leftbar}
+\end{wrapfigure}
+To delete an announcement, click the announcement on the top of the page if it's active to go to its detailed view
+ directly, or go to the list of announcements by using the ``Manage system announcements'' link in the Setup area
+ or the ``View system announcements'' in the Setup tab drop-down menu, after which you can click the announcement.
+On the detailed view, open the ``Options'' menu, and click ``Delete announcement''.
+Fill in your password and submit the form to delete the announcement.
+Note, that you can also disable an announcement without deleting it,
+ for instance if you know in the future you'll make a similar announcement.
+To disable an announcement, edit the announcement instead of deleting it, and either set
+ the ``Start date'' field to be a date in the future, or edit the ``End date'' field to be a date in the past.
+
+
+
+
+
 \section{Uninstalling LOVD}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
@@ -980,9 +1094,11 @@ Please note that deleting log entries can not be undone.
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-Only the database administrator can uninstall LOVD, provided the uninstall lock has not been set during installation of LOVD.
+Only the database administrator can uninstall LOVD,
+ provided the uninstall lock has not been set during installation of LOVD.
 The uninstall lock is set within the MySQL database and can only be removed by directly accessing MySQL.
-If you know how to handle MySQL, you can also uninstall LOVD through MySQL directly, by removing all LOVD tables, but this is not recommended.
+If you know how to handle MySQL, you can also uninstall LOVD through MySQL directly by removing all LOVD tables,
+ but this is not recommended.
 \vskip \baselineskip
 
 To uninstall LOVD and remove all data stored in LOVD, click on the ``Uninstall LOVD'' link in the setup area.
@@ -995,7 +1111,8 @@ If you wish to store these data elsewhere, make sure you download all data first
 \end{warntable}
 
 \begin{infotable}
-Please note that the LOVD uninstaller will not remove the LOVD files itself, just the database tables that it has created during install.
+Please note that the LOVD uninstaller will not remove the LOVD files itself,
+ just the database tables that it has created during install.
 Thus, to completely remove LOVD from the system, also remove the files from the server.
 \end{infotable}
 
@@ -4267,6 +4384,74 @@ Read this section to learn about how to protect your data in LOVD further.
 
 
 
+\chapter{Updating LOVD}
+Several times a year, a new LOVD build is released.
+An update may contain bug fixes, new features, new custom columns and such.
+Therefore, each update has a priority setting to indicate how important it is
+ to update your LOVD installation to the new release.
+\vskip \baselineskip
+
+Depending on whether or not LOVD has found that there is an update available,\
+ an update icon appears at the bottom right-hand side of the screen:
+\vskip \baselineskip
+
+\begin{center}
+\begin{tabular}{ | p{0.8cm} p{10cm} | }
+  \hline
+  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newer.png}} & There is an update available. \\
+  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newest.png}} & There is no update available. \\
+  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_error.png}} & There was an error while checking for updates. \\
+  \hline
+\end{tabular}
+\end{center}
+
+If you are logged in as an authorized user,
+ you can click the update notification icon for more information on the status of the update.
+If an update is available, detailed information is presented:
+
+\begin{description}
+  \item[Last checked for updates:]
+  Shows the date LOVD last checked for a new update.
+  \item[Latest version:]
+  Shows the detected update.
+  \item[Release date:]
+  The date this update has been released.
+  \item[Priority level:]
+  Shows how important the LOVD developers consider this update.
+  Can contain ``Optional'', ``Common'', ``Suggested'', ``Recommended'',
+   ``\textcolor{red}{Important}'' or ``\textcolor{red}{\textbf{Critical}}'', with increasing priority.
+  \item[Release info:]
+  Information on the changes that have been done in this release.
+  Please note that this is usually only a very short list of updates.
+  A more elaborate description can always be found in the \href{http://www.lovd.nl/3.0/news/}{news section} of the
+   LOVD website, and the full list can be found in the \href{http://www.lovd.nl/3.0/changelog.txt}{LOVD changelog}.
+\end{description}
+
+\noindent
+If you choose to upgrade LOVD, follow these steps:
+
+\begin{enumerate} \itemsep0pt \parskip0pt
+  \item Download the new build.
+    Either using the direct link to it from the update window, or from the website.
+  \item Unpack the new build and overwrite the LOVD files.
+  \item If you're working from your local machine, upload the updated files to your webserver.
+  \item Log into LOVD.
+    This is an important step.
+    If you are already logged in, perform some activity, like clicking on the Setup tab.
+    LOVD will then upgrade the database tables to make sure the database backend has the same version as the files.
+    Skipping this step may result in serious errors occurring.
+  \item You're done!
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
 \hypertarget{chap:troubleshooting}{}
 \chapter{Troubleshooting}
 In case you run into any kind of problem or when you have a question, we recommend you first check in the manual to see if perhaps the answer can be found there.
@@ -4283,7 +4468,8 @@ If that doesn't resolve your problem or answer your question, please follow the 
 
 %            s (section) ss (subsection)
 \hypertarget{sec:name_of_label}{}
-\hyperlink{sec:name_of_label}{name of link}.
+\hyperlink{sec:name_of_label}{name of link||\nameref{sec:name_of_label}}
+
 
 \begin{infobox}
   \caption{\textbf{Caption}}
@@ -4368,12 +4554,9 @@ $_PAGES =
                      array(
                             'Advanced options',
                           ),
-                    'Submitting variant and patient data',
                     'Editing variant data',
                     'Editing patient data',
                     'Deleting variant or patient data',
-                    'Downloading data to text files',
-                    'Importing text files',
                     'Database statistics',
                   ),
             'Submitters',
