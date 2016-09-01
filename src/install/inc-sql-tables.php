@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2016-08-25
+ * Modified    : 2016-09-01
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -217,7 +217,7 @@ $aTableSQL =
     symbol VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
     id_omim INT(10) UNSIGNED,
-    tissue VARCHAR(255) NOT NULL DEFAULT "",
+    tissues TEXT NOT NULL,
     features TEXT NOT NULL,
     remarks TEXT NOT NULL,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
