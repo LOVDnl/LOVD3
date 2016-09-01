@@ -1999,7 +1999,8 @@ class LOVD_Object {
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" class="optionsmenu" style="display: none;">
-    <SPAN>Find &amp; Replace for column
+    <SPAN><B style="color: red">Note that find &amp; replace is still in BETA, changes made using this feature are not checked for errors, therefore using find and replace may have destructive consequences. If uncertain, use the edit form of the data entries instead.</B><BR>
+        Find &amp; replace for column
         <B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>
         <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
                value="$sFRFieldname" />
