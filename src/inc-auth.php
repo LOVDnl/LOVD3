@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2016-06-17
- * For LOVD    : 3.0-16
+ * Modified    : 2016-09-01
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -99,7 +99,8 @@ if ($_AUTH && $_AUTH['allowed_ip']) {
 if (!$_AUTH) {
     // We need to check for cookies, so set whatever and check whether it's there later...
     if (!isset($_COOKIE['lovd_cookie_check'])) {
-        setcookie('lovd_cookie_check', 'OK');
+        // @ is to suppress errors in Travis test.
+        @setcookie('lovd_cookie_check', 'OK');
     }
 }
 ?>

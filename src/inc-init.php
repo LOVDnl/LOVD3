@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-08-29
+ * Modified    : 2016-09-01
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,8 @@ if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
 } else {
     define('FORMAT', $aFormats[0]);
 }
-header('Content-type: ' . FORMAT . '; charset=UTF-8');
+// @ is to suppress errors in Travis test.
+@header('Content-type: ' . FORMAT . '; charset=UTF-8');
 
 define('COLLEAGUE_CAN_EDIT', 1);    // Colleagues that have edit permissions.
 define('COLLEAGUE_CANNOT_EDIT', 2); // Colleagues that have no edit permissions.
@@ -594,7 +595,8 @@ session_name('PHPSESSID_' . $_SETT['cookie_id']);
 
 // Start sessions - use cookies.
 @session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
-header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version']) || $_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
+// @ is to suppress errors in Travis test.
+@header('X-LOVD-version: ' . $_SETT['system']['version'] . (empty($_STAT['version']) || $_STAT['version'] == $_SETT['system']['version']? '' : ' (DB @ ' . $_STAT['version'] . ')'));
 
 
 
