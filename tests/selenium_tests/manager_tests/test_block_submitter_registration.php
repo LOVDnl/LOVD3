@@ -29,8 +29,11 @@ class TestBlockSubmitterRegistration extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/logout');
 
         // There should be no link to register yourself.
-        // This call takes quite some time, because of the timeout that we have set if elements are not found immediately (normally needed if pages load slowly).
-        $this->assertFalse((bool) count($this->driver->findElements(WebDriverBy::xpath('//a/b[text()="Register as submitter"]'))));
+        // First, I had this findElements(), but Chrome doesn't like that at all, and times out.
+        // Firefox anyway took quite some time, because of the timeout that we have set if elements are not found immediately (normally needed if pages load slowly).
+        // $this->assertFalse((bool) count($this->driver->findElements(WebDriverBy::xpath('//a/b[text()="Register as submitter"]'))));
+        // New attempt to test for absence of register link.
+        $this->assertFalse(strpos($this->driver->findElement(WebDriverBy::xpath('//table[@class="logo"]//td[3]'))->getText(), 'Register as submitter'));
 
         // Not only the link should be gone. Also the form should no longer work.
         $this->driver->get(ROOT_URL . '/src/users?register');
@@ -60,7 +63,7 @@ class TestBlockSubmitterRegistration extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/users?register');
         $this->driver->findElement(WebDriverBy::xpath('//input[contains(@value, "I don\'t have an ORCID ID")]'));
 
-        // Log back in, furture tests may need it.
+        // Log back in, future tests may need it.
         // FIXME: I want to get rid of this need, by implementing a proper solution for it through the base class,
         $this->driver->get(ROOT_URL . '/src/login');
         $this->enterValue(WebDriverBy::name('username'), 'manager');
