@@ -22,6 +22,9 @@
  * Fixed bug; The previous bug fix #53, about LOVD complaining about fields not
    in the file when running an update import, was not implemented properly.
    Closes #53: "Importing records fails on existing fields in database".
+ * Fixed bug; Colleagues can now see non-public fields of shared data.
+   Closes #105: "Assigned colleagues can't see non-public fields in
+   ViewEntries"
  * Added the option to block submitter registrations.
  * Added the option to create announcements within LOVD.
  * Described these two new features in the manual, and added a new chapter

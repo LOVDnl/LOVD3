@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2016-06-21
- * For LOVD    : 3.0-16
+ * Modified    : 2016-08-10
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -320,10 +320,11 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewEntry ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewEntry format
+        // Note: object_custom_viewlists.php implements their own version of this code
         global $_AUTH;
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
-            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_COLLABORATOR) {
                 continue;
             }
             $aViewEntry[$sID] = $aCol['head_column'];
@@ -338,10 +339,11 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewList ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewList format
+        // Note: object_custom_viewlists.php implements their own version of this code
         global $_AUTH;
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
-            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_COLLABORATOR) {
                 continue;
             }
             $bAlignRight = preg_match('/^(DEC|FLOAT|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
