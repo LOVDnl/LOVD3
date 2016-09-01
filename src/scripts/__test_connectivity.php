@@ -86,6 +86,5 @@ ini_set('soap.wsdl_cache_enabled',0);
 ini_set('soap.wsdl_cache_ttl',0);
 require ROOT_PATH . 'class/soap_client.php';
 $_Mutalyzer = new LOVD_SoapClient();
-$_Mutalyzer->__setLocation($_CONF['mutalyzer_soap_url'] . '?wsdl');
 var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
 ?>

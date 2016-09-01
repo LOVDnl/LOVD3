@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2014-07-25
- * Modified    : 2016-08-12
+ * Modified    : 2016-09-01
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,7 +65,10 @@ class LOVD_SoapClient extends SoapClient {
             ));
         }
 
-        return parent::__construct($_CONF['mutalyzer_soap_url'] . '?wsdl', $aOptions);
+        parent::__construct($_CONF['mutalyzer_soap_url'] . '?wsdl', $aOptions);
+        // 2016-09-01; 3.0-17; Some PHP versions need this additional call, because somehow they start failing otherwise.
+        $this->__setLocation($_CONF['mutalyzer_soap_url'] . '?wsdl');
+        return true;
     }
 }
 ?>
