@@ -190,7 +190,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('symbol', 'name', 'id_omim', 'tissue', 'features', 'remarks',
+            $aFields = array('symbol', 'name', 'id_omim', 'tissues', 'features', 'remarks',
                              'created_by', 'created_date');
 
             // Prepare values.
