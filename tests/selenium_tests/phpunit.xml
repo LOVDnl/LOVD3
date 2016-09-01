@@ -185,17 +185,6 @@
             <file>submitter_tests/delete_gene_GJB.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
-        <testsuite name="temp_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>temp_tests/create_gene_IVD.php</file>
-            <file>temp_tests/create_disease_IVA.php</file>
-            <file>temp_tests/create_individual_diagnosed_with_IVA.php</file>
-            <file>temp_tests/add_phenotype_info_to_IVA_individual.php</file>
-            <file>temp_tests/add_screening_to_IVA_individual.php</file>
-            <file>temp_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
-            <file>temp_tests/confirm_variant_to_IVA_individual.php</file>
-            <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
         <testsuite name="access_sharing_tests">
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_users_submitter.php</file>
