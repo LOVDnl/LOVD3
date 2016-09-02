@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-08-25
+ * Modified    : 2016-09-01
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -433,6 +433,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      ),
                  '3.0-16a' =>
                     array('ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ADD COLUMN remarks TEXT NOT NULL DEFAULT "" AFTER id_protein_uniprot'),
+                 '3.0-16b' =>
+                    array('ALTER TABLE ' . TABLE_DISEASES .
+                               ' ADD COLUMN tissues  TEXT NOT NULL AFTER id_omim, 
+                                 ADD COLUMN features TEXT NOT NULL AFTER tissues,
+                                 ADD COLUMN remarks TEXT NOT NULL AFTER features',
+                        ),
                  '3.0-16c' =>
                     array(
                         'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN allow_submitter_registration BOOLEAN NOT NULL DEFAULT 1 AFTER include_in_listing',

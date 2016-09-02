@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2016-02-25
+ * Modified    : 2016-09-01
  * For LOVD    : 3.0-15
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -190,7 +190,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('symbol', 'name', 'id_omim', 'created_by', 'created_date');
+            $aFields = array('symbol', 'name', 'id_omim', 'tissues', 'features', 'remarks',
+                             'created_by', 'created_date');
 
             // Prepare values.
             $_POST['created_by'] = $_AUTH['id'];
@@ -321,7 +322,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('symbol', 'name', 'id_omim', 'edited_by', 'edited_date');
+            $aFields = array('symbol', 'name', 'id_omim', 'tissues', 'features', 'remarks',
+                             'edited_by', 'edited_date');
 
             // Prepare values.
             $_POST['edited_by'] = $_AUTH['id'];
