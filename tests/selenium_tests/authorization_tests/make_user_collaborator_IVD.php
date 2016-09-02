@@ -14,7 +14,7 @@ class MakeUserCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
 //        $element = $this->driver->findElement("xpath=(//input[@name='allow_edit[]'])[3]");
         $elements = $this->driver->findElements(WebDriverBy::xpath("//input[@name='allow_edit[]']"));
         $elements[2]->click();
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
+        $this->enterValue(WebDriverBy::xpath("//td/input[@type='password']"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Save curator list']"));
         $element->click();
         

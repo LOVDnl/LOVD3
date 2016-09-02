@@ -11,7 +11,7 @@ class MakeUserCuratorTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . "/src/genes/IVD?authorize");
         $element = $this->driver->findElement(WebDriverBy::linkText("Test Curator"));
         $element->click();
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
+        $this->enterValue(WebDriverBy::xpath("//td/input[@type='password']"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Save curator list']"));
         $element->click();
         

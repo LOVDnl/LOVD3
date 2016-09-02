@@ -54,7 +54,7 @@ class ConfirmVariantToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCas
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/0000000002[\s\S]confirmVariants$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::id("check_0000000001"));
         $element->click();
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
+        $this->enterValue(WebDriverBy::xpath("//td/input[@type='password']"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Save variant list']"));
         $element->click();
 

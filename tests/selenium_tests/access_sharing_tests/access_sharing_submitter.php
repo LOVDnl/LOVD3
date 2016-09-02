@@ -130,7 +130,7 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath($sUserSelector)));
         $userRow = $this->driver->findElement(WebDriverBy::xpath($sUserSelector));
         $userRow->click();
-        $this->enterValue(WebDriverBy::name('password'), $sSubPass1);
+        $this->enterValue(WebDriverBy::xpath('//td/input[@type="password"]'), $sSubPass1);
 
         $saveButton = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Save access permissions"]'));
         $saveButton->click();
