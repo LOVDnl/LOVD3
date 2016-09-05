@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-09-01
+ * Modified    : 2016-09-05
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -260,10 +260,7 @@ function lovd_AJAX_viewListHideRow (sViewListID, sElementID)
 
 
 
-function lovd_AJAX_viewListSubmit (sViewListID, callBack, oGetParams) {
-    // Params:
-    //  - oGetParams: an object whose properties are appended to the request as
-    //                GET parameters. (e.g. "?fieldname=value")
+function lovd_AJAX_viewListSubmit (sViewListID, callBack) {
 
     oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
@@ -339,16 +336,6 @@ if (!isset($_GET['nohistory'])) {
         }
         // Build GET query.
         var sGET = '';
-
-        // Append oGetParams to sGET string.
-        if (typeof oGetParams != 'undefined') {
-            $.each(oGetParams, function (sFieldname, sValue) {
-                if (sGET.length > 0) {
-                    sGET += '&';
-                }
-                sGET += sFieldname + '=' + sValue;
-            });
-        }
 
         // Put values into a GET param string for all input fields, except fields named check_*
         // and non-checked radio buttons and checkboxes

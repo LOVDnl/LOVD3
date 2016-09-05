@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2016-08-31
+ * Modified    : 2016-09-05
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -110,8 +110,8 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
 
 // 2016-07-14; 3.0-17; Submitters should not be allowed to retrieve more
 // information about users than the info the access sharing page gives them.
-$aColsToSkip = (!empty($_GET['skip'])? $_GET['skip'] : array());
-if ($_GET['object'] == 'User' && $_AUTH['level'] == LEVEL_SUBMITTER) {
+$aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
+if ($sObject == 'User' && $_AUTH['level'] == LEVEL_SUBMITTER) {
     // Force removal of certain columns, regardless of this has been requested or not.
     $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
 }
