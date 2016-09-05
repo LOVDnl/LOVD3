@@ -920,23 +920,53 @@ function lovd_parseConfigFile($sConfigFile)
 
 
 function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHeaders = array()) {
-    // LOVD's alternative to file(), not dependent on the fopenwrappers, and can do POST requests.
+    // LOVD's alternative to file(), not dependent on the fopen wrappers, and can do POST requests.
     global $_CONF, $_SETT;
 
-    if (substr($sURL, 0, 4) != 'http' || (ini_get('allow_url_fopen') && !$sPOST && !$aAdditionalHeaders)) {
-        // Normal file() is fine.
-        return @file($sURL, FILE_IGNORE_NEW_LINES);
-    }
+    // Check additional headers.
     if (!is_array($aAdditionalHeaders)) {
         $aAdditionalHeaders = array($aAdditionalHeaders);
     }
+
+    // Prepare proxy authorization header.
+    if (!empty($_CONF['proxy_username']) && !empty($_CONF['proxy_password'])) {
+        $aAdditionalHeaders[] = 'Proxy-Authorization: Basic ' . base64_encode($_CONF['proxy_username'] . ':' . $_CONF['proxy_password']) . "\r\n";
+    }
+
     $aAdditionalHeaders[] = ''; // To make sure we end with a \r\n.
+
+    // Use the simple file() method, only if:
+    // - We're working with local files, OR:
+    // - We're using HTTPS (because our fsockopen() currently doesn't support that, let's hope allow_url_fopen is on), OR:
+    // - Fopen wrappers are on AND we're NOT using POST (because POST doesn't work for now).
+    if (substr($sURL, 0, 4) != 'http' || substr($sURL, 0, 5) == 'https' || (ini_get('allow_url_fopen') && !$sPOST)) {
+        // Normal file() is fine.
+        $aOptions = array(
+            'http' => array(
+                'method' => ($sPOST? 'POST' : 'GET'),
+                'header' => $aAdditionalHeaders,
+                'user_agent' => 'LOVDv.' . $_SETT['system']['version'],
+            ),
+        );
+        // If we're connecting through a proxy, we need to set some additional information.
+        if ($_CONF['proxy_host']) {
+            $aOptions['http']['proxy'] = 'tcp://' . $_CONF['proxy_host'] . ':' . $_CONF['proxy_port'];
+            $aOptions['http']['request_fulluri'] = true;
+        }
+        if (substr($sURL, 0, 5) == 'https') {
+            $aOptions['ssl'] = array('allow_self_signed' => 1, 'SNI_enabled' => 1, (PHP_VERSION_ID >= 50600? 'peer_name' : 'SNI_server_name') => parse_url($sURL, PHP_URL_HOST));
+            $aOptions['http']['request_fulluri'] = false; // Somehow this breaks when testing through squid3 and using HTTPS.
+        }
+
+        return @file($sURL, FILE_IGNORE_NEW_LINES, stream_context_create($aOptions));
+    }
 
     $aHeaders = array();
     $aOutput = array();
     $aURL = parse_url($sURL);
     if ($aURL['host']) {
-        $f = @fsockopen((!empty($_CONF['proxy_host'])? $_CONF['proxy_host'] : $aURL['host']), (!empty($_CONF['proxy_port'])? $_CONF['proxy_port'] : 80)); // Doesn't support SSL without OpenSSL.
+        // fsockopen() can only connect to an HTTPS (proxy or host), when using "ssl" as the scheme, and having OpenSSL installed.
+        $f = @fsockopen((!empty($_CONF['proxy_host'])? $_CONF['proxy_host'] : $aURL['host']), (!empty($_CONF['proxy_port'])? $_CONF['proxy_port'] : 80));
         if ($f === false) {
             // No use continuing - it will only cause errors.
             return false;
@@ -947,8 +977,6 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
                     (!$sPOST? '' :
                     'Content-length: ' . strlen($sPOST) . "\r\n" .
                     'Content-Type: application/x-www-form-urlencoded' . "\r\n") .
-            (empty($_CONF['proxy_username']) || empty($_CONF['proxy_password'])? '' :
-                'Proxy-Authorization: Basic ' . base64_encode($_CONF['proxy_username'] . ':' . $_CONF['proxy_password']) . "\r\n") .
             implode("\r\n", $aAdditionalHeaders) .
                     'Connection: Close' . "\r\n\r\n" .
                     (!$sPOST? '' :

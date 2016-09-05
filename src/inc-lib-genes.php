@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2015-09-24
- * For LOVD    : 3.0-14
+ * Modified    : 2016-08-12
+ * For LOVD    : 3.0-17
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -400,13 +400,13 @@ function lovd_getUDForGene ($sBuild, $sGene)
     $sUD = '';
 
     // Let's get the mapping information.
-    $sJSONResponse = @file_get_contents(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene);
+    $sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene));
     // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but file_get_contents() just returns false.
     if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
         $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
         $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
         $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
-        $sJSONResponse = @file_get_contents(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2));
+        $sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2)));
         if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
             $sResponse = (!is_array($aResponse)? $aResponse : implode('', $aResponse));
             $sUD = $sResponse;
