@@ -101,8 +101,20 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     protected function setCheckBoxValue($locator, $bSetChecked) {
         $element = $this->driver->findElement($locator);
 
-        if (($bSetChecked && is_null($element->getAttribute('checked'))) ||
-            (!$bSetChecked && !is_null($element->getAttribute('checked')))) {
+        $nMaxTries = defined('MAX_TRIES_CHECKING_BOX')? MAX_TRIES_CHECKING_BOX : 10;
+        $nCount = 0;
+
+        while (($bSetChecked && is_null($element->getAttribute('checked'))) ||
+               (!$bSetChecked && !is_null($element->getAttribute('checked')))) {
+            if ($nCount > 0) {
+                fwrite(STDERR, 'Failed attempt setting checkbox (' . $locator->getMechanism() .
+                               '="' . $locator->getValue() . '")"');
+                if ($nCount >= $nMaxTries) {
+                    fwrite(STDERR, 'Failed setting checkbox ' . strVal($nMaxTries) .
+                                   ' times, skipping!');
+                    break;
+                }
+            }
             $element->click();
         }
     }
