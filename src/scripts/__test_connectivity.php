@@ -78,13 +78,240 @@ Contacting LOVD server over HTTPS, using our file() wrapper, testing SNI_server_
 var_dump(strlen(implode("\n", lovd_php_file('https://grenada.lumc.nl/'))));
 
 // Now checking LOVD's Mutalyzer's SOAP implementation.
+$bSOAPWSDLCacheEnabled = ini_get('soap.wsdl_cache_enabled');
+$bSOAPWSDLCacheTTL = ini_get('soap.wsdl_cache_ttl');
 print("
 ================================================================================
-Contacting Mutalyzer over HTTPS, using SOAP implementation, should return IVD mapping data:
+                                   SOAP TESTS
+================================================================================
+WSDLCacheEnabled : $bSOAPWSDLCacheEnabled
+WSDLCacheTTL     : $bSOAPWSDLCacheTTL");
+
+// The original class (with minor modifications for PHP 5.6.0.).
+class LOVD_SoapClientOri extends SoapClient {
+    // This class provides a wrapper around SoapClient such that the proxy settings
+    // are respected and SoapClient options are handled in just one place.
+
+    function __construct ()
+    {
+        // Initiate Soap Client.
+        global $_CONF;
+
+        $sHostname = parse_url($_CONF['mutalyzer_soap_url'], PHP_URL_HOST);
+        // Mutalyzer's Apache server doesn't like SSL requests coming in through a proxy, if these settings are not configured.
+        // The new Mutalyzer server (scheduled to be released in September, 2014) does not have this issue, but still works with these settings enabled.
+        $oContext = stream_context_create(array('ssl' => array('allow_self_signed' => 1, 'SNI_enabled' => 1, (PHP_VERSION_ID >= 50600? 'peer_name' : 'SNI_server_name') => $sHostname)));
+        $aOptions =
+            array(
+                'features' => SOAP_SINGLE_ELEMENT_ARRAYS, // Makes sure we ALWAYS get an array back, even if there is just one element returned (saves us a lot is_array() checks).
+                'stream_context' => $oContext,
+            );
+        if ($_CONF['proxy_host']) {
+            $aOptions = array_merge($aOptions, array(
+                'proxy_host'     => $_CONF['proxy_host'],
+                'proxy_port'     => $_CONF['proxy_port'],
+                'proxy_login'    => $_CONF['proxy_username'],
+                'proxy_password' => $_CONF['proxy_password'],
+            ));
+        }
+
+        return parent::__construct($_CONF['mutalyzer_soap_url'] . '?wsdl', $aOptions);
+    }
+}
+
+class LOVD_SoapClientNoVerify extends SoapClient {
+    // This class provides a wrapper around SoapClient such that the proxy settings
+    // are respected and SoapClient options are handled in just one place.
+
+    function __construct ()
+    {
+        // Initiate Soap Client.
+        global $_CONF;
+
+        $sHostname = parse_url($_CONF['mutalyzer_soap_url'], PHP_URL_HOST);
+        // Mutalyzer's Apache server doesn't like SSL requests coming in through a proxy, if these settings are not configured.
+        // The new Mutalyzer server (scheduled to be released in September, 2014) does not have this issue, but still works with these settings enabled.
+        $oContext = stream_context_create(array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
+        $aOptions =
+            array(
+                'features' => SOAP_SINGLE_ELEMENT_ARRAYS, // Makes sure we ALWAYS get an array back, even if there is just one element returned (saves us a lot is_array() checks).
+                'stream_context' => $oContext,
+            );
+        if ($_CONF['proxy_host']) {
+            $aOptions = array_merge($aOptions, array(
+                'proxy_host'     => $_CONF['proxy_host'],
+                'proxy_port'     => $_CONF['proxy_port'],
+                'proxy_login'    => $_CONF['proxy_username'],
+                'proxy_password' => $_CONF['proxy_password'],
+            ));
+        }
+
+        return parent::__construct($_CONF['mutalyzer_soap_url'] . '?wsdl', $aOptions);
+    }
+}
+
+class LOVD_SoapClientNoVerifyWSDLReconfirm extends SoapClient {
+    // This class provides a wrapper around SoapClient such that the proxy settings
+    // are respected and SoapClient options are handled in just one place.
+
+    function __construct ()
+    {
+        // Initiate Soap Client.
+        global $_CONF;
+
+        $sHostname = parse_url($_CONF['mutalyzer_soap_url'], PHP_URL_HOST);
+        // Mutalyzer's Apache server doesn't like SSL requests coming in through a proxy, if these settings are not configured.
+        // The new Mutalyzer server (scheduled to be released in September, 2014) does not have this issue, but still works with these settings enabled.
+        $oContext = stream_context_create(array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
+        $aOptions =
+            array(
+                'features' => SOAP_SINGLE_ELEMENT_ARRAYS, // Makes sure we ALWAYS get an array back, even if there is just one element returned (saves us a lot is_array() checks).
+                'stream_context' => $oContext,
+            );
+        if ($_CONF['proxy_host']) {
+            $aOptions = array_merge($aOptions, array(
+                'proxy_host'     => $_CONF['proxy_host'],
+                'proxy_port'     => $_CONF['proxy_port'],
+                'proxy_login'    => $_CONF['proxy_username'],
+                'proxy_password' => $_CONF['proxy_password'],
+            ));
+        }
+
+        parent::__construct($_CONF['mutalyzer_soap_url'] . '?wsdl', $aOptions);
+        // 2016-09-01; 3.0-17; Some PHP versions need this additional call, because somehow they start failing otherwise.
+        // Also see the ini_set() calls above.
+        $this->__setLocation($_CONF['mutalyzer_soap_url'] . '?wsdl');
+        return true;
+    }
+}
+
+
+
+print("
+================================================================================
+Requesting IVD mapping data, no modifications:
 ");
-ini_set('soap.wsdl_cache_enabled',0);
-ini_set('soap.wsdl_cache_ttl',0);
-require ROOT_PATH . 'class/soap_client.php';
-$_Mutalyzer = new LOVD_SoapClient();
+
+$_Mutalyzer = new LOVD_SoapClientOri();
 var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
+
+
+
+print("
+================================================================================
+Requesting IVD mapping data, disabled peer verification:
+");
+
+$_Mutalyzer = new LOVD_SoapClientNoVerify();
+var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
+
+
+
+print("
+================================================================================
+Requesting IVD mapping data, disabled peer verification, reconfirming WSDL:
+");
+
+$_Mutalyzer = new LOVD_SoapClientNoVerifyWSDLReconfirm();
+var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
+
+
+
+// Now checking with different settings.
+ini_set('soap.wsdl_cache_enabled', 0);
+ini_set('soap.wsdl_cache_ttl', 0);
+$bSOAPWSDLCacheEnabled = ini_get('soap.wsdl_cache_enabled');
+$bSOAPWSDLCacheTTL = ini_get('soap.wsdl_cache_ttl');
+print("
+================================================================================
+                              DISABLING WSDL CACHE
+================================================================================
+WSDLCacheEnabled : $bSOAPWSDLCacheEnabled
+WSDLCacheTTL     : $bSOAPWSDLCacheTTL
+================================================================================
+Requesting IVD mapping data, no modifications:
+");
+
+$_Mutalyzer = new LOVD_SoapClientOri();
+var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
+
+
+
+print("
+================================================================================
+Requesting IVD mapping data, disabled peer verification:
+");
+
+$_Mutalyzer = new LOVD_SoapClientNoVerify();
+var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
+
+
+
+print("
+================================================================================
+Requesting IVD mapping data, disabled peer verification, reconfirming WSDL:
+");
+
+$_Mutalyzer = new LOVD_SoapClientNoVerifyWSDLReconfirm();
+var_dump($_Mutalyzer->getGeneLocation(array('build' => $_CONF['refseq_build'], 'gene' => 'IVD'))->getGeneLocationResult);
+
+
+
+// Now checking the different call that seems to fail still.
+print("
+================================================================================
+                 REQUESTING  TRANSCRIPT INFORMATION  FROM  GENE
+================================================================================
+WSDLCacheEnabled : $bSOAPWSDLCacheEnabled
+WSDLCacheTTL     : $bSOAPWSDLCacheTTL
+================================================================================
+Requesting IVD mapping data, no modifications:
+");
+
+$_Mutalyzer = new LOVD_SoapClientOri();
+$aResults = $_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => 'UD_145628011486', 'geneName' => 'LAMA2'))->getTranscriptsAndInfoResult->TranscriptInfo;
+if (is_array($aResults)) {
+    foreach ($aResults as $nKey => $aResult) {
+        if (isset($aResult->id)) {
+            $aResults[$nKey] = $aResult->id;
+        }
+    }
+}
+var_dump($aResults);
+
+
+
+print("
+================================================================================
+Requesting IVD mapping data, disabled peer verification:
+");
+
+$_Mutalyzer = new LOVD_SoapClientNoVerify();
+$aResults = $_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => 'UD_145628011486', 'geneName' => 'LAMA2'))->getTranscriptsAndInfoResult->TranscriptInfo;
+if (is_array($aResults)) {
+    foreach ($aResults as $nKey => $aResult) {
+        if (isset($aResult->id)) {
+            $aResults[$nKey] = $aResult->id;
+        }
+    }
+}
+var_dump($aResults);
+
+
+
+print("
+================================================================================
+Requesting IVD mapping data, disabled peer verification, reconfirming WSDL:
+");
+
+$_Mutalyzer = new LOVD_SoapClientNoVerifyWSDLReconfirm();
+$aResults = $_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => 'UD_145628011486', 'geneName' => 'LAMA2'))->getTranscriptsAndInfoResult->TranscriptInfo;
+if (is_array($aResults)) {
+    foreach ($aResults as $nKey => $aResult) {
+        if (isset($aResult->id)) {
+            $aResults[$nKey] = $aResult->id;
+        }
+    }
+}
+var_dump($aResults);
 ?>

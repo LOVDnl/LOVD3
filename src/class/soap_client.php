@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2014-07-25
- * Modified    : 2016-09-01
+ * Modified    : 2016-09-02
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,6 +33,11 @@ if (!defined('ROOT_PATH')) {
     exit;
 }
 
+// 2016-09-02; 3.0-17; Some PHP versions need these settings, because somehow they start failing otherwise.
+// Also see the __setLocation() call below.
+ini_set('soap.wsdl_cache_enabled', 0);
+ini_set('soap.wsdl_cache_ttl', 0);
+
 
 
 
@@ -49,7 +54,8 @@ class LOVD_SoapClient extends SoapClient {
         $sHostname = parse_url($_CONF['mutalyzer_soap_url'], PHP_URL_HOST);
         // Mutalyzer's Apache server doesn't like SSL requests coming in through a proxy, if these settings are not configured.
         // The new Mutalyzer server (scheduled to be released in September, 2014) does not have this issue, but still works with these settings enabled.
-//        $oContext = stream_context_create(array('ssl' => array('allow_self_signed' => 1, 'SNI_enabled' => 1, (PHP_VERSION_ID >= 50600? 'peer_name' : 'SNI_server_name') => $sHostname)));
+        // $oContext = stream_context_create(array('ssl' => array('allow_self_signed' => 1, 'SNI_enabled' => 1, (PHP_VERSION_ID >= 50600? 'peer_name' : 'SNI_server_name') => $sHostname)));
+        // We keep getting errors in PHP 5.6.0 behind a proxy, so we'll switch to these settings:
         $oContext = stream_context_create(array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
         $aOptions =
             array(
@@ -67,6 +73,7 @@ class LOVD_SoapClient extends SoapClient {
 
         parent::__construct($_CONF['mutalyzer_soap_url'] . '?wsdl', $aOptions);
         // 2016-09-01; 3.0-17; Some PHP versions need this additional call, because somehow they start failing otherwise.
+        // Also see the ini_set() calls above.
         $this->__setLocation($_CONF['mutalyzer_soap_url'] . '?wsdl');
         return true;
     }
