@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-09-01
+ * Modified    : 2016-09-06
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -481,7 +481,7 @@ if ($_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
         // See if the database is read-only at the moment, due to an announcement with the configuration.
         // Ignore errors, in case the table doesn't exist yet.
         $qAnnouncements = @$_DB->query('SELECT COUNT(*) FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW() AND lovd_read_only = 1', array(), false);
-        $_CONF['lovd_read_only'] = (bool) ($qAnnouncements && $qAnnouncements->fetchColumn());
+        $_CONF['lovd_read_only'] = ($qAnnouncements && $qAnnouncements->fetchColumn());
     }
 }
 if (!$_CONF) {
@@ -491,6 +491,7 @@ if (!$_CONF) {
          array(
                 'system_title' => 'LOVD 3.0 - Leiden Open Variation Database',
                 'logo_uri' => 'gfx/LOVD3_logo145x50.jpg',
+                'lovd_read_only' => false,
               );
 }
 
