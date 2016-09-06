@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-09-01
+ * Modified    : 2016-09-06
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -484,7 +484,10 @@ class LOVD_Object {
 
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
         $sFRSearchCondition = $sCompositeFieldname . ' LIKE "%' . $sFRSearchValue . '%"';
-        if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+        if ($sFRSearchValue == '' && (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '1')) {
+            // When searching an empty string, match NULL field
+            $sFRSearchCondition = 'CAST(IFNULL(' . $sCompositeFieldname . ', "") AS CHAR) = ""';
+        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
             // Match search string at beginning of field.
             $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', 1, ' .
                                   strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
@@ -515,7 +518,11 @@ class LOVD_Object {
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
         $sReplacement = $sFRReplaceValue;
 
-        if (!isset($aOptions['sFRMatchType']) || $aOptions['sFRMatchType'] == '1') {
+        if ($sFRSearchValue == '') {
+            // When searching on empty string, we can assume we're replacing the whole field.
+            $sReplacement = '"' . $sFRReplaceValue . '"';
+        } else if ((!isset($aOptions['sFRMatchType']) || $aOptions['sFRMatchType'] == '1') &&
+                   (!isset($aOptions['bFRReplaceAll']) || !$aOptions['bFRReplaceAll'])) {
             // Default is to replace occurrences anywhere in the field.
             return 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue . '", "' .
                    $sFRReplaceValue . '")';
@@ -2077,7 +2084,7 @@ FROptions
                             (!$bSearchable? '' :
                                  "\n" .
                                  // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
-                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain...' . (!empty($_GET['search_' . $sField])? "\nCurrent search:\n\n" . htmlspecialchars(lovd_formatSearchExpression($_GET['search_' . $sField], $aColTypes[$sField])) : '') .'" style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); }">') .
+                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain...' . (!empty($_GET['search_' . $sField])? "\nCurrent search:\n\n" . htmlspecialchars(lovd_formatSearchExpression($_GET['search_' . $sField], $aColTypes[$sField])) : '') .'" style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); return false;}">') .
                           '</TH>');
                 }
                 print('</TR></THEAD>');
