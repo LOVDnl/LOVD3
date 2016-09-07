@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-08-23
+ * Modified    : 2016-09-06
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,4 +63,8 @@ define('WEBDRIVER_IMPLICIT_WAIT', 30);
 
 // Time to wait when no expected condition can be set (in seconds)
 define('SELENIUM_TEST_SLEEP', 10);
+
+// Maximum number of tries to set a checkbox (sometimes click events fail to
+// check/uncheck a box the first time.
+define('MAX_TRIES_CHECKING_BOX', 10);
 

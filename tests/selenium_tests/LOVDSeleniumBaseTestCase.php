@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-02
- * Modified    : 2016-07-18
+ * Modified    : 2016-09-06
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,10 +99,23 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 
 
     protected function setCheckBoxValue($locator, $bSetChecked) {
+        // Set checkbox specified by $locator to 'checked' if $bSetChecked or
+        // not 'checked' otherwise.
         $element = $this->driver->findElement($locator);
+        $nCount = 0;
 
-        if (($bSetChecked && is_null($element->getAttribute('checked'))) ||
-            (!$bSetChecked && !is_null($element->getAttribute('checked')))) {
+        while (($bSetChecked && is_null($element->getAttribute('checked'))) ||
+               (!$bSetChecked && !is_null($element->getAttribute('checked')))) {
+            if ($nCount > 0) {
+                fwrite(STDERR, 'Failed attempt setting checkbox (' . $locator->getMechanism() .
+                               '="' . $locator->getValue() . '")"');
+                if ($nCount >= MAX_TRIES_CHECKING_BOX) {
+                    fwrite(STDERR, 'Failed setting checkbox ' . MAX_TRIES_CHECKING_BOX .
+                                   ' times, skipping!');
+                    break;
+                }
+            }
+            $nCount += 1;
             $element->click();
         }
     }

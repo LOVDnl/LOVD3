@@ -22,8 +22,7 @@ class CreateUserSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue(WebDriverBy::name("city"), "Leiden");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="level"]/option[text()="Submitter"]'));
         $option->click();
-        $element = $this->driver->findElement(WebDriverBy::name("send_email"));
-        $element->click();
+        $this->unCheck(WebDriverBy::name("send_email"));
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create user']"));
         $element->click();
