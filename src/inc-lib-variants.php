@@ -214,7 +214,7 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 
         if (isset($oSoapMessage->errorcode) && substr($oSoapMessage->errorcode, 0, 1) === 'E') {
             $aMutalyzerData['error'][trim($oSoapMessage->errorcode)] =  trim($oSoapMessage->message);
-        } else if (isset($oSoapMessage->errorcode)) {
+        } elseif (isset($oSoapMessage->errorcode)) {
             $aMutalyzerData['warning'][trim($oSoapMessage->errorcode)] = trim($oSoapMessage->message);
         }
     }

@@ -154,10 +154,10 @@ if (POST && ACTION == 'applyFR') {
         // Not authorized for find & replace.
         die(AJAX_NO_AUTH);
     }
-    $aFROptions['sFRMatchType'] = isset($_POST['FRMatchType_' . $sViewListID])?
-        $_POST['FRMatchType_' . $sViewListID] : null;
-    $aFROptions['bFRReplaceAll'] = isset($_POST['FRReplaceAll_' . $sViewListID])?
-        $_POST['FRReplaceAll_' . $sViewListID] : null;
+    $aFROptions['sFRMatchType'] = (isset($_POST['FRMatchType_' . $sViewListID])?
+        $_POST['FRMatchType_' . $sViewListID] : null);
+    $aFROptions['bFRReplaceAll'] = (isset($_POST['FRReplaceAll_' . $sViewListID])?
+        $_POST['FRReplaceAll_' . $sViewListID] : null);
 
     if (!isset($_POST['FRFieldname_' . $sViewListID]) ||
         !isset($_POST['FRSearch_' . $sViewListID]) ||
