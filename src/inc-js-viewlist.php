@@ -521,7 +521,7 @@ function lovd_getFROptionsElement (sViewListID)
 {
     // Display find & replace options menu, set its options and return it as a
     // jQuery object.
-    
+
     if (!FRState.hasOwnProperty(sViewListID)) {
         FRState[sViewListID] = {};
     }
@@ -781,7 +781,7 @@ function lovd_FRShowConfirmation (sViewListID, sDisplayname, sFRRowsAffected)
 
     var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
     FRoptions.before(
-        '<table border="0" cellpadding="2" cellspacing="0" width="100%" class="info" style="margin: 10px">' +
+        '<table border="0" cellpadding="2" cellspacing="0" width="100%" class="info" style="margin: 10px 0px;">' +
             '<tbody><tr>' +
                 '<td valign="top" align="center" width="40">' +
                     '<img src="gfx/lovd_information.png" alt="Information" title="Information"' +

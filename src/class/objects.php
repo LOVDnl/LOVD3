@@ -182,7 +182,7 @@ class LOVD_Object {
                 // table alias + "id" (e.g. "votid" or "sid").
                 $sSubqueryIDField = $aTableInfo['table_alias'] . 'id';
             }
-        } else if (isset($this->sTable) && defined($this->sTable)) {
+        } elseif (isset($this->sTable) && defined($this->sTable)) {
             $sTablename = constant($this->sTable);
         }
 
@@ -476,25 +476,30 @@ class LOVD_Object {
 
 
 
-    private function generateFRSearchCondition($sFRSearchValue, $sTablename, $sFieldname,
-                                               $aOptions)
+    private function generateFRSearchCondition ($sFRSearchValue, $sTablename, $sFieldname,
+                                                $aOptions)
     {
         // Return an SQL search condition for given search string, field name and match options.
         // Default is to match the search string anywhere in the field.
 
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
-        $sFRSearchCondition = $sCompositeFieldname . ' LIKE "%' . $sFRSearchValue . '%"';
+        if ($sFRSearchValue == '') {
+            // When searching an empty string, match NULL field as well.
+            $sCompositeFieldname = 'CAST(IFNULL(' . $sCompositeFieldname . ', "") AS CHAR)';
+        }
         if ($sFRSearchValue == '' && (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '1')) {
-            // When searching an empty string, match NULL field
-            $sFRSearchCondition = 'CAST(IFNULL(' . $sCompositeFieldname . ', "") AS CHAR) = ""';
-        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+            // Searching for nothing anywhere in the field, means field must be empty.
+            $sFRSearchCondition = $sCompositeFieldname . ' = ""';
+        } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
             // Match search string at beginning of field.
             $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', 1, ' .
                                   strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
-        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
+        } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
             // Match search string at end of field.
             $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', -' .
                                   strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
+        } else {
+            $sFRSearchCondition = $sCompositeFieldname . ' LIKE "%' . $sFRSearchValue . '%"';
         }
         return $sFRSearchCondition;
     }
@@ -503,8 +508,8 @@ class LOVD_Object {
 
 
 
-    private function generateViewListFRReplaceStatement($sTablename, $sFieldname, $sFRSearchValue,
-                                                        $sFRReplaceValue, $aOptions)
+    private function generateViewListFRReplaceStatement ($sTablename, $sFieldname, $sFRSearchValue,
+                                                         $sFRReplaceValue, $aOptions)
     {
         // Return a SQL REPLACE statement for given field name and options.
         // Params:
@@ -521,15 +526,15 @@ class LOVD_Object {
         if ($sFRSearchValue == '') {
             // When searching on empty string, we can assume we're replacing the whole field.
             $sReplacement = '"' . $sFRReplaceValue . '"';
-        } else if ((!isset($aOptions['sFRMatchType']) || $aOptions['sFRMatchType'] == '1') &&
-                   (!isset($aOptions['bFRReplaceAll']) || !$aOptions['bFRReplaceAll'])) {
+        } elseif ((!isset($aOptions['sFRMatchType']) || $aOptions['sFRMatchType'] == '1') &&
+                  (!isset($aOptions['bFRReplaceAll']) || !$aOptions['bFRReplaceAll'])) {
             // Default is to replace occurrences anywhere in the field.
             return 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue . '", "' .
                    $sFRReplaceValue . '")';
-        } else if (isset($aOptions['bFRReplaceAll']) && $aOptions['bFRReplaceAll']) {
+        } elseif (isset($aOptions['bFRReplaceAll']) && $aOptions['bFRReplaceAll']) {
             // Whole field is replaced with a single value.
             $sReplacement = '"' . $sFRReplaceValue . '"';
-        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+        } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
             // Replace search string at beginning of field.
             // E.g.:
             // CASE WHEN SUBSTRING(table.`field`, 1, 6) = "search"
@@ -538,7 +543,7 @@ class LOVD_Object {
             $sReplacement = 'CONCAT("' . $sFRReplaceValue . '", SUBSTRING(' .
                             $sCompositeFieldname . ', ' . strval($nSearchStrLen + 1) . '))';
 
-        } else if (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
+        } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
             // Replace search string at end of field.
             // E.g.:
             // CASE WHEN SUBSTRING(table.`field`, - 6) = "search"
@@ -1023,7 +1028,7 @@ class LOVD_Object {
 
 
 
-    public static function lovd_getObjectLinksHTML($aIDs, $sURLFormat)
+    public static function lovd_getObjectLinksHTML ($aIDs, $sURLFormat)
     {
         // Returns a list of object links in HTML format.
         // Parameter $aIDs is an array with object IDs, and optionally, values.
@@ -1173,7 +1178,7 @@ class LOVD_Object {
 
         // Set names for preview column.
         $sPreviewFieldname = $sFRFieldname . '_FR';
-        $sPreviewFieldDisplayname = $sFRFieldDisplayname . '_(PREVIEW)';
+        $sPreviewFieldDisplayname = $sFRFieldDisplayname . ' (PREVIEW)';
 
         // Edit sql in $this->aSQLViewList to include an F&R column.
         $this->aSQLViewList['SELECT'] .= ",\n";
@@ -2006,7 +2011,7 @@ class LOVD_Object {
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" class="optionsmenu" style="display: none;">
-    <SPAN><B style="color: red">Note that find &amp; replace is still in BETA, changes made using this feature are not checked for errors, therefore using find and replace may have destructive consequences. If uncertain, use the edit form of the data entries instead.</B><BR>
+    <SPAN><B style="color: red">Note that find &amp; replace is still in BETA. Changes made using this feature are not checked for errors, therefore using find &amp; replace may have destructive consequences. Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR>
         Find &amp; replace for column
         <B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>
         <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
