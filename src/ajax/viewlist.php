@@ -36,11 +36,10 @@ require ROOT_PATH . 'inc-init.php';
 require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
 // Get viewlist-identifying arguments from request and check their validity.
-
-$sViewListID = isset($_REQUEST['viewlistid'])? $_REQUEST['viewlistid'] : '';
-$sObject = isset($_REQUEST['object'])? $_REQUEST['object'] : '';
-$sObjectID = isset($_REQUEST['object_id'])? $_REQUEST['object_id'] : '';
-$nID = isset($_REQUEST['id'])? $_REQUEST['id'] : '';
+$sViewListID = (isset($_REQUEST['viewlistid'])? $_REQUEST['viewlistid'] : '');
+$sObject = (isset($_REQUEST['object'])? $_REQUEST['object'] : '');
+$sObjectID = (isset($_REQUEST['object_id'])? $_REQUEST['object_id'] : '');
+$nID = (isset($_REQUEST['id'])? $_REQUEST['id'] : '');
 
 if (empty($sViewListID) || empty($sObject) || !preg_match('/^[A-Z_]+$/i', $sObject)) {
     die(AJAX_DATA_ERROR);
@@ -147,7 +146,7 @@ $sObjectClassname = 'LOVD_' . str_replace('_', '', $sObject);
 $_DATA = new $sObjectClassname($sObjectID, $nID);
 
 if (POST && ACTION == 'applyFR') {
-    // Apply find & replace
+    // Apply find & replace.
 
     if ($_AUTH['level'] < LEVEL_CURATOR || !isset($_POST['password']) ||
         !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
@@ -168,7 +167,7 @@ if (POST && ACTION == 'applyFR') {
     // Setup search filters before applying find & replace.
     list($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes) = $_DATA->processViewListSearchArgs($_POST);
 
-    // Update where/having clauses based on search filters (needed for LOVD_Object->buildSQL())
+    // Update where/having clauses based on search filters (needed for LOVD_Object->buildSQL()).
     if ($WHERE) {
         $_DATA->aSQLViewList['WHERE'] .= ($_DATA->aSQLViewList['WHERE']? ' AND ' : '') . $WHERE;
     }
@@ -176,16 +175,13 @@ if (POST && ACTION == 'applyFR') {
         $_DATA->aSQLViewList['HAVING'] .= ($_DATA->aSQLViewList['HAVING']? ' AND ' : '') . $HAVING;
     }
     $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
-    $result = $_DATA->applyColumnFindAndReplace($_POST['FRFieldname_' . $sViewListID],
+    $bResult = $_DATA->applyColumnFindAndReplace($_POST['FRFieldname_' . $sViewListID],
                                                 $_POST['FRSearch_' . $sViewListID],
                                                 $_POST['FRReplace_' . $sViewListID],
                                                 $aArgs, $aFROptions);
     // Return AJAX response.
-    if ($result !== false) {
-        die(AJAX_TRUE);
-    } else {
-        die(AJAX_FALSE);
-    }
+    die($bResult? AJAX_TRUE : AJAX_FALSE);
+
 } elseif (POST) {
     // Post request with no action specified. We do not allow normal viewlist
     // views via POST.

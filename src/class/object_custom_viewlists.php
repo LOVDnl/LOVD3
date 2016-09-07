@@ -125,15 +125,13 @@ class LOVD_CustomViewList extends LOVD_Object {
         $aSQL = $this->aSQLViewList;
         // Loop requested data types, and keep columns in order indicated by request.
         foreach ($aObjects as $nKey => $sObject) {
-
             // Generate custom column listing to be appended to SELECT SQL statement.
+            // We're not using SELECT * anymore because then we can't use the query as a subquery
+            //  (which needs to have unique columns, and * can select `id` more than once).
+            // So, we need to select all columns that we need.
             $sCustomCols = '';
             if (isset($this->aColumns[$sObject])) {
-                $aQuotedCols = array();
-                foreach ($this->aColumns[$sObject] as $sColID => $aColValues) {
-                    $aQuotedCols[] = '`' . $sColID . '`';
-                }
-                $sCustomCols = ', ' . join(', ', $aQuotedCols);
+                $sCustomCols = ', `' . implode('`, `', array_keys($this->aColumns[$sObject])) . '`';
             }
 
             switch ($sObject) {

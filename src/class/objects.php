@@ -221,7 +221,7 @@ class LOVD_Object {
         $aArgs[] = $_AUTH['id'];
         $aArgs[] = date('Y-m-d H:i:s');
 
-        return $_DB->query($sUpdateSQL, $aArgs);
+        return (bool) $_DB->query($sUpdateSQL, $aArgs);
     }
 
 
@@ -1204,7 +1204,7 @@ class LOVD_Object {
 
 
 
-    public function processViewListSearchArgs($aRequest)
+    public function processViewListSearchArgs ($aRequest)
     {
         // Generate WHERE and HAVING statements for search field content in viewlist.
         // Returns an array with:
@@ -2011,7 +2011,7 @@ class LOVD_Object {
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" class="optionsmenu" style="display: none;">
-    <SPAN><B style="color: red">Note that find &amp; replace is still in BETA. Changes made using this feature are not checked for errors, therefore using find &amp; replace may have destructive consequences. Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR>
+    <SPAN><B style="color: red">Note that find &amp; replace is still in BETA. Changes made using this feature are not checked for errors, therefore using find &amp; replace may have destructive consequences.<BR>Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR>
         Find &amp; replace for column
         <B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>
         <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"

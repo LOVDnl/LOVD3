@@ -200,7 +200,8 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
 
 
 
-function lovd_AJAX_viewListGoToPage (sViewListID, nPage) {
+function lovd_AJAX_viewListGoToPage (sViewListID, nPage)
+{
     oForm = document.forms['viewlistForm_' + sViewListID];
     oForm.page.value = nPage;
     lovd_AJAX_viewListSubmit(sViewListID);
@@ -260,7 +261,8 @@ function lovd_AJAX_viewListHideRow (sViewListID, sElementID)
 
 
 
-function lovd_AJAX_viewListSubmit (sViewListID, callBack) {
+function lovd_AJAX_viewListSubmit (sViewListID, callBack)
+{
 
     oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
@@ -495,7 +497,8 @@ function lovd_activateMenu (sViewListID)
 
 
 
-function onNextDocumentClick(callback) {
+function onNextDocumentClick (callback)
+{
     // Call callback function on next click anywhere on the page.
 
     $(document).on('click.onNextDocumentClick', function() {
@@ -508,7 +511,8 @@ function onNextDocumentClick(callback) {
 
 
 
-function closeAllTooltips() {
+function closeAllTooltips ()
+{
     // Remove tooltip elements from DOM.
     $('div[role="tooltip"]').remove();
 }
@@ -571,8 +575,8 @@ function lovd_getFROptionsElement (sViewListID)
 
 
 
-function lovd_FRShowOverlayColumn(index, targetTH, sOverlayClassname, tableHeight,
-                                  sViewListID, sViewListDivSelector)
+function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeight,
+                                   sViewListID, sViewListDivSelector)
 {
     // Show an overlay element for the viewlist column denoted by targetTH.
     // The overlay element is given class sOverlayClassname and has a height
