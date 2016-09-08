@@ -208,6 +208,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $nKeyVOT = array_search('VariantOnTranscript', $aObjects);
                         if ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.
+                            $aSQL['SELECT'] .= ', CONCAT(vog.id, ":", vot.transcriptid) AS row_id'; // To ensure other table's id columns don't interfere.
                             $aSQL['FROM'] .= 'vot.id = vog.id)';
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
@@ -274,7 +275,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscriptUnique':
-                    $aSQL['SELECT'] = 'vot.id AS row_id, vot.id AS votid, vot.transcriptid'; // To ensure other table's id columns don't interfere.
+                    $aSQL['SELECT'] = 'vot.id AS row_id, vot.id AS votid, vot.transcriptid, ' .
+                                      'vot.position_c_start, vot.position_c_start_intron, ' .
+                                      'vot.position_c_end, vot.position_c_end_intron'; // To ensure other table's id columns don't interfere.
                     // To group variants together that belong together (regardless of minor textual differences, we replace parentheses, remove the "c.", and trim for question marks.
                     // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change';
@@ -498,7 +501,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // First data table in view.
                         $this->sSortDefault = 'VariantOnGenome/DNA';
                     }
-                    $this->sRowLink = 'variants/{{zData_row_id}}#{{zData_transcriptid}}';
+                    $this->sRowLink = 'variants/{{zData_vogid}}#{{zData_transcriptid}}';
                     break;
 
                 case 'VariantOnTranscript':
