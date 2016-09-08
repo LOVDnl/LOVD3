@@ -34,6 +34,8 @@
  * Fixed bug; The proxy server settings were often ignored by LOVD, and proxy
    servers could not be used when using HTTPS, such as with Mutalyzer resources.
    (thanks to Jorge Oliveira, Centro Hospitalar do Porto, for reporting)
+ * Fixed bug; For curators, editing a disease could result in a fatal error in
+   some conditions.
 
 
 /**************************
