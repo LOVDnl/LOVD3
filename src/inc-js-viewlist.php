@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-09-06
+ * Modified    : 2016-09-08
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -748,7 +748,6 @@ function lovd_FRPreview (sViewListID)
     lovd_AJAX_viewListSubmit(sViewListID, function() {
         // Get the predicted number of affected rows from the retrieved HTML.
         var sFRRowsAffected = $('#FRRowsAffected_' + sViewListID).val();
-        FRState[sViewListID]['sFRRowsAffected'] = sFRRowsAffected;
 
         // Show tooltip above column with changes about to be applied.
         var FRPreviewHeader = $('th[data-fieldname="' + FRState[sViewListID]['sFieldname'] +
@@ -837,7 +836,8 @@ function lovd_FRSubmit (sViewListID)
         return false;
     }
 
-    if (!window.confirm('You are about to modify ' + FRState[sViewListID]['sFRRowsAffected'] +
+    var sFRRowsAffected = $('#FRRowsAffected_' + sViewListID).val();
+    if (!window.confirm('You are about to modify ' + sFRRowsAffected +
                         ' records. Do you wish to continue?')) {
         return false;
     }
@@ -847,10 +847,8 @@ function lovd_FRSubmit (sViewListID)
                               $(sViewlistFormSelector).serialize(), null, 'text');
 
     var sDisplayname = '';
-    var sFRRowsAffected = '';
     if (FRState.hasOwnProperty(sViewListID)) {
         sDisplayname = FRState[sViewListID]['sDisplayname'];
-        sFRRowsAffected = FRState[sViewListID]['sFRRowsAffected'];
     }
 
     postResponse.done(function(sData) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2016-09-07
+ * Modified    : 2016-09-08
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -73,7 +73,7 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         $previewColHeading = $this->driver->findElement(
                 WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'));
-        $this->assertContains($previewColHeading->getText(), 'Reference_(PREVIEW)');
+        $this->assertContains($previewColHeading->getText(), 'Reference (PREVIEW)');
 
         $aNewValueElements = $this->driver->findElements(WebDriverBy::xpath('//td[text()="newvalue"]'));
         $this->assertEquals(count($aNewValueElements), 25);
@@ -95,6 +95,11 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue(WebDriverBy::name('FRSearch_VOG'), 'C');
         $previewButton = $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'));
         $previewButton->click();
+
+        // Click on tooltip to close it
+        $previewTooltip = $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@class="ui-tooltip-content" and text()="Preview changes (14 rows affected)"]'));
+        $previewTooltip->click();
 
         // Filter on 'Variant ID' > 10 during preview.
         $sSearchIDSelector = WebDriverBy::name('search_id_');
