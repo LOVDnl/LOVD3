@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2016-09-08
+ * Modified    : 2016-09-09
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -107,6 +107,12 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $searchIDElement = $this->driver->findElement($sSearchIDSelector);
         // Use json_decode to send enter key to browser.
         $searchIDElement->sendKeys(json_decode('"\uE007"'));
+
+        // Check that viewlist is refreshed. (id='0000000004' should be filtered)
+        $this->waitUntil(function ($driver) {
+            $vlTable = $driver->findElement(WebDriverBy::id('viewlistTable_VOG'));
+            return strpos($vlTable->getText(), '0000000004') === false;
+        });
 
         // Submit find & replace
         $this->enterValue(WebDriverBy::xpath('//input[@type="password"]'), 'test1234');

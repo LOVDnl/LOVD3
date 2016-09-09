@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-07-18
+ * Modified    : 2016-09-09
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,7 +56,7 @@ function getWebDriverInstance()
             // $webDriver = ChromeDriver::start();
 
             // Start the chrome driver through the selenium server.
-            fwrite(STDERR, 'Connecting to Chrome driver via Selenium at ' . $host);
+            fwrite(STDERR, 'Connecting to Chrome driver via Selenium at ' . $host . PHP_EOL);
             $options = new ChromeOptions();
             $options->addArguments(array('--no-sandbox'));
             $capabilities = DesiredCapabilities::chrome();
@@ -64,7 +64,7 @@ function getWebDriverInstance()
             $webDriver = RemoteWebDriver::create($host, $capabilities);
         } else {
             // Create Firefox webdriver
-            fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host);
+            fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host . PHP_EOL);
             $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
             $webDriver = RemoteWebDriver::create('http://127.0.0.1:4444/wd/hub', $capabilities,
                 WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
