@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-09-01
+ * Modified    : 2016-09-08
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -326,7 +326,8 @@ class LOVD_Disease extends LOVD_Object {
             $aGenes = $_AUTH['curates'];
             if (ACTION == 'edit') {
                 global $zData;
-                $aGenes = array_unique(array_merge($aGenes, $zData['genes']));
+                // 2016-09-08; 3.0-17; Don't forget to run array_values() since a missing key results in a query error... :|
+                $aGenes = array_values(array_unique(array_merge($aGenes, $zData['genes'])));
             }
             $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') ORDER BY id', $aGenes)->fetchAllCombine();
         } else {
