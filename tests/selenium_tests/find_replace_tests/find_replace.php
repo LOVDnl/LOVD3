@@ -133,6 +133,10 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         $this->chooseOkOnNextConfirmation();
 
+        // Wait until viewlist is refreshed.
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath(
+            '//td[@valign="middle" and contains(., "Find & Replace applied to column")]')));
+
         // Open find and replace for Reference col.
         $this->openFRMenuForCol(6);
 
@@ -172,6 +176,10 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
                 WebDriverBy::partialLinkText('Find and replace text in column'));
         $FRMenuItem->click();
 
+        // Include explicit wait for overlay divs. Going directly to clicking sometimes
+        // results in a StaleElementReferenceException.
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(
+            WebDriverBy::xpath('//div[@class="vl_overlay"]')));
         $columnOverlay = $this->driver->findElement(
                 WebDriverBy::xpath('//div[@class="vl_overlay"][' . $nCol . ']'));
         $columnOverlay->click();

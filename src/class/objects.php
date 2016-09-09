@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-09-06
+ * Modified    : 2016-09-09
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,6 +36,7 @@ if (!defined('ROOT_PATH')) {
     exit;
 }
 
+require_once ROOT_PATH . 'inc-lib-columns.php';
 
 
 
@@ -523,8 +524,10 @@ class LOVD_Object {
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
         $sReplacement = $sFRReplaceValue;
 
-        if ($sFRSearchValue == '') {
-            // When searching on empty string, we can assume we're replacing the whole field.
+        if ($sFRSearchValue == '' && ((!isset($aOptions['sFRMatchType']) ||
+                                       $aOptions['sFRMatchType'] == '1'))) {
+            // When searching on empty string anywhere, we can assume we're replacing the whole
+            // field.
             $sReplacement = '"' . $sFRReplaceValue . '"';
         } elseif ((!isset($aOptions['sFRMatchType']) || $aOptions['sFRMatchType'] == '1') &&
                   (!isset($aOptions['bFRReplaceAll']) || !$aOptions['bFRReplaceAll'])) {
