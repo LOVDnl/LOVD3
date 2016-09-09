@@ -33,6 +33,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
+use \Facebook\WebDriver\Exception\StaleElementReferenceException;
 
 class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 {
@@ -111,7 +112,14 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         // Check that viewlist is refreshed. (id='0000000004' should be filtered)
         $this->waitUntil(function ($driver) {
             $vlTable = $driver->findElement(WebDriverBy::id('viewlistTable_VOG'));
-            return strpos($vlTable->getText(), '0000000004') === false;
+            // Avoid checking text exactly during refresh.
+            try {
+                $sTableText = $vlTable->getText();
+            } catch (StaleElementReferenceException $e) {
+                // try again next poll
+                return false;
+            }
+            return strpos($sTableText, '0000000004') === false;
         });
 
         // Submit find & replace
