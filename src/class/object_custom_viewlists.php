@@ -300,9 +300,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscriptUnique':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid, vot.transcriptid, ' .
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid, vot.transcriptid, ' . // To ensure other table's id columns don't interfere.
                                       'vot.position_c_start, vot.position_c_start_intron, ' .
-                                      'vot.position_c_end, vot.position_c_end_intron'; // To ensure other table's id columns don't interfere.
+                                      'vot.position_c_end, vot.position_c_end_intron';
                     // To group variants together that belong together (regardless of minor textual differences, we replace parentheses, remove the "c.", and trim for question marks.
                     // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change';
@@ -751,6 +751,22 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
 
+    private function getCustomColsForCategory ($sCategory)
+    {
+        $nCatLength = strlen($sCategory);
+        $aOut = array();
+        foreach ($this->aColumns as $sCol => $aCol) {
+            if (substr($sCol, 0, $nCatLength) == $sCategory) {
+                $aOut[$sCol] = $aCol;
+            }
+        }
+        return $aOut;
+    }
+
+
+
+
+
     function prepareData ($zData = '', $sView = 'list', $sViewListID = '')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
@@ -831,19 +847,6 @@ class LOVD_CustomViewList extends LOVD_Object {
         }
 
         return $zData;
-    }
-
-
-    private function getCustomColsForCategory($sCategory)
-    {
-        $nCatLength = strlen($sCategory);
-        $aOut = array();
-        foreach ($this->aColumns as $sCol => $aCol) {
-            if (substr($sCol, 0, $nCatLength) == $sCategory) {
-                $aOut[$sCol] = $aCol;
-            }
-        }
-        return $aOut;
     }
 }
 ?>
