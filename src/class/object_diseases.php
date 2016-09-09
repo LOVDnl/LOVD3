@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-09-08
+ * Modified    : 2016-09-09
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -224,10 +224,10 @@ class LOVD_Disease extends LOVD_Object {
                                     'db'   => array('_genes', false, 'TEXT')),
                         'tissues' => array(
                                     'view' => array('Associated tissues', 160),
-                                    'db'   => array('tissues', false, true)),
+                                    'db'   => array('d.tissues', false, true)),
                         'features' => array(
                                     'view' => array('Disease features', 200),
-                                    'db'   => array('features', false, true)),
+                                    'db'   => array('d.features', false, true)),
                       );
         $this->sSortDefault = 'symbol';
 
