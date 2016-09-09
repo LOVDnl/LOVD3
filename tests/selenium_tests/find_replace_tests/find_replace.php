@@ -132,6 +132,31 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertContains('You are about to modify 9 records', $alertText);
 
         $this->chooseOkOnNextConfirmation();
+
+        // Open find and replace for Reference col.
+        $this->openFRMenuForCol(6);
+
+        $matchBeginningRadio = $this->driver->findElement(WebDriverBy::xpath(
+            '//input[@name="FRMatchType_VOG" and @value="2"]'));
+        $matchBeginningRadio->click();
+        $this->enterValue(WebDriverBy::name('FRReplace_VOG'), 'prefix');
+
+        // Find empty string at beginning of field and insert prefix string.
+        $previewButton = $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'));
+        $previewButton->click();
+
+        // Click on tooltip to close it
+        $previewTooltip = $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@class="ui-tooltip-content" and text()="Preview changes (15 rows affected)"]'));
+        $previewTooltip->click();
+
+        $this->enterValue(WebDriverBy::xpath('//input[@type="password"]'), 'test1234');
+        $submitButton = $this->driver->findElement(WebDriverBy::id('FRSubmit_VOG'));
+        $submitButton->click();
+        $this->chooseOkOnNextConfirmation();
+
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(
+            WebDriverBy::xpath('//td[text()="prefixnewvalue"]')));
     }
 
 
