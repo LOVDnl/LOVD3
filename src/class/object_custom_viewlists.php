@@ -98,7 +98,7 @@ class LOVD_CustomViewList extends LOVD_Object {
             $this->nID = $sOtherID; // We need the AJAX script to have the same restrictions!!!
         }
 
-        // Increase the max group_concat() length, so that lists of many many genes still have all genes mentioned here (22.000 genes take 193.940 bytes here).
+        // Increase the max GROUP_CONCAT() length, so that lists of many many genes still have all genes mentioned here (22.000 genes take 193.940 bytes here).
         $_DB->query('SET group_concat_max_len = 200000');
         $q = $_DB->query($sSQL, $aSQL);
         while ($z = $q->fetchAssoc()) {

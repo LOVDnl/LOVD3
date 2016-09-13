@@ -430,7 +430,7 @@ function lovd_fetchDBID ($aData)
                     continue;
                 }
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
-                    // If the symbol of the option is the same, but the number is lower(not including 000000), take it.
+                    // If the symbol of the option is the same, but the number is lower (not including 000000), take it.
                     $sDBID = $sDBIDoption;
                 } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDoptionSymbol, $aGenes)) {
                     // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.

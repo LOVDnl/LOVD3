@@ -375,11 +375,11 @@ class LOVD_Object {
                     // For numerical columns, maxlength works differently!
                     if (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'FLOAT', 'FLOAT_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
                         // SIGNED cols: negative values.
-                        if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int)$sFieldvalue < (int)('-' . str_repeat('9', $nMaxLength))) {
+                        if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int) $sFieldvalue < (int) ('-' . str_repeat('9', $nMaxLength))) {
                             lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no lower than -' . str_repeat('9', $nMaxLength) . '.');
                         }
                         // ALL numerical cols (except floats): positive values.
-                        if (substr($sMySQLType, 0, 5) != 'FLOAT' && (int)$sFieldvalue > (int)str_repeat('9', $nMaxLength)) {
+                        if (substr($sMySQLType, 0, 5) != 'FLOAT' && (int) $sFieldvalue > (int) str_repeat('9', $nMaxLength)) {
                             lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . str_repeat('9', $nMaxLength) . '.');
                         }
                     } elseif (strlen($sFieldvalue) > $nMaxLength) {
@@ -1142,6 +1142,7 @@ class LOVD_Object {
 
 
 
+
     private function previewColumnFindAndReplace ($sFRFieldname, $sFRFieldDisplayname,
                                                   $sFRSearchValue, $sFRReplaceValue, $aArgs, $aOptions)
     {
@@ -1231,7 +1232,7 @@ class LOVD_Object {
         $aColTypes = array(); // For describing the search expressions in the mouseover of the input field.
         foreach ($this->aColumnsViewList as $sColumn => $aCol) {
             if (!empty($aCol['db'][2]) && isset($aRequest['search_' . $sColumn]) && trim($aRequest['search_' . $sColumn]) !== '') {
-                $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false ? 'HAVING' : 'WHERE');
+                $CLAUSE = (strpos($aCol['db'][0], '.') === false && strpos($aCol['db'][0], '/') === false? 'HAVING' : 'WHERE');
                 if ($aCol['db'][2] !== true) {
                     // Column type of an alias is given by LOVD.
                     $sColType = $aCol['db'][2];
@@ -1262,10 +1263,10 @@ class LOVD_Object {
                 foreach ($aWords as $sWord) {
                     if ($sWord !== '') {
                         $sWord = lovd_escapeSearchTerm($sWord);
-                        $aOR = (preg_match('/^[^|]+(\|[^|]+)+$/', $sWord) ? explode('|', $sWord) : array($sWord));
-                        $$CLAUSE .= ($$CLAUSE ? ' AND ' : '') . (!empty($aOR[1]) ? '(' : '');
+                        $aOR = (preg_match('/^[^|]+(\|[^|]+)+$/', $sWord)? explode('|', $sWord) : array($sWord));
+                        $$CLAUSE .= ($$CLAUSE? ' AND ' : '') . (!empty($aOR[1])? '(' : '');
                         foreach ($aOR as $nTerm => $sTerm) {
-                            $$CLAUSE .= ($nTerm ? ' OR ' : '');
+                            $$CLAUSE .= ($nTerm? ' OR ' : '');
                             switch ($sColType) {
                                 case 'DECIMAL_UNSIGNED':
                                 case 'DECIMAL':
@@ -1277,15 +1278,15 @@ class LOVD_Object {
                                         $sOperator = $aMatches[1];
                                         $sTerm = $aMatches[2];
                                         if ($sOperator) {
-                                            $sOperator = (substr($sOperator, 0, 1) == '!' ? '!=' : $sOperator);
+                                            $sOperator = (substr($sOperator, 0, 1) == '!'? '!=' : $sOperator);
                                         } else {
                                             $sOperator = '=';
                                         }
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ' . ($_INI['database']['driver'] != 'sqlite' ? '?' : 'CAST(? AS NUMERIC)') . ($sOperator == '!=' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ' . ($_INI['database']['driver'] != 'sqlite'? '?' : 'CAST(? AS NUMERIC)') . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = $sTerm;
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // Numeric fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
-                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'NULL';
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
                                     } else {
                                         // Bad syntax! Report. LOVD doesn't actually complain about bad syntax columns
                                         // when they're not viewed, but we do need that var to be filled.
@@ -1294,9 +1295,9 @@ class LOVD_Object {
                                     break;
                                 case 'DATE':
                                 case 'DATETIME':
-                                    if (preg_match('/^([><]=?|!)?(\d{4})(?:(-\d{2})' . ($sColType == 'DATETIME' ? '(?:(-\d{2})(?:( \d{2})(?:(:\d{2})(:\d{2})?)?)?)?)?' : '(-\d{2})?)?') . '$/', $sTerm, $aMatches)) {
+                                    if (preg_match('/^([><]=?|!)?(\d{4})(?:(-\d{2})' . ($sColType == 'DATETIME'? '(?:(-\d{2})(?:( \d{2})(?:(:\d{2})(:\d{2})?)?)?)?)?' : '(-\d{2})?)?') . '$/', $sTerm, $aMatches)) {
                                         @list(, $sOperator, $nYear, $nMonth, $nDay, $nHour, $nMinute, $nSecond) = $aMatches;
-                                        if (!checkdate(($nMonth ? substr($nMonth, 1) : '01'), ($nDay ? substr($nDay, 1) : '01'), $nYear) && $aCol['view']) {
+                                        if (!checkdate(($nMonth? substr($nMonth, 1) : '01'), ($nDay? substr($nDay, 1) : '01'), $nYear) && $aCol['view']) {
                                             $aBadSyntaxColumns[] = $aCol['view'][0];
                                         }
                                         if (((isset($nHour) && ($nHour < 0 || $nHour > 23)) || (isset($nMinute) && ($nMinute < 0 || $nMinute > 59)) || (isset($nSecond) && ($nSecond < 0 || $nSecond > 59))) && $aCol['view']) {
@@ -1317,7 +1318,7 @@ class LOVD_Object {
                                                 if (($sColType == 'DATE' && isset($nDay)) || ($sColType == 'DATETIME' && isset($nSecond))) {
                                                     $sOperator .= '='; // != or =
                                                 } else {
-                                                    $sOperator = ($sOperator == '!' ? 'NOT ' : '') . 'LIKE';
+                                                    $sOperator = ($sOperator == '!'? 'NOT ' : '') . 'LIKE';
                                                 }
                                                 $aTerms = array(3 => '', '', '', '', '');
                                                 break;
@@ -1327,11 +1328,11 @@ class LOVD_Object {
                                         $aTerms = $aMatches + $aTerms;
                                         ksort($aTerms);
                                         $sTerms = implode($aTerms);
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = $sTerms . (substr($sOperator, -4) == 'LIKE' ? '%' : '');
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $aArguments[$CLAUSE][] = $sTerms . (substr($sOperator, -4) == 'LIKE'? '%' : '');
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         // DATE(TIME) fields cannot be empty, they are NULL. So searching for ="" must return all NULL values.
-                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'NULL';
+                                        $$CLAUSE .= $aCol['db'][0] . ' IS ' . (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'NULL';
                                     } else {
                                         // Bad syntax! Report. LOVD doesn't actually complain about bad syntax columns
                                         // when they're not viewed, but we do need that var to be filled.
@@ -1340,8 +1341,8 @@ class LOVD_Object {
                                     break;
                                 default:
                                     if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
-                                        $sOperator = (substr($sTerm, 0, 1) == '!' ? 'NOT ' : '') . 'LIKE';
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         $aArguments[$CLAUSE][] = '%' . $aMatches[1] . '%';
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
                                         $bNot = (substr($sTerm, 0, 1) == '!');
@@ -1351,8 +1352,8 @@ class LOVD_Object {
                                             $$CLAUSE .= '(' . $aCol['db'][0] . ' = "" OR ' . $aCol['db'][0] . ' IS NULL)';
                                         }
                                     } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
-                                        $sOperator = (substr($sTerm, 0, 1) == '!' ? '!=' : '=');
-                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!=' ? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
+                                        $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
+                                        $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         // 2013-07-25; 3.0-07; When not using LIKE, undo escaping done by lovd_escapeSearchTerm().
                                         $aArguments[$CLAUSE][] = str_replace(array('\%', '\_'), array('%', '_'), $aMatches[1]);
                                     } else {
@@ -1363,13 +1364,15 @@ class LOVD_Object {
                                     break;
                             }
                         }
-                        $$CLAUSE .= (!empty($aOR[1]) ? ')' : '');
+                        $$CLAUSE .= (!empty($aOR[1])? ')' : '');
                     }
                 }
             }
         }
         return array($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes);
     }
+
+
 
 
 
@@ -1769,7 +1772,7 @@ class LOVD_Object {
             'bFRReplaceAll' =>  $bFRReplaceAll
         );
 
-        $nTotal = 0;
+        $nTotal = 0; // Overwrites the previous $nTotal.
         if (!count($aBadSyntaxColumns)) {
             // Build argument list.
             $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
@@ -1781,8 +1784,6 @@ class LOVD_Object {
                     $sFRFieldDisplayname, $sFRSearchValue, $sFRReplaceValue, $aArgs, $aFROptions);
             }
 
-
-            // Using the SQL_CALC_FOUND_ROWS technique to find the amount of hits in one go.
             // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
             // function, but we'll try to avoid that due to extreme slowness in some cases.
             // getRowCountForViewList() will take care of that.
@@ -1824,7 +1825,6 @@ class LOVD_Object {
                 $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
                 $bSQLCALCFOUNDROWS = true;
             }
-
 
             if ($bOptions) {
                 // If the session variable does not exist, create it!
@@ -2212,7 +2212,7 @@ FROptions
 
             $zData = $this->autoExplode($zData);
 
-            // Only the CustomViewList object has this 3rd argument, but other objects' prepareDate()
+            // Only the CustomViewList object has this 3rd argument, but other objects' prepareData()
             // don't complain when called with this 3 argument they didn't define.
             $zData = $this->prepareData($zData, 'list', $sViewListID);
 

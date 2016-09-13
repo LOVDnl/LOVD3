@@ -179,8 +179,8 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     // Write to log file... if we're not here because we don't have MySQL.
     if (!empty($_DB) && class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
         // lovd_displayError() always halts LOVD. If we're in a transaction, any log we'll write
-        // to the DB will be gone since PHP will rollback() any transaction that is still open.
-        // So we'd better rollback() ourselves first!
+        // to the DB will be gone since PHP will rollBack() any transaction that is still open.
+        // So we'd better rollBack() ourselves first!
         try {
             @$_DB->rollBack(); // In case we were in a transaction. // FIXME; we can know from PHP >= 5.3.3.
         } catch (PDOException $eNoTransaction) {}

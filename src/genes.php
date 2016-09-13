@@ -1598,7 +1598,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                     // FIXME; Is using REPLACE not a lot easier?
                     $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)));
                     // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
-                    //   We could rapport things here more specifically because mysql_affected_rows() tells us if there has been an update (2) or an insert (1) or nothing changed (0).
+                    //   We could rapport things here more specifically because MySQL can tell us if there has been an update (2) or an insert (1) or nothing changed (0).
                 } else {
                     // Just sort and update visibility!
                     $_DB->query('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE geneid = ? AND userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $sID, $nUserID));
