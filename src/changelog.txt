@@ -36,6 +36,9 @@
    (thanks to Jorge Oliveira, Centro Hospitalar do Porto, for reporting)
  * Fixed bug; For curators, editing a disease could result in a fatal error in
    some conditions.
+ * Fixed issue with the HGNC returning multiple OMIM IDs sometimes. Some LOVD
+   installations refuse to create such genes.
+   (thanks to Jorge Oliveira, Centro Hospitalar do Porto, for reporting)
 
 
 /**************************
