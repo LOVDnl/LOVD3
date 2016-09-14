@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2016-08-12
+ * Modified    : 2016-09-14
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -214,9 +214,11 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
     foreach (array('omim_id') as $sCol) {
         // Columns presented as arrays (new?), but should contain just one value.
         // 2014-12-23; 3.0-13; Can also not be defined.
+        // 2016-09-14; 3.0-17; HGNC can actually return multiple OMIM IDs,
+        //  take just the first one.
         if (!isset($aGene[$sCol])) {
             $aGene[$sCol] = '';
-        } elseif (is_array($aGene[$sCol]) && count($aGene[$sCol]) == 1) {
+        } elseif (is_array($aGene[$sCol])) {
             $aGene[$sCol] = $aGene[$sCol][0];
         }
     }
@@ -347,6 +349,12 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
         foreach (array_diff($aColumns, $aCols) as $sUnwantedColumn) {
             // Don't return columns the caller hasn't asked for.
             unset($aGene[$sUnwantedColumn]);
+        }
+
+        // 2016-09-14; 3.0-17; HGNC can return multiple OMIM IDs.
+        if (isset($aGene['md_mim_id']) && preg_match('/^(\d+), /', $aGene['md_mim_id'], $aRegs)) {
+            // Just trim the other(s) off.
+            $aGene['md_mim_id'] = $aRegs[1];
         }
 
         return $aGene;
