@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-09-09
+ * Modified    : 2016-09-15
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,7 +36,11 @@ if (!defined('ROOT_PATH')) {
     exit;
 }
 
+// FIXME: This includes the file in pretty much every page load in LOVD.
+// Check which functions are really used that often and put them in a more
+//  general place, like in inc-lib-init.php or perhaps as a method.
 require_once ROOT_PATH . 'inc-lib-columns.php';
+
 
 
 
@@ -741,11 +745,6 @@ class LOVD_Object {
         // We're specifically looking for custom columns *not* prefixed by a table alias.
         if (preg_match_all('/[^.](?:`(\w+)\/[A-Za-z0-9_\/]+`)/', $aSQL['WHERE'], $aRegs)) {
             // To not reproduce code, we'll use lovd_getTableInfoByCategory().
-            if (!function_exists('lovd_getTableInfoByCategory')) {
-                // FIXME: Yes, this is messy. This function is getting used in a decent number of places,
-                //  and therefore perhaps we should pull it into inc-lib-init.php?
-                require ROOT_PATH . 'inc-lib-columns.php';
-            }
             // Loop columns and find tables.
             foreach ($aRegs[1] as $sCategory) {
                 $aTableInfo = lovd_getTableInfoByCategory($sCategory);

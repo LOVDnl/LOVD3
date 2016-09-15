@@ -84,6 +84,7 @@ function lovd_getCategoryCustomColFromName ($sName)
 
 
 
+
 function lovd_getTableInfoByCategory ($sCategory)
 {
     // Returns information on the LOVD table that holds the data for this given
