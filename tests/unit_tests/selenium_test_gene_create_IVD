@@ -53,21 +53,6 @@
 </tr>
 <tr>
 	<td>assertText</td>
-	<td>//*/table[@class=&quot;info&quot;][2]</td>
-	<td>You are about to delete 1 transcript(s) and related information on 0 variant(s) on those transcripts. Please fill in your password one more time to confirm the removal of gene IVD</td>
-</tr>
-<tr>
-	<td>type</td>
-	<td>name=password</td>
-	<td>test1234</td>
-</tr>
-<tr>
-	<td>clickAndWait</td>
-	<td>css=input[type=&quot;submit&quot;]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>assertText</td>
 	<td>css=table[class=info]</td>
 	<td>Successfully created the gene information entry!</td>
 </tr>
