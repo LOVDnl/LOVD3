@@ -161,7 +161,6 @@ class LOVD_Template {
                              '/view/' . $_SESSION['currdb'] . '?search_var_status=' . urlencode('="Pending"|"Non public"|"Marked"') => array('menu_variants_curate.png', 'View ' . $_SESSION['currdb'] . ' variants that require attention', ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
                              'hr',
 /*
-                                        array('config_free_edit.php', 'fnr', 'Find &amp; Replace', 'Find &amp; Replace', 'lovd_free_edit_fnr'),
                                         array('config_free_edit.php', 'copy', 'Copy Column', 'Copy Column', 'lovd_free_edit_copy'),
                                         'vr',
 */

@@ -215,6 +215,6 @@ MySQL:
 =======-========
 4.1. 2  REQUIRED
 
-PHP function list buildup (not perfect yet):
+PHP function list buildup (not perfect yet), e.g. needs to ignore comments:
 find . -iname \*.php | grep -v "inc-js" | grep -v "/_" | grep -v "/lib/" | xargs grep -RIE "[A-Za-z0-9_]+\(" | tr ':' '\n' | tr ' ' '\n' | grep -F "(" | sed 's/(/(\n/g' | grep -F "(" | sed -E 's/^[\(@!]+//' | grep -vE "^(lovd_|\\$)" | sort | uniq | sed 's/($//' > __function_list_new.txt
 

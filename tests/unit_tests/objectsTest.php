@@ -1,5 +1,4 @@
 <?php
-
 define('ROOT_PATH', realpath(__DIR__ . '/../../'));
 set_include_path(get_include_path() . PATH_SEPARATOR . ROOT_PATH);
 
@@ -13,7 +12,6 @@ class MockLOVDObject extends LOVD_Object
 
 class LOVD_ObjectTest extends PHPUnit_Framework_TestCase
 {
-
     /**
      * @dataProvider providerGetTableAndFieldNameFromSelect
      */
@@ -32,7 +30,8 @@ class LOVD_ObjectTest extends PHPUnit_Framework_TestCase
                             'Invalid field name detected in "' . $sSelectStmt . '"');
     }
 
-    public function providerGetTableAndFieldNameFromSelect() {
+    public function providerGetTableAndFieldNameFromSelect()
+    {
         return array(
             array('fieldname', 's.*', 's', 'fieldname'),
             array('fieldname', '*', null, 'fieldname'),

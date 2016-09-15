@@ -263,7 +263,6 @@ function lovd_AJAX_viewListHideRow (sViewListID, sElementID)
 
 function lovd_AJAX_viewListSubmit (sViewListID, callBack)
 {
-
     oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
     $(oForm).find('input').each(function(){
@@ -340,7 +339,7 @@ if (!isset($_GET['nohistory'])) {
         var sGET = '';
 
         // Put values into a GET param string for all input fields, except fields named check_*
-        // and non-checked radio buttons and checkboxes
+        // and non-checked radio buttons and checkboxes.
         $(oForm).find('input').each(function(){
             if (!this.disabled && this.value && this.name.substring(0,6) != 'check_' &&
                 (this.type != 'radio' || this.checked) &&

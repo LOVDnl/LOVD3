@@ -207,8 +207,8 @@ class LOVD_Object {
         // Construct and apply update query.
         $sUpdateSQL = 'UPDATE ' . $sTablename .  ', (' . $sSelectSQL . ') AS ' .
             $sSubqueryAlias . ' SET ' . $sTablename . '.`' . $sFieldname .
-            '`=' . $sReplaceStmt . ', ' . $sTablename . '.edited_by=?, ' . $sTablename .
-            '.edited_date=? WHERE ' . $sFRSearchCondition . ' AND ' . $sTablename . '.' .
+            '` = ' . $sReplaceStmt . ', ' . $sTablename . '.edited_by = ?, ' . $sTablename .
+            '.edited_date = ? WHERE ' . $sFRSearchCondition . ' AND ' . $sTablename . '.' .
             $sIDField . ' = ' . $sSubqueryAlias . '.' . $sSubqueryIDField;
 
         if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
@@ -217,7 +217,7 @@ class LOVD_Object {
             $sUpdateSQL = 'UPDATE ' . TABLE_VARIANTS .  ' vog INNER JOIN ' .
                           TABLE_VARIANTS_ON_TRANSCRIPTS . ' vot ON vog.id = vot.id, (' .
                           $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET vot.`' . $sFieldname .
-                          '`=' . $sReplaceStmt . ', vog.edited_by=?, vog.edited_date=? WHERE ' .
+                          '` = ' . $sReplaceStmt . ', vog.edited_by = ?, vog.edited_date = ? WHERE ' .
                           $sFRSearchCondition . ' AND vot.' . $sIDField . ' = ' . $sSubqueryAlias .
                           '.' . $sSubqueryIDField;
         }
@@ -226,7 +226,15 @@ class LOVD_Object {
         $aArgs[] = $_AUTH['id'];
         $aArgs[] = date('Y-m-d H:i:s');
 
-        return (bool) $_DB->query($sUpdateSQL, $aArgs);
+        $q = $_DB->query($sUpdateSQL, $aArgs);
+        $bSuccess = (bool) $q;
+        if ($bSuccess) {
+            // Create a log entry, too.
+            $n = $q->rowCount();
+            // FIXME: Add VL description? Add other filters that have been used?
+            lovd_writeLog('Event', 'FindAndReplace', 'Find and Replace successfully run on ' . $sFRFieldname . ', replacing "' . $sFRSearchValue . '" (matching ' . ($aOptions['sFRMatchType'] == 1? 'anywhere' : 'at the ' . ($aOptions['sFRMatchType'] == 2? 'beginning' : 'end')) . ') with "' . $sFRReplaceValue . '"' . (empty($aOptions['bFRReplaceAll'])? '' : ', overwriting the entire field'). ', updating ' . $n . ' row' . ($n == 1? '' : 's') . '.');
+        }
+        return $bSuccess;
     }
 
 
@@ -527,21 +535,20 @@ class LOVD_Object {
         $nSearchStrLen = strlen($sFRSearchValue);
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
         $sReplacement = $sFRReplaceValue;
+        $aOptions['sFRMatchType'] = (!isset($aOptions['sFRMatchType'])? 1 : $aOptions['sFRMatchType']);
 
-        if ($sFRSearchValue == '' && ((!isset($aOptions['sFRMatchType']) ||
-                                       $aOptions['sFRMatchType'] == '1'))) {
+        if ($sFRSearchValue == '' && $aOptions['sFRMatchType'] == '1') {
             // When searching on empty string anywhere, we can assume we're replacing the whole
             // field.
             $sReplacement = '"' . $sFRReplaceValue . '"';
-        } elseif ((!isset($aOptions['sFRMatchType']) || $aOptions['sFRMatchType'] == '1') &&
-                  (!isset($aOptions['bFRReplaceAll']) || !$aOptions['bFRReplaceAll'])) {
+        } elseif ($aOptions['sFRMatchType'] == '1' && empty($aOptions['bFRReplaceAll'])) {
             // Default is to replace occurrences anywhere in the field.
             return 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue . '", "' .
                    $sFRReplaceValue . '")';
-        } elseif (isset($aOptions['bFRReplaceAll']) && $aOptions['bFRReplaceAll']) {
+        } elseif (!empty($aOptions['bFRReplaceAll'])) {
             // Whole field is replaced with a single value.
             $sReplacement = '"' . $sFRReplaceValue . '"';
-        } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
+        } elseif ($aOptions['sFRMatchType'] == '2') {
             // Replace search string at beginning of field.
             // E.g.:
             // CASE WHEN SUBSTRING(table.`field`, 1, 6) = "search"
@@ -550,7 +557,7 @@ class LOVD_Object {
             $sReplacement = 'CONCAT("' . $sFRReplaceValue . '", SUBSTRING(' .
                             $sCompositeFieldname . ', ' . strval($nSearchStrLen + 1) . '))';
 
-        } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
+        } elseif ($aOptions['sFRMatchType'] == '3') {
             // Replace search string at end of field.
             // E.g.:
             // CASE WHEN SUBSTRING(table.`field`, - 6) = "search"
@@ -1171,7 +1178,7 @@ class LOVD_Object {
         ));
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
                                                                $sFRFieldname, $aOptions);
-        $oResult = $_DB->query('SELECT count(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
+        $oResult = $_DB->query('SELECT COUNT(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
                                $sFRSearchCondition, $aArgs);
         $nAffectedRows = intval($oResult->fetchColumn());
 
@@ -1184,8 +1191,7 @@ class LOVD_Object {
         $sPreviewFieldDisplayname = $sFRFieldDisplayname . ' (PREVIEW)';
 
         // Edit sql in $this->aSQLViewList to include an F&R column.
-        $this->aSQLViewList['SELECT'] .= ",\n";
-        $this->aSQLViewList['SELECT'] .= $sReplaceStmt . ' AS `' . $sPreviewFieldname . '`';
+        $this->aSQLViewList['SELECT'] .= ', ' . $sReplaceStmt . ' AS `' . $sPreviewFieldname . '`';
 
         // Add description of preview-field in $this->aColumnsViewList based on original field.
         $aFRColValues = $this->aColumnsViewList[$sFRFieldname];
@@ -1506,7 +1512,6 @@ class LOVD_Object {
         // Check existence of entry.
         $n = $this->getCount($nID);
         if (!$n) {
-            global $_SETT, $_STAT, $_AUTH;
             lovd_showInfoTable('No such ID!', 'stop');
             if (!$bAjax) {
                 $_T->printFooter();
@@ -1548,7 +1553,6 @@ class LOVD_Object {
         // If the user has no rights based on the statusid column, we don't have a $zData.
         if (!$zData) {
             // Don't give away information about the ID: just pretend the entry does not exist.
-            global $_SETT, $_STAT, $_AUTH;
             lovd_showInfoTable('No such ID!', 'stop');
             $_T->printFooter();
             exit;
@@ -1743,26 +1747,24 @@ class LOVD_Object {
 
         // Process input values regarding find & replace.
         // User clicked preview.
-        $bFRPreview =           isset($_GET['FRPreviewClicked_' . $sViewListID]) &&
-                                $_GET['FRPreviewClicked_' . $sViewListID] == '1';
+        $bFRPreview =          (!empty($_GET['FRPreviewClicked_' . $sViewListID]));
         // Selected field name for replace.
-        $sFRFieldname =         isset($_GET['FRFieldname_' . $sViewListID])?
-                                $_GET['FRFieldname_' . $sViewListID] : null;
+        $sFRFieldname =        (isset($_GET['FRFieldname_' . $sViewListID])?
+                                $_GET['FRFieldname_' . $sViewListID] : null);
         // Display name of selected field.
-        $sFRFieldDisplayname =  isset($_GET['FRFieldDisplayname_' . $sViewListID])?
-                                $_GET['FRFieldDisplayname_' . $sViewListID] : null;
+        $sFRFieldDisplayname = (isset($_GET['FRFieldDisplayname_' . $sViewListID])?
+                                $_GET['FRFieldDisplayname_' . $sViewListID] : null);
         // Search query for find & replace.
-        $sFRSearchValue =       isset($_GET['FRSearch_' . $sViewListID])?
-                                $_GET['FRSearch_' . $sViewListID] : null;
+        $sFRSearchValue =      (isset($_GET['FRSearch_' . $sViewListID])?
+                                $_GET['FRSearch_' . $sViewListID] : null);
         // Replace value for find & replace.
-        $sFRReplaceValue =      isset($_GET['FRReplace_' . $sViewListID])?
-                                $_GET['FRReplace_' . $sViewListID] : null;
+        $sFRReplaceValue =     (isset($_GET['FRReplace_' . $sViewListID])?
+                                $_GET['FRReplace_' . $sViewListID] : null);
         // Type of matching.
-        $sFRMatchType =         isset($_GET['FRMatchType_' . $sViewListID])?
-                                $_GET['FRMatchType_' . $sViewListID] : null;
+        $sFRMatchType =        (isset($_GET['FRMatchType_' . $sViewListID])?
+                                $_GET['FRMatchType_' . $sViewListID] : null);
         // Flag stating whether all field content sould be replaced.
-        $bFRReplaceAll =        isset($_GET['FRReplaceAll_' . $sViewListID]) &&
-                                $_GET['FRReplaceAll_' . $sViewListID] == '1';
+        $bFRReplaceAll =       (!empty($_GET['FRReplaceAll_' . $sViewListID]));
         // Predicted affected row count.
         $nFRRowsAffected = null;
         // Find & replace options parameter.
@@ -2005,10 +2007,10 @@ class LOVD_Object {
 
                 // 'checked' attribute values for find & replace menu options.
                 $sFRMatchtypeCheck1 = (!isset($sFRMatchType) || $sFRMatchType == '1')? 'checked' : '';
-                $sFRMatchtypeCheck2 = ($sFRMatchType == '2')? 'checked' : '';
-                $sFRMatchtypeCheck3 = ($sFRMatchType == '3')? 'checked' : '';
-                $sFRReplaceAllCheck = $bFRReplaceAll? 'checked' : '';
-                $sFRRowsAffected = (!is_null($nFRRowsAffected))? strval($nFRRowsAffected) : '';
+                $sFRMatchtypeCheck2 = ($sFRMatchType == '2'? 'checked' : '');
+                $sFRMatchtypeCheck3 = ($sFRMatchType == '3'? 'checked' : '');
+                $sFRReplaceAllCheck = ($bFRReplaceAll? 'checked' : '');
+                $sFRRowsAffected = (!is_null($nFRRowsAffected)? strval($nFRRowsAffected) : '');
 
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions

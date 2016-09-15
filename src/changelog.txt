@@ -31,8 +31,8 @@
    "Updating LOVD".
  * You can now perform a 'find and replace' on custom columns in some tables if
    authorized. Note that this feature is still in BETA, changes made using find
-   and replace are not checked for errors as it happens in the edit forms,
-   therefore using this feature may have destructive consequences.
+   and replace are not checked for errors as done in the edit forms, therefore
+   using this feature may have destructive consequences.
 
 
 /**************************
