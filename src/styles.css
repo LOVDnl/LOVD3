@@ -3,7 +3,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2016-08-24
+ * Modified    : 2016-09-15
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -170,8 +170,8 @@ table.data tr.marked:hover td.checkbox   {background : #FFF0F0; cursor : default
 div.vl_overlay {background : #224488; opacity : 0.4; filter: alpha(opacity=40); /* For IE8 and earlier */}
 div.vl_overlay:hover {background : #224488; opacity : 0.1; filter: alpha(opacity=10); /* For IE8 and earlier */}
 
-/* Options menu (used for find & replace in viewlists) */
-div.optionsmenu {background: #F0F3FF; border: 1px solid #AFC8FA; padding: 4px;}
+/* F&R options menu (used for find & replace in viewlists) */
+div.fnroptionsmenu {background: #F0F3FF; border: 1px solid #AFC8FA; padding: 4px; margin-bottom : 4px;}
 
 /* Large, outstanding tooltips */
 .ui-tooltip, .arrow:after { background: #224488; border: 2px solid white;}

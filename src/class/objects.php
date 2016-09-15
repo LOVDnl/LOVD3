@@ -2012,10 +2012,10 @@ class LOVD_Object {
 
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions
-<DIV id="viewlistFRFormContainer_$sViewListID" class="optionsmenu" style="display: none;">
+<DIV id="viewlistFRFormContainer_$sViewListID" class="fnroptionsmenu" style="display: none;">
     <SPAN><B style="color: red">Note that find &amp; replace is still in BETA. Changes made using this feature are not checked for errors, therefore using find &amp; replace may have destructive consequences.<BR>Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR>
-        Find &amp; replace for column
-        <B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>
+        Applying find &amp; replace to column
+        &quot;<B id="viewlistFRColDisplay_$sViewListID">$sFRFieldname</B>&quot;.
         <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
                value="$sFRFieldname" />
         <INPUT id="FRFieldDisplayname_$sViewListID" type="hidden"
@@ -2047,13 +2047,13 @@ class LOVD_Object {
             </TD>
         </TR>
     </TABLE>
-    <INPUT id="FRPreview_$sViewListID" type="button" value="preview" />
-    <INPUT id="FRCancel_$sViewListID" type="button" value="cancel" />
+    <INPUT id="FRPreview_$sViewListID" type="button" value="Preview" />
+    <INPUT id="FRCancel_$sViewListID" type="button" value="Cancel" style="border : 1px solid #FF4422;" />
     <DIV id="FRSubmitDiv_$sViewListID">
         <BR>
         Enter your password to apply find and replace:<BR> 
         <INPUT type="password" name="password" size="20" />
-        <INPUT id="FRSubmit_$sViewListID" type="submit" value="submit" />
+        <INPUT id="FRSubmit_$sViewListID" type="submit" value="Submit" />
     </DIV>
 </DIV>
 FROptions
