@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-07-15
+ * Modified    : 2016-09-14
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -284,8 +284,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         $sGeneName = $aGeneInfo['name'];
                         $sChromLocation = $aGeneInfo['location'];
                         $sEntrez = $aGeneInfo['entrez_id'];
-                        // OMIM ID is not always defined.
-                        $nOmim = (!isset($aGeneInfo['omim_id'])? '' : $aGeneInfo['omim_id']);
+                        $nOmim = $aGeneInfo['omim_id'];
                     }
                 }
             }
