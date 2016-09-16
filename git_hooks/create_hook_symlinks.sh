@@ -3,7 +3,7 @@
 # Create symlinks in .git/hooks for hook scripts in this directory.
 # The script assumes it is executed in the directory where the hook
 # scripts are that need to be linked.
-# Code is inspired by: 
+# Code is inspired by:
 # http://stackoverflow.com/questions/3462955/putting-git-hooks-into-repository
 
 HOOK_NAMES="applypatch-msg pre-applypatch post-applypatch pre-commit prepare-commit-msg commit-msg post-commit pre-rebase post-checkout post-merge pre-receive update post-receive post-update pre-auto-gc"

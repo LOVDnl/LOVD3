@@ -32,6 +32,26 @@
 
 
 
+function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
+{
+    // Insert $new_key, $new_value pair after entry $key in array $array.
+    // Courtesy of http://eosrei.net/
+    if (array_key_exists($key, $array)) {
+        $new = array();
+        foreach ($array as $k => $value) {
+            $new[$k] = $value;
+            if ($k === $key) {
+                $new[$new_key] = $new_value;
+            }
+        }
+        return $new;
+    }
+    return FALSE;
+}
+
+
+
+
 
 function lovd_calculateVersion ($sVersion)
 {
@@ -159,8 +179,8 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     // Write to log file... if we're not here because we don't have MySQL.
     if (!empty($_DB) && class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
         // lovd_displayError() always halts LOVD. If we're in a transaction, any log we'll write
-        // to the DB will be gone since PHP will rollback() any transaction that is still open.
-        // So we'd better rollback() ourselves first!
+        // to the DB will be gone since PHP will rollBack() any transaction that is still open.
+        // So we'd better rollBack() ourselves first!
         try {
             @$_DB->rollBack(); // In case we were in a transaction. // FIXME; we can know from PHP >= 5.3.3.
         } catch (PDOException $eNoTransaction) {}

@@ -39,6 +39,10 @@
  * Fixed issue with the HGNC returning multiple OMIM IDs sometimes. Some LOVD
    installations refuse to create such genes.
    (thanks to Jorge Oliveira, Centro Hospitalar do Porto, for reporting)
+ * You can now perform a 'find and replace' on custom columns in some tables if
+   authorized. Note that this feature is still in BETA, changes made using find
+   and replace are not checked for errors as done in the edit forms, therefore
+   using this feature may have destructive consequences.
 
 
 /**************************

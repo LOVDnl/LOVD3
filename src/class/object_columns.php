@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-07-20
+ * Modified    : 2016-09-15
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -378,10 +378,6 @@ class LOVD_Column extends LOVD_Object {
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
-
-        if (!function_exists('lovd_describeFormType')) {
-            require ROOT_PATH . 'inc-lib-columns.php';
-        }
 
         if ($sView == 'list') {
             $zData['row_id']      = $zData['id'];

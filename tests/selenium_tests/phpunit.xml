@@ -192,6 +192,12 @@
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_users_submitter.php</file>
             <file>access_sharing_tests/access_sharing_submitter.php</file>
+            <file>shared_tests/uninstall_LOVD.php</file>
+        </testsuite>
+        <testsuite name="find_replace_tests">
+            <file>shared_tests/install_LOVD.php</file>
+            <file>shared_tests/login_as_admin.php</file>
+            <file>find_replace_tests/find_replace.php</file>
         </testsuite>
     </testsuites>
     <listeners>

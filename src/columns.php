@@ -1271,7 +1271,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
             }
 
             // Write to log...
-            lovd_writeLog('MySQL:Event', 'ColEditColID', $_AUTH['username'] . ' (' . mysql_real_escape_string($_AUTH['name']) . ') successfully changed column ID ' . $zData['colid'] . ' to ' . $_POST['colid']);
+            lovd_writeLog('MySQL:Event', 'ColEditColID', $_AUTH['username'] . ' (' . $_DB->quote($_AUTH['name']) . ') successfully changed column ID ' . $zData['colid'] . ' to ' . $_POST['colid']);
 
             // 2008-12-03; 2.0-15; Update links (whether they exist or not)
             $sQ = 'UPDATE ' . TABLE_COLS2LINKS . ' SET colid="' . $_POST['colid'] . '" WHERE colid="' . $zData['colid'] . '"';
