@@ -2031,6 +2031,10 @@ class LOVD_Object {
                 $sFRMatchtypeCheck3 = ($sFRMatchType == '3'? 'checked' : '');
                 $sFRReplaceAllCheck = ($bFRReplaceAll? 'checked' : '');
                 $sFRRowsAffected = (!is_null($nFRRowsAffected)? strval($nFRRowsAffected) : '');
+                $sFRFieldname = htmlspecialchars($sFRFieldname);
+                $sFRFieldDisplayname = htmlspecialchars($sFRFieldDisplayname);
+                $sFRSearchValue = htmlspecialchars($sFRSearchValue);
+                $sFRReplaceValue = htmlspecialchars($sFRReplaceValue);
 
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions
