@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-09-16
+ * Modified    : 2016-09-19
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -202,7 +202,7 @@ class LOVD_Object {
 
         // Apply find & replace search condition so that only changed records will be updated.
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
-                                                               $sFRFieldname, $aOptions);
+                                                               $sFieldname, $aOptions);
 
         // Construct and apply update query.
         $sUpdateSQL = 'UPDATE ' . $sTablename .  ', (' . $sSelectSQL . ') AS ' .
@@ -546,7 +546,7 @@ class LOVD_Object {
 
         $nSearchStrLen = strlen($sFRSearchValue);
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
-        $sReplacement = $sFRReplaceValue;
+        $sReplacement = $_DB->quote($sFRReplaceValue);
         $aOptions['sFRMatchType'] = (!isset($aOptions['sFRMatchType'])? 1 : $aOptions['sFRMatchType']);
 
         // FIXME: Search value and replace value (and fieldname, unless we're sure it can't be
@@ -1197,7 +1197,7 @@ class LOVD_Object {
             'HAVING' => $this->aSQLViewList['HAVING'],
         ));
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
-                                                               $sFRFieldname, $aOptions);
+                                                               $sFieldname, $aOptions);
         $oResult = $_DB->query('SELECT COUNT(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
                                $sFRSearchCondition, $aArgs);
         $nAffectedRows = intval($oResult->fetchColumn());
@@ -1220,7 +1220,7 @@ class LOVD_Object {
         } else {
             $aFRColValues['view'][0] = $sPreviewFieldDisplayname;
         }
-        $aFRColValues['db'] = array($sFRFieldname);
+        $aFRColValues['db'] = array();
 
         // Place preview column just behind column where F&R is performed on.
         $this->aColumnsViewList = lovd_arrayInsertAfter($sFRFieldname, $this->aColumnsViewList,
