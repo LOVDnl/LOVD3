@@ -219,7 +219,8 @@ class LOVD_Object {
                           $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET vot.`' . $sFieldname .
                           '` = ' . $sReplaceStmt . ', vog.edited_by = ?, vog.edited_date = ? WHERE ' .
                           $sFRSearchCondition . ' AND vot.' . $sIDField . ' = ' . $sSubqueryAlias .
-                          '.' . $sSubqueryIDField;
+                          '.' . $sSubqueryIDField . ' AND vot.transcriptid = '  . $sSubqueryAlias .
+                          '.transcriptid';
         }
 
         // Add edit fields to SQL arguments.
@@ -231,14 +232,8 @@ class LOVD_Object {
         if ($bSuccess) {
             // Create a log entry, too.
             $n = $q->rowCount();
-            if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
-                // Update query for VOT alters twice as many rows, since edited_by/-date
-                // fields are updated in the VOG table. Only mention number of rows in VOT
-                // in the logs.
-                $n /= 2;
-            }
             // FIXME: Add VL description? Add other filters that have been used?
-            lovd_writeLog('Event', 'FindAndReplace', 'Find and Replace successfully run on ' . $sFRFieldname . ', replacing "' . $sFRSearchValue . '" (matching ' . ($aOptions['sFRMatchType'] == 1? 'anywhere' : 'at the ' . ($aOptions['sFRMatchType'] == 2? 'beginning' : 'end')) . ') with "' . $sFRReplaceValue . '"' . (empty($aOptions['bFRReplaceAll'])? '' : ', overwriting the entire field'). ', updating ' . $n . ' row' . ($n == 1? '' : 's') . '.');
+            lovd_writeLog('Event', 'FindAndReplace', 'Find and Replace successfully run on ' . $sFRFieldname . ', replacing "' . $sFRSearchValue . '" (matching ' . ($aOptions['sFRMatchType'] == 1? 'anywhere' : 'at the ' . ($aOptions['sFRMatchType'] == 2? 'beginning' : 'end')) . ') with "' . $sFRReplaceValue . '"' . (empty($aOptions['bFRReplaceAll'])? '' : ', overwriting the entire field'). ', updating ' . $n . ' row' . ($n == 1? '' : 's') . '.' . (($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS)? ' Note: the number of updated rows may be an overestimation since updates to edited_by/-date fields in ' . TABLE_VARIANTS . ' are counted as well.' : ''));
         }
         return $bSuccess;
     }
