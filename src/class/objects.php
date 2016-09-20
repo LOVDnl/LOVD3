@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-09-19
+ * Modified    : 2016-09-20
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -231,6 +231,12 @@ class LOVD_Object {
         if ($bSuccess) {
             // Create a log entry, too.
             $n = $q->rowCount();
+            if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
+                // Update query for VOT alters twice as many rows, since edited_by/-date
+                // fields are updated in the VOG table. Only mention number of rows in VOT
+                // in the logs.
+                $n /= 2;
+            }
             // FIXME: Add VL description? Add other filters that have been used?
             lovd_writeLog('Event', 'FindAndReplace', 'Find and Replace successfully run on ' . $sFRFieldname . ', replacing "' . $sFRSearchValue . '" (matching ' . ($aOptions['sFRMatchType'] == 1? 'anywhere' : 'at the ' . ($aOptions['sFRMatchType'] == 2? 'beginning' : 'end')) . ') with "' . $sFRReplaceValue . '"' . (empty($aOptions['bFRReplaceAll'])? '' : ', overwriting the entire field'). ', updating ' . $n . ' row' . ($n == 1? '' : 's') . '.');
         }
