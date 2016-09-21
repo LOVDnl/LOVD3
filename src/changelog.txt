@@ -5,8 +5,8 @@
  *************/
 
 /**************************
- * 3.0 Build 17 ()
- * 2016-...
+ * 3.0 Build 17 (tag:3.0-17)
+ * 2016-09-21
  *********/
  * Fixed bug; Impossible for users of level submitter to browse the user list
    on the access sharing page.
