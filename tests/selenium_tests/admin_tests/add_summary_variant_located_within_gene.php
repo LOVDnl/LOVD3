@@ -47,34 +47,48 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $this->enterValue(WebDriverBy::name("00000002_VariantOnTranscript/DNA"), "c.62T>C");
         $element = $this->driver->findElement(WebDriverBy::cssSelector("button.mapVariant"));
         $element->click();
-        sleep(3);
-        for ($second = 0; ; $second++) {
-            if ($second >= 60) $this->fail("timeout");
-            try {
-                if ($this->isElementPresent(WebDriverBy::cssSelector("img[alt='Prediction OK!']"))) break;
-            } catch (Exception $e) {
-            }
-            sleep(1);
-        }
-        $RnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[4].value");
-        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange));
-        $ProteinChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
-        $this->assertEquals("p.(Leu21Pro)", $ProteinChange);
+
+        // Wait until the first two RNA-change input fields contain data.
+        $firstRNAInputSelector = '(//input[contains(@name, "VariantOnTranscript/RNA")])[1]';
+        $secondRNAInputSelector = '(//input[contains(@name, "VariantOnTranscript/RNA")])[2]';
+        $this->waitUntil(function ($driver) use ($firstRNAInputSelector, $secondRNAInputSelector) {
+            $firstRNAInput = $driver->findElement(WebDriverBy::xpath($firstRNAInputSelector));
+            $firstRNAValue = $firstRNAInput->getAttribute('value');
+            $secondRNAInput = $driver->findElement(WebDriverBy::xpath($secondRNAInputSelector));
+            $secondRNAValue = $secondRNAInput->getAttribute('value');
+            return !empty($firstRNAValue) && !empty($secondRNAValue);
+        });
+
+        $firstRNAInput = $this->driver->findElement(WebDriverBy::xpath($firstRNAInputSelector));
+        $firstRNAValue = $firstRNAInput->getAttribute('value');
+        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $firstRNAValue));
+
+        $firstProteinInputSelector = '(//input[contains(@name, "VariantOnTranscript/Protein")])[1]';
+        $firstProteinInput = $this->driver->findElement(WebDriverBy::xpath($firstProteinInputSelector));
+        $firstProteinValue = $firstProteinInput->getAttribute('value');
+        $this->assertEquals("p.(Leu21Pro)", $firstProteinValue);
+
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000002_effect_reported"]/option[text()="Probably affects function"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000002_effect_concluded"]/option[text()="Probably does not affect function"]'));
         $option->click();
-        $RnaChangeTwo = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[4].value");
-        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChangeTwo));
-        $ProteinChangeTwo = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
-        $this->assertEquals("p.(Leu21Pro)", $ProteinChangeTwo);
+
+        $secondRNAInput = $this->driver->findElement(WebDriverBy::xpath($secondRNAInputSelector));
+        $secondRNAValue = $secondRNAInput->getAttribute('value');
+        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $secondRNAValue));
+
+        $secondProteinInputSelector = '(//input[contains(@name, "VariantOnTranscript/Protein")])[2]';
+        $secondProteinInput = $this->driver->findElement(WebDriverBy::xpath($secondProteinInputSelector));
+        $secondProteinValue = $secondProteinInput->getAttribute('value');
+        $this->assertEquals("p.(Leu21Pro)", $secondProteinValue);
+
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000003_effect_reported"]/option[text()="Probably affects function"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000003_effect_concluded"]/option[text()="Probably does not affect function"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="allele"]/option[text()="Maternal (confirmed)"]'));
         $option->click();
-//        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[19].value");
+
         $GenomicDNAChange = $this->driver->findElement(WebDriverBy::name('VariantOnGenome/DNA'));
         $this->assertEquals("g.2843789A>G", $GenomicDNAChange->getAttribute('value'));
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
@@ -98,6 +112,6 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         // wait for page redirect
         $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
 
-        $this->assertContains("src/variants/0000000168", $this->driver->getCurrentURL());
+        $this->assertRegExp("/src\/variants\/\d{10}/", $this->driver->getCurrentURL());
     }
 }

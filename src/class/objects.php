@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-09-15
+ * Modified    : 2016-09-21
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -202,7 +202,7 @@ class LOVD_Object {
 
         // Apply find & replace search condition so that only changed records will be updated.
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
-                                                               $sFRFieldname, $aOptions);
+                                                               $sFieldname, $aOptions);
 
         // Construct and apply update query.
         $sUpdateSQL = 'UPDATE ' . $sTablename .  ', (' . $sSelectSQL . ') AS ' .
@@ -219,7 +219,8 @@ class LOVD_Object {
                           $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET vot.`' . $sFieldname .
                           '` = ' . $sReplaceStmt . ', vog.edited_by = ?, vog.edited_date = ? WHERE ' .
                           $sFRSearchCondition . ' AND vot.' . $sIDField . ' = ' . $sSubqueryAlias .
-                          '.' . $sSubqueryIDField;
+                          '.' . $sSubqueryIDField . ' AND vot.transcriptid = '  . $sSubqueryAlias .
+                          '.transcriptid';
         }
 
         // Add edit fields to SQL arguments.
@@ -232,7 +233,7 @@ class LOVD_Object {
             // Create a log entry, too.
             $n = $q->rowCount();
             // FIXME: Add VL description? Add other filters that have been used?
-            lovd_writeLog('Event', 'FindAndReplace', 'Find and Replace successfully run on ' . $sFRFieldname . ', replacing "' . $sFRSearchValue . '" (matching ' . ($aOptions['sFRMatchType'] == 1? 'anywhere' : 'at the ' . ($aOptions['sFRMatchType'] == 2? 'beginning' : 'end')) . ') with "' . $sFRReplaceValue . '"' . (empty($aOptions['bFRReplaceAll'])? '' : ', overwriting the entire field'). ', updating ' . $n . ' row' . ($n == 1? '' : 's') . '.');
+            lovd_writeLog('Event', 'FindAndReplace', 'Find and Replace successfully run on ' . $sFRFieldname . ', replacing "' . $sFRSearchValue . '" (matching ' . ($aOptions['sFRMatchType'] == 1? 'anywhere' : 'at the ' . ($aOptions['sFRMatchType'] == 2? 'beginning' : 'end')) . ') with "' . $sFRReplaceValue . '"' . (empty($aOptions['bFRReplaceAll'])? '' : ', overwriting the entire field'). ', updating ' . $n . ' row' . ($n == 1? '' : 's') . '.' . ($sTablename != TABLE_VARIANTS_ON_TRANSCRIPTS? '' : ' Note: the number of updated rows may be an overcalculation since variant data is stored in multiple rows.'));
         }
         return $bSuccess;
     }
@@ -494,6 +495,15 @@ class LOVD_Object {
     {
         // Return an SQL search condition for given search string, field name and match options.
         // Default is to match the search string anywhere in the field.
+        global $_DB;
+
+        // FIXME: Search value (and fieldname, unless we're sure it can't be
+        //  tainted) should never be used directly in the query.
+        // Putting it in an arguments array however, will mean redesign of much of the code.
+        // $_DB->quote() isn't perfect and should be avoided, but if we don't
+        //  want to redo this part again, we need this for now.
+        // NOTE: We can't $_DB->quote() the thing here, because that makes the code weird
+        //  (it adds quotes around the value) and it makes strlen() fail for quoted strings.
 
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
         if ($sFRSearchValue == '') {
@@ -506,13 +516,15 @@ class LOVD_Object {
         } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '2') {
             // Match search string at beginning of field.
             $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', 1, ' .
-                                  strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
+                                  strlen($sFRSearchValue) . ') = ' . $_DB->quote($sFRSearchValue);
         } elseif (isset($aOptions['sFRMatchType']) && $aOptions['sFRMatchType'] == '3') {
             // Match search string at end of field.
             $sFRSearchCondition = 'SUBSTRING(' . $sCompositeFieldname . ', -' .
-                                  strlen($sFRSearchValue) . ') = "' . $sFRSearchValue . '"';
+                                  strlen($sFRSearchValue) . ') = ' . $_DB->quote($sFRSearchValue);
         } else {
-            $sFRSearchCondition = $sCompositeFieldname . ' LIKE "%' . $sFRSearchValue . '%"';
+            // Throw the search term through lovd_escapeSearchTerm() to make sure special LIKE characters (%, _) are not interpreted by MySQL.
+            // However, REPLACE(), doing the actual replacing, does not interpret these special characters, so there is no real danger.
+            $sFRSearchCondition = $sCompositeFieldname . ' LIKE ' . $_DB->quote('%' . lovd_escapeSearchTerm($sFRSearchValue) . '%');
         }
         return $sFRSearchCondition;
     }
@@ -531,30 +543,39 @@ class LOVD_Object {
         // - $sFRSearchValue    Find & replace search value.
         // - $sFRReplaceValue   Find & replace replace value.
         // - $aOptions          Array with options on how to perform replace.
+        global $_DB;
 
         $nSearchStrLen = strlen($sFRSearchValue);
         $sCompositeFieldname = (!$sTablename? '' : $sTablename . '.') . '`' . $sFieldname . '`';
-        $sReplacement = $sFRReplaceValue;
+        $sReplacement = $_DB->quote($sFRReplaceValue);
         $aOptions['sFRMatchType'] = (!isset($aOptions['sFRMatchType'])? 1 : $aOptions['sFRMatchType']);
+
+        // FIXME: Search value and replace value (and fieldname, unless we're sure it can't be
+        //  tainted) should never be used directly in the query.
+        // Putting it in an arguments array however, will mean redesign of much of the code.
+        // $_DB->quote() isn't perfect and should be avoided, but if we don't
+        //  want to redo this part again, we need this for now.
+        // NOTE: We can't $_DB->quote() the thing here, because that makes the code weird
+        //  (it adds quotes around the value) and it makes strlen() fail for quoted strings.
 
         if ($sFRSearchValue == '' && $aOptions['sFRMatchType'] == '1') {
             // When searching on empty string anywhere, we can assume we're replacing the whole
             // field.
-            $sReplacement = '"' . $sFRReplaceValue . '"';
+            $sReplacement = $_DB->quote($sFRReplaceValue);
         } elseif ($aOptions['sFRMatchType'] == '1' && empty($aOptions['bFRReplaceAll'])) {
             // Default is to replace occurrences anywhere in the field.
-            return 'REPLACE(' . $sCompositeFieldname . ', "' . $sFRSearchValue . '", "' .
-                   $sFRReplaceValue . '")';
+            return 'REPLACE(' . $sCompositeFieldname . ', ' . $_DB->quote($sFRSearchValue) . ', ' .
+                $_DB->quote($sFRReplaceValue) . ')';
         } elseif (!empty($aOptions['bFRReplaceAll'])) {
             // Whole field is replaced with a single value.
-            $sReplacement = '"' . $sFRReplaceValue . '"';
+            $sReplacement = $_DB->quote($sFRReplaceValue);
         } elseif ($aOptions['sFRMatchType'] == '2') {
             // Replace search string at beginning of field.
             // E.g.:
             // CASE WHEN SUBSTRING(table.`field`, 1, 6) = "search"
             // THEN CONCAT("replace", SUBSTRING(table.`field`, 6))
             // ELSE table.`field` END
-            $sReplacement = 'CONCAT("' . $sFRReplaceValue . '", SUBSTRING(' .
+            $sReplacement = 'CONCAT(' . $_DB->quote($sFRReplaceValue) . ', SUBSTRING(' .
                             $sCompositeFieldname . ', ' . strval($nSearchStrLen + 1) . '))';
 
         } elseif ($aOptions['sFRMatchType'] == '3') {
@@ -564,8 +585,8 @@ class LOVD_Object {
             // THEN CONCAT(SUBSTRING(table.`field`, 1, CHAR_LENGTH(table.`field`) - 6), "replace")
             // ELSE table.`field` END
             $sReplacement = 'CONCAT(' . 'SUBSTRING(' . $sCompositeFieldname . ', 1, CHAR_LENGTH(' .
-                            $sCompositeFieldname . ') - ' . strval($nSearchStrLen) . '), "' .
-                            $sFRReplaceValue . '")';
+                            $sCompositeFieldname . ') - ' . strval($nSearchStrLen) . '), ' .
+                            $_DB->quote($sFRReplaceValue) . ')';
         }
 
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sTablename,
@@ -573,7 +594,7 @@ class LOVD_Object {
 
         // Return replace statement.
         return 'CASE WHEN ' . $sFRSearchCondition . ' THEN ' . $sReplacement . ' ELSE ' .
-               $sCompositeFieldname . ' END ';
+               $sCompositeFieldname . ' END';
     }
 
 
@@ -1177,7 +1198,7 @@ class LOVD_Object {
             'HAVING' => $this->aSQLViewList['HAVING'],
         ));
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
-                                                               $sFRFieldname, $aOptions);
+                                                               $sFieldname, $aOptions);
         $oResult = $_DB->query('SELECT COUNT(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
                                $sFRSearchCondition, $aArgs);
         $nAffectedRows = intval($oResult->fetchColumn());
@@ -1200,7 +1221,7 @@ class LOVD_Object {
         } else {
             $aFRColValues['view'][0] = $sPreviewFieldDisplayname;
         }
-        $aFRColValues['db'] = array($sFRFieldname);
+        $aFRColValues['db'] = array();
 
         // Place preview column just behind column where F&R is performed on.
         $this->aColumnsViewList = lovd_arrayInsertAfter($sFRFieldname, $this->aColumnsViewList,
@@ -2006,11 +2027,15 @@ class LOVD_Object {
                 }
 
                 // 'checked' attribute values for find & replace menu options.
-                $sFRMatchtypeCheck1 = (!isset($sFRMatchType) || $sFRMatchType == '1')? 'checked' : '';
+                $sFRMatchtypeCheck1 = (!isset($sFRMatchType) || $sFRMatchType == '1'? 'checked' : '');
                 $sFRMatchtypeCheck2 = ($sFRMatchType == '2'? 'checked' : '');
                 $sFRMatchtypeCheck3 = ($sFRMatchType == '3'? 'checked' : '');
                 $sFRReplaceAllCheck = ($bFRReplaceAll? 'checked' : '');
                 $sFRRowsAffected = (!is_null($nFRRowsAffected)? strval($nFRRowsAffected) : '');
+                $sFRFieldname = htmlspecialchars($sFRFieldname);
+                $sFRFieldDisplayname = htmlspecialchars($sFRFieldDisplayname);
+                $sFRSearchValue = htmlspecialchars($sFRSearchValue);
+                $sFRReplaceValue = htmlspecialchars($sFRReplaceValue);
 
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions

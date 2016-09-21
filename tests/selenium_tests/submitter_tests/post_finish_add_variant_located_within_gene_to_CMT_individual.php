@@ -42,13 +42,29 @@ class PostFinishAddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSelen
         $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/DNA"), "c.251T>A");
         $element = $this->driver->findElement(WebDriverBy::cssSelector("button.mapVariant"));
         $element->click();
-        sleep(6);
-        $RnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[4].value");
-        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange));
-        $ProteinChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
-        $this->assertEquals("p.(Val84Asp)", $ProteinChange);
-        $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[10].value");
-        $this->assertEquals("g.70443808T>A", $GenomicDnaChange);
+
+        // Wait until RNA description field is filled after AJAX request.
+        $firstRNAInputSelector = '(//input[contains(@name, "VariantOnTranscript/RNA")])[1]';
+        $this->waitUntil(function ($driver) use ($firstRNAInputSelector) {
+            $firstRNAInput = $driver->findElement(WebDriverBy::xpath($firstRNAInputSelector));
+            $firstRNAValue = $firstRNAInput->getAttribute('value');
+            return !empty($firstRNAValue);
+        });
+
+        // Check RNA description for first transcript.
+        $firstRNAInput = $this->driver->findElement(WebDriverBy::xpath($firstRNAInputSelector));
+        $firstRNAValue = $firstRNAInput->getAttribute('value');
+        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $firstRNAValue));
+
+        // Check protein description for first transcript.
+        $firstProteinInputSelector = '(//input[contains(@name, "VariantOnTranscript/Protein")])[1]';
+        $firstProteinInput = $this->driver->findElement(WebDriverBy::xpath($firstProteinInputSelector));
+        $firstProteinValue = $firstProteinInput->getAttribute('value');
+        $this->assertEquals("p.(Val84Asp)", $firstProteinValue);
+
+        $GenomicDNAChange = $this->driver->findElement(WebDriverBy::name('VariantOnGenome/DNA'));
+        $this->assertEquals("g.70443808T>A", $GenomicDNAChange->getAttribute('value'));
+
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="allele"]/option[text()="Paternal (confirmed)"]'));

@@ -28,19 +28,26 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/DNA"), "c.62G>A");
         $element = $this->driver->findElement(WebDriverBy::cssSelector("button.mapVariant"));
         $element->click();
-        sleep(3);
-        for ($second = 0; ; $second++) {
-            if ($second >= 60) $this->fail("timeout");
-            try {
-                if ($this->isElementPresent(WebDriverBy::cssSelector("img[alt='Prediction OK!']"))) break;
-            } catch (Exception $e) {
-            }
-            sleep(1);
-        }
-        $RnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[4].value");
-        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $RnaChange));
-        $ProteinChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[5].value");
-        $this->assertEquals("p.(Gly21Asp)", $ProteinChange);
+
+        // Wait until the first RNA-change input field contains data.
+        $firstRNAInputSelector = '(//input[contains(@name, "VariantOnTranscript/RNA")])[1]';
+        $this->waitUntil(function ($driver) use ($firstRNAInputSelector) {
+            $firstRNAInput = $driver->findElement(WebDriverBy::xpath($firstRNAInputSelector));
+            $firstRNAValue = $firstRNAInput->getAttribute('value');
+            return !empty($firstRNAValue);
+        });
+
+        // Check RNA description.
+        $firstRNAInput = $this->driver->findElement(WebDriverBy::xpath($firstRNAInputSelector));
+        $firstRNAValue = $firstRNAInput->getAttribute('value');
+        $this->assertTrue((bool)preg_match('/^r\.\([\s\S]\)$/', $firstRNAValue));
+
+        // Check protein description.
+        $firstProteinInputSelector = '(//input[contains(@name, "VariantOnTranscript/Protein")])[1]';
+        $firstProteinInput = $this->driver->findElement(WebDriverBy::xpath($firstProteinInputSelector));
+        $firstProteinValue = $firstProteinInput->getAttribute('value');
+        $this->assertEquals("p.(Gly21Asp)", $firstProteinValue);
+
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_reported"]/option[text()="Probably affects function"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="00000001_effect_concluded"]/option[text()="Probably does not affect function"]'));
