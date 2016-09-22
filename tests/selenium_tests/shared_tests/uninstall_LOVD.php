@@ -8,19 +8,9 @@ class UninstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testUninstallLOVDTest()
     {
-        $this->driver->get(ROOT_URL . "/src/logout");
+        $this->logout();
+        $this->login('admin', 'test1234');
 
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-
-        $this->driver->get(ROOT_URL . "/src/login");
-        $this->enterValue(WebDriverBy::name("username"), "admin");
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $element->click();
         $this->driver->get(ROOT_URL . "/src/uninstall");
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Next >>']"));

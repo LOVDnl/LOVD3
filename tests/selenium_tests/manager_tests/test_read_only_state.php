@@ -11,7 +11,7 @@ class TestReadOnlyState extends LOVDSeleniumWebdriverBaseTestCase
         // Test that LOVD is in the read-only state.
 
         // First, log out of any session that might exist at this time.
-        $this->driver->get(ROOT_URL . '/src/logout');
+        $this->logout();
 
         // There should be no link to register yourself.
         // First, I had this findElements(), but Chrome doesn't like that at all, and times out.

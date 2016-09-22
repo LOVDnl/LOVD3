@@ -26,7 +26,7 @@ class TestBlockSubmitterRegistration extends LOVDSeleniumWebdriverBaseTestCase
         }
 
         // Log out, then check if element is gone indeed.
-        $this->driver->get(ROOT_URL . '/src/logout');
+        $this->logout();
 
         // There should be no link to register yourself.
         // First, I had this findElements(), but Chrome doesn't like that at all, and times out.
@@ -50,7 +50,7 @@ class TestBlockSubmitterRegistration extends LOVDSeleniumWebdriverBaseTestCase
         $this->chooseOkOnNextConfirmation();
 
         // Log out, and check if registration is allowed again.
-        $this->driver->get(ROOT_URL . '/src/logout');
+        $this->logout();
 
         // Find the link to register yourself.
         $this->driver->findElement(WebDriverBy::xpath('//a/b[text()="Register as submitter"]'));
