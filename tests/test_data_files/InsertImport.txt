@@ -72,7 +72,7 @@
 ## Variants_On_Genome ## Do not remove or alter this header ##
 ## Count = 1
 "{{id}}"	"{{allele}}"	"{{effectid}}"	"{{chromosome}}"	"{{position_g_start}}"	"{{position_g_end}}"	"{{type}}"	"{{mapping_flags}}"	"{{average_frequency}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Frequency}}"	"{{VariantOnGenome/Reference}}"
-"0000000001"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-03 11:31:16"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:[2011]:[2150333]}"
+"0000000001"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-03 11:31:16"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:Fokkema et al (2011):21520333}"
 
 
 ## Variants_On_Transcripts ## Do not remove or alter this header ##

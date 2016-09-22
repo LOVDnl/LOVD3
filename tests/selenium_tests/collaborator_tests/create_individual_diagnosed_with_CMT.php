@@ -15,7 +15,7 @@ class CreateIndividualDiagnosedWithCMTTest extends LOVDSeleniumWebdriverBaseTest
         $this->enterValue(WebDriverBy::name("Individual/Lab_ID"), "12345CMT");
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
-        $this->enterValue(WebDriverBy::name("Individual/Reference"), "{PMID:[2011]:[21520333]}");
+        $this->enterValue(WebDriverBy::name("Individual/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("Individual/Remarks"), "No Remarks");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="active_diseases[]"]/option[text()="CMT (Charcot Marie Tooth Disease)"]'));
         $option->click();
