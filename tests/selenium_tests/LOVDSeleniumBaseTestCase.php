@@ -150,7 +150,7 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         $this->enterValue(WebDriverBy::name('username'), $sUsername);
         $this->enterValue(WebDriverBy::name('password'), $sPassword);
         $element = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Log in"]'));
-        usleep(100000); // If not waiting at all, sometimes you're just not logged in, for some reason.
+        usleep(500000); // If not waiting at all, sometimes you're just not logged in, for some reason.
         $element->click();
 
         // To make sure we've left the login form, check the URL.
