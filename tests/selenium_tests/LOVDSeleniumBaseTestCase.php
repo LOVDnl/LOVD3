@@ -9,6 +9,7 @@
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -31,10 +32,11 @@
 
 require_once 'inc-lib-test.php';
 
-use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\WebDriverException;
 use \Facebook\WebDriver\Remote\LocalFileDetector;
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 
 
@@ -122,6 +124,55 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     {
         // Return text displayed by confirmation dialog box.
         return $this->driver->switchTo()->alert()->getText();
+    }
+
+
+
+    protected function login ($sUsername, $sPassword)
+    {
+        // Logs user in, using the given username and password. When already
+        //  logged in, this function will log you out. This may be done more
+        //  intelligently later, having this function check if you're already
+        //  the requested user.
+
+        $this->driver->get(ROOT_URL . '/src/login');
+        // When already logged in, we will be sent to a different URL by LOVD.
+        $sCurrentURL = $this->driver->getCurrentURL();
+        if (substr($sCurrentURL, -10) != '/src/login') {
+            // Already logged in, log out first!
+            $this->logout();
+            // If we get the situation where the login form no longer forwards you
+            //  if you're already logged in, we'll end up in an endless loop here.
+            return $this->login($sUsername, $sPassword);
+        }
+
+        // We're now at the login form.
+        $this->enterValue(WebDriverBy::name('username'), $sUsername);
+        $this->enterValue(WebDriverBy::name('password'), $sPassword);
+        $element = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Log in"]'));
+        usleep(100000); // If not waiting at all, sometimes you're just not logged in, for some reason.
+        $element->click();
+
+        // To make sure we've left the login form, check the URL.
+        // Wait a maximum of 5 seconds with intervals of 500ms, until our test is true.
+        $this->driver->wait(5, 500)->until(function ($driver) {
+            return substr($driver->getCurrentURL(), -10) != '/src/login';
+        });
+    }
+
+
+
+    protected function logout ()
+    {
+        // Logs user in, using the given username and password. When already
+        //  logged in, this function will log you out. This may be done more
+        //  intelligently later, having this function check if you're already
+        //  the requested user.
+
+        $this->driver->get(ROOT_URL . '/src/logout');
+        // Test for the "Log in" link to be shown. This link below
+        //  will already throw an exception if it fails.
+        $this->driver->findElement(WebDriverBy::xpath('//a/b[text()="Log in"]'));
     }
 
 
