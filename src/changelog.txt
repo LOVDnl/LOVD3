@@ -5,6 +5,14 @@
  *************/
 
 /**************************
+ * 3.0 Build 17 patch 01
+ * 2016-09-22
+ *********/
+ * Fixed bug; Custom links no longer functioned in most columns in custom data
+   listings.
+
+
+/**************************
  * 3.0 Build 17 (tag:3.0-17)
  * 2016-09-21
  *********/
@@ -33,6 +41,7 @@
    Closes #101: "New columns for diseases viewlist: tissue, alias, remarks".
  * Fixed bug; The proxy server settings were often ignored by LOVD, and proxy
    servers could not be used when using HTTPS, such as with Mutalyzer resources.
+   Closes #112: "SOAP using HTTPS over proxy using PHP 5.6.0 doesn't work".
    (thanks to Jorge Oliveira, Centro Hospitalar do Porto, for reporting)
  * Fixed bug; For curators, editing a disease could result in a fatal error in
    some conditions.
