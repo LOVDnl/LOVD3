@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-02
- * Modified    : 2016-09-06
+ * Modified    : 2016-09-22
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,17 +42,17 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 {
     // Base class for all Selenium tests.
 
-    // public webdriver instance
+    // public webdriver instance.
     public $driver;
 
-    protected function setUp()
+    protected function setUp ()
     {
         // This method is called before every test invocation.
         $this->driver = getWebDriverInstance();
     }
 
 
-    protected function waitUntil($condition)
+    protected function waitUntil ($condition)
     {
         // Convenience function to let the webdriver wait for a standard amount
         // of time on the given condition.
@@ -61,7 +61,7 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     }
 
 
-    protected function enterValue($locator, $sText)
+    protected function enterValue ($locator, $sText)
     {
         // Convenience function to let the webdriver type text $text in an
         // element specified by $locator.
@@ -98,7 +98,8 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     }
 
 
-    protected function setCheckBoxValue($locator, $bSetChecked) {
+    protected function setCheckBoxValue ($locator, $bSetChecked)
+    {
         // Set checkbox specified by $locator to 'checked' if $bSetChecked or
         // not 'checked' otherwise.
         $element = $this->driver->findElement($locator);
@@ -121,19 +122,20 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     }
 
 
-    protected function check($locator)
+    protected function check ($locator)
     {
         $this->setCheckBoxValue($locator, true);
     }
 
 
-    protected  function unCheck($locator)
+    protected  function unCheck ($locator)
     {
         $this->setCheckBoxValue($locator, false);
     }
 
 
-    protected function isElementPresent($locator) {
+    protected function isElementPresent ($locator)
+    {
         try {
             $this->driver->findElement($locator);
             return true;
@@ -143,21 +145,21 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     }
 
 
-    protected function chooseOkOnNextConfirmation()
+    protected function chooseOkOnNextConfirmation ()
     {
         $this->waitUntil(WebDriverExpectedCondition::alertIsPresent());
         $this->driver->switchTo()->alert()->accept();
     }
 
 
-    protected function getConfirmation()
+    protected function getConfirmation ()
     {
         // Return text displayed by confirmation dialog box.
         return $this->driver->switchTo()->alert()->getText();
     }
 
 
-    protected function removeAttribute($element, $attrName)
+    protected function removeAttribute ($element, $attrName)
     {
         // Remove attribute in current DOM. For element $element, remove
         // attribute with name $attrName.
@@ -166,7 +168,8 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     }
 
 
-    protected function  clickNoTimeout($element) {
+    protected function clickNoTimeout ($element)
+    {
         // Invoke click() on $element, but ignore any potential timeout. This
         // can be used for long page loads where one may want to set an
         // explicit wait limit later in the code.
