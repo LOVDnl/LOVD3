@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-09-09
+ * Modified    : 2016-09-22
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -795,8 +795,8 @@ class LOVD_CustomViewList extends LOVD_Object {
             $zData['VariantOnGenome/dbSNP'] = preg_replace('/(rs\d+)/', '<SPAN' . ($sView != 'list'? '' : ' onclick="cancelParentEvent(event);"') . '><A href="http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=' . "$1" . '" target="_blank">' . "$1" . '</A></SPAN>', $zData['VariantOnGenome/dbSNP']);
         }
 
-        foreach ($this->getCustomColsForCategory('VariantOnTranscript') as $sCol => $aCol) {
-            if ($_AUTH['level'] < LEVEL_MANAGER && !$this->nID) {
+        foreach ($this->aColumns as $sCol => $aCol) {
+            if ($_AUTH['level'] < LEVEL_MANAGER && !$this->nID && substr($sCol, 0, 19) == 'VariantOnTranscript') {
                 // Not a special authorized person, no gene selected, VOT column.
                 // A column that has been disabled for this gene, may still show its value to collaborators and higher.
                 if ((!$_AUTH || !in_array($zData['geneid'], $_AUTH['allowed_to_view'])) && ((is_array($zData['geneid']) && count(array_diff($zData['geneid'], $aCol['public_view']))) || (!is_array($zData['geneid']) && !in_array($zData['geneid'], $aCol['public_view'])))) {
