@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-02
- * Modified    : 2016-09-22
- * For LOVD    : 3.0-17
+ * Modified    : 2016-09-23
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -164,7 +164,9 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
             $nSlept += $nSleepStep;
             if ($nSlept >= $nSleepMax && substr($this->driver->getCurrentURL(), -10) == '/src/login') {
                 // Failed log in, let's try again.
-                print('Failed log in attempt, trying again...' . "\n");
+                // Warning! This has the potential of an endless loop.
+                print("\n" .
+                      'Failed log in attempt, trying again...');
                 return $this->login($sUsername, $sPassword);
             }
         }
