@@ -6,7 +6,8 @@
 ## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
 serverFile=selenium-server-standalone-2.53.1.jar
-chromeDriverSrc=http://chromedriver.storage.googleapis.com/2.23/chromedriver_linux64.zip
+chromeDriverVersion=`curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
+chromeDriverSrc=http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip
 
 phpVersion=`php -v`
 
@@ -26,7 +27,7 @@ if [ ! -e ${serverFile} ]; then
     exit
 fi
 
-echo "Download chromedriver"
+echo "Download chromedriver from ${chromeDriverSrc}"
 driverArchive=${chromeDriverSrc##*/}
 curl $chromeDriverSrc > $driverArchive
 if [ ! -f $driverArchive ]; then
