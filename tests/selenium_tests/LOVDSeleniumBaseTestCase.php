@@ -151,8 +151,9 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         $this->enterValue(WebDriverBy::name('password'), $sPassword);
         $element = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Log in"]'));
         $this->driver->takeScreenshot(dirname(__FILE__) . '/../test_results/error_screenshots/login_attempt_' . date('Y-m-d\TH-i-s') . '.png');
-        usleep(500000); // If not waiting at all, sometimes you're just not logged in, for some reason.
+        usleep(1000000); // If not waiting at all, sometimes you're just not logged in, for some reason.
         $element->click();
+        $this->driver->takeScreenshot(dirname(__FILE__) . '/../test_results/error_screenshots/login_attempt_' . date('Y-m-d\TH-i-s') . '.png');
 
         // To make sure we've left the login form, check the URL.
         // Wait a maximum of 5 seconds with intervals of 500ms, until our test is true.
