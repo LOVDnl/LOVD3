@@ -220,6 +220,8 @@ if (!$_AUTH) {
 
     lovd_errorPrint();
 
+    var_dump($_POST);
+
     print('      <FORM action="login" method="post" id="login">' . "\n" .
          (!$_POST['referer']? '' :
           '        <INPUT type="hidden" name="referer" value="' . htmlspecialchars($_POST['referer']) . '">' . "\n") .
