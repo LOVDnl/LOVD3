@@ -153,11 +153,26 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         usleep(100000); // If not waiting at all, sometimes you're just not logged in, for some reason.
         $element->click();
 
-        // To make sure we've left the login form, check the URL.
-        // Wait a maximum of 5 seconds with intervals of 500ms, until our test is true.
-        $this->driver->wait(5, 500)->until(function ($driver) {
-            return substr($driver->getCurrentURL(), -10) != '/src/login';
-        });
+        // We're seeing a small number of failed logins, reasons unknown. Since
+        //  we rely already on the login form to forward logged in users, we'll
+        //  just retry this function untill we've gotten in.
+        $nSleepMax = 2000000; // Wait 2 seconds second in total.
+        $nSlept = 0;
+        $nSleepStep = 500000; // Sleep for half a second, each time.
+        while (substr($this->driver->getCurrentURL(), -10) == '/src/login') {
+            usleep($nSleepStep);
+            $nSlept += $nSleepStep;
+            if ($nSlept >= $nSleepMax && substr($this->driver->getCurrentURL(), -10) == '/src/login') {
+                // Failed log in, let's try again.
+                print('Failed log in attempt, trying again...' . "\n");
+                return $this->login($sUsername, $sPassword);
+            }
+        }
+//        // To make sure we've left the login form, check the URL.
+//        // Wait a maximum of 5 seconds with intervals of 500ms, until our test is true.
+//        $this->driver->wait(5, 500)->until(function ($driver) {
+//            return substr($driver->getCurrentURL(), -10) != '/src/login';
+//        });
     }
 
 
