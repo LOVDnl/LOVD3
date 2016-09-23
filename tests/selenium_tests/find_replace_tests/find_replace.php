@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2016-09-09
+ * Modified    : 2016-09-23
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -64,17 +65,16 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         // Open find and replace for Reference col.
         $this->openFRMenuForCol(6);
 
-        $columnReference = $this->driver->findElement(WebDriverBy::id('viewlistFRColDisplay_VOG'));
-        $this->assertEquals($columnReference->getText(), 'Reference');
+        $this->assertEquals($this->driver->findElement(
+            WebDriverBy::id('viewlistFRColDisplay_VOG'))->getText(), 'Reference');
 
         $this->enterValue(WebDriverBy::name('FRReplace_VOG'), 'newvalue');
 
         $previewButton = $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'));
         $previewButton->click();
 
-        $previewColHeading = $this->driver->findElement(
-                WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'));
-        $this->assertContains($previewColHeading->getText(), 'Reference (PREVIEW)');
+        $this->assertContains($this->driver->findElement(
+            WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'))->getText(), 'Reference (PREVIEW)');
 
         $aNewValueElements = $this->driver->findElements(WebDriverBy::xpath('//td[text()="newvalue"]'));
         $this->assertEquals(count($aNewValueElements), 25);
