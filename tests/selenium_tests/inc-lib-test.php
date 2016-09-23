@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-09-09
- * For LOVD    : 3.0-17
+ * Modified    : 2016-09-23
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -61,7 +62,9 @@ function getWebDriverInstance()
             $options->addArguments(array('--no-sandbox'));
             $capabilities = DesiredCapabilities::chrome();
             $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
-            $webDriver = RemoteWebDriver::create($host, $capabilities);
+            $webDriver = RemoteWebDriver::create($host, $capabilities,
+                WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
+                WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
         } else {
             // Create Firefox webdriver
             fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host . PHP_EOL);
