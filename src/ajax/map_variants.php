@@ -182,7 +182,7 @@ $_SESSION['mapping']['time_complete'] = 0;
 // Now we unlock the session. We'll update the unmappable, todo and time_complete values
 // when exiting the script. We do it this way because the mapping script is called
 // asynchronously, but the session data is locked by PHP to prevent race conditions.
-// This forces it to be come completely synchronous. Without closing the session, the
+// This forces it to become completely synchronous. Without closing the session, the
 // user will not be able to do anything in LOVD until this script finishes.
 session_write_close();
 

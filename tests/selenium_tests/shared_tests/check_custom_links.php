@@ -57,6 +57,16 @@ class CheckCustomLinks extends LOVDSeleniumWebdriverBaseTestCase
         // Load the in_gene view.
         $this->driver->get(ROOT_URL . '/src/variants/in_gene');
 
+        // Filter on Reference, so we can find this link on the first page.
+        $sSelector = WebDriverBy::name('search_VariantOnGenome/Reference');
+        $this->enterValue($sSelector, 'Fokkema');
+        $oElement = $this->driver->findElement($sSelector);
+        // Use json_decode to send enter key to browser.
+        $oElement->sendKeys(json_decode('"\uE007"'));
+
+        // FIXME: It would be good if we can test for the VL to renew. Now just waiting a second.
+        sleep(1);
+
         // Find a custom link, and move the mouse over it.
         $oCustomLink = $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr/td/span[text()="Fokkema et al (2011)"]'));
         $this->driver->getMouse()->mouseMove($oCustomLink->getCoordinates());
