@@ -5,6 +5,14 @@
  *************/
 
 /**************************
+ * 3.0 Build 17 patch 02
+ * 2016-09-2?
+ *********/
+ * Fixed bug; Custom columns could no longer be edited because of a double
+   inclusion of a library file.
+
+
+/**************************
  * 3.0 Build 17 patch 01
  * 2016-09-22
  *********/
