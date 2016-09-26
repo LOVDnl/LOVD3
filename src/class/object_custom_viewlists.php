@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-09-22
+ * Modified    : 2016-09-26
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -125,7 +125,8 @@ class LOVD_CustomViewList extends LOVD_Object {
         $sRowIDSQL = null;
         if (in_array('VariantOnGenome', $aObjects) && (in_array('VariantOnTranscript', $aObjects) ||
                 in_array('VariantOnTranscriptUnique', $aObjects))) {
-            $aSQL['SELECT'] = 'CONCAT(vog.id, ":", vot.transcriptid) AS row_id';
+            // Use "vogid:votid" as row_id, fall back to "vogid" if there is no votid.
+            $aSQL['SELECT'] = 'CONCAT(vog.id, IFNULL(CONCAT(":", vot.transcriptid), "")) AS row_id';
             $bSetRowID = true;
         } elseif (in_array('Transcript', $aObjects)) {
             $aSQL['SELECT'] = 't.id AS row_id';
