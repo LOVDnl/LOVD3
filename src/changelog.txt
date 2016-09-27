@@ -4,10 +4,11 @@
  *
  *************/
 
-/**************************
- * 3.0 Build 17 patch 02
- * 2016-09-2?
+/************************************
+ * 3.0 Build 17 patch 02 (tag:3.0-17)
+ * 2016-09-27
  *********/
+ * Fixed bug; Some data listings had some rows that were no longer clickable.
  * Fixed bug; Custom columns could no longer be edited because of a double
    inclusion of a library file.
 
@@ -21,7 +22,7 @@
 
 
 /**************************
- * 3.0 Build 17 (tag:3.0-17)
+ * 3.0 Build 17
  * 2016-09-21
  *********/
  * Fixed bug; Impossible for users of level submitter to browse the user list
