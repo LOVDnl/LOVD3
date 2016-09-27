@@ -10,21 +10,10 @@ class CreateDiseaseCMTTest extends LOVDSeleniumWebdriverBaseTestCase
     {
         $this->driver->get(ROOT_URL . "/src/diseases?create");
         $this->assertEquals("To access this area, you need at least Curator clearance.", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        $this->driver->get(ROOT_URL . "/src/logout");
 
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
+        $this->logout();
+        $this->login('admin', 'test1234');
 
-        $this->driver->get(ROOT_URL . "/src/login");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/login$/', $this->driver->getCurrentURL()));
-        $this->enterValue(WebDriverBy::name("username"), "admin");
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $element->click();
-        
         $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='Create a new disease information entry.']"));
         $element->click();
         
@@ -44,20 +33,8 @@ class CreateDiseaseCMTTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->waitUntil(WebDriverExpectedCondition::titleContains("View disease"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/diseases\/00001$/', $this->driver->getCurrentURL()));
-        $this->driver->get(ROOT_URL . "/src/logout");
 
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-
-        $this->driver->get(ROOT_URL . "/src/login");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/login$/', $this->driver->getCurrentURL()));
-        $this->enterValue(WebDriverBy::name("username"), "collaborator");
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $element->click();
-        
+        $this->logout();
+        $this->login('collaborator', 'test1234');
     }
 }

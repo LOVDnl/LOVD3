@@ -8,20 +8,8 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToCMTIndividualTest extends
 {
     public function testPostFinishAddVariantOnlyDescribedOnGenomicLevelToCMTIndividual()
     {
-        $this->driver->get(ROOT_URL . "/src/logout");
-
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-
-        $this->driver->get(ROOT_URL . "/src/login");
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/login$/', $this->driver->getCurrentURL()));
-        $this->enterValue(WebDriverBy::name("username"), "submitter");
-        $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $element->click();
+        $this->logout();
+        $this->login('submitter', 'test1234');
         
         $this->driver->get(ROOT_URL . "/src/");
 
@@ -58,7 +46,7 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToCMTIndividualTest extends
         // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
         $this->driver->getMouse()->mouseMove(null, 200, 200);
 
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[21520333]}");
+        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "11/10000");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();

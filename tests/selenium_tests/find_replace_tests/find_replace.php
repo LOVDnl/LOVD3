@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2016-09-09
+ * Modified    : 2016-09-23
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -64,17 +65,25 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         // Open find and replace for Reference col.
         $this->openFRMenuForCol(6);
 
-        $columnReference = $this->driver->findElement(WebDriverBy::id('viewlistFRColDisplay_VOG'));
-        $this->assertEquals($columnReference->getText(), 'Reference');
+        $this->assertEquals($this->driver->findElement(
+            WebDriverBy::id('viewlistFRColDisplay_VOG'))->getText(), 'Reference');
 
         $this->enterValue(WebDriverBy::name('FRReplace_VOG'), 'newvalue');
 
         $previewButton = $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'));
         $previewButton->click();
 
-        $previewColHeading = $this->driver->findElement(
-                WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'));
-        $this->assertContains($previewColHeading->getText(), 'Reference (PREVIEW)');
+        // Click on header to close tooltip.
+        $previewTooltip = $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@class="ui-tooltip-content" and contains(., "Preview changes")]'));
+        $mainHeader = $this->driver->findElement(WebDriverBy::xpath('//h2[contains(., "LOVD")]'));
+        $mainHeader->click();
+
+        // Check if tooltip is closed.
+        $this->waitUntil(WebDriverExpectedCondition::stalenessOf($previewTooltip));
+
+        $this->assertContains($this->driver->findElement(
+            WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'))->getText(), 'Reference (PREVIEW)');
 
         $aNewValueElements = $this->driver->findElements(WebDriverBy::xpath('//td[text()="newvalue"]'));
         $this->assertEquals(count($aNewValueElements), 25);
@@ -178,8 +187,10 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Include explicit wait for overlay divs. Going directly to clicking sometimes
         // results in a StaleElementReferenceException.
-        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(
-            WebDriverBy::xpath('//div[@class="vl_overlay"]')));
+        $this->waitUntil(function ($driver) use ($nCol) {
+            $aOverlays = $driver->findElements(WebDriverBy::xpath('//div[@class="vl_overlay"]'));
+            return count($aOverlays) >= $nCol;
+        });
         $columnOverlay = $this->driver->findElement(
                 WebDriverBy::xpath('//div[@class="vl_overlay"][' . $nCol . ']'));
         $columnOverlay->click();

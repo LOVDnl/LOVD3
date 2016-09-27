@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-02
- * Modified    : 2016-09-06
- * For LOVD    : 3.0-17
+ * Modified    : 2016-09-23
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -31,10 +32,11 @@
 
 require_once 'inc-lib-test.php';
 
-use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\WebDriverException;
 use \Facebook\WebDriver\Remote\LocalFileDetector;
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 
 
@@ -42,26 +44,45 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 {
     // Base class for all Selenium tests.
 
-    // public webdriver instance
+    // public webdriver instance.
     public $driver;
 
-    protected function setUp()
+
+
+    protected function check ($locator)
     {
-        // This method is called before every test invocation.
-        $this->driver = getWebDriverInstance();
+        $this->setCheckBoxValue($locator, true);
     }
 
 
-    protected function waitUntil($condition)
+
+    protected function chooseOkOnNextConfirmation ()
     {
-        // Convenience function to let the webdriver wait for a standard amount
-        // of time on the given condition.
-        return $this->driver->wait(WEBDRIVER_MAX_WAIT_DEFAULT, WEBDRIVER_POLL_INTERVAL_DEFAULT)
-                            ->until($condition);
+        $this->waitUntil(WebDriverExpectedCondition::alertIsPresent());
+        $this->driver->switchTo()->alert()->accept();
     }
 
 
-    protected function enterValue($locator, $sText)
+
+    protected function clickNoTimeout ($element)
+    {
+        // Invoke click() on $element, but ignore any potential timeout. This
+        // can be used for long page loads where one may want to set an
+        // explicit wait limit later in the code.
+        try {
+            $element->click();
+        } catch (WebDriverException $e) {
+            if (strpos($e->getMessage(), 'Operation timed out') === false) {
+                // Not a timeout, but a different reason for failing, rethrow
+                // the exception.
+                throw $e;
+            }
+        }
+    }
+
+
+
+    protected function enterValue ($locator, $sText)
     {
         // Convenience function to let the webdriver type text $text in an
         // element specified by $locator.
@@ -98,7 +119,105 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     }
 
 
-    protected function setCheckBoxValue($locator, $bSetChecked) {
+
+    protected function getConfirmation ()
+    {
+        // Return text displayed by confirmation dialog box.
+        return $this->driver->switchTo()->alert()->getText();
+    }
+
+
+
+    protected function login ($sUsername, $sPassword)
+    {
+        // Logs user in, using the given username and password. When already
+        //  logged in, this function will log you out. This may be done more
+        //  intelligently later, having this function check if you're already
+        //  the requested user.
+
+        $this->driver->get(ROOT_URL . '/src/login');
+        // When already logged in, we will be sent to a different URL by LOVD.
+        $sCurrentURL = $this->driver->getCurrentURL();
+        if (substr($sCurrentURL, -10) != '/src/login') {
+            // Already logged in, log out first!
+            $this->logout();
+            // If we get the situation where the login form no longer forwards you
+            //  if you're already logged in, we'll end up in an endless loop here.
+            return $this->login($sUsername, $sPassword);
+        }
+
+        // We're now at the login form.
+        $this->enterValue(WebDriverBy::name('username'), $sUsername);
+        $this->enterValue(WebDriverBy::name('password'), $sPassword);
+        $element = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Log in"]'));
+        usleep(100000); // If not waiting at all, sometimes you're just not logged in, for some reason.
+        $element->click();
+
+        // We're seeing a small number of failed logins, reasons unknown. Since
+        //  we rely already on the login form to forward logged in users, we'll
+        //  just retry this function untill we've gotten in.
+        $nSleepMax = 2000000; // Wait 2 seconds second in total.
+        $nSlept = 0;
+        $nSleepStep = 500000; // Sleep for half a second, each time.
+        while (substr($this->driver->getCurrentURL(), -10) == '/src/login') {
+            usleep($nSleepStep);
+            $nSlept += $nSleepStep;
+            if ($nSlept >= $nSleepMax && substr($this->driver->getCurrentURL(), -10) == '/src/login') {
+                // Failed log in, let's try again.
+                // Warning! This has the potential of an endless loop.
+                print("\n" .
+                      'Failed log in attempt, trying again...');
+                return $this->login($sUsername, $sPassword);
+            }
+        }
+//        // To make sure we've left the login form, check the URL.
+//        // Wait a maximum of 5 seconds with intervals of 500ms, until our test is true.
+//        $this->driver->wait(5, 500)->until(function ($driver) {
+//            return substr($driver->getCurrentURL(), -10) != '/src/login';
+//        });
+    }
+
+
+
+    protected function logout ()
+    {
+        // Logs user in, using the given username and password. When already
+        //  logged in, this function will log you out. This may be done more
+        //  intelligently later, having this function check if you're already
+        //  the requested user.
+
+        $this->driver->get(ROOT_URL . '/src/logout');
+        // Test for the "Log in" link to be shown. This link below
+        //  will already throw an exception if it fails.
+        $this->driver->findElement(WebDriverBy::xpath('//a/b[text()="Log in"]'));
+    }
+
+
+
+    protected function isElementPresent ($locator)
+    {
+        try {
+            $this->driver->findElement($locator);
+            return true;
+        } catch (NoSuchElementException $e) {
+            return false;
+        }
+    }
+
+
+
+    protected function removeAttribute ($element, $attrName)
+    {
+        // Remove attribute in current DOM. For element $element, remove
+        // attribute with name $attrName.
+        $this->driver->executeScript('arguments[0].removeAttribute(arguments[1]);',
+            array($element, $attrName));
+    }
+
+
+
+    protected function setCheckBoxValue ($locator, $bSetChecked)
+    {
         // Set checkbox specified by $locator to 'checked' if $bSetChecked or
         // not 'checked' otherwise.
         $element = $this->driver->findElement($locator);
@@ -121,63 +240,27 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     }
 
 
-    protected function check($locator)
+
+    protected function setUp ()
     {
-        $this->setCheckBoxValue($locator, true);
+        // This method is called before every test invocation.
+        $this->driver = getWebDriverInstance();
     }
 
 
-    protected  function unCheck($locator)
+
+    protected  function unCheck ($locator)
     {
         $this->setCheckBoxValue($locator, false);
     }
 
 
-    protected function isElementPresent($locator) {
-        try {
-            $this->driver->findElement($locator);
-            return true;
-        } catch (NoSuchElementException $e) {
-            return false;
-        }
-    }
 
-
-    protected function chooseOkOnNextConfirmation()
+    protected function waitUntil ($condition)
     {
-        $this->waitUntil(WebDriverExpectedCondition::alertIsPresent());
-        $this->driver->switchTo()->alert()->accept();
-    }
-
-
-    protected function getConfirmation()
-    {
-        // Return text displayed by confirmation dialog box.
-        return $this->driver->switchTo()->alert()->getText();
-    }
-
-
-    protected function removeAttribute($element, $attrName)
-    {
-        // Remove attribute in current DOM. For element $element, remove
-        // attribute with name $attrName.
-        $this->driver->executeScript('arguments[0].removeAttribute(arguments[1]);',
-                                     array($element, $attrName));
-    }
-
-
-    protected function  clickNoTimeout($element) {
-        // Invoke click() on $element, but ignore any potential timeout. This
-        // can be used for long page loads where one may want to set an
-        // explicit wait limit later in the code.
-        try {
-            $element->click();
-        } catch (WebDriverException $e) {
-            if (strpos($e->getMessage(), 'Operation timed out') === false) {
-                // Not a timeout, but a different reason for failing, rethrow
-                // the exception.
-                throw $e;
-            }
-        }
+        // Convenience function to let the webdriver wait for a standard amount
+        // of time on the given condition.
+        return $this->driver->wait(WEBDRIVER_MAX_WAIT_DEFAULT, WEBDRIVER_POLL_INTERVAL_DEFAULT)
+                            ->until($condition);
     }
 }

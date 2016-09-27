@@ -144,6 +144,7 @@
             <file>manager_tests/test_block_submitter_registration.php</file>
             <file>manager_tests/create_announcement_readonly.php</file>
             <file>manager_tests/test_read_only_state.php</file>
+            <file>shared_tests/check_custom_links.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="import_tests">
