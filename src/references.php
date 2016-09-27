@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2015-12-01
- * For LOVD    : 3.0-15
+ * Modified    : 2016-09-26
+ * For LOVD    : 3.0-17-patch-02
  *
  * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -72,7 +72,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
     // URL: /references/PMID:...../image
     // View specific DOI or PMID.
 
-    require ROOT_PATH . 'inc-lib-columns.php';
+    require_once ROOT_PATH . 'inc-lib-columns.php';
 
     if (substr($aPathElements[1], 0, 4) == 'DOI:') {
         $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '}%';
