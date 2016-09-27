@@ -125,7 +125,7 @@ class LOVD_CustomViewList extends LOVD_Object {
         $sRowIDSQL = null;
         if (in_array('VariantOnGenome', $aObjects) && (in_array('VariantOnTranscript', $aObjects) ||
                 in_array('VariantOnTranscriptUnique', $aObjects))) {
-            // Use "vogid:votid" as row_id, fall back to "vogid" if there is no votid.
+            // Use "vog.id:vot.transcriptid" as row_id, fall back to "vog.id" if there is no VOT entry.
             $aSQL['SELECT'] = 'CONCAT(vog.id, IFNULL(CONCAT(":", vot.transcriptid), "")) AS row_id';
             $bSetRowID = true;
         } elseif (in_array('Transcript', $aObjects)) {
