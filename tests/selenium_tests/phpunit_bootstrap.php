@@ -68,3 +68,7 @@ define('SELENIUM_TEST_SLEEP', 10);
 // check/uncheck a box the first time.
 define('MAX_TRIES_CHECKING_BOX', 10);
 
+// Maximum number of tries to refresh an element after a
+// StaleElementReferenceException has been thrown.
+define('MAX_TRIES_STALE_REFRESH', 10);
+
