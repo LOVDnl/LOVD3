@@ -83,12 +83,17 @@ class LOVD_Template {
         $this->aMenu =
             array(
                         'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'View all genes'),
+                        'gene_panels' => 'View all gene panels',
                         'genes_' =>
                          array(
-                                '' => array('menu_magnifying_glass.png', 'View all genes', 0),
-                                '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View ' . $_SESSION['currdb'] . ' gene homepage', 0),
-                                '/genes/' . $_SESSION['currdb'] . '/graphs' => array('menu_graphs.png', 'View graphs about the ' . $_SESSION['currdb'] . ' gene database', 0),
-                                'create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
+                             '/gene_panels' => array('menu_magnifying_glass.png', 'View all gene panels', 0),
+                             '/gene_panels?create' => array('plus.png', 'Create a new gene panel', LEVEL_SUBMITTER),
+                             'hr',
+                             '/genes' => array('menu_magnifying_glass.png', 'View all genes', 0),
+                             '/gene_statistics' => array('menu_magnifying_glass.png', 'View all gene statistics', 0),
+                             '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View ' . $_SESSION['currdb'] . ' gene homepage', 0),
+                             '/genes/' . $_SESSION['currdb'] . '/graphs' => array('menu_graphs.png', 'View graphs about the ' . $_SESSION['currdb'] . ' gene database', 0),
+                             '/genes?create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
                               ),
                         'transcripts' => 'View transcripts',
                         'transcripts_' =>
@@ -191,6 +196,7 @@ class LOVD_Template {
                                 'hr',
                                 '/download/all' => array('menu_save.png', 'Download all data', LEVEL_MANAGER),
                                 '/import' => array('menu_import.png', 'Import data', LEVEL_MANAGER),
+                                '/import?schedule' => array('menu_clock.png', 'Schedule data for import', LEVEL_MANAGER),
                                 'hr',
                                 '/logs' => array('menu_logs.png', 'View system logs', LEVEL_MANAGER),
                                 'hr',
@@ -225,6 +231,29 @@ class LOVD_Template {
             unset($this->aMenu['diseases_']['search_genes_=']);
             unset($this->aMenu['screenings_']['/screenings/']);
             unset($this->aMenu['configuration_']);
+        }
+
+        if (LOVD_plus) {
+            // Unset unneeded tabs for Diagnostics.
+            unset($this->aMenu['genes']);
+            unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
+            unset($this->aMenu['variants'], $this->aMenu['variants_']);
+            unset($this->aMenu['screenings'], $this->aMenu['screenings_']);
+            unset($this->aMenu['submit'], $this->aMenu['submit_']);
+            unset($this->aMenu['configuration'], $this->aMenu['configuration_']);
+            unset($this->aMenu['setup_']['/download/columns']);
+            unset($this->aMenu['setup_']['/download/all']);
+            if ($_AUTH && $_AUTH['level'] <= LEVEL_ANALYZER) {
+                unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            }
+        } else {
+            // Remove menu items for non-LOVD+.
+            unset($this->aMenu['gene_panels']);
+            unset($this->aMenu['genes_']['/gene_panels']);
+            unset($this->aMenu['genes_']['/gene_panels?create']);
+            unset($this->aMenu['genes_'][0]);
+            unset($this->aMenu['genes_']['/gene_statistics']);
+            unset($this->aMenu['setup_']['/import?schedule']);
         }
 
         if (!defined('PAGE_TITLE')) {

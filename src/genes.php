@@ -34,6 +34,9 @@
 
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+if (LOVD_plus) {
+    define('TAB_SELECTED', 'gene_panels');
+}
 
 if ($_AUTH) {
     // If authorized, check for updates.
@@ -192,7 +195,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
         $aNavigation[$_PE[0] . '/' . $sID . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[$_PE[0] . '/' . $sID . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
         $aNavigation['columns/VariantOnTranscript']      = array('menu_columns.png', 'View all available variant columns', 1);
-        $aNavigation['download/all/gene/' . $sID]        = array('menu_save.png', 'Download all this gene\'s data', 1);
+        if (!LOVD_plus) {
+            $aNavigation['download/all/gene/' . $sID]        = array('menu_save.png', 'Download all this gene\'s data', 1);
+        }
         $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . 'scripts/refseq_parser.php?step=1&amp;symbol=' . $sID . '\', \'refseq_parser\', 900, 500);'] = array('menu_scripts.png', 'Create human-readable refseq file', ($zData['refseq_UD'] && count($zData['transcripts'])));
     }
     lovd_showJGNavigation($aNavigation, 'Genes');
@@ -476,7 +481,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
 
                 // Make current user curator of this gene.
-                $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+                if (!LOVD_plus) {
+                    $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+                }
 
                 // Add diseases.
                 $aSuccessDiseases = array();
@@ -583,7 +590,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
                 // Thank the user...
                 // If there is only one user, don't forward to the Add curators page.
-                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
+                if (!LOVD_plus && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id'] . '?authorize');
                 } else {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id']);
