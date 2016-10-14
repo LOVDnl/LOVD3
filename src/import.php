@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-08-08
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -35,6 +35,7 @@ define('TAB_SELECTED', 'setup');
 require ROOT_PATH . 'inc-init.php';
 ini_set('auto_detect_line_endings', true); // So we can work with Mac files also...
 set_time_limit(0); // Disable time limit, parsing may take a long time.
+session_write_close(); // Also don't care about the session (in fact, it locks the whole LOVD while this page is running).
 
 // Require at least curator clearance.
 lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
@@ -408,6 +409,10 @@ if (POST) {
         require ROOT_PATH . 'class/progress_bar.php';
         $_BAR = array(new ProgressBar('parser', 'Parsing file...'));
         $_BAR[0]->setMessageVisibility('done', true);
+        if (LOVD_plus) {
+            // Diagnostics: Find default gene we'll use for all VOTs, since the gene is always the same anyway.
+            $sDefaultGene = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
+        }
 
 
 
@@ -800,7 +805,8 @@ if (POST) {
             // Data status.
             if (in_array('statusid', $aSection['allowed_columns']) && empty($aLine['statusid']) && $sMode != 'update') {
                 // Status not filled in. Set to Public.
-                $aLine['statusid'] = STATUS_OK;
+                // Diagnostics: For LOVD+, the default is STATUS_HIDDEN.
+                $aLine['statusid'] = (LOVD_plus? STATUS_HIDDEN : STATUS_OK);
             }
 
             // General checks: required fields defined by import.
@@ -835,6 +841,12 @@ if (POST) {
                     $bGeneInDB = true;
                     // Store for the next VOT.
                     $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']] = array('id' => $aLine['transcriptid'], 'geneid' => $sGene, 'todo' => '');
+                }
+                if (LOVD_plus) {
+                    // Diagnostics: Simple method to save a lot of memory and parsing time; since all genes should be equal, I'm creating the VOT object just once.
+                    // This will save a lot of memory (each VOT object takes 0.05 MB == 500 MB per 10.000 VOTs, and we often have 40.000 or so) and parsing time.
+                    // Selecting a gene that exists, so transcripts and columns will be filled (needed to actually make the checkFields() work.)
+                    $sGene = $sDefaultGene;
                 }
                 // Only instantiate an object when a gene is found for a transcript.
                 if ($sGene) {
@@ -1003,7 +1015,7 @@ if (POST) {
                     // When updating, if a error is triggered by a field that is
                     // not in the file, then this error is unrelated to the data
                     // currently being processed so we should ignore the error.
-                    if ($sMode == 'update' && !empty($_ERROR['fields'][$i]) && !in_array($_ERROR['fields'][$i], $aColumns)) {
+                    if ($sMode == 'update' && !empty($_ERROR['fields'][$i]) && !isset($aColumns[$_ERROR['fields'][$i]])) {
                         // Ignoring error!
                         unset($_ERROR['fields'][$i], $_ERROR['messages'][$i]);
                         continue;
@@ -2112,8 +2124,8 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 }
                 $aGenes = array_unique($aGenes);
                 $nGenes = count($aGenes);
-                lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries' . (!$aGenes? '' : ' (' . ($nGenes > 100? $nGenes . ' genes' : implode(', ', $aGenes)) . ')') . '.');
-                lovd_setUpdatedDate($aGenes);
+                lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries' . (!$aGenes? '' : ' (' . ($nGenes > 100? $nGenes . ' genes' : implode(', ', $aGenes)) . ')') . (ACTION != 'autoupload_scheduled_file' || !$sFile? '' : ' (' . $sFile . ')') . '.');
+                lovd_setUpdatedDate($aGenes); // FIXME; regardless of variant status... oh, well...
             }
             // FIXME: Why is this not empty?
             //var_dump(implode("\n", $aData));

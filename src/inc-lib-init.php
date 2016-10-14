@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-09-08
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -29,8 +29,6 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
-
-
 
 function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
 {
@@ -559,7 +557,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     // Check data type.
     if (!$Data) {
         return false;
-    } elseif (!in_array($sType, array('user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
+    } elseif (!in_array($sType, array('analysisrun', 'user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening', 'screening_analysis'))) {
         lovd_writeLog('Error', 'LOVD-Lib', 'lovd_isAuthorized() - Function didn\'t receive a valid datatype (' . $sType . ').');
         return false;
     }
@@ -609,6 +607,44 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
     }
 
+    if (LOVD_plus && $sType == 'analysisrun') {
+        // Authorization based on person who started the analysis run (note, not necessarily the whole analysis).
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            $nCreatorID = $_DB->query('SELECT created_by FROM ' . TABLE_ANALYSES_RUN . ' WHERE id = ?', array($Data))->fetchColumn();
+            if ($_AUTH['level'] >= LEVEL_ANALYZER && $nCreatorID == $_AUTH['id']) {
+                // At least Analyzer (Managers don't get to this point).
+                if ($bSetUserLevel) {
+                    $_AUTH['level'] = LEVEL_OWNER;
+                }
+                return 1;
+            }
+        }
+        return false;
+
+    } elseif (LOVD_plus && $sType == 'screening_analysis') {
+        // Authorization based on not being analyzed, or analysis being started by $_AUTH['id'].
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            $z = $_DB->query('SELECT analysis_statusid, analysis_by FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($Data))->fetchAssoc();
+            if ($_AUTH['level'] >= LEVEL_ANALYZER) {
+                // At least Analyzer (Managers don't get to this point).
+                if ($z['analysis_by'] == $_AUTH['id'] ||
+                    ($z['analysis_by'] === NULL && $z['analysis_statusid'] == ANALYSIS_STATUS_READY)) {
+                    if ($bSetUserLevel) {
+                        $_AUTH['level'] = LEVEL_OWNER;
+                    }
+                    return 1;
+                }
+            }
+        }
+        return false;
+    }
+
     // Makes it easier to check the data.
     if (!is_array($Data)) {
         $Data = array($Data);
@@ -645,7 +681,14 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         return 1;
     }
 
-    $bOwner = lovd_isOwner($sType, $Data);
+    if (LOVD_plus && $sType == 'variant') {
+        // LOVD+ allows LEVEL_OWNER authorization based on ownership of the screening analysis.
+        // We dump in multiple variants, but we should really only get one Screening back.
+        $aScreeningIDs = $_DB->query('SELECT DISTINCT screeningid FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($Data) - 1) . ')', $Data)->fetchAllColumn();
+        $bOwner = lovd_isAuthorized('screening_analysis', $aScreeningIDs[0], false);
+    } else {
+        $bOwner = lovd_isOwner($sType, $Data);
+    }
     if (($bOwner || lovd_isColleagueOfOwner($sType, $Data, true)) && $_CONF['allow_submitter_mods']) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_OWNER;
@@ -794,6 +837,8 @@ function lovd_magicUnquoteAll ()
 
 function lovd_parseConfigFile($sConfigFile)
 {
+    // Parses the given config file, checks all values, and returns array with parsed settings.
+
     // Config file exists?
     if (!file_exists($sConfigFile)) {
         lovd_displayError('Init', 'Can\'t find config.ini.php');
@@ -808,6 +853,7 @@ function lovd_parseConfigFile($sConfigFile)
     if (!$aConfig = file($sConfigFile)) {
         lovd_displayError('Init', 'Can\'t open config.ini.php');
     }
+
 
 
     // Parse config file.
@@ -894,6 +940,45 @@ function lovd_parseConfigFile($sConfigFile)
                 ),
         );
 
+    if (LOVD_plus) {
+        // Configure data file paths.
+        $aConfigValues['paths'] = array(
+            'data_files' =>
+                array(
+                    'required' => true,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+            'data_files_archive' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+            'alternative_ids' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => false,
+                ),
+            'confirm_variants' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+        );
+
+        // Configure instance details.
+        $aConfigValues['instance'] = array(
+            'name' =>
+                array(
+                    'required' => false,
+                    'default'  => '',
+                ),
+        );
+    }
+
     // SQLite doesn't need an username and password...
     if (isset($_INI['database']['driver']) && $_INI['database']['driver'] == 'sqlite') {
         unset($aConfigValues['database']['username']);
@@ -911,6 +996,9 @@ function lovd_parseConfigFile($sConfigFile)
                 } elseif (isset($aVar['required']) && $aVar['required']) {
                     // No default value, required setting not filled in.
                     lovd_displayError('Init', 'Error parsing config file: missing required value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
+                } elseif (!isset($_INI[$sSection][$sVar])){
+                    // Add the setting to the $_INI array to avoid notices.
+                    $_INI[$sSection][$sVar] = false;
                 }
 
             } else {
@@ -926,6 +1014,16 @@ function lovd_parseConfigFile($sConfigFile)
                         // Error: a value list is available, but it doesn't match the input!
                         lovd_displayError('Init', 'Error parsing config file: incorrect value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
                     }
+                }
+
+                // For paths, check readability or writability.
+                if (!empty($aVar['path_is_readable']) && !is_readable($_INI[$sSection][$sVar])) {
+                    // Error: The path should be readable, but it's not!
+                    lovd_displayError('Init', 'Error parsing config file: path for \'' . $sVar . '\' in section [' . $sSection . '] is not readable.');
+                }
+                if (!empty($aVar['path_is_writable']) && !is_writable($_INI[$sSection][$sVar])) {
+                    // Error: The path should be writable, but it's not!
+                    lovd_displayError('Init', 'Error parsing config file: path for \'' . $sVar . '\' in section [' . $sSection . '] is not writable.');
                 }
             }
         }
@@ -1501,5 +1599,41 @@ function lovd_convertIniValueToBytes ($sValue)
     }
 
     return $nValue;
+}
+
+
+
+
+
+function lovd_convertSecondsToTime ($sValue, $nDecimals = 0)
+{
+    // This function takes a number of seconds and converts it into whole
+    // minutes, hours, days, months or years.
+    // FIXME; Implement proper checks here? Regexp?
+
+    $nValue = (int) $sValue;
+    if (ctype_digit((string) $sValue)) {
+        $sValue .= 's';
+    }
+    $sLast = strtolower(substr($sValue, -1));
+    $nDecimals = (int) $nDecimals;
+
+    $aConversion =
+        array(
+            's' => array(60, 'm'),
+            'm' => array(60, 'h'),
+            'h' => array(24, 'd'),
+            'd' => array(265, 'y'),
+        );
+
+    foreach ($aConversion as $sUnit => $aConvert) {
+        list($nFactor, $sNextUnit) = $aConvert;
+        if ($sLast == $sUnit && $nValue > $nFactor) {
+            $nValue /= $nFactor;
+            $sLast = $sNextUnit;
+        }
+    }
+
+    return round($nValue, $nDecimals) . $sLast;
 }
 ?>
