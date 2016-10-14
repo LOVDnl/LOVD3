@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-09-26
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -57,7 +57,7 @@ class LOVD_CustomViewList extends LOVD_Object {
     function __construct ($aObjects = array(), $sOtherID = '')
     {
         // Default constructor.
-        global $_AUTH, $_CONF, $_DB;
+        global $_AUTH, $_CONF, $_DB, $_SETT;
 
         if (!is_array($aObjects)) {
             $aObjects = explode(',', $aObjects);
@@ -77,7 +77,7 @@ class LOVD_CustomViewList extends LOVD_Object {
         // FIXME; This join is not always needed (it's done for VOT columns, but sometimes they are excluded, or the join is not necessary because of the user level), exclude when not needed to speed up the query?
         //   Also, the select of public_view makes no sense of VOTs are restricted by gene.
         // Note: objects inheriting LOVD_custom implement selection of
-        // viewable columns in buildViewList()
+        //  viewable columns in buildViewList().
         $sSQL = 'SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
                     'WHERE ' . ($_AUTH['level'] >= ($sGene? LEVEL_COLLABORATOR : LEVEL_MANAGER)? '' : '((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     (!$sGene? 'GROUP BY c.id ' :
@@ -243,8 +243,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)';
                     }
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
-                    // If no collaborator, hide lines with hidden variants!
-                    if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+                    // If user level not high enough, hide lines with hidden variants!
+                    if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                         // Construct list of user IDs for current user and users who share access with him.
                         $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                         $sOwnerIDsSQL = join(', ', $aOwnerIDs);
@@ -423,8 +423,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                             // We have no fallback, so it won't join if we messed up somewhere!
                         }
                         $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
-                        // If no collaborator, hide hidden individuals (from the join, don't hide the line)!
-                        if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+                        // If user level not high enough, hide hidden individuals (from the join, don't hide the line)!
+                        if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                             // Construct list of user IDs for current user and users who share access with him.
                             $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                             $sOwnerIDsSQL = join(', ', $aOwnerIDs);
@@ -779,8 +779,9 @@ class LOVD_CustomViewList extends LOVD_Object {
         // In the VariantOnTranscriptUnique view the var_statusid can contain multiple IDs, these IDs are separated by a ",".
         // PHP always takes the first integer-like part of a string when a string and an integer are compared.
         // But to avoid problems in the future, only the first character is compared.
-        $bVarStatus = (!empty($zData['var_statusid']) && substr($zData['var_statusid'], 0, 1) <= STATUS_MARKED);
-        $bIndStatus = (!empty($zData['ind_statusid']) && $zData['ind_statusid'] <= STATUS_MARKED);
+        // We disable this feature in LOVD+.
+        $bVarStatus = (!LOVD_plus && !empty($zData['var_statusid']) && substr($zData['var_statusid'], 0, 1) <= STATUS_MARKED);
+        $bIndStatus = (!LOVD_plus && !empty($zData['ind_statusid']) && $zData['ind_statusid'] <= STATUS_MARKED);
 
         if ($bVarStatus && $bIndStatus) {
             $nStatus = min(substr($zData['var_statusid'], 0, 1), $zData['ind_statusid']);

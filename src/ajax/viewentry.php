@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-09
- * Modified    : 2016-08-09
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-11
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -41,6 +41,7 @@ if (empty($_GET['id']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', 
 // To prevent security problems if we forget to set a requirement here, we default to LEVEL_ADMIN.
 $aNeededLevel =
          array(
+                'ScreeningMOD' => 0, // LOVD+
                 'Transcript_Variant' => 0,
               );
 
@@ -69,6 +70,10 @@ if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
 }
 
 $sFile = ROOT_PATH . 'class/object_' . strtolower($_GET['object']) . 's.php';
+// Exception for LOVD+.
+if (LOVD_plus && substr($_GET['object'], -3) == 'MOD') {
+    $sFile = str_replace('mods.', 's.mod.', $sFile);
+}
 
 if (!file_exists($sFile)) {
     header('HTTP/1.0 404 Not Found');
@@ -79,7 +84,7 @@ if (!file_exists($sFile)) {
 
 $sObjectID = '';
 $nID = '';
-if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_ViewList'))) {
+if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_ViewList', 'ScreeningMOD'))) {
     if (isset($_GET['object_id'])) {
         $sObjectID = $_GET['object_id'];
     }

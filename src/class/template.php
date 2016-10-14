@@ -599,11 +599,11 @@ foreach ($zAnnouncements as $zAnnouncement) {
   <TR>
 <?php
         if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
-            $_CONF['logo_uri'] = 'gfx/LOVD3_logo145x50.jpg';
+            $_CONF['logo_uri'] = 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg';
         }
         $aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
         if (!is_array($aImage)) {
-            $aImage = array('130', '50', '', 'width="130" heigth="50"');
+            $aImage = array('145', '50', '', 'width="145" heigth="50"');
         }
         list($nWidth, $nHeight, $sType, $sSize) = $aImage;
         print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($nHeight + 5) . '">' . "\n" .
@@ -636,8 +636,9 @@ foreach ($zAnnouncements as $zAnnouncement) {
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
-                print('      ' . (!$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
-                    '<A href="login"><B>Log in</B></A>' . "\n");
+                // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
+                print('      ' . (LOVD_plus || !$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                      '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }
 

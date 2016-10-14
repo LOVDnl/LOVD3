@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-09-14
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1000,7 +1000,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     define('LOG_EVENT', 'GeneDelete');
 
     // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_requireAUTH((LOVD_plus? LEVEL_ADMIN : LEVEL_MANAGER));
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
