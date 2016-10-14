@@ -1355,10 +1355,25 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
         $sWidth = '100%';
     }
 
-    print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
-          '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE>' . (!$bBR? '' : '<BR>') . "\n\n");
+    switch (FORMAT) {
+        case 'text/plain':
+            // We're ignoring the $sWidth here.
+            $nWidth = 100;
+            $sSeparatorLine = '+' . str_repeat('-', $nWidth - 2) . '+';
+            $aMessage = explode("\n", wordwrap($sMessage, $nWidth - 4));
+            $aMessage = array_map('str_pad', $aMessage, array_fill(0, count($aMessage), $nWidth - 4));
+            print($sSeparatorLine . "\n" .
+                  '| ' . str_pad($aTypes[$sType], $nWidth - 4, ' ') . ' |' . "\n" .
+                  $sSeparatorLine . "\n" .
+                  '| ' . implode(" |\n| ", $aMessage) . ' |' . "\n" .
+                  $sSeparatorLine . (!$bBR? '' : "\n") . "\n");
+            break;
+        default:
+            print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
+                  '        <TR>' . "\n" .
+                  '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
+                  '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE>' . (!$bBR? '' : '<BR>') . "\n\n");
+    }
 }
 
 
@@ -1380,11 +1395,23 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '<UL id="viewentryMenu_' . $sID . '" class="jeegoocontext jeegooviewlist">' . "\n");
     foreach ($aOptions as $sURL => $aLink) {
         list($sIMG, $sName, $bShown) = $aLink;
+        $sSubMenu = '';
+        if (!empty($aLink['sub_menu'])) {
+            // Allow for one level of sub menus.
+            $sSubMenu = "\n" . $sPrefix . '    <UL>' . "\n";
+            foreach ($aLink['sub_menu'] as $sSubURL => $aSubMenu) {
+                list($sSubIMG, $sSubName) = $aSubMenu;
+                $sSubMenu .= $sPrefix . '      <LI' . (!$sSubIMG? '' : ' class="icon"') . '><A ' . (substr($sSubURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . lovd_getInstallURL(false)) . ltrim($sSubURL, '/') . '">' .
+                    (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sSubIMG . ');"></SPAN>') . $sSubName .
+                    '</A></LI>' . "\n";
+            }
+            $sSubMenu .= $sPrefix . '    </UL>' . "\n  " . $sPrefix;
+        }
         if ($bShown) {
             // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
-            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . lovd_getInstallURL(false)) . ltrim($sURL, '/') . '">' .
+            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . ($sSubMenu ? '' : lovd_getInstallURL(false))) . ($sSubMenu ? '' : ltrim($sURL, '/')) . '">' .
                                 (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
-                                '</A></LI>' . "\n");
+                                '</A>' . $sSubMenu . '</LI>' . "\n");
         } else {
             print($sPrefix . '  <LI class="disabled' . (!$sIMG? '' : ' icon') . '">' . (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . preg_replace('/(\.[a-z]+)$/', '_disabled' . "$1", $sIMG) . ');"></SPAN>') . $sName . '</LI>' . "\n");
         }
@@ -1396,7 +1423,7 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '      event: "click",' . "\n" .
           $sPrefix . '      openBelowContext: true,' . "\n" .
           $sPrefix . '      autoHide: true,' . "\n" .
-          $sPrefix . '      delay: 1000,' . "\n" .
+          $sPrefix . '      delay: 100,' . "\n" .
           $sPrefix . '      onSelect: function(e, context) {' . "\n" .
           $sPrefix . '        if ($(this).hasClass("disabled")) {' . "\n" .
           $sPrefix . '          return false;' . "\n" .

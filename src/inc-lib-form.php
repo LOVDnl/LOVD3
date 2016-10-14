@@ -278,8 +278,12 @@ function lovd_errorPrint ()
 
     if (count($_ERROR['messages']) > 1) {
         unset($_ERROR['messages'][0]);
-        print('      <DIV class="err">' . "\n" .
-              '        ' . implode('<BR>' . "\n" . '        ', $_ERROR['messages']) . '</DIV><BR>' . "\n\n");
+        if (FORMAT == 'text/html') {
+            print('      <DIV class="err">' . "\n" .
+                  '        ' . implode('<BR>' . "\n" . '        ', $_ERROR['messages']) . '</DIV><BR>' . "\n\n");
+        } elseif (FORMAT == 'text/plain') {
+            print(':' . implode("\n" . ':', array_map('strip_tags', $_ERROR['messages'])) . "\n\n");
+        }
     }
 }
 

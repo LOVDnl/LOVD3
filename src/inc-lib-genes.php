@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2016-09-14
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -184,7 +184,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
             'immunoglobulin gene',    // From group "other", none of them work (verified).
             'region',                 // From group "other", none of them work (verified).
             'transposable element',   // From group "other", none of them work (verified).
-            'unknown',                // From group "other", none of them work (verified).
+//            'unknown',                // From group "other", none of them work (verified). // 2015-01-19 C1orf195 from this group works for me...
             'virus integration site', // From group "other", none of them work (verified).
             'immunoglobulin pseudogene', // From group "pseudogene", none of them work (verified).
         );
