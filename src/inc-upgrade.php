@@ -81,7 +81,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_GEN2DIS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(20)',
-                                'ALTER TABLE ' . TABLE_HITS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
+                                'ALTER TABLE ' . TABLEPREFIX . '_hits MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                               ),
                     '3.0-alpha-02' =>
                          array(
@@ -155,7 +155,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE pathogenicid effectid TINYINT(2) UNSIGNED ZEROFILL',
                                 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD INDEX (effectid)',
 
-                                'RENAME TABLE ' . TABLE_PATHOGENIC . ' TO ' . TABLE_EFFECT,
+                                'RENAME TABLE ' . TABLEPREFIX . '_variant_pathogenicity TO ' . TABLE_EFFECT,
                                 'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                                 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                                 'UPDATE ' . TABLE_VARIANTS . ' SET effectid = 55 WHERE effectid < 11 OR effectid IS NULL',
@@ -349,7 +349,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'ALTER TABLE ' . TABLE_GEN2DIS . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
                      'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
                      'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(25)',
-                     'DROP TABLE ' . TABLE_HITS,
+                     'DROP TABLE ' . TABLEPREFIX . '_hits',
                  ),
                  '3.0-07' =>
                  array(

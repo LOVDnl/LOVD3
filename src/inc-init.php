@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-10-14
+ * Modified    : 2016-10-17
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -432,14 +432,6 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
-
-                // REMOVED in 3.0-alpha-07; delete only if sure that there are no legacy versions still out there!
-                // SEE ALSO uninstall.php !!!
-                // SEE ALSO line 559 !!!
-                'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
-                // REMOVED IN 3.0-05; delete only if sure that there are no legacy versions still out there!
-                'TABLE_HITS' => TABLEPREFIX . '_hits',
-                // They can also be removed, if they are completely removed from the code (also inc-upgrade.php), and only the DROP code is kept with the name hard coded.
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
@@ -542,7 +534,7 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
             $aTables[] = $sCol;
         }
     }
-    if (count($aTables) < (count($_TABLES) - 2)) {
+    if (count($aTables) < (count($_TABLES))) {
         // We're not completely installed.
         define('NOT_INSTALLED', true);
     }
