@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-10-14
+ * Modified    : 2016-10-17
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,7 +31,9 @@
 
 // Set up global constants and include path for running tests.
 define('ROOT_PATH', realpath(__DIR__ . '/../../src') . '/');
-define('LOVD_plus', false);
+if (!defined('LOVD_plus')) {
+    define('LOVD_plus', false);
+}
 
 require_once ROOT_PATH . 'inc-lib-init.php';
 
