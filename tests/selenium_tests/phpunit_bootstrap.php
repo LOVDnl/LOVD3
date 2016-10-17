@@ -9,7 +9,7 @@
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
-                 Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -31,11 +31,19 @@
 
 // Set up global constants and include path for running tests.
 define('ROOT_PATH', realpath(__DIR__ . '/../../src') . '/');
-if (!defined('LOVD_plus')) {
-    define('LOVD_plus', false);
-}
 
-require_once ROOT_PATH . 'inc-lib-init.php';
+// Set up the LOVD environment with all common globals like a database
+// connection, configuration settings, etc. by including inc-init.php.
+define('FORMAT_ALLOW_TEXTPLAIN', true);
+$_GET['format'] = 'text/plain';
+// To prevent notices when running inc-init.php.
+$_SERVER = array_merge($_SERVER, array(
+    'HTTP_HOST' => 'localhost',
+    'REQUEST_URI' => '/' . basename(__FILE__),
+    'QUERY_STRING' => '',
+    'REQUEST_METHOD' => 'GET',
+));
+require_once ROOT_PATH . 'inc-init.php';
 
 // Get configuration settings.
 $_INI = lovd_parseConfigFile(ROOT_PATH . 'config.ini.php');
