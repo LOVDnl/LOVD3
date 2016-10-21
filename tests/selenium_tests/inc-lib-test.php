@@ -68,8 +68,8 @@ function getWebDriverInstance()
         } else {
             // Create Firefox webdriver
             fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host . PHP_EOL);
-            $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
-            $webDriver = RemoteWebDriver::create('http://127.0.0.1:4444/wd/hub', $capabilities,
+            $capabilities = DesiredCapabilities::firefox();
+            $webDriver = RemoteWebDriver::create($host, $capabilities,
                 WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
                 WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
         }
