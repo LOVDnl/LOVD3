@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-10-26
+ * Modified    : 2016-10-27
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -34,12 +34,11 @@ require_once 'LOVDWebDriver.php';
 
 use \Facebook\WebDriver\Chrome\ChromeOptions;
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
-use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
 
 
 
-function getWebDriverInstance()
+function getWebDriverInstance ()
 {
     // Provide a re-usable webdriver for selenium tests.
 
@@ -74,7 +73,6 @@ function getWebDriverInstance()
             WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
             WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
 
-
         // Set time for trying to access DOM elements
         $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
 
@@ -98,7 +96,7 @@ function getWebDriverInstance()
 
 
 
-function setMutalyzerServiceURL($sURL)
+function setMutalyzerServiceURL ($sURL)
 {
     // Set up the LOVD environment with all common globals like a database
     // connection, configuration settings, etc. by including inc-init.php.

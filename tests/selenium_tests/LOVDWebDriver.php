@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-26
- * Modified    : 2016-10-26
+ * Modified    : 2016-10-27
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -30,9 +30,10 @@
 
 require_once 'RefreshingWebDriverElement.php';
 
-use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\Remote\DriverCommand;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
+use \Facebook\WebDriver\WebDriverBy;
+
 
 class LOVDWebDriver extends RemoteWebDriver {
     /**
@@ -40,7 +41,7 @@ class LOVDWebDriver extends RemoteWebDriver {
      * to make use of RefreshingWebDriverElement.
      */
 
-    public function findElement(WebDriverBy $by)
+    public function findElement (WebDriverBy $by)
     {
         // This method is similar to RemoteWebDriver::findElement() but
         // returns an instance of RefreshingWebElement.
@@ -50,6 +51,8 @@ class LOVDWebDriver extends RemoteWebDriver {
             $params
         );
 
+        // Create a RefreshingWebElement and set resources needed to let the
+        // element refresh in the future.
         $element = new RefreshingWebElement($this->getExecuteMethod(), $raw_element['ELEMENT']);
         $element->setLocator($by);
         $element->setWebDriver($this);

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-27
- * Modified    : 2016-10-26
+ * Modified    : 2016-10-27
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -54,63 +54,25 @@ class RefreshingWebElement extends RemoteWebElement {
     protected $locator;
 
 
-    public function setWebDriver(WebDriver $driver)
-    {
-        $this->driver = $driver;
-    }
-
-
-    public function setLocator(WebDriverBy $locator)
-    {
-        $this->locator = $locator;
-    }
-
-
-    public function clear()
+    public function clear ()
     {
         return $this->tryWithRefresh('clear');
     }
 
 
-    public function click()
+    public function click ()
     {
         return $this->tryWithRefresh('click');
     }
 
 
-    public function getText()
+    public function getText ()
     {
         return $this->tryWithRefresh('getText');
     }
 
 
-    public function sendKeys($value)
-    {
-        return $this->tryWithRefresh('sendKeys', array($value));
-    }
-
-
-    private function tryWithRefresh($sParentMethod, $args=array())
-    {
-        $aFunction = array(get_parent_class($this), $sParentMethod);
-        $e = null;
-        for ($i = 0; $i < MAX_TRIES_STALE_REFRESH; $i++) {
-            try {
-                return call_user_func_array($aFunction, $args);
-            } catch (StaleElementReferenceException $e) {
-                // Refresh the element so we can try again.
-                if (!$this->refresh()) {
-                    // Refresh failed, can't do anything better than to re-throw the exception.
-                    throw $e;
-                }
-            }
-        }
-        // Too many tries, rethrow the exception.
-        throw $e;
-    }
-
-
-    private function refresh()
+    private function refresh ()
     {
         // Refresh this element by re-running findElement() using the locator.
 
@@ -126,6 +88,50 @@ class RefreshingWebElement extends RemoteWebElement {
 
         // Cannot refresh element without locator or driver.
         return false;
+    }
+
+
+    public function sendKeys($value)
+    {
+        return $this->tryWithRefresh('sendKeys', array($value));
+    }
+
+
+    public function setWebDriver(WebDriver $driver)
+    {
+        // Set webdriver instance to be used for refreshing element.
+        $this->driver = $driver;
+    }
+
+
+    public function setLocator(WebDriverBy $locator)
+    {
+        // Set locator to be used for refreshing element.
+        $this->locator = $locator;
+    }
+
+
+    private function tryWithRefresh($sParentMethod, $args=array())
+    {
+        // Call method of the parent class with method name $sParentMethod and
+        // contents of array $args as arguments. If the method call results in
+        // a stale element reference exception, it will try a number of times
+        // to refresh the element and call the method again.
+        $aFunction = array(get_parent_class($this), $sParentMethod);
+        $e = null;
+        for ($i = 0; $i < MAX_TRIES_STALE_REFRESH; $i++) {
+            try {
+                return call_user_func_array($aFunction, $args);
+            } catch (StaleElementReferenceException $e) {
+                // Refresh the element so we can try again.
+                if (!$this->refresh()) {
+                    // Refresh failed, can't do anything better than to re-throw the exception.
+                    throw $e;
+                }
+            }
+        }
+        // Too many tries, rethrow the exception.
+        throw $e;
     }
 }
 
