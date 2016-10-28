@@ -1271,12 +1271,21 @@ class LOVD_Object {
                     }
                 }
             }
+            if (LOVD_plus) {
+                // Analyzer's details like the owner's details.
+                if (isset($zData['analysis_by']) && (int) $zData['analysis_by'] && !empty($zData['analyzer'])) {
+                    list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['analyzer'];
+                    $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
+                }
+                // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
+                $zData['class_name'] = '';
+            }
 
         } else {
             // Add links to users from *_by fields.
-            $aUserColumns = array('owned_by', 'created_by', 'edited_by', 'updated_by', 'deleted_by');
+            $aUserColumns = array('owned_by', 'created_by', 'edited_by', 'updated_by', 'deleted_by', 'analysis_by', 'analysis_approved_by');
             foreach($aUserColumns as $sUserColumn) {
-                if (empty($zData[$sUserColumn])) {
+                if (empty($zData[$sUserColumn]) || !isset($this->aColumnsViewEntry[$sUserColumn . '_'])) {
                     $zData[$sUserColumn . '_'] = 'N/A';
                 } elseif ($_AUTH && $zData[$sUserColumn] != '00000') {
                     $zData[$sUserColumn . '_'] = '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>';
@@ -1384,7 +1393,7 @@ class LOVD_Object {
                     // Column type of an alias is given by LOVD.
                     $sColType = $aCol['db'][2];
                 } else {
-                    if (preg_match('/^[a-z0-9]{1,3}\.[a-z_]+$/i', $aCol['db'][0])) {
+                    if (preg_match('/^[a-z0-9]+\.[a-z_]+$/i', $aCol['db'][0])) {
                         list($sAlias, $sColName) = explode('.', $aCol['db'][0]);
                         if (preg_match('/(' . TABLEPREFIX . '_[a-z0-9_]+) AS ' . $sAlias . '\b/', $this->aSQLViewList['FROM'], $aMatches)) {
                             $sTable = $aMatches[1];
@@ -2230,7 +2239,7 @@ class LOVD_Object {
                         if (empty($aCol['legend'][1])) {
                             $aCol['legend'][1] = $aCol['legend'][0];
                         }
-                        print('        <B>' . $aCol['view'][0] . '</B>: ' . $aCol['legend'][1]);
+                        print('        <B>' . strip_tags($aCol['view'][0]) . '</B>: ' . $aCol['legend'][1]);
                         if (substr($aCol['legend'][1], -5) == '</UL>') {
                             // No additional breaks, no possible listing of selection options. Column has its own UL already.
                             print("\n\n");
@@ -2348,7 +2357,7 @@ FROptions
                             (!$bSearchable? '' :
                                  "\n" .
                                  // SetTimeOut() is necessary because if the function gets executed right away, selecting a previously used value from a *browser-generated* list in one of the fields, gets aborted and it just sends whatever is typed in at that moment.
-                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . $aCol['view'][0] . ' field should contain...' . (!empty($_GET['search_' . $sField])? "\nCurrent search:\n\n" . htmlspecialchars(lovd_formatSearchExpression($_GET['search_' . $sField], $aColTypes[$sField])) : '') .'" style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); return false;}">') .
+                                 '            <INPUT type="text" name="search_' . $sField . '" value="' . (!isset($_GET['search_' . $sField])? '' : htmlspecialchars($_GET['search_' . $sField])) . '" title="' . strip_tags($aCol['view'][0]) . ' field should contain...' . (!empty($_GET['search_' . $sField])? "\nCurrent search:\n\n" . htmlspecialchars(lovd_formatSearchExpression($_GET['search_' . $sField], $aColTypes[$sField])) : '') .'" style="width : ' . ($aCol['view'][1] - 6) . 'px; font-weight : normal;" onkeydown="if (event.keyCode == 13) { if (document.forms[\'viewlistForm_' . $sViewListID . '\'].page) { document.forms[\'viewlistForm_' . $sViewListID . '\'].page.value=1; } setTimeout(\'lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\')\', 0); return false;}">') .
                           '</TH>');
                 }
                 print('</TR></THEAD>');
@@ -2527,7 +2536,6 @@ FROptions
                   '        // This has to be run when the document has finished loading everything, because only then can it get the proper width from IE7 and lower!' . "\n" .
                   '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
             if ($bOptions) {
-
                 $sFRMenuOption = '';
                 if ($bFindReplace) {
                     // Add find & replace menu item to viewlist options menu.
@@ -2566,6 +2574,10 @@ FRITEM;
 '            </LI>' +
 $sFRMenuOption
 '            ');
+OPMENU
+);
+                if (!LOVD_plus) {
+                    print(<<<OPMENU
         $('#viewlistMenu_$sViewListID').append(
 '            <LI class="icon">' +
 '                <A click="lovd_AJAX_viewListSubmit(\'$sViewListID\', function(){lovd_AJAX_viewListDownload(\'$sViewListID\', true);});">' +
@@ -2579,10 +2591,11 @@ $sFRMenuOption
 '                    Download selected entries (summary data)' +
 '                </A>' +
 '            </LI>');
-        lovd_activateMenu('$sViewListID');
 OPMENU
 );
-
+                }
+                print("\n" .
+                      '        lovd_activateMenu(\'' . $sViewListID . '\');' . "\n\n");
             }
             print('        check_list[\'' . $sViewListID . '\'] = [];' . "\n" .
                   '      </SCRIPT>' . "\n\n");
