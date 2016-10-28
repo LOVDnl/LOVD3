@@ -2063,7 +2063,8 @@ class LOVD_Object {
             // 1) If we don't have a count in memory, request count separately.
             // Also if last count was >15min ago, request again.
             $bTrueCount = false; // Indicates whether or not we are sure about the number of results.
-            $sFilterMD5 = md5($WHERE . '||' . $HAVING . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
+            // FIXME: this has to be done better, we can't see what we're filtering for, because it's in the arguments!
+            $sFilterMD5 = md5($this->aSQLViewList['WHERE'] . '||' . $this->aSQLViewList['HAVING'] . '||' . implode('|', $aArgs)); // A signature for the filters, NOTE that this depends on the column order!
             // FIXME: If this count takes longer than 1s, we don't estimate anymore like we used to (see line 1543).
             if (true || !isset($aSessionViewList['counts'][$sFilterMD5]['n'])) {
                 $t = microtime(true);
@@ -2371,7 +2372,7 @@ FROptions
             header('Pragma: public');
             print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sObject . ' Quick Download format ### This file can not be imported ###' . "\r\n");
             // FIXME: this has to be done better, we can't see what we're filtering for, because it's in the arguments!
-            $sFilter = $WHERE . ($WHERE && $HAVING? ' AND ' : '') . $HAVING;
+            $sFilter = $this->aSQLViewList['WHERE'] . ($this->aSQLViewList['WHERE'] && $this->aSQLViewList['HAVING']? ' AND ' : '') . $this->aSQLViewList['HAVING'];
             if ($sFilter) {
                 if (count($aArgs) == substr_count($sFilter, '?')) {
                     foreach ($aArgs as $sArg) {
