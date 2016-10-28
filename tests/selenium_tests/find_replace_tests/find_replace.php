@@ -196,7 +196,7 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
                 WebDriverBy::xpath('//div[@class="vl_overlay"][' . $nCol . ']'));
         $columnOverlay->click();
 
-        // Wait a second to handle click event properly and let tooltip disaapear.
+        // Wait a second to handle click event properly and let tooltip disappear.
         sleep(1);
     }
 }

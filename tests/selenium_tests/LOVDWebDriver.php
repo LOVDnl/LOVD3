@@ -37,7 +37,7 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class LOVDWebDriver extends RemoteWebDriver {
     /**
-     * Custom wrapper for RemoteWebDriver. Overloading its findElement method
+     * Sub class of RemoteWebDriver. Overloading its findElement method
      * to make use of RefreshingWebDriverElement.
      */
 

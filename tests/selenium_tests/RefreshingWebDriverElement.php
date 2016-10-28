@@ -42,7 +42,7 @@ class RefreshingWebElement extends RemoteWebElement {
      * exception is thrown, it tries to reload the element using the
      * locator.
      *
-     * This strategy tries to overcome stale elements resulting from unforseen
+     * This strategy tries to overcome stale elements resulting from unforeseen
      * re-rendering of the DOM instead of expected element staleness for
      * example due to page reloading.
      */
@@ -91,27 +91,27 @@ class RefreshingWebElement extends RemoteWebElement {
     }
 
 
-    public function sendKeys($value)
+    public function sendKeys ($value)
     {
         return $this->tryWithRefresh('sendKeys', array($value));
     }
 
 
-    public function setWebDriver(WebDriver $driver)
+    public function setWebDriver (WebDriver $driver)
     {
         // Set webdriver instance to be used for refreshing element.
         $this->driver = $driver;
     }
 
 
-    public function setLocator(WebDriverBy $locator)
+    public function setLocator (WebDriverBy $locator)
     {
         // Set locator to be used for refreshing element.
         $this->locator = $locator;
     }
 
 
-    private function tryWithRefresh($sParentMethod, $args=array())
+    private function tryWithRefresh ($sParentMethod, $args=array())
     {
         // Call method of the parent class with method name $sParentMethod and
         // contents of array $args as arguments. If the method call results in
