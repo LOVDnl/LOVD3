@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-09-23
- * For LOVD    : 3.0-18
+ * Modified    : 2016-10-27
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -30,15 +30,15 @@
  *************/
 
 
+require_once 'LOVDWebDriver.php';
 
 use \Facebook\WebDriver\Chrome\ChromeOptions;
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
-use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
 
 
 
-function getWebDriverInstance()
+function getWebDriverInstance ()
 {
     // Provide a re-usable webdriver for selenium tests.
 
@@ -49,6 +49,7 @@ function getWebDriverInstance()
 
         $driverType = getenv('LOVD_SELENIUM_DRIVER');
         $host = 'http://localhost:4444/wd/hub';
+        $capabilities = null;
 
         if ($driverType == 'chrome') {
             // This is the documented way of starting the chromedriver, but it fails. (at least
@@ -62,17 +63,15 @@ function getWebDriverInstance()
             $options->addArguments(array('--no-sandbox'));
             $capabilities = DesiredCapabilities::chrome();
             $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
-            $webDriver = RemoteWebDriver::create($host, $capabilities,
-                WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
-                WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
         } else {
             // Create Firefox webdriver
             fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host . PHP_EOL);
-            $capabilities = DesiredCapabilities::firefox();
-            $webDriver = RemoteWebDriver::create($host, $capabilities,
-                WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
-                WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
+            $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
         }
+
+        $webDriver = LOVDWebDriver::create($host, $capabilities,
+            WEBDRIVER_MAX_WAIT_DEFAULT * 1000,
+            WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
 
         // Set time for trying to access DOM elements
         $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
@@ -87,6 +86,8 @@ function getWebDriverInstance()
                 'value' => 'selenium'));
         }
     }
+
+    // Wrap the webdriver instance in a custom processor.
     return $webDriver;
 }
 
@@ -95,7 +96,7 @@ function getWebDriverInstance()
 
 
 
-function setMutalyzerServiceURL($sURL)
+function setMutalyzerServiceURL ($sURL)
 {
     // Set up the LOVD environment with all common globals like a database
     // connection, configuration settings, etc. by including inc-init.php.

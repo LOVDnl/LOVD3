@@ -1,0 +1,138 @@
+<?php
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2016-09-27
+ * Modified    : 2016-10-27
+ * For LOVD    : 3.0-18
+ *
+ * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
+
+use \Facebook\WebDriver\Exception\StaleElementReferenceException;
+use \Facebook\WebDriver\Remote\RemoteWebElement;
+use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriver;
+
+
+class RefreshingWebElement extends RemoteWebElement {
+    /**
+     * RefreshingWebElement keeps track of the locator that was used to
+     * retrieve it from the web page. Whenever a StaleElementReference
+     * exception is thrown, it tries to reload the element using the
+     * locator.
+     *
+     * This strategy tries to overcome stale elements resulting from unforeseen
+     * re-rendering of the DOM instead of expected element staleness for
+     * example due to page reloading.
+     */
+
+    // WebDriver instance used for refreshing the element.
+    protected $driver;
+
+    // Locator used to generate $element (of WebDriverBy type).
+    protected $locator;
+
+
+    public function clear ()
+    {
+        return $this->tryWithRefresh('clear');
+    }
+
+
+    public function click ()
+    {
+        return $this->tryWithRefresh('click');
+    }
+
+
+    public function getText ()
+    {
+        return $this->tryWithRefresh('getText');
+    }
+
+
+    private function refresh ()
+    {
+        // Refresh this element by re-running findElement() using the locator.
+
+        if (isset($this->locator) && isset($this->driver)) {
+            fwrite(STDERR, 'Refreshing element, locator = "' . $this->locator->getValue() . '" (' .
+                $this->locator->getMechanism() . ')' . PHP_EOL);
+            $newElement = $this->driver->findElement($this->locator);
+
+            // Overwrite ID of current element with new one.
+            $this->id = $newElement->id;
+            return true;
+        }
+
+        // Cannot refresh element without locator or driver.
+        return false;
+    }
+
+
+    public function sendKeys ($value)
+    {
+        return $this->tryWithRefresh('sendKeys', array($value));
+    }
+
+
+    public function setWebDriver (WebDriver $driver)
+    {
+        // Set webdriver instance to be used for refreshing element.
+        $this->driver = $driver;
+    }
+
+
+    public function setLocator (WebDriverBy $locator)
+    {
+        // Set locator to be used for refreshing element.
+        $this->locator = $locator;
+    }
+
+
+    private function tryWithRefresh ($sParentMethod, $args=array())
+    {
+        // Call method of the parent class with method name $sParentMethod and
+        // contents of array $args as arguments. If the method call results in
+        // a stale element reference exception, it will try a number of times
+        // to refresh the element and call the method again.
+        $aFunction = array(get_parent_class($this), $sParentMethod);
+        $e = null;
+        for ($i = 0; $i < MAX_TRIES_STALE_REFRESH; $i++) {
+            try {
+                return call_user_func_array($aFunction, $args);
+            } catch (StaleElementReferenceException $e) {
+                // Refresh the element so we can try again.
+                if (!$this->refresh()) {
+                    // Refresh failed, can't do anything better than to re-throw the exception.
+                    throw $e;
+                }
+            }
+        }
+        // Too many tries, rethrow the exception.
+        throw $e;
+    }
+}
+
+

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2016-09-23
+ * Modified    : 2016-10-26
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,6 +55,7 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->openFRMenuForCol(6);
 
         // Click cancel button.
+        sleep(1);
         $cancelButton = $this->driver->findElement(WebDriverBy::id('FRCancel_VOG'));
         $cancelButton->click();
 
@@ -65,8 +66,8 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         // Open find and replace for Reference col.
         $this->openFRMenuForCol(6);
 
-        $this->assertEquals($this->driver->findElement(
-            WebDriverBy::id('viewlistFRColDisplay_VOG'))->getText(), 'Reference');
+        $columnReference = $this->driver->findElement(WebDriverBy::id('viewlistFRColDisplay_VOG'));
+        $this->assertEquals($columnReference->getText(), 'Reference');
 
         $this->enterValue(WebDriverBy::name('FRReplace_VOG'), 'newvalue');
 
@@ -194,5 +195,8 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
         $columnOverlay = $this->driver->findElement(
                 WebDriverBy::xpath('//div[@class="vl_overlay"][' . $nCol . ']'));
         $columnOverlay->click();
+
+        // Wait a second to handle click event properly and let tooltip disappear.
+        sleep(1);
     }
 }
