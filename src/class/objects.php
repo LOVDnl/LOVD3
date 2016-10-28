@@ -4,14 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-09-21
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-28
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               Anthony Marty <anthony.marty@unimelb.edu.au>
  *
  *
  * This file is part of LOVD.
@@ -438,26 +439,65 @@ class LOVD_Object {
 
 
 
-    function deleteEntry ($nID = false)
+    function deleteEntry ($ID, $sReason = '-')
     {
-        // Delete an entry from the database.
-        global $_DB;
+        // Deletes an entry from the database, handles revisions as well.
+        // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to change.
+        //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
+        // $sReason = The reason the entry as deleted, as given by the user.
+        global $_DB, $_AUTH;
 
-        if (!$nID) {
-            // We were called, but the class wasn't initiated with an ID. Fail.
+        // Check to see if an ID has been passed and there is data to process.
+        if ((!is_array($ID) && !trim($ID)) || (is_array($ID) && (!$ID || in_array('', array_map('trim', $ID))))) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::deleteEntry() - Method didn\'t receive ID');
-        } else {
-            if ($this->getCount($nID)) {
-                $sSQL = 'DELETE FROM ' . constant($this->sTable) . ' WHERE id = ?';
-                if (!defined('LOG_EVENT')) {
-                    define('LOG_EVENT', $this->sObject . '::deleteEntry()');
-                }
-                $q = $_DB->query($sSQL, array($nID));
-                return true;
-            } else {
-                return false;
+        }
+
+        // Prepare ID variable, to always be in the array('id' => 1) format.
+        $aIDs = $ID;
+        if (!is_array($ID)) {
+            $aIDs = array('id' => $ID);
+        }
+
+        // Check to see if this table uses revisions.
+        $bRev = defined($this->sTable . '_REV');
+        // Check if maybe we already were in a transaction when we started this function.
+        // If so, we won't create a new transaction, nor run a commit() in the end.
+        $bWasAlreadyInTransaction = (method_exists($_DB, 'inTransaction') && $_DB->inTransaction());
+        if ($bRev) {
+            if (!$bWasAlreadyInTransaction) {
+                $_DB->beginTransaction();
             }
         }
+
+        $sSQL = 'DELETE FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?';
+        if (!defined('LOG_EVENT')) {
+            define('LOG_EVENT', $this->sObject . '::deleteEntry()');
+        }
+        $q = $_DB->query($sSQL, array_values($aIDs));
+
+        // Setup and run the revision table SQL.
+        if ($bRev) {
+            $sReason = 'Record deleted: ' . $sReason;
+            // Update the existing revision record.
+            // We could just check for a valid_to of 9999-12-31, but this
+            //  is more flexible if we choose a different format.
+            $qRevisionUpdate = $_DB->query(
+                'UPDATE ' . constant($this->sTable . '_REV') . '
+                 SET valid_to = NOW(), deleted = 1, deleted_by = ?, reason = CONCAT(reason, "\r\n", ?)
+                 WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? AND valid_to >= NOW()
+                 ORDER BY valid_to DESC LIMIT 1',
+                array_merge(array($_AUTH['id'], $sReason), array_values($aIDs)), true, true);
+            // If any of the queries failed, then rollback and return false. Otherwise, commit.
+            if (!$q || !$qRevisionUpdate) {
+                $_DB->rollBack();
+                return false;
+            } else {
+                if (!$bWasAlreadyInTransaction) {
+                    $_DB->commit();
+                }
+            }
+        }
+        return $q->rowCount();
     }
 
 
@@ -601,14 +641,29 @@ class LOVD_Object {
 
 
 
-    function getCount ($nID = false)
+    function getCount ($ID = false)
     {
         // Returns the number of entries in the database table.
         // ViewEntry() and ViewList() call this function to see if data exists at all, and actually don't require a precise number.
+        // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to check for existance.
+        //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
         global $_DB;
 
-        if ($nID) {
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE id = ?', array($nID))->fetchColumn();
+        if ($ID) {
+            // Prepare ID variable, to always be in the array('id' => 1) format.
+            $aIDs = $ID;
+            if (!is_array($ID)) {
+                $sIDColumn = 'id';
+                // In case a different column name is used, better use that instead.
+                if (!empty($this->aColumnsViewList['id']['db'][0])) {
+                    $sIDColumn = $this->aColumnsViewList['id']['db'][0];
+                    // But take the optional table alias off.
+                    $sIDColumn = substr(strrchr('.' . $sIDColumn, '.'), 1);
+                }
+                $aIDs = array($sIDColumn => $ID);
+            }
+
+            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?', array_values($aIDs))->fetchColumn();
         } else {
             if ($this->nCount !== '') {
                 return $this->nCount;
@@ -960,7 +1015,20 @@ class LOVD_Object {
     function insertEntry ($aData, $aFields = array())
     {
         // Inserts data in $aData into the database, using only fields defined in $aFields.
+        // $aData = Associative array with values to be inserted. Keys should equal database column names.
+        // $aFields = The keys of the associative array that will actually get inserted.
         global $_DB;
+
+        // Check to see if this table uses revisions.
+        $bRev = defined($this->sTable . '_REV');
+        // Check if maybe we already were in a transaction when we started this function.
+        // If so, we won't create a new transaction, nor run a commit() in the end.
+        $bWasAlreadyInTransaction = (method_exists($_DB, 'inTransaction') && $_DB->inTransaction());
+        if ($bRev) {
+            if (!$bWasAlreadyInTransaction) {
+                $_DB->beginTransaction();
+            }
+        }
 
         if (!is_array($aData) || !count($aData)) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::insertEntry() - Method didn\'t receive data array');
@@ -985,6 +1053,10 @@ class LOVD_Object {
             }
             $aSQL[] = $aData[$sField];
         }
+        // If this is a revision table, we mostly use the same query.
+        if ($bRev) {
+            $sRevSQL = $sSQL;
+        }
         $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
 
         if (!defined('LOG_EVENT')) {
@@ -992,23 +1064,60 @@ class LOVD_Object {
         }
         $q = $_DB->query($sSQL, $aSQL, true, true);
 
-        $nID = $_DB->lastInsertId();
-        if (substr(lovd_getColumnType(constant($this->sTable), 'id'), 0, 3) == 'INT') {
+        $nID = $_DB->lastInsertId(); // Will not return an ID for linking tables.
+        if ($nID && substr(lovd_getColumnType(constant($this->sTable), 'id'), 0, 3) == 'INT') {
             $nID = sprintf('%0' . lovd_getColumnLength(constant($this->sTable), 'id') . 'd', $nID);
         }
-        return $nID;
+
+        // Setup and run the revision table SQL.
+        if ($bRev) {
+            // Replace the table name with the revision table name
+            $sRevSQL = preg_replace('/^(INSERT INTO ' . constant($this->sTable) . ')/i', 'INSERT INTO ' . constant($this->sTable . '_REV'), $sRevSQL);
+            // For tables that don't have an AUTO_INCREMENT column, the ID must have already been provided in the SQL.
+            // For other tables, we add the field here. We're assuming it's "id".
+            if ($nID) {
+                // Auto-increment column in place, assuming the name is "id".
+                $sRevSQL .= ', id';
+            }
+            // These are the extra columns that are required for inserting a record into the revision table.
+            $sRevSQL .= ', valid_from, reason';
+            // Add the ID to the SQL's arguments as well, for auto-incremented tables.
+            if ($nID) {
+                $aSQL[] = $nID;
+            }
+            // Use the created_date if provided, otherwise use the current date.
+            $aSQL[] = (empty($aData['created_date'])? date('Y-m-d H:i:s') : $aData['created_date']);
+            // Use the reason, if provided in the $aData array.
+            $aSQL[] = 'Record created' . (empty($aData['reason'])? '' : ': ' . $aData['reason']);
+            $sRevSQL .= ') VALUES (?' . str_repeat(', ?', count($aSQL) - 1) . ')';
+            $qRevisionInsert = $_DB->query($sRevSQL, $aSQL, true, true);
+
+            // If any of the queries fail, then rollback and return false. Otherwise, commit.
+            if (!$q || !$qRevisionInsert) {
+                $_DB->rollBack();
+                return false;
+            } else {
+                if (!$bWasAlreadyInTransaction) {
+                    $_DB->commit();
+                }
+            }
+        }
+        return ($nID? $nID : true);
     }
 
 
 
 
 
-    function loadEntry ($nID = false)
+    function loadEntry ($ID)
     {
         // Loads and returns an entry from the database.
+        // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to load.
+        //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
         global $_DB, $_T;
 
-        if (empty($nID)) {
+        // Check to see if an ID has been passed and there is data to process.
+        if ((!is_array($ID) && !trim($ID)) || (is_array($ID) && (!$ID || in_array('', array_map('trim', $ID))))) {
             // We were called, but the class wasn't initiated with an ID. Fail.
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
         }
@@ -1018,13 +1127,21 @@ class LOVD_Object {
             $_DB->query($this->sSQLPreLoadEntry);
         }
 
+        // Prepare ID variable, to always be in the array('id' => 1) format.
+        $aIDs = $ID;
+        if (!is_array($ID)) {
+            // FIXME: Other methods of this class try something intelligent to figure out if it's 'id' indeed.
+            //  Put that code in a function perhaps?
+            $aIDs = array('id' => $ID);
+        }
+
         // Build query.
         if ($this->sSQLLoadEntry) {
             $sSQL = $this->sSQLLoadEntry;
         } else {
-            $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE id = ?';
+            $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?';
         }
-        $q = $_DB->query($sSQL, array($nID), false);
+        $q = $_DB->query($sSQL, array_values($aIDs), false);
         if ($q) {
             $zData = $q->fetchAssoc();
         }
@@ -1046,7 +1163,11 @@ class LOVD_Object {
             exit;
 
         } else {
-            $this->nID = $nID;
+            // FIXME: Need to confirm what to do here. $this->nID is used throughout the code,
+            //  sometimes passed to constructors that do nothing with it. Sometimes as a parent ID (object ID),
+            //  sometimes as the object's own ID. Sometimes an integer, sometimes an array.
+            // Here it's assigned and we don't even know why. We need to standardize all of those usages.
+            $this->nID = $aIDs;
         }
 
         $zData = $this->autoExplode($zData);
@@ -1476,12 +1597,17 @@ class LOVD_Object {
 
 
 
-    function updateEntry ($nID, $aData, $aFields = array())
+    function updateEntry ($ID, $aData, $aFields = array())
     {
-        // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
+        // Updates entry $ID with data from $aData in the database, changing only fields defined in $aFields.
+        // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to change.
+        //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
+        // $aData = Associative array with values to be inserted. Keys should equal database column names.
+        // $aFields = The keys of the associative array that will actually get inserted.
         global $_DB;
 
-        if (!trim($nID)) {
+        // Check to see if an ID has been passed and there is data to process.
+        if ((!is_array($ID) && !trim($ID)) || (is_array($ID) && (!$ID || in_array('', array_map('trim', $ID))))) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive ID');
         } elseif (!is_array($aData) || !count($aData)) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive data array');
@@ -1489,11 +1615,39 @@ class LOVD_Object {
             $aFields = array_keys($aData);
         }
 
+        // Prepare ID variable, to always be in the array('id' => 1) format.
+        $aIDs = $ID;
+        if (!is_array($ID)) {
+            $aIDs = array('id' => $ID);
+        }
+
+        // Check to see if this table uses revisions.
+        $bRev = defined($this->sTable . '_REV');
+        $aDataOld = array(); // Will contain the current data, to compare with what we receive now.
+        // Check if maybe we already were in a transaction when we started this function.
+        // If so, we won't create a new transaction, nor run a commit() in the end.
+        $bWasAlreadyInTransaction = (method_exists($_DB, 'inTransaction') && $_DB->inTransaction());
+        if ($bRev) {
+            if (!$bWasAlreadyInTransaction) {
+                $_DB->beginTransaction();
+            }
+            // Read in the existing record from the revision table to be used to compare against the changes.
+            // TODO What if we do not find any records in the revision table? Currently it will crasy with an error.
+            $aDataOld = $_DB->query('SELECT * FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?',
+                array_values($aIDs))->fetchAssoc();
+        }
+
         // Query text.
         $sSQL = 'UPDATE ' . constant($this->sTable) . ' SET ';
         $aSQL = array();
-        foreach ($aFields as $key => $sField) {
-            $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
+        $i = 0;
+        foreach ($aFields as $sField) {
+            // But skip the IDs that may be in the list.
+            if (isset($aIDs[$sField])) {
+                continue;
+            }
+            $sSQL .= (!$i? '' : ', ') . '`' . $sField . '` = ?';
+            $i ++;
             if (!isset($aData[$sField])) {
                 // Field may be not set, make sure it is (happens in very rare cases).
                 $aData[$sField] = '';
@@ -1501,16 +1655,76 @@ class LOVD_Object {
             if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC', 'FLO'))) {
                 $aData[$sField] = NULL;
             }
-            $aSQL[] = $aData[$sField];
+            $aSQL[$sField] = $aData[$sField];
         }
-        $sSQL .= ' WHERE id = ?';
-        $aSQL[] = $nID;
+        $sSQL .= ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?';
+        $aSQL += $aIDs;
+
+        // Calculate diff with past entry. We do this, to see if we need to run at all.
+        // If we don't run, we don't run on any table (to prevent mismatch in edited_date between data and REV).
+        // Fill the columns that are not available in $aSQL (non-updatable fields).
+        $aSQLTotal = $aSQL + $aDataOld; // Doesn't overwrite existing values like array_merge() does (good in this case).
+        // Find the differences between the old and new records
+        $aDiff = array_diff_assoc($aSQLTotal, $aDataOld);
+        // Remove the columns we are not interested in.
+        unset($aDiff['edited_by'], $aDiff['edited_date']);
+
+        // No diff? Do nothing. Don't return false, though.
+        if (!$aDiff) {
+            if ($bRev && !$bWasAlreadyInTransaction) {
+                $_DB->commit(); // Or a rollback()? We only did a select...
+            }
+            return -1; // Doesn't evaluate to false, but can serve as a specific value that you can check for.
+        }
 
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::updateEntry()');
         }
-        $q = $_DB->query($sSQL, $aSQL, true, true);
+        $q = $_DB->query($sSQL, array_values($aSQL), true, true);
 
+        // Setup and run the revision table SQL.
+        if ($bRev) {
+            // If we have passed a reason then use this as the first line otherwise just say the record was modified.
+            $sReason = 'Record modified' . (empty($aData['reason'])? '' : ': ' . $aData['reason']);
+            // Have we detected any differences?
+            // (we could remove this check now since we returned already, but just in case we change that behavior)
+            if (count($aDiff)) {
+                // Loop through each of these differences and create a reason string.
+                foreach ($aDiff as $sKey => $sValue) {
+                    $sReason .= "\r\n" . $sKey . ': "' . $aDataOld[$sKey] . '" => "' . $sValue . '"';
+                }
+            } else {
+                $sReason .= ', no changes detected.';
+            }
+
+            // Modify the columns relevant to the revision table.
+            $aSQLTotal['reason'] = $sReason;
+            $aSQLTotal['valid_from'] = (!empty($aSQLTotal['edited_date'])? $aSQLTotal['edited_date'] : date('Y-m-d H:i:s'));
+
+            // Update the existing revision record.
+            // We could just check for a valid_to of 9999-12-31, but this
+            //  is more flexible if we choose a different format.
+            $qRevisionUpdate = $_DB->query('
+                UPDATE ' . constant($this->sTable . '_REV') . '
+                SET valid_to = ?
+                WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? AND valid_to >= NOW()
+                ORDER BY valid_to DESC LIMIT 1',
+                    array_merge(array($aSQLTotal['valid_from']), array_values($aIDs)), true, true);
+
+            // Create the SQL for inserting a new revision record.
+            $sRevSQL = 'INSERT INTO ' . constant($this->sTable . '_REV') . ' (`' . implode('`, `', array_keys($aSQLTotal)) . '`) VALUES (?' . str_repeat(', ?', count($aSQLTotal) - 1) . ')';
+            $qRevisionInsert = $_DB->query($sRevSQL, array_values($aSQLTotal), true, true);
+
+            // If any of the queries fail, then rollback and return false. Otherwise, commit.
+            if (!$q || !$qRevisionInsert || !$qRevisionUpdate) {
+                $_DB->rollBack();
+                return false;
+            } else {
+                if (!$bWasAlreadyInTransaction) {
+                    $_DB->commit();
+                }
+            }
+        }
         return $q->rowCount();
     }
 
@@ -1518,20 +1732,22 @@ class LOVD_Object {
 
 
 
-    function viewEntry ($nID = false)
+    function viewEntry ($ID)
     {
         // Views just one entry from the database.
+        // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to change.
+        //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
         global $_DB, $_T;
 
-        if (empty($nID)) {
-            // We were called, but the class wasn't initiated with an ID. Fail.
+        // Check to see if an ID has been passed and there is data to process.
+        if ((!is_array($ID) && !trim($ID)) || (is_array($ID) && (!$ID || in_array('', array_map('trim', $ID))))) {
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::viewEntry() - Method didn\'t receive ID');
         }
 
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
 
         // Check existence of entry.
-        $n = $this->getCount($nID);
+        $n = $this->getCount($ID);
         if (!$n) {
             lovd_showInfoTable('No such ID!', 'stop');
             if (!$bAjax) {
@@ -1548,21 +1764,35 @@ class LOVD_Object {
             $_DB->query($this->sSQLPreViewEntry);
         }
 
-        // Manipulate WHERE to include ID, and build query.
-        $sTableName = constant($this->sTable);
-        // Try to get the name of the ID column in MySQL. I'd rather not do it this way, but even worse would be to have yet another variable.
-        if (!empty($this->aColumnsViewList['id']['db'][0])) {
-            $sIDColumn = $this->aColumnsViewList['id']['db'][0];
+        // Because a ViewEntry query often contains many tables, find out the table's alias, if used.
+        if (preg_match('/' . constant($this->sTable) . ' AS ([a-z0-9]+)\b/', $this->aSQLViewEntry['FROM'], $aRegs)) {
+            // An alias was defined. Use it.
+            $sTableAlias = $aRegs[1];
         } else {
-            if (preg_match('/' . constant($this->sTable) . ' AS ([a-z]+)( .+)?$/', $this->aSQLViewEntry['FROM'], $aRegs)) {
-                // An alias was defined. Use it.
-                $sIDColumn = $aRegs[1] . '.id';
-            } else {
-                // Use the normal table name.
-                $sIDColumn = constant($this->sTable) . '.id';
+            // Use the normal table name.
+            $sTableAlias = constant($this->sTable);
+        }
+
+        // Prepare ID variable, to always be in the array('id' => 1) format.
+        if (!is_array($ID)) {
+            $sIDColumn = 'id';
+            // In case a different column name is used, better use that instead.
+            if (!empty($this->aColumnsViewList['id']['db'][0])) {
+                $sIDColumn = $this->aColumnsViewList['id']['db'][0];
+                // But take the optional table alias off.
+                $sIDColumn = substr(strrchr('.' . $sIDColumn, '.'), 1);
+            }
+            $aIDs = array($sTableAlias . '.' . $sIDColumn => $ID);
+        } else {
+            // Apply the table's alias to each of the IDs.
+            $aIDs = array();
+            foreach ($ID as $sKey => $sValue) {
+                $aIDs[$sTableAlias . '.' . $sKey] = $sValue;
             }
         }
-        $this->aSQLViewEntry['WHERE'] = $sIDColumn . ' = ?' . (!$this->aSQLViewEntry['WHERE']? '' : ' AND ' . $this->aSQLViewEntry['WHERE']);
+
+        // Manipulate WHERE to include ID, and build query.
+        $this->aSQLViewEntry['WHERE'] = implode(' = ? AND ', array_keys($aIDs)) . ' = ?' . (!$this->aSQLViewEntry['WHERE']? '' : ' AND ' . $this->aSQLViewEntry['WHERE']);
         $sSQL = 'SELECT ' . $this->aSQLViewEntry['SELECT'] .
                ' FROM ' . $this->aSQLViewEntry['FROM'] .
                ' WHERE ' . $this->aSQLViewEntry['WHERE'] .
@@ -1570,7 +1800,7 @@ class LOVD_Object {
                ' GROUP BY ' . $this->aSQLViewEntry['GROUP_BY']);
 
         // Run the actual query.
-        $zData = $_DB->query($sSQL, array($nID))->fetchAssoc();
+        $zData = $_DB->query($sSQL, array_values($aIDs))->fetchAssoc();
         // If the user has no rights based on the statusid column, we don't have a $zData.
         if (!$zData) {
             // Don't give away information about the ID: just pretend the entry does not exist.
