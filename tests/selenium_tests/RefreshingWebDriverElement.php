@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-27
- * Modified    : 2016-10-27
+ * Modified    : 2016-10-31
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -30,6 +30,7 @@
 
 
 use \Facebook\WebDriver\Exception\StaleElementReferenceException;
+use \Facebook\WebDriver\Exception\UnknownServerException;
 use \Facebook\WebDriver\Remote\RemoteWebElement;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriver;
@@ -62,7 +63,21 @@ class RefreshingWebElement extends RemoteWebElement {
 
     public function click ()
     {
-        return $this->tryWithRefresh('click');
+        try {
+            return $this->tryWithRefresh('click');
+        } catch (UnknownServerException $e) {
+            if (strpos($e->getMessage(), 'Element is not clickable at point') !== false) {
+                // Try to scroll the element into view at bottom of viewport
+                // and click it again.
+                fwrite(STDERR, 'Scrolling element into view, locator = "' .
+                    $this->locator->getValue() . '" (' . $this->locator->getMechanism() . ')' .
+                    PHP_EOL);
+                $this->driver->scrollToElement($this, false);
+                return $this->tryWithRefresh('click');
+            }
+            // Otherwise rethrow the unknown exception.
+            throw $e;
+        }
     }
 
 
