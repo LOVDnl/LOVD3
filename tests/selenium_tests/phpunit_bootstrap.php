@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-10-17
+ * Modified    : 2016-11-01
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,19 +31,9 @@
 
 // Set up global constants and include path for running tests.
 define('ROOT_PATH', realpath(__DIR__ . '/../../src') . '/');
+define('LOVD_plus', false);
 
-// Set up the LOVD environment with all common globals like a database
-// connection, configuration settings, etc. by including inc-init.php.
-define('FORMAT_ALLOW_TEXTPLAIN', true);
-$_GET['format'] = 'text/plain';
-// To prevent notices when running inc-init.php.
-$_SERVER = array_merge($_SERVER, array(
-    'HTTP_HOST' => 'localhost',
-    'REQUEST_URI' => '/' . basename(__FILE__),
-    'QUERY_STRING' => '',
-    'REQUEST_METHOD' => 'GET',
-));
-require_once ROOT_PATH . 'inc-init.php';
+require_once ROOT_PATH . 'inc-lib-init.php';
 
 // Get configuration settings.
 $_INI = lovd_parseConfigFile(ROOT_PATH . 'config.ini.php');

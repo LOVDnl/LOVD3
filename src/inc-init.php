@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-10-17
+ * Modified    : 2016-11-01
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -121,7 +121,7 @@ define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 
 // Diagnostics: To make it easier to share certain code between
 // LOVD and LOVD+, simply define if we're active or not.
-define('LOVD_plus', false);
+@define('LOVD_plus', false);
 
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =

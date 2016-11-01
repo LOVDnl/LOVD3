@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-10-27
+ * Modified    : 2016-11-01
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -101,7 +101,19 @@ function setMutalyzerServiceURL ($sURL)
     // Set the Mutalyzer URL in the database to the TEST server, as agreed with
     //  the Mutalyzer team. This way, one test run of LOVD also tests their
     //  update.
-    global $_DB;
+
+    // Set up the LOVD environment with all common globals like a database
+    // connection, configuration settings, etc. by including inc-init.php.
+    define('FORMAT_ALLOW_TEXTPLAIN', true);
+    $_GET['format'] = 'text/plain';
+    // To prevent notices when running inc-init.php.
+    $_SERVER = array_merge($_SERVER, array(
+        'HTTP_HOST' => 'localhost',
+        'REQUEST_URI' => '/' . basename(__FILE__),
+        'QUERY_STRING' => '',
+        'REQUEST_METHOD' => 'GET',
+    ));
+    require_once ROOT_PATH . 'inc-init.php';
 
     $result = $_DB->query('UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url=?', array($sURL));
 
