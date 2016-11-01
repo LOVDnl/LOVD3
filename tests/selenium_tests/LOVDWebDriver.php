@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-26
- * Modified    : 2016-10-27
+ * Modified    : 2016-11-01
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,6 +33,7 @@ require_once 'RefreshingWebDriverElement.php';
 use \Facebook\WebDriver\Remote\DriverCommand;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverElement;
 
 
 class LOVDWebDriver extends RemoteWebDriver {
@@ -57,6 +58,21 @@ class LOVDWebDriver extends RemoteWebDriver {
         $element->setLocator($by);
         $element->setWebDriver($this);
         return $element;
+    }
+
+
+
+
+
+    public function scrollToElement (WebDriverElement $element, $bAtTop = true)
+    {
+        // Let the browser scroll such that the given element is in the
+        // viewport. If $bAtTop is true, the element will be located at the top
+        // of the viewport, otherwise it will be at the bottom.
+
+        // Note: Passing $sAtTop as an argument to executeScript() doesn't seem to do what is expected.
+        $sAtTop = ($bAtTop? 'true' : 'false');
+        $this->executeScript('arguments[0].scrollIntoView(' . $sAtTop . ');', array($element));
     }
 }
 

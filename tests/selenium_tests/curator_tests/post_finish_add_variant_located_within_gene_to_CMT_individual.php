@@ -31,7 +31,8 @@ class PostFinishAddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSelen
         $element->click();
         
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::xpath("//table[2]/tbody/tr/td[2]/b"));
+        $element = $this->driver->findElement(WebDriverBy::xpath(
+            '//b[contains(., "A variant that is located within a gene")]'));
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));
         $element->click();

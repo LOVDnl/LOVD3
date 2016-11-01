@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-08-29
- * For LOVD    : 3.0-17
+ * Modified    : 2016-11-01
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -595,7 +595,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
 
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
 
-<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
+<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo" style="position : fixed; z-index : 10">
   <TR>
 <?php
         if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
@@ -610,7 +610,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
               '    </TD>' . "\n");
 
-        print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
+        print('    <TD valign="top" style="padding-top : 2px; white-space : nowrap; width : 100%">' . "\n" .
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
 
         if ($sCurrSymbol && $sCurrGene) {
@@ -627,7 +627,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // This is done with function lovd_switchGene().
         print('      <H5 id="gene_switcher"></H5>' . "\n" .
               '    </TD>' . "\n" .
-              '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
+              '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px; white-space: nowrap; padding-left: 20px;">' . "\n" .
               '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .
               (!defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
               '<BR>' . "\n");
@@ -642,7 +642,11 @@ foreach ($zAnnouncements as $zAnnouncement) {
         }
 
         print('    </TD>' . "\n" .
-              '  </TR>' . "\n");
+              '  </TR>' . "\n" .
+              '</TABLE>' . "\n\n");
+
+        $nTotalTabWidth = 0; // Will stretch the page at least this far, so the tabs don't "break" if the window is narrow.
+        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo" style="margin-top:55px;' . (count($this->aMenu)? '' : ' border-bottom : 2px solid #000000;') . '">' . "\n");
 
         // Add curator info to header.
         if ($sCurrSymbol && $sCurrGene) {
@@ -662,15 +666,9 @@ foreach ($zAnnouncements as $zAnnouncement) {
             }
         }
 
-        print('</TABLE>' . "\n\n");
-
-
-
         // Build menu tabs...
-        $nTotalTabWidth = 0; // Will stretch the page at least this far, so the tabs don't "break" if the window is narrow.
-        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo"' . (count($this->aMenu)? '' : ' style="border-bottom : 2px solid #000000;"') . '>' . "\n" .
-              '  <TR>' . "\n" .
-              '    <TD align="left" style="background : url(\'gfx/tab_fill.png\'); background-repeat : repeat-x;">' . "\n");
+        print('  <TR>' . "\n" .
+              '    <TD align="left" colspan="2" style="background : url(\'gfx/tab_fill.png\'); background-repeat : repeat-x;">' . "\n");
 
         // Loop menu.
         $n         = 0;
