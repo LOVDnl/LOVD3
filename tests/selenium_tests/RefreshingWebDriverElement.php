@@ -72,6 +72,8 @@ class RefreshingWebElement extends RemoteWebElement {
                 fwrite(STDERR, 'Scrolling element into view, locator = "' .
                     $this->locator->getValue() . '" (' . $this->locator->getMechanism() . ')' .
                     PHP_EOL);
+                // "false" indicates we will scroll to have this element
+                //  at the *bottom* of the page, not the top.
                 $this->driver->scrollToElement($this, false);
                 return $this->tryWithRefresh('click');
             }

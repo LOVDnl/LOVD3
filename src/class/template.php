@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-08-29
- * For LOVD    : 3.0-17
+ * Modified    : 2016-11-01
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -642,10 +642,8 @@ foreach ($zAnnouncements as $zAnnouncement) {
         }
 
         print('    </TD>' . "\n" .
-              '  </TR>' . "\n");
-
-
-        print('</TABLE>' . "\n\n");
+              '  </TR>' . "\n" .
+              '</TABLE>' . "\n\n");
 
         $nTotalTabWidth = 0; // Will stretch the page at least this far, so the tabs don't "break" if the window is narrow.
         print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo" style="margin-top:55px;' . (count($this->aMenu)? '' : ' border-bottom : 2px solid #000000;') . '">' . "\n");

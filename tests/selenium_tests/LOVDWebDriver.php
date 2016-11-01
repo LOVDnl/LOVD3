@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-26
- * Modified    : 2016-10-31
+ * Modified    : 2016-11-01
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -64,14 +64,14 @@ class LOVDWebDriver extends RemoteWebDriver {
 
 
 
-    public function scrollToElement (WebDriverElement $element, $bAtTop=true)
+    public function scrollToElement (WebDriverElement $element, $bAtTop = true)
     {
         // Let the browser scroll such that the given element is in the
         // viewport. If $bAtTop is true, the element will be located at the top
         // of the viewport, otherwise it will be at the bottom.
 
-        // Note: passing $sAtTop as an argument does not give the expected result.
-        $sAtTop = ($bAtTop) ? 'true' : 'false';
+        // Note: Passing $sAtTop as an argument to executeScript() doesn't seem to do what is expected.
+        $sAtTop = ($bAtTop? 'true' : 'false');
         $this->executeScript('arguments[0].scrollIntoView(' . $sAtTop . ');', array($element));
     }
 }
