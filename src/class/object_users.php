@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-07-20
- * For LOVD    : 3.0-17
+ * Modified    : 2016-11-11
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -412,7 +412,12 @@ class LOVD_User extends LOVD_Object {
                         'skip',
       'change_other' => array('Enter your password for authorization', '', 'password', 'password', 20));
             if ($_PE[1] == $_AUTH['id']) {
+                // User is resetting password for him/herself.
                 unset($this->aFormData['change_other']);
+                // If user just logged in with an unlocking code, we will rename the "Current password" field.
+                if ($_AUTH['password'] == $_AUTH['password_autogen']) {
+                    $this->aFormData['change_self'][0] = 'Unlocking code';
+                }
             } else {
                 unset($this->aFormData['change_self']);
             }
