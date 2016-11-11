@@ -10,6 +10,8 @@
  *********/
  * Make header stick to the top of the browser's viewport, such that the links
    in the header are always visible.
+ * Fixed bug; When a user needed to change the password, the force option didn't
+   work properly, and could be circumvented.
 
 
 /************************************
