@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2016-04-08
- * For LOVD    : 3.0-15
+ * Modified    : 2016-11-11
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -50,6 +50,7 @@ if (ACTION || PATH_COUNT < 2) {
 
 if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'user')))) ||
     ($_PE[1] == 'columns' && PATH_COUNT <= 3) ||
+    ($_PE[1] == 'diseases' && PATH_COUNT == 2) ||
     ($_PE[1] == 'genes' && PATH_COUNT == 2)) {
     // URL: /download/all
     // URL: /download/all/gene/IVD
@@ -57,6 +58,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     // URL: /download/all/user/00001
     // URL: /download/columns
     // URL: /download/columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
+    // URL: /download/diseases
     // URL: /download/genes
     // Download data from the database, so that we can import it elsewhere.
 
@@ -104,6 +106,12 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sHeader = 'Custom column';
         $sFilter = 'category';
         $ID = $_PE[2];
+        lovd_requireAuth(LEVEL_MANAGER);
+
+    } elseif ($_PE[1] == 'diseases' && empty($_PE[2])) {
+        // Download all diseases.
+        $sFileName = 'diseases';
+        $sHeader = 'Disease data';
         lovd_requireAuth(LEVEL_MANAGER);
 
     } elseif ($_PE[1] == 'genes' && empty($_PE[2])) {
@@ -284,6 +292,13 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         if ($sFilter == 'category') {
             $aObjects['Columns']['filters']['category'] = $ID;
         }
+
+    } elseif ($_PE[1] == 'diseases') {
+        $aObjects =
+            array(
+                'Diseases' => $aDataTypeSettings,
+                'Gen2Dis' => array_merge($aDataTypeSettings, array('label' => 'Genes_To_Diseases', 'order_by' => 'geneid, diseaseid')),
+            );
 
     } elseif ($_PE[1] == 'genes') {
         $aObjects =

@@ -13,6 +13,7 @@
  * Fixed bug; Curators were given an actions menu when viewing other users. None
    of the links actually worked because of security measures, now the menu has
    been removed.
+ * Full disease data can now also be downloaded by Managers and up.
 
 
 /************************************
