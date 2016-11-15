@@ -14,6 +14,8 @@
    of the links actually worked because of security measures, now the menu has
    been removed.
  * Full disease data can now also be downloaded by Managers and up.
+ * Fixed bug; Importing data failed for installations with a '2' in the table
+   prefix, because the import code misunderstood the table types that way.
 
 
 /************************************
