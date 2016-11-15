@@ -14,6 +14,8 @@
    of the links actually worked because of security measures, now the menu has
    been removed.
  * Full disease data can now also be downloaded by Managers and up.
+ * Large downloads are now allowed to take a longer time, to make sure they
+   finish before the server interrupts them.
 
 
 /************************************
