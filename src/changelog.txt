@@ -18,6 +18,8 @@
    removal of a transcript anymore due to an error introduced in 3.0-17.
  * Fixed bug; Importing data failed for installations with a '2' in the table
    prefix, because the import code misunderstood the table types that way.
+ * Large downloads are now allowed to take a longer time, to make sure they
+   finish before the server interrupts them.
 
 
 /************************************
