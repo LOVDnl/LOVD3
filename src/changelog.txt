@@ -16,6 +16,8 @@
  * Full disease data can now also be downloaded by Managers and up.
  * Fixed bug; The "Manage transcripts for this variant" feature didn't allow the
    removal of a transcript anymore due to an error introduced in 3.0-17.
+ * Fixed bug; Importing data failed for installations with a '2' in the table
+   prefix, because the import code misunderstood the table types that way.
 
 
 /************************************
