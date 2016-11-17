@@ -55,8 +55,28 @@ if (!$zUser) {
 // If we get there, we want to show the dialog for sure.
 print('
 if (!$("#auth_token_dialog").hasClass("ui-dialog-content") || !$("#auth_token_dialog").dialog("isOpen")) {
-    $("#auth_token_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true,buttons:{"Close":function(){$(this).dialog("close");}}});
-}');
+    $("#auth_token_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true});
+}
+
+
+');
+
+$sMessageIntro  = 'Since LOVD 3.0-18, LOVD contains an API that allows for the direct submission of data into the database. This API is currently undocumented and stil in beta. To use this API, you\'ll need an API token that serves to authorize you instead of using your username and password in the data file.';
+$sMessageCreate = 'You can create a new token by clicking &quot;Create new token&quot; below. This will revoke any existing tokens, if any. This also allows you to set an expiration to your token; after the expiration date, you will no longer be able to use this token and you will need to renew it.';
+$sMessageRevoke = 'You can also revoke your token completely, without creating a new one, blocking access of this token to the API completely. You can do this by clicking &quote;Revoke token&quot; below.';
+$bToken = !empty($zUser['auth_token']);
+$bTokenExpired = (strtotime($zUser['auth_token_expires']) <= time());
+
+// Set JS variables and objects.
+print('
+var bToken = ' . (int) $bToken . ';
+var bTokenExpired = ' . (int) $bTokenExpired . ';
+var oButtonCreate = {"Create new token":function () { $.get("' . CURRENT_PATH . '?create"); }};
+var oButtonRevoke = {"Revoke token":function () { $.get("' . CURRENT_PATH . '?revoke"); }};
+var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
+
+
+');
 
 
 
@@ -64,6 +84,27 @@ if (!$("#auth_token_dialog").hasClass("ui-dialog-content") || !$("#auth_token_di
 
 if (ACTION == 'view') {
     // View current token and status.
+    print('
+    $("#auth_token_dialog").html("' . $sMessageIntro . '<BR>");
+    $("#auth_token_dialog").append("' . $sMessageCreate . '<BR>");
+    if (bToken) {
+        $("#auth_token_dialog").append("' . $sMessageRevoke . '<BR>");
+    }
+    $("#auth_token_dialog").append("<BR>");
+    
+    // If we have a token, show it.
+    if (bToken) {
+        $("#auth_token_dialog").append("Your current token:<BR><PRE>' . $zUser['auth_token'] . '</PRE><BR>");
+    }
+    
+    // Select the right buttons.
+    var oButtons = $.extend({}, oButtonCreate);
+    if (bToken) {
+        $.extend(oButtons, oButtonRevoke);
+    }
+    $.extend(oButtons, oButtonClose);
+    $("#auth_token_dialog").dialog({buttons: oButtons}); 
+    ');
     exit;
 }
 ?>
