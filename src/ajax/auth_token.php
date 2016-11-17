@@ -71,7 +71,7 @@ $bTokenExpired = (strtotime($zUser['auth_token_expires']) <= time());
 print('
 var bToken = ' . (int) $bToken . ';
 var bTokenExpired = ' . (int) $bTokenExpired . ';
-var oButtonCreate = {"Create new token":function () { $.get("' . CURRENT_PATH . '?create"); }};
+var oButtonCreate = {"Create new token":function () { if (bToken && !bTokenExpired) { if (!window.confirm("Are you sure you want to create a new token, invalidating the current token?")) { return false; }} $.get("' . CURRENT_PATH . '?create"); }};
 var oButtonRevoke = {"Revoke token":function () { $.get("' . CURRENT_PATH . '?revoke"); }};
 var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 
@@ -94,7 +94,11 @@ if (ACTION == 'view') {
     
     // If we have a token, show it.
     if (bToken) {
-        $("#auth_token_dialog").append("Your current token:<BR><PRE>' . $zUser['auth_token'] . '</PRE><BR>");
+        if (bTokenExpired) {
+            $("#auth_token_dialog").append("Your current token has expired.<BR>");
+        } else {
+            $("#auth_token_dialog").append("Your current token:<BR><PRE>' . $zUser['auth_token'] . '</PRE><BR>");
+        }
     }
     
     // Select the right buttons.
