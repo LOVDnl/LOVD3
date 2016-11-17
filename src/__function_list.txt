@@ -28,6 +28,7 @@
 4.0.0 asort
 4.0.0 base64_encode
 4.0.0 basename
+4.0.0 bin2hex
 4.0.0 ceil
 4.0.0 chdir
 4.0.0 checkdate
@@ -115,6 +116,7 @@
 4.3.0 ob_get_clean
 4.0.0 ob_start
 4.0.0 opendir
+5.3.0 openssl_random_pseudo_bytes
 4.0.0 parse_url
 4.0.0 phpversion
 4.0.0 preg_match
