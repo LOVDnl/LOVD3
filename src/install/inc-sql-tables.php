@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2016-09-05
- * For LOVD    : 3.0-17
+ * Modified    : 2016-11-17
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -79,6 +79,8 @@ $aTableSQL =
     password CHAR(50) NOT NULL,
     password_autogen CHAR(50),
     password_force_change BOOLEAN NOT NULL,
+    auth_token CHAR(32),
+    auth_token_expires DATETIME,
     phpsessid CHAR(32),
     saved_work TEXT,
     level TINYINT(1) UNSIGNED NOT NULL,
