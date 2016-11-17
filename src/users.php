@@ -8,7 +8,7 @@
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -150,6 +150,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_GET['search_userid'] = $nID;
         $_DATA->viewList('Logs_for_Users_VE', array('user_', 'del'), true);
     }
+
+    // DIV for Dialog meant for the authorization token.
+    print('      <DIV id="auth_token_dialog" title="API authorization token" style="display : none;"></DIV>' . "\n\n" .
+          '      <SCRIPT type="text/javascript">' . "\n" .
+          '        function lovd_showAuthTokenDialog ()' . "\n" .
+          '        {' . "\n" .
+          '          // This is enough to get the code evaluated.' . "\n" .
+          '          $.get("ajax/auth_token.php/' . $nID . '?view");' . "\n" .
+          '        }' . "\n" .
+          '      </SCRIPT>' . "\n\n");
 
     $_T->printFooter();
     exit;
