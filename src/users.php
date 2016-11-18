@@ -106,7 +106,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
 
+    print('      <DIV id="viewentryDiv">' . "\n");
     $zData = $_DATA->viewEntry($nID);
+    print('      </DIV>' . "\n\n");
 
     $aNavigation = array();
     // Since we're faking the user's level to show some more columns when the user is viewing himself, we must put the check on the ID here.

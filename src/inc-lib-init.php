@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-11-17
+ * Modified    : 2016-11-18
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -572,7 +572,10 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         } else {
             // If viewing himself, always get authorization.
             if ($Data == $_AUTH['id']) {
-                return 1; // FIXME: We're not supporting $bSetUserLevel at the moment (not required right now, either).
+                if ($bSetUserLevel) {
+                    $_AUTH['level'] = LEVEL_OWNER;
+                }
+                return 1;
             } elseif ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Lower than managers never get access to hidden data of other users.
                 return false;
