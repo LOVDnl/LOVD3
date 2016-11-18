@@ -493,7 +493,7 @@ class LOVD_User extends LOVD_Object {
                     $sDiff = lovd_convertSecondsToTime(abs($tDiff));
                     $zData['auth_token_expires_'] = '<SPAN title="' . $zData['auth_token_expires'] . '">' . ($tDiff > 0? 'In ' . $sDiff : 'Expired ' . $sDiff . ' ago') . '</SPAN>';
                 } else {
-                    $zData['auth_token_expires_'] = '- (Never)';
+                    $zData['auth_token_expires_'] = (!$zData['auth_token']? '' : '- (Never)');
                 }
 
                 // Since we're manager or viewing ourselves, we don't need to check for the data status of the data.

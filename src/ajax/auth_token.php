@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 // Check for basic format.
-if (PATH_COUNT != 3 || !ctype_digit($_PE[2]) || !in_array(ACTION, array('create', 'view'))) {
+if (PATH_COUNT != 3 || !ctype_digit($_PE[2]) || !in_array(ACTION, array('create', 'revoke', 'view'))) {
     die('alert("Error while sending data.");');
 }
 
@@ -72,10 +72,11 @@ function lovd_reloadUserVE ()
 
 ');
 
-$sFormCreate    = '<FORM id=\'auth_token_create_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Please select the validity of the token.<BR><SELECT name=\'auth_token_expires\'><OPTION value=\'\'>forever</OPTION><OPTION value=\'604800\'>1 week</OPTION><OPTION value=\'2592000\'>1 month</OPTION><OPTION value=\'7776000\'>3 months</OPTION><OPTION value=\'31536000\'>1 year</OPTION></SELECT>';
+$sFormCreate    = '<FORM id=\'auth_token_create_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Please select the validity of the token.<BR><SELECT name=\'auth_token_expires\'><OPTION value=\'\'>forever</OPTION><OPTION value=\'604800\'>1 week</OPTION><OPTION value=\'2592000\'>1 month</OPTION><OPTION value=\'7776000\'>3 months</OPTION><OPTION value=\'31536000\'>1 year</OPTION></SELECT></FORM>';
+$sFormRevoke    = '<FORM id=\'auth_token_revoke_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Are you sure you want to revoke your current API key?</FORM>';
 $sMessageIntro  = 'Since LOVD 3.0-18, LOVD contains an API that allows for the direct submission of data into the database. This API is currently undocumented and still in beta. To use this API, you\'ll need an API token that serves to authorize you instead of using your username and password in the data file.';
 $sMessageCreate = 'You can create a new token by clicking &quot;Create new token&quot; below. This will revoke any existing tokens, if any. This also allows you to set an expiration to your token; after the expiration date, you will no longer be able to use this token and you will need to renew it.';
-$sMessageRevoke = 'You can also revoke your token completely, without creating a new one, blocking access of this token to the API completely. You can do this by clicking &quote;Revoke token&quot; below.';
+$sMessageRevoke = 'You can also revoke your token completely, without creating a new one, blocking access of this token to the API completely. You can do this by clicking &quot;Revoke token&quot; below.';
 $bToken = !empty($zUser['auth_token']);
 $bTokenExpired = (!empty($zUser['auth_token_expires']) && strtotime($zUser['auth_token_expires']) <= time());
 
@@ -89,6 +90,7 @@ var oButtonBack   = {"Back":function () { $.get("' . CURRENT_PATH . '?view"); }}
 var oButtonCancel = {"Cancel":function () { $.get("' . CURRENT_PATH . '?view"); }};
 var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 var oButtonFormCreate = {"Create new token":function () { $.post("' . CURRENT_PATH . '?create", $("#auth_token_create_form").serialize()); }};
+var oButtonFormRevoke = {"Yes, revoke token":function () { $.post("' . CURRENT_PATH . '?revoke", $("#auth_token_revoke_form").serialize()); }};
 
 
 ');
@@ -119,7 +121,7 @@ if (ACTION == 'create' && GET) {
 
 
 if (ACTION == 'create' && POST) {
-    // Show create form.
+    // Process create form.
     // We do this in two steps, not only because we need to know the expiration of the token, but also to prevent CSRF.
 
     if (empty($_POST['csrf_token']) || $_POST['csrf_token'] != $_SESSION['csrf_tokens']['auth_token_create']) {
@@ -149,6 +151,56 @@ if (ACTION == 'create' && POST) {
     // Display the form, and put the right buttons in place.
     print('
     $("#auth_token_dialog").html("Token created successfully!");
+    lovd_reloadUserVE();
+    
+    // Select the right buttons.
+    $("#auth_token_dialog").dialog({buttons: oButtonBack}); 
+    ');
+    exit;
+}
+
+
+
+
+
+if (ACTION == 'revoke' && GET) {
+    // Show revoke form.
+    // We do this in two steps, to prevent CSRF.
+
+    $_SESSION['csrf_tokens']['auth_token_revoke'] = md5(uniqid());
+    $sFormRevoke = str_replace('{{CSRF_TOKEN}}', $_SESSION['csrf_tokens']['auth_token_revoke'], $sFormRevoke);
+
+    // Display the form, and put the right buttons in place.
+    print('
+    $("#auth_token_dialog").html("' . $sFormRevoke . '<BR>");
+
+    // Select the right buttons.
+    $("#auth_token_dialog").dialog({buttons: $.extend({}, oButtonFormRevoke, oButtonCancel)});
+    ');
+    exit;
+}
+
+
+
+
+
+if (ACTION == 'revoke' && POST) {
+    // Process revoke form.
+    // We do this in two steps, to prevent CSRF.
+
+    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] != $_SESSION['csrf_tokens']['auth_token_revoke']) {
+        die('alert("Error while sending data, possible security risk. Try reloading the page, and loading the form again.");');
+    }
+
+    // Update!
+    if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET auth_token = NULL, auth_token_expires = NULL WHERE id = ?', array($nID), false)) {
+        die('alert("Failed to revoke token.\n' . htmlspecialchars($_DB->formatError()) . '");');
+    }
+    // If we get here, the token has been revoked successfully!
+
+    // Display the form, and put the right buttons in place.
+    print('
+    $("#auth_token_dialog").html("Token revoked successfully!");
     lovd_reloadUserVE();
     
     // Select the right buttons.
