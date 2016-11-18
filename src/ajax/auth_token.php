@@ -53,7 +53,10 @@ if (!$zUser) {
 }
 
 // If we get there, we want to show the dialog for sure.
-print('// Make sure we show the dialog.
+print('// Make sure we have and show the dialog.
+if (!$("#auth_token_dialog").length) {
+    $("body").append("<DIV id=\'auth_token_dialog\' title=\'API authorization token\'></DIV>");
+}
 if (!$("#auth_token_dialog").hasClass("ui-dialog-content") || !$("#auth_token_dialog").dialog("isOpen")) {
     $("#auth_token_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true});
 }
@@ -147,6 +150,7 @@ if (ACTION == 'create' && POST) {
         die('alert("Failed to create new token.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been created and stored successfully!
+    lovd_writeLog('Event', 'AuthTokenCreate', 'Successfully created new API token, expires ' . $sAuthTokenExpires);
 
     // Display the form, and put the right buttons in place.
     print('
@@ -197,6 +201,7 @@ if (ACTION == 'revoke' && POST) {
         die('alert("Failed to revoke token.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been revoked successfully!
+    lovd_writeLog('Event', 'AuthTokenRevoke', 'Successfully revoked current API token');
 
     // Display the form, and put the right buttons in place.
     print('

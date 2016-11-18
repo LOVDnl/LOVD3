@@ -487,7 +487,7 @@ class LOVD_User extends LOVD_Object {
                 // Either we're viewing ourselves, or we're manager or up.
 
                 // Auth token links. We don't show the token by default.
-                $zData['auth_token_'] = '(<A href="#" onclick="lovd_showAuthTokenDialog(); return false;">Show / More information</A>)';
+                $zData['auth_token_'] = '(<A href="#" onclick="$.get(\'ajax/auth_token.php/' . $zData['id'] . '?view\'); return false;">Show / More information</A>)';
                 if ($zData['auth_token_expires']) {
                     $tDiff = strtotime($zData['auth_token_expires']) - time();
                     $sDiff = lovd_convertSecondsToTime(abs($tDiff));
