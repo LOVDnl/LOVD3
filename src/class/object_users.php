@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-11-17
+ * Modified    : 2016-11-18
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -493,7 +493,7 @@ class LOVD_User extends LOVD_Object {
                     $sDiff = lovd_convertSecondsToTime(abs($tDiff));
                     $zData['auth_token_expires_'] = '<SPAN title="' . $zData['auth_token_expires'] . '">' . ($tDiff > 0? 'In ' . $sDiff : 'Expired ' . $sDiff . ' ago') . '</SPAN>';
                 } else {
-                    $zData['auth_token_expires_'] = '';
+                    $zData['auth_token_expires_'] = '- (Never)';
                 }
 
                 // Since we're manager or viewing ourselves, we don't need to check for the data status of the data.

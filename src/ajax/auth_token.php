@@ -53,9 +53,20 @@ if (!$zUser) {
 }
 
 // If we get there, we want to show the dialog for sure.
-print('
+print('// Make sure we show the dialog.
 if (!$("#auth_token_dialog").hasClass("ui-dialog-content") || !$("#auth_token_dialog").dialog("isOpen")) {
     $("#auth_token_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true});
+}
+
+function lovd_reloadUserVE ()
+{
+    // Reloads the VE if we\'ve changed the token info.
+    $.get("ajax/viewentry.php", { object: "User", id: "' . $nID . '" },
+        function (sData) {
+            if (sData.length > 2) {
+                $("#viewentryDiv").html("\n" + sData);
+            }
+        });
 }
 
 
@@ -66,7 +77,7 @@ $sMessageIntro  = 'Since LOVD 3.0-18, LOVD contains an API that allows for the d
 $sMessageCreate = 'You can create a new token by clicking &quot;Create new token&quot; below. This will revoke any existing tokens, if any. This also allows you to set an expiration to your token; after the expiration date, you will no longer be able to use this token and you will need to renew it.';
 $sMessageRevoke = 'You can also revoke your token completely, without creating a new one, blocking access of this token to the API completely. You can do this by clicking &quote;Revoke token&quot; below.';
 $bToken = !empty($zUser['auth_token']);
-$bTokenExpired = (strtotime($zUser['auth_token_expires']) <= time());
+$bTokenExpired = (!empty($zUser['auth_token_expires']) && strtotime($zUser['auth_token_expires']) <= time());
 
 // Set JS variables and objects.
 print('
@@ -74,6 +85,7 @@ var bToken = ' . (int) $bToken . ';
 var bTokenExpired = ' . (int) $bTokenExpired . ';
 var oButtonCreate = {"Create new token":function () { if (bToken && !bTokenExpired) { if (!window.confirm("Are you sure you want to create a new token, invalidating the current token?")) { return false; }} $.get("' . CURRENT_PATH . '?create"); }};
 var oButtonRevoke = {"Revoke token":function () { $.get("' . CURRENT_PATH . '?revoke"); }};
+var oButtonBack   = {"Back":function () { $.get("' . CURRENT_PATH . '?view"); }};
 var oButtonCancel = {"Cancel":function () { $.get("' . CURRENT_PATH . '?view"); }};
 var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 var oButtonFormCreate = {"Create new token":function () { $.post("' . CURRENT_PATH . '?create", $("#auth_token_create_form").serialize()); }};
@@ -95,9 +107,52 @@ if (ACTION == 'create' && GET) {
     // Display the form, and put the right buttons in place.
     print('
     $("#auth_token_dialog").html("' . $sFormCreate . '<BR>");
+
+    // Select the right buttons.
+    $("#auth_token_dialog").dialog({buttons: $.extend({}, oButtonFormCreate, oButtonCancel)});
+    ');
+    exit;
+}
+
+
+
+
+
+if (ACTION == 'create' && POST) {
+    // Show create form.
+    // We do this in two steps, not only because we need to know the expiration of the token, but also to prevent CSRF.
+
+    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] != $_SESSION['csrf_tokens']['auth_token_create']) {
+        die('alert("Error while sending data, possible security risk. Try reloading the page, and loading the form again.");');
+    }
+
+    if (!isset($_POST['auth_token_expires']) || !($_POST['auth_token_expires'] === '' || ctype_digit($_POST['auth_token_expires']))) {
+        die('alert("Error while sending data, please select a valid expiration time.");');
+    }
+
+    // Define expiration date.
+    if ($_POST['auth_token_expires']) {
+        $sAuthTokenExpires = date('Y-m-d H:i:s', time() + $_POST['auth_token_expires']);
+    } else {
+        $sAuthTokenExpires = NULL;
+    }
+
+    // Generate new token.
+    $sToken = md5($zUser['username'] . microtime(true) . bin2hex(openssl_random_pseudo_bytes(10)));
+
+    // Update!
+    if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET auth_token = ?, auth_token_expires = ? WHERE id = ?', array($sToken, $sAuthTokenExpires, $nID), false)) {
+        die('alert("Failed to create new token.\n' . htmlspecialchars($_DB->formatError()) . '");');
+    }
+    // If we get here, the token has been created and stored successfully!
+
+    // Display the form, and put the right buttons in place.
+    print('
+    $("#auth_token_dialog").html("Token created successfully!");
+    lovd_reloadUserVE();
     
     // Select the right buttons.
-    $("#auth_token_dialog").dialog({buttons: $.extend({}, oButtonFormCreate, oButtonCancel)}); 
+    $("#auth_token_dialog").dialog({buttons: oButtonBack}); 
     ');
     exit;
 }
@@ -121,7 +176,7 @@ if (ACTION == 'view') {
         if (bTokenExpired) {
             $("#auth_token_dialog").append("Your current token has expired.<BR>");
         } else {
-            $("#auth_token_dialog").append("Your current token:<BR><PRE>' . $zUser['auth_token'] . '</PRE><BR>");
+            $("#auth_token_dialog").append("Your current token:<BR><PRE>' . $zUser['auth_token'] . '</PRE>");
         }
     }
     
