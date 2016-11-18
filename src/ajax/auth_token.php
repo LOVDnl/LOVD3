@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-17
- * Modified    : 2016-11-17
+ * Modified    : 2016-11-18
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -61,8 +61,8 @@ if (!$("#auth_token_dialog").hasClass("ui-dialog-content") || !$("#auth_token_di
 
 ');
 
-$sFormCreate    = '<FORM id=\'auth_token_create_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'\'>Please select the validity of the token.<BR><SELECT name=\'auth_token_expires\'><OPTION value=\'\'>forever</OPTION><OPTION value=\'604800\'>1 week</OPTION><OPTION value=\'2592000\'>1 month</OPTION><OPTION value=\'7776000\'>3 months</OPTION><OPTION value=\'31536000\'>1 year</OPTION></SELECT>';
-$sMessageIntro  = 'Since LOVD 3.0-18, LOVD contains an API that allows for the direct submission of data into the database. This API is currently undocumented and stil in beta. To use this API, you\'ll need an API token that serves to authorize you instead of using your username and password in the data file.';
+$sFormCreate    = '<FORM id=\'auth_token_create_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Please select the validity of the token.<BR><SELECT name=\'auth_token_expires\'><OPTION value=\'\'>forever</OPTION><OPTION value=\'604800\'>1 week</OPTION><OPTION value=\'2592000\'>1 month</OPTION><OPTION value=\'7776000\'>3 months</OPTION><OPTION value=\'31536000\'>1 year</OPTION></SELECT>';
+$sMessageIntro  = 'Since LOVD 3.0-18, LOVD contains an API that allows for the direct submission of data into the database. This API is currently undocumented and still in beta. To use this API, you\'ll need an API token that serves to authorize you instead of using your username and password in the data file.';
 $sMessageCreate = 'You can create a new token by clicking &quot;Create new token&quot; below. This will revoke any existing tokens, if any. This also allows you to set an expiration to your token; after the expiration date, you will no longer be able to use this token and you will need to renew it.';
 $sMessageRevoke = 'You can also revoke your token completely, without creating a new one, blocking access of this token to the API completely. You can do this by clicking &quote;Revoke token&quot; below.';
 $bToken = !empty($zUser['auth_token']);
@@ -90,16 +90,14 @@ if (ACTION == 'create' && GET) {
     // We do this in two steps, not only because we need to know the expiration of the token, but also to prevent CSRF.
 
     $_SESSION['csrf_tokens']['auth_token_create'] = md5(uniqid());
-    $sFormCreate = str_replace('value=""', 'value="' . $_SESSION['csrf_tokens']['auth_token_create'] . '"', $sFormCreate);
+    $sFormCreate = str_replace('{{CSRF_TOKEN}}', $_SESSION['csrf_tokens']['auth_token_create'], $sFormCreate);
 
     // Display the form, and put the right buttons in place.
     print('
     $("#auth_token_dialog").html("' . $sFormCreate . '<BR>");
     
     // Select the right buttons.
-    var oButtons = $.extend({}, oButtonFormCreate);
-    $.extend(oButtons, oButtonCancel);
-    $("#auth_token_dialog").dialog({buttons: oButtons}); 
+    $("#auth_token_dialog").dialog({buttons: $.extend({}, oButtonFormCreate, oButtonCancel)}); 
     ');
     exit;
 }
