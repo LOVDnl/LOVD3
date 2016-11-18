@@ -572,7 +572,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         } else {
             // If viewing himself, always get authorization.
             if ($Data == $_AUTH['id']) {
-                if ($bSetUserLevel) {
+                if ($bSetUserLevel && $_AUTH['level'] < LEVEL_OWNER) {
                     $_AUTH['level'] = LEVEL_OWNER;
                 }
                 return 1;
