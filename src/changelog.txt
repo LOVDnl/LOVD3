@@ -20,6 +20,8 @@
    prefix, because the import code misunderstood the table types that way.
  * Large downloads are now allowed to take a longer time, to make sure they
    finish before the server interrupts them.
+ * Users can now create their own API tokens to use for the LOVD data submission
+   API.
 
 
 /************************************
