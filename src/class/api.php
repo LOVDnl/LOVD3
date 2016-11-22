@@ -231,8 +231,20 @@ class LOVD_API {
                 $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
             }
 
-            // Our job ends here.
-            return true;
+            // If we're here, the API regarded the call acceptable, and assigned
+            //  an API version higher than 0 (the LOVD2-style API).
+            // If we're at version 1 or higher, let this new API handle it.
+            // Since each method requires very specific code, the methods are
+            //  handled separately.
+            // These methods should process the request and stop PHP execution.
+            if (POST) {
+                $this->processPOST();
+            }
+
+            // If we get here, the above methods apparently didn't handle the
+            //  request.
+            $this->aResponse['errors'][] = 'Request not picked up by any handler.';
+            $this->sendHeader(500, true); // Send 500 Internal Server Error, print response, and quit.
         }
     }
 
@@ -270,6 +282,24 @@ class LOVD_API {
         }
 
         return $sResponse;
+    }
+
+
+
+
+
+    private function processPOST ()
+    {
+        // Processes the POST calls to the API.
+
+        // Currently only handling the 'submission' resource, which receives a
+        //  VarioML JSON file.
+        if ($this->sResource == 'submissions') {
+            require_once 'class/api.submissions.php';
+            $o = new LOVD_API_Submissions($this);
+            // This should process the request and stop PHP execution.
+            return $o->processPOST();
+        }
     }
 
 
