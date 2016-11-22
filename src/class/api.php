@@ -57,6 +57,21 @@ class LOVD_API {
         'data' => array(),
     );
 
+    // Currently supported resources (resource => array(methods)):
+    private $aResourcesSupported = array(
+        'submissions' => array('POST'),
+    );
+
+    // Currently supported formats:
+    private $aFormatsAccepted = array(
+        'application/json',
+        'application/*',
+        'text/plain',
+        'text/bed',
+        'text/*',
+        '*/*',
+    );
+
 
 
 
@@ -76,14 +91,6 @@ class LOVD_API {
         $aAccepts = array();
 
         // These formats are interesting:
-        $aFormatsAccepted = array(
-            'application/json',
-            'application/*',
-            'text/plain',
-            'text/bed',
-            'text/*',
-            '*/*',
-        );
 
         foreach ($aAcceptsRaw as $nKey => $sAcceptRaw) {
             // Split the optional quality separator off. We're currently
@@ -92,7 +99,7 @@ class LOVD_API {
             // Also see https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html.
             // We are deciding for the client.
             $aAccept = explode(';', $sAcceptRaw);
-            if (in_array($aAccept[0], $aFormatsAccepted)) {
+            if (in_array($aAccept[0], $this->aFormatsAccepted)) {
                 $aAccepts[] = $aAccept[0];
             }
         }
@@ -100,8 +107,8 @@ class LOVD_API {
         if (!$aAccepts && $sAcceptsRaw) {
             // Client requested a format, but all formats requested are rejected
             //  and client didn't add */* as an option. So, we complain.
-            $this->sFormatOutput = $aFormatsAccepted[0]; // Pick our default output.
-            $this->aResponse['errors'][] = 'The format you requested is not available. Pick from ' . implode(', ', $aFormatsAccepted);
+            $this->sFormatOutput = $this->aFormatsAccepted[0]; // Pick our default output.
+            $this->aResponse['errors'][] = 'The format you requested is not available. Pick from ' . implode(', ', $this->aFormatsAccepted);
             $this->sendHeader(406, true); // Send 406 Not Acceptable, print response, and quit.
 
         } elseif ($aAccepts) {
@@ -109,9 +116,9 @@ class LOVD_API {
             // We'll loop through our preferred formats, and pick what works best with the request.
             if (in_array('*/*', $aAccepts)) {
                 // Client is OK with everything.
-                $this->sFormatOutput = $aFormatsAccepted[0]; // Pick our default output.
+                $this->sFormatOutput = $this->aFormatsAccepted[0]; // Pick our default output.
             } else {
-                foreach ($aFormatsAccepted as $sFormat) {
+                foreach ($this->aFormatsAccepted as $sFormat) {
                     // Take the prefix, as we'll accept 'type/*' as well.
                     $sType = substr($sFormat, 0, strpos($sFormat . '/', '/'));
                     if (in_array($sFormat, $aAccepts) || in_array($sType . '/*', $aAccepts)) {
@@ -124,7 +131,7 @@ class LOVD_API {
 
         } else {
             // Client didn't bother to request anything.
-            $this->sFormatOutput = $aFormatsAccepted[0]; // Pick our default output.
+            $this->sFormatOutput = $this->aFormatsAccepted[0]; // Pick our default output.
         }
 
 
@@ -141,17 +148,17 @@ class LOVD_API {
             $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
         }
 
-        // Check if we're using the old style LOVD2-API or not.
+        // Check if we're using the old style LOVD2-style API or not.
         if (in_array($_PE[1], array('rest', 'rest.php'))) {
             // Yes, we are...
             $this->aResponse['version'] = 0;
             // This API also ignores the Accept header.
             $this->sFormatOutput = 'text/plain';
             // And, we only allow GET.
-            if ($_SERVER['REQUEST_METHOD'] != 'GET') {
+            if (!GET) {
                 // Will only allow GET.
-                // $this->aResponse['errors'][] = 'Method not allowed.';
-                // $this->sendHeader(501, true); // Send 501 Not Implemented, print response, and quit.
+                // $this->aResponse['errors'][] = 'Method not allowed here.';
+                // $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
                 // This API is LOVD2-style and shouldn't have their output changed now that we're more advanced.
                 header('HTTP/1.0 501 Not Implemented');
                 exit;
@@ -173,6 +180,59 @@ class LOVD_API {
                 header('HTTP/1.0 400 Bad Request');
                 die('Too few parameters.');
             }
+
+        } else {
+            // This is the new LOVD3-style API.
+            // URLs can be with or without version.
+            $aURLElements = $_PE;
+            array_shift($aURLElements); // We take "api" off.
+
+            if (preg_match('/^v([0-9]+)$/', $aURLElements[0], $aRegs)) {
+                // We received version in URL.
+                // Version must be larger than zero, and no greater than the currently configured version.
+                if (!$aRegs[1] || $aRegs[1] > $this->nVersion) {
+                    $this->aResponse['errors'][] = 'Requested version is unavailable.';
+                    $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+                } else {
+                    $this->nVersion = (int) $aRegs[1];
+                }
+                array_shift($aURLElements); // Take the version off.
+            }
+
+            // Next, should be resource.
+            $this->sResource = array_shift($aURLElements);
+            if (!isset($this->aResourcesSupported[$this->sResource])) {
+                $this->aResponse['errors'][] = 'Requested resource is unknown.';
+                $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+            }
+
+            // From here, it's optional.
+            $this->nID = array_shift($aURLElements);
+
+            // Rest of the URL should be empty at this point.
+            if (implode('', $aURLElements)) {
+                // URL still had more data. At this point, that can't be right.
+                $this->aResponse['errors'][] = 'Could not parse requested URL.';
+                $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+            }
+
+            // Verify method. This depends on the resource.
+            if (!in_array($_SERVER['REQUEST_METHOD'], $this->aResourcesSupported[$this->sResource])) {
+                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]);
+                $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
+            }
+
+            // The combination of POST with an ID can't work.
+            if (POST && $this->nID !== '') {
+                // Remove POST from options, before we mention it.
+                // FIXME: Yes, this currently means there are no methods left...
+                unset($this->aResourcesSupported[$this->sResource][array_search('POST', $this->aResourcesSupported[$this->sResource])]);
+                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]);
+                $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
+            }
+
+            // Our job ends here.
+            return true;
         }
     }
 
@@ -223,6 +283,10 @@ class LOVD_API {
 
         // Response header...
         header('HTTP/1.0 ' . $nStatus, true, $nStatus);
+        // Add the Allow header, if needed.
+        if ($nStatus == 405 && $this->sResource && isset($this->aResourcesSupported[$this->sResource])) {
+            header('Allow: ' . implode(', ', $this->aResourcesSupported[$this->sResource]));
+        }
         // Content type...
         header('Content-type: ' . $this->sFormatOutput . '; charset=UTF-8');
         if ($bHalt) {

@@ -27,6 +27,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
+ *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -60,8 +61,8 @@ require ROOT_PATH . 'inc-init.php';
     HTTP/1.0 400 Bad Request // The parameters passed to the service did not match as expected / Malformed syntax. The exact error is returned in the response.
 *   HTTP/1.0 403 Forbidden // With 401 we are required to send more, now we're not.
     HTTP/1.0 404 Not Found // ID that does not exist?
-*   HTTP/1.0 405 Method Not Allowed // Don't forget an Allow header with allowed methods. Use this if the method is not allowed for *this* resource.
-*   HTTP/1.0 406 Not Acceptable // The format requested with the Accept header, can not be delivered.
+    HTTP/1.0 405 Method Not Allowed // Don't forget an Allow header with allowed methods. Use this if the method is not allowed for *this* resource.
+    HTTP/1.0 406 Not Acceptable // The format requested with the Accept header, can not be delivered.
 *   HTTP/1.0 409 Conflict // After a PUT???
 *   HTTP/1.0 410 Gone // If we know it was there, but not anymore (if we don't know: 404)
 *   HTTP/1.0 415 Unsupported Media Type // Format not supported.
