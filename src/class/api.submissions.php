@@ -38,7 +38,8 @@ if (!defined('ROOT_PATH')) {
 class LOVD_API_Submissions {
     // This class defines the LOVD API object handling submissions.
 
-    private $API; // The API object.
+    private $API;                     // The API object.
+    private $nMaxPOSTSize = 1048576;  // The maximum POST size allowed (1MB).
 
 
 
@@ -60,11 +61,101 @@ class LOVD_API_Submissions {
 
 
 
+    private function jsonDecode ($sInput)
+    {
+        // Attempts to decode the given JSON string, and handles any error.
+        // Returns the array if successfully decoded, but throws any errors
+        //  directly to the output.
+
+        $aJSONErrors = array(
+            JSON_ERROR_DEPTH => 'The maximum stack depth has been exceeded',
+            JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
+            JSON_ERROR_CTRL_CHAR => 'Control character error, possibly incorrectly encoded',
+            JSON_ERROR_SYNTAX => 'Syntax error',
+        );
+        if (PHP_VERSION_ID >= 50303) {
+            $aJSONErrors[JSON_ERROR_UTF8] = 'Malformed UTF-8 characters, possibly incorrectly encoded';
+            if (PHP_VERSION_ID >= 50500) {
+                $aJSONErrors[JSON_ERROR_RECURSION] = 'One or more recursive references in the value to be encoded';
+                $aJSONErrors[JSON_ERROR_INF_OR_NAN] = 'One or more NAN or INF values in the value to be encoded';
+                $aJSONErrors[JSON_ERROR_UNSUPPORTED_TYPE] = 'A value of a type that cannot be encoded was given';
+            } else {
+                // This makes sure they can be referenced, but can never occur.
+                define('JSON_ERROR_RECURSION', 0);
+                define('JSON_ERROR_INF_OR_NAN', 0);
+                define('JSON_ERROR_UNSUPPORTED_TYPE', 0);
+            }
+        } else {
+            // This makes sure they can be referenced, but can never occur.
+            define('JSON_ERROR_UTF8', 0);
+        }
+
+        // Attempt to decode.
+        $aInput = json_decode($sInput, true);
+
+        // If not successful, try if a non-UTF8 string is the error.
+        if ($aInput === NULL && json_last_error() == JSON_ERROR_UTF8) {
+            // Encode to UTF8, and try again.
+            $aInput = json_decode(utf8_encode($sInput), true);
+        }
+
+        if ($aInput === NULL) {
+            // Handle errors.
+            $this->API->aResponse['errors'][] = 'Error parsing JSON input. Error: ' . $aJSONErrors[json_last_error()] . '.';
+            $this->API->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+        }
+
+        // If we're still here, we have properly decoded data.
+        return $aInput;
+    }
+
+
+
+
+
     public function processPOST ()
     {
         // Handle POST requests for submissions.
 
-        // STUB.
+        // Check if we're receiving data at all over POST.
+        $sInput = file_get_contents('php://input');
+        if (!$sInput) {
+            // No data received.
+            $this->API->aResponse['errors'][] = 'No data received.';
+            $this->API->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+        }
+
+        // Check the size of the data. Can not be larger than $this->nMaxPOSTSize.
+        if (strlen($sInput) > $this->nMaxPOSTSize) {
+            $this->API->aResponse['errors'][] = 'Payload too large. Maximum data size: ' . $this->nMaxPOSTSize . ' bytes.';
+            $this->API->sendHeader(413, true); // Send 413 Payload Too Large, print response, and quit.
+        }
+
+        // If we have data, do a quick check if it could be JSON.
+        // First, content type. Also accept an often made error (application/x-www-form-urlencoded data).
+        if (isset($_SERVER['CONTENT_TYPE']) && !in_array($_SERVER['CONTENT_TYPE'], array('application/json', 'application/x-www-form-urlencoded'))) {
+            $this->API->aResponse['errors'][] = 'Unsupported media type. Expecting: application/json.';
+            $this->API->sendHeader(415, true); // Send 415 Unsupported Media Type, print response, and quit.
+        }
+
+        // Then, check the first character. Should be an '{'.
+        if ($sInput{0} != '{') {
+            // Can't be JSON...
+            $this->API->aResponse['errors'][] = 'Unsupported media type. Expecting: application/json.';
+            $this->API->sendHeader(415, true); // Send 415 Unsupported Media Type, print response, and quit.
+        }
+
+        // If it appears to be JSON, have PHP try and convert it into an array.
+        $aInput = $this->jsonDecode($sInput);
+
+        // Clean up the JSON, not forcing minimum data requirements yet.
+        // This makes traversing the array easier.
+
+        // Check for minimum data set.
+
+        // Do a quick check on the data, which is specific for the VarioML format.
+
+        // Convert into the LOVD3 output file.
     }
 }
 ?>

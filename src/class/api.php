@@ -49,7 +49,7 @@ class LOVD_API {
     protected $sFormatInput = '';         // The input format.
     protected $sFormatOutput = '';        // The output format, may be a decision based on the request.
 
-    protected $aResponse = array( // The standard response body.
+    public $aResponse = array( // The standard response body.
         'version' => '',
         'messages' => array(),
         'warnings' => array(),
