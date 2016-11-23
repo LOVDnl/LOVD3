@@ -41,6 +41,19 @@ class LOVD_API_Submissions {
     private $API;                     // The API object.
     private $nMaxPOSTSize = 1048576;  // The maximum POST size allowed (1MB).
 
+    private $aRepeatableElements = array(
+        'varioml' => array(
+            'db_xref',
+            'individual',
+            'phenotype',
+            'variant',
+            'pathogenicity',
+            'variant_detection',
+            'seq_changes',
+            'gene',
+        ),
+    );
+
 
 
 
@@ -54,6 +67,38 @@ class LOVD_API_Submissions {
         }
 
         $this->API = $oAPI;
+        return true;
+    }
+
+
+
+
+
+    private function cleanVarioMLData (&$aInput)
+    {
+        // Cleans the VarioML-formatted data by making sure all elements that
+        //  can be repeated in the specs, are presented as an array.
+        // Function will call itself, while traversing through the array.
+
+        if (is_array($aInput)) {
+            foreach ($aInput as $sKey => $Value) {
+                // Attributes or text values can never be repeated, so check only possible arrays.
+                if ($sKey{0} != '@' && $sKey{0} != '#') {
+                    // Check if this key is listed as one that can be repeated.
+                    if (in_array((string) $sKey, $this->aRepeatableElements['varioml'])) {
+                        // This element can be repeated. Make sure it's a proper array of values.
+                        if (!is_array($Value) || !isset($Value[0])) {
+                            $aInput[$sKey] = $Value = array($Value);
+                        }
+                    }
+                    if (is_array($Value)) {
+                        $this->cleanVarioMLData($Value);
+                        $aInput[$sKey] = $Value;
+                    }
+                }
+            }
+        }
+
         return true;
     }
 
@@ -142,6 +187,9 @@ class LOVD_API_Submissions {
             return false;
         }
 
+        // Remove comments from JSON file, and trim.
+        $sInput = trim(preg_replace('/\/\*.+\*\//Us', '', $sInput));
+
         // Then, check the first character. Should be an '{'.
         if ($sInput{0} != '{') {
             // Can't be JSON...
@@ -157,14 +205,17 @@ class LOVD_API_Submissions {
             return false;
         }
 
-        // Clean up the JSON, not forcing minimum data requirements yet.
-        // This makes traversing the array easier.
+        return (
+            // Clean up the JSON, not forcing minimum data requirements yet.
+            // This makes traversing the array easier.
+            $this->cleanVarioMLData($aInput)
 
-        // Check for minimum data set.
+            // Check for minimum data set.
 
-        // Do a quick check on the data, which is specific for the VarioML format.
+            // Do a quick check on the data, which is specific for the VarioML format.
 
-        // Convert into the LOVD3 output file.
+            // Convert into the LOVD3 output file.
+        );
     }
 }
 ?>
