@@ -208,14 +208,67 @@ class LOVD_API_Submissions {
         return (
             // Clean up the JSON, not forcing minimum data requirements yet.
             // This makes traversing the array easier.
-            $this->cleanVarioMLData($aInput)
+            $this->cleanVarioMLData($aInput) &&
 
             // Check for minimum data set.
+            $this->verifyVarioMLData($aInput)
 
             // Do a quick check on the data, which is specific for the VarioML format.
 
             // Convert into the LOVD3 output file.
         );
+    }
+
+
+
+
+
+    private function verifyVarioMLData (&$aInput)
+    {
+        // Verifies if the VarioML data is complete; Is the source OK, and the
+        //  authorization OK? Is there at least one individual with variants?
+        // At least one screening present?
+        global $_SETT, $_STAT;
+
+        // FIXME: If we'd have a proper VarioML JSON schema, like:
+        // https://github.com/VarioML/VarioML/blob/master/json/examples/vreport.json-schema
+        //  then we could use something like this library:
+        // https://github.com/justinrainbow/json-schema
+        //  to preprocess the VarioML, which saves us a lot of code. More info:
+        // http://json-schema.org/
+
+        // First, check if this file is actually meant for this LSDB.
+        if (!isset($aInput['lsdb']) || !isset($aInput['lsdb']['@id'])) {
+            // Without the proper LSDB info, we can't authorize this addition.
+            $this->API->aResponse['errors'][] = 'VarioML error: LSDB root element not found, or has no ID.';
+            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+            return false;
+        }
+
+        if ($aInput['lsdb']['@id'] != md5($_STAT['signature'])) {
+            // Data file is not meant for this LSDB.
+            $this->API->aResponse['errors'][] = 'VarioML error: LSDB ID in file does not match this LSDB. ' .
+                'Submit your file to the correct LSDB, or if sure you want to submit here, ' .
+                'request the LSDB ID from the admin: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+            return false;
+        }
+        $aInput = $aInput['lsdb']; // Simplifying our code.
+
+        // Then, check the source info and the authorization.
+        if (!isset($aInput['source']) || !isset($aInput['source']['name']) || !isset($aInput['source']['email'])) {
+            $this->API->aResponse['errors'][] = 'VarioML error: Source element not found, or no contact information.';
+            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+            return false;
+        }
+        if (!isset($aInput['source']['db_xref'])) {
+            $this->API->aResponse['errors'][] = 'VarioML error: Authorization IDs not found.';
+            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+            return false;
+        }
+
+
+        return true;
     }
 }
 ?>
