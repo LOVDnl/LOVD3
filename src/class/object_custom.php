@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2016-08-10
- * For LOVD    : 3.0-17
+ * Modified    : 2016-11-23
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -372,7 +372,7 @@ class LOVD_Custom extends LOVD_Object {
                 $this->aCheckMandatory[] = $sCol;
             }
             // Make it easier for users to fill in the age fields. Change 5d into 00y00m05d, for instance.
-            if (preg_match('/\/Age(\/.+|_.+)?$/', $sCol) && $aData[$sCol] && preg_match('/^([<>])?(\d{1,2}y)?(\d{1,2}m)?(\d{1,2}d)?(\?)?$/', $aData[$sCol], $aRegs)) {
+            if (preg_match('/\/Age(\/.+|_.+)?$/', $sCol) && isset($aData[$sCol]) && preg_match('/^([<>])?(\d{1,2}y)?(\d{1,2}m)?(\d{1,2}d)?(\?)?$/', $aData[$sCol], $aRegs)) {
                 $aRegs = array_pad($aRegs, 6, '');
                 if ($aRegs[2] || $aRegs[3] || $aRegs[4]) {
                     // At least some data needs to be filled in!
