@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-10-14
+ * Modified    : 2016-11-11
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -86,7 +86,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // If not viewing himself, the user may see very little information (low level) or all data (high level).
     lovd_requireAUTH();
 
-    lovd_isAuthorized('gene', $_AUTH['curates']); // Enables LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
+    // Enable LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
+    // Those levels will see more fields of the given user.
+    lovd_isAuthorized('gene', $_AUTH['curates']);
 
     if ($nID == '00000') {
         $nID = -1;
@@ -107,7 +109,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $aNavigation = array();
     // Since we're faking the user's level to show some more columns when the user is viewing himself, we must put the check on the ID here.
-    if ($_AUTH['id'] != $nID && $_AUTH['level'] > $zData['level']) {
+    if ($_AUTH['id'] != $nID && $_AUTH['level'] >= LEVEL_MANAGER && $_AUTH['level'] > $zData['level']) {
         // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Edit user', 1);
         if ($zData['active']) {
@@ -129,7 +131,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     }
 
-    if ($_AUTH['id'] == $nID || $_AUTH['level'] > $zData['level']) {
+    if ($_AUTH['id'] == $nID || ($_AUTH['level'] >= LEVEL_MANAGER && $_AUTH['level'] > $zData['level'])) {
         $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to ' . ($_AUTH['id'] == $nID? 'your' : 'user\'s') . ' entries with other users', 1);
     }
 

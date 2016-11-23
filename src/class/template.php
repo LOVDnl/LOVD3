@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-11-01
+ * Modified    : 2016-11-16
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -609,6 +609,10 @@ function lovd_mapVariants ()
 
 <BODY style="margin : 0px;">
 
+<TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
+
+<!-- Have a DIV for the announcements together with the header, to make sure the announcements move with the sticky header. -->
+<DIV id="stickyheader" style="position : fixed; z-index : 10;">
 <?php
 // Check for announcements. Ignore errors, in case the table doesn't exist yet.
 $qAnnouncements = @$_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
@@ -622,9 +626,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
 }
 ?>
 
-<TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
-
-<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo" style="position : fixed; z-index : 10">
+<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
   <TR>
 <?php
         if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
@@ -673,10 +675,13 @@ foreach ($zAnnouncements as $zAnnouncement) {
 
         print('    </TD>' . "\n" .
               '  </TR>' . "\n" .
-              '</TABLE>' . "\n\n");
+              '</TABLE>' . "\n" .
+              '</DIV>' . "\n\n");
 
         $nTotalTabWidth = 0; // Will stretch the page at least this far, so the tabs don't "break" if the window is narrow.
-        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo" style="margin-top:55px;' . (count($this->aMenu)? '' : ' border-bottom : 2px solid #000000;') . '">' . "\n");
+        // The margin chosen here is just a default. We don't actually know the height of the announcements, unless we measure them.
+        // So after printing this table, we'll measure it and resize the margin.
+        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo" style="margin-top : ' . (55+(count($zAnnouncements)*46)) . 'px;' . (count($this->aMenu)? '' : ' border-bottom : 2px solid #000000;') . '">' . "\n");
 
         // Add curator info to header.
         if ($sCurrSymbol && $sCurrGene) {
@@ -811,6 +816,14 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '  </TR>' . "\n" .
               '</TABLE>' . "\n\n" .
               '<IMG src="gfx/trans.png" alt="" width="' . $nTotalTabWidth . '" height="0">' . "\n\n");
+
+        if (!empty($zAnnouncements)) {
+            // Measure the height of the sticky header (can depend on announcements or
+            // font settings and such), and adapt the menu table to have a margin of this height.
+            print('<SCRIPT type="text/javascript">' . "\n" .
+                  '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+                  '</SCRIPT>' . "\n\n");
+        }
 
         // Attach dropdown menus.
         print('<!-- Start drop down menu definitions -->' . "\n");

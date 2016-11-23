@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2016-11-11
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -93,12 +93,10 @@ if (!empty($_POST)) {
                         // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
                         setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
                     }
-                    // Also update the password field, it needs to be used by the update password form.
+                    // Also update the password field, it needs to be used by the update password form, and force the change of password.
                     $_AUTH['password'] = $zUser['password_autogen'];
-                    $_DB->query('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
-
-                    // Since this is the unlocking code, the user should be forced to change his/her password.
-                    $_SESSION['password_force_change'] = true;
+                    $_AUTH['password_force_change'] = 1;
+                    $_DB->query('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0, password_force_change = 1 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
 
                     header('Location: ' . lovd_getInstallURL() . 'users/' . $_AUTH['id'] . '?change_password');
                     exit;
@@ -150,11 +148,6 @@ if (!empty($_POST)) {
                     } else {
                         // FIXME; if this block is removed, keep this query.
                         $_DB->query('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
-                    }
-
-                    // Check if the user should be forced to change his/her password.
-                    if (!empty($_AUTH['password_force_change'])) {
-                        $_SESSION['password_force_change'] = true;
                     }
 
                     // Check if referer is given, check it, then forward the user.

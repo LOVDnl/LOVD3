@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-10-17
- * For LOVD    : 3.0-18
+ * Modified    : 2016-11-15
+ * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -653,7 +653,7 @@ if (POST) {
                         $sTableName = constant($sTableName);
                         $aSection['allowed_columns'] = lovd_getColumnList($sTableName);
 
-                        if (strpos($sTableName, '2') !== false) {
+                        if (strpos($sTableName, '2', strlen(TABLEPREFIX)) !== false) {
                             // Linking tables (such as GEN2DIS) require all available columns to be present.
                             $aSection['required_columns'] = $aSection['allowed_columns'];
                         } else {

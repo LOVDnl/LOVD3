@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2016-10-14
+ * Modified    : 2016-11-15
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,6 +32,7 @@ $_GET['format'] = 'text/plain'; // To make sure all possible error functions out
 define('FORMAT_ALLOW_TEXTPLAIN', true);
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+set_time_limit(60*5); // Very large, but not infinite.
 
 //header('Content-type: text/plain; charset=UTF-8');
 
@@ -50,6 +51,7 @@ if (ACTION || PATH_COUNT < 2) {
 
 if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'user')))) ||
     ($_PE[1] == 'columns' && PATH_COUNT <= 3) ||
+    ($_PE[1] == 'diseases' && PATH_COUNT == 2) ||
     ($_PE[1] == 'genes' && PATH_COUNT == 2) ||
     ($_PE[1] == 'gene_panels' && PATH_COUNT == 3 && ctype_digit($_PE[2]))) {
     // URL: /download/all
@@ -58,6 +60,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     // URL: /download/all/user/00001
     // URL: /download/columns
     // URL: /download/columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
+    // URL: /download/diseases
     // URL: /download/genes
     // URL: /download/gene_panels/00001
     // Download data from the database, so that we can import it elsewhere.
@@ -115,6 +118,12 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sHeader = 'Custom column';
         $sFilter = 'category';
         $ID = $_PE[2];
+        lovd_requireAuth(LEVEL_MANAGER);
+
+    } elseif ($_PE[1] == 'diseases' && empty($_PE[2])) {
+        // Download all diseases.
+        $sFileName = 'diseases';
+        $sHeader = 'Disease data';
         lovd_requireAuth(LEVEL_MANAGER);
 
     } elseif ($_PE[1] == 'genes' && empty($_PE[2])) {
@@ -301,6 +310,13 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         if ($sFilter == 'category') {
             $aObjects['Columns']['filters']['category'] = $ID;
         }
+
+    } elseif ($_PE[1] == 'diseases') {
+        $aObjects =
+            array(
+                'Diseases' => $aDataTypeSettings,
+                'Gen2Dis' => array_merge($aDataTypeSettings, array('label' => 'Genes_To_Diseases', 'order_by' => 'geneid, diseaseid')),
+            );
 
     } elseif ($_PE[1] == 'genes') {
         $aObjects =

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2016-10-28
+ * Modified    : 2016-11-15
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2997,11 +2997,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     }
 
     $_GET['page_size'] = 10;
-    $_GET['search_id'] = '';
+    $_GET['search_tid'] = '';
     foreach ($aVOT as $aTranscript) {
-        $_GET['search_id'] .= '!' . $aTranscript['id'] . ' ';
+        $_GET['search_tid'] .= '!' . $aTranscript['id'] . ' ';
     }
-    $_GET['search_id'] = (!empty($_GET['search_id'])? rtrim($_GET['search_id']) : '!0');
+    $_GET['search_tid'] = (!empty($_GET['search_tid'])? rtrim($_GET['search_tid']) : '!0');
     $_GET['search_chromosome'] = '="' . $zData['chromosome'] . '"';
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
@@ -3058,9 +3058,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
             lovd_AJAX_viewListUpdateEntriesString(sViewListID);
             // 2013-09-26; 3.0-08; First do this, THEN add the next row, otherwise you're just duplicating the last visible row all the time.
             // Also change the search terms in the viewList such that submitting it will not reshow this item.
-            objViewListF.search_id.value += ' !' + nID;
+            objViewListF.search_tid.value += ' !' + nID;
             // Does an ltrim, too. But trim() doesn't work in IE < 9.
-            objViewListF.search_id.value = objViewListF.search_id.value.replace(/^\s*/, '');
+            objViewListF.search_tid.value = objViewListF.search_tid.value.replace(/^\s*/, '');
 
             lovd_AJAX_viewListAddNextRow(sViewListID);
             return true;
@@ -3080,7 +3080,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
 
                 // Reset the viewList.
                 // Does an ltrim, too. But trim() doesn't work in IE < 9.
-                objViewListF.search_id.value = objViewListF.search_id.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
+                objViewListF.search_tid.value = objViewListF.search_tid.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
                 lovd_AJAX_viewListSubmit(sViewListID);
 
                 return true;
