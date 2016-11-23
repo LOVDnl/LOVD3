@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2016-07-12
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -99,6 +99,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'effect_concluded' => 'Affects function (concluded)',
                       ),
                  $this->buildViewEntry());
+        if (LOVD_plus) {
+            unset($this->aColumnsViewEntry['effect_reported']);
+            unset($this->aColumnsViewEntry['effect_concluded']);
+        }
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
@@ -128,6 +132,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                                     'db'   => array('ds.name', false, true),
                                     'auth' => LEVEL_COLLABORATOR),
                       ));
+        if (LOVD_plus) {
+            unset($this->aColumnsViewList['effect']);
+        }
 
         $this->sSortDefault = 'id_ncbi';
 

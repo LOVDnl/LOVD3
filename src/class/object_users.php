@@ -422,6 +422,9 @@ class LOVD_User extends LOVD_Object {
                 unset($this->aFormData['change_self']);
             }
         }
+        if (LOVD_plus && isset($this->aFormData['level'])) {
+            $this->aFormData['level'][1] = ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Analyzers</B> can analyze individuals that are not analyzed yet by somebody else, but can not send variants for confirmation.<BR><B>Read-only</B> users can only see existing data in LOVD+, but can not start or edit any analyses or data.';
+        }
         return parent::getForm();
     }
 

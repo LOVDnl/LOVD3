@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-28
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -185,7 +185,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('LOG_EVENT', 'IndividualCreate');
 
     lovd_isAuthorized('gene', $_AUTH['curates']);
-    lovd_requireAUTH(LEVEL_SUBMITTER);
+    lovd_requireAUTH($_SETT['user_level_settings']['submit_new_data']);
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
@@ -228,6 +228,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         }
                     }
                 }
+            }
+
+            if (count($aSuccessDiseases)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Disease entr' . (count($aSuccessDiseases) > 1? 'ies' : 'y') . ' successfully added to individual ' . $nID);
             }
 
             $_AUTH['saved_work']['submissions']['individual'][$nID] = array('id' => $nID, 'panel_size' => $_POST['panel_size']);
@@ -326,7 +330,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     if (POST || ACTION == 'publish') {
         lovd_errorClean();
 
-        $_DATA->checkFields($_POST);
+        $_DATA->checkFields($_POST, $zData);
 
         if (!lovd_error()) {
             // Fields to be used.
@@ -393,6 +397,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from individual ' . $nID);
+                } else {
+                    lovd_writeLog('Event', LOG_EVENT, 'Disease entr' . (count($aToRemove) > 1? 'ies' : 'y') . ' successfully removed from individual ' . $nID);
                 }
             }
 
@@ -413,6 +419,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             if ($aFailed) {
                 // Silent error.
                 lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aFailed) == 1? 'y' : 'ies') . ' ' . implode(', ', $aFailed) . ' could not be added to individual ' . $nID);
+            }
+            if (count($aSuccess)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Disease entr' . (count($aSuccess) > 1? 'ies' : 'y') . ' successfully added to individual ' . $nID);
             }
 
             // Thank the user...

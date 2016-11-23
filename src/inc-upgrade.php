@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-09-05
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-17
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -81,7 +81,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_GEN2DIS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                                 'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(20)',
-                                'ALTER TABLE ' . TABLE_HITS . ' MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
+                                'ALTER TABLE ' . TABLEPREFIX . '_hits MODIFY COLUMN geneid VARCHAR(20) NOT NULL',
                               ),
                     '3.0-alpha-02' =>
                          array(
@@ -155,7 +155,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                                 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE pathogenicid effectid TINYINT(2) UNSIGNED ZEROFILL',
                                 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD INDEX (effectid)',
 
-                                'RENAME TABLE ' . TABLE_PATHOGENIC . ' TO ' . TABLE_EFFECT,
+                                'RENAME TABLE ' . TABLEPREFIX . '_variant_pathogenicity TO ' . TABLE_EFFECT,
                                 'ALTER TABLE ' . TABLE_VARIANTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                                 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' ADD CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE',
                                 'UPDATE ' . TABLE_VARIANTS . ' SET effectid = 55 WHERE effectid < 11 OR effectid IS NULL',
@@ -349,7 +349,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'ALTER TABLE ' . TABLE_GEN2DIS . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
                      'ALTER TABLE ' . TABLE_SCR2GENE . ' MODIFY COLUMN geneid VARCHAR(25) NOT NULL',
                      'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY COLUMN geneid VARCHAR(25)',
-                     'DROP TABLE ' . TABLE_HITS,
+                     'DROP TABLE ' . TABLEPREFIX . '_hits',
                  ),
                  '3.0-07' =>
                  array(
@@ -441,7 +441,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         ),
                  '3.0-16c' =>
                     array(
-                        'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN allow_submitter_registration BOOLEAN NOT NULL DEFAULT 1 AFTER include_in_listing',
+                        'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN allow_submitter_registration BOOLEAN NOT NULL DEFAULT ' . (int) (!LOVD_plus) . ' AFTER include_in_listing',
                         'CREATE TABLE ' . TABLE_ANNOUNCEMENTS . ' (
                             id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
                             type VARCHAR(15) NOT NULL DEFAULT "information",
@@ -461,6 +461,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             ENGINE=InnoDB,
                             DEFAULT CHARACTER SET utf8',
                     ),
+                 '3.0-18' =>
+                     array(
+                         // These two will be ignored by LOVD+.
+                         'INSERT IGNORE INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_article", "http://www.ncbi.nlm.nih.gov/pubmed/{{ ID }}")',
+                         'INSERT IGNORE INTO ' . TABLE_LINKS . ' VALUES (NULL, "Alamut", "{Alamut:[1]:[2]}", "<A href=\"http://127.0.0.1:10000/show?request=[1]:[2]\" target=\"_blank\">Alamut</A>", "Links directly to the variant in the Alamut software.\r\n[1] = The chromosome letter or number.\r\n[2] = The genetic change on genome level.\r\n\r\nExample:\r\n{Alamut:16:21854780G>A}", 0, NOW(), NULL, NULL)',
+                     ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

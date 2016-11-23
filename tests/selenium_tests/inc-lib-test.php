@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2016-10-27
- * For LOVD    : 3.0-17
+ * Modified    : 2016-11-01
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -98,6 +98,10 @@ function getWebDriverInstance ()
 
 function setMutalyzerServiceURL ($sURL)
 {
+    // Set the Mutalyzer URL in the database to the TEST server, as agreed with
+    //  the Mutalyzer team. This way, one test run of LOVD also tests their
+    //  update.
+
     // Set up the LOVD environment with all common globals like a database
     // connection, configuration settings, etc. by including inc-init.php.
     define('FORMAT_ALLOW_TEXTPLAIN', true);
