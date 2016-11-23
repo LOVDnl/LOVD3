@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-11-22
+ * Modified    : 2016-11-23
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -102,7 +102,8 @@ class LOVD_API_Submissions {
         if ($aInput === NULL) {
             // Handle errors.
             $this->API->aResponse['errors'][] = 'Error parsing JSON input. Error: ' . $aJSONErrors[json_last_error()] . '.';
-            $this->API->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+            $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
+            return false;
         }
 
         // If we're still here, we have properly decoded data.
@@ -122,31 +123,39 @@ class LOVD_API_Submissions {
         if (!$sInput) {
             // No data received.
             $this->API->aResponse['errors'][] = 'No data received.';
-            $this->API->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+            $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
+            return false;
         }
 
         // Check the size of the data. Can not be larger than $this->nMaxPOSTSize.
         if (strlen($sInput) > $this->nMaxPOSTSize) {
             $this->API->aResponse['errors'][] = 'Payload too large. Maximum data size: ' . $this->nMaxPOSTSize . ' bytes.';
-            $this->API->sendHeader(413, true); // Send 413 Payload Too Large, print response, and quit.
+            $this->API->nHTTPStatus = 413; // Send 413 Payload Too Large.
+            return false;
         }
 
         // If we have data, do a quick check if it could be JSON.
         // First, content type. Also accept an often made error (application/x-www-form-urlencoded data).
         if (isset($_SERVER['CONTENT_TYPE']) && !in_array($_SERVER['CONTENT_TYPE'], array('application/json', 'application/x-www-form-urlencoded'))) {
             $this->API->aResponse['errors'][] = 'Unsupported media type. Expecting: application/json.';
-            $this->API->sendHeader(415, true); // Send 415 Unsupported Media Type, print response, and quit.
+            $this->API->nHTTPStatus = 415; // Send 415 Unsupported Media Type.
+            return false;
         }
 
         // Then, check the first character. Should be an '{'.
         if ($sInput{0} != '{') {
             // Can't be JSON...
             $this->API->aResponse['errors'][] = 'Unsupported media type. Expecting: application/json.';
-            $this->API->sendHeader(415, true); // Send 415 Unsupported Media Type, print response, and quit.
+            $this->API->nHTTPStatus = 415; // Send 415 Unsupported Media Type.
+            return false;
         }
 
         // If it appears to be JSON, have PHP try and convert it into an array.
         $aInput = $this->jsonDecode($sInput);
+        // If $aInput is false, we failed somewhere. Function should have set response and HTTP status.
+        if ($aInput === false) {
+            return false;
+        }
 
         // Clean up the JSON, not forcing minimum data requirements yet.
         // This makes traversing the array easier.

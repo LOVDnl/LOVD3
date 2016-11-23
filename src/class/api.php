@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-11-22
+ * Modified    : 2016-11-23
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,7 +46,6 @@ class LOVD_API {
     public $sGene = '';       // The LOVD2-style API often has the gene symbol in the URL, since it's gene-specific.
 
     protected $aAcceptedOutput = array(); // Parsed array of accepted outputs, taken from the Accept header.
-    protected $sFormatInput = '';         // The input format.
     protected $sFormatOutput = '';        // The output format, may be a decision based on the request.
 
     public $aResponse = array( // The standard response body.
@@ -56,13 +55,14 @@ class LOVD_API {
         'errors' => array(),
         'data' => array(),
     );
+    public $nHTTPStatus = 0;   // The HTTP status that should be send back to the user.
 
     // Currently supported resources (resource => array(methods)):
     private $aResourcesSupported = array(
         'submissions' => array('POST'),
     );
 
-    // Currently supported formats:
+    // Currently supported output formats that can be requested:
     private $aFormatsAccepted = array(
         'application/json',
         'application/*',
@@ -89,8 +89,6 @@ class LOVD_API {
         $sAcceptsRaw = (empty($_SERVER['HTTP_ACCEPT'])? '' : $_SERVER['HTTP_ACCEPT']);
         $aAcceptsRaw = explode(',', $sAcceptsRaw);
         $aAccepts = array();
-
-        // These formats are interesting:
 
         foreach ($aAcceptsRaw as $nKey => $sAcceptRaw) {
             // Split the optional quality separator off. We're currently
@@ -238,13 +236,35 @@ class LOVD_API {
             //  handled separately.
             // These methods should process the request and stop PHP execution.
             if (POST) {
-                $this->processPOST();
+                $bReturn = $this->processPOST();
             }
 
-            // If we get here, the above methods apparently didn't handle the
-            //  request.
-            $this->aResponse['errors'][] = 'Request not picked up by any handler.';
-            $this->sendHeader(500, true); // Send 500 Internal Server Error, print response, and quit.
+            // $bReturn is false on failure, true on success, or void otherwise.
+            if ($bReturn === false) {
+                // Some failure.
+                if (!$this->nHTTPStatus || !$this->aResponse['errors']) {
+                    // We somehow didn't receive a status, or no error message.
+                    // This is failure on our side, and we will return a HTTP 500.
+                    $this->aResponse['errors'][] = 'Request not handled well by any handler.';
+                    $this->sendHeader(500, true); // Send 500 Internal Server Error, print response, and quit.
+                } else {
+                    // Failure, error message already defined by handler.
+                    $this->sendHeader($this->nHTTPStatus, true); // Send HTTP status code, print response, and quit.
+                }
+
+            } elseif ($bReturn) {
+                // Success!
+                // If we have not HTTP status, we'll give 200.
+                if (!$this->nHTTPStatus) {
+                    $this->nHTTPStatus = 200;
+                }
+                $this->sendHeader($this->nHTTPStatus, true); // Send HTTP status code, print response, and quit.
+
+            } else {
+                // Failure, but not false. Error in handler.
+                $this->aResponse['errors'][] = 'Request not picked up by any handler.';
+                $this->sendHeader(500, true); // Send 500 Internal Server Error, print response, and quit.
+            }
         }
     }
 
@@ -297,7 +317,8 @@ class LOVD_API {
         if ($this->sResource == 'submissions') {
             require_once 'class/api.submissions.php';
             $o = new LOVD_API_Submissions($this);
-            // This should process the request and stop PHP execution.
+            // This should process the request, return false on failure,
+            //  true on success, and void otherwise (bugs).
             return $o->processPOST();
         }
     }
