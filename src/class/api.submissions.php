@@ -50,8 +50,6 @@ class LOVD_API_Submissions {
             'variant',
             'pathogenicity',
             'variant_detection',
-            'seq_changes',
-            'gene',
         ),
     );
 
@@ -287,19 +285,18 @@ class LOVD_API_Submissions {
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
-        $aInput = $aInput['lsdb']; // Simplifying our code.
 
 
 
         // Then, check the source info and the authentication.
-        if (!isset($aInput['source']) || !isset($aInput['source']['contact']) ||
-            !isset($aInput['source']['contact']['name']) || !isset($aInput['source']['contact']['email'])) {
+        if (!isset($aInput['lsdb']['source']) || !isset($aInput['lsdb']['source']['contact']) ||
+            !isset($aInput['lsdb']['source']['contact']['name']) || !isset($aInput['lsdb']['source']['contact']['email'])) {
             $this->API->aResponse['errors'][] = 'VarioML error: Source element not found, contact element not found, or no contact information. ' .
                 'You need to provide both a name and an email in the contact element.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
-        if (!isset($aInput['source']['contact']['db_xref'])) {
+        if (!isset($aInput['lsdb']['source']['contact']['db_xref'])) {
             $this->API->aResponse['errors'][] = 'VarioML error: Authentication IDs not found. ' .
                 'You need to provide authentication IDs in db_xref elements in the contact element.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
@@ -307,7 +304,7 @@ class LOVD_API_Submissions {
         }
         // Loop the IDs for a valid one.
         $aAuth = array('id' => 0, 'auth_token' => '');
-        foreach ($aInput['source']['contact']['db_xref'] as $aID) {
+        foreach ($aInput['lsdb']['source']['contact']['db_xref'] as $aID) {
             if ($aID['@source'] == 'lovd') {
                 $aAuth['id'] = $aID['@accession'];
             } elseif ($aID['@source'] == 'lovd_auth_token') {
@@ -334,18 +331,17 @@ class LOVD_API_Submissions {
 
 
         // Do we have data at all?
-        if (!isset($aInput['individual']) || !$aInput['individual']) {
+        if (!isset($aInput['lsdb']['individual']) || !$aInput['lsdb']['individual']) {
             $this->API->aResponse['errors'][] = 'VarioML error: Individual element not found, or no individuals. ' .
                 'Your submission must include at least one individual data entry.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
-        $aInput = $aInput['individual']; // Simplifying our code.
 
 
 
         // Loop through individual, checking minimal requirements.
-        foreach ($aInput as $iIndividual => $aIndividual) {
+        foreach ($aInput['lsdb']['individual'] as $iIndividual => $aIndividual) {
             // From now on, we won't return directly anymore if there are errors.
             // We let them accumulate, to make it easier for the user to test his file.
             $nIndividual = $iIndividual + 1; // We start counting at 1, like most humans do.
@@ -492,10 +488,163 @@ class LOVD_API_Submissions {
                         }
                     }
 
+                    // Check next level of variation, if present.
+                    if (isset($aVariant['seq_changes']) && isset($aVariant['seq_changes']['variant'])) {
+                        // We collect the genes and transcripts annotated for this variant.
+                        // If we cannot find *any* of the transcripts that are annotated for this variant, we throw an error.
+                        // If we do have genes in the database that are mentioned, then we let the user know which transcripts we have that they are maybe interested in.
+                        // If we also don't have any of the genes, we suggest the user to request them.
+                        // If we do have at least one matching NM, we just issue warnings for all the ignored NMs.
+                        // We also remove those from the array to save space and time when writing the file.
+                        $aGenes = array();
+                        $aGenesExisting = array();
+                        $aTranscripts = array();
+                        $aTranscriptsExisting = array();
+
+                        // First loop through the variants: quick check not descending any further, and collect gene and transcript info.
+                        foreach ($aVariant['seq_changes']['variant'] as $iVariantLevel2 => $aVariantLevel2) {
+                            $nVariantLevel2 = $iVariantLevel2 + 1; // We start counting at 1, like most humans do.
+
+                            // Required elements.
+                            foreach (array('@type', 'ref_seq', 'name') as $sRequiredElement) {
+                                if (!isset($aVariantLevel2[$sRequiredElement]) || !$aVariantLevel2[$sRequiredElement]) {
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Missing required ' . $sRequiredElement . ' element.';
+                                }
+                            }
+
+                            // Check variant further, if we at least have a type.
+                            if (isset($aVariantLevel2['@type'])) {
+                                // Check types.
+                                if (!in_array($aVariantLevel2['@type'], $this->aDNATypes)) {
+                                    // Value not recognized.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Type code \'' . $aVariantLevel2['@type'] . '\' not recognized. ' .
+                                        'Options: ' . implode(', ', $this->aDNATypes) . '.';
+
+                                } elseif ($aVariantLevel2['@type'] != 'cDNA') {
+                                    // Second level variant must have type "cDNA".
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Variant type must be cDNA, indicated by type \'cDNA\'. ' .
+                                        ($aVariantLevel2['@type'] == 'DNA'?
+                                            'Variants of the DNA type can not be children of other variants.' :
+                                            'Variants of other types can only be specified as children of a cDNA variant.');
+
+                                } else {
+                                    // Collect gene...
+                                    if (isset($aVariantLevel2['gene'])) {
+                                        // VarioML specifies you can have multiple gene elements, but that makes no sense to me.
+                                        // Let them add that to another variant on the cDNA level.
+                                        if (empty($aVariantLevel2['gene']['@source']) || empty($aVariantLevel2['gene']['@accession'])) {
+                                            // No source or accession, no way.
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Missing required Gene @source or @accession elements.';
+                                        } elseif (strtolower($aVariantLevel2['gene']['@source']) != 'hgnc') {
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Gene source not understood. ' .
+                                                'Currently supported: hgnc.';
+                                        } else {
+                                            // Store the gene, and check if it exists.
+                                            $aGenes[$iVariantLevel2] = $aVariantLevel2['gene']['@accession'];
+                                            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?',
+                                                array($aVariantLevel2['gene']['@accession']))->fetchColumn()) {
+                                                // Gene exists.
+                                                $aGenesExisting[$iVariantLevel2] = $aVariantLevel2['gene']['@accession'];
+                                            }
+                                        }
+                                    }
+
+                                    // Collect transcript...
+                                    if (isset($aVariantLevel2['ref_seq'])) {
+                                        if (empty($aVariantLevel2['ref_seq']['@source']) || empty($aVariantLevel2['ref_seq']['@accession'])) {
+                                            // No source or accession, no way.
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Missing required RefSeq @source or @accession elements.';
+                                        } else {
+                                            // Check the ref_seq.
+                                            if ($aVariantLevel2['ref_seq']['@source'] != 'genbank') {
+                                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': RefSeq source not understood. ' .
+                                                    'Currently supported: genbank.';
+                                            } elseif (!preg_match('/^[NX][MR]_([0-9]{6}|[0-9]{9})(\.[0-9]{1,2})?$/', $aVariantLevel2['ref_seq']['@accession'])) {
+                                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': RefSeq accession not understood. ' .
+                                                    'Currently supported are NCBI RefSeq transcript reference sequences (NM, NR, XM, XR).';
+                                            } else {
+                                                // Store the transcript, and check if it exists (or an alternative can be used).
+                                                $aTranscripts[$iVariantLevel2] = $aVariantLevel2['ref_seq']['@accession'];
+                                                // We'll search flexibly, so get the transcript ID without the version.
+                                                $sTranscriptNoVersion = substr($aVariantLevel2['ref_seq']['@accession'], 0, strpos($aVariantLevel2['ref_seq']['@accession'] . '.', '.') + 1);
+                                                $sTranscriptAvailable = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
+                                                    array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchColumn();
+                                                if ($sTranscriptAvailable) {
+                                                    $aTranscriptsExisting[$iVariantLevel2] = $sTranscriptAvailable;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // If we have transcripts, check which ones exists, and which ones don't.
+                        // Otherwise, complain.
+                        if (!$aTranscripts && $aVariant['seq_changes']['variant']) {
+                            // We didn't receive any transcripts, but there were definitely variants defined.
+                            // This is a problem.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChanges defined with variants, but none have a valid transcript defined.';
+                            break; // Continue to the individual's next variant.
+                        } elseif (!$aTranscriptsExisting) {
+                            // We did have transcripts, but there are none in the database that match.
+                            // If we had genes but now not anymore, that could explain it...
+                            if ($aGenes) {
+                                if (!$aGenesExisting) {
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given genes for this variant are configured in this LOVD. ' .
+                                        'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                                } else {
+                                    // Genes do exist. Mention which transcripts can then be used.
+                                    $sTranscriptsAvailable = implode(', ', $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', count($aGenesExisting) - 1) . ') ORDER BY id_ncbi')->fetchAllColumn());
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given transcripts for this variant are configured in this LOVD. ' .
+                                        'Options for the given genes: ' . $sTranscriptsAvailable . '.';
+                                }
+                            } else {
+                                // No genes were ever given, focus on the transcripts.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given transcripts for this variant are configured in this LOVD. ' .
+                                    'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                            }
+                        } else {
+                            // We have at least one matching transcript.
+                            // Remove all the others, and issue warnings for those.
+                            // Transcripts that we will use:
+                            $sTranscriptsAvailable = implode(', ', $aTranscriptsExisting);
+                            // Remove unusable transcripts.
+                            foreach (array_diff(array_keys($aTranscripts), array_keys($aTranscriptsExisting)) as $iVariantLevel2) {
+                                // Unset, issue warning.
+                                unset($aVariant['seq_changes']['variant'][$iVariantLevel2]);
+                                $this->API->aResponse['warnings'][] = 'Warning: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Ignoring transcript \'' . $aTranscripts[$iVariantLevel2] . '\', not configured in this LOVD, using ' . $sTranscriptsAvailable . '.';
+                            }
+
+                            // Replace RefSeqs with the ones we will use.
+                            foreach ($aTranscriptsExisting as $iVariantLevel2 => $sTranscriptAvailable) {
+                                $aVariant['seq_changes']['variant'][$iVariantLevel2]['ref_seq']['@accession'] = $sTranscriptAvailable;
+                            }
+
+                            // Also update the whole data array.
+                            $aInput['lsdb']['individual'][$iIndividual]['variant'][$iVariant]['seq_changes']['variant'] = $aVariant['seq_changes']['variant'];
+                        }
 
 
 
+                        // Loop variants again. But, only the ones of type cDNA with verified, existing, RefSeqs.
+                        // There might be more, with erroneous types or missing ref_seq fields or so.
+                        foreach (array_keys($aTranscriptsExisting) as $iVariantLevel2) {
+                            $nVariantLevel2 = $iVariantLevel2 + 1; // We start counting at 1, like most humans do.
+                            $aVariantLevel2 = $aVariant['seq_changes']['variant'][$iVariantLevel2];
 
+                            // Check name, if present.
+                            if (isset($aVariant['name'])) {
+                                if (empty($aVariant['name']['@scheme']) || empty($aVariant['name']['#text'])) {
+                                    // No scheme or text, no way.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Missing required name @scheme or #text elements.';
+                                } elseif (strtolower($aVariant['name']['@scheme']) != 'hgvs') {
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Name scheme not understood. ' .
+                                        'Currently supported: hgvs.';
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
