@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-11-23
+ * Modified    : 2016-11-24
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -331,9 +331,14 @@ class LOVD_API {
     {
         // Sends the HTTP header as requested, and optionally halts. If it does,
         //  it will send the response as well.
+        global $_SETT;
 
         // Response header...
         header('HTTP/1.0 ' . $nStatus, true, $nStatus);
+        // Add the WWW-Authenticate, if needed.
+        if ($nStatus == 401) {
+            header('WWW-Authenticate: LOVDAuthToken realm="LOVD ' . $_SETT['system']['version'] . ' API. See the LOVD documentation on how to get access."');
+        }
         // Add the Allow header, if needed.
         if ($nStatus == 405 && $this->sResource && isset($this->aResourcesSupported[$this->sResource])) {
             header('Allow: ' . implode(', ', $this->aResourcesSupported[$this->sResource]));

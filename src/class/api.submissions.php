@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-11-23
+ * Modified    : 2016-11-24
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,6 +40,7 @@ class LOVD_API_Submissions {
 
     private $API;                     // The API object.
     private $nMaxPOSTSize = 1048576;  // The maximum POST size allowed (1MB).
+    private $zAuth = array();         // User uploading the data.
 
     private $aRepeatableElements = array(
         'varioml' => array(
@@ -226,9 +227,9 @@ class LOVD_API_Submissions {
     private function verifyVarioMLData (&$aInput)
     {
         // Verifies if the VarioML data is complete; Is the source OK, and the
-        //  authorization OK? Is there at least one individual with variants?
+        //  authentication OK? Is there at least one individual with variants?
         // At least one screening present?
-        global $_SETT, $_STAT;
+        global $_DB, $_SETT, $_STAT;
 
         // FIXME: If we'd have a proper VarioML JSON schema, like:
         // https://github.com/VarioML/VarioML/blob/master/json/examples/vreport.json-schema
@@ -255,7 +256,7 @@ class LOVD_API_Submissions {
         }
         $aInput = $aInput['lsdb']; // Simplifying our code.
 
-        // Then, check the source info and the authorization.
+        // Then, check the source info and the authentication.
         if (!isset($aInput['source']) || !isset($aInput['source']['contact']) ||
             !isset($aInput['source']['contact']['name']) || !isset($aInput['source']['contact']['email'])) {
             $this->API->aResponse['errors'][] = 'VarioML error: Source element not found, contact element not found, or no contact information. ' .
@@ -264,8 +265,8 @@ class LOVD_API_Submissions {
             return false;
         }
         if (!isset($aInput['source']['contact']['db_xref'])) {
-            $this->API->aResponse['errors'][] = 'VarioML error: Authorization IDs not found. ' .
-                'You need to provide authorization IDs in db_xref elements in the contact element.';
+            $this->API->aResponse['errors'][] = 'VarioML error: Authentication IDs not found. ' .
+                'You need to provide authentication IDs in db_xref elements in the contact element.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
@@ -280,12 +281,20 @@ class LOVD_API_Submissions {
         }
         if (!$aAuth['id'] || !$aAuth['auth_token']) {
             // We don't have both an ID and the token, as required.
-            $this->API->aResponse['errors'][] = 'VarioML error: Authorization IDs missing. ' .
+            $this->API->aResponse['errors'][] = 'VarioML error: Authentication IDs missing. ' .
                 'You need both the lovd db_xref as the lovd_auth_token db_xref in your contact element.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
-
+        // Check the authentication.
+        $this->zAuth = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ? AND auth_token = ? AND auth_token_expires > NOW()',
+            array($aAuth['id'], $aAuth['auth_token']))->fetchAssoc();
+        if (!$this->zAuth) {
+            $this->API->aResponse['errors'][] = 'VarioML error: Authentication denied. ' .
+                'Verify your lovd and lovd_auth_token values. Also check if your token has perhaps expired.';
+            $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
+            return false;
+        }
 
         return true;
     }
