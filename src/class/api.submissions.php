@@ -60,6 +60,20 @@ class LOVD_API_Submissions {
             '1' => '0',
             '2' => '3',
         ),
+        // Let's hope this one doesn't clash, otherwise we need to rebuild this array.
+        '@term' => array(
+            'Non-pathogenic' => '10',
+            'Probably Not Pathogenic' => '30',
+            'Probably Pathogenic' => '70',
+            'Pathogenic' => '90',
+            'Not Known' => '50',
+        ),
+        '@template' => array(
+            'DNA' => 'DNA',
+            'RNA' => 'RNA',
+            'cDNA' => 'RNA',
+            'AA' => 'Protein',
+        ),
         'gender' => array(
             '0' => '?',
             '1' => 'M',
@@ -429,13 +443,54 @@ class LOVD_API_Submissions {
                         if (empty($aVariant['name']['@scheme']) || empty($aVariant['name']['#text'])) {
                             // No scheme or text, no way.
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Missing required name @scheme or #text elements.';
-                        } elseif ($aVariant['name']['@scheme'] != 'hgvs') {
+                        } elseif (strtolower($aVariant['name']['@scheme']) != 'hgvs') {
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Name scheme not understood. ' .
                                 'Currently supported: hgvs.';
                         }
                     }
 
+                    // Check pathogenicity, if present.
+                    if (isset($aVariant['pathogenicity'])) {
+                        // We don't want to find conflicting info. Mark if we found pathogenicity of individual level.
+                        $bPathogenicityIndividualScope = false;
+                        foreach ($aVariant['pathogenicity'] as $iPathogenicity => $aPathogenicity) {
+                            $nPathogenicity = $iPathogenicity + 1; // We start counting at 1, like most humans do.
+                            if (empty($aPathogenicity['@scope']) || empty($aPathogenicity['@term'])) {
+                                // No scope or term, no way.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Missing required Pathogenicity @scope or @term elements.';
+                            } elseif ($aPathogenicity['@scope'] != 'individual') {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity scope \'' . $aPathogenicity['@scope'] . '\' not understood. ' .
+                                    'LOVD only supports: individual.';
+                            } else {
+                                if ($bPathogenicityIndividualScope) {
+                                    // We already saw this scope, that's not possible.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': You cannot have more than one Pathogenicity element of the same scope.';
+                                } else {
+                                    $bPathogenicityIndividualScope = true;
+                                }
+                                if (!isset($this->aValueMappings['@term'][$aPathogenicity['@term']])) {
+                                    // Value not recognized.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity term \'' . $aPathogenicity['@term'] . '\' not recognized. ' .
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['@term'])) . '.';
+                                }
+                            }
+                        }
+                    }
 
+                    // Check variant_detection, if present.
+                    if (isset($aVariant['variant_detection'])) {
+                        foreach ($aVariant['variant_detection'] as $iScreening => $aScreening) {
+                            $nScreening = $iScreening + 1; // We start counting at 1, like most humans do.
+                            if (empty($aScreening['@template']) || empty($aScreening['@technique'])) {
+                                // No template or technique, no way.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': Missing required VariantDetection @template or @technique elements.';
+                            } elseif (!isset($this->aValueMappings['@template'][$aScreening['@template']])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection template \'' . $aScreening['@template'] . '\' not understood. ' .
+                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['@template']));
+                            }
+                            // We currently don't parse the technique. We just accept anything.
+                        }
+                    }
 
 
 
