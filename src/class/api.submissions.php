@@ -256,13 +256,32 @@ class LOVD_API_Submissions {
         $aInput = $aInput['lsdb']; // Simplifying our code.
 
         // Then, check the source info and the authorization.
-        if (!isset($aInput['source']) || !isset($aInput['source']['name']) || !isset($aInput['source']['email'])) {
-            $this->API->aResponse['errors'][] = 'VarioML error: Source element not found, or no contact information.';
+        if (!isset($aInput['source']) || !isset($aInput['source']['contact']) ||
+            !isset($aInput['source']['contact']['name']) || !isset($aInput['source']['contact']['email'])) {
+            $this->API->aResponse['errors'][] = 'VarioML error: Source element not found, contact element not found, or no contact information. ' .
+                'You need to provide both a name and an email in the contact element.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
-        if (!isset($aInput['source']['db_xref'])) {
-            $this->API->aResponse['errors'][] = 'VarioML error: Authorization IDs not found.';
+        if (!isset($aInput['source']['contact']['db_xref'])) {
+            $this->API->aResponse['errors'][] = 'VarioML error: Authorization IDs not found. ' .
+                'You need to provide authorization IDs in db_xref elements in the contact element.';
+            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+            return false;
+        }
+        // Loop the IDs for a valid one.
+        $aAuth = array('id' => 0, 'auth_token' => '');
+        foreach ($aInput['source']['contact']['db_xref'] as $aID) {
+            if ($aID['@source'] == 'lovd') {
+                $aAuth['id'] = $aID['@accession'];
+            } elseif ($aID['@source'] == 'lovd_auth_token') {
+                $aAuth['auth_token'] = $aID['@accession'];
+            }
+        }
+        if (!$aAuth['id'] || !$aAuth['auth_token']) {
+            // We don't have both an ID and the token, as required.
+            $this->API->aResponse['errors'][] = 'VarioML error: Authorization IDs missing. ' .
+                'You need both the lovd db_xref as the lovd_auth_token db_xref in your contact element.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
