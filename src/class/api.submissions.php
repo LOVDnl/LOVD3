@@ -56,12 +56,22 @@ class LOVD_API_Submissions {
     );
 
     private $aValueMappings = array(
+        '@copy_count' => array(
+            '1' => '0',
+            '2' => '3',
+        ),
         'gender' => array(
             '0' => '?',
             '1' => 'M',
             '2' => 'F',
             '9' => '', // This assumes it's not a mandatory field.
         ),
+    );
+    private $aDNATypes = array(
+        'DNA',
+        'cDNA',
+        'RNA',
+        'AA'
     );
 
 
@@ -238,7 +248,7 @@ class LOVD_API_Submissions {
         // Verifies if the VarioML data is complete; Is the source OK, and the
         //  authentication OK? Is there at least one individual with variants?
         // At least one screening present?
-        global $_DB, $_SETT, $_STAT;
+        global $_CONF, $_DB, $_SETT, $_STAT;
 
         // FIXME: If we'd have a proper VarioML JSON schema, like:
         // https://github.com/VarioML/VarioML/blob/master/json/examples/vreport.json-schema
@@ -337,13 +347,14 @@ class LOVD_API_Submissions {
             if (isset($aIndividual['gender']) && isset($aIndividual['gender']['@code']) &&
                 !isset($this->aValueMappings['gender'][$aIndividual['gender']['@code']])) {
                 // Value not recognized.
-                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Gender code \'' . $aIndividual['gender']['@code'] . '\' not recognized.';
+                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Gender code \'' . $aIndividual['gender']['@code'] . '\' not recognized. ' .
+                    'Options: ' . implode(', ', array_keys($this->aValueMappings['gender'])) . '.';
             }
 
             // Check phenotypes, if present.
             if (isset($aIndividual['phenotype'])) {
                 foreach ($aIndividual['phenotype'] as $iPhenotype => $aPhenotype) {
-                    $nPhenotype = $iPhenotype + 1;
+                    $nPhenotype = $iPhenotype + 1; // We start counting at 1, like most humans do.
                     if (!isset($aPhenotype['@term'])) {
                         $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Missing required @term element.';
                     }
@@ -358,6 +369,78 @@ class LOVD_API_Submissions {
                                 'Expecting 7 digits.';
                         }
                     }
+                }
+            }
+
+            // Check (genomic) variant, if present.
+            if (isset($aIndividual['variant'])) {
+                foreach ($aIndividual['variant'] as $iVariant => $aVariant) {
+                    $nVariant = $iVariant + 1; // We start counting at 1, like most humans do.
+
+                    // Required elements.
+                    foreach (array('@copy_count', '@type', 'ref_seq', 'name', 'pathogenicity', 'variant_detection') as $sRequiredElement) {
+                        if (!isset($aVariant[$sRequiredElement]) || !$aVariant[$sRequiredElement]) {
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Missing required ' . $sRequiredElement . ' element.';
+                        }
+                    }
+
+                    // Check copy_count, if present.
+                    if (isset($aVariant['@copy_count']) &&
+                        !isset($this->aValueMappings['@copy_count'][$aVariant['@copy_count']])) {
+                        // Value not recognized.
+                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Copy count code \'' . $aVariant['@copy_count'] . '\' not recognized. ' .
+                            'Options: ' . implode(', ', array_keys($this->aValueMappings['@copy_count'])) . '.';
+                    }
+
+                    // Check variant type, if present.
+                    if (isset($aVariant['@type'])) {
+                        // Check types.
+                        if (!in_array($aVariant['@type'], $this->aDNATypes)) {
+                            // Value not recognized.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Type code \'' . $aVariant['@type'] . '\' not recognized. ' .
+                                'Options: ' . implode(', ', $this->aDNATypes) . '.';
+                        } elseif ($aVariant['@type'] != 'DNA') {
+                            // First variant must have type "DNA".
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Variant type must be genomic, indicated by type \'DNA\'. ' .
+                                'Variants of other types can only be specified as children of a genomic variant.';
+                        }
+                    }
+
+                    // Check ref_seq, if present.
+                    if (isset($aVariant['ref_seq'])) {
+                        if (empty($aVariant['ref_seq']['@source']) || empty($aVariant['ref_seq']['@accession'])) {
+                            // No source or accession, no way.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Missing required RefSeq @source or @accession elements.';
+                        } elseif ($aVariant['@type'] == 'DNA') {
+                            // Check the ref_seq, but only if we're indeed using DNA.
+                            if ($aVariant['ref_seq']['@source'] != 'genbank') {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': RefSeq source not understood. ' .
+                                    'Currently supported: genbank.';
+                            } elseif (!in_array($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': RefSeq accession ' . $aVariant['ref_seq']['@accession'] . ' not understood. ' .
+                                    'Are you using the right genome build? This LOVD is configured for ' . $_CONF['refseq_build'] . '. ' .
+                                    'Options: ' . implode(', ', $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
+                            }
+                        }
+                    }
+
+                    // Check name, if present.
+                    if (isset($aVariant['name'])) {
+                        if (empty($aVariant['name']['@scheme']) || empty($aVariant['name']['#text'])) {
+                            // No scheme or text, no way.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Missing required name @scheme or #text elements.';
+                        } elseif ($aVariant['name']['@scheme'] != 'hgvs') {
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Name scheme not understood. ' .
+                                'Currently supported: hgvs.';
+                        }
+                    }
+
+
+
+
+
+
+
                 }
             }
         }
