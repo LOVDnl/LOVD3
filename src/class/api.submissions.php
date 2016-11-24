@@ -55,6 +55,15 @@ class LOVD_API_Submissions {
         ),
     );
 
+    private $aValueMappings = array(
+        'gender' => array(
+            '0' => '?',
+            '1' => 'M',
+            '2' => 'F',
+            '9' => '', // This assumes it's not a mandatory field.
+        ),
+    );
+
 
 
 
@@ -256,6 +265,8 @@ class LOVD_API_Submissions {
         }
         $aInput = $aInput['lsdb']; // Simplifying our code.
 
+
+
         // Then, check the source info and the authentication.
         if (!isset($aInput['source']) || !isset($aInput['source']['contact']) ||
             !isset($aInput['source']['contact']['name']) || !isset($aInput['source']['contact']['email'])) {
@@ -295,6 +306,70 @@ class LOVD_API_Submissions {
             $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
             return false;
         }
+
+
+
+        // Do we have data at all?
+        if (!isset($aInput['individual']) || !$aInput['individual']) {
+            $this->API->aResponse['errors'][] = 'VarioML error: Individual element not found, or no individuals. ' .
+                'Your submission must include at least one individual data entry.';
+            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+            return false;
+        }
+        $aInput = $aInput['individual']; // Simplifying our code.
+
+
+
+        // Loop through individual, checking minimal requirements.
+        foreach ($aInput as $iIndividual => $aIndividual) {
+            // From now on, we won't return directly anymore if there are errors.
+            // We let them accumulate, to make it easier for the user to test his file.
+            $nIndividual = $iIndividual + 1; // We start counting at 1, like most humans do.
+
+            // Required elements.
+            foreach (array('@id', 'variant') as $sRequiredElement) {
+                if (!isset($aIndividual[$sRequiredElement]) || !$aIndividual[$sRequiredElement]) {
+                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Missing required ' . $sRequiredElement . ' element.';
+                }
+            }
+
+            // Check gender, if present.
+            if (isset($aIndividual['gender']) && isset($aIndividual['gender']['@code']) &&
+                !isset($this->aValueMappings['gender'][$aIndividual['gender']['@code']])) {
+                // Value not recognized.
+                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Gender code \'' . $aIndividual['gender']['@code'] . '\' not recognized.';
+            }
+
+            // Check phenotypes, if present.
+            if (isset($aIndividual['phenotype'])) {
+                foreach ($aIndividual['phenotype'] as $iPhenotype => $aPhenotype) {
+                    $nPhenotype = $iPhenotype + 1;
+                    if (!isset($aPhenotype['@term'])) {
+                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Missing required @term element.';
+                    }
+                    if (isset($aPhenotype['@source'])) {
+                        if ($aPhenotype['@source'] != 'HPO') {
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Source not understood. ' .
+                                'Currently supported: HPO.';
+                        } elseif (empty($aPhenotype['@accession'])) {
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Accession mandatory if source provided.';
+                        } elseif (!ctype_digit($aPhenotype['@accession']) || strlen($aPhenotype['@accession']) != 7) {
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Accession not understood. ' .
+                                'Expecting 7 digits.';
+                        }
+                    }
+                }
+            }
+        }
+
+        // If we have errors, return false here.
+        if ($this->API->aResponse['errors']) {
+            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+            return false;
+        }
+
+
+
 
         return true;
     }
