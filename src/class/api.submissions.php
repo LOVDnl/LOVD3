@@ -382,6 +382,8 @@ class LOVD_API_Submissions {
                 }
             }
 
+
+
             // Check (genomic) variant, if present.
             if (isset($aIndividual['variant'])) {
                 foreach ($aIndividual['variant'] as $iVariant => $aVariant) {
@@ -488,7 +490,9 @@ class LOVD_API_Submissions {
                         }
                     }
 
-                    // Check next level of variation, if present.
+
+
+                    // Check next level of variation (cDNA), if present.
                     if (isset($aVariant['seq_changes']) && isset($aVariant['seq_changes']['variant'])) {
                         // We collect the genes and transcripts annotated for this variant.
                         // If we cannot find *any* of the transcripts that are annotated for this variant, we throw an error.
@@ -634,13 +638,102 @@ class LOVD_API_Submissions {
                             $aVariantLevel2 = $aVariant['seq_changes']['variant'][$iVariantLevel2];
 
                             // Check name, if present.
-                            if (isset($aVariant['name'])) {
-                                if (empty($aVariant['name']['@scheme']) || empty($aVariant['name']['#text'])) {
+                            if (isset($aVariantLevel2['name'])) {
+                                if (empty($aVariantLevel2['name']['@scheme']) || empty($aVariantLevel2['name']['#text'])) {
                                     // No scheme or text, no way.
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Missing required name @scheme or #text elements.';
-                                } elseif (strtolower($aVariant['name']['@scheme']) != 'hgvs') {
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Name scheme not understood. ' .
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Missing required name @scheme or #text elements.';
+                                } elseif (strtolower($aVariantLevel2['name']['@scheme']) != 'hgvs') {
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': Name scheme not understood. ' .
                                         'Currently supported: hgvs.';
+                                }
+                            }
+
+
+
+                            // Check next level of variation (RNA or Protein), if present.
+                            if (isset($aVariantLevel2['seq_changes']) && isset($aVariantLevel2['seq_changes']['variant'])) {
+                                foreach ($aVariantLevel2['seq_changes']['variant'] as $iVariantLevel3 => $aVariantLevel3) {
+                                    $nVariantLevel3 = $iVariantLevel3 + 1; // We start counting at 1, like most humans do.
+
+                                    // Required elements.
+                                    foreach (array('@type', 'name') as $sRequiredElement) {
+                                        if (!isset($aVariantLevel3[$sRequiredElement]) || !$aVariantLevel3[$sRequiredElement]) {
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': Missing required ' . $sRequiredElement . ' element.';
+                                        }
+                                    }
+
+                                    // Check variant further, if we at least have a type.
+                                    if (isset($aVariantLevel3['@type'])) {
+                                        // Check types.
+                                        if (!in_array($aVariantLevel3['@type'], $this->aDNATypes)) {
+                                            // Value not recognized.
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': Type code \'' . $aVariantLevel3['@type'] . '\' not recognized. ' .
+                                                'Options: ' . implode(', ', $this->aDNATypes) . '.';
+
+                                        } elseif ($aVariantLevel3['@type'] != 'RNA' && $aVariantLevel3['@type'] != 'AA') {
+                                            // Third level variant must have type "RNA" or "AA".
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': Variant type must be RNA or Protein, indicated by type \'RNA\' or \'AA\', respectively.';
+                                        }
+                                    }
+
+                                    // Check name, if present.
+                                    if (isset($aVariantLevel3['name'])) {
+                                        if (empty($aVariantLevel3['name']['@scheme']) || empty($aVariantLevel3['name']['#text'])) {
+                                            // No scheme or text, no way.
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': Missing required name @scheme or #text elements.';
+                                        } elseif (strtolower($aVariantLevel3['name']['@scheme']) != 'hgvs') {
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': Name scheme not understood. ' .
+                                                'Currently supported: hgvs.';
+                                        }
+                                    }
+
+
+
+                                    // Check next level of variation (only AA allowed, only if this variant was RNA).
+                                    if (isset($aVariantLevel3['seq_changes']) && isset($aVariantLevel3['seq_changes']['variant'])) {
+                                        // If the previous level was already AA, we should not be seeing any children, actually.
+
+                                        if (isset($aVariantLevel3['@type']) && $aVariantLevel3['@type'] == 'AA' && $aVariantLevel3['seq_changes']['variant']) {
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': Variant type is Protein, but child variants have been defined, which is not allowed.';
+                                            break; // Continue to the individual's next variant in this level.
+                                        }
+
+                                        foreach ($aVariantLevel3['seq_changes']['variant'] as $iVariantLevel4 => $aVariantLevel4) {
+                                            $nVariantLevel4 = $iVariantLevel4 + 1; // We start counting at 1, like most humans do.
+
+                                            // Required elements.
+                                            foreach (array('@type', 'name') as $sRequiredElement) {
+                                                if (!isset($aVariantLevel4[$sRequiredElement]) || !$aVariantLevel4[$sRequiredElement]) {
+                                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': SeqChange #' . $nVariantLevel4 . ': Missing required ' . $sRequiredElement . ' element.';
+                                                }
+                                            }
+
+                                            // Check variant further, if we at least have a type.
+                                            if (isset($aVariantLevel4['@type'])) {
+                                                // Check types.
+                                                if (!in_array($aVariantLevel4['@type'], $this->aDNATypes)) {
+                                                    // Value not recognized.
+                                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': SeqChange #' . $nVariantLevel4 . ': Type code \'' . $aVariantLevel4['@type'] . '\' not recognized. ' .
+                                                        'Options: ' . implode(', ', $this->aDNATypes) . '.';
+
+                                                } elseif ($aVariantLevel4['@type'] != 'AA') {
+                                                    // Third level variant must have type "AA".
+                                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': SeqChange #' . $nVariantLevel4 . ': Variant type must be Protein, indicated by type \'AA\'.';
+                                                }
+                                            }
+
+                                            // Check name, if present.
+                                            if (isset($aVariantLevel4['name'])) {
+                                                if (empty($aVariantLevel4['name']['@scheme']) || empty($aVariantLevel4['name']['#text'])) {
+                                                    // No scheme or text, no way.
+                                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': SeqChange #' . $nVariantLevel4 . ': Missing required name @scheme or #text elements.';
+                                                } elseif (strtolower($aVariantLevel4['name']['@scheme']) != 'hgvs') {
+                                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': SeqChange #' . $nVariantLevel3 . ': SeqChange #' . $nVariantLevel4 . ': Name scheme not understood. ' .
+                                                        'Currently supported: hgvs.';
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -654,9 +747,6 @@ class LOVD_API_Submissions {
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
-
-
-
 
         return true;
     }
