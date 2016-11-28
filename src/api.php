@@ -67,7 +67,7 @@ require ROOT_PATH . 'inc-init.php';
 *   HTTP/1.0 410 Gone // If we know it was there, but not anymore (if we don't know: 404)
     HTTP/1.0 413 Payload Too Large
     HTTP/1.0 415 Unsupported Media Type // Format not supported.
-*   HTTP/1.0 422 Unprocessable Entity // Format OK, syntax OK, semantics wrong.
+    HTTP/1.0 422 Unprocessable Entity // Format OK, syntax OK, semantics wrong.
 *   HTTP/1.0 423 Locked
 *   HTTP/1.0 500 Internal Server Error
     HTTP/1.0 501 Not Implemented // This is the appropriate response when the server does not recognize the request method and is not capable of supporting it for *any* resource.

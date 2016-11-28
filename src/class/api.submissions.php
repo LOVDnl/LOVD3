@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-11-25
+ * Modified    : 2016-11-28
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -338,6 +338,11 @@ class LOVD_API_Submissions {
             return false;
         }
 
+        // Fetch and store variant detection techniques.
+        $sScreeningTechniques = $_DB->query('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?', array('Screening/Technique'))->fetchColumn();
+        $aScreeningTechniques = explode("\r\n", $sScreeningTechniques);
+        // Isolate only the option values.
+        $aScreeningTechniques = preg_replace('/\s*(=.*)?$/', '', $aScreeningTechniques);
 
 
         // Loop through individual, checking minimal requirements.
@@ -482,9 +487,20 @@ class LOVD_API_Submissions {
                             if (empty($aScreening['@template']) || empty($aScreening['@technique'])) {
                                 // No template or technique, no way.
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': Missing required VariantDetection @template or @technique elements.';
-                            } elseif (!isset($this->aValueMappings['@template'][$aScreening['@template']])) {
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection template \'' . $aScreening['@template'] . '\' not understood. ' .
-                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['@template']));
+                            } else {
+                                if (!isset($this->aValueMappings['@template'][$aScreening['@template']])) {
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection template \'' . $aScreening['@template'] . '\' not understood. ' .
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['@template']));
+                                }
+                                // Compare all the techniques. Here, we'll allow semi-colon separated values, since LOVD stores it like that, too.
+                                $aOptions = explode(';', $aScreening['@technique']);
+                                foreach ($aOptions as $sOption) {
+                                    $sOption = trim($sOption); // Trim whitespace to ensure match independent of whitespace.
+                                    if ($sOption && !in_array($sOption, $aScreeningTechniques)) {
+                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection technique \'' . $sOption . '\' not understood. ' .
+                                            'Options: ' . implode(', ', $aScreeningTechniques);
+                                    }
+                                }
                             }
                             // We currently don't parse the technique. We just accept anything.
                         }
