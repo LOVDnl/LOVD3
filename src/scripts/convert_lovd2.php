@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-11-29
+ * Modified    : 2016-11-30
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,15 +51,16 @@ $aFieldLinks = array(
     'Variant/Restriction_site' =>       array('vog',        'VariantOnGenome/Restriction_site'),
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
     'Variant/Detection/Template' =>     array('scrrening',  'Screening/Template'),
-    'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique'),
+    'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
     'Variant/Exon' =>                   array('vot',        'VariantOnTranscript/Exon'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID',            'lovd_convertLab_ID'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
+    'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
     'Patient/Times_Reported' =>         array('individual', 'panel_size'),
     'Patient/Phenotype_2' =>            array('phenotype',  'Phenotype/Additional'),
-    'Patient/Occurrence' =>             array('phenotype',  'Phenotype/Inheritance'),
-    'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin'),
-    'ID_pathogenic_' =>                 array('vot',        'effectid'),
+    'Patient/Occurrence' =>             array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
+    'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
+    'ID_pathogenic_' =>                 array('vog',        'effectid'),
     'ID_status_' =>                     array('vog',        'statusid'),
     'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertUserID'),
     'variant_created_date_' =>          array('vog',        'created_date'),
@@ -84,6 +85,7 @@ $aFieldLinks = array(
 // will be preferred, so be careful to place more generic prefixes at the
 // bottom.
 $aCustomColLinks = array(
+    'Variant/Detection' =>  array('screening', 'Screening'),
     'Variant' =>            array('vot', 'VariantOnTranscript'),
     'Patient/Phenotype' =>  array('phenotype', 'Phenotype'),
     'Patient' =>            array('individual', 'Individual')
@@ -147,6 +149,49 @@ $aImportSections = array(
         'mandatory_fields' =>       array('screeningid' => '0', 'variantid' => '0')),
 );
 
+
+// Possible values for 'Screening/Technique'.
+$aScreeningTechniques = array(
+    'arrayCGH' => null,
+    'arraySEQ' => null,
+    'arraySNP' => null,
+    'arrayCNV' => null,
+    'BESS' => null,
+    'CMC' => null,
+    'CSCE' => null,
+    'DGGE' => null,
+    'DHPLC' => null,
+    'DOVAM' => null,
+    'ddF' => null,
+    'DSCA' => null,
+    'EMC' => null,
+    'HD' => null,
+    'MCA' => null,
+    'IHC' => null,
+    'MAPH' => null,
+    'MLPA' => null,
+    'SEQ-NG' => null,
+    'SEQ-NG-H' => null,
+    'SEQ-NG-I' => null,
+    'SEQ-NG-R' => null,
+    'SEQ-NG-S' => null,
+    'Northern' => null,
+    'PCR' => null,
+    'PCRdig' => null,
+    'PCRlr' => null,
+    'PCRm' => null,
+    'PCRq' => null,
+    'PAGE' => null,
+    'PTT' => null,
+    'PFGE' => null,
+    'RT-PCR' => null,
+    'SEQ' => null,
+    'SBE' => null,
+    'SSCA' => null,
+    'SSCAf' => null,
+    'Southern' => null,
+    'TaqMan' => null,
+    'Western' => null);
 
 // Default user ID with which to overwrite user IDs in the input file. Used by
 // lovd_convertUserID().
@@ -229,6 +274,36 @@ function lovd_convertDBID ($LOVD2DBID)
 
 
 
+function lovd_convertGender ($LOVD2Gender)
+{
+    // Returns LOVD3 gender value given LOVD2 gender value.
+    if (strcasecmp($LOVD2Gender, 'Female')) {
+        return 'F';
+    } else if (strcasecmp($LOVD2Gender, 'Male')) {
+        return 'M';
+    }
+    return '';
+}
+
+
+
+
+
+function lovd_convertInheritance ($LOVD2Occurrence)
+{
+    // Convert values from LOVD2's 'Patient/Occurrence' to LOVD3's
+    // Individual/Inheritance.
+    if (strcasecmp($LOVD2Occurrence, 'Sporadic') === 0) {
+        return 'Isolated (sporadic)';
+    } else if (strcasecmp($LOVD2Occurrence, 'Familial') === 0) {
+        return 'Familial';
+    }
+    return '';
+}
+
+
+
+
 
 function lovd_convertLab_ID ($LOVD2Lab_ID)
 {
@@ -243,6 +318,22 @@ function lovd_convertLab_ID ($LOVD2Lab_ID)
 
 
 
+function lovd_convertOrigin ($LOVD2MutationOrigin)
+{
+    // Convert LOVD2's 'Patient/Mutation/Origin' to LOVD3's
+    // 'Individual/Genetic_origin'.
+    if (strcasecmp($LOVD2MutationOrigin, 'Inherited') === 0) {
+        return 'Germline';
+    } else if (strcasecmp($LOVD2MutationOrigin, 'De novo') === 0) {
+        return 'De novo';
+    }
+    return '';
+}
+
+
+
+
+
 function lovd_convertReference ($LOVD2Reference)
 {
     // Convert LOVD2-style reference to LOVD3-style. E.g.:
@@ -251,6 +342,20 @@ function lovd_convertReference ($LOVD2Reference)
 }
 
 
+
+
+
+function lovd_convertScrTech ($LOVD2ScreeningTechnique)
+{
+    global $aScreeningTechniques;
+    $sTechniqueClean = lovd_trim($LOVD2ScreeningTechnique);
+    if (key_exists($sTechniqueClean, $aScreeningTechniques)) {
+        return $LOVD2ScreeningTechnique;
+    } else if ($sTechniqueClean == 'mPCR') {
+        return 'PCRm';
+    }
+    return '?';
+}
 
 
 
@@ -485,6 +590,12 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 
             // Could not link input header intelligently.
             $aWarnings[] = 'Warning: could not link field "' . $sHeader . '"';
+        }
+
+        // Handle special case effectid: if this field exists for VOG, also
+        // add it to VOT.
+        if (in_array('effectid', $aOutputHeaders['vog'])) {
+            $aOutputHeaders['vot']['effectid'] = 'effectid';
         }
 
         // Add mandatory fields and sort everything.
@@ -829,6 +940,9 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $aVOTRecord = lovd_getRecordForHeaders($aOutputHeaders['vot'], $aRecord,
             $aSections['vot']);
         $aVOTRecord['id'] = $aVOGRecord['id'];
+        if (key_exists('effectid', $aVOGRecord)) {
+            $aVOTRecord['effectid'] = $aVOGRecord['effectid'];
+        }
         $aVOTRecord['transcriptid'] = $zTranscript['id'];
 
         // Get positions on transcript/chromosome from mutalyzer for variant.
