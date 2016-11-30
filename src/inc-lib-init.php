@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-11-18
+ * Modified    : 2016-11-30
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -895,6 +895,21 @@ function lovd_parseConfigFile($sConfigFile)
                             'pattern'  => '/^[A-Z0-9_]+$/i',
                         ),
                 ),
+            'paths' =>
+                array(
+                    'data_files' =>
+                        array(
+                            'required' => LOVD_plus,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
+                        ),
+                    'data_files_archive' =>
+                        array(
+                            'required' => false,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
+                        ),
+                ),
         );
 
     // SQLite doesn't need an username and password...
@@ -914,6 +929,9 @@ function lovd_parseConfigFile($sConfigFile)
                 } elseif (isset($aVar['required']) && $aVar['required']) {
                     // No default value, required setting not filled in.
                     lovd_displayError('Init', 'Error parsing config file: missing required value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
+                } elseif (!isset($_INI[$sSection][$sVar])){
+                    // Add the setting to the $_INI array to avoid notices.
+                    $_INI[$sSection][$sVar] = false;
                 }
 
             } else {
@@ -929,6 +947,16 @@ function lovd_parseConfigFile($sConfigFile)
                         // Error: a value list is available, but it doesn't match the input!
                         lovd_displayError('Init', 'Error parsing config file: incorrect value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
                     }
+                }
+
+                // For paths, check readability or writability.
+                if (!empty($aVar['path_is_readable']) && !is_readable($_INI[$sSection][$sVar])) {
+                    // Error: The path should be readable, but it's not!
+                    lovd_displayError('Init', 'Error parsing config file: path for \'' . $sVar . '\' in section [' . $sSection . '] is not readable.');
+                }
+                if (!empty($aVar['path_is_writable']) && !is_writable($_INI[$sSection][$sVar])) {
+                    // Error: The path should be writable, but it's not!
+                    lovd_displayError('Init', 'Error parsing config file: path for \'' . $sVar . '\' in section [' . $sSection . '] is not writable.');
                 }
             }
         }
