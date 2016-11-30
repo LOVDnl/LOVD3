@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-11-28
+ * Modified    : 2016-11-30
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -194,6 +194,16 @@ class LOVD_API_Submissions {
     public function processPOST ()
     {
         // Handle POST requests for submissions.
+        global $_INI, $_SETT;
+
+        // Check if we have data path to write the resulting file to.
+        if (!$_INI['paths']['data_files']) {
+            // There's no way we can do anything with the results, so fail.
+            $this->API->aResponse['errors'][] = 'No data file path configured. Without this path, this LOVD API is not able to process files. ' .
+                'Please contact the admin to configure the data file path: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+            $this->API->nHTTPStatus = 500; // Send 500 Internal Server Error.
+            return false;
+        }
 
         // Check if we're receiving data at all over POST.
         $sInput = file_get_contents('php://input');
