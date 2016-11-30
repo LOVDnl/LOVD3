@@ -252,10 +252,9 @@ class LOVD_API_Submissions {
             // This makes traversing the array easier.
             $this->cleanVarioMLData($aInput) &&
 
-            // Check for minimum data set.
+            // Check for minimum data set, and check the data, specific for the VarioML format.
+            // This function may alter the data, dropping transcripts that are not found in this LOVD.
             $this->verifyVarioMLData($aInput)
-
-            // Do a quick check on the data, which is specific for the VarioML format.
 
             // Convert into the LOVD3 output file.
         );
@@ -625,7 +624,7 @@ class LOVD_API_Submissions {
                                         'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
                                 } else {
                                     // Genes do exist. Mention which transcripts can then be used.
-                                    $sTranscriptsAvailable = implode(', ', $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', count($aGenesExisting) - 1) . ') ORDER BY id_ncbi')->fetchAllColumn());
+                                    $sTranscriptsAvailable = implode(', ', $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', count($aGenesExisting) - 1) . ') ORDER BY id_ncbi', array($aGenesExisting))->fetchAllColumn());
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given transcripts for this variant are configured in this LOVD. ' .
                                         'Options for the given genes: ' . $sTranscriptsAvailable . '.';
                                 }
