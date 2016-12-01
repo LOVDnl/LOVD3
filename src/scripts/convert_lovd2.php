@@ -407,53 +407,41 @@ function lovd_empty ($value)
 
 
 
-
-function lovd_getInc ($sCounterName='default')
+function lovd_getDiseaseID ($sDiseaseName)
 {
-    // Static automatic incrementor. Returns incrementing integers accross
-    // consecutive function calls (starting at 1). $sCounterName allows one to
-    // use multiple incrementors simultaneously.
-    static $aCounters;
-    if (!isset($aCounters)) {
-        $aCounters = array();
-    }
-    if (!isset($aCounters[$sCounterName])) {
-        $aCounters[$sCounterName] = 1;
-    } else {
-        $aCounters[$sCounterName]++;
-    }
-    return $aCounters[$sCounterName];
-}
+    // Get the ID from the database searching the name and synmbol fields for
+    // given disease $sDiseaseName. If it is not present in the database,
+    // generate and return an automatic incrementing ID. Displays an error if
+    // there are multiple hits in the database.
+    // Returns array with disease ID (or false if an error occurred) and a
+    // boolean flag stating whether a new disease record for this ID should be
+    // created. Returns false if multiple matching diseases are found in the
+    // DB.
+    global $_DB;
+    static $aKnownDiseases;
 
-
-
-
-function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection=null)
-{
-    // Given output headers $aOutputHeaders with integer keys linked to fields
-    // in the input record $aRecord, generate an array with the fields filled
-    // with values for the corresponding links. E.g. given $aOutputHeaders =
-    // array(0 => 'field1', 1 => 'field2', 'dummy' => 'field3') and $aRecord =
-    // array('v1', 'v2'), this function would return array('field1' => 'v1',
-    // field2 => 'v2', 'dummy' => null).
-    $aNewRecord = array();
-    foreach ($aOutputHeaders as $nInputIdx => $sHeader) {
-        if (is_int($nInputIdx) || ctype_digit($nInputIdx)) {
-            // Numeric key defines link to field in input record $aRecord.
-            $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
+    $bNewDisease = false;
+    $sDiseaseNameClean = lovd_trim($sDiseaseName);
+    if (!isset($aKnownDiseases[$sDiseaseNameClean])) {
+        $zDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name=? OR symbol=?',
+            array($sDiseaseNameClean, $sDiseaseNameClean));
+        $aDiseases = $zDiseases->fetchAllAssoc();
+        if (count($aDiseases) < 1) {
+            // Not in database: create new unique disease ID.
+            $aKnownDiseases[$sDiseaseNameClean] = lovd_getInc('Diseases');
+            $bNewDisease = true;
+        } else if(count($aDiseases) > 1) {
+            // Multiple hits in database.
+            lovd_errorAdd('LOVD2_export', 'Error: disease name "' . $sDiseaseNameClean .
+                '" is ambiguous, it matches name or symbol for more than one disease in the ' .
+                'database.');
+            return array(false, false);
         } else {
-            // Leave non-linked fields empty for now. These are probably
-            // mandatory fields not provided directly in the input.
-            $aNewRecord[$sHeader] = null;
-        }
-        if (isset($aSection['mandatory_fields']) &&
-            array_key_exists($sHeader, $aSection['mandatory_fields']) &&
-            lovd_empty($aNewRecord[$sHeader])) {
-            // Set default value for mandatory field.
-            $aNewRecord[$sHeader] = $aSection['mandatory_fields'][$sHeader];
+            // Exactly one hit in database.
+            $aKnownDiseases[$sDiseaseNameClean] = $aDiseases[0]['id'];
         }
     }
-    return $aNewRecord;
+    return array($aKnownDiseases[$sDiseaseNameClean], $bNewDisease);
 }
 
 
@@ -562,7 +550,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                     $aSection = $aSections[$sSection];
                     if (isset($aSection['customcol_prefix']) &&
                         array_search($aSection['customcol_prefix'] . $sFieldname,
-                                     $aSection['db_fields']) !== false) {
+                            $aSection['db_fields']) !== false) {
                         // Set output header to with new LOVD3 prefix (e.g. Individual).
                         $aOutputHeaders[$sSection][$i] = $aSection['customcol_prefix'] . '/' .
                             $sFieldname;
@@ -623,6 +611,58 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 
 
 
+function lovd_getInc ($sCounterName='default')
+{
+    // Static automatic incrementor. Returns incrementing integers accross
+    // consecutive function calls (starting at 1). $sCounterName allows one to
+    // use multiple incrementors simultaneously.
+    static $aCounters;
+    if (!isset($aCounters)) {
+        $aCounters = array();
+    }
+    if (!isset($aCounters[$sCounterName])) {
+        $aCounters[$sCounterName] = 1;
+    } else {
+        $aCounters[$sCounterName]++;
+    }
+    return $aCounters[$sCounterName];
+}
+
+
+
+
+function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection=null)
+{
+    // Given output headers $aOutputHeaders with integer keys linked to fields
+    // in the input record $aRecord, generate an array with the fields filled
+    // with values for the corresponding links. E.g. given $aOutputHeaders =
+    // array(0 => 'field1', 1 => 'field2', 'dummy' => 'field3') and $aRecord =
+    // array('v1', 'v2'), this function would return array('field1' => 'v1',
+    // field2 => 'v2', 'dummy' => null).
+    $aNewRecord = array();
+    foreach ($aOutputHeaders as $nInputIdx => $sHeader) {
+        if (is_int($nInputIdx) || ctype_digit($nInputIdx)) {
+            // Numeric key defines link to field in input record $aRecord.
+            $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
+        } else {
+            // Leave non-linked fields empty for now. These are probably
+            // mandatory fields not provided directly in the input.
+            $aNewRecord[$sHeader] = null;
+        }
+        if (isset($aSection['mandatory_fields']) &&
+            array_key_exists($sHeader, $aSection['mandatory_fields']) &&
+            lovd_empty($aNewRecord[$sHeader])) {
+            // Set default value for mandatory field.
+            $aNewRecord[$sHeader] = $aSection['mandatory_fields'][$sHeader];
+        }
+    }
+    return $aNewRecord;
+}
+
+
+
+
+
 function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
 {
     // Generate LOVD3 import data format from converted LOVD2 records.
@@ -654,47 +694,6 @@ function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
     }
     $sOutput .= "\n";
     return $sOutput;
-}
-
-
-
-
-
-function lovd_getDiseaseID ($sDiseaseName)
-{
-    // Get the ID from the database searching the name and synmbol fields for
-    // given disease $sDiseaseName. If it is not present in the database,
-    // generate and return an automatic incrementing ID. Displays an error if
-    // there are multiple hits in the database.
-    // Returns array with disease ID (or false if an error occurred) and a
-    // boolean flag stating whether a new disease record for this ID should be
-    // created. Returns false if multiple matching diseases are found in the
-    // DB.
-    global $_DB;
-    static $aKnownDiseases;
-
-    $bNewDisease = false;
-    $sDiseaseNameClean = lovd_trim($sDiseaseName);
-    if (!isset($aKnownDiseases[$sDiseaseNameClean])) {
-        $zDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name=? OR symbol=?',
-            array($sDiseaseNameClean, $sDiseaseNameClean));
-        $aDiseases = $zDiseases->fetchAllAssoc();
-        if (count($aDiseases) < 1) {
-            // Not in database: create new unique disease ID.
-            $aKnownDiseases[$sDiseaseNameClean] = lovd_getInc('Diseases');
-            $bNewDisease = true;
-        } else if(count($aDiseases) > 1) {
-            // Multiple hits in database.
-            lovd_errorAdd('LOVD2_export', 'Error: disease name "' . $sDiseaseNameClean .
-                '" is ambiguous, it matches name or symbol for more than one disease in the ' .
-                'database.');
-            return array(false, false);
-        } else {
-            // Exactly one hit in database.
-            $aKnownDiseases[$sDiseaseNameClean] = $aDiseases[0]['id'];
-        }
-    }
-    return array($aKnownDiseases[$sDiseaseNameClean], $bNewDisease);
 }
 
 
