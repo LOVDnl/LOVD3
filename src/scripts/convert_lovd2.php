@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-11-30
+ * Modified    : 2016-12-01
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -53,11 +53,12 @@ $aFieldLinks = array(
     'Variant/Detection/Template' =>     array('scrrening',  'Screening/Template'),
     'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
     'Variant/Exon' =>                   array('vot',        'VariantOnTranscript/Exon'),
-    'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID',            'lovd_convertLab_ID'),
+    'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
     'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
     'Patient/Times_Reported' =>         array('individual', 'panel_size'),
     'Patient/Phenotype_2' =>            array('phenotype',  'Phenotype/Additional'),
+    // TODO: decide what to do with 'Patient/Phenotype/Inheritance' which will be automatically linked to Phenotype/Inheritance
     'Patient/Occurrence' =>             array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
     'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
     'ID_pathogenic_' =>                 array('vog',        'effectid'),
@@ -109,7 +110,12 @@ $aImportSections = array(
         'output_header' =>          'Transcripts'),
     'disease' =>    array(
         'output_header' =>          'Diseases',
-        'mandatory_fields' =>       array('id' => '1', 'name' => '-', 'symbol' => '')),
+        'mandatory_fields' =>       array('id' => '1', 'name' => '-', 'symbol' => ''),
+        'comments' =>               array('Diseases listed here were not found in the database ' .
+                                    '(in either name or symbol field).',
+                                    'If this is a mistake, remove the disease below and update ' .
+                                    'all references to it in this file',
+                                    'in order to avoid duplication of diseases in the database.')),
     'g2d' =>        array(
         'output_header' =>          'Genes_To_Diseases'),
     'individual' => array(
@@ -262,7 +268,7 @@ function lovd_convertDBID ($LOVD2DBID)
 {
     // Returns an LOVD3-formatted DBID for the given $LOVD2DBID by padding
     // the number with an extra '0'.
-    $aChunks = explode('_', $LOVD2DBID);
+    $aChunks = explode('_', lovd_trim($LOVD2DBID));
     $nParts = count($aChunks);
     if ($nParts > 1 && ctype_digit($aChunks[$nParts-1])) {
         $aChunks[$nParts-1] = '0' . $aChunks[$nParts-1];
@@ -299,19 +305,6 @@ function lovd_convertInheritance ($LOVD2Occurrence)
         return 'Familial';
     }
     return '';
-}
-
-
-
-
-
-function lovd_convertLab_ID ($LOVD2Lab_ID)
-{
-    // Returns the last 15 characters of the given lab ID. LOVD3 max length
-    // for Lab_ID is 15. We assume the identifying part of the ID is at the end
-    // of the value, which we aim to preserve.
-    // TODO: remove this, let import fail if too long
-    return substr($LOVD2Lab_ID, -15);
 }
 
 
@@ -568,7 +561,8 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                 foreach ($aSectionIDs as $sSection) {
                     $aSection = $aSections[$sSection];
                     if (isset($aSection['customcol_prefix']) &&
-                        array_search($sFieldname, $aSection['db_fields']) !== false) {
+                        array_search($aSection['customcol_prefix'] . $sFieldname,
+                                     $aSection['db_fields']) !== false) {
                         // Set output header to with new LOVD3 prefix (e.g. Individual).
                         $aOutputHeaders[$sSection][$i] = $aSection['customcol_prefix'] . '/' .
                             $sFieldname;
@@ -635,6 +629,13 @@ function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
 
     $sOutput = "\n" . '## ' . $aImportSection['output_header'];
     $sOutput .= ' ## Do not remove or alter this header ##' . "\n";
+    $sOutput .= '## Count = ' . strval(count($aRecords)) . "\n";
+
+    if (key_exists('comments', $aImportSection)) {
+        foreach ($aImportSection['comments'] as $sComment) {
+            $sOutput .= '# ' . $sComment . "\n";
+        }
+    }
 
     $aSectionHeaders = array();
     foreach ($aOutputHeaders as $sHeader) {
@@ -1042,6 +1043,17 @@ function lovd_setUserIDSettings ($sFixedSubmitterIDInput, $sSubmitterTranslation
         foreach (explode("\n", $sInput) as $sLine) {
             $sLineClean = trim($sLine);
             if (!empty($sLineClean)) {
+                // TODO: allow mysql SELECT query output format i.e.:
+                // +-------------+------------+
+                // |       OldID |      NewID |
+                // +-------------+------------+
+                // |  0000000001 | 0000000001 |
+                // |  0000000001 | 0000000027 |
+                // |  0000000002 | 0000000002 |
+                // |  0000000002 | 0000000023 |
+                // |  0000000003 | 0000000003 |
+                // +-------------+------------+
+
                 preg_match('/^\s*(\d+)\s+(\d+)\s*$/', $sLine, $m);
                 if (count($m) != 3 || !ctype_digit($m[1]) || !ctype_digit($m[2])) {
                     lovd_errorAdd($sFormField,
@@ -1068,6 +1080,7 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
     // Returns nothing.
 
     // Show viewlist for searching and selecting a transcript.
+    print('<H2>Select transcript</H2>');
     $_DATA = new LOVD_Transcript();
     $_DATA->setRowLink('Transcripts', 'javascript: $("input[name=\'transcriptid\']").val({{ID}}); return false;');
     $_GET['page_size'] = 10;
