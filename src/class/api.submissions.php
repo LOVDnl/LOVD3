@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-11-30
+ * Modified    : 2016-12-01
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -78,6 +78,12 @@ class LOVD_API_Submissions {
             '2' => 'F',
             '9' => '', // This assumes it's not a mandatory field.
         ),
+    );
+    // The length of the accessions are checked if source is provided. Should
+    //  always be numeric.
+    private $aAccessionLengths = array(
+        'hpo' => 7,
+        'omim' => 6,
     );
     private $aDNATypes = array(
         'DNA',
@@ -383,14 +389,14 @@ class LOVD_API_Submissions {
                         $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Missing required @term element.';
                     }
                     if (isset($aPhenotype['@source'])) {
-                        if ($aPhenotype['@source'] != 'HPO') {
+                        if (!in_array(strtolower($aPhenotype['@source']), array('hpo', 'omim'))) {
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Source not understood. ' .
-                                'Currently supported: HPO.';
+                                'Currently supported: hpo, omim.';
                         } elseif (empty($aPhenotype['@accession'])) {
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Accession mandatory if source provided.';
-                        } elseif (!ctype_digit($aPhenotype['@accession']) || strlen($aPhenotype['@accession']) != 7) {
+                        } elseif (!ctype_digit($aPhenotype['@accession']) || strlen($aPhenotype['@accession']) != $this->aAccessionLengths[strtolower($aPhenotype['@source'])]) {
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Phenotype #' . $nPhenotype . ': Accession not understood. ' .
-                                'Expecting 7 digits.';
+                                'Expecting ' . $this->aAccessionLengths[strtolower($aPhenotype['@source'])] . ' digits.';
                         }
                     }
                 }
