@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-12-01
+ * Modified    : 2016-12-06
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -334,7 +334,7 @@ class LOVD_API_Submissions {
             return false;
         }
         // Check the authentication.
-        $this->zAuth = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ? AND auth_token = ? AND auth_token_expires > NOW()',
+        $this->zAuth = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ? AND auth_token = ? AND (auth_token_expires > NOW() OR auth_token_expires IS NULL)',
             array($aAuth['id'], $aAuth['auth_token']))->fetchAssoc();
         if (!$this->zAuth) {
             $this->API->aResponse['errors'][] = 'VarioML error: Authentication denied. ' .
@@ -400,6 +400,8 @@ class LOVD_API_Submissions {
                         }
                     }
                 }
+            } else {
+                $aInput['lsdb']['individual'][$iIndividual]['phenotype'] = array();
             }
 
 
