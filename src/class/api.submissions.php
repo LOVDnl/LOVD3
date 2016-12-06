@@ -92,6 +92,22 @@ class LOVD_API_Submissions {
         'AA'
     );
 
+    // The sections/objects and their columns that we'll use.
+    private $aObjects = array(
+        'Columns' => array(),
+        'Genes' => array(),
+        'Transcripts' => array(),
+        'Diseases' => array('id', 'symbol', 'name', 'id_omim'),
+        'Individuals' => array('id', 'Individual/Lab_ID', 'Individual/Gender'),
+        'Ind2Dis' => array('individualid', 'diseaseid'),
+        'Phenotypes' => array('id', 'diseaseid', 'individualid', 'Phenotype/Additional'),
+        'Screenings' => array('id', 'Screening/Template', 'Screening/Technique'),
+        'Scr2Gene' => array(),
+        'Variants_On_Genome' => array('id', 'allele', 'chromosome', 'VariantOnGenome/DNA'),
+        'Variants_On_Transcripts' => array('id', 'transcriptid', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
+        'Scr2Var' => array('screeningid', 'variantid'),
+    );
+
 
 
 
@@ -138,6 +154,229 @@ class LOVD_API_Submissions {
         }
 
         return true;
+    }
+
+
+
+
+
+    private function convertVarioMLToLOVD ($aInput)
+    {
+        // This function takes the input data and creates an LOVD data array, in
+        //  the format as if taken directly from the database.
+        // Calling this function assumes the input is properly verified VarioML
+        //  format.
+        global $_CONF, $_DB, $_SETT;
+
+        // This array will contain all data that is to be returned.
+        $aData = array_fill_keys(array_keys($this->aObjects), array());
+
+        // This Disease ID is of the "unclassified" disease (which we will create if it doesn't exist and we need it).
+        static $nDiseaseIDUnclassified = false;
+        // Array of diseases we have seen already.
+        static $aDiseases = array();
+        // Array of transcripts we have already seen.
+        static $aTranscripts = array();
+
+        // Loop VarioML data, fill in $aData array.
+        foreach ($aInput['lsdb']['individual'] as $nIndividualKey => $aIndividual) {
+            $nIndividualID = $nIndividualKey + 1;
+            $aData['Individuals'][$nIndividualKey] = array_fill_keys($this->aObjects['Individuals'], ''); // Instantiate all columns.
+
+            // Map the data.
+            $aData['Individuals'][$nIndividualKey]['id'] = $nIndividualID;
+            $aData['Individuals'][$nIndividualKey]['Individual/Lab_ID'] = $aIndividual['@id'];
+            $aData['Individuals'][$nIndividualKey]['Individual/Gender'] = (!isset($aIndividual['gender'])? '' : $this->aValueMappings['gender'][$aIndividual['gender']['@code']]);
+
+
+
+            // Phenotypes; can be both HPO and OMIM entries.
+            $nDiseaseIDForHPO = 0; // The disease ID to which HPO terms will be added.
+            // Split based on source.
+            $aPhenotypes = array('hpo' => array(), 'omim' => array());
+            foreach ($aIndividual['phenotype'] as $aPhenotype) {
+                $aPhenotypes[strtolower($aPhenotype['@source'])][$aPhenotype['@accession']] = $aPhenotype['@term'];
+            }
+            // If we have (HPO) phenotypes but no diseases, or if we have phenotypes
+            //  and more than one disease, we need to add 'unclassified'.
+            if ($aPhenotypes['hpo'] && count($aPhenotypes['omim']) != 1) {
+                if (!$nDiseaseIDUnclassified) {
+                    // We didn't look for it yet. Find it, and if it's not there, create it.
+                    $nDiseaseIDUnclassified = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ? AND name LIKE ?', array('?', '%unclassified%'))->fetchColumn();
+                    if ($nDiseaseIDUnclassified === false) {
+                        // Have the "unclassified" disease created, then.
+                        $nDiseaseIDUnclassified = count($aData['Diseases']) + 1;
+                        $aData['Diseases'][] = array('id' => $nDiseaseIDUnclassified, 'symbol' => '?', 'name' => 'Unclassified', 'id_omim' => '');
+                    }
+                }
+                $nDiseaseIDForHPO = $nDiseaseIDUnclassified;
+            }
+
+            // First handle the diseases.
+            foreach ($aPhenotypes['omim'] as $nAccession => $sTerm) {
+                // We focus on the OMIM ID and use the term
+                //  only when we can't match on the OMIM ID.
+                // We can just put it in the file and have LOVD match it, but
+                //  LOVD will always issue a warning, and I want to prevent that.
+                if (!isset($aDiseases[$nAccession])) {
+                    $nDiseaseID = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ? OR (id_omim IS NULL AND name = ?)', array($nAccession, $sTerm))->fetchColumn();
+                    if (!$nDiseaseID) {
+                        // Disease is not yet in the database. Have it created.
+                        $nDiseaseID = count($aData['Diseases']) + 1;
+                        // If the term looks like an abbreviation, use that, otherwise use "-".
+                        $sSymbol = (preg_match('/^[A-Z0-9-]+$/', $sTerm)? $sTerm : '-');
+                        $aData['Diseases'][] = array('id' => $nDiseaseID, 'symbol' => $sSymbol, 'name' => $sTerm, 'id_omim' => $nAccession);
+                    }
+                    $aDiseases[$nAccession] = $nDiseaseID;
+                }
+                // Link individual to the disease.
+                $aData['Ind2Dis'][] = array('individualid' => $nIndividualID, 'diseaseid' => $aDiseases[$nAccession]);
+                // Also, take individual's first disease, and select it for HPO terms to be added to.
+                if (!$nDiseaseIDForHPO) {
+                    $nDiseaseIDForHPO = $aDiseases[$nAccession];
+                }
+            }
+
+            // Then, store phenotypes. Add to the first disease we have attached
+            //  to this individual. If there were multiple diseases, we already
+            //  handled that by added the "Unclassified" disease first.
+            // All HPO phenotypes will be stored as one phenotype entry.
+            if ($aPhenotypes['hpo']) {
+                $sPhenotype = '';
+                foreach ($aPhenotypes['hpo'] as $nAccession => $sTerm) {
+                    $sPhenotype .= (!$sPhenotype ? '' : '; ') . 'HP:' . $nAccession . ' (' . $sTerm . ')';
+                }
+                // We're assuming here, that the Phenotype/Additional column is
+                //  active. It's an LOVD-standard custom column added to new
+                //  diseases by default.
+                $nPhenotypeID = count($aData['Phenotypes']) + 1;
+                $aData['Phenotypes'][] = array(
+                    'id' => $nPhenotypeID,
+                    'diseaseid' => $nDiseaseIDForHPO,
+                    'individualid' => $nIndividualID,
+                    'Phenotype/Additional' => $sPhenotype,
+                );
+            }
+
+
+
+            // Loop variants and store them, too.
+            foreach ($aIndividual['variant'] as $nVariantKey => $aVariant) {
+                $nVariantID = $nVariantKey + 1;
+                $aData['Variants_On_Genome'][$nVariantKey] = array_fill_keys($this->aObjects['Variants_On_Genome'], ''); // Instantiate all columns.
+
+                // Map the data.
+                $aData['Variants_On_Genome'][$nVariantKey]['id'] = $nVariantID;
+                $aData['Variants_On_Genome'][$nVariantKey]['allele'] = $this->aValueMappings['@copy_count'][$aVariant['@copy_count']];
+                $aData['Variants_On_Genome'][$nVariantKey]['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
+                $aData['Variants_On_Genome'][$nVariantKey]['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
+                $aData['Variants_On_Genome'][$nVariantKey]['effectid'] = $this->aValueMappings['@term'][$aVariant['pathogenicity'][0]['@term']];
+
+                // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
+                $nScreeningID = count($aData['Screenings']) + 1;
+                $aTemplates = array();
+                $aTechniques = array();
+                foreach ($aVariant['variant_detection'] as $aScreening) {
+                    $aTemplates[] = $aScreening['@template'];
+                    $aTechniques = array_merge($aTechniques, explode(';', $aScreening['@technique']));
+                }
+                $aData['Screenings'][] = array(
+                    'id' => $nScreeningID,
+                    'Screening/Template' => implode(';', array_unique($aTemplates)),
+                    'Screening/Technique' => implode(';', array_unique($aTechniques)),
+                );
+                $aData['Scr2Var'][] = array(
+                    'screeningid' => $nScreeningID,
+                    'variantid' => $nVariantID,
+                );
+
+
+
+                // Check for VOTs.
+                if (isset($aVariant['seq_changes']) && isset($aVariant['seq_changes']['variant'])) {
+                    // Loop through all VOTs. They've already been checked, so have to be cDNA, [RNA], [AA].
+                    foreach ($aVariant['seq_changes']['variant'] as $aVariantLevel2) {
+                        $aVOT = array('id' => $nVariantID); // The VOT that we're building now.
+
+                        // Type must be cDNA, we already checked.
+                        // We ignore the gene.
+
+                        // Find the RefSeq. It should have already been checked.
+                        if (!isset($aTranscripts[$aVariantLevel2['ref_seq']['@accession']])) {
+                            $aTranscripts[$aVariantLevel2['ref_seq']['@accession']] = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($aVariantLevel2['ref_seq']['@accession']))->fetchColumn();
+                        }
+                        $aVOT['transcriptid'] = $aTranscripts[$aVariantLevel2['ref_seq']['@accession']];
+
+                        // Map the DNA field.
+                        $aVOT['VariantOnTranscript/DNA'] = $aVariantLevel2['name']['#text'];
+
+                        // For RNA, we need to go to the next level (if it's there).
+                        $aRNAs = array(); // We could find more than one!
+                        $aProteins = array(); // We could find more than one!
+
+                        if (isset($aVariantLevel2['seq_changes']) && isset($aVariantLevel2['seq_changes']['variant'])) {
+                            foreach ($aVariantLevel2['seq_changes']['variant'] as $aVariantLevel3) {
+                                if ($aVariantLevel3['@type'] == 'RNA') {
+                                    $aRNAs[] = $aVariantLevel3['name']['#text'];
+                                } elseif ($aVariantLevel3['@type'] == 'AA') {
+                                    $aProteins[] = $aVariantLevel3['name']['#text'];
+                                }
+
+                                // We should only find AA still now.
+                                if (isset($aVariantLevel3['seq_changes']) && isset($aVariantLevel3['seq_changes']['variant'])) {
+                                    foreach ($aVariantLevel3['seq_changes']['variant'] as $aVariantLevel4) {
+                                        if ($aVariantLevel4['@type'] == 'AA') {
+                                            $aProteins[] = $aVariantLevel4['name']['#text'];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Store RNA.
+                        if (count($aRNAs) == 1) {
+                            $sRNA = $aRNAs[0];
+                        } elseif (!$aRNAs) {
+                            // Default value.
+                            $sRNA = 'r.(?)';
+                        } else {
+                            // Multiple RNA changes...
+                            $sRNA = 'r.[';
+                            foreach ($aRNAs as $i => $sRNAVariant) {
+                                if (substr($sRNAVariant, 0, 2) == 'r.') {
+                                    $sRNAVariant = substr($sRNAVariant, 2);
+                                }
+                                $sRNA .= (!$i? '' : '; ') . $sRNAVariant;
+                            }
+                            $sRNA .= ']';
+                        }
+                        $aVOT['VariantsOnTranscript/RNA'] = $sRNA;
+
+                        // Store Protein.
+                        if (count($aProteins) == 1) {
+                            $sProtein = $aProteins[0];
+                        } elseif (!$aProteins) {
+                            // Default value.
+                            $sProtein = '-';
+                        } else {
+                            // Multiple Protein changes...
+                            $sProtein = 'p.[';
+                            foreach ($aProteins as $i => $sProteinVariant) {
+                                if (substr($sProteinVariant, 0, 2) == 'p.') {
+                                    $sProteinVariant = substr($sProteinVariant, 2);
+                                }
+                                $sProtein .= (!$i? '' : '; ') . $sProteinVariant;
+                            }
+                            $sProtein .= ']';
+                        }
+                        $aVOT['VariantsOnTranscript/Protein'] = $sProtein;
+                        $aData['Variants_On_Transcripts'][] = $aVOT;
+                    }
+                }
+            }
+        }
+
+        return $aData;
     }
 
 
@@ -260,9 +499,12 @@ class LOVD_API_Submissions {
 
             // Check for minimum data set, and check the data, specific for the VarioML format.
             // This function may alter the data, dropping transcripts that are not found in this LOVD.
-            $this->verifyVarioMLData($aInput)
+            $this->verifyVarioMLData($aInput) &&
 
-            // Convert into the LOVD3 output file.
+            // Convert into an LOVD3 object.
+            $aData = $this->convertVarioMLToLOVD($aInput)
+
+            // Write the LOVD3 output file.
         );
     }
 
