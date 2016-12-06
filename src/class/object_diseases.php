@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-09-09
+ * Modified    : 2016-12-06
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -351,10 +351,10 @@ class LOVD_Disease extends LOVD_Object {
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
                         array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
-                        array('Associated tissues', '', 'select', 'tissues', 10, $_SETT['disease_tissues'],
+                        array('Associated tissues (optional)', '', 'select', 'tissues', 10, $_SETT['disease_tissues'],
                               false, true, false),
-                        array('Disease features', '', 'textarea', 'features', 50, 5),
-                        array('Remarks', '', 'textarea', 'remarks', 50, 5),
+                        array('Disease features (optional)', '', 'textarea', 'features', 50, 5),
+                        array('Remarks (optional)', '', 'textarea', 'remarks', 50, 5),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to genes (optional)</B>'),
