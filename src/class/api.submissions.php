@@ -97,15 +97,15 @@ class LOVD_API_Submissions {
         'Columns' => array(),
         'Genes' => array(),
         'Transcripts' => array(),
-        'Diseases' => array('id', 'symbol', 'name', 'id_omim'),
+        'Diseases' => array('id', 'symbol', 'name', 'id_omim', 'created_by'),
         'Genes_To_Diseases' => array(),
-        'Individuals' => array('id', 'panel_size', 'Individual/Lab_ID', 'Individual/Gender'),
+        'Individuals' => array('id', 'panel_size', 'owned_by', 'statusid', 'created_by', 'Individual/Lab_ID', 'Individual/Gender'),
         'Individuals_To_Diseases' => array('individualid', 'diseaseid'),
-        'Phenotypes' => array('id', 'diseaseid', 'individualid', 'Phenotype/Additional'),
-        'Screenings' => array('id', 'individualid', 'Screening/Template', 'Screening/Technique'),
+        'Phenotypes' => array('id', 'diseaseid', 'individualid', 'owned_by', 'statusid', 'created_by', 'Phenotype/Additional'),
+        'Screenings' => array('id', 'individualid', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
         'Screenings_To_Genes' => array(),
-        'Variants_On_Genome' => array('id', 'allele', 'chromosome', 'position_g_start', 'position_g_end', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID'),
-        'Variants_On_Transcripts' => array('id', 'transcriptid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
+        'Variants_On_Genome' => array('id', 'allele', 'effectid', 'chromosome', 'position_g_start', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID'),
+        'Variants_On_Transcripts' => array('id', 'transcriptid', 'effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
         'Screenings_To_Variants' => array('screeningid', 'variantid'),
     );
 
@@ -187,6 +187,9 @@ class LOVD_API_Submissions {
             // Map the data.
             $aData['Individuals'][$nIndividualKey]['id'] = $nIndividualID;
             $aData['Individuals'][$nIndividualKey]['panel_size'] = 1; // Defaults to one individual.
+            $aData['Individuals'][$nIndividualKey]['owned_by'] = $this->zAuth['id'];
+            $aData['Individuals'][$nIndividualKey]['statusid'] = STATUS_PENDING;
+            $aData['Individuals'][$nIndividualKey]['created_by'] = $this->zAuth['id'];
             $aData['Individuals'][$nIndividualKey]['Individual/Lab_ID'] = $aIndividual['@id'];
             $aData['Individuals'][$nIndividualKey]['Individual/Gender'] = (!isset($aIndividual['gender'])? '' : $this->aValueMappings['gender'][$aIndividual['gender']['@code']]);
 
@@ -208,7 +211,7 @@ class LOVD_API_Submissions {
                     if ($nDiseaseIDUnclassified === false) {
                         // Have the "unclassified" disease created, then.
                         $nDiseaseIDUnclassified = count($aData['Diseases']) + 1;
-                        $aData['Diseases'][] = array('id' => $nDiseaseIDUnclassified, 'symbol' => '?', 'name' => 'Unclassified', 'id_omim' => '');
+                        $aData['Diseases'][] = array('id' => $nDiseaseIDUnclassified, 'symbol' => '?', 'name' => 'Unclassified', 'id_omim' => '', 'created_by' => $this->zAuth['id']);
                     }
                 }
                 $nDiseaseIDForHPO = $nDiseaseIDUnclassified;
@@ -227,7 +230,7 @@ class LOVD_API_Submissions {
                         $nDiseaseID = count($aData['Diseases']) + 1;
                         // If the term looks like an abbreviation, use that, otherwise use "-".
                         $sSymbol = (preg_match('/^[A-Z0-9-]+$/', $sTerm)? $sTerm : '-');
-                        $aData['Diseases'][] = array('id' => $nDiseaseID, 'symbol' => $sSymbol, 'name' => $sTerm, 'id_omim' => $nAccession);
+                        $aData['Diseases'][] = array('id' => $nDiseaseID, 'symbol' => $sSymbol, 'name' => $sTerm, 'id_omim' => $nAccession, 'created_by' => $this->zAuth['id']);
                     }
                     $aDiseases[$nAccession] = $nDiseaseID;
                 }
@@ -256,6 +259,9 @@ class LOVD_API_Submissions {
                     'id' => $nPhenotypeID,
                     'diseaseid' => $nDiseaseIDForHPO,
                     'individualid' => $nIndividualID,
+                    'owned_by' => $this->zAuth['id'],
+                    'statusid' => STATUS_PENDING,
+                    'created_by' => $this->zAuth['id'],
                     'Phenotype/Additional' => $sPhenotype,
                 );
             }
@@ -271,9 +277,12 @@ class LOVD_API_Submissions {
                 // Map the data.
                 $aVOG['id'] = $nVariantID;
                 $aVOG['allele'] = $this->aValueMappings['@copy_count'][$aVariant['@copy_count']];
-                $aVOG['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
-                $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
                 $aVOG['effectid'] = $this->aValueMappings['@term'][$aVariant['pathogenicity'][0]['@term']];
+                $aVOG['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
+                $aVOG['owned_by'] = $this->zAuth['id'];
+                $aVOG['statusid'] = STATUS_PENDING;
+                $aVOG['created_by'] = $this->zAuth['id'];
+                $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
 
                 // Fill in the positions. If this fails, this is reason to reject the variant.
                 $aVariantInfo = lovd_getVariantInfo($aVariant['name']['#text']);
@@ -304,6 +313,8 @@ class LOVD_API_Submissions {
                 $aData['Screenings'][] = array(
                     'id' => $nScreeningID,
                     'individualid' => $nIndividualID,
+                    'owned_by' => $this->zAuth['id'],
+                    'created_by' => $this->zAuth['id'],
                     'Screening/Template' => implode(';', array_unique($aTemplates)),
                     'Screening/Technique' => implode(';', array_unique($aTechniques)),
                 );
@@ -330,7 +341,8 @@ class LOVD_API_Submissions {
                         }
                         $aVOT['transcriptid'] = $aTranscripts[$aVariantLevel2['ref_seq']['@accession']];
 
-                        // Map the DNA field.
+                        // Map the data.
+                        $aVOT['effectid'] = $aVOG['effectid'];
                         $aVOT['VariantOnTranscript/DNA'] = $aVariantLevel2['name']['#text'];
 
                         // Fill in the positions. If this fails, this is reason to reject the variant.
