@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-12-06
+ * Modified    : 2016-12-07
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -103,8 +103,8 @@ class LOVD_API_Submissions {
         'Phenotypes' => array('id', 'diseaseid', 'individualid', 'Phenotype/Additional'),
         'Screenings' => array('id', 'Screening/Template', 'Screening/Technique'),
         'Scr2Gene' => array(),
-        'Variants_On_Genome' => array('id', 'allele', 'chromosome', 'VariantOnGenome/DNA'),
-        'Variants_On_Transcripts' => array('id', 'transcriptid', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
+        'Variants_On_Genome' => array('id', 'allele', 'chromosome', 'position_g_start', 'position_g_end', 'VariantOnGenome/DNA'),
+        'Variants_On_Transcripts' => array('id', 'transcriptid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
         'Scr2Var' => array('screeningid', 'variantid'),
     );
 
@@ -262,15 +262,34 @@ class LOVD_API_Submissions {
 
             // Loop variants and store them, too.
             foreach ($aIndividual['variant'] as $nVariantKey => $aVariant) {
-                $nVariantID = $nVariantKey + 1;
-                $aData['Variants_On_Genome'][$nVariantKey] = array_fill_keys($this->aObjects['Variants_On_Genome'], ''); // Instantiate all columns.
+                // Prepare the VOG that we're building now.
+                $aVOG = array_fill_keys($this->aObjects['Variants_On_Genome'], ''); // Instantiate all columns.
+                $nVariantID = count($aData['Variants_On_Genome']) + 1;
 
                 // Map the data.
-                $aData['Variants_On_Genome'][$nVariantKey]['id'] = $nVariantID;
-                $aData['Variants_On_Genome'][$nVariantKey]['allele'] = $this->aValueMappings['@copy_count'][$aVariant['@copy_count']];
-                $aData['Variants_On_Genome'][$nVariantKey]['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
-                $aData['Variants_On_Genome'][$nVariantKey]['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
-                $aData['Variants_On_Genome'][$nVariantKey]['effectid'] = $this->aValueMappings['@term'][$aVariant['pathogenicity'][0]['@term']];
+                $aVOG['id'] = $nVariantID;
+                $aVOG['allele'] = $this->aValueMappings['@copy_count'][$aVariant['@copy_count']];
+                $aVOG['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
+                $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
+                $aVOG['effectid'] = $this->aValueMappings['@term'][$aVariant['pathogenicity'][0]['@term']];
+
+                // Fill in the positions. If this fails, this is reason to reject the variant.
+                $aVariantInfo = lovd_getVariantInfo($aVariant['name']['#text']);
+                if (!$aVariantInfo) {
+                    $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Name not understood. ' .
+                        'This does not seem to be correct HGVS nomenclature.';
+                    return false;
+                } elseif (isset($aVariantInfo['position_start_intron'])) {
+                    // Shouldn't happen for genomic variants.
+                    $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Name does not seem to describe a genomic variant. ' .
+                        'Variant must be genomic, indicated by \'g.\'. ' .
+                        'Variants of other types can only be specified as children of a genomic variant.';
+                    return false;
+                }
+                $aVOG['position_g_start'] = $aVariantInfo['position_start'];
+                $aVOG['position_g_end'] = $aVariantInfo['position_end'];
 
                 // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
                 $nScreeningID = count($aData['Screenings']) + 1;
@@ -373,6 +392,8 @@ class LOVD_API_Submissions {
                         $aData['Variants_On_Transcripts'][] = $aVOT;
                     }
                 }
+
+                $aData['Variants_On_Genome'][] = $aVOG;
             }
         }
 
