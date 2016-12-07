@@ -26,6 +26,13 @@
    to clarify that you need to insert the unlocking code again for confirmation.
  * Users can now create their own API tokens to use for the LOVD data submission
    API.
+ * LOVD now includes a submission API, that can take VarioML formatted data and
+   convert this into an LOVD3 import file. Currently, these import files are not
+   yet automatically imported. This will be included in a future LOVD release.
+   Documentation on this API is to follow soon.
+ * The VariantOnTranscript/Exon field is now no longer mandatory by default,
+   allowing the submission API to directly submit data, since it doesn't contain
+   the Exon field.
 
 
 /************************************

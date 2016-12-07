@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2016-09-14
- * For LOVD    : 3.0-17
+ * Modified    : 2016-12-07
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -78,7 +78,7 @@ $aColSQL =
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnGenome/Type",                         1, 200, 0, 0, 1, "Type",                 "", "Type of variant at DNA level.", "Type of variant at DNA level; note that the variant type can also be derived from the variant description (for all levels).", "VARCHAR(100)", "Type of variant (DNA level)|Type of variant at DNA level; note that the variant type can also be derived from the variant description (for all levels).|select|1|true|false|false", "Substitution\r\nDeletion\r\nDuplication\r\nInsertion\r\nInversion\r\nInsertion/Deletion\r\nTranslocation\r\nOther/Complex", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Distance_to_splice_site", 10, 150, 0, 0, 0, "Splice distance",      "", "The distance to the nearest splice site.", "The distance to the nearest splice site.", "MEDIUMINT(8) UNSIGNED", "Distance to splice site||text|8", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/DNA",                      3, 200, 1, 1, 1, "DNA change (cDNA)",    "", "Description of variant at DNA level, based on a coding DNA reference sequence (following HGVS recommendations).", "Description of variant at DNA level, based on a coding DNA reference sequence (following HGVS recommendations); e.g. c.123C>T, c.123_145del, c.123_126dup.", "VARCHAR(100)", "DNA change (HGVS format)|Description of variant at DNA level, based on a coding DNA reference sequence (following HGVS recommendations); e.g. c.123C>T, c.123_145del, c.123_126dup.|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
-                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Exon",                     2,  50, 0, 1, 1, "Exon",                 "", "Number of exon/intron containing the variant.", "Number of exon/intron containing variant; 2 = exon 2, 12i = intron 12, 2i_7i = exons 3 to 7, 8i_9 = border intron 8/exon 9.", "VARCHAR(7)", "Exon|Format: 2 = exon 2, 12i = intron 12, 2i_7i = exons 3 to 7, 8i_9 = border intron 8/exon 9.|text|7", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Exon",                     2,  50, 0, 1, 0, "Exon",                 "", "Number of exon/intron containing the variant.", "Number of exon/intron containing variant; 2 = exon 2, 12i = intron 12, 2i_7i = exons 3 to 7, 8i_9 = border intron 8/exon 9.", "VARCHAR(7)", "Exon|Format: 2 = exon 2, 12i = intron 12, 2i_7i = exons 3 to 7, 8i_9 = border intron 8/exon 9.|text|7", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/GVS/Function",             9, 200, 0, 0, 0, "GVS function",         "", "Functional annotation of this position from the Genome Variation Server.", "The functional annotation of this position from the Genome Variation Server.", "VARCHAR(100)", "GVS function||select|1|true|false|false", "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Location",                 1, 200, 0, 0, 1, "Location",             "", "Location of variant at DNA level.", "Location of variant at DNA level; note that the variant location can also be derived from the variant description.", "VARCHAR(100)", "Location of variant|The variant location can also be derived from the variant description|select|1|true|false|false", "5\' gene flanking\r\n5\' UTR\r\nExon\r\nIntron\r\n3\' UTR\r\n3\' gene flanking", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/PolyPhen",                 8, 200, 0, 0, 0, "PolyPhen prediction",  "", "Effect of variant, predicted by PolyPhen.", "Effect of variant, predicted by PolyPhen.", "VARCHAR(100)", "PolyPhen prediction|Effect of variant, predicted by PolyPhen|select|1|true|false|false", "benign = Benign\r\npossiblyDamaging = Possibly damaging\r\nprobablyDamaging = Probably damaging\r\nnoPrediction = No prediction", "", 1, 1, 1, 0, NOW(), NULL, NULL)',

@@ -98,14 +98,15 @@ class LOVD_API_Submissions {
         'Genes' => array(),
         'Transcripts' => array(),
         'Diseases' => array('id', 'symbol', 'name', 'id_omim'),
-        'Individuals' => array('id', 'Individual/Lab_ID', 'Individual/Gender'),
-        'Ind2Dis' => array('individualid', 'diseaseid'),
+        'Genes_To_Diseases' => array(),
+        'Individuals' => array('id', 'panel_size', 'Individual/Lab_ID', 'Individual/Gender'),
+        'Individuals_To_Diseases' => array('individualid', 'diseaseid'),
         'Phenotypes' => array('id', 'diseaseid', 'individualid', 'Phenotype/Additional'),
-        'Screenings' => array('id', 'Screening/Template', 'Screening/Technique'),
-        'Scr2Gene' => array(),
-        'Variants_On_Genome' => array('id', 'allele', 'chromosome', 'position_g_start', 'position_g_end', 'VariantOnGenome/DNA'),
+        'Screenings' => array('id', 'individualid', 'Screening/Template', 'Screening/Technique'),
+        'Screenings_To_Genes' => array(),
+        'Variants_On_Genome' => array('id', 'allele', 'chromosome', 'position_g_start', 'position_g_end', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID'),
         'Variants_On_Transcripts' => array('id', 'transcriptid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
-        'Scr2Var' => array('screeningid', 'variantid'),
+        'Screenings_To_Variants' => array('screeningid', 'variantid'),
     );
 
 
@@ -185,6 +186,7 @@ class LOVD_API_Submissions {
 
             // Map the data.
             $aData['Individuals'][$nIndividualKey]['id'] = $nIndividualID;
+            $aData['Individuals'][$nIndividualKey]['panel_size'] = 1; // Defaults to one individual.
             $aData['Individuals'][$nIndividualKey]['Individual/Lab_ID'] = $aIndividual['@id'];
             $aData['Individuals'][$nIndividualKey]['Individual/Gender'] = (!isset($aIndividual['gender'])? '' : $this->aValueMappings['gender'][$aIndividual['gender']['@code']]);
 
@@ -230,7 +232,7 @@ class LOVD_API_Submissions {
                     $aDiseases[$nAccession] = $nDiseaseID;
                 }
                 // Link individual to the disease.
-                $aData['Ind2Dis'][] = array('individualid' => $nIndividualID, 'diseaseid' => $aDiseases[$nAccession]);
+                $aData['Individuals_To_Diseases'][] = array('individualid' => $nIndividualID, 'diseaseid' => $aDiseases[$nAccession]);
                 // Also, take individual's first disease, and select it for HPO terms to be added to.
                 if (!$nDiseaseIDForHPO) {
                     $nDiseaseIDForHPO = $aDiseases[$nAccession];
@@ -301,10 +303,11 @@ class LOVD_API_Submissions {
                 }
                 $aData['Screenings'][] = array(
                     'id' => $nScreeningID,
+                    'individualid' => $nIndividualID,
                     'Screening/Template' => implode(';', array_unique($aTemplates)),
                     'Screening/Technique' => implode(';', array_unique($aTechniques)),
                 );
-                $aData['Scr2Var'][] = array(
+                $aData['Screenings_To_Variants'][] = array(
                     'screeningid' => $nScreeningID,
                     'variantid' => $nVariantID,
                 );
