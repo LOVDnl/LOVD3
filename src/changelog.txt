@@ -20,6 +20,10 @@
    prefix, because the import code misunderstood the table types that way.
  * Large downloads are now allowed to take a longer time, to make sure they
    finish before the server interrupts them.
+ * Fixed bug; When a user needed to change the password, the force option didn't
+   work properly, and could be circumvented.
+ * Improved data form when changing the password after unlocking your account,
+   to clarify that you need to insert the unlocking code again for confirmation.
  * Users can now create their own API tokens to use for the LOVD data submission
    API.
 

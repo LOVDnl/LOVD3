@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-09-26
- * For LOVD    : 3.0-17-patch-02
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -888,7 +888,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            $sMessage = 'Editing columns MySQL type' . ($tAlter < 4? '' : '(this make take some time)') . '...';
+            $sMessage = 'Editing columns MySQL type ' . ($tAlter < 4? '' : '(this may take some time)') . '...';
 
             // If ALTER time is large enough, mention something about it.
             if ($tAlter > $tAlterMax) {
@@ -1498,7 +1498,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             }
 
             if (!$zData['active_checked']) {
-                $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
+                $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this may take some time)') . '...';
             } else {
                 $sMessage = 'Enabling column...';
             }
@@ -1825,7 +1825,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $_T->printHeader();
             $_T->printTitle();
 
-            $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
+            $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this may take some time)') . '...';
 
             // If ALTER time is large enough, mention something about it.
             // ... but only if we're running it...

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2015-12-22
- * For LOVD    : 3.0-15
+ * Modified    : 2016-10-11
+ * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -164,7 +164,7 @@ function lovd_pagesplitInit ()
         // Special allowance for page_size = 1 for Ajax retrieval of 1 row after deleting one.
         $_GET['page_size'] = (int) $_GET['page_size'];
     } else {
-        $_GET['page_size'] = 100;
+        $_GET['page_size'] = (LOVD_plus? 25 : 100);
     }
 
     global $_PAGESPLIT;

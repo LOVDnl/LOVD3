@@ -1,9 +1,9 @@
-﻿body ul.jeegoocontext, body ul.jeegoocontext ul
+body ul.jeegoocontext, body ul.jeegoocontext ul
 {
 	/* Required settings */
-	top:-1000px; left:-1000px; position:absolute; z-index:999; 
+	top:-1000px; left:-1000px; position:absolute; z-index:999;
 	/* Possibly inherited values overrides */
-	border-width:0; float:none; height:auto; margin:0; padding:0; width:auto;	
+	border-width:0; float:none; height:auto; margin:0; padding:0; width:auto;
 	/* Additional settings */
 	border-bottom:solid 1px #000000;
 	-moz-box-shadow: 3px 3px 4px #888;
@@ -11,7 +11,7 @@
 	box-shadow: 3px 3px 4px #888;
 }
 /* FIXME; Anything I put here is completely ignored, and I have no clue why?!!?? */
-﻿body ul.jeegooviewlist, body ul.jeegooviewlist ul
+body ul.jeegooviewlist, body ul.jeegooviewlist ul
 {
 	/* Additional settings */
 	border-top: solid 1px #000000;
@@ -19,14 +19,14 @@
 body ul.jeegoocontext li
 {
 	/* Required settings */
-	width:250px; list-style:none none outside;
+	width:300px; list-style:none none outside;
 	/* Possibly inherited values overrides */
-	float:none; height:auto; letter-spacing:normal; margin:0; border-width:0; line-height:normal; margin:0; 
+	float:none; height:auto; letter-spacing:normal; margin:0; border-width:0; line-height:normal; margin:0;
 	text-align:left; text-decoration:none; text-indent:0; text-transform:none; vertical-align:top; word-spacing:normal;
 	font-size:11px; font-style:normal; font-variant:normal; font-weight:normal;
 	/* Additional settings */
-	overflow:hidden; cursor:pointer; padding:5px 5px 5px 31px; 
-	border-left:solid 1px #000000; border-right:solid 1px #000000; 
+	overflow:hidden; cursor:pointer; padding:5px 5px 5px 31px;
+	border-left:solid 1px #000000; border-right:solid 1px #000000;
 	background:#FFFFFF
 }
 body ul.jeegooviewlist li
@@ -38,11 +38,11 @@ body ul.jeegoocontext li.hr{padding:2px 5px 2px 31px; cursor:default;}
 body ul.jeegoocontext li.hr hr {margin : 0px;}
 
 body ul.jeegoocontext li.disabled{color:#999; cursor:default;}
-body ul.jeegoocontext li span.submenu{display:block; width:4px; height:11px; float:right; background:url(lib/jeegoocontext/skins/images/submenu.gif) no-repeat 0 4px}
-body ul.jeegoocontext li.disabled span.submenu{background-image:url(lib/jeegoocontext/skins/images/submenu_dis.gif)}
+body ul.jeegoocontext li span.submenu{display:block; width:4px; height:11px; float:right; background:url(submenu.gif) no-repeat 0 4px}
+body ul.jeegoocontext li.disabled span.submenu{background-image:url(submenu_dis.gif)}
 body ul.jeegoocontext li.hover{background-color:#C8DCFA}
 body ul.jeegoocontext li.hover.disabled, body ul.jeegoocontext li.hover.hr{background-color:#FFFFFF}
 body ul.jeegooviewlist li.hover.disabled{background-color:#F0F3FF}
 /*icons*/
-body ul.jeegoocontext li.icon{width:276px; padding:5px}
+body ul.jeegoocontext li.icon{width:326px; padding:5px}
 body ul.jeegoocontext span.icon{display:block; float:left; width:26px; height:16px; background-repeat:no-repeat}

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2013-01-28
- * For LOVD    : 3.0-02
+ * Modified    : 2016-10-17
+ * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -42,5 +42,14 @@ $aLinkSQL =
                 'INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("VariantOnGenome/Reference", 004)',
                 'DOI' => 'INSERT INTO ' . TABLE_LINKS . ' VALUES (005, "DOI", "{DOI:[1]:[2]}", "<A href=\"http://dx.doi.org/[2]\" target=\"_blank\">[1]</A>", "Links directly to an article using the DOI.\r\n[1] = The name of the author(s), possibly followed by the year of publication.\r\n[2] = The DOI.\r\n\r\nExample:\r\n{DOI:Fokkema et al. (2011):10.1002/humu.21438}", 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("Individual/Reference", 005)',
+                'Alamut' => 'INSERT INTO ' . TABLE_LINKS . ' VALUES (006, "Alamut", "{Alamut:[1]:[2]}", "<A href=\"http://127.0.0.1:10000/show?request=[1]:[2]\" target=\"_blank\">Alamut</A>", "Links directly to the variant in the Alamut software.\r\n[1] = The chromosome letter or number.\r\n[2] = The genetic change on genome level.\r\n\r\nExample:\r\n{Alamut:16:21854780G>A}", 0, NOW(), NULL, NULL)',
          );
+
+if (LOVD_plus) {
+    // Extra links just for LOVD+.
+    $aLinkSQL = array_merge($aLinkSQL,
+        array(
+                'INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("VariantOnGenome/Alamut", 006)',
+        ));
+}
 ?>

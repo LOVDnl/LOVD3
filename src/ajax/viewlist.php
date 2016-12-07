@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2016-09-05
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -51,14 +51,20 @@ $aNeededLevel =
          array(
                 'Column' => LEVEL_CURATOR,
                 'Custom_ViewList' => 0,
+                'Custom_ViewListMOD' => 0, // LOVD+
                 'Disease' => 0,
                 'Gene' => 0,
+                'Gene_Panel' => LEVEL_SUBMITTER, // LOVD+
+                'Gene_Panel_Gene_REV' => LEVEL_SUBMITTER, // LOVD+
+                'Gene_Statistic' => LEVEL_SUBMITTER, // LOVD+
                 'Genome_Variant' => 0,
                 'Individual' => 0,
+                'IndividualMOD' => 0, // LOVD+
                 'Link' => LEVEL_MANAGER,
-                'Log' => LEVEL_MANAGER,
+                'Log' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_MANAGER),
                 'Phenotype' => 0,
                 'Screening' => 0,
+                'ScreeningMOD' => 0, // LOVD+
                 'Shared_Column' => LEVEL_CURATOR,
                 'Transcript' => 0,
                 'Transcript_Variant' => 0,
@@ -134,6 +140,12 @@ if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
 }
 
 $sFile = ROOT_PATH . 'class/object_' . strtolower($sObject) . 's.php';
+// For revision tables.
+$sFile = str_replace('_revs.php', 's.rev.php', $sFile);
+// Exception for LOVD+.
+if (LOVD_plus && substr($_GET['object'], -3) == 'MOD') {
+    $sFile = str_replace('mods.', 's.mod.', $sFile);
+}
 
 if (!file_exists($sFile)) {
     header('HTTP/1.0 404 Not Found');

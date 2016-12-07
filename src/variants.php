@@ -320,10 +320,36 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->viewEntry($nID);
 
+    $bAuthorized = ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER);
+    // However, for LOVD+, depending on the status of the screening, we might not have the rights to edit the variant.
+    if (LOVD_plus && $bAuthorized) {
+        $zScreenings = $_DB->query('SELECT s.* FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s2v.variantid = ? GROUP BY s.id', array($nID))->fetchAllAssoc();
+        if (!($_AUTH['level'] >= LEVEL_OWNER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_CLOSED) &&
+            !($_AUTH['level'] >= LEVEL_MANAGER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_WAIT_CONFIRMATION) &&
+            !($_AUTH['level'] >= LEVEL_ADMIN && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_CONFIRMED)) {
+            $bAuthorized = false;
+        }
+    }
+
     $aNavigation = array();
-    if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
+    if ($bAuthorized) {
         // Authorized user is logged in. Provide tools.
-        $aNavigation[CURRENT_PATH . '?edit']       = array('menu_edit.png', 'Edit variant entry', 1);
+        if (!LOVD_plus) {
+            $aNavigation[CURRENT_PATH . '?edit']       = array('menu_edit.png', 'Edit variant entry', 1);
+        } else {
+            // Menu items for setting the curation status.
+            foreach ($_SETT['curation_status'] as $nCurationStatusID => $sCurationStatus) {
+                $aCurationStatusMenu['javascript:$.get(\'ajax/set_curation_status.php?' . $nCurationStatusID . '&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully set curation status of this variant to \\\'' . $sCurationStatus . '\\\'.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting curation status.\');});'] = array('menu_edit.png', $sCurationStatus);
+            }
+            $aCurationStatusMenu['javascript:if(window.confirm(\'Are you sure you want to clear this variants curation status?\')){$.get(\'ajax/set_curation_status.php?clear&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully cleared the curation status of this variant.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting curation status.\');});}else{alert(\'This variants curation status has not been changed.\');}'] = array('cross.png', 'Clear curation status');
+            $aNavigation['curation_status'] = array('menu_edit.png', 'Set curation status', 1, 'sub_menu' => $aCurationStatusMenu);
+            // Menu items for setting the confirmation status.
+            foreach ($_SETT['confirmation_status'] as $nConfirmationStatusID => $sConfirmationStatus) {
+                $aConfirmationStatusMenu['javascript:$.get(\'ajax/set_confirmation_status.php?' . $nConfirmationStatusID . '&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully set confirmation status of this variant to \\\'' . $sConfirmationStatus . '\\\'.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting confirmation status.\');});'] = array('menu_edit.png', $sConfirmationStatus);
+            }
+            $aNavigation['confirmation_status'] = array('menu_edit.png', 'Set confirmation status', 1, 'sub_menu' => $aConfirmationStatusMenu);
+            $aNavigation[CURRENT_PATH . '?edit_remarks' . (isset($_GET['in_window'])? '&amp;in_window' : '')] = array('menu_edit.png', 'Edit remarks', 1);
+        }
         if ($zData['statusid'] < STATUS_OK && $_AUTH['level'] >= LEVEL_CURATOR) {
             $aNavigation[CURRENT_PATH . '?publish'] = array('check.png', ($zData['statusid'] == STATUS_MARKED ? 'Remove mark from' : 'Publish (curate)') . ' variant entry', 1);
         }
@@ -413,7 +439,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
       </SCRIPT>
 <?php
 
-    if (!empty($zData['screeningids'])) {
+    if (!LOVD_plus && !empty($zData['screeningids'])) {
         $_GET['search_screeningid'] = $zData['screeningids'];
         print('<BR><BR>' . "\n\n");
         $_T->printTitle('Screenings', 'H4');
@@ -441,7 +467,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     if (!isset($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
         lovd_requireAUTH(LEVEL_CURATOR);
     }
-    lovd_requireAUTH(empty($_PE[1])? LEVEL_SUBMITTER : LEVEL_MANAGER);
+    lovd_requireAUTH(empty($_PE[1])? $_SETT['user_level_settings']['submit_new_data'] : LEVEL_MANAGER);
 
     $bSubmit = false;
     if (isset($_GET['target'])) {
@@ -2265,6 +2291,21 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         lovd_requireAUTH(LEVEL_OWNER);
     }
 
+    $bAuthorized = ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER);
+    // However, for LOVD+, depending on the status of the screening, we might not have the rights to edit the variant.
+    if (LOVD_plus && $bAuthorized) {
+        $zScreenings = $_DB->query('SELECT s.* FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s2v.variantid = ? GROUP BY s.id', array($nID))->fetchAllAssoc();
+        if (!($_AUTH['level'] >= LEVEL_OWNER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_CLOSED) &&
+            !($_AUTH['level'] >= LEVEL_MANAGER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_WAIT_CONFIRMATION) &&
+            !($_AUTH['level'] >= LEVEL_ADMIN && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_CONFIRMED)) {
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('This analysis has been closed. It\'s not possible to edit this variant.', 'stop');
+            $_T->printFooter();
+            exit;
+        }
+    }
+
     $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ?', array($nID))->fetchAllColumn();
     $bGene = (!empty($aGenes));
 
@@ -2774,6 +2815,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     // Require manager clearance.
     lovd_isAuthorized('variant', $nID);
     lovd_requireAUTH(LEVEL_OWNER);
+
+    if (LOVD_plus) {
+        // However, depending on the status of the screening, we might not have the rights to edit the variant.
+        $zScreenings = $_DB->query('SELECT s.* FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s2v.variantid = ? GROUP BY s.id', array($nID))->fetchAllAssoc();
+        if (!($_AUTH['level'] >= LEVEL_OWNER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_CLOSED) &&
+            !($_AUTH['level'] >= LEVEL_MANAGER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_WAIT_CONFIRMATION)) {
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('This analysis has been closed. It\'s not possible to edit this variant.', 'stop');
+            $_T->printFooter();
+            exit;
+        }
+    }
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-11-30
+ * Modified    : 2016-12-07
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,8 +29,6 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
-
-
 
 function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
 {
@@ -486,6 +484,109 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
+function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
+{
+    // Parses the variant, and returns position fields (2 for genomic variants,
+    //  4 for cDNA variants) and variant type.
+    // This function is basically a local method that's trying to replace the
+    //  MappingInfo feature of Mutalyzer.
+    // $sVariant contains the HGVS nomenclature of the variant.
+    // $sTranscriptID contains the internal ID or NCBI ID of the transcript that
+    //  this variant is on, and is only needed for processing 3' UTR variants,
+    //  like c.*10del, since we'll need to have the CDS stop value for that.
+
+    static $aTranscriptOffsets = array();
+    $aResponse = array(
+        'position_start' => 0,
+        'position_end' => 0,
+        'type' => '',
+    );
+
+    // Isolate the position(s) from the variant. We don't support combined variants.
+    // We're not super picky, and would therefore approve of c.1_2A>C; we also
+    //  don't check for the end of the variant, it may contain bases, or not.
+    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+        //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
+        //                       2 = Start position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.*10del).
+        //                                   3 = Start position intronic offset, if available.
+        //                                                        4 = End position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.300_*10del).
+        //                                                                    5 = End position intronic offset, if available.
+        //                                                                                       6 = The variant, which we'll use to determine the type.
+        global $_DB;
+
+        list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant) = $aRegs;
+        if ($sPrefix != 'c' && $sPrefix != 'n') {
+            if ($sStartPositionIntron || $sEndPositionIntron) {
+                // Anything not c. or n. is regarded genomic, having a max of 2 positions.
+                // Found more positions? Return false.
+                return false;
+            } elseif (!ctype_digit($sStartPosition) || ($sEndPosition && !ctype_digit($sEndPosition))) {
+                // Non-numeric first character of the main positions is also impossible for genomic variants.
+                return false;
+            }
+        }
+
+        // Convert 3' UTR notations into normal notations.
+        if ($sStartPosition{0} == '*' || ($sEndPosition && $sEndPosition{0} == '*')) {
+            // Check if a transcript ID has been provided.
+            if (!$sTranscriptID) {
+                // No, but we'll need it.
+                return false;
+            }
+
+            // Check if we already know this transcript.
+            if (!isset($aTranscriptOffsets[$sTranscriptID])) {
+                $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
+                    array($sTranscriptID, $sTranscriptID))->fetchColumn();
+                if (!$aTranscriptOffsets[$sTranscriptID]) {
+                    // Transcript not configured correctly.
+                    return false;
+                }
+            }
+
+            // Translate positions.
+            if ($sStartPosition{0} == '*') {
+                $sStartPosition = substr($sStartPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+            }
+            if ($sEndPosition && $sEndPosition{0} == '*') {
+                $sEndPosition = substr($sEndPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+            }
+        }
+
+        // Store positions.
+        $aResponse['position_start'] = $sStartPosition;
+        $aResponse['position_end'] = ($sEndPosition? $sEndPosition : $sStartPosition);
+
+        // And intronic, if needed.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            // Interpret ? positions as intronic position 1, which is more correct than 0,
+            // which makes them look like exonic variants and may also result in different variants.
+            // Simplest to just do a str_replace().
+            $sStartPositionIntron = str_replace('?', '1', $sStartPositionIntron);
+            $sEndPositionIntron = str_replace('?', '1', $sEndPositionIntron);
+
+            $aResponse['position_start_intron'] = (int) $sStartPositionIntron;
+            $aResponse['position_end_intron'] = (int) ($sEndPositionIntron? $sEndPositionIntron : $sStartPositionIntron);
+        }
+
+        // Variant type.
+        if (preg_match('/^[ACGT]>[ACGT]$/', $sVariant)) {
+            $aResponse['type'] = 'subst';
+        } else {
+            $aResponse['type'] = $sVariant;
+        }
+
+    } else {
+        return false;
+    }
+
+    return $aResponse;
+}
+
+
+
+
+
 function lovd_getProjectFile ()
 {
     // Gets project file name (file name including possible project subdirectory).
@@ -559,7 +660,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     // Check data type.
     if (!$Data) {
         return false;
-    } elseif (!in_array($sType, array('user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
+    } elseif (!in_array($sType, array('analysisrun', 'user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening', 'screening_analysis'))) {
         lovd_writeLog('Error', 'LOVD-Lib', 'lovd_isAuthorized() - Function didn\'t receive a valid datatype (' . $sType . ').');
         return false;
     }
@@ -612,6 +713,44 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         }
     }
 
+    if (LOVD_plus && $sType == 'analysisrun') {
+        // Authorization based on person who started the analysis run (note, not necessarily the whole analysis).
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            $nCreatorID = $_DB->query('SELECT created_by FROM ' . TABLE_ANALYSES_RUN . ' WHERE id = ?', array($Data))->fetchColumn();
+            if ($_AUTH['level'] >= LEVEL_ANALYZER && $nCreatorID == $_AUTH['id']) {
+                // At least Analyzer (Managers don't get to this point).
+                if ($bSetUserLevel) {
+                    $_AUTH['level'] = LEVEL_OWNER;
+                }
+                return 1;
+            }
+        }
+        return false;
+
+    } elseif (LOVD_plus && $sType == 'screening_analysis') {
+        // Authorization based on not being analyzed, or analysis being started by $_AUTH['id'].
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            $z = $_DB->query('SELECT analysis_statusid, analysis_by FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($Data))->fetchAssoc();
+            if ($_AUTH['level'] >= LEVEL_ANALYZER) {
+                // At least Analyzer (Managers don't get to this point).
+                if ($z['analysis_by'] == $_AUTH['id'] ||
+                    ($z['analysis_by'] === NULL && $z['analysis_statusid'] == ANALYSIS_STATUS_READY)) {
+                    if ($bSetUserLevel) {
+                        $_AUTH['level'] = LEVEL_OWNER;
+                    }
+                    return 1;
+                }
+            }
+        }
+        return false;
+    }
+
     // Makes it easier to check the data.
     if (!is_array($Data)) {
         $Data = array($Data);
@@ -648,7 +787,14 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         return 1;
     }
 
-    $bOwner = lovd_isOwner($sType, $Data);
+    if (LOVD_plus && $sType == 'variant') {
+        // LOVD+ allows LEVEL_OWNER authorization based on ownership of the screening analysis.
+        // We dump in multiple variants, but we should really only get one Screening back.
+        $aScreeningIDs = $_DB->query('SELECT DISTINCT screeningid FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($Data) - 1) . ')', $Data)->fetchAllColumn();
+        $bOwner = lovd_isAuthorized('screening_analysis', $aScreeningIDs[0], false);
+    } else {
+        $bOwner = lovd_isOwner($sType, $Data);
+    }
     if (($bOwner || lovd_isColleagueOfOwner($sType, $Data, true)) && $_CONF['allow_submitter_mods']) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_OWNER;
@@ -797,6 +943,8 @@ function lovd_magicUnquoteAll ()
 
 function lovd_parseConfigFile($sConfigFile)
 {
+    // Parses the given config file, checks all values, and returns array with parsed settings.
+
     // Config file exists?
     if (!file_exists($sConfigFile)) {
         lovd_displayError('Init', 'Can\'t find config.ini.php');
@@ -811,6 +959,7 @@ function lovd_parseConfigFile($sConfigFile)
     if (!$aConfig = file($sConfigFile)) {
         lovd_displayError('Init', 'Can\'t open config.ini.php');
     }
+
 
 
     // Parse config file.
@@ -911,6 +1060,45 @@ function lovd_parseConfigFile($sConfigFile)
                         ),
                 ),
         );
+
+    if (LOVD_plus) {
+        // Configure data file paths.
+        $aConfigValues['paths'] = array(
+            'data_files' =>
+                array(
+                    'required' => true,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+            'data_files_archive' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+            'alternative_ids' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => false,
+                ),
+            'confirm_variants' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+        );
+
+        // Configure instance details.
+        $aConfigValues['instance'] = array(
+            'name' =>
+                array(
+                    'required' => false,
+                    'default'  => '',
+                ),
+        );
+    }
 
     // SQLite doesn't need an username and password...
     if (isset($_INI['database']['driver']) && $_INI['database']['driver'] == 'sqlite') {
@@ -1288,10 +1476,25 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
         $sWidth = '100%';
     }
 
-    print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
-          '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE>' . (!$bBR? '' : '<BR>') . "\n\n");
+    switch (FORMAT) {
+        case 'text/plain':
+            // We're ignoring the $sWidth here.
+            $nWidth = 100;
+            $sSeparatorLine = '+' . str_repeat('-', $nWidth - 2) . '+';
+            $aMessage = explode("\n", wordwrap($sMessage, $nWidth - 4));
+            $aMessage = array_map('str_pad', $aMessage, array_fill(0, count($aMessage), $nWidth - 4));
+            print($sSeparatorLine . "\n" .
+                  '| ' . str_pad($aTypes[$sType], $nWidth - 4, ' ') . ' |' . "\n" .
+                  $sSeparatorLine . "\n" .
+                  '| ' . implode(" |\n| ", $aMessage) . ' |' . "\n" .
+                  $sSeparatorLine . (!$bBR? '' : "\n") . "\n");
+            break;
+        default:
+            print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
+                  '        <TR>' . "\n" .
+                  '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
+                  '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE>' . (!$bBR? '' : '<BR>') . "\n\n");
+    }
 }
 
 
@@ -1313,11 +1516,23 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '<UL id="viewentryMenu_' . $sID . '" class="jeegoocontext jeegooviewlist">' . "\n");
     foreach ($aOptions as $sURL => $aLink) {
         list($sIMG, $sName, $bShown) = $aLink;
+        $sSubMenu = '';
+        if (!empty($aLink['sub_menu'])) {
+            // Allow for one level of sub menus.
+            $sSubMenu = "\n" . $sPrefix . '    <UL>' . "\n";
+            foreach ($aLink['sub_menu'] as $sSubURL => $aSubMenu) {
+                list($sSubIMG, $sSubName) = $aSubMenu;
+                $sSubMenu .= $sPrefix . '      <LI' . (!$sSubIMG? '' : ' class="icon"') . '><A ' . (substr($sSubURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . lovd_getInstallURL(false)) . ltrim($sSubURL, '/') . '">' .
+                    (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sSubIMG . ');"></SPAN>') . $sSubName .
+                    '</A></LI>' . "\n";
+            }
+            $sSubMenu .= $sPrefix . '    </UL>' . "\n  " . $sPrefix;
+        }
         if ($bShown) {
             // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
-            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . lovd_getInstallURL(false)) . ltrim($sURL, '/') . '">' .
+            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . ($sSubMenu ? '' : lovd_getInstallURL(false))) . ($sSubMenu ? '' : ltrim($sURL, '/')) . '">' .
                                 (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
-                                '</A></LI>' . "\n");
+                                '</A>' . $sSubMenu . '</LI>' . "\n");
         } else {
             print($sPrefix . '  <LI class="disabled' . (!$sIMG? '' : ' icon') . '">' . (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . preg_replace('/(\.[a-z]+)$/', '_disabled' . "$1", $sIMG) . ');"></SPAN>') . $sName . '</LI>' . "\n");
         }
@@ -1329,7 +1544,7 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '      event: "click",' . "\n" .
           $sPrefix . '      openBelowContext: true,' . "\n" .
           $sPrefix . '      autoHide: true,' . "\n" .
-          $sPrefix . '      delay: 1000,' . "\n" .
+          $sPrefix . '      delay: 100,' . "\n" .
           $sPrefix . '      onSelect: function(e, context) {' . "\n" .
           $sPrefix . '        if ($(this).hasClass("disabled")) {' . "\n" .
           $sPrefix . '          return false;' . "\n" .

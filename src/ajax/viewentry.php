@@ -8,7 +8,7 @@
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -46,6 +46,7 @@ if (empty($nID) || empty($sObject) || !preg_match('/^[A-Z_]+$/i', $sObject)) {
 // To prevent security problems if we forget to set a requirement here, we default to LEVEL_ADMIN.
 $aNeededLevel =
          array(
+                'ScreeningMOD' => 0, // LOVD+
                 'Transcript_Variant' => 0,
                 'User' => LEVEL_OWNER,
               );
@@ -81,6 +82,10 @@ if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
 }
 
 $sFile = ROOT_PATH . 'class/object_' . strtolower($sObject) . 's.php';
+// Exception for LOVD+.
+if (LOVD_plus && substr($sObject, -3) == 'MOD') {
+    $sFile = str_replace('mods.', 's.mod.', $sFile);
+}
 
 if (!file_exists($sFile)) {
     header('HTTP/1.0 404 Not Found');

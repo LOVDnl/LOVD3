@@ -115,6 +115,7 @@ Website:
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Implement an HGNC mirror (student project?)
   + REST API can still be used I guess, but a raw download would be useful for at least variants.php, which downloads a full copy.
+- Fix broken LSDB mirrors? (student project?)
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
   + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
   + Alleen als in intron en p.(=), r.(=) geven. Anders altijd r.(?) ?

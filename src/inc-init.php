@@ -89,6 +89,7 @@ define('COLLEAGUE_CANNOT_EDIT', 2); // Colleagues that have no edit permissions.
 define('COLLEAGUE_ALL', 3);         // All colleagues.
 
 define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
+define('LEVEL_ANALYZER', 2);     // Diagnostics: LOVD+ introduced this user level.
 define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
 define('LEVEL_OWNER', 4);        // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
 define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
@@ -118,9 +119,9 @@ define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which
 // Define constant to quickly check if we're on Windows, since sending emails on Windows requires different settings.
 define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 
-// Diagnostics: To later make it easier to share certain code
-// between LOVD and LOVD+, simply define if we're active or not.
-define('LOVD_plus', false);
+// Diagnostics: To make it easier to share certain code between
+// LOVD and LOVD+, simply define if we're active or not.
+@define('LOVD_plus', false);
 
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
@@ -154,6 +155,13 @@ $_SETT = array(
                             LEVEL_COLLABORATOR => 'Collaborator',
                             LEVEL_SUBMITTER    => 'Submitter',
                           ),
+                'user_level_settings' =>
+                array(
+                    // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
+                    // has already been called for gene-specific overviews.
+                    'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
+                ),
                 'gene_imprinting' =>
                      array(
                             'unknown'  => 'Unknown',
@@ -380,6 +388,10 @@ $_INI = lovd_parseConfigFile(CONFIG_URI);
 
 
 // Define table names (system-wide).
+// WARNING: The order of tables *MUST* be the same as the order in which the
+// tables are defined in the installer (meaning, respecting foreign keys),
+// because uninstalling LOVD will use this table, reverse it, and try to remove
+// the tables in the right order.
 // FIXME: TABLE_SCR2GENE => TABLE_SCRS2GENES etc. etc.?
 define('TABLEPREFIX', $_INI['database']['table_prefix']);
 $_TABLES =
@@ -397,11 +409,16 @@ $_TABLES =
                 'TABLE_ALLELES' => TABLEPREFIX . '_alleles',
                 'TABLE_EFFECT' => TABLEPREFIX . '_variant_effect',
                 'TABLE_INDIVIDUALS' => TABLEPREFIX . '_individuals',
+                //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',
                 'TABLE_IND2DIS' => TABLEPREFIX . '_individuals2diseases',
                 'TABLE_VARIANTS' => TABLEPREFIX . '_variants',
+                //'TABLE_VARIANTS_REV' => TABLEPREFIX . '_variants_revisions',
                 'TABLE_VARIANTS_ON_TRANSCRIPTS' => TABLEPREFIX . '_variants_on_transcripts',
+                //'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' => TABLEPREFIX . '_variants_on_transcripts_revisions',
                 'TABLE_PHENOTYPES' => TABLEPREFIX . '_phenotypes',
+                //'TABLE_PHENOTYPES_REV' => TABLEPREFIX . '_phenotypes_revisions',
                 'TABLE_SCREENINGS' => TABLEPREFIX . '_screenings',
+                //'TABLE_SCREENINGS_REV' => TABLEPREFIX . '_screenings_revisions',
                 'TABLE_SCR2GENE' => TABLEPREFIX . '_screenings2genes',
                 'TABLE_SCR2VAR' => TABLEPREFIX . '_screenings2variants',
                 'TABLE_COLS' => TABLEPREFIX . '_columns',
@@ -415,21 +432,6 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
-
-                // VERSIONING TABLES
-                //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',
-                //'TABLE_VARIANTS_REV' => TABLEPREFIX . '_variants_revisions',
-                //'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' => TABLEPREFIX . '_variants_on_transcripts_revisions',
-                //'TABLE_PHENOTYPES_REV' => TABLEPREFIX . '_phenotypes_revisions',
-                //'TABLE_SCREENINGS_REV' => TABLEPREFIX . '_screenings_revisions',
-
-                // REMOVED in 3.0-alpha-07; delete only if sure that there are no legacy versions still out there!
-                // SEE ALSO uninstall.php !!!
-                // SEE ALSO line 559 !!!
-                'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
-                // REMOVED IN 3.0-05; delete only if sure that there are no legacy versions still out there!
-                'TABLE_HITS' => TABLEPREFIX . '_hits',
-                // They can also be removed, if they are completely removed from the code (also inc-upgrade.php), and only the DROP code is kept with the name hard coded.
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
@@ -494,7 +496,7 @@ if (!$_CONF) {
     $_CONF =
          array(
                 'system_title' => 'LOVD 3.0 - Leiden Open Variation Database',
-                'logo_uri' => 'gfx/LOVD3_logo145x50.jpg',
+                'logo_uri' => 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg',
                 'lovd_read_only' => false,
               );
 }
@@ -532,7 +534,7 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
             $aTables[] = $sCol;
         }
     }
-    if (count($aTables) < (count($_TABLES) - 2)) {
+    if (count($aTables) < (count($_TABLES))) {
         // We're not completely installed.
         define('NOT_INSTALLED', true);
     }

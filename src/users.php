@@ -9,8 +9,8 @@
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -176,12 +176,15 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     } else {
         define('PAGE_TITLE', 'Register as new submitter');
 
-        if ($_AUTH || !$_CONF['allow_submitter_registration']) {
+        if (LOVD_plus || $_AUTH || !$_CONF['allow_submitter_registration']) {
             $_T->printHeader();
             $_T->printTitle();
             if (!$_CONF['allow_submitter_registration']) {
                 $sGeneSymbol = ($_SESSION['currdb']? $_SESSION['currdb'] : 'DMD'); // Used as an example gene symbol, use the current gene symbol if possible.
                 $sMessage = 'Submitter registration is not active in this LOVD installation. If you wish to submit data, please check the list of gene variant databases in our <A href="http://www.LOVD.nl/LSDBs" target="_blank">list of LSDBs</A>.<BR>Our LSDB list can also be reached by typing <I>GENESYMBOL.lovd.nl</I> in your browser address bar, like <I><A href="http://' . $sGeneSymbol . '.lovd.nl" target="_blank">' . $sGeneSymbol . '.lovd.nl</A></I>.';
+            } elseif (LOVD_plus) {
+                // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
+                $sMessage = 'You can not register as a submitter at this LOVD+ installation. Ask the Manager or Administrator for an account.';
             } else {
                 $sMessage = 'You are already a registered user.';
             }

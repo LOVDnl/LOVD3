@@ -366,7 +366,7 @@ $aTableSQL =
 //   'CREATE TABLE ' . TABLE_VARIANTS_REV . ' (
 //    id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
 //    allele TINYINT(2) UNSIGNED NOT NULL,
-//    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
+//    effectid TINYINT(2) UNSIGNED ZEROFILL,
 //    chromosome VARCHAR(2) NOT NULL,
 //    position_g_start INT(10) UNSIGNED,
 //    position_g_end INT(10) UNSIGNED,
@@ -381,13 +381,13 @@ $aTableSQL =
 //    PRIMARY KEY (id, valid_from),
 //    INDEX (valid_to),
 //    INDEX (allele),
-//    INDEX (pathogenicid),
+//    INDEX (effectid),
 //    INDEX (chromosome, position_g_start, position_g_end),
 //    INDEX (owned_by),
 //    INDEX (statusid),
 //    INDEX (edited_by),
 //    INDEX (deleted_by),
-//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_ALLELES . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -417,7 +417,7 @@ $aTableSQL =
 //   'CREATE TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS_REV . ' (
 //    id INT(10) UNSIGNED ZEROFILL NOT NULL,
 //    transcriptid SMALLINT(5) UNSIGNED ZEROFILL NOT NULL,
-//    pathogenicid TINYINT(2) UNSIGNED ZEROFILL,
+//    effectid TINYINT(2) UNSIGNED ZEROFILL,
 //    position_c_start MEDIUMINT(8),
 //    position_c_start_intron INT(10),
 //    position_c_end MEDIUMINT(8),
@@ -425,12 +425,12 @@ $aTableSQL =
 //    valid_from DATETIME NOT NULL,
 //    PRIMARY KEY (id, valid_from, transcriptid),
 //    INDEX (transcriptid),
-//    INDEX (pathogenicid),
+//    INDEX (effectid),
 //    INDEX (position_c_start, position_c_end),
 //    INDEX (position_c_start, position_c_start_intron, position_c_end, position_c_end_intron),
 //    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
-//    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_pathogenicid FOREIGN KEY (pathogenicid) REFERENCES ' . TABLE_PATHOGENIC . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+//    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_ALLELES . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
 //    ' . $sSettings
 
          , 'TABLE_PHENOTYPES' =>
@@ -663,12 +663,12 @@ $aTableSQL =
     proxy_port SMALLINT(5) UNSIGNED,
     proxy_username VARCHAR(255) NOT NULL,
     proxy_password VARCHAR(255) NOT NULL,
-    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD3_logo145x50.jpg",
+    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg",
     mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://mutalyzer.nl/services",
     omim_apikey VARCHAR(40) NOT NULL,
     send_stats BOOLEAN NOT NULL,
     include_in_listing BOOLEAN NOT NULL,
-    allow_submitter_registration BOOLEAN NOT NULL DEFAULT 1,
+    allow_submitter_registration BOOLEAN NOT NULL DEFAULT ' . (int) (!LOVD_plus) . ',
     lock_users BOOLEAN NOT NULL,
     allow_unlock_accounts BOOLEAN NOT NULL,
     allow_submitter_mods BOOLEAN NOT NULL,
