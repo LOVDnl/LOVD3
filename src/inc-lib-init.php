@@ -1704,7 +1704,7 @@ function lovd_verifyPassword ($sPassword, $sOriHash)
 
 
 
-function lovd_writeLog ($sLog, $sEvent, $sMessage)
+function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Writes timestamps and messages to given log in the database.
@@ -1720,7 +1720,8 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
     $sTime = substr($aTime[0], 2, -2);
 
     // Insert new line in logs table.
-    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage), false);
+    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
+        array($sLog, $sTime, ($nAuthID? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 

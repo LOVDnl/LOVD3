@@ -1142,6 +1142,17 @@ class LOVD_API_Submissions {
             fputs($f, "\r\n\r\n");
         }
 
+        // Create log entry.
+        $sMessage = '';
+        foreach (array_keys($this->aObjects) as $sObject) {
+            $n = count($aData[$sObject]);
+            if ($n && !strpos($sObject, '_To_')) {
+                $sMessage .= (!$sMessage ? '' : ', ') . $n . ' ' . $sObject;
+            }
+        }
+        $sMessage = preg_replace('/, ([^,]+)/', " and $1", $sMessage);
+        lovd_writeLog('Event', 'API:SubmissionCreate', 'Created LOVD import file ' . $sFileName . ' using LOVD API v' . $this->API->nVersion . ' (' . $sMessage . ')', $this->zAuth['id']);
+
         $nBytes = filesize($_INI['paths']['data_files'] . '/' . $sFileName);
         $this->API->aResponse['messages'][] = 'Data successfully scheduled for import. Data file name: ' . $sFileName . '. File size: ' . $nBytes . ' bytes.';
         $this->API->nHTTPStatus = 202; // Send 202 Accepted.
