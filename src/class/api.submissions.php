@@ -284,7 +284,7 @@ class LOVD_API_Submissions {
                     // Shouldn't happen for genomic variants.
                     $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Name does not seem to describe a genomic variant. ' .
-                        'Variant must be genomic, indicated by \'g.\'. ' .
+                        'Variant must be genomic, indicated by \'g.\' or \'m.\'. ' .
                         'Variants of other types can only be specified as children of a genomic variant.';
                     return false;
                 }
@@ -314,7 +314,8 @@ class LOVD_API_Submissions {
                 // Check for VOTs.
                 if (isset($aVariant['seq_changes']) && isset($aVariant['seq_changes']['variant'])) {
                     // Loop through all VOTs. They've already been checked, so have to be cDNA, [RNA], [AA].
-                    foreach ($aVariant['seq_changes']['variant'] as $aVariantLevel2) {
+                    foreach ($aVariant['seq_changes']['variant'] as $nVariantLevel2 => $aVariantLevel2) {
+                        $nVariantLevel2 ++;
                         $aVOT = array('id' => $nVariantID); // The VOT that we're building now.
 
                         // Type must be cDNA, we already checked.
@@ -328,6 +329,27 @@ class LOVD_API_Submissions {
 
                         // Map the DNA field.
                         $aVOT['VariantOnTranscript/DNA'] = $aVariantLevel2['name']['#text'];
+
+                        // Fill in the positions. If this fails, this is reason to reject the variant.
+                        $aVariantInfo = lovd_getVariantInfo($aVariantLevel2['name']['#text']);
+                        if (!$aVariantInfo) {
+                            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': SeqChange #' . $nVariantLevel2 . ': Name not understood. ' .
+                                'This does not seem to be correct HGVS nomenclature.';
+                            return false;
+                        } elseif (!isset($aVariantInfo['position_start_intron'])) {
+                            // Shouldn't happen for cDNA variants.
+                            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': SeqChange #' . $nVariantLevel2 . ': Name does not seem to describe a transcriptomic variant. ' .
+                                'Variant must be transcriptomic, indicated by \'c.\' or \'n.\'. ' .
+                                'Genomic variants can not be children of other variants. ' .
+                                'RNA and Protein variants can only be specified as children of a cDNA variant.';
+                            return false;
+                        }
+                        $aVOT['position_c_start'] = $aVariantInfo['position_start'];
+                        $aVOT['position_c_start_intron'] = $aVariantInfo['position_start_intron'];
+                        $aVOT['position_c_end'] = $aVariantInfo['position_end'];
+                        $aVOT['position_c_end_intron'] = $aVariantInfo['position_end_intron'];
 
                         // For RNA, we need to go to the next level (if it's there).
                         $aRNAs = array(); // We could find more than one!
