@@ -1656,31 +1656,6 @@ function lovd_validateIP ($sRange, $sIP)
 
 
 
-/*
-DMD_SPECIFIC
-function lovd_variantToPosition ($sVariant)
-{
-    // 2009-09-28; 2.0-22; Added function for API.
-    // Calculates the variant's position based on the variant description.
-    // Outputs c. positions with c. variants and g. positions with g.variants.
-
-    // Remove first character(s) after c./g. which are: [(?
-    $sPosition = preg_replace('/^(c\.|g\.)([[(?]*)/', "$1", $sVariant);
-    $sPosition = preg_replace('/^((c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?).*//*', "$1", $sPosition); ///////// CHANGED TEMPORARILY ADDED /*
-
-    // Final check; does it conform to our output?
-    if (!preg_match('/^(c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?$/', $sPosition)) {
-        $sPosition = '';
-    }
-
-    return $sPosition;
-}
-*/
-
-
-
-
-
 function lovd_verifyPassword ($sPassword, $sOriHash)
 {
     // Verifies a password given a certain hash. This hash is usually taken from
