@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-11-18
+ * Modified    : 2016-12-09
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -487,7 +487,7 @@ class LOVD_User extends LOVD_Object {
                 // Either we're viewing ourselves, or we're manager or up.
 
                 // Auth token links. We don't show the token by default.
-                $zData['auth_token_'] = '(<A href="#" onclick="$.get(\'ajax/auth_token.php/' . $zData['id'] . '?view\'); return false;">Show / More information</A>)';
+                $zData['auth_token_'] = '(<A href="#" onclick="$.get(\'ajax/auth_token.php/' . $zData['id'] . '?view\').fail(function(){alert(\'Error viewing token, please try again later.\');}); return false;">Show / More information</A>)';
                 if ($zData['auth_token_expires']) {
                     $tDiff = strtotime($zData['auth_token_expires']) - time();
                     $sDiff = lovd_convertSecondsToTime(abs($tDiff));
