@@ -55,6 +55,7 @@
 4.0.0 feof
 4.0.0 fgets
 4.0.0 file
+4.0.0 filesize
 4.0.0 file_exists
 4.3.0 file_get_contents
 4.0.0 floor

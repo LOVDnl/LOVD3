@@ -1044,6 +1044,21 @@ function lovd_parseConfigFile($sConfigFile)
                             'pattern'  => '/^[A-Z0-9_]+$/i',
                         ),
                 ),
+            'paths' =>
+                array(
+                    'data_files' =>
+                        array(
+                            'required' => LOVD_plus,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
+                        ),
+                    'data_files_archive' =>
+                        array(
+                            'required' => false,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
+                        ),
+                ),
         );
 
     if (LOVD_plus) {
@@ -1641,31 +1656,6 @@ function lovd_validateIP ($sRange, $sIP)
 
 
 
-/*
-DMD_SPECIFIC
-function lovd_variantToPosition ($sVariant)
-{
-    // 2009-09-28; 2.0-22; Added function for API.
-    // Calculates the variant's position based on the variant description.
-    // Outputs c. positions with c. variants and g. positions with g.variants.
-
-    // Remove first character(s) after c./g. which are: [(?
-    $sPosition = preg_replace('/^(c\.|g\.)([[(?]*)/', "$1", $sVariant);
-    $sPosition = preg_replace('/^((c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?).*//*', "$1", $sPosition); ///////// CHANGED TEMPORARILY ADDED /*
-
-    // Final check; does it conform to our output?
-    if (!preg_match('/^(c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?$/', $sPosition)) {
-        $sPosition = '';
-    }
-
-    return $sPosition;
-}
-*/
-
-
-
-
-
 function lovd_verifyPassword ($sPassword, $sOriHash)
 {
     // Verifies a password given a certain hash. This hash is usually taken from
@@ -1689,7 +1679,7 @@ function lovd_verifyPassword ($sPassword, $sOriHash)
 
 
 
-function lovd_writeLog ($sLog, $sEvent, $sMessage)
+function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Writes timestamps and messages to given log in the database.
@@ -1705,7 +1695,8 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
     $sTime = substr($aTime[0], 2, -2);
 
     // Insert new line in logs table.
-    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage), false);
+    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
+        array($sLog, $sTime, ($nAuthID? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 

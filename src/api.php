@@ -27,9 +27,10 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
+ *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -56,35 +57,34 @@ require ROOT_PATH . 'inc-init.php';
 // I believe these are all Status codes I need to implement in the future. Those with asterisks are not yet implemented.
     HTTP/1.0 200 OK
 *   HTTP/1.0 201 Created
-    HTTP/1.0 400 Bad Request // The parameters passed to the service did not match as expected. The exact error is returned in the XML response.
+*   HTTP/1.0 202 Accepted // Accepted for later processing
+    HTTP/1.0 400 Bad Request // The parameters passed to the service did not match as expected / Malformed syntax. The exact error is returned in the response.
 *   HTTP/1.0 403 Forbidden // With 401 we are required to send more, now we're not.
     HTTP/1.0 404 Not Found // ID that does not exist?
-*   HTTP/1.0 405 Method Not Allowed // Don't forget an Allow header with allowed methods. Use this if the method is not allowed for *this* resource.
+    HTTP/1.0 405 Method Not Allowed // Don't forget an Allow header with allowed methods. Use this if the method is not allowed for *this* resource.
+    HTTP/1.0 406 Not Acceptable // The format requested with the Accept header, can not be delivered.
 *   HTTP/1.0 409 Conflict // After a PUT???
 *   HTTP/1.0 410 Gone // If we know it was there, but not anymore (if we don't know: 404)
+    HTTP/1.0 413 Payload Too Large
+    HTTP/1.0 415 Unsupported Media Type // Format not supported.
+    HTTP/1.0 422 Unprocessable Entity // Format OK, syntax OK, semantics wrong.
+*   HTTP/1.0 423 Locked
 *   HTTP/1.0 500 Internal Server Error
     HTTP/1.0 501 Not Implemented // This is the appropriate response when the server does not recognize the request method and is not capable of supporting it for *any* resource.
 *   HTTP/1.0 503 Service Unavailable // TEMPORARY: The implication is that this is a temporary condition which will be alleviated after some delay. If known, the length of the delay MAY be indicated in a Retry-After header.
 */
 
-// Will currently only allow GET.
-if (!in_array($_SERVER['REQUEST_METHOD'], array('GET'))) {
-    header('HTTP/1.0 501 Not Implemented');
-}
+// Since LOVD 3.0-18, the API class takes over the common URL parsing.
+require ROOT_PATH . 'class/api.php';
+$_API = new LOVD_API();
 
-// Parse URL to see what we need to do.
-list(,,$sDataType, $sSymbol, $nID) = array_pad($_PE, 5, '');
+// API's constructor has already parsed the URL and made sure the method is valid.
 
-if (!$sDataType) { // No data type given.
-    header('HTTP/1.0 400 Bad Request');
-    die('Too few parameters.');
-} elseif (!in_array($sDataType, array('variants', 'genes'))) { // Wrong data type given.
-    header('HTTP/1.0 400 Bad Request');
-    die('Requested data type not known.');
-} elseif ($sDataType == 'variants' && !$sSymbol) { // Variants, but no gene selected.
-    header('HTTP/1.0 400 Bad Request');
-    die('Too few parameters.');
-}
+list($sDataType, $sSymbol, $nID) = array(
+    $_API->sResource,
+    $_API->sGene,
+    $_API->nID,
+);
 // Now we've got $sDataType, $sSymbol, $nID, FORMAT filled in, if data is available.
 
 
