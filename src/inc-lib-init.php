@@ -673,7 +673,10 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         } else {
             // If viewing himself, always get authorization.
             if ($Data == $_AUTH['id']) {
-                return 1; // FIXME: We're not supporting $bSetUserLevel at the moment (not required right now, either).
+                if ($bSetUserLevel && $_AUTH['level'] < LEVEL_OWNER) {
+                    $_AUTH['level'] = LEVEL_OWNER;
+                }
+                return 1;
             } elseif ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Lower than managers never get access to hidden data of other users.
                 return false;

@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-11-11
+ * Modified    : 2016-11-18
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -105,7 +105,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
+
+    print('      <DIV id="viewentryDiv">' . "\n");
     $zData = $_DATA->viewEntry($nID);
+    print('      </DIV>' . "\n\n");
 
     $aNavigation = array();
     // Since we're faking the user's level to show some more columns when the user is viewing himself, we must put the check on the ID here.
