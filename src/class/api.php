@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-12-01
+ * Modified    : 2016-12-09
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -234,7 +234,7 @@ class LOVD_API {
             // If we're at version 1 or higher, let this new API handle it.
             // Since each method requires very specific code, the methods are
             //  handled separately.
-            // These methods should process the request and stop PHP execution.
+            $bReturn = false;
             if (POST) {
                 $bReturn = $this->processPOST();
             }
