@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-12-01
+ * Modified    : 2016-12-09
  * For LOVD    : 3.0-18
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : M. Kroon <m.kroon@lumc.nl>
+ * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -46,11 +47,12 @@ $aFieldLinks = array(
     'Variant/DNA' =>                    array('vot',        'VariantOnTranscript/DNA'),
     'Variant/RNA' =>                    array('vot',        'VariantOnTranscript/RNA'),
     'Variant/Protein' =>                array('vot',        'VariantOnTranscript/Protein'),
+    // This field maps to either VOT/Published_as or VOG/Published_as (handled later specifically).
     'Variant/DNA_published' =>          array('vot',        'VariantOnTranscript/Published_as'),
     'Variant/DBID' =>                   array('vog',        'VariantOnGenome/DBID',         'lovd_convertDBID'),
     'Variant/Restriction_site' =>       array('vog',        'VariantOnGenome/Restriction_site'),
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
-    'Variant/Detection/Template' =>     array('scrrening',  'Screening/Template'),
+    'Variant/Detection/Template' =>     array('screening',  'Screening/Template'),
     'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
     'Variant/Exon' =>                   array('vot',        'VariantOnTranscript/Exon'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
@@ -58,7 +60,7 @@ $aFieldLinks = array(
     'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
     'Patient/Times_Reported' =>         array('individual', 'panel_size'),
     'Patient/Phenotype_2' =>            array('phenotype',  'Phenotype/Additional'),
-    // TODO: decide what to do with 'Patient/Phenotype/Inheritance' which will be automatically linked to Phenotype/Inheritance
+    // Note that 'Patient/Phenotype/Inheritance' automatically maps to Phenotype/Inheritance as well.
     'Patient/Occurrence' =>             array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
     'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
     'ID_pathogenic_' =>                 array('vog',        'effectid'),
@@ -79,6 +81,7 @@ $aFieldLinks = array(
 );
 
 
+
 // Defaults for prefixed custom column fields not mentioned in $aFieldLinks.
 // (e.g. 'Patient' => array('individual', 'Individual') will cause field
 // 'Patient/Origin/Population' to be linked to 'Individual/Origin/Population'
@@ -91,6 +94,7 @@ $aCustomColLinks = array(
     'Patient/Phenotype' =>  array('phenotype', 'Phenotype'),
     'Patient' =>            array('individual', 'Individual')
 );
+
 
 
 // Output section information describing the LOVD3 import format. Each section
@@ -113,8 +117,8 @@ $aImportSections = array(
         'mandatory_fields' =>       array('id' => '1', 'name' => '-', 'symbol' => ''),
         'comments' =>               array('Diseases listed here were not found in the database ' .
                                     '(in either name or symbol field).',
-                                    'If this is a mistake, remove the disease below and update ' .
-                                    'all references to it in this file',
+                                    'If this is a mistake, please edit the disease below to reflect the database contents, ' .
+                                    'or edit the disease in the database to match this file, ' .
                                     'in order to avoid duplication of diseases in the database.')),
     'g2d' =>        array(
         'output_header' =>          'Genes_To_Diseases'),
@@ -156,48 +160,49 @@ $aImportSections = array(
 );
 
 
+
 // Possible values for 'Screening/Technique'.
-$aScreeningTechniques = array(
-    'arrayCGH' => null,
-    'arraySEQ' => null,
-    'arraySNP' => null,
-    'arrayCNV' => null,
-    'BESS' => null,
-    'CMC' => null,
-    'CSCE' => null,
-    'DGGE' => null,
-    'DHPLC' => null,
-    'DOVAM' => null,
-    'ddF' => null,
-    'DSCA' => null,
-    'EMC' => null,
-    'HD' => null,
-    'MCA' => null,
-    'IHC' => null,
-    'MAPH' => null,
-    'MLPA' => null,
-    'SEQ-NG' => null,
-    'SEQ-NG-H' => null,
-    'SEQ-NG-I' => null,
-    'SEQ-NG-R' => null,
-    'SEQ-NG-S' => null,
-    'Northern' => null,
-    'PCR' => null,
-    'PCRdig' => null,
-    'PCRlr' => null,
-    'PCRm' => null,
-    'PCRq' => null,
-    'PAGE' => null,
-    'PTT' => null,
-    'PFGE' => null,
-    'RT-PCR' => null,
-    'SEQ' => null,
-    'SBE' => null,
-    'SSCA' => null,
-    'SSCAf' => null,
-    'Southern' => null,
-    'TaqMan' => null,
-    'Western' => null);
+$aScreeningTechniques = array_flip(array(
+    'arrayCGH',
+    'arraySEQ',
+    'arraySNP',
+    'arrayCNV',
+    'BESS',
+    'CMC',
+    'CSCE',
+    'DGGE',
+    'DHPLC',
+    'DOVAM',
+    'ddF',
+    'DSCA',
+    'EMC',
+    'HD',
+    'MCA',
+    'IHC',
+    'MAPH',
+    'MLPA',
+    'SEQ-NG',
+    'SEQ-NG-H',
+    'SEQ-NG-I',
+    'SEQ-NG-R',
+    'SEQ-NG-S',
+    'Northern',
+    'PCR',
+    'PCRdig',
+    'PCRlr',
+    'PCRm',
+    'PCRq',
+    'PAGE',
+    'PTT',
+    'PFGE',
+    'RT-PCR',
+    'SEQ',
+    'SBE',
+    'SSCA',
+    'SSCAf',
+    'Southern',
+    'TaqMan',
+    'Western'));
 
 // Default user ID with which to overwrite user IDs in the input file. Used by
 // lovd_convertUserID().
@@ -208,6 +213,7 @@ $sFixedCuratorID = null;
 // lovd_convertUserID().
 $aSubmitterTranslationTable = array();
 $aCuratorTranslationTable = array();
+
 
 
 function lovd_autoIncIndividualID ($LOVD2PatientID)
@@ -225,7 +231,6 @@ function lovd_autoIncPhenotypeID ()
     // ID generator for phenotypes.
     return lovd_getInc('lovd_autoIncPhenotypeID');
 }
-
 
 
 
@@ -254,6 +259,7 @@ function lovd_autoIncScreeningID ()
 function lovd_callJSONService ($sURL)
 {
     // Call $sURL using lovd_php_file() and return the decoded JSON output.
+
     $sResponse = @join('', lovd_php_file($sURL));
     if ($sResponse) {
         return json_decode($sResponse);
@@ -264,63 +270,72 @@ function lovd_callJSONService ($sURL)
 
 
 
-function lovd_convertDBID ($LOVD2DBID)
+
+function lovd_convertDBID ($sLOVD2DBID)
 {
-    // Returns an LOVD3-formatted DBID for the given $LOVD2DBID by padding
+    // Returns an LOVD3-formatted DBID for the given $sLOVD2DBID by padding
     // the number with an extra '0'.
-    $aChunks = explode('_', lovd_trim($LOVD2DBID));
+
+    $aChunks = explode('_', lovd_trim($sLOVD2DBID));
     $nParts = count($aChunks);
     if ($nParts > 1 && ctype_digit($aChunks[$nParts-1])) {
         $aChunks[$nParts-1] = '0' . $aChunks[$nParts-1];
         return join('_', $aChunks);
     }
-    return $LOVD2DBID;
+    return $sLOVD2DBID;
 }
 
 
 
 
-function lovd_convertGender ($LOVD2Gender)
+
+function lovd_convertGender ($sLOVD2Gender)
 {
     // Returns LOVD3 gender value given LOVD2 gender value.
-    if (strcasecmp($LOVD2Gender, 'Female')) {
+    if (strcasecmp($sLOVD2Gender, 'Female') === 0) {
         return 'F';
-    } else if (strcasecmp($LOVD2Gender, 'Male')) {
+    } elseif (strcasecmp($sLOVD2Gender, 'Male') === 0) {
         return 'M';
     }
-    return '';
+    // Don't lose data. If it's something we don't recognize, just return the
+    //  original value.
+    return $sLOVD2Gender;
 }
 
 
 
 
 
-function lovd_convertInheritance ($LOVD2Occurrence)
+function lovd_convertInheritance ($sLOVD2Occurrence)
 {
     // Convert values from LOVD2's 'Patient/Occurrence' to LOVD3's
     // Individual/Inheritance.
-    if (strcasecmp($LOVD2Occurrence, 'Sporadic') === 0) {
+    if (strcasecmp($sLOVD2Occurrence, 'Sporadic') === 0) {
         return 'Isolated (sporadic)';
-    } else if (strcasecmp($LOVD2Occurrence, 'Familial') === 0) {
+    } elseif (strcasecmp($sLOVD2Occurrence, 'Familial') === 0) {
         return 'Familial';
     }
-    return '';
+    // Don't lose data. If it's something we don't recognize, just return the
+    //  original value.
+    return $sLOVD2Occurrence;
 }
 
 
 
 
 
-function lovd_convertOrigin ($LOVD2MutationOrigin)
+function lovd_convertOrigin ($sLOVD2MutationOrigin)
 {
     // Convert LOVD2's 'Patient/Mutation/Origin' to LOVD3's
     // 'Individual/Genetic_origin'.
-    if (strcasecmp($LOVD2MutationOrigin, 'Inherited') === 0) {
+    if (strcasecmp($sLOVD2MutationOrigin, 'Inherited') === 0) {
         return 'Germline';
-    } else if (strcasecmp($LOVD2MutationOrigin, 'De novo') === 0) {
+    } elseif (strcasecmp($sLOVD2MutationOrigin, 'De novo') === 0) {
         return 'De novo';
     }
-    return '';
+    // Don't lose data. If it's something we don't recognize, just return the
+    //  original value.
+    return $sLOVD2MutationOrigin;
 }
 
 
@@ -338,21 +353,28 @@ function lovd_convertReference ($LOVD2Reference)
 
 
 
-function lovd_convertScrTech ($LOVD2ScreeningTechnique)
+function lovd_convertScrTech ($sLOVD2ScreeningTechnique)
 {
+    // Convert LOVD2's 'Patient/Detection/Technique' to LOVD3's
+    // 'Screening/Technique'.
     global $aScreeningTechniques;
-    $sTechniqueClean = lovd_trim($LOVD2ScreeningTechnique);
-    if (key_exists($sTechniqueClean, $aScreeningTechniques)) {
-        return $LOVD2ScreeningTechnique;
-    } else if ($sTechniqueClean == 'mPCR') {
+
+    $sTechniqueClean = lovd_trim($sLOVD2ScreeningTechnique);
+    if (isset($aScreeningTechniques[$sTechniqueClean])) {
+        return $sTechniqueClean;
+    } elseif ($sTechniqueClean == 'mPCR') {
         return 'PCRm';
     }
-    return '?';
+    // Don't lose data. If it's something we don't recognize, just return the
+    //  original value.
+    return $sTechniqueClean;
 }
 
 
 
-function lovd_convertUserID ($LOVD2UserID, $type='curator')
+
+
+function lovd_convertUserID ($nLOVD2UserID, $sType = 'curator')
 {
     // Returns user ID for given LOVD2 user ID. Return value is based on
     // settings for fixed (default) user ID and ID translation table, both
@@ -360,15 +382,15 @@ function lovd_convertUserID ($LOVD2UserID, $type='curator')
     global $sFixedSubmitterID, $aSubmitterTranslationTable, $sFixedCuratorID,
            $aCuratorTranslationTable;
 
-    $LOVD2UserIDClean = intval(lovd_trim($LOVD2UserID));
-    if ($type == 'curator') {
+    $LOVD2UserIDClean = intval(lovd_trim($nLOVD2UserID));
+    if ($sType == 'curator') {
         // Convert curator ID.
         if ($LOVD2UserIDClean === 0) {
             // '0' in LOVD2 export means the submitter ID should be used.
             // Return false.
             return false;
         }
-        if (key_exists($LOVD2UserIDClean, $aCuratorTranslationTable)) {
+        if (isset($aCuratorTranslationTable[$LOVD2UserIDClean])) {
             // Found match in translation table.
             return $aCuratorTranslationTable[$LOVD2UserIDClean];
         }
@@ -378,7 +400,7 @@ function lovd_convertUserID ($LOVD2UserID, $type='curator')
         }
     } else {
         // Convert submitter ID.
-        if (key_exists($LOVD2UserIDClean, $aSubmitterTranslationTable)) {
+        if (isset($aSubmitterTranslationTable[$LOVD2UserIDClean])) {
             // Found match in translation table.
             return $aSubmitterTranslationTable[$LOVD2UserIDClean];
         }
@@ -388,19 +410,20 @@ function lovd_convertUserID ($LOVD2UserID, $type='curator')
         }
     }
     // Last resort is to return the original ID.
-    return $LOVD2UserID;
+    return $nLOVD2UserID;
 }
 
 
 
 
 
-function lovd_empty ($value)
+function lovd_empty ($sValue)
 {
-    // Returns true if given LOVD2 input field value ($value) is considered
+    // Returns true if given LOVD2 input field value ($sValue) is considered
     // empty (i.e. an empty string, null or a string with just opening and
     // closing quotation marks.
-    return is_null($value) || $value === '' || $value === '""' || $value === "''";
+
+    return (is_null($sValue) || in_array($sValue, array('', '""', "''")));
 }
 
 
@@ -409,28 +432,28 @@ function lovd_empty ($value)
 
 function lovd_getDiseaseID ($sDiseaseName)
 {
-    // Get the ID from the database searching the name and synmbol fields for
+    // Get the ID from the database, searching the name and symbol fields for
     // given disease $sDiseaseName. If it is not present in the database,
     // generate and return an automatic incrementing ID. Displays an error if
     // there are multiple hits in the database.
     // Returns array with disease ID (or false if an error occurred) and a
     // boolean flag stating whether a new disease record for this ID should be
-    // created. Returns false if multiple matching diseases are found in the
-    // DB.
+    // created. Returns array(false, false) if multiple matching diseases are
+    // found in the DB.
     global $_DB;
     static $aKnownDiseases;
 
     $bNewDisease = false;
     $sDiseaseNameClean = lovd_trim($sDiseaseName);
     if (!isset($aKnownDiseases[$sDiseaseNameClean])) {
-        $zDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name=? OR symbol=?',
+        $zDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
             array($sDiseaseNameClean, $sDiseaseNameClean));
         $aDiseases = $zDiseases->fetchAllAssoc();
-        if (count($aDiseases) < 1) {
+        if (!$aDiseases) {
             // Not in database: create new unique disease ID.
             $aKnownDiseases[$sDiseaseNameClean] = lovd_getInc('Diseases');
             $bNewDisease = true;
-        } else if(count($aDiseases) > 1) {
+        } elseif (count($aDiseases) > 1) {
             // Multiple hits in database.
             lovd_errorAdd('LOVD2_export', 'Error: disease name "' . $sDiseaseNameClean .
                 '" is ambiguous, it matches name or symbol for more than one disease in the ' .
@@ -475,10 +498,10 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             continue;
         }
 
-        $matches = array();
-        preg_match_all('/"?{{\s*([^ }]+)\s*}}"?/', $sLine, $matches);
+        $aMatches = array();
+        preg_match_all('/"?{{\s*([^ }]+)\s*}}"?/', $sLine, $aMatches);
 
-        if (empty($matches[0]) || empty($matches[1])) {
+        if (empty($aMatches[0]) || empty($aMatches[1])) {
             // Cannot find header in first non-empty, non-comment line in file. Show an error.
             break;
         }
@@ -498,25 +521,23 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             $aOutputHeaders[$sSection] = array();
         }
 
-        // Loop over input headers and link them to output headers, such tat
+        // Loop over input headers and link them to output headers, such that
         // $aOutputHeaders[section][i] = outHeader, where section is the output
         // section as defined in $aImportSections, i is the index of the input
         // header and outHeader is the name of the column in the output.
-        for ($i = 0; $i < count($matches[1]); $i++) {
+        for ($i = 0; $i < count($aMatches[1]); $i++) {
 
             $aSectionIDs = array_keys($aSections);
 
             // Check if field is manually linked in $aFieldLinks.
-            $sHeader = $matches[1][$i];
+            $sHeader = $aMatches[1][$i];
 
             // Special consideration for Variant/DNA_published, as it can be linked to two
             // fields: VariantOnTranscript/Published_as and VariantOnGenome/Published_as,
-            // but the former is perferred.
+            // but the former is preferred.
             if ($sHeader == 'Variant/DNA_published') {
-                if (array_search('VariantOnTranscript/Published_as',
-                        $aSections['vot']['db_fields']) === false &&
-                    array_search('VariantOnGenome/Published_as',
-                        $aSections['vog']['db_fields']) !== false) {
+                if (!in_array('VariantOnTranscript/Published_as', $aSections['vot']['db_fields']) &&
+                    in_array('VariantOnGenome/Published_as', $aSections['vog']['db_fields'])) {
                     // Field available on VOG and not on VOT.
                     $aOutputHeaders['vog'][$i] = 'VariantOnGenome/Published_as';
                     continue;
@@ -549,8 +570,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                 foreach ($aSectionIDs as $sSection) {
                     $aSection = $aSections[$sSection];
                     if (isset($aSection['customcol_prefix']) &&
-                        array_search($aSection['customcol_prefix'] . $sFieldname,
-                            $aSection['db_fields']) !== false) {
+                        in_array($aSection['customcol_prefix'] . $sFieldname, $aSection['db_fields'])) {
                         // Set output header to with new LOVD3 prefix (e.g. Individual).
                         $aOutputHeaders[$sSection][$i] = $aSection['customcol_prefix'] . '/' .
                             $sFieldname;
@@ -600,7 +620,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             });
         }
 
-        return array($matches[1], $aOutputHeaders, $aWarnings);
+        return array($aMatches[1], $aOutputHeaders, $aWarnings);
     }
 
     lovd_errorAdd('LOVD2_export', 'Cannot find header in file.');
@@ -611,9 +631,9 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 
 
 
-function lovd_getInc ($sCounterName='default')
+function lovd_getInc ($sCounterName = 'default')
 {
-    // Static automatic incrementor. Returns incrementing integers accross
+    // Static automatic incrementor. Returns incrementing integers across
     // consecutive function calls (starting at 1). $sCounterName allows one to
     // use multiple incrementors simultaneously.
     static $aCounters;
@@ -631,7 +651,8 @@ function lovd_getInc ($sCounterName='default')
 
 
 
-function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection=null)
+
+function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection = null)
 {
     // Given output headers $aOutputHeaders with integer keys linked to fields
     // in the input record $aRecord, generate an array with the fields filled
@@ -650,7 +671,7 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection=null)
             $aNewRecord[$sHeader] = null;
         }
         if (isset($aSection['mandatory_fields']) &&
-            array_key_exists($sHeader, $aSection['mandatory_fields']) &&
+            isset($aSection['mandatory_fields'][$sHeader]) &&
             lovd_empty($aNewRecord[$sHeader])) {
             // Set default value for mandatory field.
             $aNewRecord[$sHeader] = $aSection['mandatory_fields'][$sHeader];
@@ -663,7 +684,7 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection=null)
 
 
 
-function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
+function lovd_getSectionOutput ($aImportSection, $aOutputHeaders, $aRecords)
 {
     // Generate LOVD3 import data format from converted LOVD2 records.
 
@@ -671,7 +692,7 @@ function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
     $sOutput .= ' ## Do not remove or alter this header ##' . "\n";
     $sOutput .= '## Count = ' . strval(count($aRecords)) . "\n";
 
-    if (key_exists('comments', $aImportSection)) {
+    if (isset($aImportSection['comments'])) {
         foreach ($aImportSection['comments'] as $sComment) {
             $sOutput .= '# ' . $sComment . "\n";
         }
@@ -682,7 +703,7 @@ function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
         // Add header to output without potential section prefix (e.g. 'vog:').
         $aSectionHeaders[] = '{{' . preg_replace('/^[^:]*:/', '', $sHeader) . '}}';
     }
-    $sOutput .= join("\t", $aSectionHeaders) . "\n";
+    $sOutput .= implode("\t", $aSectionHeaders) . "\n";
 
     foreach ($aRecords as $aRecord) {
         // Put record fields in same order as headers.
@@ -690,7 +711,7 @@ function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
         foreach ($aOutputHeaders as $sHeader) {
             $aOutRecord[] = $aRecord[$sHeader];
         }
-        $sOutput .= join("\t", $aOutRecord) . "\n";
+        $sOutput .= implode("\t", $aOutRecord) . "\n";
     }
     $sOutput .= "\n";
     return $sOutput;
@@ -700,16 +721,7 @@ function lovd_getSectionOutput($aImportSection, $aOutputHeaders, $aRecords)
 
 
 
-function lovd_log ($sMessage)
-{
-    print($sMessage . "\n");
-}
-
-
-
-
-
-function lovd_openLOVD2ExportFile($aRequest, $aFiles)
+function lovd_openLOVD2ExportFile ($aRequest, $aFiles)
 {
     // Returns an array with the contents of the uploaded LOVD2 export file,
     // returns false when something went wrong with opening or decoding the
@@ -832,14 +844,14 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         // (homozygous).
         $sRecordID = $aInputRecord[array_search('ID_variantid_', $aInputHeaders)] . '_' .
                      $aInputRecord[array_search('ID_patientid_', $aInputHeaders)];
-        if (array_key_exists($sRecordID, $aUniqueRecords)) {
+        if (isset($aUniqueRecords[$sRecordID])) {
             // Combination variant_id/patient_id already seen, set previous
             // record allele field to 3 (homozygous). Skip this record.
             $aVOGRecords[$sRecordID]['allele'] = 3;
             continue;
         } else {
             // Store current variant/patient combination for future reference.
-            $aUniqueRecords[$sRecordID] = null;
+            $aUniqueRecords[$sRecordID] = 1;
         }
 
         // Get submitter ID.
@@ -873,11 +885,11 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 $aIndividual = lovd_getRecordForHeaders($aOutputHeaders['individual'], $aRecord,
                     $aSections['individual']);
                 if ($aIndividual['created_by'] === false) {
-                    // No curator ID was available, set submtiter ID.
+                    // No curator ID was available, set submitter ID.
                     $aIndividual['created_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
                 }
                 if ($aIndividual['edited_by'] === false) {
-                    // No curator ID was available, set submtiter ID.
+                    // No curator ID was available, set submitter ID.
                     $aIndividual['edited_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
                 }
                 $aIndividuals[$sLOVD2IndividualID] = $aIndividual;
@@ -924,23 +936,23 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 'variantid' => $aRecord[array_search('ID_variantid_', $aInputHeaders)]);
         }
 
-        // Create VOG/VOT records
+        // Create VOG/VOT records.
         $aVOGRecord = lovd_getRecordForHeaders($aOutputHeaders['vog'], $aRecord,
             $aSections['vog']);
         $aVOGRecord['chromosome'] = $zTranscript['chromosome'];
         if ($aVOGRecord['edited_by'] === false) {
-            // No curator ID was available, set submtiter ID.
+            // No curator ID was available, set submitter ID.
             $aVOGRecord['edited_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
         }
         if ($aVOGRecord['created_by'] === false) {
-            // No curator ID was available, set submtiter ID.
+            // No curator ID was available, set submitter ID.
             $aVOGRecord['created_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
         }
 
         $aVOTRecord = lovd_getRecordForHeaders($aOutputHeaders['vot'], $aRecord,
             $aSections['vot']);
         $aVOTRecord['id'] = $aVOGRecord['id'];
-        if (key_exists('effectid', $aVOGRecord)) {
+        if (isset($aVOGRecord['effectid'])) {
             $aVOTRecord['effectid'] = $aVOGRecord['effectid'];
         }
         $aVOTRecord['transcriptid'] = $zTranscript['id'];
@@ -1025,7 +1037,7 @@ function lovd_setUserIDSettings ($sFixedSubmitterIDInput, $sSubmitterTranslation
         list($sIDtype, $sFormField, $sGlobalVar, $sInput) = $aFixedUserInfo;
         if (ctype_digit($sInput)) {
             $GLOBALS[$sGlobalVar] = $sInput;
-        } else if (!empty($sInput)) {
+        } elseif (!empty($sInput)) {
             lovd_errorAdd($sFormField, 'Error: Fixed ' . $sIDtype . ' ID must be numeric.');
         }
     }
@@ -1064,10 +1076,6 @@ function lovd_setUserIDSettings ($sFixedSubmitterIDInput, $sSubmitterTranslation
         }
     }
 }
-
-
-
-
 
 
 
@@ -1147,9 +1155,11 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
 
 
 
-function lovd_trim($sValue) {
+function lovd_trim ($sValue)
+{
     return trim($sValue, '"\' ');
 }
+
 
 
 
@@ -1225,7 +1235,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
     } else {
         if (!empty($_POST['transcriptid'])) {
             $qTranscript = $_DB->query('SELECT t.*, chromosome FROM ' . TABLE_TRANSCRIPTS .
-                ' AS t LEFT JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid)  WHERE t.id=?',
+                ' AS t LEFT JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid)  WHERE t.id = ?',
                 array($_POST['transcriptid']));
             $zTranscript = $qTranscript->fetchAssoc();
         }
@@ -1251,7 +1261,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
         print('<H3>Field linking log:</H3>
         <TEXTAREA id="header_log" cols="100" rows="10" style="font-family: monospace; 
             white-space: nowrap; overflow: scroll;">' .
-            join("\n", $aHeaderWarnings) .
+            implode("\n", $aHeaderWarnings) .
         '</TEXTAREA><BR><BR>');
     }
 
@@ -1278,8 +1288,8 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
 
         foreach (array_keys($aSections) as $sSection) {
             $sOutput .= lovd_getSectionOutput($aSections[$sSection],
-                isset($aOutputHeaders[$sSection]) ? $aOutputHeaders[$sSection] : array(),
-                isset($aOut[$sSection]) ? $aOut[$sSection] : array());
+                isset($aOutputHeaders[$sSection])? $aOutputHeaders[$sSection] : array(),
+                isset($aOut[$sSection])? $aOut[$sSection] : array());
         }
 
         print('<H3>LOVD3 import data:</H3>
@@ -1308,5 +1318,4 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
 
 // Call main function with setting variables.
 main($aFieldLinks, $aImportSections, $aCustomColLinks);
-
-
+?>
