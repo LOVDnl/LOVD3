@@ -163,50 +163,6 @@ $aImportSections = array(
 );
 
 
-
-// Possible values for 'Screening/Technique'.
-$aScreeningTechniques = array_flip(array(
-    'arrayCGH',
-    'arraySEQ',
-    'arraySNP',
-    'arrayCNV',
-    'BESS',
-    'CMC',
-    'CSCE',
-    'DGGE',
-    'DHPLC',
-    'DOVAM',
-    'ddF',
-    'DSCA',
-    'EMC',
-    'HD',
-    'MCA',
-    'IHC',
-    'MAPH',
-    'MLPA',
-    'SEQ-NG',
-    'SEQ-NG-H',
-    'SEQ-NG-I',
-    'SEQ-NG-R',
-    'SEQ-NG-S',
-    'Northern',
-    'PCR',
-    'PCRdig',
-    'PCRlr',
-    'PCRm',
-    'PCRq',
-    'PAGE',
-    'PTT',
-    'PFGE',
-    'RT-PCR',
-    'SEQ',
-    'SBE',
-    'SSCA',
-    'SSCAf',
-    'Southern',
-    'TaqMan',
-    'Western'));
-
 // Default user ID with which to overwrite user IDs in the input file. Used by
 // lovd_convertUserID().
 $sFixedSubmitterID = null;
@@ -356,21 +312,22 @@ function lovd_convertReference ($LOVD2Reference)
 
 
 
-function lovd_convertScrTech ($sLOVD2ScreeningTechnique)
+function lovd_convertScrTech ($sLOVD2ScreeningTechniques)
 {
     // Convert LOVD2's 'Patient/Detection/Technique' to LOVD3's
     // 'Screening/Technique'.
     global $aScreeningTechniques;
 
-    $sTechniqueClean = lovd_trim($sLOVD2ScreeningTechnique);
-    if (isset($aScreeningTechniques[$sTechniqueClean])) {
-        return $sTechniqueClean;
-    } elseif ($sTechniqueClean == 'mPCR') {
-        return 'PCRm';
-    }
-    // Don't lose data. If it's something we don't recognize, just return the
-    //  original value.
-    return $sTechniqueClean;
+    $aTechniques = array_map(function ($sTechnique) use ($aScreeningTechniques) {
+        if ($sTechnique == 'mPCR') {
+            return 'PCRm';
+        }
+        // Don't lose data. If it's something we don't recognize, just return the
+        //  original value.
+        return $sTechnique;
+    }, explode(';', $sLOVD2ScreeningTechniques));
+
+    return join(';', $aTechniques);
 }
 
 
