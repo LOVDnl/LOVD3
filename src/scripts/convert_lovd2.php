@@ -340,7 +340,7 @@ function lovd_convertUserID ($nLOVD2UserID, $sType = 'curator')
     // settings for fixed (default) user ID and ID translation table, both
     // are defined in the upload form.
     global $sFixedSubmitterID, $aSubmitterTranslationTable, $sFixedCuratorID,
-           $aCuratorTranslationTable;
+           $aCuratorTranslationTable, $_WARNINGS;
 
     $LOVD2UserIDClean = intval(lovd_trim($nLOVD2UserID));
     if ($sType == 'curator') {
@@ -370,6 +370,8 @@ function lovd_convertUserID ($nLOVD2UserID, $sType = 'curator')
         }
     }
     // Last resort is to return the original ID.
+    $_WARNINGS[] = 'Warning: unknown user ID for ' . $sType . ': "' . $nLOVD2UserID . '" (no ' .
+                   'fixed ID set and ID is not in translation table)';
     return $nLOVD2UserID;
 }
 
