@@ -377,19 +377,6 @@ function lovd_convertUserID ($nLOVD2UserID, $sType = 'curator')
 
 
 
-function lovd_empty ($sValue)
-{
-    // Returns true if given LOVD2 input field value ($sValue) is considered
-    // empty (i.e. an empty string, null or a string with just opening and
-    // closing quotation marks.
-
-    return (is_null($sValue) || in_array($sValue, array('', '""', "''")));
-}
-
-
-
-
-
 function lovd_getDiseaseID ($sDiseaseName)
 {
     // Get the ID from the database, searching the name and symbol fields for
@@ -659,7 +646,7 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection = null)
         }
         if (isset($aSection['mandatory_fields']) &&
             isset($aSection['mandatory_fields'][$sHeader]) &&
-            lovd_empty($aNewRecord[$sHeader])) {
+            empty($aNewRecord[$sHeader])) {
             // Set default value for mandatory field.
             $aNewRecord[$sHeader] = $aSection['mandatory_fields'][$sHeader];
         }
@@ -689,14 +676,14 @@ function lovd_getSectionOutput ($aImportSection, $aOutputHeaders, $aRecords)
     // will be duplicated when multiple input fields link to the same output.
     $aUniqueHeaders = array_unique($aOutputHeaders);
     $sOutput .= implode("\t", array_map(function ($sHeader) {
-        return '{{' . $sHeader . '}}';
+        return '{{"' . $sHeader . '"}}';
     }, $aUniqueHeaders)) . "\n";
 
     foreach ($aRecords as $aRecord) {
         // Put record fields in same order as headers.
         $aOutRecord = array();
         foreach ($aUniqueHeaders as $sHeader) {
-            $aOutRecord[] = $aRecord[$sHeader];
+            $aOutRecord[] = '"' . $aRecord[$sHeader] . '"';
         }
         $sOutput .= implode("\t", $aOutRecord) . "\n";
     }
@@ -814,7 +801,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $aRecord = array();
         for ($i = 0; $i < count($aInputRecord); $i++) {
             $sFieldName = $aInputHeaders[$i];
-            $sFieldValue = $aInputRecord[$i];
+            $sFieldValue = lovd_trim($aInputRecord[$i]);
             if (isset($aFieldLinks[$sFieldName])) {
                 if (count($aFieldLinks[$sFieldName]) == 2) {
                     $aRecord[] = $sFieldValue;
@@ -851,7 +838,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         // Create new disease if necessary.
         $aDisease = lovd_getRecordForHeaders($aOutputHeaders['disease'], $aRecord,
             $aSections['disease']);
-        if (!lovd_empty($aDisease['name'])) {
+        if (!empty($aDisease['name'])) {
             list($aDisease['id'], $bCreateNewDisease) = lovd_getDiseaseID($aDisease['name']);
             if ($aDisease['id'] === false) {
                 // Something went wrong determining the disease, stop parsing.
@@ -899,7 +886,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 $bEmptyPheno = true;
                 foreach ($aPhenotype as $k => $v) {
                     $bEmptyPheno = $bEmptyPheno &&
-                        (in_array($k, array('id', 'diseaseid', 'individualid')) || lovd_empty($v));
+                        (in_array($k, array('id', 'diseaseid', 'individualid')) || empty($v));
                 }
                 if (!$bEmptyPheno) {
                     // Skip phenotype because there is no data in phenotype
@@ -1011,9 +998,6 @@ function lovd_setUserIDSettings ($sFixedSubmitterIDInput, $sSubmitterTranslation
     //                              ID value to translate, the second int is
     //                              the LOVD3 user ID value to which is being
     //                              translated.
-
-    global $sFixedSubmitterID, $aSubmitterTranslationTable, $sFixedCuratorID,
-           $aCuratorTranslationTable;
 
     $aFixedUserInfos = array(
         array('submitter', 'submitterid_fixed', 'sFixedSubmitterID', $sFixedSubmitterIDInput),

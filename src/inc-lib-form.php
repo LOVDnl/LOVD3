@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2016-12-12
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -739,6 +739,22 @@ function lovd_setUpdatedDate ($aGenes)
     // Just update the database and we'll see what happens.
     $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = ?, updated_date = NOW() WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')', array_merge(array($_AUTH['id']), $aGenes), false);
     return ($q->rowCount());
+}
+
+
+
+
+
+function lovd_trimField ($sVal)
+{
+    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
+    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
+
+    $sVal = trim($sVal);
+    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
+        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
+    }
+    return trim($sVal);
 }
 
 
