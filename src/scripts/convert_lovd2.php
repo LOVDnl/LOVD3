@@ -841,11 +841,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
             $aSections['disease']);
         if (!empty($aDisease['name'])) {
             list($aDisease['id'], $bCreateNewDisease) = lovd_getDiseaseID($aDisease['name']);
-            if ($aDisease['id'] === false) {
-                // Something went wrong determining the disease, stop parsing.
-                break;
-            }
-            if ($bCreateNewDisease) {
+            if ($bCreateNewDisease && $aDisease['id'] !== false) {
                 // New disease, create an output record for it.
                 $aDiseases[] = $aDisease;
             }
