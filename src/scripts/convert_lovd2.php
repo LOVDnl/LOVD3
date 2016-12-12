@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-12-09
+ * Modified    : 2016-12-12
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,6 +35,9 @@ require_once ROOT_PATH . 'inc-lib-form.php';
 require_once ROOT_PATH . 'class/object_transcripts.php';
 require_once ROOT_PATH . 'class/progress_bar.php';
 require_once ROOT_PATH . 'class/soap_client.php';
+
+// Global for storing warning messages during conversion.
+$_WARNINGS = array();
 
 // Links between LOVD2-LOVD3 fields, with optional conversion function. Format:
 // LOVD2_field => array(LOVD3_section, LOVD3_field, Conversion_function)
@@ -481,14 +484,12 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
     // Returns false for both header arrays if header cannot be either found or
     // parsed.
 
-    global $_DB;
+    global $_DB, $_WARNINGS;
 
     if (!is_array($aData)) {
         lovd_errorAdd('LOVD2_export', 'Invalid input.');
-        return array(false, false, array());
+        return array(false, false);
     }
-
-    $aWarnings = array();
 
     // Walk through lines until header is found.
     foreach ($aData as $i => $sLine) {
@@ -584,14 +585,14 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                         list($sSection, $sPrefixOut) = $aCustomColDefault;
                         $sHeaderOut = str_replace($sPrefix, $sPrefixOut, $sHeader);
                         $aOutputHeaders[$sSection][$i] = $sHeaderOut;
-                        $aWarnings[] = 'Warning: linked "' . $sHeader . '" to "' . $sHeaderOut . '"';
+                        $_WARNINGS[] = 'Warning: linked "' . $sHeader . '" to "' . $sHeaderOut . '"';
                         continue 2;
                     }
                 }
             }
 
             // Could not link input header intelligently.
-            $aWarnings[] = 'Warning: could not link field "' . $sHeader . '"';
+            $_WARNINGS[] = 'Warning: could not link field "' . $sHeader . '"';
         }
 
         // Handle special case effectid: if this field exists for VOG, also
@@ -600,8 +601,9 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             $aOutputHeaders['vot']['effectid'] = 'effectid';
         }
 
-        // Add mandatory fields and sort everything.
+        // Output header post processing
         foreach ($aSections as $sSection => $aImportSection) {
+            // Add mandatory fields.
             if (isset($aImportSection['mandatory_fields'])) {
                 $aMandatory = array_diff(array_keys($aImportSection['mandatory_fields']),
                     $aOutputHeaders[$sSection]);
@@ -618,13 +620,34 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                 }
                 return strcasecmp($a, $b);
             });
+
+            // Find if fields are linked more than once in this section. (outer call to
+            // array_unique() is needed for when more than 2 inputs link to the same output.
+            $aDuplicates = array_unique(array_diff_key($aOutputHeaders[$sSection],
+                array_unique($aOutputHeaders[$sSection])));
+            foreach ($aDuplicates as $sDupHeader) {
+                // We get here when field $sDupHeader appears more than once.
+                $aDupKeys = array_keys($aOutputHeaders[$sSection], $sDupHeader);
+                $prevKey = null;
+                foreach ($aDupKeys as $sKey) {
+                    if (!is_null($prevKey)) {
+                        $sPrevField = is_int($prevKey)? $aMatches[1][$prevKey] : $prevKey;
+                        $sCurrField = is_int($sKey)? $aMatches[1][$sKey] : $sKey;
+                        $_WARNINGS[] = 'Warning: output field ' . $sSection . ':' . $sDupHeader
+                                       . ' is linked to both ' . $sPrevField . ' and ' .
+                                       $sCurrField . '. Values for ' . $sCurrField . ' may ' .
+                                       'get lost when ' . $sPrevField . ' is non-empty';
+                    }
+                    $prevKey = $sKey;
+                }
+            }
         }
 
-        return array($aMatches[1], $aOutputHeaders, $aWarnings);
+        return array($aMatches[1], $aOutputHeaders);
     }
 
     lovd_errorAdd('LOVD2_export', 'Cannot find header in file.');
-    return array(false, false, array());
+    return array(false, false);
 }
 
 
@@ -660,10 +683,17 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection = null)
     // array(0 => 'field1', 1 => 'field2', 'dummy' => 'field3') and $aRecord =
     // array('v1', 'v2'), this function would return array('field1' => 'v1',
     // field2 => 'v2', 'dummy' => null).
+    global $_WARNINGS;
     $aNewRecord = array();
     foreach ($aOutputHeaders as $nInputIdx => $sHeader) {
         if (is_int($nInputIdx) || ctype_digit($nInputIdx)) {
-            // Numeric key defines link to field in input record $aRecord.
+            // Numeric key $nInputIdx defines link to field in input record $aRecord.
+            if (!empty($aNewRecord[$sHeader]) && !empty($aRecord[$nInputIdx])) {
+                $_WARNINGS[] = 'Warning: doubly-linked field already has a value "' .
+                               $aNewRecord[$sHeader] . '", alternate value will get lost: "' .
+                               $aRecord[$nInputIdx] . '"';
+                continue;
+            }
             $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
         } else {
             // Leave non-linked fields empty for now. These are probably
@@ -698,17 +728,17 @@ function lovd_getSectionOutput ($aImportSection, $aOutputHeaders, $aRecords)
         }
     }
 
-    $aSectionHeaders = array();
-    foreach ($aOutputHeaders as $sHeader) {
-        // Add header to output without potential section prefix (e.g. 'vog:').
-        $aSectionHeaders[] = '{{' . preg_replace('/^[^:]*:/', '', $sHeader) . '}}';
-    }
-    $sOutput .= implode("\t", $aSectionHeaders) . "\n";
+    // Get output for header line. array_unique() is called because headers
+    // will be duplicated when multiple input fields link to the same output.
+    $aUniqueHeaders = array_unique($aOutputHeaders);
+    $sOutput .= implode("\t", array_map(function ($sHeader) {
+        return '{{' . $sHeader . '}}';
+    }, $aUniqueHeaders)) . "\n";
 
     foreach ($aRecords as $aRecord) {
         // Put record fields in same order as headers.
         $aOutRecord = array();
-        foreach ($aOutputHeaders as $sHeader) {
+        foreach ($aUniqueHeaders as $sHeader) {
             $aOutRecord[] = $aRecord[$sHeader];
         }
         $sOutput .= implode("\t", $aOutRecord) . "\n";
@@ -1209,7 +1239,7 @@ function lovd_validateConversionForm ($zTranscript, $nMaxSize, $nMaxSizeLOVD)
 
 function main ($aFieldLinks, $aSections, $aCustomColLinks)
 {
-    global $_DB, $_T, $_SETT;
+    global $_DB, $_T, $_SETT, $_WARNINGS;
 
     // Only allow managers or higher to perform conversion.
     lovd_requireAUTH(LEVEL_MANAGER);
@@ -1251,19 +1281,8 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
     $aData = lovd_openLOVD2ExportFile($_POST, $_FILES);
 
     // Get headers for input (as defined in file) and output (per section).
-    list($aInputHeaders, $aOutputHeaders, $aHeaderWarnings) = lovd_getHeaders($aData, $aFieldLinks,
+    list($aInputHeaders, $aOutputHeaders) = lovd_getHeaders($aData, $aFieldLinks,
         $aSections, $aCustomColLinks);
-
-    if ($aData === false || $aInputHeaders === false) {
-        lovd_showConversionForm($nMaxSizeLOVD, $nMaxSize);
-        return;
-    } else {
-        print('<H3>Field linking log:</H3>
-        <TEXTAREA id="header_log" cols="100" rows="10" style="font-family: monospace; 
-            white-space: nowrap; overflow: scroll;">' .
-            implode("\n", $aHeaderWarnings) .
-        '</TEXTAREA><BR><BR>');
-    }
 
     // Parse data and get output records per section.
     list($aOut['vog'],
@@ -1275,7 +1294,18 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
         $aOut['s2g'],
         $aOut['s2v'],
         $aOut['phenotype']) = lovd_parseData($aData, $zTranscript, $aFieldLinks, $aInputHeaders,
-            $aOutputHeaders, $aSections, $oProgressBar);
+        $aOutputHeaders, $aSections, $oProgressBar);
+
+    if ($aData === false || $aInputHeaders === false) {
+        lovd_showConversionForm($nMaxSizeLOVD, $nMaxSize);
+        return;
+    } else {
+        print('<H3>Conversion log:</H3>
+        <TEXTAREA id="header_log" cols="100" rows="10" style="font-family: monospace; 
+            white-space: nowrap; overflow: scroll;">' .
+            implode("\n", $_WARNINGS) .
+        '</TEXTAREA><BR><BR>');
+    }
 
     if (lovd_error()) {
         print('<B>There were fatal errors during conversion:</B>');
