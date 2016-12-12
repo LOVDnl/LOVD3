@@ -235,7 +235,7 @@ function lovd_convertDBID ($sLOVD2DBID)
     // Returns an LOVD3-formatted DBID for the given $sLOVD2DBID by padding
     // the number with an extra '0'.
 
-    $aChunks = explode('_', lovd_trim($sLOVD2DBID));
+    $aChunks = explode('_', $sLOVD2DBID);
     $nParts = count($aChunks);
     if ($nParts > 1 && ctype_digit($aChunks[$nParts-1])) {
         $aChunks[$nParts-1] = '0' . $aChunks[$nParts-1];
@@ -342,7 +342,7 @@ function lovd_convertUserID ($nLOVD2UserID, $sType = 'curator')
     global $sFixedSubmitterID, $aSubmitterTranslationTable, $sFixedCuratorID,
            $aCuratorTranslationTable, $_WARNINGS;
 
-    $LOVD2UserIDClean = intval(lovd_trim($nLOVD2UserID));
+    $LOVD2UserIDClean = intval($nLOVD2UserID);
     if ($sType == 'curator') {
         // Convert curator ID.
         if ($LOVD2UserIDClean === 0) {
@@ -393,27 +393,26 @@ function lovd_getDiseaseID ($sDiseaseName)
     static $aKnownDiseases;
 
     $bNewDisease = false;
-    $sDiseaseNameClean = lovd_trim($sDiseaseName);
-    if (!isset($aKnownDiseases[$sDiseaseNameClean])) {
+    if (!isset($aKnownDiseases[$sDiseaseName])) {
         $zDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
-            array($sDiseaseNameClean, $sDiseaseNameClean));
+            array($sDiseaseName, $sDiseaseName));
         $aDiseases = $zDiseases->fetchAllAssoc();
         if (!$aDiseases) {
             // Not in database: create new unique disease ID.
-            $aKnownDiseases[$sDiseaseNameClean] = lovd_getInc('Diseases');
+            $aKnownDiseases[$sDiseaseName] = lovd_getInc('Diseases');
             $bNewDisease = true;
         } elseif (count($aDiseases) > 1) {
             // Multiple hits in database.
-            lovd_errorAdd('LOVD2_export', 'Error: disease name "' . $sDiseaseNameClean .
+            lovd_errorAdd('LOVD2_export', 'Error: disease name "' . $sDiseaseName .
                 '" is ambiguous, it matches name or symbol for more than one disease in the ' .
                 'database.');
             return array(false, false);
         } else {
             // Exactly one hit in database.
-            $aKnownDiseases[$sDiseaseNameClean] = $aDiseases[0]['id'];
+            $aKnownDiseases[$sDiseaseName] = $aDiseases[0]['id'];
         }
     }
-    return array($aKnownDiseases[$sDiseaseNameClean], $bNewDisease);
+    return array($aKnownDiseases[$sDiseaseName], $bNewDisease);
 }
 
 
@@ -803,7 +802,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $aRecord = array();
         for ($i = 0; $i < count($aInputRecord); $i++) {
             $sFieldName = $aInputHeaders[$i];
-            $sFieldValue = lovd_trim($aInputRecord[$i]);
+            $sFieldValue = lovd_trimField($aInputRecord[$i]);
             if (isset($aFieldLinks[$sFieldName])) {
                 if (count($aFieldLinks[$sFieldName]) == 2) {
                     $aRecord[] = $sFieldValue;
@@ -935,7 +934,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
 
         // Get positions on transcript/chromosome from mutalyzer for variant.
         $nHGVSIdx = array_search('Variant/DNA', $aInputHeaders);
-        $sVariant = lovd_trim($aRecord[$nHGVSIdx]);
+        $sVariant = $aRecord[$nHGVSIdx];
         $aMappingInfoArgs = array(
             'LOVD_ver' => $_SETT['system']['version'],
             'build' => 'hg19',
@@ -1128,14 +1127,6 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
 
 
 
-function lovd_trim ($sValue)
-{
-    return trim($sValue, '"\' ');
-}
-
-
-
-
 
 function lovd_validateConversionForm ($zTranscript, $nMaxSize, $nMaxSizeLOVD)
 {
@@ -1269,7 +1260,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
             <TEXTAREA id="conversion_output" cols="100" rows="20" style="font-family: monospace; 
         white-space: nowrap; overflow: scroll;">' .
             $sOutput .
-            '</TEXTAREA>
+            '</TEXTAREA><BR>
             <BUTTON id="copybutton">Copy content to clipboard</BUTTON>
             <SCRIPT language="JavaScript">
                 $("#copybutton").on("click", function () {
