@@ -69,18 +69,18 @@ $aFieldLinks = array(
     'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
     'ID_pathogenic_' =>                 array('vog',        'effectid'),
     'ID_status_' =>                     array('vog',        'statusid'),
-    'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertUserID'),
+    'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertCuratorID'),
     'variant_created_date_' =>          array('vog',        'created_date'),
-    'ID_variant_edited_by_' =>          array('vog',        'edited_by',                    'lovd_convertUserID'),
+    'ID_variant_edited_by_' =>          array('vog',        'edited_by',                    'lovd_convertCuratorID'),
     'variant_edited_date_' =>           array('vog',        'edited_date'),
-    'ID_patient_created_by_' =>         array('individual', 'created_by',                   'lovd_convertUserID'),
+    'ID_patient_created_by_' =>         array('individual', 'created_by',                   'lovd_convertCuratorID'),
     'patient_created_date_' =>          array('individual', 'created_date'),
-    'ID_patient_edited_by_' =>          array('individual', 'edited_by',                    'lovd_convertUserID'),
+    'ID_patient_edited_by_' =>          array('individual', 'edited_by',                    'lovd_convertCuratorID'),
     'patient_edited_date_' =>           array('individual', 'edited_date'),
     'ID_patientid_' =>                  array('individual', 'id',                           'lovd_autoIncIndividualID'),
     'ID_variantid_' =>                  array('vog',        'id',                           'lovd_autoIncVariantID'),
     'ID_allele_' =>                     array('vog',        'allele'),
-    'ID_submitterid_' =>                array('vog',        'owned_by',                     'lovd_convertUserID'),
+    'ID_submitterid_' =>                array('vog',        'owned_by',                     'lovd_convertSubmitterID'),
     'Patient/Phenotype/Disease' =>      array('disease',    'name'),
 );
 
@@ -165,12 +165,12 @@ $aImportSections = array(
 
 
 // Default user ID with which to overwrite user IDs in the input file. Used by
-// lovd_convertUserID().
+// lovd_convertSubmitterID() and lovd_convertCuratorID().
 $sFixedSubmitterID = null;
 $sFixedCuratorID = null;
 
 // Translation array of LOVD2 user IDs to LOVD3 user IDs. Used by
-// lovd_convertUserID().
+// lovd_convertSubmitterID() and lovd_convertCuratorID().
 $aSubmitterTranslationTable = array();
 $aCuratorTranslationTable = array();
 
@@ -225,6 +225,38 @@ function lovd_callJSONService ($sURL)
         return json_decode($sResponse);
     }
     return false;
+}
+
+
+
+
+
+function lovd_convertCuratorID ($nLOVD2UserID)
+{
+    // Returns curator ID for given LOVD2 user ID. Return value is based on
+    // settings for fixed (default) user ID and ID translation table, both
+    // are defined in the upload form.
+    global $sFixedCuratorID, $aCuratorTranslationTable, $_WARNINGS;
+
+    $LOVD2UserIDClean = intval($nLOVD2UserID);
+    // Convert curator ID.
+    if ($LOVD2UserIDClean === 0) {
+        // '0' in LOVD2 export means the submitter ID should be used.
+        // Return false.
+        return false;
+    }
+    if (isset($aCuratorTranslationTable[$LOVD2UserIDClean])) {
+        // Found match in translation table.
+        return $aCuratorTranslationTable[$LOVD2UserIDClean];
+    }
+    if (!is_null($sFixedCuratorID)) {
+        // Default to fixed user ID.
+        return $sFixedCuratorID;
+    }
+    // Last resort is to return the original ID.
+    $_WARNINGS[] = 'Warning: unknown user ID for curator: "' . $nLOVD2UserID . '" (no ' .
+        'fixed ID set and ID is not in translation table)';
+    return $nLOVD2UserID;
 }
 
 
@@ -335,44 +367,26 @@ function lovd_convertScrTech ($sLOVD2ScreeningTechniques)
 
 
 
-function lovd_convertUserID ($nLOVD2UserID, $sType = 'curator')
+function lovd_convertSubmitterID ($nLOVD2UserID)
 {
-    // Returns user ID for given LOVD2 user ID. Return value is based on
+    // Returns submitter ID for given LOVD2 user ID. Return value is based on
     // settings for fixed (default) user ID and ID translation table, both
     // are defined in the upload form.
-    global $sFixedSubmitterID, $aSubmitterTranslationTable, $sFixedCuratorID,
-           $aCuratorTranslationTable, $_WARNINGS;
+    global $sFixedSubmitterID, $aSubmitterTranslationTable, $_WARNINGS;
 
     $LOVD2UserIDClean = intval($nLOVD2UserID);
-    if ($sType == 'curator') {
-        // Convert curator ID.
-        if ($LOVD2UserIDClean === 0) {
-            // '0' in LOVD2 export means the submitter ID should be used.
-            // Return false.
-            return false;
-        }
-        if (isset($aCuratorTranslationTable[$LOVD2UserIDClean])) {
-            // Found match in translation table.
-            return $aCuratorTranslationTable[$LOVD2UserIDClean];
-        }
-        if (!is_null($sFixedCuratorID)) {
-            // Default to fixed user ID.
-            return $sFixedCuratorID;
-        }
-    } else {
-        // Convert submitter ID.
-        if (isset($aSubmitterTranslationTable[$LOVD2UserIDClean])) {
-            // Found match in translation table.
-            return $aSubmitterTranslationTable[$LOVD2UserIDClean];
-        }
-        if (!is_null($sFixedSubmitterID)) {
-            // Default to fixed user ID.
-            return $sFixedSubmitterID;
-        }
+    // Convert curator ID.
+    if (isset($aSubmitterTranslationTable[$LOVD2UserIDClean])) {
+        // Found match in translation table.
+        return $aSubmitterTranslationTable[$LOVD2UserIDClean];
+    }
+    if (!is_null($sFixedSubmitterID)) {
+        // Default to fixed user ID.
+        return $sFixedSubmitterID;
     }
     // Last resort is to return the original ID.
-    $_WARNINGS[] = 'Warning: unknown user ID for ' . $sType . ': "' . $nLOVD2UserID . '" (no ' .
-                   'fixed ID set and ID is not in translation table)';
+    $_WARNINGS[] = 'Warning: unknown user ID for submitter: "' . $nLOVD2UserID . '" (no ' .
+        'fixed ID set and ID is not in translation table)';
     return $nLOVD2UserID;
 }
 
@@ -833,6 +847,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         // Get submitter ID.
         $sSubmitterID = null;
         if (($i = array_search('ID_submitterid_', $aInputHeaders)) !== false) {
+            // Note that the $aRecord[$i] is already translated by lovd_convertSubmitterID()
             $sSubmitterID = $aRecord[$i];
         }
 
@@ -858,11 +873,11 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                     $aSections['individual']);
                 if ($aIndividual['created_by'] === false) {
                     // No curator ID was available, set submitter ID.
-                    $aIndividual['created_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
+                    $aIndividual['created_by'] = $sSubmitterID;
                 }
                 if ($aIndividual['edited_by'] === false) {
                     // No curator ID was available, set submitter ID.
-                    $aIndividual['edited_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
+                    $aIndividual['edited_by'] = $sSubmitterID;
                 }
                 $aIndividuals[$sLOVD2IndividualID] = $aIndividual;
 
@@ -914,11 +929,11 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $aVOGRecord['chromosome'] = $zTranscript['chromosome'];
         if ($aVOGRecord['edited_by'] === false) {
             // No curator ID was available, set submitter ID.
-            $aVOGRecord['edited_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
+            $aVOGRecord['edited_by'] = $sSubmitterID;
         }
         if ($aVOGRecord['created_by'] === false) {
             // No curator ID was available, set submitter ID.
-            $aVOGRecord['created_by'] = lovd_convertUserID($sSubmitterID, 'submitter');
+            $aVOGRecord['created_by'] = $sSubmitterID;
         }
 
         $aVOTRecord = lovd_getRecordForHeaders($aOutputHeaders['vot'], $aRecord,
@@ -1019,28 +1034,18 @@ function lovd_setUserIDSettings ($sFixedSubmitterIDInput, $sSubmitterTranslation
     );
 
     foreach ($aTranslationInfos as $aTranslationInfo) {
-        list($sIDtype, $sFormField, $sGlobalVar, $sInput) = $aTranslationInfo;
+        list( , , $sGlobalVar, $sInput) = $aTranslationInfo;
         foreach (explode("\n", $sInput) as $sLine) {
             $sLineClean = trim($sLine);
             if (!empty($sLineClean)) {
-                // TODO: allow mysql SELECT query output format i.e.:
-                // +-------------+------------+
-                // |       OldID |      NewID |
-                // +-------------+------------+
-                // |  0000000001 | 0000000001 |
-                // |  0000000001 | 0000000027 |
-                // |  0000000002 | 0000000002 |
-                // |  0000000002 | 0000000023 |
-                // |  0000000003 | 0000000003 |
-                // +-------------+------------+
-
-                preg_match('/^\s*(\d+)\s+(\d+)\s*$/', $sLine, $m);
+                // Parse line as text output from MySQL CLI client. E.g.:
+                // | 000123 | 000234 |
+                preg_match('/^[\s|]*(\d+)[\s|]+(\d+)[\s|]*$/', $sLine, $m);
                 if (count($m) != 3 || !ctype_digit($m[1]) || !ctype_digit($m[2])) {
-                    lovd_errorAdd($sFormField,
-                        'Error: Malformed translation table for ' . $sIDtype . ' IDs.');
-                    break;
+                    // Line not parsable as translation, ignore it.
+                    continue;
                 }
-                $GLOBALS[$sGlobalVar][$m[1]] = $m[2];
+                $GLOBALS[$sGlobalVar][intval($m[1])] = $m[2];
             }
         }
     }
