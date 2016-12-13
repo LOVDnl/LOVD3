@@ -692,7 +692,7 @@ function lovd_getSectionOutput ($aImportSection, $aOutputHeaders, $aRecords)
     // will be duplicated when multiple input fields link to the same output.
     $aUniqueHeaders = array_unique($aOutputHeaders);
     $sOutput .= implode("\t", array_map(function ($sHeader) {
-        return '{{"' . $sHeader . '"}}';
+        return '"{{' . $sHeader . '}}"';
     }, $aUniqueHeaders)) . "\n";
 
     foreach ($aRecords as $aRecord) {
