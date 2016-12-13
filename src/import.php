@@ -1557,10 +1557,21 @@ if (POST) {
 
                 case 'Variants_On_Genome':
                     // Check variant positions.
+                    if ($aLine['position_g_start'] === '' || $aLine['position_g_end'] === '' || $aLine['type'] === '') {
+                        // Predict position and type.
+                        $aVariantPositions = lovd_getVariantInfo($aLine['VariantOnGenome/DNA']);
+                        if ($aVariantPositions) {
+                            // Always let it overwrite everything.
+                            $aLine['position_g_start'] = $aVariantPositions['position_start'];
+                            $aLine['position_g_end']   = $aVariantPositions['position_end'];
+                            $aLine['type']             = $aVariantPositions['type'];
+                        }
+                    }
                     if ($aLine['position_g_start'] > $aLine['position_g_end']) {
                         // Start position after end position, hell no.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Variant start position is larger than variant end position.');
                     }
+
                     if ($zData) {
                         if ($nDifferences) {
                             $aLine['todo'] = 'update'; // OK, update only when there are differences.
@@ -1603,9 +1614,28 @@ if (POST) {
                     }
 
                     // Check variant positions.
+                    if ($aLine['position_c_start'] === '' || $aLine['position_c_end'] === '') {
+                        // Predict position.
+                        $aVariantPositions = lovd_getVariantInfo($aLine['VariantOnTranscript/DNA']);
+                        if ($aVariantPositions) {
+                            // Always let it overwrite everything.
+                            $aLine['position_c_start'] = $aVariantPositions['position_start'];
+                            $aLine['position_c_end']   = $aVariantPositions['position_end'];
+                            // We have the intron fields only if the variant started with c. or n.
+                            if (isset($aVariantPositions['position_start_intron'])) {
+                                $aLine['position_c_start_intron'] = $aVariantPositions['position_start_intron'];
+                                $aLine['position_c_end_intron']   = $aVariantPositions['position_end_intron'];
+                            }
+                        }
+                    }
                     if ($aLine['position_c_start'] > $aLine['position_c_end']) {
                         // Start position after end position, hell no.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Variant start position is larger than variant end position.');
+                    }
+                    foreach (array('position_c_start_intron', 'position_c_end_intron') as $sCol) {
+                        if ($aLine[$sCol] === '') {
+                            $aLine[$sCol] = 0;
+                        }
                     }
 
                     if ($zData) {

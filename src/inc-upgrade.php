@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-12-07
+ * Modified    : 2016-12-13
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -464,6 +464,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-17b' =>
                      array(
                          'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN auth_token CHAR(32) AFTER password_force_change, ADD COLUMN auth_token_expires DATETIME AFTER auth_token',
+                     ),
+                 '3.0-17c' =>
+                     array(
+                         'UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start_intron = 0 WHERE position_c_start IS NOT NULL AND position_c_start_intron IS NULL',
+                         'UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_end_intron = 0 WHERE position_c_end IS NOT NULL AND position_c_end_intron IS NULL',
                      ),
                  '3.0-18' =>
                      array(

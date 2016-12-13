@@ -41,6 +41,10 @@
    importing.
  * Fixed bug; Imports could set variant start positions that were higher than
    variant end positions.
+ * When variants are imported without position fields or variant type filled in,
+   LOVD will now predict them.
+ * Fixed bug; Variants that were imported with empty intron positions, didn't
+   group together with variants that had a 0 filled in.
 
 
 /************************************
