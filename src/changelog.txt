@@ -35,6 +35,10 @@
    the Exon field.
  * When a Database administrator creates a new user, the level now selected by
    default will be Submitter instead of Manager.
+ * The variant effect columns were checked twice while submitting and importing,
+   possibly resulting in repeated error messages.
+ * Fixed bug; The variant effect fields didn't have a default value when
+   importing.
 
 
 /************************************

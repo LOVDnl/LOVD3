@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-11-15
- * For LOVD    : 3.0-17
+ * Modified    : 2016-12-13
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -994,8 +994,6 @@ if (POST) {
                 // Object has been created.
                 // We'll need to split the functional consequence field to have checkFields() function normally.
                 if ($sCurrentSection == 'Variants_On_Genome' || $sCurrentSection == 'Variants_On_Transcripts') {
-                    $aLine['effect_reported'] = substr($_SETT['var_effect_default'], 0, 1); // Default value.
-                    $aLine['effect_concluded'] = substr($_SETT['var_effect_default'], -1); // Default value.
                     if (in_array('effectid', $aColumns)) {
                         if (strlen($aLine['effectid']) != 2) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry for the \'effectid\' field.');
@@ -1003,6 +1001,11 @@ if (POST) {
                             $aLine['effect_reported'] = $aLine['effectid']{0};
                             $aLine['effect_concluded'] = $aLine['effectid']{1};
                         }
+                    } else {
+                        // Apply the default values.
+                        $aLine['effectid'] = $_SETT['var_effect_default']; // Defaults for import.
+                        $aLine['effect_reported'] = $aLine['effectid']{0}; // Defaults for checkFields().
+                        $aLine['effect_concluded'] = $aLine['effectid']{1}; // Defaults for checkFields().
                     }
                 }
 
