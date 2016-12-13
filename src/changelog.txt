@@ -39,6 +39,8 @@
    possibly resulting in repeated error messages.
  * Fixed bug; The variant effect fields didn't have a default value when
    importing.
+ * Fixed bug; Imports could set variant start positions that were higher than
+   variant end positions.
 
 
 /************************************

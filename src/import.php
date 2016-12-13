@@ -1556,6 +1556,11 @@ if (POST) {
                     break;
 
                 case 'Variants_On_Genome':
+                    // Check variant positions.
+                    if ($aLine['position_g_start'] > $aLine['position_g_end']) {
+                        // Start position after end position, hell no.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Variant start position is larger than variant end position.');
+                    }
                     if ($zData) {
                         if ($nDifferences) {
                             $aLine['todo'] = 'update'; // OK, update only when there are differences.
@@ -1595,6 +1600,12 @@ if (POST) {
                     if ($aLine['id'] && !$bVariantInFile && !$bVariantInDB) {
                         // Variant does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['variantid']) . '" does not exist in the database and is not defined in this import file.');
+                    }
+
+                    // Check variant positions.
+                    if ($aLine['position_c_start'] > $aLine['position_c_end']) {
+                        // Start position after end position, hell no.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Variant start position is larger than variant end position.');
                     }
 
                     if ($zData) {
