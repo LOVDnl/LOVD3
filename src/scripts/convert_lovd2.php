@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-12-12
+ * Modified    : 2016-12-13
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,6 +58,7 @@ $aFieldLinks = array(
     'Variant/Detection/Template' =>     array('screening',  'Screening/Template'),
     'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
     'Variant/Exon' =>                   array('vot',        'VariantOnTranscript/Exon'),
+    'Variant/Reference' =>              array('vot',        'VariantOnTranscript/Reference','lovd_convertReference'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
     'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
@@ -305,7 +306,7 @@ function lovd_convertReference ($LOVD2Reference)
 {
     // Convert LOVD2-style reference to LOVD3-style. E.g.:
     // {PMID21228398:Bell 2011} => {PMID:Bell 2011:21228398}
-    return preg_replace('/{PMID(\d+):(\w+)}/', '{PMID:\\2:\\1}', $LOVD2Reference);
+    return preg_replace('/{PMID(\d+):([^}]+)}/', '{PMID:\\2:\\1}', $LOVD2Reference);
 }
 
 
