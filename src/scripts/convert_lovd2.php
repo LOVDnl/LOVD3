@@ -1220,6 +1220,11 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
     list($aInputHeaders, $aOutputHeaders) = lovd_getHeaders($aData, $aFieldLinks,
         $aSections, $aCustomColLinks);
 
+    if ($aData === false || $aInputHeaders === false) {
+        lovd_showConversionForm($nMaxSizeLOVD, $nMaxSize);
+        return;
+    }
+
     // Parse data and get output records per section.
     list($aOut['vog'],
         $aOut['vot'],
@@ -1232,48 +1237,42 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
         $aOut['phenotype']) = lovd_parseData($aData, $zTranscript, $aFieldLinks, $aInputHeaders,
         $aOutputHeaders, $aSections, $oProgressBar);
 
-    if ($aData === false || $aInputHeaders === false) {
-        lovd_showConversionForm($nMaxSizeLOVD, $nMaxSize);
-        return;
-    } else {
-        print('<H3>Conversion log:</H3>
-        <TEXTAREA id="header_log" cols="100" rows="10" style="font-family: monospace; 
-            white-space: nowrap; overflow: scroll;">' .
-            implode("\n", $_WARNINGS) .
-        '</TEXTAREA><BR><BR>');
-    }
+    print('<H3>Conversion log:</H3>
+    <TEXTAREA id="header_log" cols="100" rows="10" style="font-family: monospace; 
+        white-space: nowrap; overflow: scroll;">' .
+        implode("\n", $_WARNINGS) .
+    '</TEXTAREA><BR><BR>');
 
     if (lovd_error()) {
         print('<B>There were fatal errors during conversion:</B>');
         lovd_errorPrint();
-    } else {
-
-        $sOutput = '### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) .
-            " ### Full data download ### To import, do not remove or alter this header ###\n" .
-            '## Filter: (gene = ' . $zTranscript['geneid'] . ")\n# charset = UTF-8\n";
-
-        foreach (array_keys($aSections) as $sSection) {
-            $sOutput .= lovd_getSectionOutput($aSections[$sSection],
-                isset($aOutputHeaders[$sSection])? $aOutputHeaders[$sSection] : array(),
-                isset($aOut[$sSection])? $aOut[$sSection] : array());
-        }
-
-        print('<H3>LOVD3 import data:</H3>
-            <TEXTAREA id="conversion_output" cols="100" rows="20" style="font-family: monospace; 
-        white-space: nowrap; overflow: scroll;">' .
-            $sOutput .
-            '</TEXTAREA><BR>
-            <BUTTON id="copybutton">Copy content to clipboard</BUTTON>
-            <SCRIPT language="JavaScript">
-                $("#copybutton").on("click", function () {
-                    $("#conversion_output").select();
-                    document.execCommand("copy");
-                });
-            </SCRIPT>');
-
-        $oProgressBar->setProgress(100);
-        $oProgressBar->setMessage('Done.');
     }
+
+    $sOutput = '### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) .
+        " ### Full data download ### To import, do not remove or alter this header ###\n" .
+        '## Filter: (gene = ' . $zTranscript['geneid'] . ")\n# charset = UTF-8\n";
+
+    foreach (array_keys($aSections) as $sSection) {
+        $sOutput .= lovd_getSectionOutput($aSections[$sSection],
+            isset($aOutputHeaders[$sSection])? $aOutputHeaders[$sSection] : array(),
+            isset($aOut[$sSection])? $aOut[$sSection] : array());
+    }
+
+    print('<H3>LOVD3 import data:</H3>
+        <TEXTAREA id="conversion_output" cols="100" rows="20" style="font-family: monospace; 
+    white-space: nowrap; overflow: scroll;">' .
+        $sOutput .
+        '</TEXTAREA><BR>
+        <BUTTON id="copybutton">Copy content to clipboard</BUTTON>
+        <SCRIPT language="JavaScript">
+            $("#copybutton").on("click", function () {
+                $("#conversion_output").select();
+                document.execCommand("copy");
+            });
+        </SCRIPT>');
+
+    $oProgressBar->setProgress(100);
+    $oProgressBar->setMessage('Done.');
 
     $_T->printFooter();
 }
