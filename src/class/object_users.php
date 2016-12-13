@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-12-09
+ * Modified    : 2016-12-13
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -539,6 +539,7 @@ class LOVD_User extends LOVD_Object {
     function setDefaultValues ()
     {
         // Sets default values of fields in $_POST.
+        $_POST['level'] = LEVEL_SUBMITTER;
         $_POST['allowed_ip'] = '*';
         $_POST['send_email'] = 1;
         return true;

@@ -33,6 +33,8 @@
  * The VariantOnTranscript/Exon field is now no longer mandatory by default,
    allowing the submission API to directly submit data, since it doesn't contain
    the Exon field.
+ * When a Database administrator creates a new user, the level now selected by
+   default will be Submitter instead of Manager.
 
 
 /************************************
