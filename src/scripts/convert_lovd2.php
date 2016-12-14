@@ -129,7 +129,8 @@ $aImportSections = array(
     'individual' => array(
         'output_header' =>          'Individuals',
         'customcol_prefix' =>       'Individual',
-        'mandatory_fields' =>       array('id' => '0', 'panel_size' => '1', 'statusid' => '')),
+        'mandatory_fields' =>       array('id' => '0', 'panel_size' => '1', 'statusid' => '',
+            'owned_by' => '0')),
     'i2d' =>        array(
         'output_header' =>          'Individuals_To_Diseases',
         'mandatory_fields' =>       array('individualid' => '0', 'diseaseid' => '0')),
@@ -879,6 +880,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                     // No curator ID was available, set submitter ID.
                     $aIndividual['edited_by'] = $sSubmitterID;
                 }
+                $aIndividual['owned_by'] = $sSubmitterID;
                 if (($nStatusIdx = array_search('ID_status_', $aInputHeaders)) !== false) {
                     $aIndividual['statusid'] = $aRecord[$nStatusIdx];
                 }
