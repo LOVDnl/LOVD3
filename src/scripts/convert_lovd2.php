@@ -533,7 +533,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             // Check if header occurs as a literal DB field.
             foreach ($aSectionIDs as $sSection) {
                 if (isset($aSections[$sSection]['db_fields'])  &&
-                    array_search($sHeader, $aSections[$sSection]['db_fields']) !== false) {
+                    in_array($sHeader, $aSections[$sSection]['db_fields'])) {
                     $aOutputHeaders[$sSection][$i] = $sHeader;
                     continue 2;
                 }
@@ -544,12 +544,13 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                 list(, $sFieldname) = explode('/', $sHeader, 2);
                 foreach ($aSectionIDs as $sSection) {
                     $aSection = $aSections[$sSection];
-                    if (isset($aSection['customcol_prefix']) &&
-                        in_array($aSection['customcol_prefix'] . $sFieldname, $aSection['db_fields'])) {
-                        // Set output header to with new LOVD3 prefix (e.g. Individual).
-                        $aOutputHeaders[$sSection][$i] = $aSection['customcol_prefix'] . '/' .
-                            $sFieldname;
-                        continue 2;
+                    if (isset($aSection['customcol_prefix'])) {
+                        $sNewFieldName = $aSection['customcol_prefix'] . '/' . $sFieldname;
+                        if (in_array($sNewFieldName, $aSection['db_fields'])) {
+                            // Set output header with new LOVD3 prefix (e.g. Individual).
+                            $aOutputHeaders[$sSection][$i] = $sNewFieldName;
+                            continue 2;
+                        }
                     }
                 }
 
@@ -559,7 +560,9 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                         list($sSection, $sPrefixOut) = $aCustomColDefault;
                         $sHeaderOut = str_replace($sPrefix, $sPrefixOut, $sHeader);
                         $aOutputHeaders[$sSection][$i] = $sHeaderOut;
-                        $_WARNINGS[] = 'Warning: linked "' . $sHeader . '" to "' . $sHeaderOut . '"';
+                        $_WARNINGS[] = 'Warning: linked "' . $sHeader . '" to non-existing ' .
+                            'column "' . $sHeaderOut . '" in output section "' .
+                            $aSections[$sSection]['output_header'] . '"';
                         continue 2;
                     }
                 }
