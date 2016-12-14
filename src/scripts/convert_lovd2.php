@@ -68,7 +68,7 @@ $aFieldLinks = array(
     'Patient/Occurrence' =>             array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
     'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
     'ID_pathogenic_' =>                 array('vog',        'effectid'),
-    'ID_status_' =>                     array('vog',        'statusid'),
+    'ID_status_' =>                     array('vog',        'statusid',                     'lovd_convertStatus'),
     'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertCuratorID'),
     'variant_created_date_' =>          array('vog',        'created_date'),
     'ID_variant_edited_by_' =>          array('vog',        'edited_by',                    'lovd_convertCuratorID'),
@@ -362,6 +362,19 @@ function lovd_convertScrTech ($sLOVD2ScreeningTechniques)
     }, explode(';', $sLOVD2ScreeningTechniques));
 
     return join(';', $aTechniques);
+}
+
+
+
+
+
+function lovd_convertStatus ($nLOVD2Status)
+{
+    // Convert LOVD2's STATUS_NEW to LOVD3's STATUS_PENDING.
+    if (ctype_digit($nLOVD2Status) && intval($nLOVD2Status) === 1) {
+        return STATUS_PENDING;
+    }
+    return $nLOVD2Status;
 }
 
 
