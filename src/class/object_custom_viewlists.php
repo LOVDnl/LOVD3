@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-12-07
+ * Modified    : 2016-12-14
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -781,17 +781,13 @@ class LOVD_CustomViewList extends LOVD_Object {
         // that can be used in the SELECT listing of an SQL query.
         // $sSelectQuery can be given as an existing SELECT clause to avoid
         // duplication of column names are already listed.
-        $aCustomColNames = array_keys($this->getCustomColsForCategory($sCategory));
-        if (count($aCustomColNames) > 0) {
-            $aNamesAggregated = array_map(function ($sName) use ($sSelectQuery) {
-                if (strpos($sName, $sSelectQuery) === false) {
-                    return 'MIN(`' . $sName . '`) AS `' . $sName . '`';
-                }
-                return '';
-            }, $aCustomColNames);
-            return join(', ', $aNamesAggregated);
+        $sSelectFields = array();
+        foreach (array_keys($this->getCustomColsForCategory($sCategory)) as $sName) {
+            if (strpos($sSelectQuery, $sName) === false) {
+                $sSelectFields[] = 'MIN(`' . $sName . '`) AS `' . $sName . '`';
+            }
         }
-        return '';
+        return join(', ', $sSelectFields);
     }
 
 
