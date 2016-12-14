@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-12-13
+ * Modified    : 2016-12-14
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -129,7 +129,7 @@ $aImportSections = array(
     'individual' => array(
         'output_header' =>          'Individuals',
         'customcol_prefix' =>       'Individual',
-        'mandatory_fields' =>       array('id' => '0', 'panel_size' => '1')),
+        'mandatory_fields' =>       array('id' => '0', 'panel_size' => '1', 'statusid' => '')),
     'i2d' =>        array(
         'output_header' =>          'Individuals_To_Diseases',
         'mandatory_fields' =>       array('individualid' => '0', 'diseaseid' => '0')),
@@ -150,7 +150,7 @@ $aImportSections = array(
         'customcol_prefix' =>       'VariantOnGenome',
         'mandatory_fields' =>       array('id' => '0', 'allele' => '0', 'chromosome' => '0',
             'position_g_start' => '0', 'position_g_end' => '0', 'type' => '?',
-            'VariantOnGenome/DNA' => 'g.?')),
+            'VariantOnGenome/DNA' => 'g.?', 'statusid' => '')),
     'vot' =>        array(
         'output_header' =>          'Variants_On_Transcripts',
         'customcol_prefix' =>       'VariantOnTranscript',
@@ -878,6 +878,9 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 if ($aIndividual['edited_by'] === false) {
                     // No curator ID was available, set submitter ID.
                     $aIndividual['edited_by'] = $sSubmitterID;
+                }
+                if (($nStatusIdx = array_search('ID_status_', $aInputHeaders)) !== false) {
+                    $aIndividual['statusid'] = $aRecord[$nStatusIdx];
                 }
                 $aIndividuals[$sLOVD2IndividualID] = $aIndividual;
 
