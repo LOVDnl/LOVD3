@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-09
- * Modified    : 2016-10-11
+ * Modified    : 2016-11-18
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -33,7 +33,12 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (empty($_GET['id']) || empty($_GET['object']) || !preg_match('/^[A-Z_]+$/i', $_GET['object'])) {
+// Get viewentry-identifying arguments from request and check their validity.
+$sObject = (isset($_REQUEST['object'])? $_REQUEST['object'] : '');
+$sObjectID = (isset($_REQUEST['object_id'])? $_REQUEST['object_id'] : '');
+$nID = (isset($_REQUEST['id'])? $_REQUEST['id'] : '');
+
+if (empty($nID) || empty($sObject) || !preg_match('/^[A-Z_]+$/i', $sObject)) {
     die(AJAX_DATA_ERROR);
 }
 
@@ -43,19 +48,26 @@ $aNeededLevel =
          array(
                 'ScreeningMOD' => 0, // LOVD+
                 'Transcript_Variant' => 0,
+                'User' => LEVEL_OWNER,
               );
 
-if (isset($aNeededLevel[$_GET['object']])) {
-    $nNeededLevel = $aNeededLevel[$_GET['object']];
+if (isset($aNeededLevel[$sObject])) {
+    $nNeededLevel = $aNeededLevel[$sObject];
 } else {
     $nNeededLevel = LEVEL_ADMIN;
 }
 
 // Call isAuthorized() on the object. NB: isAuthorized() modifies the global
 // $_AUTH for curators, owners and colleagues.
-if ($_GET['object'] == 'Transcript_Variant') {
-    list($nVariantID, $nTranscriptID) = explode(',', $_GET['id']);
+if ($sObject == 'Transcript_Variant') {
+    list($nVariantID, $nTranscriptID) = explode(',', $nID);
     lovd_isAuthorized('variant', $nVariantID);
+} elseif ($sObject == 'User') {
+    lovd_isAuthorized(strtolower($sObject), $nID);
+    // Users viewing their own profile should see a lot more...
+    if ($_AUTH['id'] == $nID && $_AUTH['level'] < LEVEL_CURATOR) {
+        $_AUTH['level'] = LEVEL_CURATOR;
+    }
 }
 // FIXME; other lovd_isAuthorized() calls?
 
@@ -69,9 +81,9 @@ if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
     die(AJAX_NO_AUTH);
 }
 
-$sFile = ROOT_PATH . 'class/object_' . strtolower($_GET['object']) . 's.php';
+$sFile = ROOT_PATH . 'class/object_' . strtolower($sObject) . 's.php';
 // Exception for LOVD+.
-if (LOVD_plus && substr($_GET['object'], -3) == 'MOD') {
+if (LOVD_plus && substr($sObject, -3) == 'MOD') {
     $sFile = str_replace('mods.', 's.mod.', $sFile);
 }
 
@@ -82,25 +94,16 @@ if (!file_exists($sFile)) {
 
 
 
-$sObjectID = '';
-$nID = '';
-if (in_array($_GET['object'], array('Phenotype', 'Transcript_Variant', 'Custom_ViewList', 'ScreeningMOD'))) {
-    if (isset($_GET['object_id'])) {
-        $sObjectID = $_GET['object_id'];
-    }
-    if (isset($_GET['id'])) {
-        $nID = $_GET['id'];
-    }
-
+if (in_array($sObject, array('Phenotype', 'Transcript_Variant', 'Custom_ViewList'))) {
     // Exception for VOT viewEntry, we need to isolate the gene from the ID to correctly pass this to the data object.
-    if ($_GET['object'] == 'Transcript_Variant') {
+    if ($sObject == 'Transcript_Variant') {
         // This line below is redundant as long as it's also called at the lovd_isAuthorized() call. Remove it here maybe...?
         list($nVariantID, $nTranscriptID) = explode(',', $nID);
         $sObjectID = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscriptID))->fetchColumn();
     }
 }
 require $sFile;
-$_GET['object'] = 'LOVD_' . str_replace('_', '', $_GET['object']); // FIXME; test dit op een windows, test case-insensitivity.
-$_DATA = new $_GET['object']($sObjectID);
+$sObjectClassName = 'LOVD_' . str_replace('_', '', $sObject);
+$_DATA = new $sObjectClassName($sObjectID);
 $_DATA->viewEntry($nID);
 ?>

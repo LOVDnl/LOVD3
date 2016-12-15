@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-10-14
+ * Modified    : 2016-12-07
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -484,6 +484,109 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
+function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
+{
+    // Parses the variant, and returns position fields (2 for genomic variants,
+    //  4 for cDNA variants) and variant type.
+    // This function is basically a local method that's trying to replace the
+    //  MappingInfo feature of Mutalyzer.
+    // $sVariant contains the HGVS nomenclature of the variant.
+    // $sTranscriptID contains the internal ID or NCBI ID of the transcript that
+    //  this variant is on, and is only needed for processing 3' UTR variants,
+    //  like c.*10del, since we'll need to have the CDS stop value for that.
+
+    static $aTranscriptOffsets = array();
+    $aResponse = array(
+        'position_start' => 0,
+        'position_end' => 0,
+        'type' => '',
+    );
+
+    // Isolate the position(s) from the variant. We don't support combined variants.
+    // We're not super picky, and would therefore approve of c.1_2A>C; we also
+    //  don't check for the end of the variant, it may contain bases, or not.
+    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+        //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
+        //                       2 = Start position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.*10del).
+        //                                   3 = Start position intronic offset, if available.
+        //                                                        4 = End position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.300_*10del).
+        //                                                                    5 = End position intronic offset, if available.
+        //                                                                                       6 = The variant, which we'll use to determine the type.
+        global $_DB;
+
+        list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant) = $aRegs;
+        if ($sPrefix != 'c' && $sPrefix != 'n') {
+            if ($sStartPositionIntron || $sEndPositionIntron) {
+                // Anything not c. or n. is regarded genomic, having a max of 2 positions.
+                // Found more positions? Return false.
+                return false;
+            } elseif (!ctype_digit($sStartPosition) || ($sEndPosition && !ctype_digit($sEndPosition))) {
+                // Non-numeric first character of the main positions is also impossible for genomic variants.
+                return false;
+            }
+        }
+
+        // Convert 3' UTR notations into normal notations.
+        if ($sStartPosition{0} == '*' || ($sEndPosition && $sEndPosition{0} == '*')) {
+            // Check if a transcript ID has been provided.
+            if (!$sTranscriptID) {
+                // No, but we'll need it.
+                return false;
+            }
+
+            // Check if we already know this transcript.
+            if (!isset($aTranscriptOffsets[$sTranscriptID])) {
+                $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
+                    array($sTranscriptID, $sTranscriptID))->fetchColumn();
+                if (!$aTranscriptOffsets[$sTranscriptID]) {
+                    // Transcript not configured correctly.
+                    return false;
+                }
+            }
+
+            // Translate positions.
+            if ($sStartPosition{0} == '*') {
+                $sStartPosition = substr($sStartPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+            }
+            if ($sEndPosition && $sEndPosition{0} == '*') {
+                $sEndPosition = substr($sEndPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+            }
+        }
+
+        // Store positions.
+        $aResponse['position_start'] = $sStartPosition;
+        $aResponse['position_end'] = ($sEndPosition? $sEndPosition : $sStartPosition);
+
+        // And intronic, if needed.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            // Interpret ? positions as intronic position 1, which is more correct than 0,
+            // which makes them look like exonic variants and may also result in different variants.
+            // Simplest to just do a str_replace().
+            $sStartPositionIntron = str_replace('?', '1', $sStartPositionIntron);
+            $sEndPositionIntron = str_replace('?', '1', $sEndPositionIntron);
+
+            $aResponse['position_start_intron'] = (int) $sStartPositionIntron;
+            $aResponse['position_end_intron'] = (int) ($sEndPositionIntron? $sEndPositionIntron : $sStartPositionIntron);
+        }
+
+        // Variant type.
+        if (preg_match('/^[ACGT]>[ACGT]$/', $sVariant)) {
+            $aResponse['type'] = 'subst';
+        } else {
+            $aResponse['type'] = $sVariant;
+        }
+
+    } else {
+        return false;
+    }
+
+    return $aResponse;
+}
+
+
+
+
+
 function lovd_getProjectFile ()
 {
     // Gets project file name (file name including possible project subdirectory).
@@ -570,7 +673,10 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         } else {
             // If viewing himself, always get authorization.
             if ($Data == $_AUTH['id']) {
-                return 1; // FIXME: We're not supporting $bSetUserLevel at the moment (not required right now, either).
+                if ($bSetUserLevel && $_AUTH['level'] < LEVEL_OWNER) {
+                    $_AUTH['level'] = LEVEL_OWNER;
+                }
+                return 1;
             } elseif ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Lower than managers never get access to hidden data of other users.
                 return false;
@@ -936,6 +1042,21 @@ function lovd_parseConfigFile($sConfigFile)
                             'required' => true,
                             'default'  => 'lovd',
                             'pattern'  => '/^[A-Z0-9_]+$/i',
+                        ),
+                ),
+            'paths' =>
+                array(
+                    'data_files' =>
+                        array(
+                            'required' => LOVD_plus,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
+                        ),
+                    'data_files_archive' =>
+                        array(
+                            'required' => false,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
                         ),
                 ),
         );
@@ -1535,31 +1656,6 @@ function lovd_validateIP ($sRange, $sIP)
 
 
 
-/*
-DMD_SPECIFIC
-function lovd_variantToPosition ($sVariant)
-{
-    // 2009-09-28; 2.0-22; Added function for API.
-    // Calculates the variant's position based on the variant description.
-    // Outputs c. positions with c. variants and g. positions with g.variants.
-
-    // Remove first character(s) after c./g. which are: [(?
-    $sPosition = preg_replace('/^(c\.|g\.)([[(?]*)/', "$1", $sVariant);
-    $sPosition = preg_replace('/^((c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?).*//*', "$1", $sPosition); ///////// CHANGED TEMPORARILY ADDED /*
-
-    // Final check; does it conform to our output?
-    if (!preg_match('/^(c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?$/', $sPosition)) {
-        $sPosition = '';
-    }
-
-    return $sPosition;
-}
-*/
-
-
-
-
-
 function lovd_verifyPassword ($sPassword, $sOriHash)
 {
     // Verifies a password given a certain hash. This hash is usually taken from
@@ -1583,7 +1679,7 @@ function lovd_verifyPassword ($sPassword, $sOriHash)
 
 
 
-function lovd_writeLog ($sLog, $sEvent, $sMessage)
+function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Writes timestamps and messages to given log in the database.
@@ -1599,7 +1695,8 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
     $sTime = substr($aTime[0], 2, -2);
 
     // Insert new line in logs table.
-    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage), false);
+    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
+        array($sLog, $sTime, ($nAuthID? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 

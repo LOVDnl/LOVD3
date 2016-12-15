@@ -38,3 +38,19 @@ database =
 # Please use alphanumeric characters only. Defaults to 'lovd'.
 #
 table_prefix = lovd
+
+
+
+[paths]
+
+# The following path is used by the LOVD API to write files to that are to be
+# imported automatically. Other processes can also store files there that are
+# to be imported. This setting is optional.
+# If filled in, make sure the directory is readable and writable for the user
+# running the webserver.
+# Preferably, use a directory outside of the document root, or otherwise block
+# the directory from being read directly by the webserver.
+data_files =
+
+# The following path is where LOVD will write automatically imported files to.
+data_files_archive =
