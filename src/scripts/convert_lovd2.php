@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-12-14
+ * Modified    : 2016-12-15
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,19 +130,23 @@ $aImportSections = array(
         'output_header' =>          'Individuals',
         'customcol_prefix' =>       'Individual',
         'mandatory_fields' =>       array('id' => '0', 'panel_size' => '1', 'statusid' => '',
-            'owned_by' => '0')),
+            'owned_by' => '0', 'created_by' => '0', 'created_date' => '0', 'edited_by' => '0',
+            'edited_date' => '0')),
     'i2d' =>        array(
         'output_header' =>          'Individuals_To_Diseases',
         'mandatory_fields' =>       array('individualid' => '0', 'diseaseid' => '0')),
     'phenotype' =>  array(
         'output_header' =>          'Phenotypes',
         'customcol_prefix' =>       'Phenotype',
-        'mandatory_fields' =>       array('id' => '0', 'diseaseid' => '0', 'individualid' => '0')),
+        'mandatory_fields' =>       array('id' => '0', 'diseaseid' => '0', 'individualid' => '0',
+            'statusid' => '', 'owned_by' => '0', 'created_by' => '0', 'created_date' => '0',
+            'edited_by' => '0', 'edited_date' => '0')),
     'screening' =>  array(
         'output_header' =>          'Screenings',
         'customcol_prefix' =>       'Screening',
         'mandatory_fields' =>       array('id' => '0', 'individualid' => '0',
-            'Screening/Template' => '?', 'Screening/Technique' => '?')),
+            'Screening/Template' => '?', 'Screening/Technique' => '?', 'owned_by' => '0',
+            'created_by' => '0', 'created_date' => '0', 'edited_by' => '0', 'edited_date' => '0')),
     's2g' =>        array(
         'output_header' =>          'Screenings_To_Genes',
         'mandatory_fields' =>       array('screeningid' => '0', 'geneid' => '0')),
@@ -908,6 +912,11 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 $nScreeningID = lovd_autoIncScreeningID();
                 $aScreening['id'] = $nScreeningID;
                 $aScreening['individualid'] = $aIndividual['id'];
+                $aScreening['owned_by'] = $aIndividual['owned_by'];
+                $aScreening['created_by'] = $aIndividual['created_by'];
+                $aScreening['created_date'] = $aIndividual['created_date'];
+                $aScreening['edited_by'] = $aIndividual['edited_by'];
+                $aScreening['edited_date'] = $aIndividual['edited_date'];
                 $aScreenings[$sLOVD2IndividualID] = $aScreening;
 
                 // Create screening2gene record.
@@ -917,19 +926,20 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 // Create phenotype record.
                 $aPhenotype = lovd_getRecordForHeaders($aOutputHeaders['phenotype'], $aRecord,
                     $aSections['phenotype']);
-                $bEmptyPheno = true;
-                foreach ($aPhenotype as $k => $v) {
-                    $bEmptyPheno = $bEmptyPheno &&
-                        (in_array($k, array('id', 'diseaseid', 'individualid')) || empty($v));
+                // Skip phenotype because there is no data in phenotype
+                // record except for ID fields.
+                $aPhenotype['id'] = lovd_autoIncPhenotypeID();
+                $aPhenotype['diseaseid'] = $aDisease['id'];
+                $aPhenotype['individualid'] = $aIndividual['id'];
+                if (($nStatusIdx = array_search('ID_status_', $aInputHeaders)) !== false) {
+                    $aPhenotype['statusid'] = $aRecord[$nStatusIdx];
                 }
-                if (!$bEmptyPheno) {
-                    // Skip phenotype because there is no data in phenotype
-                    // record except for ID fields.
-                    $aPhenotype['id'] = lovd_autoIncPhenotypeID();
-                    $aPhenotype['diseaseid'] = $aDisease['id'];
-                    $aPhenotype['individualid'] = $aIndividual['id'];
-                    $aPhenotypes[$sLOVD2IndividualID] = $aPhenotype;
-                }
+                $aPhenotype['owned_by'] = $aIndividual['owned_by'];
+                $aPhenotype['created_by'] = $aIndividual['created_by'];
+                $aPhenotype['created_date'] = $aIndividual['created_date'];
+                $aPhenotype['edited_by'] = $aIndividual['edited_by'];
+                $aPhenotype['edited_date'] = $aIndividual['edited_date'];
+                $aPhenotypes[$sLOVD2IndividualID] = $aPhenotype;
 
                 // Create individuals2diseases record.
                 $aIndividuals2Disease = lovd_getRecordForHeaders($aOutputHeaders['i2d'], $aRecord);
