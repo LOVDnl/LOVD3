@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2014-03-03
- * For LOVD    : 3.0-10
+ * Modified    : 2016-12-05
+ * For LOVD    : 3.0-18
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -30,7 +30,8 @@
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -157,12 +158,12 @@ if ($sDataType == 'variants') {
                 }
             }
             $bQueryPMID = ($nPMID && count($aPMIDCols));
-            $sQ = 'SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type, vot.`VariantOnTranscript/DNA`
+            $sQ = 'SELECT LEAST(MAX(vog.position_g_start), MAX(vog.position_g_end)), GREATEST(MAX(vog.position_g_start), MAX(vog.position_g_end)), MIN(vog.type) AS type, MIN(vot.`VariantOnTranscript/DNA`) AS `VariantOnTranscript/DNA`
                    FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
                    (!$bJoinWithPatient? '' : ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ') . '
                    WHERE t.geneid = "' . $sSymbol . '" AND vog.statusid >= ' . STATUS_MARKED . ' AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
                    (!$bQueryPMID? '' : ' AND (`' . implode('` LIKE "%:' . $nPMID . '}%" OR `', $aPMIDCols) . '` LIKE "%:' . $nPMID . '}%") ') . '
-                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY vog.position_g_start, vog.position_g_end';
+                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY MAX(vog.position_g_start), MAX(vog.position_g_end)';
         } else {
             // Not mappable!
             header('HTTP/1.0 503 Service Unavailable');
@@ -171,7 +172,7 @@ if ($sDataType == 'variants') {
 
     } else {
         // First build query.
-        $sQ = 'SELECT vog.id, vot.position_c_start, vot.position_c_start_intron, vot.position_c_end, vot.position_c_end_intron, vog.position_g_start, vog.position_g_end, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times
+        $sQ = 'SELECT MIN(vog.id) AS id, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MAX(vog.position_g_start) AS position_g_start, MAX(vog.position_g_end) AS position_g_end, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times
                FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                WHERE vot.transcriptid = ' . $nRefSeqID . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
@@ -238,7 +239,7 @@ if ($sDataType == 'variants') {
         } else {
             $sQ .= ' GROUP BY vog.id';
         }
-        $sQ .= ' ORDER BY vog.position_g_start, vog.position_g_end, `VariantOnGenome/DNA`';
+        $sQ .= ' ORDER BY MAX(vog.position_g_start), MAX(vog.position_g_end), MIN(`VariantOnGenome/DNA`)';
     }
 
 
@@ -246,7 +247,7 @@ if ($sDataType == 'variants') {
 } elseif ($sDataType == 'genes') {
     // Listing or simple request on gene symbol.
     // First build query.
-    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (t.position_g_mrna_start < t.position_g_mrna_end) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi) AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ", ") AS curators
+    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi) AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ", ") AS curators
            FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id) LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
            WHERE 1=1';
 
