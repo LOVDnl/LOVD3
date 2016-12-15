@@ -155,7 +155,8 @@ $aImportSections = array(
         'customcol_prefix' =>       'VariantOnGenome',
         'mandatory_fields' =>       array('id' => '0', 'allele' => '0', 'chromosome' => '0',
             'position_g_start' => '0', 'position_g_end' => '0', 'type' => '?',
-            'VariantOnGenome/DNA' => 'g.?', 'statusid' => '')),
+            'VariantOnGenome/DNA' => 'g.?', 'statusid' => '', 'owned_by' => '0',
+            'created_by' => '0', 'created_date' => '0', 'edited_by' => '0', 'edited_date' => '0')),
     'vot' =>        array(
         'output_header' =>          'Variants_On_Transcripts',
         'customcol_prefix' =>       'VariantOnTranscript',

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-12-12
+ * Modified    : 2016-12-15
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -214,24 +214,6 @@ function lovd_setEmptyCheckboxFields ($aForm)
                 lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
             }
         }
-    }
-}
-
-
-
-
-
-function utf8_encode_array ($Data)
-{
-    // Recursively loop array to encode values.
-
-    if (!is_array($Data)) {
-        return utf8_encode($Data);
-    } else {
-        foreach ($Data as $key => $val) {
-            $Data[$key] = utf8_encode_array($val);
-        }
-        return $Data;
     }
 }
 
