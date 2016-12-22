@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-11-15
- * For LOVD    : 3.0-17
+ * Modified    : 2016-12-13
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -994,8 +994,6 @@ if (POST) {
                 // Object has been created.
                 // We'll need to split the functional consequence field to have checkFields() function normally.
                 if ($sCurrentSection == 'Variants_On_Genome' || $sCurrentSection == 'Variants_On_Transcripts') {
-                    $aLine['effect_reported'] = substr($_SETT['var_effect_default'], 0, 1); // Default value.
-                    $aLine['effect_concluded'] = substr($_SETT['var_effect_default'], -1); // Default value.
                     if (in_array('effectid', $aColumns)) {
                         if (strlen($aLine['effectid']) != 2) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Please select a valid entry for the \'effectid\' field.');
@@ -1003,6 +1001,11 @@ if (POST) {
                             $aLine['effect_reported'] = $aLine['effectid']{0};
                             $aLine['effect_concluded'] = $aLine['effectid']{1};
                         }
+                    } else {
+                        // Apply the default values.
+                        $aLine['effectid'] = $_SETT['var_effect_default']; // Defaults for import.
+                        $aLine['effect_reported'] = $aLine['effectid']{0}; // Defaults for checkFields().
+                        $aLine['effect_concluded'] = $aLine['effectid']{1}; // Defaults for checkFields().
                     }
                 }
 
@@ -1553,6 +1556,22 @@ if (POST) {
                     break;
 
                 case 'Variants_On_Genome':
+                    // Check variant positions.
+                    if ($aLine['position_g_start'] === '' || $aLine['position_g_end'] === '' || $aLine['type'] === '') {
+                        // Predict position and type.
+                        $aVariantPositions = lovd_getVariantInfo($aLine['VariantOnGenome/DNA']);
+                        if ($aVariantPositions) {
+                            // Always let it overwrite everything.
+                            $aLine['position_g_start'] = $aVariantPositions['position_start'];
+                            $aLine['position_g_end']   = $aVariantPositions['position_end'];
+                            $aLine['type']             = $aVariantPositions['type'];
+                        }
+                    }
+                    if ($aLine['position_g_start'] > $aLine['position_g_end']) {
+                        // Start position after end position, hell no.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Variant start position is larger than variant end position.');
+                    }
+
                     if ($zData) {
                         if ($nDifferences) {
                             $aLine['todo'] = 'update'; // OK, update only when there are differences.
@@ -1592,6 +1611,31 @@ if (POST) {
                     if ($aLine['id'] && !$bVariantInFile && !$bVariantInDB) {
                         // Variant does not exist and is not defined in the import file.
                         lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Genomic Variant "' . htmlspecialchars($aLine['variantid']) . '" does not exist in the database and is not defined in this import file.');
+                    }
+
+                    // Check variant positions.
+                    if ($aLine['position_c_start'] === '' || $aLine['position_c_end'] === '') {
+                        // Predict position.
+                        $aVariantPositions = lovd_getVariantInfo($aLine['VariantOnTranscript/DNA']);
+                        if ($aVariantPositions) {
+                            // Always let it overwrite everything.
+                            $aLine['position_c_start'] = $aVariantPositions['position_start'];
+                            $aLine['position_c_end']   = $aVariantPositions['position_end'];
+                            // We have the intron fields only if the variant started with c. or n.
+                            if (isset($aVariantPositions['position_start_intron'])) {
+                                $aLine['position_c_start_intron'] = $aVariantPositions['position_start_intron'];
+                                $aLine['position_c_end_intron']   = $aVariantPositions['position_end_intron'];
+                            }
+                        }
+                    }
+                    if ($aLine['position_c_start'] > $aLine['position_c_end']) {
+                        // Start position after end position, hell no.
+                        lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Variant start position is larger than variant end position.');
+                    }
+                    foreach (array('position_c_start_intron', 'position_c_end_intron') as $sCol) {
+                        if ($aLine[$sCol] === '') {
+                            $aLine[$sCol] = 0;
+                        }
                     }
 
                     if ($zData) {
