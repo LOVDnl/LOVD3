@@ -47,17 +47,12 @@ $_WARNINGS = array();
 // Conversion_function is an optional name of a function taking a LOVD2 field
 // value as a string as argument and returning LOVD3 field value as a string.
 $aFieldLinks = array(
-    'Variant/DNA' =>                    array('vot',        'VariantOnTranscript/DNA'),
-    'Variant/RNA' =>                    array('vot',        'VariantOnTranscript/RNA'),
-    'Variant/Protein' =>                array('vot',        'VariantOnTranscript/Protein'),
     // This field maps to either VOT/Published_as or VOG/Published_as (handled later specifically).
     'Variant/DNA_published' =>          array('vot',        'VariantOnTranscript/Published_as'),
     'Variant/DBID' =>                   array('vog',        'VariantOnGenome/DBID',         'lovd_convertDBID'),
     'Variant/Restriction_site' =>       array('vog',        'VariantOnGenome/Restriction_site'),
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
-    'Variant/Detection/Template' =>     array('screening',  'Screening/Template'),
     'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
-    'Variant/Exon' =>                   array('vot',        'VariantOnTranscript/Exon'),
     'Variant/Reference' =>              array('vot',        'VariantOnTranscript/Reference','lovd_convertReference'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
