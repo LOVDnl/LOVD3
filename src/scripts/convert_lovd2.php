@@ -131,8 +131,8 @@ $aImportSections = array(
         'output_header' =>          'Individuals',
         'customcol_prefix' =>       'Individual',
         'mandatory_fields' =>       array('id' => '0', 'panel_size' => '1', 'statusid' => '',
-            'owned_by' => '0', 'created_by' => '0', 'created_date' => '0', 'edited_by' => '0',
-            'edited_date' => '0')),
+            'owned_by' => '0', 'created_by' => '0', 'created_date' => '', 'edited_by' => '',
+            'edited_date' => '')),
     'i2d' =>        array(
         'output_header' =>          'Individuals_To_Diseases',
         'mandatory_fields' =>       array('individualid' => '0', 'diseaseid' => '0')),
@@ -140,24 +140,24 @@ $aImportSections = array(
         'output_header' =>          'Phenotypes',
         'customcol_prefix' =>       'Phenotype',
         'mandatory_fields' =>       array('id' => '0', 'diseaseid' => '0', 'individualid' => '0',
-            'statusid' => '', 'owned_by' => '0', 'created_by' => '0', 'created_date' => '0',
-            'edited_by' => '0', 'edited_date' => '0')),
+            'statusid' => '', 'owned_by' => '0', 'created_by' => '0', 'created_date' => '',
+            'edited_by' => '', 'edited_date' => '')),
     'screening' =>  array(
         'output_header' =>          'Screenings',
         'customcol_prefix' =>       'Screening',
         'mandatory_fields' =>       array('id' => '0', 'individualid' => '0',
             'Screening/Template' => '?', 'Screening/Technique' => '?', 'owned_by' => '0',
-            'created_by' => '0', 'created_date' => '0', 'edited_by' => '0', 'edited_date' => '0')),
+            'created_by' => '0', 'created_date' => '', 'edited_by' => '', 'edited_date' => '')),
     's2g' =>        array(
         'output_header' =>          'Screenings_To_Genes',
-        'mandatory_fields' =>       array('screeningid' => '0', 'geneid' => '0')),
+        'mandatory_fields' =>       array('screeningid' => '0', 'geneid' => '')),
     'vog' =>        array(
         'output_header' =>          'Variants_On_Genome',
         'customcol_prefix' =>       'VariantOnGenome',
         'mandatory_fields' =>       array('id' => '0', 'allele' => '0', 'chromosome' => '0',
             'position_g_start' => '0', 'position_g_end' => '0', 'type' => '?',
             'VariantOnGenome/DNA' => 'g.?', 'statusid' => '', 'owned_by' => '0',
-            'created_by' => '0', 'created_date' => '0', 'edited_by' => '0', 'edited_date' => '0')),
+            'created_by' => '0', 'created_date' => '', 'edited_by' => '', 'edited_date' => '')),
     'vot' =>        array(
         'output_header' =>          'Variants_On_Transcripts',
         'customcol_prefix' =>       'VariantOnTranscript',
@@ -314,8 +314,6 @@ function lovd_convertInheritance ($sLOVD2Occurrence)
     // Individual/Inheritance.
     if (strcasecmp($sLOVD2Occurrence, 'Sporadic') === 0) {
         return 'Isolated (sporadic)';
-    } elseif (strcasecmp($sLOVD2Occurrence, 'Familial') === 0) {
-        return 'Familial';
     }
     // Don't lose data. If it's something we don't recognize, just return the
     //  original value.
@@ -332,8 +330,6 @@ function lovd_convertOrigin ($sLOVD2MutationOrigin)
     // 'Individual/Genetic_origin'.
     if (strcasecmp($sLOVD2MutationOrigin, 'Inherited') === 0) {
         return 'Germline';
-    } elseif (strcasecmp($sLOVD2MutationOrigin, 'De novo') === 0) {
-        return 'De novo';
     }
     // Don't lose data. If it's something we don't recognize, just return the
     //  original value.
@@ -821,11 +817,6 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
     $aScreening2Variants = array();
     $aPhenotypes = array();
 
-    // Array for storing unique variant_id/patient_id combinations as key. This
-    // is used to find homozygous variants as they will occur twice in the
-    // LOVD2 export file with identical variant_id/patient_id.
-    $aUniqueRecords = array();
-
     $nCounter = 0;
     foreach ($aData as $i => $sLine) {
         // Set progress bar (leave 1 percent for output generation).
@@ -861,14 +852,14 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         // (homozygous).
         $sRecordID = $aInputRecord[array_search('ID_variantid_', $aInputHeaders)] . '_' .
                      $aInputRecord[array_search('ID_patientid_', $aInputHeaders)];
-        if (isset($aUniqueRecords[$sRecordID])) {
+        // Check if we already know this variant_id/patient_id combination. This
+        //  is done to find homozygous variants as they will occur twice in the
+        //  LOVD2 export file with identical variant_id/patient_id.
+        if (isset($aVOGRecords[$sRecordID])) {
             // Combination variant_id/patient_id already seen, set previous
             // record allele field to 3 (homozygous). Skip this record.
             $aVOGRecords[$sRecordID]['allele'] = 3;
             continue;
-        } else {
-            // Store current variant/patient combination for future reference.
-            $aUniqueRecords[$sRecordID] = 1;
         }
 
         // Get submitter ID.
