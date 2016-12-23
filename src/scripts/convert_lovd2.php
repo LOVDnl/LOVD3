@@ -355,9 +355,8 @@ function lovd_convertScrTech ($sLOVD2ScreeningTechniques)
 {
     // Convert LOVD2's 'Patient/Detection/Technique' to LOVD3's
     // 'Screening/Technique'.
-    global $aScreeningTechniques;
 
-    $aTechniques = array_map(function ($sTechnique) use ($aScreeningTechniques) {
+    $aTechniques = array_map(function ($sTechnique) {
         if ($sTechnique == 'mPCR') {
             return 'PCRm';
         }
@@ -975,7 +974,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $sVariant = $aRecord[$nHGVSIdx];
         $aMappingInfoArgs = array(
             'LOVD_ver' => $_SETT['system']['version'],
-            'build' => 'hg19',
+            'build' => $_CONF['refseq_build'],
             'accNo' => $zTranscript['id_ncbi'],
             'variant' => $sVariant);
         $sMappingURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']);
@@ -1068,15 +1067,16 @@ function lovd_setUserIDSettings ($sFixedSubmitterIDInput, $sSubmitterTranslation
     );
 
     foreach ($aTranslationInfos as $aTranslationInfo) {
-        list( , , $sGlobalVar, $sInput) = $aTranslationInfo;
+        list($sIDtype, $sFormField, $sGlobalVar, $sInput) = $aTranslationInfo;
         foreach (explode("\n", $sInput) as $sLine) {
             $sLineClean = trim($sLine);
             if (!empty($sLineClean)) {
                 // Parse line as text output from MySQL CLI client. E.g.:
                 // | 000123 | 000234 |
-                preg_match('/^[\s|]*(\d+)[\s|]+(\d+)[\s|]*$/', $sLine, $m);
+                preg_match('/^[\s|]*(\d+)[\s|]+(\d+)[\s|]*$/', $sLineClean, $m);
                 if (count($m) != 3 || !ctype_digit($m[1]) || !ctype_digit($m[2])) {
                     // Line not parsable as translation, ignore it.
+                    lovd_errorAdd($sFormField, 'Error: ' . $sIDtype . ' ID translation table contains unparsable line: ' . htmlspecialchars($sLine) . '.');
                     continue;
                 }
                 $GLOBALS[$sGlobalVar][intval($m[1])] = $m[2];
