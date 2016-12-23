@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-12-15
+ * Modified    : 2016-12-23
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -109,6 +109,7 @@ $aCustomColLinks = array(
 // mandatory_fields:    Array of mandatory fields as keys, and default values
 //                      as values.
 // table:               Database table corresponding to the section.
+// comments:            Comments to be stored in the import file.
 $aImportSections = array(
     'column' =>     array(
         'output_header' =>          'Columns'),
@@ -170,6 +171,7 @@ $aImportSections = array(
 );
 
 
+
 // Default user ID with which to overwrite user IDs in the input file. Used by
 // lovd_convertSubmitterID() and lovd_convertCuratorID().
 $sFixedSubmitterID = null;
@@ -179,6 +181,8 @@ $sFixedCuratorID = null;
 // lovd_convertSubmitterID() and lovd_convertCuratorID().
 $aSubmitterTranslationTable = array();
 $aCuratorTranslationTable = array();
+
+
 
 
 
@@ -244,16 +248,16 @@ function lovd_convertCuratorID ($nLOVD2UserID)
     // are defined in the upload form.
     global $sFixedCuratorID, $aCuratorTranslationTable, $_WARNINGS;
 
-    $LOVD2UserIDClean = intval($nLOVD2UserID);
+    $nLOVD2UserIDClean = intval($nLOVD2UserID);
     // Convert curator ID.
-    if ($LOVD2UserIDClean === 0) {
+    if ($nLOVD2UserIDClean === 0) {
         // '0' in LOVD2 export means the submitter ID should be used.
         // Return false.
         return false;
     }
-    if (isset($aCuratorTranslationTable[$LOVD2UserIDClean])) {
+    if (isset($aCuratorTranslationTable[$nLOVD2UserIDClean])) {
         // Found match in translation table.
-        return $aCuratorTranslationTable[$LOVD2UserIDClean];
+        return $aCuratorTranslationTable[$nLOVD2UserIDClean];
     }
     if (!is_null($sFixedCuratorID)) {
         // Default to fixed user ID.
@@ -393,11 +397,11 @@ function lovd_convertSubmitterID ($nLOVD2UserID)
     // are defined in the upload form.
     global $sFixedSubmitterID, $aSubmitterTranslationTable, $_WARNINGS;
 
-    $LOVD2UserIDClean = intval($nLOVD2UserID);
+    $nLOVD2UserIDClean = intval($nLOVD2UserID);
     // Convert curator ID.
-    if (isset($aSubmitterTranslationTable[$LOVD2UserIDClean])) {
+    if (isset($aSubmitterTranslationTable[$nLOVD2UserIDClean])) {
         // Found match in translation table.
-        return $aSubmitterTranslationTable[$LOVD2UserIDClean];
+        return $aSubmitterTranslationTable[$nLOVD2UserIDClean];
     }
     if (!is_null($sFixedSubmitterID)) {
         // Default to fixed user ID.
@@ -428,14 +432,14 @@ function lovd_getDiseaseID ($sDiseaseName)
 
     $bNewDisease = false;
     if (!isset($aKnownDiseases[$sDiseaseName])) {
-        $zDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
+        $qDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
             array($sDiseaseName, $sDiseaseName));
-        $aDiseases = $zDiseases->fetchAllAssoc();
-        if (!$aDiseases) {
+        $zDiseases = $qDiseases->fetchAllAssoc();
+        if (!$zDiseases) {
             // Not in database: create new unique disease ID.
             $aKnownDiseases[$sDiseaseName] = lovd_getInc('Diseases');
             $bNewDisease = true;
-        } elseif (count($aDiseases) > 1) {
+        } elseif (count($zDiseases) > 1) {
             // Multiple hits in database.
             lovd_errorAdd('LOVD2_export', 'Error: disease name "' . $sDiseaseName .
                 '" is ambiguous, it matches name or symbol for more than one disease in the ' .
@@ -443,7 +447,7 @@ function lovd_getDiseaseID ($sDiseaseName)
             return array(false, false);
         } else {
             // Exactly one hit in database.
-            $aKnownDiseases[$sDiseaseName] = $aDiseases[0]['id'];
+            $aKnownDiseases[$sDiseaseName] = $zDiseases[0]['id'];
         }
     }
     return array($aKnownDiseases[$sDiseaseName], $bNewDisease);
@@ -455,8 +459,10 @@ function lovd_getDiseaseID ($sDiseaseName)
 
 function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 {
-    // Returns three arrays, the first two are headers for the input and output
-    // records respectively, the third array contains warning messages. The
+    // Parse the file, read the headers, map columns to its LOVD3 counterparts,
+    //  add mandatory fields and prepare output columns.
+    // Returns an array with two array values; the input and output records
+    //  respectively. Warning messages are stored in $_WARNINGS. The
     // first array contains the names as defined in the header of the input
     // file. The second array contains per section field names for the output
     // file (the LOVD3 import format).
@@ -470,10 +476,10 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
         return array(false, false);
     }
 
-    // Walk through lines until header is found.
+    // Walk through lines until header is found, then parse the header.
     foreach ($aData as $i => $sLine) {
         $sLine = trim($sLine);
-        if (empty($sLine) || $sLine[0] == "#") {
+        if (empty($sLine) || $sLine{0} == '#') {
             // Ignore blank lines and comments.
             continue;
         }
@@ -506,7 +512,6 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
         // section as defined in $aImportSections, i is the index of the input
         // header and outHeader is the name of the column in the output.
         for ($i = 0; $i < count($aMatches[1]); $i++) {
-
             $aSectionIDs = array_keys($aSections);
 
             // Check if field is manually linked in $aFieldLinks.
@@ -583,7 +588,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             $aOutputHeaders['vot']['effectid'] = 'effectid';
         }
 
-        // Output header post processing
+        // Output header post processing.
         foreach ($aSections as $sSection => $aImportSection) {
             // Add mandatory fields.
             if (isset($aImportSection['mandatory_fields'])) {
@@ -700,9 +705,9 @@ function lovd_getSectionOutput ($aImportSection, $aOutputHeaders, $aRecords)
 {
     // Generate LOVD3 import data format from converted LOVD2 records.
 
-    $sOutput = "\n" . '## ' . $aImportSection['output_header'];
-    $sOutput .= ' ## Do not remove or alter this header ##' . "\n";
-    $sOutput .= '## Count = ' . strval(count($aRecords)) . "\n";
+    $sOutput = "\n" . '## ' . $aImportSection['output_header'] .
+               ' ## Do not remove or alter this header ##' . "\n" .
+               '## Count = ' . strval(count($aRecords)) . "\n";
 
     if (isset($aImportSection['comments'])) {
         foreach ($aImportSection['comments'] as $sComment) {
@@ -829,7 +834,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
             strval($nNumLines) . '...');
 
         $sLine = trim($sLine);
-        if (empty($sLine) || $sLine[0] == "#" || preg_match('/^"?{{.*/', $sLine)) {
+        if (empty($sLine) || $sLine{0} == '#' || preg_match('/^"?{{.*/', $sLine)) {
             // Ignore blank lines, comments and the header line.
             continue;
         }
@@ -873,7 +878,6 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
             $sSubmitterID = $aRecord[$i];
         }
 
-
         // Create new disease if necessary.
         $aDisease = lovd_getRecordForHeaders($aOutputHeaders['disease'], $aRecord,
             $aSections['disease']);
@@ -886,8 +890,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         }
 
         // Handle individual-specific data (individual, screening, phenotype, etc.).
-        $sIndividualInputHeader = 'ID_patientid_';
-        if (($i = array_search($sIndividualInputHeader, $aInputHeaders)) !== false) {
+        if (($i = array_search('ID_patientid_', $aInputHeaders)) !== false) {
             $sLOVD2IndividualID = $aInputRecord[$i];
             if (!isset($aIndividuals[$sLOVD2IndividualID])) {
                 // New individual, create an output record for it.
@@ -927,14 +930,12 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 // Create phenotype record.
                 $aPhenotype = lovd_getRecordForHeaders($aOutputHeaders['phenotype'], $aRecord,
                     $aSections['phenotype']);
-                // Skip phenotype because there is no data in phenotype
+                // FIXME: Skip phenotype when there is no data in phenotype
                 // record except for ID fields.
                 $aPhenotype['id'] = lovd_autoIncPhenotypeID();
                 $aPhenotype['diseaseid'] = $aDisease['id'];
                 $aPhenotype['individualid'] = $aIndividual['id'];
-                if (($nStatusIdx = array_search('ID_status_', $aInputHeaders)) !== false) {
-                    $aPhenotype['statusid'] = $aRecord[$nStatusIdx];
-                }
+                $aPhenotype['statusid'] = $aIndividual['statusid'];
                 $aPhenotype['owned_by'] = $aIndividual['owned_by'];
                 $aPhenotype['created_by'] = $aIndividual['created_by'];
                 $aPhenotype['created_date'] = $aIndividual['created_date'];
@@ -959,13 +960,13 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $aVOGRecord = lovd_getRecordForHeaders($aOutputHeaders['vog'], $aRecord,
             $aSections['vog']);
         $aVOGRecord['chromosome'] = $zTranscript['chromosome'];
-        if ($aVOGRecord['edited_by'] === false) {
-            // No curator ID was available, set submitter ID.
-            $aVOGRecord['edited_by'] = $sSubmitterID;
-        }
         if ($aVOGRecord['created_by'] === false) {
             // No curator ID was available, set submitter ID.
             $aVOGRecord['created_by'] = $sSubmitterID;
+        }
+        if ($aVOGRecord['edited_by'] === false) {
+            // No curator ID was available, set submitter ID.
+            $aVOGRecord['edited_by'] = $sSubmitterID;
         }
 
         $aVOTRecord = lovd_getRecordForHeaders($aOutputHeaders['vot'], $aRecord,
@@ -977,6 +978,8 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $aVOTRecord['transcriptid'] = $zTranscript['id'];
 
         // Get positions on transcript/chromosome from mutalyzer for variant.
+        // FIXME: Using the new lovd_getVariantInfo() function, you can skip
+        //  this webservice call.
         $nHGVSIdx = array_search('Variant/DNA', $aInputHeaders);
         $sVariant = $aRecord[$nHGVSIdx];
         $aMappingInfoArgs = array(
@@ -997,13 +1000,13 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
             $aVOTRecord['position_c_end_intron'] =      $oResponse->endoffset;
         }
 
-        // Call mutalyzer's numberConversion to get VariantOnGenome/DNA
+        // Call mutalyzer's numberConversion to get VariantOnGenome/DNA.
         $aNumberConvArgs = array(
             'build' => $_CONF['refseq_build'],
             'gene' => $zTranscript['geneid'],
             'variant' => $zTranscript['id_ncbi'] . ':' . $sVariant);
-        $sNumberConvURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']);
-        $sNumberConvURL .= '/json/numberConversion?' . http_build_query($aNumberConvArgs);
+        $sNumberConvURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) .
+                          '/json/numberConversion?' . http_build_query($aNumberConvArgs);
         $oResponse = lovd_callJSONService($sNumberConvURL);
         if ($oResponse && !isset($oResponse->errorcode) && !isset($oResponse->faultcode) &&
             count($oResponse) > 0 && !empty($oResponse[0])) {
@@ -1035,14 +1038,22 @@ function lovd_setUserIDSettings ($sFixedSubmitterIDInput, $sSubmitterTranslation
 {
     // Validate form settings for handling user IDs. Calls lovd_errorAdd() when
     // something went wrong. User ID settings are interpreted as follows:
-    // $sFixedUserIDInput:          Default user ID, should be integer
-    //                              referring to existing user.
-    // $sUserTranslationTableInput: Textual translation table, where every line
-    //                              contains two integers separated by
-    //                              whitespace. The first int is the LOVD2 user
-    //                              ID value to translate, the second int is
-    //                              the LOVD3 user ID value to which is being
-    //                              translated.
+    // $sFixedSubmitterIDInput:          Default submitter ID, should be integer
+    //                                   referring to existing user.
+    // $sSubmitterTranslationTableInput: Textual translation table, where every line
+    //                                   contains two integers separated by
+    //                                   whitespace. The first int is the LOVD2 submitter
+    //                                   ID value to translate, the second int is
+    //                                   the LOVD3 user ID value to which is being
+    //                                   translated.
+    // $sFixedCuratorIDInput:          Default user ID, should be integer
+    //                                 referring to existing user.
+    // $sCuratorTranslationTableInput: Textual translation table, where every line
+    //                                 contains two integers separated by
+    //                                 whitespace. The first int is the LOVD2 user
+    //                                 ID value to translate, the second int is
+    //                                 the LOVD3 user ID value to which is being
+    //                                 translated.
 
     $aFixedUserInfos = array(
         array('submitter', 'submitterid_fixed', 'sFixedSubmitterID', $sFixedSubmitterIDInput),
