@@ -494,6 +494,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     // $sTranscriptID contains the internal ID or NCBI ID of the transcript that
     //  this variant is on, and is only needed for processing 3' UTR variants,
     //  like c.*10del, since we'll need to have the CDS stop value for that.
+    global $_DB;
 
     static $aTranscriptOffsets = array();
     $aResponse = array(
@@ -512,7 +513,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         //                                                        4 = End position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.300_*10del).
         //                                                                    5 = End position intronic offset, if available.
         //                                                                                       6 = The variant, which we'll use to determine the type.
-        global $_DB;
 
         list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant) = $aRegs;
         if ($sPrefix != 'c' && $sPrefix != 'n') {
@@ -565,6 +565,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             $sStartPositionIntron = str_replace('?', '1', $sStartPositionIntron);
             $sEndPositionIntron = str_replace('?', '1', $sEndPositionIntron);
 
+            // (int) to get rid of the '+' if it's there.
             $aResponse['position_start_intron'] = (int) $sStartPositionIntron;
             $aResponse['position_end_intron'] = (int) ($sEndPositionIntron? $sEndPositionIntron : $sStartPositionIntron);
         }
@@ -582,7 +583,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
     return $aResponse;
 }
-
 
 
 
