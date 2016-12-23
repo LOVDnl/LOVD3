@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 18
- * 2016-12-??
+ * 2016-12-23
  *********/
  * Make header stick to the top of the browser's viewport, such that the links
    in the header are always visible.
@@ -45,6 +45,10 @@
    LOVD will now predict them.
  * Fixed bug; Variants that were imported with empty intron positions, didn't
    group together with variants that had a 0 filled in.
+   Closes #140: "Position fields during import sometimes left as NULL".
+ * LOVD3 is now compatible with the ONLY_FULL_GROUP_BY MySQL setting.
+   Closes #144: "Make LOVD compatible with the `ONLY_FULL_GROUP_BY` MySQL
+   setting."
 
 
 /************************************
