@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2016-12-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-01-13
+ * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -166,6 +166,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                         if ($nKeyG !== false && $nKeyG < $nKey) {
                             // Earlier, Gene was used, join to that.
                             $aSQL['FROM'] .= 'g.id = t.geneid)';
+                            // A view with gene info and transcript info will be grouped on the transcripts.
+                            $aSQL['GROUP_BY'] = 't.id';
                         } elseif ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.
                             $aSQL['FROM'] .= 'vot.transcriptid = t.id)';

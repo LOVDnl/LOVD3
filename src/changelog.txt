@@ -5,6 +5,17 @@
  *************/
 
 /**************************
+ * 3.0 Build 19
+ * 2017-0?-??
+ *********/
+ * Fixed bug; Transcripts could not easily be added to variants anymore. This
+   was caused by the recent changes making LOVD compatible with the new default
+   "ONLY_FULL_GROUP_BY" MySQL setting.
+   Closes #167: "Manage transcripts feature doesn't allow addition of transcript
+   anymore".
+
+
+/**************************
  * 3.0 Build 18
  * 2016-12-23
  *********/
