@@ -1,5 +1,4 @@
 <?php
-// DMD_SPECIFIC: changes to this file? TEST it!!!
 /*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)

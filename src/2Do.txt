@@ -13,9 +13,9 @@ Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /antwerpen/ heeft aangepaste .htaccess.
 /DNA_profiles/ heeft aangepaste index.php.
-/my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, submit.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste class/graphs.php en import.php en een eigen export.php die niet overschreven mag worden.
-/whole_genome/ heeft aangepaste files (class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
+/my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
+/shared/ heeft een aangepaste class/graphs.php, class/template.php en import.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
+/whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 /whole_genome_mirror/ heeft aangepaste files (zie hierboven), NOOIT ZOMAAR OVERSCHRIJVEN!!! (MAG WEL VAN WHOLE_GENOME, excl. de config.ini)
 After updating all installations, send email to team with all improvements summarized.
 
