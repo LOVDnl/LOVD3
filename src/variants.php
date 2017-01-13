@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2016-11-15
- * For LOVD    : 3.0-18
+ * Modified    : 2017-01-13
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -3081,6 +3081,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                 // Reset the viewList.
                 // Does an ltrim, too. But trim() doesn't work in IE < 9.
                 objViewListF.search_tid.value = objViewListF.search_tid.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
+                // If the filter is now empty, it will be disabled by the submitting VL and it won't function anymore.
+                if (!objViewListF.search_tid.value) {
+                    objViewListF.search_tid.value = '!0';
+                }
                 lovd_AJAX_viewListSubmit(sViewListID);
 
                 return true;
