@@ -641,11 +641,12 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
               '    </TD>' . "\n");
 
-        print('    <TD valign="top" style="padding-top : 2px; width : 100%">' . "\n" .
+        print('    <TD valign="top" style="padding-top : 2px; white-space : nowrap; width : 100%">' . "\n" .
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
 
         if ($sCurrSymbol && $sCurrGene) {
-            print('      <H5 id="gene_name" style="display:inline">' . $sCurrGene . ' (' . $sCurrSymbol . ')' . "\n");
+            $sGeneName = lovd_shortenString($sCurrSymbol . ' (' . $sCurrGene . ')', 50);
+            print('      <H5 id="gene_name" style="display:inline">' . $sGeneName . "\n");
             if (strpos($sGeneSwitchURL, '{{GENE}}') !== false) {
                 print('        <A href="#" onclick="lovd_switchGene(); return false;">' . "\n" .
                       '          <IMG src="gfx/lovd_genes_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top">' . "\n" .
@@ -822,9 +823,11 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // Note: we're not using $(document).ready() here to keep the user experience as
         // smooth as possible (e.g. no visible movement of the logo table). This means that
         // the javascript below must come AFTER the #stickyheader element is printed.
-        print('<SCRIPT type="text/javascript">' . "\n" .
-              '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
-              '</SCRIPT>' . "\n\n");
+        if (!empty($zAnnouncements)) {
+            print('<SCRIPT type="text/javascript">' . "\n" .
+                  '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+                  '</SCRIPT>' . "\n\n");
+        }
 
         // Attach dropdown menus.
         print('<!-- Start drop down menu definitions -->' . "\n");
