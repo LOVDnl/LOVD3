@@ -641,7 +641,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
               '    </TD>' . "\n");
 
-        print('    <TD valign="top" style="padding-top : 2px; white-space : nowrap; width : 100%">' . "\n" .
+        print('    <TD valign="top" style="padding-top : 2px; width : 100%">' . "\n" .
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
 
         if ($sCurrSymbol && $sCurrGene) {
@@ -817,13 +817,14 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '</TABLE>' . "\n\n" .
               '<IMG src="gfx/trans.png" alt="" width="' . $nTotalTabWidth . '" height="0">' . "\n\n");
 
-        if (!empty($zAnnouncements)) {
-            // Measure the height of the sticky header (can depend on announcements or
-            // font settings and such), and adapt the menu table to have a margin of this height.
-            print('<SCRIPT type="text/javascript">' . "\n" .
-                  '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
-                  '</SCRIPT>' . "\n\n");
-        }
+        // Measure the height of the sticky header (can depend on announcements or
+        // font settings and such), and adapt the menu table to have a margin of this height.
+        // Note: we're not using $(document).ready() here to keep the user experience as
+        // smooth as possible (e.g. no visible movement of the logo table). This means that
+        // the javascript below must come AFTER the #stickyheader element is printed.
+        print('<SCRIPT type="text/javascript">' . "\n" .
+              '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+              '</SCRIPT>' . "\n\n");
 
         // Attach dropdown menus.
         print('<!-- Start drop down menu definitions -->' . "\n");
