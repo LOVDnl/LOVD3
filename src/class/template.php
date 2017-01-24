@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2017-01-13
+ * Modified    : 2017-01-24
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -612,7 +612,7 @@ function lovd_mapVariants ()
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
 
 <!-- Have a DIV for the announcements together with the header, to make sure the announcements move with the sticky header. -->
-<DIV id="stickyheader" style="position : fixed; z-index : 10;">
+<DIV id="stickyheader" style="position : fixed; z-index : 10; width : 100%">
 <?php
 // Check for announcements. Ignore errors, in case the table doesn't exist yet.
 $qAnnouncements = @$_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
