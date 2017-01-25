@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-12-23
- * For LOVD    : 3.0-18
+ * Modified    : 2017-01-25
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -473,7 +473,9 @@ if ($_INI['database']['driver'] == 'mysql') {
 
 
 ini_set('default_charset','UTF-8');
-mb_internal_encoding('UTF-8');
+if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding('UTF-8');
+}
 
 // Help prevent cookie theft trough JavaScript; XSS defensive line.
 // See: http://nl.php.net/manual/en/session.configuration.php#ini.session.cookie-httponly
