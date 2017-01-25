@@ -13,6 +13,11 @@
    "ONLY_FULL_GROUP_BY" MySQL setting.
    Closes #167: "Manage transcripts feature doesn't allow addition of transcript
    anymore".
+ * Fixed several problems with MySQL's new default strict mode. LOVD wasn't
+   installable, and transcripts couldn't be created if this setting was enabled.
+   Closes #143: "LOVD won't install with error "Invalid default value for
+   'start_date'""
+   Closes #173: "Installation failed on ubuntu 16"
 
 
 /**************************
