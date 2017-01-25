@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2017-01-24
+ * Modified    : 2017-01-25
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -645,7 +645,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
 
         if ($sCurrSymbol && $sCurrGene) {
-            $sGeneName = lovd_shortenString($sCurrSymbol . ' (' . $sCurrGene . ')', 50);
+            $sGeneName = lovd_shortenString($sCurrSymbol . ' (' . $sCurrGene . ')', 55);
             print('      <H5 id="gene_name" style="display:inline">' . $sGeneName . "\n");
             if (strpos($sGeneSwitchURL, '{{GENE}}') !== false) {
                 print('        <A href="#" onclick="lovd_switchGene(); return false;">' . "\n" .
@@ -818,12 +818,9 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '</TABLE>' . "\n\n" .
               '<IMG src="gfx/trans.png" alt="" width="' . $nTotalTabWidth . '" height="0">' . "\n\n");
 
-        // Measure the height of the sticky header (can depend on announcements or
-        // font settings and such), and adapt the menu table to have a margin of this height.
-        // Note: we're not using $(document).ready() here to keep the user experience as
-        // smooth as possible (e.g. no visible movement of the logo table). This means that
-        // the javascript below must come AFTER the #stickyheader element is printed.
         if (!empty($zAnnouncements)) {
+            // Measure the height of the sticky header (can depend on announcements or
+            // font settings and such), and adapt the menu table to have a margin of this height.
             print('<SCRIPT type="text/javascript">' . "\n" .
                   '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
                   '</SCRIPT>' . "\n\n");
