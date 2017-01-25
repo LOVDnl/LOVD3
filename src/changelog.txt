@@ -13,6 +13,10 @@
    "ONLY_FULL_GROUP_BY" MySQL setting.
    Closes #167: "Manage transcripts feature doesn't allow addition of transcript
    anymore".
+ * Fixed bug; The "all variants affecting transcripts" view showed only one
+   entry. This was caused by the recent changes making LOVD compatible with the
+   new default "ONLY_FULL_GROUP_BY" MySQL setting.
+   Closes #176: "Viewlist entry count differs from what is displayed".
 
 
 /**************************
