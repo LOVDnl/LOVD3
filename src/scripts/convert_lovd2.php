@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2016-12-23
- * For LOVD    : 3.0-18
+ * Modified    : 2017-01-25
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -38,6 +38,9 @@ require_once ROOT_PATH . 'class/soap_client.php';
 
 // Global for storing warning messages during conversion.
 $_WARNINGS = array();
+
+// Array of field names to ignore in input.
+$aIgnoredFields = array_flip(array('ID_sort_'));
 
 // Links between LOVD2-LOVD3 fields, with optional conversion function. Format:
 // LOVD2_field => array(LOVD3_section, LOVD3_field, Conversion_function)
@@ -459,7 +462,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
     // Returns false for both header arrays if header cannot be either found or
     // parsed.
 
-    global $_DB, $_WARNINGS;
+    global $_DB, $_WARNINGS, $aIgnoredFields;
 
     if (!is_array($aData)) {
         lovd_errorAdd('LOVD2_export', 'Invalid input.');
@@ -503,9 +506,12 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
         // header and outHeader is the name of the column in the output.
         for ($i = 0; $i < count($aMatches[1]); $i++) {
             $aSectionIDs = array_keys($aSections);
-
-            // Check if field is manually linked in $aFieldLinks.
             $sHeader = $aMatches[1][$i];
+
+            // Skip fields listed to ignore.
+            if (key_exists($sHeader, $aIgnoredFields)) {
+                continue;
+            }
 
             // Special consideration for Variant/DNA_published, as it can be linked to two
             // fields: VariantOnTranscript/Published_as and VariantOnGenome/Published_as,
@@ -523,6 +529,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                 }
             }
 
+            // Check if field is manually linked in $aFieldLinks.
             if (isset($aFieldLinks[$sHeader])) {
                 // Use output header linked in $aFieldLinks.
                 list($sSection, $sHeaderOut) = $aFieldLinks[$sHeader];
