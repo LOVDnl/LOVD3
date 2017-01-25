@@ -677,8 +677,9 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection = null)
                                $aNewRecord[$sHeader] . '", alternate value will get lost: "' .
                                $aRecord[$nInputIdx] . '"';
                 continue;
+            } else if (empty($aNewRecord[$sHeader])) {
+                $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
             }
-            $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
         } else {
             // Leave non-linked fields empty for now. These are probably
             // mandatory fields not provided directly in the input.
