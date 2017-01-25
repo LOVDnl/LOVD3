@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2017-01-13
+ * Modified    : 2017-01-25
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -612,7 +612,7 @@ function lovd_mapVariants ()
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
 
 <!-- Have a DIV for the announcements together with the header, to make sure the announcements move with the sticky header. -->
-<DIV id="stickyheader" style="position : fixed; z-index : 10;">
+<DIV id="stickyheader" style="position : fixed; z-index : 10; width : 100%">
 <?php
 // Check for announcements. Ignore errors, in case the table doesn't exist yet.
 $qAnnouncements = @$_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
@@ -645,7 +645,8 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
 
         if ($sCurrSymbol && $sCurrGene) {
-            print('      <H5 id="gene_name" style="display:inline">' . $sCurrGene . ' (' . $sCurrSymbol . ')' . "\n");
+            $sGeneName = lovd_shortenString($sCurrSymbol . ' (' . $sCurrGene . ')', 55);
+            print('      <H5 id="gene_name" style="display:inline">' . $sGeneName . "\n");
             if (strpos($sGeneSwitchURL, '{{GENE}}') !== false) {
                 print('        <A href="#" onclick="lovd_switchGene(); return false;">' . "\n" .
                       '          <IMG src="gfx/lovd_genes_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top">' . "\n" .
