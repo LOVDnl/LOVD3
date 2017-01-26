@@ -567,9 +567,11 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                         list($sSection, $sPrefixOut) = $aCustomColDefault;
                         $sHeaderOut = str_replace($sPrefix, $sPrefixOut, $sHeader);
                         $aOutputHeaders[$sSection][$i] = $sHeaderOut;
-                        $_WARNINGS[] = 'Warning: linked "' . $sHeader . '" to non-existing ' .
-                            'column "' . $sHeaderOut . '" in output section "' .
-                            $aSections[$sSection]['output_header'] . '"';
+                        if (!in_array($sHeaderOut, $aSections[$sSection]['db_fields'])) {
+                            $_WARNINGS[] = 'Warning: linked "' . $sHeader . '" to non-existing ' .
+                                           'column "' . $sHeaderOut . '" in output section "' .
+                                           $aSections[$sSection]['output_header'] . '"';
+                        }
                         continue 2;
                     }
                 }
