@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-01-25
+ * Modified    : 2017-01-26
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -670,26 +670,30 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection = null)
     global $_WARNINGS;
     $aNewRecord = array();
     foreach ($aOutputHeaders as $nInputIdx => $sHeader) {
-        if (is_int($nInputIdx) || ctype_digit($nInputIdx)) {
+        if (is_int($nInputIdx)) {
             // Numeric key $nInputIdx defines link to field in input record $aRecord.
-            if (!empty($aNewRecord[$sHeader]) && !empty($aRecord[$nInputIdx])) {
+
+            if (!isset($aNewRecord[$sHeader]) || $aNewRecord[$sHeader] === '') {
+                $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
+            } else if ($aRecord[$nInputIdx] !== '') {
                 $_WARNINGS[] = 'Warning: doubly-linked field already has a value "' .
                                $aNewRecord[$sHeader] . '", alternate value will get lost: "' .
                                $aRecord[$nInputIdx] . '"';
                 continue;
-            } else if (empty($aNewRecord[$sHeader])) {
-                $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
             }
         } else {
             // Leave non-linked fields empty for now. These are probably
             // mandatory fields not provided directly in the input.
             $aNewRecord[$sHeader] = null;
         }
-        if (isset($aSection['mandatory_fields']) &&
-            isset($aSection['mandatory_fields'][$sHeader]) &&
-            empty($aNewRecord[$sHeader])) {
-            // Set default value for mandatory field.
-            $aNewRecord[$sHeader] = $aSection['mandatory_fields'][$sHeader];
+    }
+
+    if (!is_null($aSection) && isset($aSection['mandatory_fields'])) {
+        // Set default value for mandatory fields.
+        foreach ($aSection['mandatory_fields'] as $sHeader => $sDefault) {
+            if (!isset($aNewRecord[$sHeader]) || $aNewRecord[$sHeader] === '') {
+                $aNewRecord[$sHeader] = $sDefault;
+            }
         }
     }
     return $aNewRecord;
