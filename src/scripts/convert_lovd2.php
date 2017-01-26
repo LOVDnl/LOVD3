@@ -548,19 +548,6 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 
             // Try to link custom columns.
             if (strpos($sHeader, '/') !== false) {
-                list(, $sFieldname) = explode('/', $sHeader, 2);
-                foreach ($aSectionIDs as $sSection) {
-                    $aSection = $aSections[$sSection];
-                    if (isset($aSection['customcol_prefix'])) {
-                        $sNewFieldName = $aSection['customcol_prefix'] . '/' . $sFieldname;
-                        if (in_array($sNewFieldName, $aSection['db_fields'])) {
-                            // Set output header with new LOVD3 prefix (e.g. Individual).
-                            $aOutputHeaders[$sSection][$i] = $sNewFieldName;
-                            continue 2;
-                        }
-                    }
-                }
-
                 // Try to find default custom column translation.
                 foreach ($aCustomColLinks as $sPrefix => $aCustomColDefault) {
                     if (strpos($sHeader, $sPrefix) === 0) {
@@ -573,6 +560,20 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                                            $aSections[$sSection]['output_header'] . '"';
                         }
                         continue 2;
+                    }
+                }
+
+                // Try to find a DB field name with corresponding suffix.
+                list(, $sFieldname) = explode('/', $sHeader, 2);
+                foreach ($aSectionIDs as $sSection) {
+                    $aSection = $aSections[$sSection];
+                    if (isset($aSection['customcol_prefix'])) {
+                        $sNewFieldName = $aSection['customcol_prefix'] . '/' . $sFieldname;
+                        if (in_array($sNewFieldName, $aSection['db_fields'])) {
+                            // Set output header with new LOVD3 prefix (e.g. Individual).
+                            $aOutputHeaders[$sSection][$i] = $sNewFieldName;
+                            continue 2;
+                        }
                     }
                 }
             }
@@ -681,7 +682,6 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection = null)
                 $_WARNINGS[] = 'Warning: doubly-linked field already has a value "' .
                                $aNewRecord[$sHeader] . '", alternate value will get lost: "' .
                                $aRecord[$nInputIdx] . '"';
-                continue;
             }
         } else {
             // Leave non-linked fields empty for now. These are probably
@@ -929,18 +929,28 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 // Create phenotype record.
                 $aPhenotype = lovd_getRecordForHeaders($aOutputHeaders['phenotype'], $aRecord,
                     $aSections['phenotype']);
-                // FIXME: Skip phenotype when there is no data in phenotype
-                // record except for ID fields.
-                $aPhenotype['id'] = lovd_autoIncPhenotypeID();
-                $aPhenotype['diseaseid'] = $aDisease['id'];
-                $aPhenotype['individualid'] = $aIndividual['id'];
-                $aPhenotype['statusid'] = $aIndividual['statusid'];
-                $aPhenotype['owned_by'] = $aIndividual['owned_by'];
-                $aPhenotype['created_by'] = $aIndividual['created_by'];
-                $aPhenotype['created_date'] = $aIndividual['created_date'];
-                $aPhenotype['edited_by'] = $aIndividual['edited_by'];
-                $aPhenotype['edited_date'] = $aIndividual['edited_date'];
-                $aPhenotypes[$sLOVD2IndividualID] = $aPhenotype;
+                // Skip phenotype when there is no data in phenotype record except for ID fields.
+                $bEmptyPhenotype = true;
+                foreach ($aPhenotype as $sField => $sValue) {
+                    if ($sValue !== '' &&
+                        (!key_exists($sField, $aSections['phenotype']['mandatory_fields']) ||
+                         $sValue !== $aSections['phenotype']['mandatory_fields'][$sField])) {
+                        $bEmptyPhenotype = false;
+                        break;
+                    }
+                }
+                if (!$bEmptyPhenotype) {
+                    $aPhenotype['id'] = lovd_autoIncPhenotypeID();
+                    $aPhenotype['diseaseid'] = $aDisease['id'];
+                    $aPhenotype['individualid'] = $aIndividual['id'];
+                    $aPhenotype['statusid'] = $aIndividual['statusid'];
+                    $aPhenotype['owned_by'] = $aIndividual['owned_by'];
+                    $aPhenotype['created_by'] = $aIndividual['created_by'];
+                    $aPhenotype['created_date'] = $aIndividual['created_date'];
+                    $aPhenotype['edited_by'] = $aIndividual['edited_by'];
+                    $aPhenotype['edited_date'] = $aIndividual['edited_date'];
+                    $aPhenotypes[$sLOVD2IndividualID] = $aPhenotype;
+                }
 
                 // Create individuals2diseases record.
                 $aIndividuals2Disease = lovd_getRecordForHeaders($aOutputHeaders['i2d'], $aRecord);
