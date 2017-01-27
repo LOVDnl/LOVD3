@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-01-26
+ * Modified    : 2017-01-27
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -243,19 +243,19 @@ function lovd_convertCuratorID ($nLOVD2UserID)
 {
     // Returns curator ID for given LOVD2 user ID. Return value is based on
     // settings for fixed (default) user ID and ID translation table, both
-    // are defined in the upload form.
+    // are defined in the upload form. Returns false if $nLOVD2UserID is
+    // equal to zero, indicating that the submitterID should be used.
     global $sFixedCuratorID, $aCuratorTranslationTable, $_WARNINGS;
 
-    $nLOVD2UserIDClean = intval($nLOVD2UserID);
     // Convert curator ID.
-    if ($nLOVD2UserIDClean === 0) {
+    if ($nLOVD2UserID === '0') {
         // '0' in LOVD2 export means the submitter ID should be used.
         // Return false.
         return false;
     }
-    if (isset($aCuratorTranslationTable[$nLOVD2UserIDClean])) {
+    if (ctype_digit($nLOVD2UserID) && isset($aCuratorTranslationTable[(int) $nLOVD2UserID])) {
         // Found match in translation table.
-        return $aCuratorTranslationTable[$nLOVD2UserIDClean];
+        return $aCuratorTranslationTable[(int) $nLOVD2UserID];
     }
     if (!is_null($sFixedCuratorID)) {
         // Default to fixed user ID.
@@ -390,11 +390,10 @@ function lovd_convertSubmitterID ($nLOVD2UserID)
     // are defined in the upload form.
     global $sFixedSubmitterID, $aSubmitterTranslationTable, $_WARNINGS;
 
-    $nLOVD2UserIDClean = intval($nLOVD2UserID);
     // Convert curator ID.
-    if (isset($aSubmitterTranslationTable[$nLOVD2UserIDClean])) {
+    if (ctype_digit($nLOVD2UserID) && isset($aSubmitterTranslationTable[(int) $nLOVD2UserID])) {
         // Found match in translation table.
-        return $aSubmitterTranslationTable[$nLOVD2UserIDClean];
+        return $aSubmitterTranslationTable[(int) $nLOVD2UserID];
     }
     if (!is_null($sFixedSubmitterID)) {
         // Default to fixed user ID.
