@@ -64,9 +64,8 @@ class LOVD_VariantPositionAnalyses {
 
         // Set up the progress bar that we'll be reusing all the time.
         require_once ROOT_PATH . 'class/progress_bar.php';
-        $_BAR = new ProgressBar();
-        $_BAR->setMessageVisibility('done', true);
-        $this->oBAR =& $_BAR; // We need it reachable by other methods, but static functions don't like member variables.
+        $this->oBAR = new ProgressBar();
+        $this->oBAR->setMessageVisibility('done', true);
 
         // Define analyses.
         $this->aAnalyses = array(
@@ -80,8 +79,9 @@ class LOVD_VariantPositionAnalyses {
                     'sql_fetch' => 'SELECT id, position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE position_g_start > position_g_end ORDER BY chromosome, position_g_start, position_g_end',
                     'fix' => function ($zRow) use ($_DB)
                     {
-                        // Function body here.
-                        return 0;
+                        // We'll just simply swap the fields. That may not result in correct values, but this will be
+                        //  checked later. For now, this simple change may do the trick.
+                        return $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($zRow['position_g_end'], $zRow['position_g_start'], $zRow['id']))->rowCount();
                     },
                 ),
             'vog_positions_in_error' => // The number of positions that do not match the variant's positions (analysis needed).
