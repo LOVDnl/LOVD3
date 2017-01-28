@@ -76,7 +76,7 @@ class LOVD_VariantPositionAnalyses {
             'vog_positions_swapped' => // The number of positions that have been swapped (end > start).
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start > position_g_end',
-                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE position_g_start > position_g_end ORDER BY chromosome, position_g_start, position_g_end',
+                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE position_g_start > position_g_end',
                     'fix' => function ($zRow) use ($_DB)
                     {
                         // We'll just simply swap the fields. That may not result in correct values, but this will be
@@ -87,7 +87,7 @@ class LOVD_VariantPositionAnalyses {
             'vog_positions_in_error' => // The number of positions that do not match the variant's positions (analysis needed).
                 array(
                     'sql_fetch_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NOT NULL AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0',
-                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NOT NULL AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0 ORDER BY chromosome, position_g_start, position_g_end',
+                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NOT NULL AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0',
                     'fix' => function ($zRow) use ($_DB)
                     {
                         // Verify every single variant, compare the calculated positions with the positions we have
@@ -108,7 +108,7 @@ class LOVD_VariantPositionAnalyses {
             'vog_positions_missing' => // The number of variants that have no position fields.
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
-                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end, `VariantOnGenome/DNA` FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0 ORDER BY chromosome, position_g_start, position_g_end',
+                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end, `VariantOnGenome/DNA` FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
                     'fix' => function ($zRow) use ($_DB)
                     {
                         // Function body here.
@@ -204,6 +204,10 @@ class LOVD_VariantPositionAnalyses {
                         // And show the updated counts (count/fixed, both can change).
                         $this->updateAnalysisRow($sAnalysis);
                     }
+                }
+                // If we had no data matching, update the row.
+                if (!$nData) {
+                    $this->updateAnalysisRow($sAnalysis);
                 }
             }
             sleep(1);
