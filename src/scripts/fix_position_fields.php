@@ -108,10 +108,16 @@ class LOVD_VariantPositionAnalyses {
             'vog_positions_missing' => // The number of variants that have no position fields.
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
-                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end, `VariantOnGenome/DNA` FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
+                    'sql_fetch' => 'SELECT id, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
                     'fix' => function ($zRow) use ($_DB)
                     {
-                        // Function body here.
+                        // Calculate positions for every variant. We ignore any position fields that
+                        //  might be filled in, as we have determined we're missing at least one.
+                        $aPositions = lovd_getVariantInfo($zRow['DNA']);
+                        if ($aPositions) {
+                            // The function recognized the variant.
+                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                        }
                         return array(0, 0);
                     },
                 ),
