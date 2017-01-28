@@ -81,15 +81,28 @@ class LOVD_VariantPositionAnalyses {
                     {
                         // We'll just simply swap the fields. That may not result in correct values, but this will be
                         //  checked later. For now, this simple change may do the trick.
-                        return $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($zRow['position_g_end'], $zRow['position_g_start'], $zRow['id']))->rowCount();
+                        return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($zRow['position_g_end'], $zRow['position_g_start'], $zRow['id']))->rowCount());
                     },
                 ),
             'vog_positions_in_error' => // The number of positions that do not match the variant's positions (analysis needed).
                 array(
+                    'sql_fetch_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NOT NULL AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0',
+                    'sql_fetch' => 'SELECT id, position_g_start, position_g_end, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NOT NULL AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0 ORDER BY chromosome, position_g_start, position_g_end',
                     'fix' => function ($zRow) use ($_DB)
                     {
-                        // Function body here.
-                        return 0;
+                        // Verify every single variant, compare the calculated positions with the positions we have
+                        //  stored. The calculated positions always win.
+                        $aPositions = lovd_getVariantInfo($zRow['DNA']);
+                        if ($aPositions) {
+                            // The function recognized the variant.
+                            if ($aPositions['position_start'] != $zRow['position_g_start'] || $aPositions['position_end'] != $zRow['position_g_end']) {
+                                // Positions given by function do not match what is in the database. Fix!
+                                return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                            }
+                        } else {
+                            // Variant not recognized, but positions are stored. We're going to assume they are OK.
+                        }
+                        return array(0, 0);
                     },
                 ),
             'vog_positions_missing' => // The number of variants that have no position fields.
@@ -99,7 +112,7 @@ class LOVD_VariantPositionAnalyses {
                     'fix' => function ($zRow) use ($_DB)
                     {
                         // Function body here.
-                        return 0;
+                        return array(0, 0);
                     },
                 ),
             'vog_variants_not_understood' => // The number of variants that have no position fields and can't be recognized by LOVD (analysis needed).
@@ -107,7 +120,7 @@ class LOVD_VariantPositionAnalyses {
                     'fix' => function ($zRow) use ($_DB)
                     {
                         // Function body here.
-                        return 0;
+                        return array(0, 0);
                     },
                 ),
         );
@@ -161,19 +174,26 @@ class LOVD_VariantPositionAnalyses {
                 } else {
                     // A special query was constructed to count the number of entries we need to look at.
                     // If we would be doing a fetchAll(), then we wouldn't need this.
-                    $nData = $_DB->query($aAnalysis['sql_fetch_count']);
+                    $nData = $_DB->query($aAnalysis['sql_fetch_count'])->fetchColumn();
                 }
                 // We're optimizing for memory usage here, not speed. So we'll fetch the results line by line,
                 //  and have the fix function called for every line. This does slow things down, and requires
                 //  a separate count query, but I prefer that this script can handle any size of database.
                 $qData = $_DB->query($aAnalysis['sql_fetch']);
+                if (!isset($this->aAnalyses[$sAnalysis]['count'])) {
+                    $this->aAnalyses[$sAnalysis]['count'] = 0;
+                }
                 if (!isset($this->aAnalyses[$sAnalysis]['fixed'])) {
                     $this->aAnalyses[$sAnalysis]['fixed'] = 0;
                 }
                 for ($i = 1; $zData = $qData->fetchAssoc(); $i ++) {
                     // The fix() function analyses the data row and updates the database if needed.
                     // It returns the number of entries it updated (0 or 1).
-                    $nUpdated = $aAnalysis['fix']($zData);
+                    list($nMatched, $nUpdated) = $aAnalysis['fix']($zData);
+                    if ($nMatched && !isset($aAnalysis['sql_count'])) {
+                        // Fix function says this line matched, and we didn't have a count before.
+                        $this->aAnalyses[$sAnalysis]['count'] += $nMatched;
+                    }
                     $this->aAnalyses[$sAnalysis]['fixed'] += $nUpdated;
                     $this->aAnalyses[substr($sAnalysis, 0, 3) . '_total_variants']['fixed'] += $nUpdated;
 
@@ -236,7 +256,11 @@ class LOVD_VariantPositionAnalyses {
         // Update the row in the table, in case the counts ("count" and "fixed" counts) changed.
         $sTotalVariants = substr($sAnalysis, 0, 3) . '_total_variants';
         print('
-      <SCRIPT type="text/javascript">$("#analyses_stats #tr_' . $sAnalysis . ' td:eq(2)").html("' . $this->aAnalyses[$sAnalysis]['fixed'] . '"); $("#analyses_stats #tr_' . $sTotalVariants . ' td:eq(2)").html("' . $this->aAnalyses[$sTotalVariants]['fixed'] . '");</SCRIPT>');
+      <SCRIPT type="text/javascript">
+        $("#analyses_stats #tr_' . $sAnalysis . ' td:eq(1)").html("' . $this->aAnalyses[$sAnalysis]['count'] . '");
+        $("#analyses_stats #tr_' . $sAnalysis . ' td:eq(2)").html("' . $this->aAnalyses[$sAnalysis]['fixed'] . '");
+        $("#analyses_stats #tr_' . $sTotalVariants . ' td:eq(2)").html("' . $this->aAnalyses[$sTotalVariants]['fixed'] . '");
+      </SCRIPT>');
     }
 }
 
