@@ -69,11 +69,11 @@ class LOVD_VariantPositionAnalyses {
 
         // Define analyses.
         $this->aAnalyses = array(
-            'vog_total_variants' => // Total number of variants in the database.
+            'vog_total_variants' => // Total variants in the database.
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS,
                 ),
-            'vog_positions_swapped' => // The number of positions that have been swapped (end > start).
+            'vog_positions_swapped' => // The positions that have been swapped (end > start).
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start > position_g_end',
                     'sql_fetch' => 'SELECT id, position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE position_g_start > position_g_end',
@@ -84,7 +84,7 @@ class LOVD_VariantPositionAnalyses {
                         return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($zRow['position_g_end'], $zRow['position_g_start'], $zRow['id']))->rowCount());
                     },
                 ),
-            'vog_positions_in_error' => // The number of positions that do not match the variant's positions (analysis needed).
+            'vog_positions_in_error' => // The positions that do not match the variant's description (analysis needed).
                 array(
                     'sql_fetch_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NOT NULL AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0',
                     'sql_fetch' => 'SELECT id, position_g_start, position_g_end, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NOT NULL AND position_g_start != 0 AND position_g_end IS NOT NULL AND position_g_end != 0',
@@ -105,7 +105,7 @@ class LOVD_VariantPositionAnalyses {
                         return array(0, 0);
                     },
                 ),
-            'vog_positions_missing' => // The number of variants that have no position fields.
+            'vog_positions_missing' => // The variants that have no position fields.
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
                     'sql_fetch' => 'SELECT id, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
@@ -116,17 +116,40 @@ class LOVD_VariantPositionAnalyses {
                         $aPositions = lovd_getVariantInfo($zRow['DNA']);
                         if ($aPositions) {
                             // The function recognized the variant.
-                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ?, mapping_flags = mapping_flags &~ ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                        } else {
+                            // Variants not recognized by LOVD, will be handled by the next analysis.
                         }
-                        return array(0, 0);
+                        return array(1, 0);
                     },
                 ),
-            'vog_variants_not_understood' => // The number of variants that have no position fields and can't be recognized by LOVD (analysis needed).
+            'vog_variants_not_understood' => // The variants that have no position fields and can't be recognized by LOVD (analysis needed).
                 array(
+                    'sql_fetch_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
+                    'sql_fetch' => 'SELECT id, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE position_g_start IS NULL OR position_g_start = 0 OR position_g_end IS NULL OR position_g_end = 0',
                     'fix' => function ($zRow) use ($_DB)
                     {
-                        // Function body here.
-                        return array(0, 0);
+                        // Calculate positions for every variant. We ignore any position fields that
+                        //  might be filled in, as we have determined we're missing at least one.
+                        // We're assuming there's something wrong with this variant, otherwise the
+                        //  previous analysis would have filled in the positions.
+
+                        // Currently unsupported: g.123= and g.123A=
+                        if (preg_match('/^[cgmn]\.([0-9]+(_[0-9]+)?)[ACTG]?=$/', $zRow['DNA'], $aRegs)) {
+                            // Fake the variant.
+                            $zRow['DNA'] = 'g.' . $aRegs[1] . 'del';
+                        // Positions but no variants in the DNA field.
+                        } elseif (preg_match('/^[cgmn]\.([0-9]+(_[0-9]+)?)$/', $zRow['DNA'], $aRegs)) {
+                            // Fake the variant.
+                            $zRow['DNA'] .= 'del';
+                        }
+
+                        $aPositions = lovd_getVariantInfo($zRow['DNA']);
+                        if ($aPositions) {
+                            // The function recognized the variant.
+                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ?, mapping_flags = mapping_flags &~ ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                        }
+                        return array(1, 0);
                     },
                 ),
         );
