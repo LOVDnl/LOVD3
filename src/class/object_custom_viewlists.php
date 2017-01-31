@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2017-01-13
+ * Modified    : 2017-01-25
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -290,6 +290,11 @@ class LOVD_CustomViewList extends LOVD_Object {
                             $aSQL['FROM'] .= 't.id = vot.transcriptid)';
                             // Nice, but if we're showing transcripts and variants on transcripts in one viewList, we'd only want to see the transcripts that HAVE variants.
                             $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vot.id IS NOT NULL';
+                            // Then also make sure we group on the VOT's ID, unless we're already grouping on something.
+                            if (!$aSQL['GROUP_BY']) {
+                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used t.id).
+                                $aSQL['GROUP_BY'] = 't.geneid, vot.id';
+                            }
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
                     }
