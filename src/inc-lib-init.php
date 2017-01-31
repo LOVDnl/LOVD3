@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-12-07
- * For LOVD    : 3.0-18
+ * Modified    : 2017-01-31
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -568,6 +568,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             // (int) to get rid of the '+' if it's there.
             $aResponse['position_start_intron'] = (int) $sStartPositionIntron;
             $aResponse['position_end_intron'] = (int) ($sEndPositionIntron? $sEndPositionIntron : $sStartPositionIntron);
+        }
+
+        // If a variant is described poorly with a start > end, then we'll swap the positions so we will store them correctly.
+        if ($aResponse['position_start'] > $aResponse['position_end']) {
+            // There's many ways of doing this, but this method is the simplest to read.
+            $nTmp = $aResponse['position_start'];
+            $aResponse['position_start'] = $aResponse['position_end'];
+            $aResponse['position_end'] = $nTmp;
+
+            // And intronic, if needed.
+            if ($sPrefix == 'c' || $sPrefix == 'n') {
+                $nTmp = $aResponse['position_start_intron'];
+                $aResponse['position_start_intron'] = $aResponse['position_end_intron'];
+                $aResponse['position_end_intron'] = $nTmp;
+            }
         }
 
         // Variant type.

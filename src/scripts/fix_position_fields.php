@@ -134,7 +134,7 @@ class LOVD_VariantPositionAnalyses {
                         // We're assuming there's something wrong with this variant, otherwise the
                         //  previous analysis would have filled in the positions.
 
-                        // Currently unsupported: g.123= and g.123A=
+                        // Currently unsupported by lovd_getVariantInfo(): g.123= and g.123A=
                         if (preg_match('/^[cgmn]\.([0-9]+(_[0-9]+)?)[ACTG]?=$/', $zRow['DNA'], $aRegs)) {
                             // Fake the variant.
                             $zRow['DNA'] = 'g.' . $aRegs[1] . 'del';
@@ -326,7 +326,7 @@ if (ACTION == 'run') {
     // Actually run the analyses, update the stats table with the latest information while we run.
     @set_time_limit(0);
 
-    $_T->printFooter(false);
+    $_T->printFooter(false); // 'false' keeps the BODY and the HTML open, but closes the tables.
 
     $_ANALYSES->runAnalyses();
 
