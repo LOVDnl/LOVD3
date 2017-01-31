@@ -508,9 +508,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     //  don't check for the end of the variant, it may contain bases, or not.
     if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
         //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
-        //                       2 = Start position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.*10del).
+        //                       2 = Start position, might be negative or in the 3' UTR.
         //                                   3 = Start position intronic offset, if available.
-        //                                                        4 = End position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.300_*10del).
+        //                                                        4 = End position, might be negative or in the 3' UTR.
         //                                                                    5 = End position intronic offset, if available.
         //                                                                                       6 = The variant, which we'll use to determine the type.
 
@@ -570,30 +570,71 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             $aResponse['position_end_intron'] = (int) ($sEndPositionIntron? $sEndPositionIntron : $sStartPositionIntron);
         }
 
-        // If a variant is described poorly with a start > end, then we'll swap the positions so we will store them correctly.
-        if ($aResponse['position_start'] > $aResponse['position_end']) {
-            // There's many ways of doing this, but this method is the simplest to read.
-            $nTmp = $aResponse['position_start'];
-            $aResponse['position_start'] = $aResponse['position_end'];
-            $aResponse['position_end'] = $nTmp;
 
-            // And intronic, if needed.
-            if ($sPrefix == 'c' || $sPrefix == 'n') {
-                $nTmp = $aResponse['position_start_intron'];
-                $aResponse['position_start_intron'] = $aResponse['position_end_intron'];
-                $aResponse['position_end_intron'] = $nTmp;
-            }
-        }
 
-        // Variant type.
-        if (preg_match('/^[ACGT]>[ACGT]$/', $sVariant)) {
-            $aResponse['type'] = 'subst';
+    // If that didn't work, try matching variants with uncertain positions.
+    // We're not super picky, and don't check the end of the variant.
+    } elseif (preg_match('/^([cgmn])\.\((\d+|\?)_(\d+|\?)\)_\((\d+|\?)_(\d+|\?)\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+        //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
+        //                               2 = Earliest start position, might be a question mark.
+        //                                        3 = Latest start position, might be a question mark.
+        //                                                     4 = Earliest end position, might be a question mark.
+        //                                                              5 = Latest end position, might be a question mark.
+        //                                                                        6 = The variant, which we'll use to determine the type.
+
+        list(, $sPrefix, $sStartPositionEarly, $sStartPositionLate, $sEndPositionEarly, $sEndPositionLate, $sVariant) = $aRegs;
+
+        // Store positions.
+        // If each position (start, end) has two numeric positions, we choose the
+        //  middle one (latest start, earliest end). Otherwise, we pick the numeric one.
+        // We do require at least one numeric start position and one numeric end position.
+        if (ctype_digit($sStartPositionEarly) && ctype_digit($sStartPositionLate)) {
+            $aResponse['position_start'] = max($sStartPositionEarly, $sStartPositionLate);
+        } elseif (ctype_digit($sStartPositionEarly)) {
+            $aResponse['position_start'] = $sStartPositionEarly;
+        } elseif (ctype_digit($sStartPositionLate)) {
+            $aResponse['position_start'] = $sStartPositionLate;
         } else {
-            $aResponse['type'] = $sVariant;
+            // Two non-numeric positions. Reject this variant.
+            return false;
+        }
+        if (ctype_digit($sEndPositionEarly) && ctype_digit($sEndPositionLate)) {
+            $aResponse['position_end'] = min($sEndPositionEarly, $sEndPositionLate);
+        } elseif (ctype_digit($sEndPositionEarly)) {
+            $aResponse['position_end'] = $sEndPositionEarly;
+        } elseif (ctype_digit($sEndPositionLate)) {
+            $aResponse['position_end'] = $sEndPositionLate;
+        } else {
+            // Two non-numeric positions. Reject this variant.
+            return false;
         }
 
     } else {
         return false;
+    }
+
+
+
+    // If a variant is described poorly with a start > end, then we'll swap the positions so we will store them correctly.
+    if ($aResponse['position_start'] > $aResponse['position_end']) {
+        // There's many ways of doing this, but this method is the simplest to read.
+        $nTmp = $aResponse['position_start'];
+        $aResponse['position_start'] = $aResponse['position_end'];
+        $aResponse['position_end'] = $nTmp;
+
+        // And intronic, if needed.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            $nTmp = $aResponse['position_start_intron'];
+            $aResponse['position_start_intron'] = $aResponse['position_end_intron'];
+            $aResponse['position_end_intron'] = $nTmp;
+        }
+    }
+
+    // Variant type.
+    if (preg_match('/^[ACGT]>[ACGT]$/', $sVariant)) {
+        $aResponse['type'] = 'subst';
+    } else {
+        $aResponse['type'] = $sVariant;
     }
 
     return $aResponse;
