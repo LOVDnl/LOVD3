@@ -69,6 +69,7 @@ class LOVD_VariantPositionAnalyses {
 
         // Define analyses.
         $this->aAnalyses = array(
+/*
             'vog_total_variants' => // Total variants in the database.
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS,
@@ -152,6 +153,7 @@ class LOVD_VariantPositionAnalyses {
                         return array(1, 0);
                     },
                 ),
+*/
             'vot_total_variants' => // Total VOT variants in the database.
                 array(
                     'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS,
@@ -165,6 +167,30 @@ class LOVD_VariantPositionAnalyses {
                         // We'll just simply swap the fields. That may not result in correct values, but this will be
                         //  checked later. For now, this simple change may do the trick.
                         return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ?', array($zRow['position_c_end'], $zRow['position_c_end_intron'], $zRow['position_c_start'], $zRow['position_c_start_intron'], $zRow['id']))->rowCount());
+                    },
+                ),
+            'vot_positions_in_error' => // The positions that do not match the variant's description (analysis needed).
+                array(
+                    'sql_fetch_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE position_c_start IS NOT NULL AND position_c_start != 0 AND position_c_end IS NOT NULL AND position_c_end != 0',
+                    'sql_fetch' => 'SELECT id, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA` AS DNA FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE position_c_start IS NOT NULL AND position_c_start != 0 AND position_c_end IS NOT NULL AND position_c_end != 0',
+                    'fix' => function ($zRow) use ($_DB)
+                    {
+                        // Verify every single variant, compare the calculated positions with the positions we have
+                        //  stored. The calculated positions always win.
+                        $aPositions = lovd_getVariantInfo($zRow['DNA']);
+                        if ($aPositions) {
+                            // The function recognized the variant.
+                            if ($aPositions['position_start'] != $zRow['position_c_start'] ||
+                                $aPositions['position_start_intron'] != $zRow['position_c_start_intron'] ||
+                                $aPositions['position_end'] != $zRow['position_c_end'] ||
+                                $aPositions['position_end_intron'] != $zRow['position_c_end_intron']) {
+                                // Positions given by function do not match what is in the database. Fix!
+                                return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id']))->rowCount());
+                            }
+                        } else {
+                            // Variant not recognized, but positions are stored. We're going to assume they are OK.
+                        }
+                        return array(0, 0);
                     },
                 ),
         );
