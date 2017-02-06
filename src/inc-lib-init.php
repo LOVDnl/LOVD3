@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-01-31
+ * Modified    : 2017-02-06
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -567,7 +567,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
             // (int) to get rid of the '+' if it's there.
             $aResponse['position_start_intron'] = (int) $sStartPositionIntron;
-            $aResponse['position_end_intron'] = (int) ($sEndPositionIntron? $sEndPositionIntron : $sStartPositionIntron);
+            $aResponse['position_end_intron'] = (int) ($sEndPosition? $sEndPositionIntron : $sStartPositionIntron);
         }
 
 
