@@ -574,36 +574,74 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
     // If that didn't work, try matching variants with uncertain positions.
     // We're not super picky, and don't check the end of the variant.
-    } elseif (preg_match('/^([cgmn])\.\((\d+|\?)_(\d+|\?)\)_\((\d+|\?)_(\d+|\?)\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+    } elseif (preg_match('/^([cgmn])\.\((\d+|\?)([-+](?:\d+|\?))?_(\d+|\?)([-+](?:\d+|\?))?\)_\((\d+|\?)([-+](?:\d+|\?))?_(\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
         //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                               2 = Earliest start position, might be a question mark.
-        //                                        3 = Latest start position, might be a question mark.
-        //                                                     4 = Earliest end position, might be a question mark.
-        //                                                              5 = Latest end position, might be a question mark.
-        //                                                                        6 = The variant, which we'll use to determine the type.
+        //                                       3 = Earlier start position intronic offset, if available.
+        //                                                         4 = Latest start position, might be a question mark.
+        //                                                                 5 = Latest start position intronic offset, if available.
+        //                                                                                       6 = Earliest end position, might be a question mark.
+        //                                                                                               7 = Earliest end position intronic offset, if available.
+        //                                                                                                                  8 = Latest end position, might be a question mark.
+        //                                                                                                                          9 = Latest end position intronic offset, if available.
+        //                                                                                                                                              10 = The variant, which we'll use to determine the type.
 
-        list(, $sPrefix, $sStartPositionEarly, $sStartPositionLate, $sEndPositionEarly, $sEndPositionLate, $sVariant) = $aRegs;
+        list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
 
         // Store positions.
         // If each position (start, end) has two numeric positions, we choose the
         //  middle one (latest start, earliest end). Otherwise, we pick the numeric one.
         // We do require at least one numeric start position and one numeric end position.
         if (ctype_digit($sStartPositionEarly) && ctype_digit($sStartPositionLate)) {
-            $aResponse['position_start'] = max($sStartPositionEarly, $sStartPositionLate);
+            // Pick the max...
+            if ($sStartPositionEarly > $sStartPositionLate) {
+                $aResponse['position_start'] = $sStartPositionEarly;
+                if ($sStartPositionEarlyIntron) {
+                    $aResponse['position_start_intron'] = $sStartPositionEarlyIntron;
+                }
+            } else {
+                $aResponse['position_start'] = $sStartPositionLate;
+                if ($sStartPositionLateIntron) {
+                    $aResponse['position_start_intron'] = $sStartPositionLateIntron;
+                }
+            }
         } elseif (ctype_digit($sStartPositionEarly)) {
             $aResponse['position_start'] = $sStartPositionEarly;
+            if ($sStartPositionEarlyIntron) {
+                $aResponse['position_start_intron'] = $sStartPositionEarlyIntron;
+            }
         } elseif (ctype_digit($sStartPositionLate)) {
             $aResponse['position_start'] = $sStartPositionLate;
+            if ($sStartPositionLateIntron) {
+                $aResponse['position_start_intron'] = $sStartPositionLateIntron;
+            }
         } else {
             // Two non-numeric positions. Reject this variant.
             return false;
         }
         if (ctype_digit($sEndPositionEarly) && ctype_digit($sEndPositionLate)) {
-            $aResponse['position_end'] = min($sEndPositionEarly, $sEndPositionLate);
+            // Pick the min...
+            if ($sEndPositionEarly <= $sEndPositionLate) {
+                $aResponse['position_end'] = $sEndPositionEarly;
+                if ($sEndPositionEarlyIntron) {
+                    $aResponse['position_end_intron'] = $sEndPositionEarlyIntron;
+                }
+            } else {
+                $aResponse['position_end'] = $sEndPositionLate;
+                if ($sEndPositionLateIntron) {
+                    $aResponse['position_end_intron'] = $sEndPositionLateIntron;
+                }
+            }
         } elseif (ctype_digit($sEndPositionEarly)) {
             $aResponse['position_end'] = $sEndPositionEarly;
+            if ($sEndPositionEarlyIntron) {
+                $aResponse['position_end_intron'] = $sEndPositionEarlyIntron;
+            }
         } elseif (ctype_digit($sEndPositionLate)) {
             $aResponse['position_end'] = $sEndPositionLate;
+            if ($sEndPositionLateIntron) {
+                $aResponse['position_end_intron'] = $sEndPositionLateIntron;
+            }
         } else {
             // Two non-numeric positions. Reject this variant.
             return false;
