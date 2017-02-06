@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-01-28
- * Modified    : 2017-01-28
+ * Modified    : 2017-02-06
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -150,6 +150,21 @@ class LOVD_VariantPositionAnalyses {
                             return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ?, mapping_flags = mapping_flags &~ ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
                         }
                         return array(1, 0);
+                    },
+                ),
+            'vot_total_variants' => // Total VOT variants in the database.
+                array(
+                    'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS,
+                ),
+            'vot_positions_swapped' => // The positions that have been swapped (end > start).
+                array(
+                    'sql_count' => 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE position_c_start > position_c_end',
+                    'sql_fetch' => 'SELECT id, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE position_c_start > position_c_end',
+                    'fix' => function ($zRow) use ($_DB)
+                    {
+                        // We'll just simply swap the fields. That may not result in correct values, but this will be
+                        //  checked later. For now, this simple change may do the trick.
+                        return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ?', array($zRow['position_c_end'], $zRow['position_c_end_intron'], $zRow['position_c_start'], $zRow['position_c_start_intron'], $zRow['id']))->rowCount());
                     },
                 ),
         );
