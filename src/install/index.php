@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-01-25
+ * Modified    : 2017-02-07
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -334,14 +335,17 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Restart session, now with correct session name.
     session_destroy();
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
-// DMD_SPECIFIC
-if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
-    $sSignature = 'ifokkema_local_3.0';
-} elseif ($_SERVER['SERVER_ADMIN'] == 'd.asscheman@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
-    $sSignature = 'dasscheman_local_3.0';
-} elseif (isset($_SERVER['USER']) && $_SERVER['USER'] === 'travis') {
-    $sSignature = 'travis_CI_3.0';
-}
+
+    // DMD_SPECIFIC
+    // Set alternative signature for development/test installations.
+    $aFilterAdmins = array(
+        'i.f.a.c.fokkema@lumc.nl' => 'ifokkema_local_3.0',
+        'm.kroon@lumc.nl' => 'mkroon_local_3.0',
+        'travis-ci@localhost' => 'travis_CI_3.0');
+    if (key_exists($_SERVER['SERVER_ADMIN'], $aFilterAdmins) && $_SERVER['HTTP_HOST'] == 'localhost') {
+        $sSignature = $aFilterAdmins[$_SERVER['SERVER_ADMIN']];
+    }
+
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
