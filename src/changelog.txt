@@ -22,6 +22,9 @@
    entry. This was caused by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
    Closes #176: "Viewlist entry count differs from what is displayed".
+ * Fixed bug; The gene's graphs pages only showed half of the graphs due to a
+   query error introduced by the recent changes making LOVD compatible with the
+   new default "ONLY_FULL_GROUP_BY" MySQL setting.
 
 
 /**************************
