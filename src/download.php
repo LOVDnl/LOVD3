@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2016-11-15
- * For LOVD    : 3.0-18
+ * Modified    : 2017-02-08
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -78,6 +79,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     $sHeader = '';   // What header to put in the file? "<header> download".
     $sFilter = '';   // Do you want to filter the data? If so, put some string here, that marks this type of filter.
     $ID = '';
+    $aGene = array();
     if ($_PE[1] == 'all' && empty($_PE[2])) {
         // Download all data.
         $sFileName = 'full_download';
@@ -89,8 +91,11 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sHeader = 'Full data';
         $sFilter = 'gene';
         $ID = $_PE[3];
+        $aGene = $_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id=?', array($ID))->fetchAssoc();
         lovd_isAuthorized('gene', $_PE[3]);
-        lovd_requireAuth(LEVEL_CURATOR);
+        if (!isset($aGene['allow_download']) || $aGene['allow_download'] != '1') {
+            lovd_requireAuth(LEVEL_CURATOR);
+        }
     } elseif ($_PE[1] == 'all' && $_PE[2] == 'mine' && PATH_COUNT == 3) {
         // Own data.
         $sFileName = 'owned_data';
