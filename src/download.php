@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-02-08
+ * Modified    : 2017-02-09
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -39,6 +39,55 @@ set_time_limit(60*5); // Very large, but not infinite.
 
 
 
+function getWhereClauseForFilters($aFilters)
+{
+    // Create a SQL WHERE clause for a given filter. Returns two values, first
+    // is a string containing the SQL clause, second is an array of arguments
+    // to be added when executing a query with the clause through PDO.
+
+    $sWHERE = '';
+    $aArgs = array();
+    if ($aFilters) {
+        // The fact that we have a filter, may affect other data types.
+        $i = 0;
+        foreach ($aFilters as $sFilter => $Value) {
+            $sWHERE .= (!$i++ ? '' : ' AND ');
+            switch ($sFilter) {
+                case 'category':
+                    // Custom column category must be taken from the start of the column id.
+                    $sWHERE .= 'id LIKE ?';
+                    $aArgs[] = $Value . '/%';
+                    break;
+                case 'owner':
+                    // Data ownership is defined by the created_by and owned_by fields.
+                    $sWHERE .= '(created_by = ? OR owned_by = ?)';
+                    $aArgs[] = $Value;
+                    $aArgs[] = $Value;
+                    break;
+                default:
+                    // By default, we'll assume that this filter is a certain column.
+                    // However, if an empty array of possible values was given to filter on, we must simply return no results.
+                    if (is_array($Value) && !count($Value)) {
+                        // No hits, filter all out.
+                        $sWHERE .= '0=1';
+                    } else {
+                        $sWHERE .= '`' . $sFilter . '` ';
+                        if (is_array($Value)) {
+                            $sWHERE .= 'IN (?' . str_repeat(', ?', count($Value) - 1) . ')';
+                            $aArgs = array_merge($aArgs, $Value);
+                        } else {
+                            $sWHERE .= '= ?';
+                            $aArgs[] = $Value;
+                        }
+                    }
+            }
+        }
+        return array($sWHERE, $aArgs);
+    }
+    return array($sWHERE, $aArgs);
+}
+
+
 
 
 // None of the URLs accept an ACTION, all require at least $_PE[1].
@@ -50,7 +99,7 @@ if (ACTION || PATH_COUNT < 2) {
 
 
 
-if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'user')))) ||
+if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'gene_public', 'mine', 'user')))) ||
     ($_PE[1] == 'columns' && PATH_COUNT <= 3) ||
     ($_PE[1] == 'diseases' && PATH_COUNT == 2) ||
     ($_PE[1] == 'genes' && PATH_COUNT == 2) ||
@@ -90,6 +139,14 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sFileName = 'full_download_' . $_PE[3];
         $sHeader = 'Full data';
         $sFilter = 'gene';
+        $ID = $_PE[3];
+        lovd_isAuthorized('gene', $_PE[3]);
+        lovd_requireAuth(LEVEL_CURATOR);
+    } elseif ($_PE[1] == 'all' && $_PE[2] == 'gene_public'  && PATH_COUNT == 4 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[3]))) {
+        // Gene database contents.
+        $sFileName = 'public_data_download_' . $_PE[3];
+        $sHeader = 'Public data';
+        $sFilter = 'gene_public';
         $ID = $_PE[3];
         $aGene = $_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id=?', array($ID))->fetchAssoc();
         lovd_isAuthorized('gene', $_PE[3]);
@@ -256,7 +313,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'edited_by', 'edited_date', 'updated_by', 'updated_date',
                 );
 
-        } elseif ($sFilter == 'gene') {
+        } elseif ($sFilter == 'gene' || $sFilter == 'gene_public') {
             // Gene-specific download. Can be downloaded by Curator.
             // Change the order of filtering just a bit, so we can filter the VOGs based on the VOTs, the screenings based on the VOGs and the Individuals based on their Screenings.
             $aObjectsToBeFiltered =
@@ -303,6 +360,12 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             // Ind2Dis' have to be prefetched, because the Diseases need to be filtered on their IDs.
             $aObjects['Ind2Dis']['prefetch'] = true;
             $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid'; // More values were already in, from Gen2Dis!
+
+            if ($sFilter == 'gene_public') {
+                $aObjects['Variants']['filters']['statusid'] = STATUS_OK;
+                $aObjects['Individuals']['filters']['statusid'] = STATUS_OK;
+                $aObjects['Phenotypes']['filters']['statusid'] = STATUS_OK;
+            }
         }
 
     } elseif ($_PE[1] == 'columns') {
@@ -365,44 +428,7 @@ if (empty($aObjectsToBeFiltered) || count($aObjectsToBeFiltered) != count($aObje
 }
 foreach ($aObjectsToBeFiltered as $sObject) {
     $aSettings = $aObjects[$sObject];
-    $sWHERE = '';
-    $aArgs = array();
-    if ($aSettings['filters']) {
-        // The fact that we have a filter, may affect other data types.
-        $i = 0;
-        foreach ($aSettings['filters'] as $sFilter => $Value) {
-            $sWHERE .= (!$i++? '' : ' AND ');
-            switch ($sFilter) {
-                case 'category':
-                    // Custom column category must be taken from the start of the column id.
-                    $sWHERE .= 'id LIKE ?';
-                    $aArgs[] = $Value . '/%';
-                    break;
-                case 'owner':
-                    // Data ownership is defined by the created_by and owned_by fields.
-                    $sWHERE .= '(created_by = ? OR owned_by = ?)';
-                    $aArgs[] = $Value;
-                    $aArgs[] = $Value;
-                    break;
-                default:
-                    // By default, we'll assume that this filter is a certain column.
-                    // However, if an empty array of possible values was given to filter on, we must simply return no results.
-                    if (is_array($Value) && !count($Value)) {
-                        // No hits, filter all out.
-                        $sWHERE .= '0=1';
-                    } else {
-                        $sWHERE .= '`' . $sFilter . '` ';
-                        if (is_array($Value)) {
-                            $sWHERE .= 'IN (?' . str_repeat(', ?', count($Value) - 1) . ')';
-                            $aArgs = array_merge($aArgs, $Value);
-                        } else {
-                            $sWHERE .= '= ?';
-                            $aArgs[] = $Value;
-                        }
-                    }
-            }
-        }
-    }
+    list($sWHERE, $aArgs) = getWhereClauseForFilters($aSettings['filters']);
 
     // Build the query.
     // Ugly hack: we will change $sTable for the VOT to a string that joins VOG such that we can apply filters.
@@ -410,6 +436,14 @@ foreach ($aObjectsToBeFiltered as $sObject) {
     //   VOG values can overwrite VOT values (effectid).
     if ($sObject == 'Variants_On_Transcripts') {
         $sTable = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS . ' USING (id)';
+
+        // Apply VOG filters as well.
+        // FIXME: possibility of name clashes here for filters on VOG/VOT columns with same name.
+        if (isset($aObjects['Variants']) && !empty($aObjects['Variants']['filters'])) {
+            list($sVOGWhere, $aVOGArgs) = getWhereClauseForFilters($aObjects['Variants']['filters']);
+            $sWHERE .= (($sWHERE == '')? '' : ' AND ') . $sVOGWhere;
+            $aArgs = array_merge($aArgs, $aVOGArgs);
+        }
     } elseif ($sObject == 'Columns') {
         $sTable = TABLE_COLS . ' AS t';
     } else {
