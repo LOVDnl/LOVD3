@@ -365,6 +365,21 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'gen
                 $aObjects['Variants']['filters']['statusid'] = STATUS_OK;
                 $aObjects['Individuals']['filters']['statusid'] = STATUS_OK;
                 $aObjects['Phenotypes']['filters']['statusid'] = STATUS_OK;
+
+                // Hide non-public columns.
+                $aObjectTranslations = array(
+                    'VariantOnTranscript' => 'Variants_On_Transcripts',
+                    'VariantOnGenome' => 'Variants',
+                    'Individual' => 'Individuals',
+                    'Phenotype' => 'Phenotypes',
+                    'Screening' => 'Screenings');
+                $qHiddenCols = 'SELECT id, SUBSTRING_INDEX(id, "/", 1) AS category FROM ' .
+                               'lovd_v3_columns WHERE public_view = ?';
+                $aHiddenCols = $_DB->query($qHiddenCols, array('0'))->fetchAllAssoc();
+                foreach($aHiddenCols as $aHiddenCol) {
+                    $sObject = $aObjectTranslations[$aHiddenCol['category']];
+                    $aObjects[$sObject]['hide_columns'][] = $aHiddenCol['id'];
+                }
             }
         }
 
