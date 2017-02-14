@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-02-09
+ * Modified    : 2017-02-14
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,7 +99,7 @@ if (ACTION || PATH_COUNT < 2) {
 
 
 
-if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'gene_public', 'mine', 'user')))) ||
+if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'user')))) ||
     ($_PE[1] == 'columns' && PATH_COUNT <= 3) ||
     ($_PE[1] == 'diseases' && PATH_COUNT == 2) ||
     ($_PE[1] == 'genes' && PATH_COUNT == 2) ||
@@ -138,20 +138,19 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'gen
         // Gene database contents.
         $sFileName = 'full_download_' . $_PE[3];
         $sHeader = 'Full data';
-        $sFilter = 'gene';
         $ID = $_PE[3];
         lovd_isAuthorized('gene', $_PE[3]);
-        lovd_requireAuth(LEVEL_CURATOR);
-    } elseif ($_PE[1] == 'all' && $_PE[2] == 'gene_public'  && PATH_COUNT == 4 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[3]))) {
-        // Gene database contents.
-        $sFileName = 'public_data_download_' . $_PE[3];
-        $sHeader = 'Public data';
-        $sFilter = 'gene_public';
-        $ID = $_PE[3];
-        $aGene = $_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id=?', array($ID))->fetchAssoc();
-        lovd_isAuthorized('gene', $_PE[3]);
-        if (!isset($aGene['allow_download']) || $aGene['allow_download'] != '1') {
-            lovd_requireAuth(LEVEL_CURATOR);
+
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $sFilter = 'gene';
+        } else {
+            $aGene = $_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id=?', array($ID))->fetchAssoc();
+            if (isset($aGene['allow_download']) && $aGene['allow_download'] === '1') {
+                $sFilter = 'gene_public';
+            } else {
+                die('Error: Data for gene (' . $ID . ') is not public and you don\'t have permission '.
+                    'to see non-public data.' . "\r\n");
+            }
         }
     } elseif ($_PE[1] == 'all' && $_PE[2] == 'mine' && PATH_COUNT == 3) {
         // Own data.

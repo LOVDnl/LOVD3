@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-02-13
+ * Modified    : 2017-02-14
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -526,12 +526,10 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
             }
 
-            if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR ||
+                (isset($zData['allow_download']) && $zData['allow_download'] === '1')) {
                 $zData['download_'] = '<A href="download/all/gene/' . $zData['id'] . '">' .
                     'Download all information</a>';
-            } else if (isset($zData['allow_download']) && $zData['allow_download'] == '1') {
-                $zData['download_'] = '<A href="download/all/gene_public/' . $zData['id'] . '">' .
-                    'Download all public information</a>';
             } else {
                 unset($this->aColumnsViewEntry['download_']);
             }
