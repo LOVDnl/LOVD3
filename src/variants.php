@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-01-13
+ * Modified    : 2017-02-14
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,9 +69,11 @@ if (!ACTION && !empty($_GET['select_db'])) {
 
 
 
-if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) {
+if (!ACTION && (empty($_PE[1]) ||
+    preg_match('/^(chr[0-9A-Z]{1,2})(:([0-9,]+)-([0-9,]+))?$/', $_PE[1], $aRegionArgs))) {
     // URL: /variants
     // URL: /variants/chrX
+    // URL: /variants/chr3:20-200,000
     // View all genomic variant entries, optionally restricted by chromosome.
 
     // Managers are allowed to download this list...
@@ -79,26 +81,44 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) 
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    if (!empty($_PE[1])) {
-        $sChr = $_PE[1];
-    } else {
-        $sChr = '';
+    require_once ROOT_PATH . 'class/object_genome_variants.php';
+    $_DATA = new LOVD_GenomeVariant();
+    $aColsToHide = array('allele_');
+    $sTitle = 'View all genomic variants';
+
+    // Set conditions on viewlist if a region is specified (e.g. chr3:20-200,000)
+    if (isset($aRegionArgs)) {
+        // Set search condition for chromosome.
+        $_GET['search_chromosome'] = '="' . substr($aRegionArgs[1], 3) . '"';
+        $aColsToHide[] = 'chromosome';
+
+        if (count($aRegionArgs) == 5) {
+            // Set search conditions for start and end of region.
+            $_DATA->aColumnsViewList['position_g_start'] = array(
+                'view' => false,
+                'db'   => array('position_g_start', 'ASC', 'INT'));
+            $_GET['search_position_g_start'] = '>' . str_replace(',', '', $aRegionArgs[3]);
+            $aColsToHide[] = 'position_g_start';
+
+            $_DATA->aColumnsViewList['position_g_end'] = array(
+                'view' => false,
+                'db'   => array('position_g_end', 'ASC', 'INT'));
+            $_GET['search_position_g_end'] = '<' . str_replace(',', '', $aRegionArgs[4]);
+            $aColsToHide[] = 'position_g_end';
+
+            $sTitle .= ' in region ' . $aRegionArgs[0];
+        } else {
+            $sTitle .= ' at chromosome ' . substr($aRegionArgs[1], 3);
+        }
     }
 
-    define('PAGE_TITLE', 'View all genomic variants' . (!$sChr? '' : ' on chromosome ' . substr($sChr, 3)));
+    // Show page with variant viewlist.
+    define('PAGE_TITLE', $sTitle);
     $_T->printHeader();
     $_T->printTitle();
 
-    require ROOT_PATH . 'class/object_genome_variants.php';
-    $_DATA = new LOVD_GenomeVariant();
-    $aColsToHide = array('allele_');
-    if ($sChr) {
-        $_GET['search_chromosome'] = '="' . substr($sChr, 3) . '"';
-        $aColsToHide[] = 'chromosome';
-    }
-    $_DATA->viewList('VOG', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER),
+    $_DATA->viewList('VOG', $aColsToHide, false, false, $_AUTH['level'] >= LEVEL_MANAGER,
                      false, true);
-
     $_T->printFooter();
     exit;
 }
