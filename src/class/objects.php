@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-11-15
- * For LOVD    : 3.0-18
+ * Modified    : 2017-02-15
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -262,7 +262,7 @@ class LOVD_Object {
     function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
-        global $_AUTH, $_SETT;
+        global $_AUTH, $_SETT, $_ERROR;
 
         $aForm = $this->getForm();
         $aFormInfo = array();
@@ -286,6 +286,12 @@ class LOVD_Object {
 
         $aHeaders = array();
 
+        // Array to store fieldnames as keys for fields where an error is
+        // reported in this checkfields() call. Note that this is different
+        // from $_ERROR['fields'] which contains fieldnames for multiple
+        // records during import, not just the current checkfields() call.
+        $aErroredFields = array();
+
         // Validate form by looking at the form itself, and check what's needed.
         foreach ($aForm as $aField) {
             if (!is_array($aField)) {
@@ -308,6 +314,7 @@ class LOVD_Object {
             // Mandatory fields, as defined by child object.
             if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '')) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
+                $aErroredFields[$sName] = true;
             }
 
             if ($sType == 'select') {
@@ -334,8 +341,10 @@ class LOVD_Object {
                         if (!in_array($sValue, $aOptions)) {
                             if (lovd_getProjectFile() == '/import.php') {
                                 lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aOptions) . '\'.');
+                                $aErroredFields[$sName] = true;
                             } else {
                                 lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                                $aErroredFields[$sName] = true;
                             }
                         }
                     }
@@ -350,6 +359,7 @@ class LOVD_Object {
                     $aData[$sName] = 0;
                 } elseif (!in_array($aData[$sName], array('0', '1'))) {
                     lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
+                    $aErroredFields[$sName] = true;
                 }
             }
 
@@ -357,6 +367,7 @@ class LOVD_Object {
                 // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
                 if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
                     lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+                    $aErroredFields[$sName] = true;
                 }
             }
         }
@@ -366,8 +377,9 @@ class LOVD_Object {
         //  we do have data to check but no $aForm entry linked to it.
         foreach ($aData as $sFieldname => $sFieldvalue) {
 
-            if (!is_string($sFieldvalue)) {
-                // Checks below currently do not handle non-string values.
+            if (!is_string($sFieldvalue) || isset($aErroredFields[$sFieldname])) {
+                // Do not process non-string values and fields for which an (more specific)
+                // error has already been reported earlier.
                 continue;
             }
 
