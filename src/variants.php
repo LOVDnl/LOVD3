@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-02-14
+ * Modified    : 2017-02-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -95,13 +95,13 @@ if (!ACTION && (empty($_PE[1]) ||
         if (count($aRegionArgs) == 5) {
             // Set search conditions for start and end of region.
             $_DATA->aColumnsViewList['position_g_start'] = array(
-                'view' => false,
+                'view' => array('Start position'),
                 'db'   => array('position_g_start', 'ASC', 'INT'));
             $_GET['search_position_g_start'] = '>' . str_replace(',', '', $aRegionArgs[3]);
             $aColsToHide[] = 'position_g_start';
 
             $_DATA->aColumnsViewList['position_g_end'] = array(
-                'view' => false,
+                'view' => array('End position'),
                 'db'   => array('position_g_end', 'ASC', 'INT'));
             $_GET['search_position_g_end'] = '<' . str_replace(',', '', $aRegionArgs[4]);
             $aColsToHide[] = 'position_g_end';
