@@ -361,9 +361,9 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid'; // More values were already in, from Gen2Dis!
 
             if ($sFilter == 'gene_public') {
-                $aObjects['Variants']['filters']['statusid'] = STATUS_OK;
-                $aObjects['Individuals']['filters']['statusid'] = STATUS_OK;
-                $aObjects['Phenotypes']['filters']['statusid'] = STATUS_OK;
+                $aObjects['Variants']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
+                $aObjects['Individuals']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
+                $aObjects['Phenotypes']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
 
                 // Hide non-public columns.
                 $aObjectTranslations = array(
