@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-02-14
+ * Modified    : 2017-02-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -373,7 +373,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'Phenotype' => 'Phenotypes',
                     'Screening' => 'Screenings');
                 $qHiddenCols = 'SELECT id, SUBSTRING_INDEX(id, "/", 1) AS category FROM ' .
-                               'lovd_v3_columns WHERE public_view = ?';
+                               TABLE_COLS . ' WHERE public_view = ?';
                 $aHiddenCols = $_DB->query($qHiddenCols, array('0'))->fetchAllAssoc();
                 foreach($aHiddenCols as $aHiddenCol) {
                     $sObject = $aObjectTranslations[$aHiddenCol['category']];
