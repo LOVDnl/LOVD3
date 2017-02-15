@@ -866,6 +866,15 @@ if (POST) {
                 $_POST['workID'] = '';
             }
 
+            // Special actions for section Screenings
+            if ($sCurrentSection == 'Screenings') {
+                // For field `variants_found`, interpret any number >1 as 1.
+                if (isset($aLine['variants_found']) && is_numeric($aLine['variants_found']) &&
+                    ((int) $aLine['variants_found']) > 1) {
+                    $aLine['variants_found'] = '1';
+                }
+            }
+
             // Build the form, necessary for field-specific actions (currently for checkboxes only).
             // Exclude section Genes, because it is not allowed to import this section, it is not necessary to run the getForm().
             if (isset($aSection['object']) && is_object($aSection['object']) && $sCurrentSection != 'Genes') {
