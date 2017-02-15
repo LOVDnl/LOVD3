@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-12-13
- * For LOVD    : 3.0-18
+ * Modified    : 2017-02-15
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -210,9 +210,6 @@ function lovd_setEmptyCheckboxFields ($aForm)
             if (isset($aLine[$sName]) && $aLine[$sName] === '') {
                 // All data in $aLine is handled as a string, therefor we set the checkbox variable as string.
                 $aLine[$sName] = '0';
-            }
-            if (isset($aLine[$sName]) && !in_array($aLine[$sName], array('0', '1'))) {
-                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
             }
         }
     }
