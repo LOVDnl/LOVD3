@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2016-09-20
- * For LOVD    : 3.0-17
+ * Modified    : 2017-02-17
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -92,7 +92,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // If this gene has only one NM, show that one. Otherwise have people pick one.
     list($nTranscriptID, $sTranscript) = each($aTranscripts);
     if (!$nTranscripts) {
-        $sMessage = 'No transcripts or variants found for this gene.';
+        $sMessage = 'No transcripts with linked variants found for this gene.';
     } elseif ($nTranscripts == 1) {
         $_GET['search_transcriptid'] = $nTranscriptID;
         $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
