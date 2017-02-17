@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-02-15
+ * Modified    : 2017-02-17
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -365,6 +365,8 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                 $aObjects['Individuals']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
                 $aObjects['Phenotypes']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
 
+                $aObjects['Individuals']['filter_other']['Screenings']['individualid'] = 'id';
+
                 // Hide non-public columns.
                 $aObjectTranslations = array(
                     'VariantOnTranscript' => 'Variants_On_Transcripts',
@@ -502,6 +504,27 @@ foreach ($aObjectsToBeFiltered as $sObject) {
 }
 
 
+
+if (isset($sFilter) && $sFilter == 'gene_public') {
+    // Ugly hack to run otherwise ignored filter of individualid on screenings.
+    // Fixme: make sure this filter is part of the query to get screenings from DB.
+
+    if (isset($aObjects['Screenings']['filters']['individualid']) &&
+        is_array($aObjects['Screenings']['filters']['individualid'])) {
+
+        // Get allowed values as keys, for quick lookups.
+        $aValuesAsKeys = array_flip($aObjects['Screenings']['filters']['individualid']);
+
+        // Filter out non-allowed values for individualid.
+        $aNewData = array();
+        foreach ($aObjects['Screenings']['data'] as $zData) {
+            if (key_exists($zData['individualid'], $aValuesAsKeys)) {
+                $aNewData[] = $zData;
+            }
+        }
+        $aObjects['Screenings']['data'] = $aNewData;
+    }
+}
 
 
 
