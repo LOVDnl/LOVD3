@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2016-07-20
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -262,6 +262,18 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
 
+        // Diagnostics: Don't allow individuals with an identical Lab-ID.
+        // Can't enforce this in the table, because it's a custom column that's not active during installation, so I'll just do it like this.
+        if (LOVD_plus && !empty($aData['Individual/Lab_ID'])) {
+            if ($zData && isset($zData['id']) && isset($zData['Individual/Lab_ID'])) {
+                if ($_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Lab_ID` = ? AND id != ?', array($aData['Individual/Lab_ID'], $zData['id']))->fetchColumn()) {
+                    lovd_errorAdd('Individual/Lab_ID', 'Another individual with this Lab ID already exists in the database.');
+                }
+            } elseif ($_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Lab_ID` = ?', array($aData['Individual/Lab_ID']))->fetchColumn()) {
+                lovd_errorAdd('Individual/Lab_ID', 'Another individual with this Lab ID already exists in the database.');
+            }
+        }
+
         lovd_checkXSS();
     }
 
@@ -322,7 +334,7 @@ class LOVD_Individual extends LOVD_Custom {
                  array(
                         array('Panel size', '', 'text', 'panel_size', 10),
                         array('', '', 'note', 'Fill in how many individuals this entry represents (default: 1).'),
-                        array('ID of panel this entry belongs to (optional)', 'Fill in LOVD\'s individual ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
+           'panelid' => array('ID of panel this entry belongs to (optional)', 'Fill in LOVD\'s individual ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
@@ -351,6 +363,9 @@ class LOVD_Individual extends LOVD_Custom {
             unset($this->aFormData['diseases_create']);
         } else {
             unset($this->aFormData['diseases_info']);
+        }
+        if (LOVD_plus) {
+            unset($this->aFormData['panelid']);
         }
 
         return parent::getForm();

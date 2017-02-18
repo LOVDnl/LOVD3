@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2016-08-29
- * For LOVD    : 3.0-17
+ * Modified    : 2017-01-25
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -83,12 +83,17 @@ class LOVD_Template {
         $this->aMenu =
             array(
                         'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'View all genes'),
+                        'gene_panels' => 'View all gene panels',
                         'genes_' =>
                          array(
-                                '' => array('menu_magnifying_glass.png', 'View all genes', 0),
-                                '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View ' . $_SESSION['currdb'] . ' gene homepage', 0),
-                                '/genes/' . $_SESSION['currdb'] . '/graphs' => array('menu_graphs.png', 'View graphs about the ' . $_SESSION['currdb'] . ' gene database', 0),
-                                'create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
+                             '/gene_panels' => array('menu_magnifying_glass.png', 'View all gene panels', 0),
+                             '/gene_panels?create' => array('plus.png', 'Create a new gene panel', LEVEL_SUBMITTER),
+                             'hr',
+                             '/genes' => array('menu_magnifying_glass.png', 'View all genes', 0),
+                             '/gene_statistics' => array('menu_magnifying_glass.png', 'View all gene statistics', 0),
+                             '/genes/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View ' . $_SESSION['currdb'] . ' gene homepage', 0),
+                             '/genes/' . $_SESSION['currdb'] . '/graphs' => array('menu_graphs.png', 'View graphs about the ' . $_SESSION['currdb'] . ' gene database', 0),
+                             '/genes?create' => array('plus.png', 'Create a new gene entry', LEVEL_MANAGER),
                               ),
                         'transcripts' => 'View transcripts',
                         'transcripts_' =>
@@ -191,6 +196,7 @@ class LOVD_Template {
                                 'hr',
                                 '/download/all' => array('menu_save.png', 'Download all data', LEVEL_MANAGER),
                                 '/import' => array('menu_import.png', 'Import data', LEVEL_MANAGER),
+                                '/import?schedule' => array('menu_clock.png', 'Schedule data for import', LEVEL_MANAGER),
                                 'hr',
                                 '/logs' => array('menu_logs.png', 'View system logs', LEVEL_MANAGER),
                                 'hr',
@@ -225,6 +231,29 @@ class LOVD_Template {
             unset($this->aMenu['diseases_']['search_genes_=']);
             unset($this->aMenu['screenings_']['/screenings/']);
             unset($this->aMenu['configuration_']);
+        }
+
+        if (LOVD_plus) {
+            // Unset unneeded tabs for Diagnostics.
+            unset($this->aMenu['genes']);
+            unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
+            unset($this->aMenu['variants'], $this->aMenu['variants_']);
+            unset($this->aMenu['screenings'], $this->aMenu['screenings_']);
+            unset($this->aMenu['submit'], $this->aMenu['submit_']);
+            unset($this->aMenu['configuration'], $this->aMenu['configuration_']);
+            unset($this->aMenu['setup_']['/download/columns']);
+            unset($this->aMenu['setup_']['/download/all']);
+            if ($_AUTH && $_AUTH['level'] <= LEVEL_ANALYZER) {
+                unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            }
+        } else {
+            // Remove menu items for non-LOVD+.
+            unset($this->aMenu['gene_panels']);
+            unset($this->aMenu['genes_']['/gene_panels']);
+            unset($this->aMenu['genes_']['/gene_panels?create']);
+            unset($this->aMenu['genes_'][0]);
+            unset($this->aMenu['genes_']['/gene_statistics']);
+            unset($this->aMenu['setup_']['/import?schedule']);
         }
 
         if (!defined('PAGE_TITLE')) {
@@ -320,7 +349,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD software &copy;2004-2016 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD software &copy;2004-2017 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -580,6 +609,10 @@ function lovd_mapVariants ()
 
 <BODY style="margin : 0px;">
 
+<TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
+
+<!-- Have a DIV for the announcements together with the header, to make sure the announcements move with the sticky header. -->
+<DIV id="stickyheader" style="position : fixed; z-index : 10; width : 100%">
 <?php
 // Check for announcements. Ignore errors, in case the table doesn't exist yet.
 $qAnnouncements = @$_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
@@ -593,28 +626,27 @@ foreach ($zAnnouncements as $zAnnouncement) {
 }
 ?>
 
-<TABLE border="0" cellpadding="0" cellspacing="0" width="100%"><TR><TD>
-
 <TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo">
   <TR>
 <?php
         if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
-            $_CONF['logo_uri'] = 'gfx/LOVD3_logo145x50.jpg';
+            $_CONF['logo_uri'] = 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg';
         }
         $aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
         if (!is_array($aImage)) {
-            $aImage = array('130', '50', '', 'width="130" heigth="50"');
+            $aImage = array('145', '50', '', 'width="145" heigth="50"');
         }
         list($nWidth, $nHeight, $sType, $sSize) = $aImage;
         print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($nHeight + 5) . '">' . "\n" .
               '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
               '    </TD>' . "\n");
 
-        print('    <TD valign="top" style="padding-top : 2px;">' . "\n" .
+        print('    <TD valign="top" style="padding-top : 2px; white-space : nowrap; width : 100%">' . "\n" .
               '      <H2 style="margin-bottom : 2px;">' . $_CONF['system_title'] . '</H2>');
 
         if ($sCurrSymbol && $sCurrGene) {
-            print('      <H5 id="gene_name" style="display:inline">' . $sCurrGene . ' (' . $sCurrSymbol . ')' . "\n");
+            $sGeneName = lovd_shortenString($sCurrSymbol . ' (' . $sCurrGene . ')', 55);
+            print('      <H5 id="gene_name" style="display:inline">' . $sGeneName . "\n");
             if (strpos($sGeneSwitchURL, '{{GENE}}') !== false) {
                 print('        <A href="#" onclick="lovd_switchGene(); return false;">' . "\n" .
                       '          <IMG src="gfx/lovd_genes_switch_inline.png" width="23" height="23" alt="Switch gene" title="Switch gene database" align="top">' . "\n" .
@@ -627,7 +659,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // This is done with function lovd_switchGene().
         print('      <H5 id="gene_switcher"></H5>' . "\n" .
               '    </TD>' . "\n" .
-              '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px;">' . "\n" .
+              '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px; white-space: nowrap; padding-left: 20px;">' . "\n" .
               '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .
               (!defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
               '<BR>' . "\n");
@@ -636,13 +668,21 @@ foreach ($zAnnouncements as $zAnnouncement) {
                 print('      <B>Welcome, ' . $_AUTH['name'] . '</B><BR>' . "\n" .
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
-                print('      ' . (!$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
-                    '<A href="login"><B>Log in</B></A>' . "\n");
+                // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
+                print('      ' . (LOVD_plus || !$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                      '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }
 
         print('    </TD>' . "\n" .
-              '  </TR>' . "\n");
+              '  </TR>' . "\n" .
+              '</TABLE>' . "\n" .
+              '</DIV>' . "\n\n");
+
+        $nTotalTabWidth = 0; // Will stretch the page at least this far, so the tabs don't "break" if the window is narrow.
+        // The margin chosen here is just a default. We don't actually know the height of the announcements, unless we measure them.
+        // So after printing this table, we'll measure it and resize the margin.
+        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo" style="margin-top : ' . (55+(count($zAnnouncements)*46)) . 'px;' . (count($this->aMenu)? '' : ' border-bottom : 2px solid #000000;') . '">' . "\n");
 
         // Add curator info to header.
         if ($sCurrSymbol && $sCurrGene) {
@@ -662,15 +702,9 @@ foreach ($zAnnouncements as $zAnnouncement) {
             }
         }
 
-        print('</TABLE>' . "\n\n");
-
-
-
         // Build menu tabs...
-        $nTotalTabWidth = 0; // Will stretch the page at least this far, so the tabs don't "break" if the window is narrow.
-        print('<TABLE border="0" cellpadding="0" cellspacing="0" width="100%" class="logo"' . (count($this->aMenu)? '' : ' style="border-bottom : 2px solid #000000;"') . '>' . "\n" .
-              '  <TR>' . "\n" .
-              '    <TD align="left" style="background : url(\'gfx/tab_fill.png\'); background-repeat : repeat-x;">' . "\n");
+        print('  <TR>' . "\n" .
+              '    <TD align="left" colspan="2" style="background : url(\'gfx/tab_fill.png\'); background-repeat : repeat-x;">' . "\n");
 
         // Loop menu.
         $n         = 0;
@@ -783,6 +817,14 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '  </TR>' . "\n" .
               '</TABLE>' . "\n\n" .
               '<IMG src="gfx/trans.png" alt="" width="' . $nTotalTabWidth . '" height="0">' . "\n\n");
+
+        if (!empty($zAnnouncements)) {
+            // Measure the height of the sticky header (can depend on announcements or
+            // font settings and such), and adapt the menu table to have a margin of this height.
+            print('<SCRIPT type="text/javascript">' . "\n" .
+                  '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+                  '</SCRIPT>' . "\n\n");
+        }
 
         // Attach dropdown menus.
         print('<!-- Start drop down menu definitions -->' . "\n");

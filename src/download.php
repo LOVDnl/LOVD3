@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2016-04-08
- * For LOVD    : 3.0-15
+ * Modified    : 2016-11-15
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -32,6 +32,7 @@ $_GET['format'] = 'text/plain'; // To make sure all possible error functions out
 define('FORMAT_ALLOW_TEXTPLAIN', true);
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+set_time_limit(60*5); // Very large, but not infinite.
 
 //header('Content-type: text/plain; charset=UTF-8');
 
@@ -50,22 +51,35 @@ if (ACTION || PATH_COUNT < 2) {
 
 if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'user')))) ||
     ($_PE[1] == 'columns' && PATH_COUNT <= 3) ||
-    ($_PE[1] == 'genes' && PATH_COUNT == 2)) {
+    ($_PE[1] == 'diseases' && PATH_COUNT == 2) ||
+    ($_PE[1] == 'genes' && PATH_COUNT == 2) ||
+    ($_PE[1] == 'gene_panels' && PATH_COUNT == 3 && ctype_digit($_PE[2]))) {
     // URL: /download/all
     // URL: /download/all/gene/IVD
     // URL: /download/all/mine
     // URL: /download/all/user/00001
     // URL: /download/columns
     // URL: /download/columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
+    // URL: /download/diseases
     // URL: /download/genes
+    // URL: /download/gene_panels/00001
     // Download data from the database, so that we can import it elsewhere.
+
+    if (LOVD_plus && $_PE[1] != 'gene_panels') {
+        // For LOVD+, in general downloads are closed.
+        // We have an exception for gene panels.
+        $_T->printHeader();
+        lovd_showInfoTable('Disabled on request.', 'information');
+        $_T->printFooter();
+        exit;
+    }
 
     $sFileName = ''; // What name to give the file that is provided?
     $sHeader = '';   // What header to put in the file? "<header> download".
     $sFilter = '';   // Do you want to filter the data? If so, put some string here, that marks this type of filter.
     $ID = '';
     if ($_PE[1] == 'all' && empty($_PE[2])) {
-        // Download all.
+        // Download all data.
         $sFileName = 'full_download';
         $sHeader = 'Full data';
         lovd_requireAuth(LEVEL_MANAGER);
@@ -93,7 +107,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         lovd_requireAuth(LEVEL_MANAGER);
 
     } elseif ($_PE[1] == 'columns' && empty($_PE[2])) {
-        // Download all.
+        // Download all custom columns.
         $sFileName = 'custom_columns';
         $sHeader = 'Custom column';
         lovd_requireAuth(LEVEL_MANAGER);
@@ -106,10 +120,24 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $ID = $_PE[2];
         lovd_requireAuth(LEVEL_MANAGER);
 
+    } elseif ($_PE[1] == 'diseases' && empty($_PE[2])) {
+        // Download all diseases.
+        $sFileName = 'diseases';
+        $sHeader = 'Disease data';
+        lovd_requireAuth(LEVEL_MANAGER);
+
     } elseif ($_PE[1] == 'genes' && empty($_PE[2])) {
         // Download all genes.
         $sFileName = 'genes';
         $sHeader = 'Gene data';
+        lovd_requireAuth(LEVEL_MANAGER);
+
+    } elseif (LOVD_plus && $_PE[1] == 'gene_panels' && PATH_COUNT == 3 && ctype_digit($_PE[2])) {
+        // Download a single gene panel.
+        $sFileName = 'gene_panel_' . $_PE[2];
+        $sHeader = 'Gene panel';
+        $sFilter = 'genepanel';
+        $ID = $_PE[2];
         lovd_requireAuth(LEVEL_MANAGER);
     } else {
         exit;
@@ -121,10 +149,8 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sHeader . ' download ### To import, do not remove or alter this header ###' . "\r\n");
     if ($sFilter == 'owner') {
         print('## Filter: (created_by = ' . $ID . ' || owned_by = ' . $ID . ')' . "\r\n");
-    } elseif ($sFilter == 'gene') {
-        print('## Filter: (gene = ' . $ID . ')' . "\r\n");
-    } elseif ($sFilter == 'category') {
-        print('## Filter: (category = ' . $ID . ')' . "\r\n");
+    } elseif (in_array($sFilter, array('category', 'gene', 'genepanel'))) {
+        print('## Filter: (' . $sFilter . ' = ' . $ID . ')' . "\r\n");
     }
     print('# charset = UTF-8' . "\r\n\r\n");
 
@@ -285,12 +311,32 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             $aObjects['Columns']['filters']['category'] = $ID;
         }
 
+    } elseif ($_PE[1] == 'diseases') {
+        $aObjects =
+            array(
+                'Diseases' => $aDataTypeSettings,
+                'Gen2Dis' => array_merge($aDataTypeSettings, array('label' => 'Genes_To_Diseases', 'order_by' => 'geneid, diseaseid')),
+            );
+
     } elseif ($_PE[1] == 'genes') {
         $aObjects =
             array(
                 'Genes' => $aDataTypeSettings,
                 'Transcripts' => $aDataTypeSettings,
             );
+
+    } elseif (LOVD_plus && $_PE[1] == 'gene_panels') {
+        $aObjects =
+            array(
+                'Gene_Panels' => $aDataTypeSettings,
+                'GP2Gene' => array_merge($aDataTypeSettings, array('label' => 'Gene_Panels_To_Genes', 'order_by' => 'genepanelid, geneid')),
+            );
+
+        // Apply filters and filter order, for user-specific download.
+        if ($sFilter == 'genepanel') {
+            $aObjects['Gene_Panels']['filters']['id'] = $ID;
+            $aObjects['GP2Gene']['filters']['genepanelid'] = $ID;
+        }
     }
 }
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-09-08
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -467,7 +467,7 @@ function lovd_activateMenu (sViewListID)
                 event: "click",
                 openBelowContext: true,
                 autoHide: true,
-                delay: 1000,
+                delay: 100,
                 onSelect: function(e, context) {
                     // e.stopPropagation(); // Doesn't do anything... :(
                     if ($(this).hasClass("disabled")) {
@@ -496,25 +496,21 @@ function lovd_activateMenu (sViewListID)
 
 
 
-function onNextDocumentClick (callback)
+function onNextDocumentClick (callback, eventName)
 {
-    // Call callback function on next click anywhere on the page.
+    if (typeof eventName == 'undefined') {
+        // Create a random name if none is specified.
+        eventName = 'click.' + Math.random().toString(36).substr(2, 5);
+    }
 
-    $(document).on('click.onNextDocumentClick', function() {
+    // Call callback function on next click anywhere on the page.
+    $(document).on(eventName, function() {
         // Remove event binding.
-        $(document).off('click.onNextDocumentClick');
+        $(document).off(eventName);
         callback();
     });
 }
 
-
-
-
-function closeAllTooltips ()
-{
-    // Remove tooltip elements from DOM.
-    $('div[role="tooltip"]').remove();
-}
 
 
 
@@ -612,8 +608,15 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
             bShowPreview: true,
             bShowSubmit: false
         };
-        overlayDiv.on('click', function () {
+        overlayDiv.on('click', function (clickEvent) {
+            // Make sure the click event is propagated now and not after this
+            // function is finished.
+            clickEvent.stopPropagation();
+            $(this).parent().click();
             $('.' + sOverlayClassname).remove();
+
+            // Open F&R options menu (including tooltip, which closes on next
+            // click event).
             lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
         });
     } else {
@@ -626,12 +629,13 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
 
     if (index == 0) {
         // Show tooltip near first column.
-        overlayDiv.tooltip({
-            items: '.' + sOverlayClassname,
+        $(targetTH).tooltip({
+            items: targetTH,
             content: 'Select a column to use for Find & Replace',
+            disabled: true, // don't show tooltip on mouseover
             position: {
                 my: 'left bottom',
-                at: 'right top',
+                at: 'right top-20',
                 using: function(position, feedback) {
                     $(this).css(position);
                     $('<DIV>')
@@ -640,10 +644,12 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
-                    onNextDocumentClick(closeAllTooltips);
                 }
             }
         }).tooltip('open');
+        onNextDocumentClick(function() {
+            $(targetTH).tooltip('close');
+        });
     }
 }
 
@@ -678,15 +684,9 @@ function lovd_FRColumnSelector (sViewListID)
     });
 
     // Capture clicks outside the column overlays to cancel the F&R action.
-    $(document).on('click.columnSelector', function(event) {
-        if (!$(event.target).closest('.' + sOverlayClassname).length) {
-            // Remove viewlist column overlays.
-            $('.' + sOverlayClassname).remove();
-
-            // Remove page-wide click event capture.
-            $(document).off('click.columnSelector');
-        }
-    })
+    onNextDocumentClick(function () {
+        $('.' + sOverlayClassname).remove();
+    });
 }
 
 
@@ -705,29 +705,37 @@ function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
     if (FRState[sViewListID]['phase'] == 'input' || FRState[sViewListID]['phase'] == 'preview') {
         var FROptions = lovd_getFROptionsElement(sViewListID);
         FROptions.show();
-    }
 
-    if (FRState[sViewListID]['phase'] == 'input') {
-        // Display a tooltip for the options menu.
-        var displayNameElement = $('#viewlistFRColDisplay_' + sViewListID);
-        displayNameElement.tooltip({
-            items: '#viewlistFRColDisplay_' + sViewListID,
-            content: 'Specify find & replace options',
-            position: {
-                my: 'left bottom',
-                at: 'left-40 top-15',
-                using: function (position, feedback) {
-                    $(this).css(position);
-                    $('<DIV>')
-                        .addClass('arrow')
-                        .addClass(feedback.vertical)
-                        .addClass(feedback.horizontal)
-                        .appendTo(this);
-                    $(this).removeClass('ui-widget-content');
-                    onNextDocumentClick(closeAllTooltips);
-                }
-            }
-        }).tooltip('open');
+        // Jquery-ui tooltip keeps jumping just after it is displayed. Attempts to
+        // avoid this (show: false, hide:false, collision: 'none') have failed. As
+        // it is quite annoying, I have disabled it for now.
+//        if (FRState[sViewListID]['phase'] == 'input') {
+//            // Display a tooltip for the options menu.
+//            FROptions.tooltip({
+//                items: FROptions,
+//                content: 'Specify find & replace options',
+//                disabled: true, // Do not show tooltip on mouseover.
+//                show: false,
+//                hide: false,
+//                position: {
+//                    my: 'left bottom',
+//                    at: 'left top+40',
+//                    collision: 'none',
+//                    using: function (position, feedback) {
+//                        $(this).css(position);
+//                        $('<DIV>')
+//                            .addClass('arrow')
+//                            .addClass(feedback.vertical)
+//                            .addClass(feedback.horizontal)
+//                            .appendTo(this);
+//                        $(this).removeClass('ui-widget-content');
+//                    }
+//                }
+//            }).tooltip('open');
+//            onNextDocumentClick(function() {
+//                FROptions.tooltip('close');
+//            });
+//        }
     }
 }
 
@@ -754,6 +762,7 @@ function lovd_FRPreview (sViewListID)
         FRPreviewHeader.tooltip({
             items: 'th',
             content: 'Preview changes (' + sFRRowsAffected + ' rows affected)',
+            disabled: true, // Don't show tooltip on mouseover.
             position: {
                 my: 'center bottom',
                 at: 'center top-15',
@@ -765,10 +774,15 @@ function lovd_FRPreview (sViewListID)
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
-                    onNextDocumentClick(closeAllTooltips);
                 }
             }
         }).tooltip('open');
+        onNextDocumentClick(function() {
+            FRPreviewHeader.tooltip('close');
+            // Calling 'close' in this case does not remove tooltip from page,
+            // therefore we destroy the tooltip too, removing it from the DOM.
+            FRPreviewHeader.tooltip('destroy');
+        });
     });
 }
 
@@ -821,7 +835,7 @@ function lovd_FRCleanup (sViewListID, bSubmitVL, afterSubmitCallback)
     }
 
     // Hide all tooltips.
-    closeAllTooltips();
+    $('div[role="tooltip"]').remove();
 }
 
 

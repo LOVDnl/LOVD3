@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2014-03-03
- * For LOVD    : 3.0-10
+ * Modified    : 2016-12-05
+ * For LOVD    : 3.0-18
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -27,9 +27,11 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
+ *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -56,35 +58,34 @@ require ROOT_PATH . 'inc-init.php';
 // I believe these are all Status codes I need to implement in the future. Those with asterisks are not yet implemented.
     HTTP/1.0 200 OK
 *   HTTP/1.0 201 Created
-    HTTP/1.0 400 Bad Request // The parameters passed to the service did not match as expected. The exact error is returned in the XML response.
+*   HTTP/1.0 202 Accepted // Accepted for later processing
+    HTTP/1.0 400 Bad Request // The parameters passed to the service did not match as expected / Malformed syntax. The exact error is returned in the response.
 *   HTTP/1.0 403 Forbidden // With 401 we are required to send more, now we're not.
     HTTP/1.0 404 Not Found // ID that does not exist?
-*   HTTP/1.0 405 Method Not Allowed // Don't forget an Allow header with allowed methods. Use this if the method is not allowed for *this* resource.
+    HTTP/1.0 405 Method Not Allowed // Don't forget an Allow header with allowed methods. Use this if the method is not allowed for *this* resource.
+    HTTP/1.0 406 Not Acceptable // The format requested with the Accept header, can not be delivered.
 *   HTTP/1.0 409 Conflict // After a PUT???
 *   HTTP/1.0 410 Gone // If we know it was there, but not anymore (if we don't know: 404)
+    HTTP/1.0 413 Payload Too Large
+    HTTP/1.0 415 Unsupported Media Type // Format not supported.
+    HTTP/1.0 422 Unprocessable Entity // Format OK, syntax OK, semantics wrong.
+*   HTTP/1.0 423 Locked
 *   HTTP/1.0 500 Internal Server Error
     HTTP/1.0 501 Not Implemented // This is the appropriate response when the server does not recognize the request method and is not capable of supporting it for *any* resource.
 *   HTTP/1.0 503 Service Unavailable // TEMPORARY: The implication is that this is a temporary condition which will be alleviated after some delay. If known, the length of the delay MAY be indicated in a Retry-After header.
 */
 
-// Will currently only allow GET.
-if (!in_array($_SERVER['REQUEST_METHOD'], array('GET'))) {
-    header('HTTP/1.0 501 Not Implemented');
-}
+// Since LOVD 3.0-18, the API class takes over the common URL parsing.
+require ROOT_PATH . 'class/api.php';
+$_API = new LOVD_API();
 
-// Parse URL to see what we need to do.
-list(,,$sDataType, $sSymbol, $nID) = array_pad($_PE, 5, '');
+// API's constructor has already parsed the URL and made sure the method is valid.
 
-if (!$sDataType) { // No data type given.
-    header('HTTP/1.0 400 Bad Request');
-    die('Too few parameters.');
-} elseif (!in_array($sDataType, array('variants', 'genes'))) { // Wrong data type given.
-    header('HTTP/1.0 400 Bad Request');
-    die('Requested data type not known.');
-} elseif ($sDataType == 'variants' && !$sSymbol) { // Variants, but no gene selected.
-    header('HTTP/1.0 400 Bad Request');
-    die('Too few parameters.');
-}
+list($sDataType, $sSymbol, $nID) = array(
+    $_API->sResource,
+    $_API->sGene,
+    $_API->nID,
+);
 // Now we've got $sDataType, $sSymbol, $nID, FORMAT filled in, if data is available.
 
 
@@ -157,12 +158,12 @@ if ($sDataType == 'variants') {
                 }
             }
             $bQueryPMID = ($nPMID && count($aPMIDCols));
-            $sQ = 'SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type, vot.`VariantOnTranscript/DNA`
+            $sQ = 'SELECT LEAST(MAX(vog.position_g_start), MAX(vog.position_g_end)), GREATEST(MAX(vog.position_g_start), MAX(vog.position_g_end)), MIN(vog.type) AS type, MIN(vot.`VariantOnTranscript/DNA`) AS `VariantOnTranscript/DNA`
                    FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
                    (!$bJoinWithPatient? '' : ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ') . '
                    WHERE t.geneid = "' . $sSymbol . '" AND vog.statusid >= ' . STATUS_MARKED . ' AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
                    (!$bQueryPMID? '' : ' AND (`' . implode('` LIKE "%:' . $nPMID . '}%" OR `', $aPMIDCols) . '` LIKE "%:' . $nPMID . '}%") ') . '
-                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY vog.position_g_start, vog.position_g_end';
+                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY MAX(vog.position_g_start), MAX(vog.position_g_end)';
         } else {
             // Not mappable!
             header('HTTP/1.0 503 Service Unavailable');
@@ -171,7 +172,7 @@ if ($sDataType == 'variants') {
 
     } else {
         // First build query.
-        $sQ = 'SELECT vog.id, vot.position_c_start, vot.position_c_start_intron, vot.position_c_end, vot.position_c_end_intron, vog.position_g_start, vog.position_g_end, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times
+        $sQ = 'SELECT MIN(vog.id) AS id, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MAX(vog.position_g_start) AS position_g_start, MAX(vog.position_g_end) AS position_g_end, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times
                FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                WHERE vot.transcriptid = ' . $nRefSeqID . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
@@ -238,7 +239,7 @@ if ($sDataType == 'variants') {
         } else {
             $sQ .= ' GROUP BY vog.id';
         }
-        $sQ .= ' ORDER BY vog.position_g_start, vog.position_g_end, `VariantOnGenome/DNA`';
+        $sQ .= ' ORDER BY MAX(vog.position_g_start), MAX(vog.position_g_end), MIN(`VariantOnGenome/DNA`)';
     }
 
 
@@ -246,7 +247,7 @@ if ($sDataType == 'variants') {
 } elseif ($sDataType == 'genes') {
     // Listing or simple request on gene symbol.
     // First build query.
-    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (t.position_g_mrna_start < t.position_g_mrna_end) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi) AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ", ") AS curators
+    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi) AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ", ") AS curators
            FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id) LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
            WHERE 1=1';
 

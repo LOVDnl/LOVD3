@@ -28,6 +28,7 @@
 4.0.0 asort
 4.0.0 base64_encode
 4.0.0 basename
+4.0.0 bin2hex
 4.0.0 ceil
 4.0.0 chdir
 4.0.0 checkdate
@@ -54,6 +55,7 @@
 4.0.0 feof
 4.0.0 fgets
 4.0.0 file
+4.0.0 filesize
 4.0.0 file_exists
 4.3.0 file_get_contents
 4.0.0 floor
@@ -115,6 +117,7 @@
 4.3.0 ob_get_clean
 4.0.0 ob_start
 4.0.0 opendir
+5.3.0 openssl_random_pseudo_bytes
 4.0.0 parse_url
 4.0.0 phpversion
 4.0.0 preg_match
@@ -194,6 +197,7 @@
 5.3.0 array_replace_recursive() available (already in use in users.php in two places and we have two current PHP 5.2 users! (cc1bd203e228f68f2c67bde49779ab54 (143.210.170.132 - viti.gene.le.ac.uk), 5a6a939312e611c2a72e662752f1418f (143.210.170.214 - lamp-api-22.rcs.le.ac.uk, and 143.210.56.79)))
 5.3.0 anonymous functions introduced. I got parse errors in inc-lib-form (needed to log in even!) so I now realize that 5.3.0 is required, which means we could use bcrypt as well!!!
 5.3.0 bcrypt built into PHP (before that, availability depends on the system)
+5.3.3 PDO::inTransaction() (already in use, but we check for it)
 =====-========
 5.3.0 REQUIRED
 

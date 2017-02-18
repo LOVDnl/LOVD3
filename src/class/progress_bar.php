@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-09-10
- * Modified    : 2012-09-21
- * For LOVD    : 3.0-beta-09
+ * Modified    : 2017-01-27
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -46,7 +46,7 @@ class ProgressBar {
 
 
 
-    function ProgressBar ($sID = '', $sMessageInit = '', $sMessageDone = '')
+    function __construct ($sID = '', $sMessageInit = '', $sMessageDone = '')
     {
         // Default constructor.
 
@@ -61,26 +61,29 @@ class ProgressBar {
         }
         $this->sID = $sID;
 
-        print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440" id="lovd_' . $this->sID . '_progress_table" >' . "\n" .
-              '        <TR>' . "\n" .
-              '          <TD width="400" style="border : 1px solid black; height : 15px;">' . "\n" .
-              '            <IMG src="gfx/trans.png" alt="" title="0%" width="0%" height="15" id="lovd_' . $this->sID . '_progress_bar" style="background : #224488;"></TD>' . "\n" .
-              '          <TD width="40" align="right" id="lovd_' . $this->sID . '_progress_value">0%</TD></TR></TABLE>' . "\n\n" .
-              '      <DIV id="lovd_' . $this->sID . '_progress_message" style="margin-top : 0px;">' . "\n" .
-              '        ' . $sMessageInit . "\n" .
-              '      </DIV><BR>' . "\n\n\n" .
-              '      <DIV id="lovd_' . $this->sID . '_progress_message_done" style="visibility : hidden;">' . "\n" .
-              '        ' . $sMessageDone . "\n" .
-              '      </DIV>' . "\n\n" .
-              '      <SCRIPT type="text/javascript">' . "\n" .
-              '        var oPB_' . $this->sID . ' = document.getElementById(\'lovd_' . $this->sID . '_progress_bar\');' . "\n" .
-              '        var oPB_' . $this->sID . '_table = document.getElementById(\'lovd_' . $this->sID . '_progress_table\');' . "\n" .
-              '        var oPB_' . $this->sID . '_value = document.getElementById(\'lovd_' . $this->sID . '_progress_value\');' . "\n" .
-              '        var oPB_' . $this->sID . '_message = document.getElementById(\'lovd_' . $this->sID . '_progress_message\');' . "\n" .
-              '        var oPB_' . $this->sID . '_message_done = document.getElementById(\'lovd_' . $this->sID . '_progress_message_done\');' . "\n" .
-              '      </SCRIPT>' . "\n\n\n");
-              flush();
-              @ob_end_flush(); // Can generate errors on the screen if no buffer found.
+        if (FORMAT == 'text/html') {
+            print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440" id="lovd_' . $this->sID . '_progress_table" >' . "\n" .
+                  '        <TR>' . "\n" .
+                  '          <TD width="400" style="border : 1px solid black; height : 15px;">' . "\n" .
+                  '            <IMG src="gfx/trans.png" alt="" title="0%" width="0%" height="15" id="lovd_' . $this->sID . '_progress_bar" style="background : #224488;"></TD>' . "\n" .
+                  '          <TD width="40" align="right" id="lovd_' . $this->sID . '_progress_value">0%</TD></TR></TABLE>' . "\n\n" .
+                  '      <DIV id="lovd_' . $this->sID . '_progress_message" style="margin-top : 0px;">' . "\n" .
+                  '        ' . $sMessageInit . "\n" .
+                  '      </DIV><BR>' . "\n\n\n" .
+                  '      <DIV id="lovd_' . $this->sID . '_progress_message_done" style="visibility : hidden;">' . "\n" .
+                  '        ' . $sMessageDone . "\n" .
+                  '      </DIV>' . "\n\n" .
+                  '      <SCRIPT type="text/javascript">' . "\n" .
+                  '        var oPB_' . $this->sID . ' = document.getElementById(\'lovd_' . $this->sID . '_progress_bar\');' . "\n" .
+                  '        var oPB_' . $this->sID . '_table = document.getElementById(\'lovd_' . $this->sID . '_progress_table\');' . "\n" .
+                  '        var oPB_' . $this->sID . '_value = document.getElementById(\'lovd_' . $this->sID . '_progress_value\');' . "\n" .
+                  '        var oPB_' . $this->sID . '_message = document.getElementById(\'lovd_' . $this->sID . '_progress_message\');' . "\n" .
+                  '        var oPB_' . $this->sID . '_message_done = document.getElementById(\'lovd_' . $this->sID . '_progress_message_done\');' . "\n" .
+                  '      </SCRIPT>' . "\n\n\n");
+        }
+        flush();
+        @ob_end_flush(); // Can generate errors on the screen if no buffer found.
+        return true;
     }
 
 
@@ -101,6 +104,10 @@ class ProgressBar {
     {
         // Sends the JS necessary to redirect the viewer to another URL.
         // When using this class, PHP's header() function does not work anymore because we have output already.
+
+        if (FORMAT != 'text/html') {
+            return false;
+        }
 
         // Most likely, this function is available, but we can't be sure.
         if (function_exists('lovd_matchURL') && !lovd_matchURL($sURL, true)) {
@@ -124,8 +131,10 @@ class ProgressBar {
     {
         // Hides the progress bar itself, not the messages.
 
-        print('<SCRIPT type="text/javascript">$(oPB_' . $this->sID . '_table).hide(); $(oPB_' . $this->sID . '_message).hide(); $(oPB_' . $this->sID . '_message_done).hide(); </SCRIPT>' . "\n");
-        flush();
+        if (FORMAT == 'text/html') {
+            print('<SCRIPT type="text/javascript">$(oPB_' . $this->sID . '_table).hide(); $(oPB_' . $this->sID . '_message).hide(); $(oPB_' . $this->sID . '_message_done).hide(); </SCRIPT>' . "\n");
+            flush();
+        }
         return true;
     }
 
@@ -144,7 +153,11 @@ class ProgressBar {
             $sType = '';
         }
 
-        print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '_message' . (!$sType? '' : '_done') . '.innerHTML' . ($bAppend? '+' : '') . '=\'' . str_replace(array('\'', "\r", "\n"), array('\\\'', '', '\n'), $sMessage) . '\';</SCRIPT>' . "\n");
+        if (FORMAT == 'text/html') {
+            print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '_message' . (!$sType? '' : '_done') . '.innerHTML' . ($bAppend? '+' : '') . '=\'' . str_replace(array('\'', "\r", "\n"), array('\\\'', '', '\n'), $sMessage) . '\';</SCRIPT>' . "\n");
+        } elseif (FORMAT == 'text/plain') {
+            print(':' . str_replace("\n", "\n:", rtrim(strip_tags($sMessage))) . "\n");
+        }
         flush();
         return true;
     }
@@ -156,6 +169,10 @@ class ProgressBar {
     function setMessageVisibility ($sType, $bVisible)
     {
         // Shows or hides the message visibility.
+
+        if (FORMAT != 'text/html') {
+            return false;
+        }
 
         if ($sType != 'done') {
             $sType = '';
@@ -185,7 +202,11 @@ class ProgressBar {
         if ($this->nCurrentPercentage != $nPercentage) {
             // Only 'update' the percentage if it actually changes...
             $this->nCurrentPercentage = $nPercentage;
-            print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '.style.width = \'' . $nPercentage . '%\'; oPB_' . $this->sID . '_value.innerHTML = \'' . $nPercentage . '%\'; </SCRIPT>' . "\n");
+            if (FORMAT == 'text/html') {
+                print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '.style.width = \'' . $nPercentage . '%\'; oPB_' . $this->sID . '_value.innerHTML = \'' . $nPercentage . '%\'; </SCRIPT>' . "\n");
+            } elseif (FORMAT == 'text/plain') {
+                print($nPercentage . '%' . "\n");
+            }
             flush();
         }
         return $nPercentage;

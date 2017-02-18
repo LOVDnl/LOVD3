@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2016-06-17
- * For LOVD    : 3.0-16
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -78,6 +78,9 @@ class LOVD_Log extends LOVD_Object {
                                     'db'   => array('l.event', 'ASC', true)),
                         'del' => array(
                                     'view' => array('&nbsp;', 14, 'style="text-align : center;"')),
+                        'entry_' => array(
+                                    'view' => false,
+                                    'db'   => array('l.log', false, true)), // Meant only for a hidden search.
                         'entry' => array(
                                     'view' => array('Entry', 700),
                                     'db'   => array('l.log', false, true)),
@@ -109,6 +112,13 @@ class LOVD_Log extends LOVD_Object {
 
         // 2013-09-30; 3.0-08; Make log entry texts clickable.
         switch ($zData['event']) {
+            case 'AnalysisClose':
+            case 'AnalysisOpen':
+            case 'AnalysisRun':
+            case 'AnalysisRunModify':
+            case 'AnalysisRunDelete':
+                $zData['entry'] = preg_replace('/(individual) ([0-9]+):([0-9]+)( |$)/', '$1 <A href="individuals/$2/analyze/$3">$2</A> (analysis $3)$4', $zData['entry']);
+                break;
             case 'ColCreate':
                 $zData['entry'] = preg_replace('/(link) ([0-9]+) /', '$1 <A href="links/$2">$2</A> ', $zData['entry']);
             case 'ColAdd':
@@ -171,6 +181,7 @@ class LOVD_Log extends LOVD_Object {
             case 'VariantCreate':
             case 'VariantEdit':
             case 'VariantMap':
+            case 'CurationStatus':
                 $zData['entry'] = preg_replace('/(entry|variant) (#)?([0-9]+)( .+)?$/', '$1 $2<A href="variants/$3">$3</A>$4', $zData['entry']);
                 break;
         }
