@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-02-07
+ * Modified    : 2017-02-20
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -342,7 +342,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
         'i.f.a.c.fokkema@lumc.nl' => 'ifokkema_local_3.0',
         'm.kroon@lumc.nl' => 'mkroon_local_3.0',
         'travis-ci@localhost' => 'travis_CI_3.0');
-    if (key_exists($_SERVER['SERVER_ADMIN'], $aFilterAdmins) && $_SERVER['HTTP_HOST'] == 'localhost') {
+    if (isset($aFilterAdmins[$_SERVER['SERVER_ADMIN']]) && $_SERVER['HTTP_HOST'] == 'localhost') {
         $sSignature = $aFilterAdmins[$_SERVER['SERVER_ADMIN']];
     }
 
