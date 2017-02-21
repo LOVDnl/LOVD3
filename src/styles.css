@@ -253,3 +253,15 @@ table.option tr.disabled:hover span    {visibility : hidden;}
 optgroup        {font-weight : bold; color : #FFFFFF; background : #224488; text-align : center;}
 option          {font-weight : normal; color : #000000; background : #FFFFFF; text-align : left;}
 
+/* Visualization*/
+#variants-visualization line {stroke : black; stroke-width : 2;}
+#variants-visualization .main-axis-caption {font-size: 0.5em;}
+#variants-visualization rect.utr, #variants-visualization polyline.utr {fill: grey;}
+#variants-visualization rect.del, #variants-visualization polyline.del {fill: #A8050E;}
+#variants-visualization rect.subst, #variants-visualization polyline.subst {fill: #071AC8;}
+#variants-visualization rect.dup, #variants-visualization polyline.dup {fill: #FD9827;}
+#variants-visualization rect.delins, #variants-visualization polyline.delins {fill: #985CFB;}
+#variants-visualization rect.ins, #variants-visualization polyline.ins {fill: #149718;}
+#variants-visualization rect.inv, #variants-visualization polyline.inv {fill: #1BAACA;}
+#variants-visualization rect.con, #variants-visualization polyline.con {fill: #ECC14D;}
+
