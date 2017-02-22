@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-02-17
+ * Modified    : 2017-02-22
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -210,7 +210,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sHeader . ' download ### To import, do not remove or alter this header ###' . "\r\n");
     if ($sFilter == 'owner') {
         print('## Filter: (created_by = ' . $ID . ' || owned_by = ' . $ID . ')' . "\r\n");
-    } elseif (in_array($sFilter, array('category', 'gene', 'genepanel'))) {
+    } elseif (in_array($sFilter, array('category', 'gene', 'genepanel', 'gene_public'))) {
         print('## Filter: (' . $sFilter . ' = ' . $ID . ')' . "\r\n");
     }
     print('# charset = UTF-8' . "\r\n\r\n");
@@ -354,11 +354,18 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             // Screenings have to be prefetched, because the Individuals, Ind2Dis' and Phenotypes need to be filtered on the Individual IDs.
             $aObjects['Screenings']['prefetch'] = true;
             $aObjects['Screenings']['filter_other']['Individuals']['id'] = 'individualid';
-            $aObjects['Screenings']['filter_other']['Ind2Dis']['individualid'] = 'individualid';
-            $aObjects['Screenings']['filter_other']['Phenotypes']['individualid'] = 'individualid';
+
+            // Prefetch individuals and filter individuals_to_diseases and
+            // phenotypes based on the individuals' IDs.
+            $aObjects['Individuals']['prefetch'] = true;
+            $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
+            $aObjects['Individuals']['filter_other']['Phenotypes']['individualid'] = 'id';
+
             // Ind2Dis' have to be prefetched, because the Diseases need to be filtered on their IDs.
             $aObjects['Ind2Dis']['prefetch'] = true;
             $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid'; // More values were already in, from Gen2Dis!
+
+            $aObjects['Scr2Gene']['prefetch'] = true;
 
             if ($sFilter == 'gene_public') {
                 $aObjects['Variants']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
@@ -513,16 +520,29 @@ if (isset($sFilter) && $sFilter == 'gene_public') {
         is_array($aObjects['Screenings']['filters']['individualid'])) {
 
         // Get allowed values as keys, for quick lookups.
-        $aValuesAsKeys = array_flip($aObjects['Screenings']['filters']['individualid']);
+        $aIndIDsAsKeys = array_flip($aObjects['Screenings']['filters']['individualid']);
 
         // Filter out non-allowed values for individualid.
-        $aNewData = array();
+        $aNewScreenings = array();
+        $aScreeningIDs = array();
         foreach ($aObjects['Screenings']['data'] as $zData) {
-            if (key_exists($zData['individualid'], $aValuesAsKeys)) {
-                $aNewData[] = $zData;
+            if (isset($aIndIDsAsKeys[$zData['individualid']])) {
+                $aNewScreenings[] = $zData;
+                $aScreeningIDs[] = $zData['id'];
             }
         }
-        $aObjects['Screenings']['data'] = $aNewData;
+        $aObjects['Screenings']['data'] = $aNewScreenings;
+
+        $aScreeningIDsAsKeys = array_flip($aScreeningIDs);
+        foreach (array('Scr2Var', 'Scr2Gene') as $sObject) {
+            $aNewObjectData = array();
+            foreach ($aObjects[$sObject]['data'] as $zData) {
+                if (isset($aScreeningIDsAsKeys[$zData['screeningid']])) {
+                    $aNewObjectData[] = $zData;
+                }
+            }
+            $aObjects[$sObject]['data'] = $aNewObjectData;
+        }
     }
 }
 
