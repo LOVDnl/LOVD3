@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-12-23
- * For LOVD    : 3.0-18
+ * Modified    : 2017-03-08
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -476,6 +476,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                          'INSERT IGNORE INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_article", "http://www.ncbi.nlm.nih.gov/pubmed/{{ ID }}")',
                          'INSERT IGNORE INTO ' . TABLE_LINKS . ' VALUES (NULL, "Alamut", "{Alamut:[1]:[2]}", "<A href=\"http://127.0.0.1:10000/show?request=[1]:[2]\" target=\"_blank\">Alamut</A>", "Links directly to the variant in the Alamut software.\r\n[1] = The chromosome letter or number.\r\n[2] = The genetic change on genome level.\r\n\r\nExample:\r\n{Alamut:16:21854780G>A}", 0, NOW(), NULL, NULL)',
                          'UPDATE ' . TABLE_COLS . ' SET mandatory = 0 WHERE id = "VariantOnTranscript/Exon"',
+                     ),
+                 '3.0-18a' =>
+                     array(
+                         'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]*))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID";',
                      ),
              );
 
