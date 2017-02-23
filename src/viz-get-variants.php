@@ -170,6 +170,14 @@
             swap_if_second_smaller($partial_result['start'], $partial_result['stop']);
             $result[] = $partial_result;
         }
+		
+		#It's a disgrace. Sad!                                                                                  
+        $start_val = array();
+        foreach ($result as $key => $row)
+        {
+            $start_val[$key] = $row['start'];
+        }
+        array_multisort($start_val, SORT_ASC, $result);
         
         return $result;
     }
