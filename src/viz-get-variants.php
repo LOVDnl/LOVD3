@@ -41,7 +41,7 @@
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         #TODO: Throw up on this.
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        #curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $data = curl_exec($ch);
         
         # Note that by default curl doesn't provide a certificate list so this might die here. Still, better safe than sorry.
@@ -141,7 +141,7 @@
         return $refseq_UD;
     }
     
-    function get_variants($transcript)
+	function get_variants($transcript)
     {
         global $_DB;
         $transcript_quoted = $_DB->quote($transcript);
@@ -158,13 +158,13 @@
         
         foreach ($_DB->query($query)->fetchAll() as $variant)
         {
-            $partial_result = array('start' => $variant['position_g_start'],
-                                   'stop' => $variant['position_g_end'],
+            $partial_result = array('start' => (int)$variant['position_g_start'],
+                                   'stop' => (int)$variant['position_g_end'],
                                    'type' => $variant['type'],
                                    'url' => (int)$variant[1] . '#' . (int)$variant[0],
-                                   'frameshift' => (strpos($variant['VariantOnTranscript/Protein'], 'fs*') !== false) ? 'true' : 'false');
+                                   'frameshift' => (strpos($variant['VariantOnTranscript/Protein'], 'fs*') !== false) ? True : False);
             
-            if (!$partial_result['start'])
+            if (!$partial_result['start'] or !$partial_result['type'])
                 continue;
             
             swap_if_second_smaller($partial_result['start'], $partial_result['stop']);
