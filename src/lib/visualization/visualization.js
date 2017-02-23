@@ -574,7 +574,7 @@ var create_visualization = function() {
   }
 
   var load_data = function(transcript_id) {
-    d3.json("/viz-get-variants.php?transcript=" + transcript_id, function(data) {
+    d3.json("./viz-get-variants.php?transcript=" + transcript_id, function(data) {
       plot_data(data);
     });
   }
