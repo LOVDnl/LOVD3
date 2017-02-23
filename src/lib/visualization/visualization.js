@@ -1,12 +1,12 @@
-var create_visualization = function() {
-  var dataset;
+var create_visualization = function(scale_type) {
   var holder = document.getElementById('variants-visualization');
+  var dataset;
 
   if (holder === null) {
     return;
   }
   var transcript_id = holder.dataset.ncbi;
-  var y_scale_type = "";
+  var y_scale_type = scale_type;
 
   var plot_data = function(data) {
     // Change these to fine-tune graph
@@ -20,6 +20,8 @@ var create_visualization = function() {
     var tick_count = 80;
     var bold_tick_interval = 5;
     //////////////////////////////////
+
+    var dataset = data;
 
     var allowed_types = ["del", "subst", "dup", "delins", "ins", "inv", "con"];
     var type_to_label = {
@@ -579,9 +581,34 @@ var create_visualization = function() {
     });
   }
 
-  if (transcript_id && transcript_id.length > 0)  {
+  if (transcript_id && transcript_id.length > 0 && !dataset)  {
     load_data(transcript_id);
   }
 }
 
-create_visualization();
+var clear_visualization = function() {
+  var myNode = document.getElementById("variants-visualization");
+  while (myNode.firstChild) {
+      myNode.removeChild(myNode.firstChild);
+  }
+}
+
+var current_scale_type = "log";
+
+var swap_scale_type = function() {
+  if (current_scale_type == "log") {
+    current_scale_type = "lin";
+  } else {
+    current_scale_type = "log";
+  }
+}
+
+create_visualization(current_scale_type);
+
+var handle_change = function() {
+  clear_visualization();
+  swap_scale_type();
+  create_visualization(current_scale_type);
+}
+
+document.getElementById('vis-scale-change').addEventListener("click", handle_change);
