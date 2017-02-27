@@ -4,19 +4,19 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-09-28 (based on Reading Frame Checker 1.9/2009-03-03)
- * Modified    : 2011-04-04
+ * Modified    : 2017-03-02
  * Version     : 1.2
- * For LOVD    : 2.0-31
+ * For LOVD    : 3.0-19
  *
  * Access      : Public
  * Purpose     : Provide information on effect of whole-exon changes of a gene,
  *               based on the gene structure table, created by the Reference
  *               Sequence Parser.
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ir. Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
- * Last edited : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -40,9 +40,34 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 require ROOT_PATH . 'inc-lib-form.php';
-require ROOT_PATH . 'inc-top-clean.php';
 
-print('      <SPAN class="S18"><B>LOVD exonic deletions/duplications reading-frame checker</B></SPAN><BR><BR>' . "\n\n");
+$_T->printHeader();
+define('PAGE_TITLE', 'LOVD exonic deletions/duplications reading-frame checker');
+$_T->printTitle();
+
+
+function lovd_switchDB()
+{
+    global $_DB, $_T;
+
+    $aArgs  = array();
+    $sQ = 'SELECT CONCAT(g.id, "_", t.id_ncbi), CONCAT(g.id, " (", t.id_ncbi , " -> ", t.id_protein_ncbi, ")") FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid)';
+    $sQ .= ' ORDER BY g.id, t.id_ncbi';
+    $aTranscripts = $_DB->query($sQ, $aArgs)->fetchAllCombine();
+
+    print('<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" method="post">' . "\n");
+
+    $aForm = array(
+        array('POST', '', '', '', '35%', '14', '65%'),
+        array('Select gene and transcript', '', 'select', 'symbol', 1, $aTranscripts, false, false, false),
+        array('', '', 'submit', 'Continue'),
+    );
+
+    lovd_viewForm($aForm);
+    print("\n\n" . '  </FORM>' . "\n\n");
+    $_T->printFooter();
+    exit;
+}
 
 if (isset($_GET['explain'])) {
     // Here is explained everything about mutations difficult to predict.
@@ -100,15 +125,27 @@ if (isset($_GET['explain'])) {
       </UL>
 
 <?php
-    require ROOT_PATH . 'inc-bot-clean.php';
+    $_T->printFooter();
     exit;
 }
 
 
+if (isset($_REQUEST['symbol'])) {
+    // Write selected transcript (from lovd_switchDB()) to session, as this
+    // script requires multiple page loads.
+    if (empty($_REQUEST['symbol'])) {
+        $_SESSION['rf_checker_symbol'] = null;
+    } else {
+        $_SESSION['rf_checker_symbol'] = $_REQUEST['symbol'];
+    }
+}
+$sSymbol = isset($_SESSION['rf_checker_symbol'])? $_SESSION['rf_checker_symbol'] : null;
+
 
 // If no gene selected, present the selection list.
-if (!$_SESSION['currdb']) {
+if (is_null($sSymbol)) {
     lovd_switchDB();
+    exit;
 }
 
 // Now that we have a gene, check if we can make some sense of the gene structure table.
@@ -117,8 +154,9 @@ $nStopExon = 0;                  // Exonnumber of the exon with the stop codon.
 $aStartLengthTable = array();    // Array for exon starts and lengths. (2011-04-04; 2.0-31; Not really correct name anymore)
 $aReadingFrame = array(0 => -1); // Need this for proper calculation - can be removed later.
 $aExonNames = array();           // Simple method to store possible custom exon names (FIXME; for efficiency, it should be merged with $aStartLengthTable and $aReadingFrame).
-if (is_readable(ROOT_PATH . 'refseq/' . $_SESSION['currdb'] . '_table.txt')) {
-    $sTable = file_get_contents(ROOT_PATH . 'refseq/' . $_SESSION['currdb'] . '_table.txt');
+$sFilePath = ROOT_PATH . 'refseq/' . $sSymbol . '_table.txt';
+if (is_readable($sFilePath)) {
+    $sTable = file_get_contents($sFilePath);
     if (preg_match('/^exon #	c\.startExon	c\.endExon	g\.startExon	g\.endExon	lengthExon	lengthIntron(\n[^ \t<>]+(\t[0-9*-]+){5,6})+$/', $sTable)) {
         // Store data.
         $aTable = explode("\n", $sTable);
@@ -155,14 +193,14 @@ if (is_readable(ROOT_PATH . 'refseq/' . $_SESSION['currdb'] . '_table.txt')) {
 
     } else {
         print('      Unfortunately, the gene structure table does not look like it should, so I can\'t interpret it.<BR>' . "\n\n");
-        require ROOT_PATH . 'inc-bot-clean.php';
+        print(' (<A href="' . $_SERVER['PHP_SELF'] . '?symbol=">switch gene / transcript</A>)');
+        $_T->printFooter();
         exit;
     }
 
 } else {
-    print('      This gene does not have a gene structure table. To get one, you\'ll have to have a GenBank file for your gene with genomic sequence, and run the <A href="parseRefSeq.php">Reference Sequence Parser</A>.<BR><BR>' . "\n\n");
+    print('      There is no gene structure table available for <B>' . $sSymbol . '</B>. To get one, you\'ll have to have a GenBank file for your gene with genomic sequence, and run the <A href="scripts/refseq_parser.php">Reference Sequence Parser</A>.<BR><BR>' . "\n\n");
     lovd_switchDB();
-    exit;
 }
 
 
@@ -186,20 +224,22 @@ if (!empty($_GET['mutation'])) {
 
 lovd_showInfoTable('<I>The predictions are based on direct translation of the mRNA, which is generated by deletion / insertion (duplication) of the exons as selected by the user. Please note that for data derived from analysis of DNA the result is just a prediction based on these data only; without confirmation on RNA level (experimental evidence), this prediction does not provide certainty and cannot be used as evidence for the effect which the change detected will have on RNA level. Literature reports several exceptions where changes at DNA level do not match exactly with changes on RNA level. For example, on RNA-level more exons might be missing because signals required for correct splicing are disrupted or deleted. In addition, intronic sequences flanked by inefficient splicing signals (so called \'cryptic\' splice sites) might be activated yielding newly recognized exons incorporated in the mRNA.</I>', 'information');
 
-print('      <BR>' . "\n\n" .
+print('<P>Currently viewing gene/transcript: <B>' . $sSymbol . '</B> ('.
+    '<A href="' . $_SERVER['PHP_SELF'] . '?symbol=">switch</A>)</P>' .
+        '      <BR>' . "\n\n" .
       '      <FORM action="' . $_SERVER['PHP_SELF'] . '" method="get">' . "\n" .
       '        <TABLE border="0" cellpadding="1" cellspacing="0" width="600">');
 
 $aForm = array(
-                array('GET', '', '', '50%', '50%'),
+                array('GET', '', '', '', '50%', '14', '50%'),
                 'hr',
-                array('Deletion or Duplication', 'select', 'mutation', 1, array('del' => 'Deletion', 'dup' => 'Duplication'), false, false, false),
+                array('Deletion or Duplication', '', 'select', 'mutation', 1, array('del' => 'Deletion', 'dup' => 'Duplication'), false, false, false),
                 'hr',
-                array('From exon', 'select', 'exon_from', 1, $aExonNames, false, false, false),
+                array('From exon', '', 'select', 'exon_from', 1, $aExonNames, false, false, false),
                 'hr',
-                array('To exon', 'select', 'exon_to', 1, $aExonNames, false, false, false),
+                array('To exon', '', 'select', 'exon_to', 1, $aExonNames, false, false, false),
                 'hr',
-                array('', 'submit', 'Check'),
+                array('', '', 'submit', 'Check'),
                 'hr',
               );
 lovd_viewForm($aForm);
@@ -243,10 +283,10 @@ if (!empty($_GET['mutation']) && !empty($_GET['exon_from']) && !empty($_GET['exo
 //        $sVariantHGVS = 'c.' . $aStartLengthTable[0][0] . '-?_' . (($aStartLengthTable[1][0] + $aStartLengthTable[1][1]) - ($aStartLengthTable[1][0] < 0 && ($aStartLengthTable[1][0] + $aStartLengthTable[1][1]) >= 1? 0 : 1)) . '+?' . $_GET['mutation'];
         $sVariantHGVS = 'c.' . $aStartLengthTable[0][0] . '-?_' . $aStartLengthTable[1][2] . '+?' . $_GET['mutation'];
         $sVariant = 'ex' . str_pad($aExonNames[$_GET['exon_from']], 2, '0', STR_PAD_LEFT) . ($_GET['exon_from'] == $_GET['exon_to']? '' : 'ex' . str_pad($aExonNames[$_GET['exon_to']], 2, '0', STR_PAD_LEFT)) . $_GET['mutation'];
-        print('According to the ' . $_SESSION['currsymb'] . ' reference sequence in the LOVD database, the HGVS notation of this ' . ($_GET['mutation'] == 'del'? 'deletion' : 'duplication') . ' is:<BR>' . "\n");
+        print('According to the ' . $sSymbol . ' reference sequence in the LOVD database, the HGVS notation of this ' . ($_GET['mutation'] == 'del'? 'deletion' : 'duplication') . ' is:<BR>' . "\n");
         print($sVariant . '&nbsp;-&gt;&nbsp;' . $sVariantHGVS . '<BR>' . "\n");
     }
 }
 
-require ROOT_PATH . 'inc-bot-clean.php';
+$_T->printFooter();
 ?>
