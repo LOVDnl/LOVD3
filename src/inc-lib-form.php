@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-10-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-03-02
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -71,11 +71,8 @@ function lovd_checkDBID ($aData)
     $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
     if ($nHasDBID && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
         // This is the standard query that will be used to determine if the DBID given is correct.
-        $sSQL = 'SELECT DISTINCT t.geneid, ' .
-                'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
-                'vog.`VariantOnGenome/DBID` ' .
+        $sSQL = 'SELECT count(*) ' .
                 'FROM ' . TABLE_VARIANTS . ' AS vog LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
-                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
                 'WHERE (';
         $aArgs = array();
         $sWhere = '';
@@ -99,7 +96,7 @@ function lovd_checkDBID ($aData)
             $sWhere .= 'AND vog.id != ? ';
             $aArgs[] = sprintf('%010d', $nIDtoIgnore);
         }
-        $sSQL .= $sWhere . 'GROUP BY vog.id';
+        $sSQL .= $sWhere;
         $aOutput = $_DB->query($sSQL, $aArgs)->fetchAllRow();
         $nOptions = count($aOutput);
 
