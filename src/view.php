@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2017-02-17
+ * Modified    : 2017-03-02
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,7 +48,12 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // URL: /view/DMD/NM_004006.2
     // View all entries in a specific gene, affecting a specific trancript, with all joinable data.
 
-    $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
+    $qGene = $_DB->query('SELECT g.id, count(t.id) FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' .
+        TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid WHERE g.id = ?',
+        array(rawurldecode($_PE[1])));
+    list($sGene, $sTranscriptCount) = $qGene->fetchRow();
+    $nTranscriptCount = (int) $sTranscriptCount;
+
     if ($sGene) {
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
@@ -91,8 +96,10 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
     list($nTranscriptID, $sTranscript) = each($aTranscripts);
-    if (!$nTranscripts) {
-        $sMessage = 'No transcripts with linked variants found for this gene.';
+    if (!$nTranscriptCount) {
+        $sMessage = 'No transcripts found for this gene.';
+    } elseif (!$nTranscripts) {
+        $sMessage = 'No variants found for this gene or transcript.';
     } elseif ($nTranscripts == 1) {
         $_GET['search_transcriptid'] = $nTranscriptID;
         $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
