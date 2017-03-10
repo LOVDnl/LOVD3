@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-03-08
+ * Modified    : 2017-03-10
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -479,7 +479,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      ),
                  '3.0-18a' =>
                      array(
-                         'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]+-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]*))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID";',
+                         'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]*-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]*))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID";',
                      ),
              );
 

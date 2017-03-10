@@ -26,7 +26,10 @@
    query error introduced by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
  * Fixed bug; Gene editing page failed to save changes in certain (rare) cases.
-   Closes #200: Fatal error on editing particular gene (on shared installation)
+   Closes #200: "Fatal error on editing particular gene (on shared
+   installation)"
+ * Fixed bug; Single letter genes, like T, were not fully supported by LOVD.
+   Closes #106: "Single-letter gene "T" is not fully supported".
 
 
 /**************************
