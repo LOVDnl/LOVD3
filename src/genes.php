@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-01-25
+ * Modified    : 2017-03-06
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -660,6 +660,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     require ROOT_PATH . 'class/object_genes.php';
     require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'inc-lib-genes.php';
     $_DATA = new LOVD_Gene();
     $zData = $_DATA->loadEntry($sID);
     // 2015-07-22; 3.0-14; Drop usage of CURRENT_PATH in favor of fixed $sID which may have a gene symbol with incorrect case.
@@ -668,8 +669,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     $sPath = $_PE[0] . '?' . ACTION;
     if (GET) {
-        require ROOT_PATH . 'inc-lib-genes.php';
-
         $aRefseqGenomic = array();
         // Get LRG if it exists
         if ($sLRG = lovd_getLRGbyGeneSymbol($sID)) {

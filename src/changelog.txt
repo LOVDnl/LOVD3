@@ -25,6 +25,8 @@
  * Fixed bug; The gene's graphs pages only showed half of the graphs due to a
    query error introduced by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
+ * Fixed bug; Gene editing page failed to save changes in certain (rare) cases.
+   Closes #200: Fatal error on editing particular gene (on shared installation)
 
 
 /**************************
