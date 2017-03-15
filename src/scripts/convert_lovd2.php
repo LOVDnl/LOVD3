@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-01-27
+ * Modified    : 2017-03-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,6 +55,7 @@ $aFieldLinks = array(
     'Variant/DBID' =>                   array('vog',        'VariantOnGenome/DBID',         'lovd_convertDBID'),
     'Variant/Restriction_site' =>       array('vog',        'VariantOnGenome/Restriction_site'),
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
+    'Variant/Genetic_origin' =>         array('vog',        'VariantOnGenome/Genetic_origin'),
     'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
     'Variant/Reference' =>              array('vot',        'VariantOnTranscript/Reference','lovd_convertReference'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
