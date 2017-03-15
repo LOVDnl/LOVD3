@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-09-28 (based on Reading Frame Checker 1.9/2009-03-03)
- * Modified    : 2017-03-02
+ * Modified    : 2017-03-15
  * Version     : 1.2
  * For LOVD    : 3.0-19
  *
@@ -48,18 +48,24 @@ $_T->printTitle();
 
 function lovd_switchDB()
 {
-    global $_DB, $_T;
+    require_once ROOT_PATH . 'class/object_transcripts.php';
+    global $_T;
 
-    $aArgs  = array();
-    $sQ = 'SELECT CONCAT(g.id, "_", t.id_ncbi), CONCAT(g.id, " (", t.id_ncbi , " -> ", t.id_protein_ncbi, ")") FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid)';
-    $sQ .= ' ORDER BY g.id, t.id_ncbi';
-    $aTranscripts = $_DB->query($sQ, $aArgs)->fetchAllCombine();
+    // Show viewlist for searching and selecting a transcript.
+    print('<H2>Select gene / transcript</H2>');
+    $_DATA = new LOVD_Transcript();
+    $_DATA->setRowLink('Transcripts', 'javascript: $("input[name=\'symbol\']").val("{{geneid}}_{{id_ncbi}}"); return false;');
+    $_GET['page_size'] = 10;
+    $_DATA->viewList('Transcripts', array('ID', 'variants'));
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION .
+        '" method="post" enctype="multipart/form-data">' . "\n");
 
     print('<FORM action="' . $_SERVER['SCRIPT_NAME'] . '" method="post">' . "\n");
 
     $aForm = array(
         array('POST', '', '', '', '35%', '14', '65%'),
-        array('Select gene and transcript', '', 'select', 'symbol', 1, $aTranscripts, false, false, false),
+        array('Gene / transcript (click in table above)', 'Transcript to which generated import data' .
+            ' will be linked.', 'text', 'symbol', 30),
         array('', '', 'submit', 'Continue'),
     );
 
@@ -136,7 +142,7 @@ if (isset($_REQUEST['symbol'])) {
     if (empty($_REQUEST['symbol'])) {
         $_SESSION['rf_checker_symbol'] = null;
     } else {
-        $_SESSION['rf_checker_symbol'] = $_REQUEST['symbol'];
+        $_SESSION['rf_checker_symbol'] = htmlspecialchars($_REQUEST['symbol']);
     }
 }
 $sSymbol = isset($_SESSION['rf_checker_symbol'])? $_SESSION['rf_checker_symbol'] : null;
@@ -192,14 +198,13 @@ if (is_readable($sFilePath)) {
         }
 
     } else {
-        print('      Unfortunately, the gene structure table does not look like it should, so I can\'t interpret it.<BR>' . "\n\n");
-        print(' (<A href="' . $_SERVER['PHP_SELF'] . '?symbol=">switch gene / transcript</A>)');
+        lovd_showInfoTable('Unfortunately, the gene structure table for <B>' . $sSymbol . '</B> does not look like it should, so I can\'t interpret it.<BR>(<A href="' . $_SERVER['PHP_SELF'] . '?symbol=">switch gene / transcript</A>)', 'warning');
         $_T->printFooter();
         exit;
     }
 
 } else {
-    print('      There is no gene structure table available for <B>' . $sSymbol . '</B>. To get one, you\'ll have to have a GenBank file for your gene with genomic sequence, and run the <A href="scripts/refseq_parser.php">Reference Sequence Parser</A>.<BR><BR>' . "\n\n");
+    lovd_showInfoTable('There is no gene structure table available for <B>' . $sSymbol . '</B>. To get one, you\'ll have to have a GenBank file for your gene with genomic sequence, and run the <A href="scripts/refseq_parser.php">Reference Sequence Parser</A>.', 'warning');
     lovd_switchDB();
 }
 
