@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-04-03
+ * Modified    : 2017-04-04
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -317,7 +317,6 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     $_DATA = new LOVD_User();
     if (ACTION == 'register') {
         $sCAPTCHAerror = '';
-        print('<script src="https://www.google.com/recaptcha/api.js"></script>' . "\n");
     }
 
     if (count($_POST) > 1) { // 'orcid_id' will always be defined here.
@@ -569,6 +568,12 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     lovd_includeJS('inc-js-tooltip.php');
     // Check form (IP address allow list).
     lovd_includeJS('inc-js-submit-userform.php');
+
+    if (ACTION == 'register') {
+        // print('<script src="https://www.google.com/recaptcha/api.js"></script>' . "\n");
+        lovd_includeJS('https://www.google.com/recaptcha/api.js');
+    }
+
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
           '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
