@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-03-15
+ * Modified    : 2017-04-05
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -840,6 +840,14 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
 
         // Loop over fields in record and convert values according to $aFieldLinks.
         $aInputRecord = explode("\t", $sLine);
+
+        if (count($aInputRecord) != count($aInputHeaders)) {
+            lovd_errorAdd('', 'Incorrect number of columns for record ' . $i .
+                ' (see below), check if the number of fields corresponds with the number of ' .
+                'column headings or if a field contains a tab character?<br>' . $sLine);
+            return null;
+        }
+
         $aRecord = array();
         for ($i = 0; $i < count($aInputRecord); $i++) {
             $sFieldName = $aInputHeaders[$i];
@@ -1299,6 +1307,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
     if (lovd_error()) {
         print('<B>There were fatal errors during conversion:</B>');
         lovd_errorPrint();
+        return;
     }
 
     $sOutput = '### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) .
