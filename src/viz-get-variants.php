@@ -31,29 +31,7 @@
     require ROOT_PATH . 'inc-init.php';
 
 
-    function curl_get_contents($url)
-    {
-        $ch = curl_init($url);
-        
-        if (FALSE === $ch)
-            throw new Exception('failed to initialize');
-        
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        #TODO: Throw up on this.
-        #curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        $data = curl_exec($ch);
-        
-        # Note that by default curl doesn't provide a certificate list so this might die here. Still, better safe than sorry.
-        # https://stackoverflow.com/questions/6400300/https-and-ssl3-get-server-certificatecertificate-verify-failed-ca-is-ok
-        if (FALSE === $data)
-            throw new Exception(curl_error($ch), curl_errno($ch));
-        
-        curl_close($ch);
-        return $data;
-    }
-
-    function swap_if_second_smaller(&$x,&$y) 
+    function swap_if_second_smaller(&$x,&$y)
     {
         if ($y < $x)
         {
@@ -68,7 +46,7 @@
     function get_mutalyzer_transcript_info($gene, $genomicReference)
     {
         $target_url = "https://mutalyzer.nl/json/getTranscriptsAndInfo?genomicReference=$genomicReference";
-        $content = curl_get_contents($target_url);
+        $content = join('', lovd_php_file($target_url));
         
         $response = json_decode($content, TRUE);
         $target_prefix = $gene . '_';
