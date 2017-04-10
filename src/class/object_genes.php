@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-12-07
+ * Modified    : 2017-04-10
  * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -130,6 +130,7 @@ class LOVD_Gene extends LOVD_Object {
                         'allow_download_' => array('Allow public to download all variant entries', LEVEL_COLLABORATOR),
                         'allow_index_wiki_' => array('Allow data to be indexed by WikiProfessional', LEVEL_COLLABORATOR),
                         'refseq_url_' => 'Refseq URL',
+                        'rf_checker_' => 'Reading frame checker',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
                         'variants_' => 'Total number of public variants reported',
@@ -492,12 +493,17 @@ class LOVD_Gene extends LOVD_Object {
             // Transcript links and exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
             $zData['refseq_transcript_'] = '';
             $zData['exon_tables'] = '';
+            $zData['rf_checker_'] = '';
             foreach ($zData['transcripts'] as $aTranscript) {
                 list($nTranscriptID, $sNCBI) = $aTranscript;
                 $zData['refseq_transcript_'] .= (!$zData['refseq_transcript_']? '' : ', ') . '<A href="transcripts/' . $nTranscriptID . '">' . $sNCBI . '</A>';
                 $sExonTableFile = ROOT_PATH . 'refseq/' . $zData['id'] . '_' . $sNCBI . '_table.html';
                 if (is_readable($sExonTableFile)) {
                     $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">' . $sNCBI . '</A>';
+
+                    // Assume presence of exon table file in *.txt format. Show link to reading
+                    // frame checker.
+                    $zData['rf_checker_'] .= (!$zData['rf_checker_']? '' : ', ') . '<A href="scripts/readingFrameChecker.php?symbol=' . $zData['id'] . '_' . $sNCBI . '">' . $sNCBI . '</A>';
                 }
             }
             if (!$zData['refseq_transcript_']) {
@@ -672,7 +678,7 @@ class LOVD_Gene extends LOVD_Object {
                 'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
 
             // Unset fields that will not be shown if they're empty.
-            foreach (array('note_index', 'refseq_url_', 'url_homepage_', 'url_external_' , 'id_entrez_', 'id_pubmed_gene_', 'id_omim_', 'disease_omim_', 'show_hgmd_', 'show_genecards_', 'show_genetests_') as $key) {
+            foreach (array('note_index', 'refseq_url_', 'url_homepage_', 'url_external_' , 'id_entrez_', 'id_pubmed_gene_', 'id_omim_', 'disease_omim_', 'show_hgmd_', 'show_genecards_', 'show_genetests_', 'rf_checker_') as $key) {
                 if (empty($zData[$key])) {
                     unset($this->aColumnsViewEntry[$key]);
                 }
