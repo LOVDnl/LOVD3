@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-10-14
+ * Modified    : 2017-04-12
  * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -925,7 +925,7 @@ function lovd_viewForm ($a,
 
                 // Output a hidden text field before password field, to catch a possible
                 // mistaken automatic fill of a username.
-                print('<INPUT type="text" style="display:none" />' . PHP_EOL);
+                print('<INPUT type="text" name="fake_username" style="width:0; margin:-3px; padding:0; visibility: hidden" />' . PHP_EOL);
                 // Print indentation for new line.
                 print($sNewLine);
 
