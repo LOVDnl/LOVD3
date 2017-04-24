@@ -96,8 +96,8 @@ if (!ACTION && (empty($_PE[1]) ||
 
         if (!is_null($sPositionStart) && !is_null($sPositionEnd)) {
             // Set search conditions for start and end of region.
-            $_GET['search_position_g_start'] = '>' . $sPositionStart;
-            $_GET['search_position_g_end'] = '<' . $sPositionEnd;
+            $_GET['search_position_g_start'] = '>=' . $sPositionStart;
+            $_GET['search_position_g_end'] = '<=' . $sPositionEnd;
             $sTitle .= ' in region ' . $sRegion;
         } else {
             $sTitle .= ' on chromosome ' . substr($sChr, 3);
@@ -109,7 +109,7 @@ if (!ACTION && (empty($_PE[1]) ||
     $_T->printHeader();
     $_T->printTitle();
 
-    $_DATA->viewList('VOG', $aColsToHide, false, false, $_AUTH['level'] >= LEVEL_MANAGER,
+    $_DATA->viewList('VOG', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER),
                      false, true);
     $_T->printFooter();
     exit;
