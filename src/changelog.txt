@@ -34,6 +34,12 @@
    format /variants/chr3:20-200000.
  * Improved variant list error message for genes without transcripts and genes
    without variants.
+ * Removed repeated error message during import if a checkbox field doesn't
+   contain a 0 or 1.
+ * When importing, the 'variants_found' field now allows for values higher than
+   1, even though they will be interpreted as 1, since the field is a flag.
+ * When a form field contains incorrect values (usally when importing), LOVD
+   won't print more than one error message about that field's value anymore.
 
 
 /**************************
