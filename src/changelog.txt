@@ -25,6 +25,8 @@
  * Fixed bug; The gene's graphs pages only showed half of the graphs due to a
    query error introduced by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
+ * Improved variant list error message for genes without transcripts and genes
+   without variants.
 
 
 /**************************
