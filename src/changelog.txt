@@ -25,6 +25,12 @@
  * Fixed bug; The gene's graphs pages only showed half of the graphs due to a
    query error introduced by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
+ * Removed repeated error message during import if a checkbox field doesn't
+   contain a 0 or 1.
+ * When importing, the 'variants_found' field now allows for values higher than
+   1, even though they will be interpreted as 1, since the field is a flag.
+ * When a form field contains incorrect values (usally when importing), LOVD
+   won't print more than one error message about that field's value anymore.
 
 
 /**************************

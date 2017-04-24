@@ -866,7 +866,7 @@ if (POST) {
                 $_POST['workID'] = '';
             }
 
-            // Special actions for section Screenings
+            // Special actions for section Screenings.
             if ($sCurrentSection == 'Screenings') {
                 // For field `variants_found`, interpret any number >1 as 1.
                 if (isset($aLine['variants_found']) && is_numeric($aLine['variants_found']) &&
