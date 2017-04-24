@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-03-02
+ * Modified    : 2017-04-24
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -71,7 +71,7 @@ function lovd_checkDBID ($aData)
     $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
     if ($nHasDBID && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
         // This is the standard query that will be used to determine if the DBID given is correct.
-        $sSQL = 'SELECT count(*) ' .
+        $sSQL = 'SELECT COUNT(*) ' .
                 'FROM ' . TABLE_VARIANTS . ' AS vog LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
                 'WHERE (';
         $aArgs = array();
@@ -97,8 +97,7 @@ function lovd_checkDBID ($aData)
             $aArgs[] = sprintf('%010d', $nIDtoIgnore);
         }
         $sSQL .= $sWhere;
-        $aOutput = $_DB->query($sSQL, $aArgs)->fetchAllRow();
-        $nOptions = count($aOutput);
+        $nOptions = $_DB->query($sSQL, $aArgs)->fetchColumn();
 
         if (!$nOptions) {
             return false;
