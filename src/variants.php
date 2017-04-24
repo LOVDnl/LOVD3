@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-03-01
+ * Modified    : 2017-04-24
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,7 +100,7 @@ if (!ACTION && (empty($_PE[1]) ||
             $_GET['search_position_g_end'] = '<' . $sPositionEnd;
             $sTitle .= ' in region ' . $sRegion;
         } else {
-            $sTitle .= ' at chromosome ' . substr($sChr, 3);
+            $sTitle .= ' on chromosome ' . substr($sChr, 3);
         }
     }
 
