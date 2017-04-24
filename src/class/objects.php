@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-02-15
+ * Modified    : 2017-04-24
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -262,7 +262,7 @@ class LOVD_Object {
     function checkFields ($aData, $zData = false)
     {
         // Checks fields before submission of data.
-        global $_AUTH, $_SETT, $_ERROR;
+        global $_AUTH, $_SETT;
 
         $aForm = $this->getForm();
         $aFormInfo = array();
@@ -378,8 +378,8 @@ class LOVD_Object {
         foreach ($aData as $sFieldname => $sFieldvalue) {
 
             if (!is_string($sFieldvalue) || isset($aErroredFields[$sFieldname])) {
-                // Do not process non-string values and fields for which an (more specific)
-                // error has already been reported earlier.
+                // Do not process non-string values at the moment (currently there are no checks for them),
+                //  and fields for which an (more specific) error has already been reported earlier.
                 continue;
             }
 
