@@ -30,6 +30,8 @@
    installation)"
  * Fixed bug; Single letter genes, like T, were not fully supported by LOVD.
    Closes #106: "Single-letter gene "T" is not fully supported".
+ * Added feature to show variants in a certain genomic range, using the URL
+   format /variants/chr3:20-200000.
 
 
 /**************************
