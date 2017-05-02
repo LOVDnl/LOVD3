@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-09-14
- * For LOVD    : 3.0-17
+ * Modified    : 2017-03-06
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -34,6 +34,9 @@
 
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+if (LOVD_plus) {
+    define('TAB_SELECTED', 'gene_panels');
+}
 
 if ($_AUTH) {
     // If authorized, check for updates.
@@ -192,7 +195,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
         $aNavigation[$_PE[0] . '/' . $sID . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[$_PE[0] . '/' . $sID . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
         $aNavigation['columns/VariantOnTranscript']      = array('menu_columns.png', 'View all available variant columns', 1);
-        $aNavigation['download/all/gene/' . $sID]        = array('menu_save.png', 'Download all this gene\'s data', 1);
+        if (!LOVD_plus) {
+            $aNavigation['download/all/gene/' . $sID]        = array('menu_save.png', 'Download all this gene\'s data', 1);
+        }
         $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . 'scripts/refseq_parser.php?step=1&amp;symbol=' . $sID . '\', \'refseq_parser\', 900, 500);'] = array('menu_scripts.png', 'Create human-readable refseq file', ($zData['refseq_UD'] && count($zData['transcripts'])));
     }
     lovd_showJGNavigation($aNavigation, 'Genes');
@@ -476,7 +481,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 lovd_writeLog('Event', LOG_EVENT, 'Created gene information entry ' . $_POST['id'] . ' (' . $_POST['name'] . ')');
 
                 // Make current user curator of this gene.
-                $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+                if (!LOVD_plus) {
+                    $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+                }
 
                 // Add diseases.
                 $aSuccessDiseases = array();
@@ -515,6 +522,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                 'id_protein_ncbi' => $zData['transcriptsProtein'][$sTranscript],
                                 'id_protein_ensembl' => '',
                                 'id_protein_uniprot' => '',
+                                'remarks' => '',
                                 'position_c_mrna_start' => $zData['transcriptPositions'][$sTranscript]['cTransStart'],
                                 'position_c_mrna_end' => $zData['transcriptPositions'][$sTranscript]['cTransEnd'],
                                 'position_c_cds_end' => $zData['transcriptPositions'][$sTranscript]['cCDSStop'],
@@ -542,9 +550,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                             $sTranscriptName = $zData['transcriptNames'][$sTranscript];
                             $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
                             // Add transcript to gene.
-                            $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
-                                             'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
-                                             array($_POST['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
+                            $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, remarks, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
+                                             'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
+                                             array($_POST['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
                             if (!$q) {
                                 // Silent error.
                                 lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
@@ -583,7 +591,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
                 // Thank the user...
                 // If there is only one user, don't forward to the Add curators page.
-                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
+                if (!LOVD_plus && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id'] . '?authorize');
                 } else {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id']);
@@ -652,6 +660,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     require ROOT_PATH . 'class/object_genes.php';
     require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'inc-lib-genes.php';
     $_DATA = new LOVD_Gene();
     $zData = $_DATA->loadEntry($sID);
     // 2015-07-22; 3.0-14; Drop usage of CURRENT_PATH in favor of fixed $sID which may have a gene symbol with incorrect case.
@@ -660,8 +669,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     $sPath = $_PE[0] . '?' . ACTION;
     if (GET) {
-        require ROOT_PATH . 'inc-lib-genes.php';
-
         $aRefseqGenomic = array();
         // Get LRG if it exists
         if ($sLRG = lovd_getLRGbyGeneSymbol($sID)) {
@@ -1000,7 +1007,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     define('LOG_EVENT', 'GeneDelete');
 
     // Require manager clearance.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_requireAUTH((LOVD_plus? LEVEL_ADMIN : LEVEL_MANAGER));
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();

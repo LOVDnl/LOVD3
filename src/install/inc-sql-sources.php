@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2014-08-26
- * For LOVD    : 3.0-12
+ * Modified    : 2016-10-17
+ * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -40,5 +40,6 @@ $aSourceSQL =
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("uniprot",      "http://www.uniprot.org/uniprot/{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgnc",         "http://www.genenames.org/data/hgnc_data.php?hgnc_id={{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_gene",  "http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}")',
+                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_article", "http://www.ncbi.nlm.nih.gov/pubmed/{{ ID }}")',
               );
 ?>

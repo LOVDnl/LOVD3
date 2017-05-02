@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2016-03-15
- * For LOVD    : 3.0-15
+ * Modified    : 2017-01-25
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -59,7 +59,7 @@ class LOVD_PDO extends PDO {
                 // Still needs check though, in case two PDO connections are opened.
                 define('MYSQL_ATTR_INIT_COMMAND', 1002);
             }
-            $aOptions = array(MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE);
+            $aOptions = array(MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8, SQL_MODE = REPLACE(@@SQL_MODE, "NO_ZERO_DATE", "")', PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE);
         }
         try {
             parent::__construct($sDSN, $sUsername, $sPassword, $aOptions);
@@ -304,6 +304,17 @@ class LOVD_PDOStatement extends PDOStatement {
         // Wrapper around PDOStatement::fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC).
         // THIS WRAPPER DOES NOT SUPPORT ANY OF THE PDOStatement::fetchAll() ARGUMENTS!
         return $this->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+    }
+
+
+
+
+
+    function fetchAllGroupColumn ()
+    {
+        // Wrapper around PDOStatement::fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN).
+        // THIS WRAPPER DOES NOT SUPPORT ANY OF THE PDOStatement::fetchAll() ARGUMENTS!
+        return $this->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
     }
 
 

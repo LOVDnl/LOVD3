@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-09-29
- * For LOVD    : 3.0-17
+ * Modified    : 2016-10-14
+ * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -467,7 +467,7 @@ function lovd_activateMenu (sViewListID)
                 event: "click",
                 openBelowContext: true,
                 autoHide: true,
-                delay: 1000,
+                delay: 100,
                 onSelect: function(e, context) {
                     // e.stopPropagation(); // Doesn't do anything... :(
                     if ($(this).hasClass("disabled")) {

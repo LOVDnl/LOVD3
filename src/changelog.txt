@@ -5,8 +5,46 @@
  *************/
 
 /**************************
+ * 3.0 Build 19
+ * 2017-0?-??
+ *********/
+ * Fixed bug; Transcripts could not easily be added to variants anymore. This
+   was caused by the recent changes making LOVD compatible with the new default
+   "ONLY_FULL_GROUP_BY" MySQL setting.
+   Closes #167: "Manage transcripts feature doesn't allow addition of transcript
+   anymore".
+ * Fixed several problems with MySQL's new default strict mode. LOVD wasn't
+   installable, and transcripts couldn't be created if this setting was enabled.
+   Closes #143: "LOVD won't install with error "Invalid default value for
+   'start_date'""
+   Closes #173: "Installation failed on ubuntu 16"
+ * Fixed bug; The "all variants affecting transcripts" view showed only one
+   entry. This was caused by the recent changes making LOVD compatible with the
+   new default "ONLY_FULL_GROUP_BY" MySQL setting.
+   Closes #176: "Viewlist entry count differs from what is displayed".
+ * Fixed bug; The gene's graphs pages only showed half of the graphs due to a
+   query error introduced by the recent changes making LOVD compatible with the
+   new default "ONLY_FULL_GROUP_BY" MySQL setting.
+ * Fixed bug; Gene editing page failed to save changes in certain (rare) cases.
+   Closes #200: "Fatal error on editing particular gene (on shared
+   installation)"
+ * Fixed bug; Single letter genes, like T, were not fully supported by LOVD.
+   Closes #106: "Single-letter gene "T" is not fully supported".
+ * Added feature to show variants in a certain genomic range, using the URL
+   format /variants/chr3:20-200000.
+ * Improved variant list error message for genes without transcripts and genes
+   without variants.
+ * Removed repeated error message during import if a checkbox field doesn't
+   contain a 0 or 1.
+ * When importing, the 'variants_found' field now allows for values higher than
+   1, even though they will be interpreted as 1, since the field is a flag.
+ * When a form field contains incorrect values (usally when importing), LOVD
+   won't print more than one error message about that field's value anymore.
+
+
+/**************************
  * 3.0 Build 18
- * 2016-12-??
+ * 2016-12-23
  *********/
  * Make header stick to the top of the browser's viewport, such that the links
    in the header are always visible.
@@ -20,6 +58,35 @@
    prefix, because the import code misunderstood the table types that way.
  * Large downloads are now allowed to take a longer time, to make sure they
    finish before the server interrupts them.
+ * Fixed bug; When a user needed to change the password, the force option didn't
+   work properly, and could be circumvented.
+ * Improved data form when changing the password after unlocking your account,
+   to clarify that you need to insert the unlocking code again for confirmation.
+ * Users can now create their own API tokens to use for the LOVD data submission
+   API.
+ * LOVD now includes a submission API, that can take VarioML formatted data and
+   convert this into an LOVD3 import file. Currently, these import files are not
+   yet automatically imported. This will be included in a future LOVD release.
+   Documentation on this API is to follow soon.
+ * The VariantOnTranscript/Exon field is now no longer mandatory by default,
+   allowing the submission API to directly submit data, since it doesn't contain
+   the Exon field.
+ * When a Database administrator creates a new user, the level now selected by
+   default will be Submitter instead of Manager.
+ * The variant effect columns were checked twice while submitting and importing,
+   possibly resulting in repeated error messages.
+ * Fixed bug; The variant effect fields didn't have a default value when
+   importing.
+ * Fixed bug; Imports could set variant start positions that were higher than
+   variant end positions.
+ * When variants are imported without position fields or variant type filled in,
+   LOVD will now predict them.
+ * Fixed bug; Variants that were imported with empty intron positions, didn't
+   group together with variants that had a 0 filled in.
+   Closes #140: "Position fields during import sometimes left as NULL".
+ * LOVD3 is now compatible with the ONLY_FULL_GROUP_BY MySQL setting.
+   Closes #144: "Make LOVD compatible with the `ONLY_FULL_GROUP_BY` MySQL
+   setting."
 
 
 /************************************

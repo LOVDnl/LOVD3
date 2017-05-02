@@ -406,7 +406,6 @@ class LOVD_Column extends LOVD_Object {
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';
 
-
             if ($zData['category'] == 'VariantOnTranscript') {
                 // Show genes for which this column is activated.
                 $this->aColumnsViewEntry['parent_objects'] = 'Column activated for genes';
@@ -419,7 +418,6 @@ class LOVD_Column extends LOVD_Object {
             } else {
                 unset($this->aColumnsViewEntry['parent_objects']);
             }
-
         }
         // FIXME; for titles use tooltips?
         $zData['active_']      = '<IMG src="gfx/mark_' . (int) $zData['active'] . '.png" alt="" width="11" height="11">';
