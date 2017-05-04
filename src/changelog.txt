@@ -40,6 +40,7 @@
    1, even though they will be interpreted as 1, since the field is a flag.
  * When a form field contains incorrect values (usally when importing), LOVD
    won't print more than one error message about that field's value anymore.
+ * The LOVD2-style API can include the variant effect now, if requested.
 
 
 /**************************
