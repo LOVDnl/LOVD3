@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2014-10-02
- * For LOVD    : 3.0-12
+ * Modified    : 2017-05-08
+ * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -144,7 +144,7 @@ if ($_GET['step'] == 1) {
                     }
                     // Determine the accession number, including version.
                     if (substr($line, 0, 7) == 'VERSION') {
-                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\s+.*$/', "$1", rtrim($line));
+                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\b/', "$1", rtrim($line));
                     }
                     if ('/gene="' . $_POST['symbol'] . '"' == preg_replace('/\s+/', '', $line)) {
                         // We are in the right gene.
