@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-03-08
+ * Modified    : 2017-05-08
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -123,6 +123,10 @@ define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 // LOVD and LOVD+, simply define if we're active or not.
 @define('LOVD_plus', false);
 
+// Flag LOVD_LIGHT disables certain features to streamline LOVD for high
+// quantities of variants but no or few individuals or diseases.
+define('LOVD_LIGHT', true);
+
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
@@ -161,6 +165,26 @@ $_SETT = array(
                     // has already been called for gene-specific overviews.
                     'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
+                ),
+                'customization_settings' => // Miscellaneous configuration settings.
+                array(
+                    // Show extra fields related to variant custom viewlists.
+                    'show_custom_vl_variant_extra_fields' => !LOVD_LIGHT,
+                    // Show variant list for whole genome on page `variants/`. If false, variant
+                    // counts per chromosome are displayed.
+                    'show_full_genome_variant_vl' => !LOVD_LIGHT && !LOVD_plus,
+                    // Show extra fields like `allele` and `effect` in variant VLs/entries.
+                    'show_genome_variant_extra_fields' => !LOVD_LIGHT,
+                    // Show graphs page and links to that page.
+                    'show_graphs' => !LOVD_LIGHT,
+                    // Show / hide tabs in page header.
+                    'show_tab_diseases' => !LOVD_LIGHT,
+                    'show_tab_individuals' => !LOVD_LIGHT,
+                    'show_tab_screenings' => !LOVD_LIGHT,
+                    'show_tab_submit' => !LOVD_LIGHT,
+                    'show_transcript_select_on_gene_vl' => LOVD_plus,
+                    'show_unique_variants_menu_item' => !LOVD_LIGHT,
+                    'show_variants_on_gene_vl' => !LOVD_LIGHT,
                 ),
                 'gene_imprinting' =>
                      array(

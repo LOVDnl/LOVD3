@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-03-06
+ * Modified    : 2017-05-08
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -162,6 +162,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
+    global $_SETT;
 
     $sID = rawurldecode($_PE[1]);
     define('PAGE_TITLE', 'View ' . $sID . ' gene homepage');
@@ -191,7 +192,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             $aNavigation[$_PE[0] . '/' . $sID . '?sortCurators'] = array('', 'Sort/hide curator names', 1);
         }
         $aNavigation[$_PE[0] . '/' . $sID . '?empty']            = array('menu_empty.png', 'Empty this gene database', (bool) ($zData['variants']));
-        $aNavigation[$_PE[0] . '/' . $sID . '/graphs']           = array('menu_graphs.png', 'View graphs about this gene database', 1);
+        if ($_SETT['customization_settings']['show_graphs']) {
+            $aNavigation[$_PE[0] . '/' . $sID . '/graphs'] = array('menu_graphs.png', 'View graphs about this gene database', 1);
+        }
         $aNavigation[$_PE[0] . '/' . $sID . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[$_PE[0] . '/' . $sID . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
         $aNavigation['columns/VariantOnTranscript']      = array('menu_columns.png', 'View all available variant columns', 1);
@@ -1374,7 +1377,8 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'graphs' && !ACTION) {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) &&
+    $_PE[2] == 'graphs' && !ACTION && $_SETT['customization_settings']['show_graphs']) {
     // URL: /genes/DMD/graphs
     // Show different graphs about this gene; variant type (DNA, RNA & Protein level), ...
 

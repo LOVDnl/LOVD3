@@ -1,10 +1,10 @@
 <?php
 /*******************************************************************************
  *
- * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ * LEIDEN OPEN VARIATION DATABASE (LOVD) (MODIFIED)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-04-24
+ * Modified    : 2017-05-08
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -75,6 +75,7 @@ if (!ACTION && (empty($_PE[1]) ||
     // URL: /variants/chrX
     // URL: /variants/chr3:20-200000
     // View all genomic variant entries, optionally restricted by chromosome.
+    global $_SETT;
 
     // Managers are allowed to download this list...
     if ($_AUTH['level'] >= LEVEL_MANAGER) {
@@ -85,6 +86,11 @@ if (!ACTION && (empty($_PE[1]) ||
     $_DATA = new LOVD_GenomeVariant();
     $aColsToHide = array('allele_');
     $sTitle = 'View all genomic variants';
+
+    // Show page with variant viewlist.
+    define('PAGE_TITLE', $sTitle);
+    $_T->printHeader();
+    $_T->printTitle();
 
     // Set conditions on viewlist if a region is specified (e.g. chr3:20-200000)
     if (isset($aRegionArgs)) {
@@ -102,12 +108,26 @@ if (!ACTION && (empty($_PE[1]) ||
         } else {
             $sTitle .= ' on chromosome ' . substr($sChr, 3);
         }
+    } elseif (!$_SETT['customization_settings']['show_full_genome_variant_vl']) {
+        // Show a list of chromosomes with variant counts instead of the
+        // variant viewlist for the whole genome.
+        $nTotal = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS)->fetchColumn(); // No check on status necessary.
+        print($nTotal . ' variants in total, please select the chromosome to view all variants.<BR>' . "\n");
+        $aChromosomes = $_DB->query('SELECT c.name, COUNT(vog.id) FROM ' . TABLE_CHROMOSOMES . ' AS c LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (c.name = vog.chromosome) GROUP BY c.name ORDER BY c.sort_id')->fetchAllCombine();
+        print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data">
+        <TR>
+          <TH valign="top" class="ordered">Chromosome</TH>
+          <TH valign="top">Variants</TH></TR>');
+        foreach ($aChromosomes as $sChr => $nVariants) {
+            print('
+        <TR class="data" valign="top" style="cursor : pointer;" onclick="window.location.href = \'' . $_PE[0] . '/chr' . $sChr . '\';">
+          <TD class="ordered"><A href="' . $_PE[0] . '/' . $sChr . '" class="hide">' . $sChr . '</A></TD>
+          <TD>' . $nVariants . '</TD></TR>');
+        }
+        print('</TABLE>' . "\n\n");
+        $_T->printFooter();
+        exit;
     }
-
-    // Show page with variant viewlist.
-    define('PAGE_TITLE', $sTitle);
-    $_T->printHeader();
-    $_T->printTitle();
 
     $_DATA->viewList('VOG', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER),
                      false, true);

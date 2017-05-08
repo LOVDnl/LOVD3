@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2017-01-25
+ * Modified    : 2017-05-08
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,7 +72,7 @@ class LOVD_Template {
     {
         // Builds up the menu array, to be used in the full text/html header.
         // Can't be in the constructor, because that one is called before we have $_SESSION.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         if (defined('NOT_INSTALLED') || (ROOT_PATH == '../' && substr(lovd_getProjectFile(), 0, 9) == '/install/')) {
             // In install directory.
@@ -231,6 +231,16 @@ class LOVD_Template {
             unset($this->aMenu['diseases_']['search_genes_=']);
             unset($this->aMenu['screenings_']['/screenings/']);
             unset($this->aMenu['configuration_']);
+        }
+
+        if (!$_SETT['customization_settings']['show_graphs']) {
+            // Hide link to graphs for current gene.
+            unset($this->aMenu['genes_']['/genes/' . $_SESSION['currdb'] . '/graphs']);
+        }
+
+        if (!$_SETT['customization_settings']['show_unique_variants_menu_item']) {
+            // Hide link to unique variant view for current gene.
+            unset($this->aMenu['variants_']['/variants/' . $_SESSION['currdb'] . '/unique']);
         }
 
         if (LOVD_plus) {
@@ -793,7 +803,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
             if ($_SESSION['currdb']) {
                 if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants', 'screenings', 'individuals'))) {
                     $sURL = $sPrefix . '/' . $_SESSION['currdb'];
-                    if ($sPrefix == 'variants') {
+                    if ($sPrefix == 'variants' && $_SETT['customization_settings']['show_unique_variants_menu_item']) {
                         $sURL .= '/unique';
                     }
                 } elseif ($sPrefix == 'diseases') {
