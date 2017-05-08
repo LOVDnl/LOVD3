@@ -40,6 +40,10 @@
    1, even though they will be interpreted as 1, since the field is a flag.
  * When a form field contains incorrect values (usally when importing), LOVD
    won't print more than one error message about that field's value anymore.
+ * Included version 3.0-19 of the official LOVD Reference Sequence Parser
+   script.
+   - The "Include link to GenBank record" field in the final step sometimes
+     contained more text than just an GenBank record ID.
 
 
 /**************************
