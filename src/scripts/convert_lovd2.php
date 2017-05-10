@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-04-05
+ * Modified    : 2017-05-10
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -832,7 +832,6 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $oProgressBar->setMessage('Converting record ' . strval($nCounter) . ' of ' .
             strval($nNumLines) . '...');
 
-        $sLine = trim($sLine);
         if (empty($sLine) || $sLine{0} == '#' || preg_match('/^"?{{.*/', $sLine)) {
             // Ignore blank lines, comments and the header line.
             continue;
