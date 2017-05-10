@@ -1306,7 +1306,6 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
     if (lovd_error()) {
         print('<B>There were fatal errors during conversion:</B>');
         lovd_errorPrint();
-        return;
     }
 
     $sOutput = '### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) .
