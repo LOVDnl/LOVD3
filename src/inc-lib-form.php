@@ -623,6 +623,13 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwd
 
     $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
 
+    // Submission emails should have the Reply-To set to the curator
+    //  and the submitter, so both benefit from it.
+    if (strpos($sSubject, 'LOVD submission') === 0) {
+        // Reply-to should be original addressees.
+        $sHeaders .= PHP_EOL . 'Reply-To: ' . $sTo . ', ' . $sCc;
+    }
+
     // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
     $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
     $bSafeMode = ini_get('safe_mode');

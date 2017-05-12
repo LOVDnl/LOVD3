@@ -1216,6 +1216,8 @@
  * The screenings & individuals pages now have gene specific page, which shows
    the entries that have been screened for the currently selected gene.
  * Mails are now being sent to the appropriate users after an edit of data.
+ * Submission emails now have their Reply-To set to the curators and submitters,
+   so that both parties can just reply to end up with the correct addressees.
 
 
 /*******************
