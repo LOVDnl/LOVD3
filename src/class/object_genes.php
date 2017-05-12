@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-04-24
- * For LOVD    : 3.0-18
+ * Modified    : 2017-05-12
+ * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -311,13 +311,13 @@ class LOVD_Gene extends LOVD_Object {
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             if (lovd_getProjectFile() == '/import.php') {
-                // During import the refseq_genomic is required, else the import 
+                // During import the refseq_genomic is required, else the import
                 // starts complaining that the selected refseq_genomic is not valid
-                // Therefore we set the refseq_genomic in the aFormData property 
+                // Therefore we set the refseq_genomic in the aFormData property
                 // before the getForm() is returned.
                 global $zData;
                 $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
-         
+
                 $this->aFormData['refseq_genomic'] = array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false);
             }
             return parent::getForm();
@@ -497,7 +497,7 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['refseq_transcript_'] .= (!$zData['refseq_transcript_']? '' : ', ') . '<A href="transcripts/' . $nTranscriptID . '">' . $sNCBI . '</A>';
                 $sExonTableFile = ROOT_PATH . 'refseq/' . $zData['id'] . '_' . $sNCBI . '_table.html';
                 if (is_readable($sExonTableFile)) {
-                    $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">E/I table' . $sNCBI . '</A>';
+                    $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">' . $sNCBI . ' exon/intron table</A>';
                 }
             }
             if (!$zData['refseq_transcript_']) {
