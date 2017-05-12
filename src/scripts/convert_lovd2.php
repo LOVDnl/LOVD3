@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-05-10
+ * Modified    : 2017-05-12
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1238,7 +1238,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
     global $_DB, $_T, $_SETT, $_WARNINGS;
 
     // Only allow managers or higher to perform conversion.
-    lovd_requireAUTH(LEVEL_MANAGER);
+    lovd_requireAUTH(LEVEL_SUBMITTER);
 
     // Selected transcript, will be created from request arguments.
     $zTranscript = null;
