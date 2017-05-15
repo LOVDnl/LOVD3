@@ -45,6 +45,7 @@
    - The "Include link to GenBank record" field in the final step sometimes
      contained more text than just an GenBank record ID.
  * Updated all links to the HGVS nomenclature to point to the new website.
+ * Updated all links to the NCBI to use HTTPS.
 
 
 /**************************
