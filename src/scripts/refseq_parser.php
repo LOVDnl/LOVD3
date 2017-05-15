@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2017-05-08
+ * Modified    : 2017-05-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ir. Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -114,7 +114,7 @@ if ($_GET['step'] == 1) {
             // Read file into an array.
             $sFileID = (substr($sFileID, 0, 2) == 'UD'?
                 str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $sFileID . '.gb' :
-                'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $sFileID . '&rettype=gb');
+                'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $sFileID . '&rettype=gb');
             // FIXME: Since Mutalyzer only allows for https communication since Sept 2014, lovd_php_file()'s socket communication doesn't work.
             // 2014-10-02; 3.0-12; Modified lovd_php_file() to allow http(s) communication through PHP's file() as long as there's allow_url_fopen and no POST.
             // This is a temporary fix, depends on a PHP setting, and does not work with proxies at the moment (although than can be fixed with providing a context to file()).
@@ -145,7 +145,7 @@ if ($_GET['step'] == 1) {
                     }
                     // Determine the accession number, including version.
                     if (substr($line, 0, 7) == 'VERSION') {
-                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\b/', "$1", rtrim($line));
+                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\b.*/', "$1", rtrim($line));
                     }
                     if ('/gene="' . $_POST['symbol'] . '"' == preg_replace('/\s+/', '', $line)) {
                         // We are in the right gene.
@@ -1356,7 +1356,7 @@ if ($_GET['step'] == 3) {
                 }
                 // 2009-12-03; 2.0-23; added the mRNA accession number, but only if it is the same in the database
                 if (!empty($_POST['version_id'])) {
-                    $_POST['note'] .= ' The sequence was taken from <a href="http://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['version_id'] . '">' . $_POST['version_id'] . '</a>' . ($bStep2 ? ', covering ' . $_POST['symbol'] . ' transcript <a href="http://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['transcript_id'] . '">' . $_POST['transcript_id'] . '</a>.' : '.') .'</p>';
+                    $_POST['note'] .= ' The sequence was taken from <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['version_id'] . '">' . $_POST['version_id'] . '</a>' . ($bStep2 ? ', covering ' . $_POST['symbol'] . ' transcript <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['transcript_id'] . '">' . $_POST['transcript_id'] . '</a>.' : '.') .'</p>';
                 }
 
                 if (trim($_POST['note'])) {

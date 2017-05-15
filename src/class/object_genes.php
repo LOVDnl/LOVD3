@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-05-12
+ * Modified    : 2017-05-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -486,7 +486,7 @@ class LOVD_Gene extends LOVD_Object {
             $zData['imprinting_'] = $_SETT['gene_imprinting'][$zData['imprinting']];
 
             // FIXME; zou dit een external source moeten zijn?
-            $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
+            $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'https://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
             $zData['refseq_UD_'] = '<A href="' . str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $zData['refseq_UD'] . '.gb" target="_blank">' . $zData['refseq_UD'] . '</A>';
 
             // Transcript links and exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
@@ -521,8 +521,8 @@ class LOVD_Gene extends LOVD_Object {
             }
 
             if (isset($zData['reference'])) {
-                // FIXME; is 't niet beter de PubMed custom link data uit de database te halen? Als ie ooit wordt aangepast, gaat dit fout.
-                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+                // FIXME; Isn't it better to take the PubMed custom link from the database? If it ever gets edited, this one should be edited, too.
+                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="https://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
             }
 
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
@@ -630,7 +630,7 @@ class LOVD_Gene extends LOVD_Object {
                 // The weird addition in the end is to fake a proper name in Ensembl.
                 $sURLEnsembl .= $sURLBedFile . rawurlencode('&name=/' . $zData['id'] . ' variants');
                 $zData['ensembl'] = 'Show variants in the Ensembl Genome Browser (<A href="' . $sURLEnsembl . '=labels" target="_blank">full view</A>, <A href="' . $sURLEnsembl . '=normal" target="_blank">compact view</A>)';
-                $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="http://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
+                $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="https://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
 
             } else {
                 unset($this->aColumnsViewEntry['TableStart_Graphs'],$this->aColumnsViewEntry['TableHeader_Graphs'],$this->aColumnsViewEntry['graphs'],$this->aColumnsViewEntry['ucsc'],$this->aColumnsViewEntry['ensembl'],$this->aColumnsViewEntry['ncbi'],$this->aColumnsViewEntry['TableEnd_Graphs'],$this->aColumnsViewEntry['HR_2']);
