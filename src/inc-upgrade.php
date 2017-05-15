@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-03-10
+ * Modified    : 2017-05-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -480,6 +480,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-18a' =>
                      array(
                          'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]*-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]*))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID";',
+                     ),
+                 '3.0-18b' =>
+                     array(
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/gene?cmd=Retrieve&dopt=full_report&list_uids={{ ID }}" WHERE id = "entrez"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/nuccore/{{ ID }}" WHERE id = "genbank"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/gtr/genes/{{ ID }}" WHERE id = "genetests"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}" WHERE id = "pubmed_gene"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/pubmed/{{ ID }}" WHERE id = "pubmed_article"',
                      ),
              );
 

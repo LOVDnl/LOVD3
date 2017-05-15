@@ -8,9 +8,9 @@
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -64,7 +64,7 @@ class LOVD_Gene extends LOVD_Object {
                                'GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, ' .
+        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
                                            '(MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, ' .
@@ -655,12 +655,16 @@ class LOVD_Gene extends LOVD_Object {
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID, 2);
                 if (!empty($zData[$sColID])) {
-                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                    // For IDs and the GeneTests link, use the IDs for the URL, otherwise use the gene symbol;
+                    //  for IDs, use the IDs in the visible part of the link, otherwise use the gene symbol.
+                    // FIXME: Note that id_pubmed_gene now uses the gene symbol in the visible part of the link (code below this block);
+                    //  it would be good if we'd standardize that.
+                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }
             }
-            // Link to PubMed articles now shows Entrez Gene ID, which might be misinterpreted as a number of articles. Replace by Gene Symbol.
+            // The link to PubMed articles showed the Entrez Gene ID, which might be misinterpreted as a number of articles. Replaced by Gene Symbol.
             $zData['id_pubmed_gene_'] = str_replace($zData['id_entrez'] . '</A>', $zData['id'] . '</A>', $zData['id_pubmed_gene_']);
 
             // Disclaimer.
