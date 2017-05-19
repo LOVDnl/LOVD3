@@ -921,7 +921,7 @@ function lovd_viewForm ($a,
 
                 // Output a hidden text field before password field, to catch a possible
                 // mistaken automatic fill of a username.
-                print('<INPUT type="text" style="display:none" />' . PHP_EOL);
+                print('<INPUT type="text" name="fake_username" style="width:0; margin:-3px; padding:0; visibility: hidden" />' . PHP_EOL);
                 // Print indentation for new line.
                 print($sNewLine);
 
