@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-03-10
+ * Modified    : 2017-05-16
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -480,6 +480,20 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-18a' =>
                      array(
                          'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]*-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]*))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID";',
+                     ),
+                 '3.0-18b' =>
+                     array(
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/gene?cmd=Retrieve&dopt=full_report&list_uids={{ ID }}" WHERE id = "entrez"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/nuccore/{{ ID }}" WHERE id = "genbank"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/gtr/genes/{{ ID }}" WHERE id = "genetests"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}" WHERE id = "pubmed_gene"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/pubmed/{{ ID }}" WHERE id = "pubmed_article"',
+                     ),
+                 '3.0-18c' =>
+                     array(
+                         'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>" WHERE name = "PubMed" AND replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>"',
+                         'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=[1]\" target=\"_blank\">dbSNP</A>" WHERE name = "DbSNP" AND replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=[1]\" target=\"_blank\">dbSNP</A>"',
+                         'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/nuccore/[1]\" target=\"_blank\">GenBank</A>" WHERE name = "GenBank" AND replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?cmd=Retrieve&amp;db=nucleotide&amp;dopt=GenBank&amp;list_uids=[1]\" target=\"_blank\">GenBank</A>"',
                      ),
              );
 
