@@ -79,7 +79,6 @@ $aFieldLinks = array(
     'ID_patientid_' =>                  array('individual', 'id',                           'lovd_autoIncIndividualID'),
     'ID_variantid_' =>                  array('vog',        'id',                           'lovd_autoIncVariantID'),
     'ID_allele_' =>                     array('vog',        'allele'),
-    'ID_submitterid_' =>                array('vog',        'owned_by',                     'lovd_convertSubmitterID'),
     'Patient/Phenotype/Disease' =>      array('disease',    'name'),
 );
 
@@ -925,7 +924,9 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                     // No curator ID was available, set submitter ID.
                     $aIndividual['edited_by'] = $sSubmitterID;
                 }
-                $aIndividual['owned_by'] = $sSubmitterID;
+                // Use the translated submitter ID as owner, fall back to value in created_by.
+                $aIndividual['owned_by'] = $sSubmitterID != ''? $sSubmitterID :
+                    $aIndividual['created_by'];
                 if (($nStatusIdx = array_search('ID_status_', $aInputHeaders)) !== false) {
                     $aIndividual['statusid'] = $aRecord[$nStatusIdx];
                 }
@@ -999,6 +1000,8 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
             // No curator ID was available, set submitter ID.
             $aVOGRecord['edited_by'] = $sSubmitterID;
         }
+        // Use the translated submitter ID as owner, fall back to value in created_by.
+        $aVOGRecord['owned_by'] = $sSubmitterID != ''? $sSubmitterID : $aVOGRecord['created_by'];
 
         $aVOTRecord = lovd_getRecordForHeaders($aOutputHeaders['vot'], $aRecord,
             $aSections['vot']);
