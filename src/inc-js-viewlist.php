@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-10-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-06-01
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -937,3 +937,22 @@ function lovd_passAndRemoveViewListRow (sViewListID, sRowID, aRowData, callback)
 
 
 
+
+
+$(document).ready(function() {
+    // Bind mouse clicking events to viewlist rows. Open urls specified in a
+    // 'data-url' attribute if it's available.
+    $('table .data').on('mouseup', 'tr', function(e) {
+        if ($(this).data('href')) {
+            switch (e.which) {
+                case 1:
+                    // Left mouse button clicked, open url in current window.
+                    window.location.href = $(this).data('href');
+                    break;
+                case 2:
+                    // Middle mouse button clicked, open url in new window.
+                    window.open($(this).data('href'), '_blank');
+            }
+        }
+    });
+});
