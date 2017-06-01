@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-05-12
+ * Modified    : 2017-06-01
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,11 +70,11 @@ $aFieldLinks = array(
     'ID_status_' =>                     array('vog',        'statusid',                     'lovd_convertStatus'),
     'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertCuratorID'),
     'variant_created_date_' =>          array('vog',        'created_date'),
-    'ID_variant_edited_by_' =>          array('vog',        'edited_by',                    'lovd_convertCuratorID'),
+    'ID_variant_edited_by_' =>          array('vog',        'edited_by',                    'lovd_convertEditedByID'),
     'variant_edited_date_' =>           array('vog',        'edited_date'),
     'ID_patient_created_by_' =>         array('individual', 'created_by',                   'lovd_convertCuratorID'),
     'patient_created_date_' =>          array('individual', 'created_date'),
-    'ID_patient_edited_by_' =>          array('individual', 'edited_by',                    'lovd_convertCuratorID'),
+    'ID_patient_edited_by_' =>          array('individual', 'edited_by',                    'lovd_convertEditedByID'),
     'patient_edited_date_' =>           array('individual', 'edited_date'),
     'ID_patientid_' =>                  array('individual', 'id',                           'lovd_autoIncIndividualID'),
     'ID_variantid_' =>                  array('vog',        'id',                           'lovd_autoIncVariantID'),
@@ -286,6 +286,21 @@ function lovd_convertDBID ($sLOVD2DBID)
     return $sLOVD2DBID;
 }
 
+
+
+
+
+function lovd_convertEditedByID ($sLOVD2EditedBy)
+{
+    // Convert edited_by fields from LOVD2 to LOVD3. This is a wrapper for
+    // lovd_convertCuratorID() with the difference that if the input is empty,
+    // it will not fall back on the fixed user ID specified in the submission
+    // form.
+    if ($sLOVD2EditedBy != '') {
+        return lovd_convertCuratorID($sLOVD2EditedBy);
+    }
+    return $sLOVD2EditedBy;
+}
 
 
 
