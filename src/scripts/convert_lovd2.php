@@ -1180,21 +1180,40 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
             '</A>.'),
         'skip',
         array('', '', 'print', 'User IDs in the selected LOVD2 export file are usually different' .
-            ' from those in the LOVD3 application. Below one can define a "Fixed user ID" to ' .
+            ' from those in the LOVD3 application. Below one can define a fixed user ID to ' .
             'set all user IDs in the file to a single value. One can also specify a translation ' .
-            'between LOVD2 and LOVD3 IDs. The translation has precedence over the fixed value. ' .
-            'If both fields are left empty, the user IDs are left untouched.'),
-        array('Fixed submitter ID', 'All user IDs in the imported file will be replaced with ' .
-            'this value. (E.g. all IDs in the edited_by, created_by fields)', 'text',
+            'between LOVD2 and LOVD3 IDs. The general strategy for determining the value of user ' .
+            'ID fields in the output (created_by, owned_by, edited_by) is as following:<br>' .
+            '1. Non-zero value translated by "Curator ID translation table".<br>' .
+            '2. Non-zero value replaced by given value in "Fixed curator ID".<br>' .
+            '3. Untouched value from corresponding input field.<br>' .
+            '4. Zero-valued fields ("0") are treated similarly as in steps 1-3, but using the ' .
+            '"Submitter ID translation table" and "Fixed submitter ID" form fields instead.<br>' .
+            'Exceptions to above steps are that the "edited_by" fields will not default to the ' .
+            'fixed curator ID field value when empty, and that the "owned_by" field is first ' .
+            'tried to be filled with the submitter ID and will default to whatever value was ' .
+            'determined for the "created_by" field.'),
+        array('Fixed submitter ID', '', 'text',
             'submitterid_fixed', 10),
-        array('', '', 'note', 'All user IDs in the imported file will be replaced with this ' .
-            'value. (E.g. all IDs in the edited_by, created_by fields)'),
+        array('', '', 'note', 'Fixed value for submitter ID (field "ID_submitterid_" in ' .
+            'import file). All fields in output that represent a user ID and are zero "0" are ' .
+            'given this fixed value instead, if there is no corresponding value in the ' .
+            'translation table below.'),
         array('Submitter ID translation table', '', 'textarea', 'submitterid_translation', 20, 6),
         array('', '', 'note', 'Translation table for user IDs. On every line an LOVD2 user ID ' .
-            'is expected, followed by an LOVD3 user ID, separated by whitespace. Any submitters ' .
-            'present in the selected file will translated according to this table.'),
+            'is expected, followed by an LOVD3 user ID, separated by whitespace. Any fields in ' .
+            'the output file will be given a value based on this table, before defaulting to the ' .
+            'fixed submitter ID defined above or the value of "ID_submitterid_" in the input ' .
+            'file.'),
         array('Fixed curator ID', '', 'text', 'curatorid_fixed', 10),
+        array('', '', 'note', 'Fixed value for non-zero user ID fields. All fields in the output ' .
+            'that represent a non-submitter user ID will be given this value if they cannot be ' .
+            'translated with the table defined below.'),
         array('Curator ID translation table', '', 'textarea', 'curatorid_translation', 20, 6),
+        array('', '', 'note', 'Translation table for curator user IDs. On every line an LOVD2 user ID ' .
+            'is expected, followed by an LOVD3 user ID, separated by whitespace. Any fields in ' .
+            'the output file will be given a value based on this table, before defaulting to the ' .
+            'fixed curator ID defined above.'),
         'hr',
         array('', '', 'submit', 'Generate LOVD3 import file'),
     );
