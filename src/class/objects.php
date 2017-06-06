@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-06-01
+ * Modified    : 2017-06-06
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2505,8 +2505,11 @@ FROptions
                                 // Rowlink is javascript code, define it with an onClick attribute.
                                 ' onclick="' . rawurldecode(substr($zData['row_link'], 11)) . '"' :
                                 // Rowlink is a URL, define a data-href attribute which is used to
-                                // generate a link with jquery.
-                                'data-href="' . lovd_getInstallURL(false) . $zData['row_link'] . '"')
+                                // by javascript open the page in the current window (onclick) or
+                                // in a new window (middle-click event caught with jquery in
+                                // inc-js-viewlist.php).
+                                ' data-href="' . lovd_getInstallURL(false) . $zData['row_link'] . '"' .
+                                ' onclick="javascript:window.location.href=this.getAttribute(\'data-href\');"')
                         ) . '>');
                 if ($bOptions) {
                     print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . (in_array($zData['row_id'], $aSessionViewList['checked'])? ' checked' : '') . '></TD>');
