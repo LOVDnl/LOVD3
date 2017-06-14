@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-12-09
+ * Modified    : 2017-06-14
  * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -153,7 +154,7 @@ class LOVD_API {
             // This API also ignores the Accept header.
             $this->sFormatOutput = 'text/plain';
             // And, we only allow GET.
-            if (!GET) {
+            if (!GET && !POST) {
                 // Will only allow GET.
                 // $this->aResponse['errors'][] = 'Method not allowed here.';
                 // $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
@@ -171,7 +172,7 @@ class LOVD_API {
             if (!$this->sResource) { // No data type given.
                 header('HTTP/1.0 400 Bad Request');
                 die('Too few parameters.');
-            } elseif (!in_array($this->sResource, array('variants', 'genes'))) { // Wrong data type given.
+            } elseif (!in_array($this->sResource, array('variants', 'genes', 'get_frequencies'))) { // Wrong data type given.
                 header('HTTP/1.0 400 Bad Request');
                 die('Requested data type not known.');
             } elseif ($this->sResource == 'variants' && !$this->sGene) { // Variants, but no gene selected.

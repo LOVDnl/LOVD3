@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2016-12-05
+ * Modified    : 2017-06-14
  * For LOVD    : 3.0-18
  *
  * Supported URIs:
@@ -29,7 +29,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -304,6 +304,53 @@ if ($sDataType == 'variants') {
         }
     }
     $sQ .= ' GROUP BY g.id ORDER BY g.id';
+
+
+
+} elseif ($sDataType == 'get_frequencies') {
+    // 2013-09-26; This addition to the API allows us to fetch frequencies from the whole_genome installation using this API.
+    if (!empty($_POST['variants'])) {
+        $aVariants = @json_decode($_POST['variants'], true);
+        if (!$aVariants) {
+            header('HTTP/1.0 400 Bad Request');
+            die('Error decoding variant string.' . "\n");
+        }
+    } else {
+        // Hmm... in GET then, maybe?
+        $aVariants = array();
+        if (isset($_GET['variant'])) {
+            if (preg_match('/^([0-9]{1,2}|[XYM]);([0-9]+);([0-9]+);(g\..+)/', $_GET['variant'], $aRegs)) {
+                list(,$sChr, $nPositionStart, $nPositionEnd, $sDNA) = $aRegs;
+                $aVariants[] = array('chromosome' => $sChr, 'position_g_start' => $nPositionStart, 'position_g_end' => $nPositionEnd, 'DNA' => $sDNA);
+            }
+        }
+    }
+    if (!$aVariants) {
+        // No variants in $_POST nor $_GET.
+        header('HTTP/1.0 400 Bad Request');
+        die('No variants received.' . "\n");
+    } elseif (count($aVariants) > 25) {
+        // More than 25 variants at the same time at this time not supported.
+        header('HTTP/1.0 400 Bad Request');
+        die('Please do not request more than 25 variants at the same time.' . "\n");
+    }
+
+    // Send one query to the server, request all variants using a UNION. This is done to prevent overhead from 25 queries.
+    $sSQL = '';
+    $aArgs = array();
+    foreach ($aVariants as $nKey => $aVariant) {
+        // If we received through $_POST we're not 100% sure everthing looks like how it should.
+        if (count($aVariant) == 4) {
+            $sSQL .= (!$sSQL? '' : ' UNION ALL ') . '(SELECT ' . $nKey . ', `VariantOnGenome/Frequency` FROM ' . TABLE_VARIANTS . ' WHERE chromosome = ? AND position_g_start = ? AND position_g_end = ? AND `VariantOnGenome/DNA` = ?)';
+            $aArgs = array_merge($aArgs, array($aVariant['chromosome'], $aVariant['position_g_start'], $aVariant['position_g_end'], $aVariant['DNA']));
+        }
+    }
+    if ($sSQL && $aArgs) {
+        $aResults = $_DB->query($sSQL, $aArgs)->fetchAllCombine();
+    } else {
+        $aResults = array();
+    }
+    die(json_encode($aResults) . "\n");
 }
 $aData = $_DB->query($sQ)->fetchAllAssoc();
 $n = count($aData);
