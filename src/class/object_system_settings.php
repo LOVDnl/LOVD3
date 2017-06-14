@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2016-10-13
+ * Modified    : 2017-06-14
  * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -267,7 +267,7 @@ class LOVD_SystemSetting extends LOVD_Object {
         $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
         $_POST['send_stats'] = 1;
         $_POST['include_in_listing'] = 1;
-        $_POST['allow_submitter_registration'] = (int) (!LOVD_plus);
+        $_POST['allow_submitter_registration'] = (int) !(LOVD_plus || LOVD_LIGHT);
         $_POST['allow_submitter_mods'] = 1;
         if (!SSL) {
             $_POST['use_ssl'] = 0;
