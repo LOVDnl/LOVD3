@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-02-22
+ * Modified    : 2017-06-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -39,11 +39,12 @@ set_time_limit(60*5); // Very large, but not infinite.
 
 
 
-function getWhereClauseForFilters($aFilters)
+function getWhereClauseForFilters ($aFilters, $sTableAlias)
 {
     // Create a SQL WHERE clause for a given filter. Returns two values, first
-    // is a string containing the SQL clause, second is an array of arguments
-    // to be added when executing a query with the clause through PDO.
+    //  is a string containing the SQL clause, second is an array of arguments
+    //  to be added when executing a query with the clause through PDO.
+    // Optionally, all references to columns can be prefixed by a table alias.
 
     $sWHERE = '';
     $aArgs = array();
@@ -55,12 +56,12 @@ function getWhereClauseForFilters($aFilters)
             switch ($sFilter) {
                 case 'category':
                     // Custom column category must be taken from the start of the column id.
-                    $sWHERE .= 'id LIKE ?';
+                    $sWHERE .= $sTableAlias . '.id LIKE ?';
                     $aArgs[] = $Value . '/%';
                     break;
                 case 'owner':
                     // Data ownership is defined by the created_by and owned_by fields.
-                    $sWHERE .= '(created_by = ? OR owned_by = ?)';
+                    $sWHERE .= '(' . $sTableAlias . '.created_by = ? OR ' . $sTableAlias . '.owned_by = ?)';
                     $aArgs[] = $Value;
                     $aArgs[] = $Value;
                     break;
@@ -71,7 +72,7 @@ function getWhereClauseForFilters($aFilters)
                         // No hits, filter all out.
                         $sWHERE .= '0=1';
                     } else {
-                        $sWHERE .= '`' . $sFilter . '` ';
+                        $sWHERE .= $sTableAlias . '.`' . $sFilter . '` ';
                         if (is_array($Value)) {
                             $sWHERE .= 'IN (?' . str_repeat(', ?', count($Value) - 1) . ')';
                             $aArgs = array_merge($aArgs, $Value);
@@ -82,7 +83,6 @@ function getWhereClauseForFilters($aFilters)
                     }
             }
         }
-        return array($sWHERE, $aArgs);
     }
     return array($sWHERE, $aArgs);
 }
@@ -128,7 +128,6 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     $sHeader = '';   // What header to put in the file? "<header> download".
     $sFilter = '';   // Do you want to filter the data? If so, put some string here, that marks this type of filter.
     $ID = '';
-    $aGene = array();
     if ($_PE[1] == 'all' && empty($_PE[2])) {
         // Download all data.
         $sFileName = 'full_download';
@@ -144,11 +143,11 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $sFilter = 'gene';
         } else {
-            $aGene = $_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id=?', array($ID))->fetchAssoc();
-            if (isset($aGene['allow_download']) && $aGene['allow_download'] === '1') {
+            $bAllowDownload = $_DB->query('SELECT allow_download FROM ' . TABLE_GENES . ' WHERE id = ?', array($ID))->fetchColumn();
+            if ($bAllowDownload) {
                 $sFilter = 'gene_public';
             } else {
-                die('Error: Data for gene (' . $ID . ') is not public and you don\'t have permission '.
+                die('Error: Data for gene (' . htmlspecialchars($ID) . ') is not public and you don\'t have permission '.
                     'to see non-public data.' . "\r\n");
             }
         }
@@ -313,7 +312,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                 );
 
         } elseif ($sFilter == 'gene' || $sFilter == 'gene_public') {
-            // Gene-specific download. Can be downloaded by Curator.
+            // Gene-specific download. Can be downloaded by Curator or by public when settings allow.
             // Change the order of filtering just a bit, so we can filter the VOGs based on the VOTs, the screenings based on the VOGs and the Individuals based on their Screenings.
             $aObjectsToBeFiltered =
                 array(
@@ -355,24 +354,32 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             $aObjects['Screenings']['prefetch'] = true;
             $aObjects['Screenings']['filter_other']['Individuals']['id'] = 'individualid';
 
-            // Prefetch individuals and filter individuals_to_diseases and
-            // phenotypes based on the individuals' IDs.
-            $aObjects['Individuals']['prefetch'] = true;
-            $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
-            $aObjects['Individuals']['filter_other']['Phenotypes']['individualid'] = 'id';
+            if ($sFilter == 'gene') {
+                // Normally, we only filter the individuals based on
+                //  the screenings that are connected to the variants.
+                $aObjects['Screenings']['filter_other']['Ind2Dis']['individualid'] = 'individualid';
+                $aObjects['Screenings']['filter_other']['Phenotypes']['individualid'] = 'individualid';
+
+            } else {
+                // Public data filter. Individuals get filtered on status as well, and therefore filter others.
+                // Prefetch individuals and filter Screenings, Ind2Dis, and Phenotypes.
+                $aObjects['Individuals']['prefetch'] = true;
+                $aObjects['Individuals']['filter_other']['Screenings']['individualid'] = 'id';
+                $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
+                $aObjects['Individuals']['filter_other']['Phenotypes']['individualid'] = 'id';
+
+                $aObjects['Scr2Gene']['prefetch'] = true;
+            }
 
             // Ind2Dis' have to be prefetched, because the Diseases need to be filtered on their IDs.
             $aObjects['Ind2Dis']['prefetch'] = true;
             $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid'; // More values were already in, from Gen2Dis!
 
-            $aObjects['Scr2Gene']['prefetch'] = true;
-
             if ($sFilter == 'gene_public') {
+                // When downloading only the public gene data, filter data on status.
                 $aObjects['Variants']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
                 $aObjects['Individuals']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
                 $aObjects['Phenotypes']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
-
-                $aObjects['Individuals']['filter_other']['Screenings']['individualid'] = 'id';
 
                 // Hide non-public columns.
                 $aObjectTranslations = array(
@@ -451,20 +458,19 @@ if (empty($aObjectsToBeFiltered) || count($aObjectsToBeFiltered) != count($aObje
 }
 foreach ($aObjectsToBeFiltered as $sObject) {
     $aSettings = $aObjects[$sObject];
-    list($sWHERE, $aArgs) = getWhereClauseForFilters($aSettings['filters']);
+    list($sWHERE, $aArgs) = getWhereClauseForFilters($aSettings['filters'], 't');
 
     // Build the query.
     // Ugly hack: we will change $sTable for the VOT to a string that joins VOG such that we can apply filters.
     // We'll add table alias 't' everywhere to make sure the SELECT * doesn't take data from both tables, if we're using two tables here.
     //   VOG values can overwrite VOT values (effectid).
     if ($sObject == 'Variants_On_Transcripts') {
-        $sTable = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS . ' USING (id)';
+        $sTable = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS . ' AS g USING (id)';
 
         // Apply VOG filters as well.
-        // FIXME: possibility of name clashes here for filters on VOG/VOT columns with same name.
         if (isset($aObjects['Variants']) && !empty($aObjects['Variants']['filters'])) {
-            list($sVOGWhere, $aVOGArgs) = getWhereClauseForFilters($aObjects['Variants']['filters']);
-            $sWHERE .= (($sWHERE == '')? '' : ' AND ') . $sVOGWhere;
+            list($sVOGWhere, $aVOGArgs) = getWhereClauseForFilters($aObjects['Variants']['filters'], 'g');
+            $sWHERE .= (!$sWHERE? '' : ' AND ') . $sVOGWhere;
             $aArgs = array_merge($aArgs, $aVOGArgs);
         }
     } elseif ($sObject == 'Columns') {
@@ -476,7 +482,7 @@ foreach ($aObjectsToBeFiltered as $sObject) {
         }
     }
     // Store in data array.
-    $aObjects[$sObject]['query'] = 'SELECT t.* FROM ' . $sTable . (!$sWHERE? '' : ' WHERE ' . $sWHERE) . ' ORDER BY ' . (empty($aSettings['order_by'])? 'id' : $aSettings['order_by']);
+    $aObjects[$sObject]['query'] = 'SELECT t.* FROM ' . $sTable . (!$sWHERE? '' : ' WHERE ' . $sWHERE) . ' ORDER BY t.' . (empty($aSettings['order_by'])? 'id' : $aSettings['order_by']);
     $aObjects[$sObject]['args']  = $aArgs;
 
     // If prefetch is requested, request data right here. We will then loop through the results to create the filters for the other objects.
@@ -514,7 +520,7 @@ foreach ($aObjectsToBeFiltered as $sObject) {
 
 if (isset($sFilter) && $sFilter == 'gene_public') {
     // Ugly hack to run otherwise ignored filter of individualid on screenings.
-    // Fixme: make sure this filter is part of the query to get screenings from DB.
+    // FIXME: make sure this filter is part of the query to get screenings from DB.
 
     if (isset($aObjects['Screenings']['filters']['individualid']) &&
         is_array($aObjects['Screenings']['filters']['individualid'])) {
@@ -523,28 +529,31 @@ if (isset($sFilter) && $sFilter == 'gene_public') {
         $aIndIDsAsKeys = array_flip($aObjects['Screenings']['filters']['individualid']);
 
         // Filter out non-allowed values for individualid.
-        $aNewScreenings = array();
         $aScreeningIDs = array();
-        foreach ($aObjects['Screenings']['data'] as $zData) {
-            if (isset($aIndIDsAsKeys[$zData['individualid']])) {
-                $aNewScreenings[] = $zData;
+        foreach ($aObjects['Screenings']['data'] as $nKey => $zData) {
+            if (!isset($aIndIDsAsKeys[$zData['individualid']])) {
+                unset($aObjects['Screenings']['data'][$nKey]);
+            } else {
                 $aScreeningIDs[] = $zData['id'];
             }
         }
-        $aObjects['Screenings']['data'] = $aNewScreenings;
+        // Because we need the data to surely have a key [0].
+        $aObjects['Screenings']['data'] = array_values($aObjects['Screenings']['data']);
 
         $aScreeningIDsAsKeys = array_flip($aScreeningIDs);
         foreach (array('Scr2Var', 'Scr2Gene') as $sObject) {
-            $aNewObjectData = array();
-            foreach ($aObjects[$sObject]['data'] as $zData) {
-                if (isset($aScreeningIDsAsKeys[$zData['screeningid']])) {
-                    $aNewObjectData[] = $zData;
+            foreach ($aObjects[$sObject]['data'] as $nKey => $zData) {
+                if (!isset($aScreeningIDsAsKeys[$zData['screeningid']])) {
+                    unset($aObjects[$sObject]['data'][$nKey]);
                 }
             }
-            $aObjects[$sObject]['data'] = $aNewObjectData;
+            // Because we need the data to surely have a key [0].
+            $aObjects[$sObject]['data'] = array_values($aObjects[$sObject]['data']);
         }
     }
 }
+
+
 
 
 
