@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-05-15
+ * Modified    : 2017-06-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -127,8 +127,6 @@ class LOVD_Gene extends LOVD_Object {
                         'exon_tables' => 'Exon/intron information',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
-                        'allow_download_' => array('Allow public to download all variant entries', LEVEL_COLLABORATOR),
-                        'allow_index_wiki_' => array('Allow data to be indexed by WikiProfessional', LEVEL_COLLABORATOR),
                         'refseq_url_' => 'Refseq URL',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
@@ -136,6 +134,8 @@ class LOVD_Gene extends LOVD_Object {
                         'uniq_variants_' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
+                        'allow_download_' => array('Allow public to download linked information', LEVEL_COLLABORATOR),
+                        'download_' => 'Download all this gene\'s data',
                         'note_index' => 'Notes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => 'Date created',
@@ -523,6 +523,13 @@ class LOVD_Gene extends LOVD_Object {
             if (isset($zData['reference'])) {
                 // FIXME; Isn't it better to take the PubMed custom link from the database? If it ever gets edited, this one should be edited, too.
                 $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="https://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+            }
+
+            if ($_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
+                $zData['download_'] = '<A href="download/all/gene/' . $zData['id'] . '">' .
+                    'Download all data</a>';
+            } else {
+                unset($this->aColumnsViewEntry['download_']);
             }
 
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
