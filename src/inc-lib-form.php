@@ -757,6 +757,22 @@ function lovd_setUpdatedDate ($aGenes)
 
 
 
+function lovd_trimField ($sVal)
+{
+    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
+    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
+
+    $sVal = trim($sVal);
+    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
+        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
+    }
+    return trim($sVal);
+}
+
+
+
+
+
 function lovd_viewForm ($a,
                         $sHeaderPrefix = "\n          <TR valign=\"top\">\n            <TD class=\"{{ CLASS }}\">",
                         $sHeaderSuffix = '</TD>',
@@ -1089,4 +1105,23 @@ function lovd_wrapText ($s, $l = 70, $sCut = ' ')
 
     return $s;
 }
+
+
+
+
+
+function utf8_encode_array ($Data)
+{
+    // Recursively loop array to encode values.
+
+    if (!is_array($Data)) {
+        return utf8_encode($Data);
+    } else {
+        foreach ($Data as $key => $val) {
+            $Data[$key] = utf8_encode_array($val);
+        }
+        return $Data;
+    }
+}
+
 ?>
