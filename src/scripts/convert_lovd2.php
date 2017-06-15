@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-06-01
+ * Modified    : 2017-06-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,7 +57,7 @@ $aFieldLinks = array(
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
     'Variant/Genetic_origin' =>         array('vog',        'VariantOnGenome/Genetic_origin'),
     'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
-    'Variant/Reference' =>              array('vot',        'VariantOnTranscript/Reference','lovd_convertReference'),
+    'Variant/Reference' =>              array('vog',        'VariantOnGenome/Reference','lovd_convertReference'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
     'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
@@ -514,12 +514,12 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             $aOutputHeaders[$sSection] = array();
         }
 
+        $aSectionIDs = array_keys($aSections);
         // Loop over input headers and link them to output headers, such that
         // $aOutputHeaders[section][i] = outHeader, where section is the output
         // section as defined in $aImportSections, i is the index of the input
         // header and outHeader is the name of the column in the output.
         for ($i = 0; $i < count($aMatches[1]); $i++) {
-            $aSectionIDs = array_keys($aSections);
             $sHeader = $aMatches[1][$i];
 
             // Skip fields listed to ignore.
