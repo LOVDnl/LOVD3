@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-02-14
+ * Modified    : 2017-06-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -127,9 +127,6 @@ class LOVD_Gene extends LOVD_Object {
                         'exon_tables' => 'Exon/intron information',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
-                        'download_' => 'Download all information linked to this gene',
-                        'allow_download_' => array('Allow public to download linked information', LEVEL_COLLABORATOR),
-                        'allow_index_wiki_' => array('Allow data to be indexed by WikiProfessional', LEVEL_COLLABORATOR),
                         'refseq_url_' => 'Refseq URL',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
@@ -137,6 +134,8 @@ class LOVD_Gene extends LOVD_Object {
                         'uniq_variants_' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
+                        'allow_download_' => array('Allow public to download linked information', LEVEL_COLLABORATOR),
+                        'download_' => 'Download all this gene\'s data',
                         'note_index' => 'Notes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => 'Date created',
@@ -312,13 +311,13 @@ class LOVD_Gene extends LOVD_Object {
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             if (lovd_getProjectFile() == '/import.php') {
-                // During import the refseq_genomic is required, else the import 
+                // During import the refseq_genomic is required, else the import
                 // starts complaining that the selected refseq_genomic is not valid
-                // Therefore we set the refseq_genomic in the aFormData property 
+                // Therefore we set the refseq_genomic in the aFormData property
                 // before the getForm() is returned.
                 global $zData;
                 $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
-         
+
                 $this->aFormData['refseq_genomic'] = array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false);
             }
             return parent::getForm();
@@ -526,10 +525,9 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
             }
 
-            if ($_AUTH['level'] >= LEVEL_CURATOR ||
-                (isset($zData['allow_download']) && $zData['allow_download'] === '1')) {
+            if ($_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
                 $zData['download_'] = '<A href="download/all/gene/' . $zData['id'] . '">' .
-                    'Download all information</a>';
+                    'Download all data</a>';
             } else {
                 unset($this->aColumnsViewEntry['download_']);
             }
