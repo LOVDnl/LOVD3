@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-05-08
+ * Modified    : 2017-06-15
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,34 +100,51 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // FIXME: we should implement this in a different way
         $this->aSQLViewList['SELECT'] =
             'vog.*' .
-            (!$_SETT['customization_settings']['show_genome_variant_extra_fields']? '' :
-                // FIXME; de , is niet de standaard.
-                ', GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
-                'a.name AS allele_, ' .
-                'e.name AS effect, ' .
-                'uo.name AS owned_by_, ' .
-                'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
+            // FIXME; de , is niet de standaard.
+            (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']? '' :
+                ', GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids'
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
+                ', a.name AS allele_'
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_effect']? '' :
+                ', e.name AS effect'
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_owner']? '' :
+                ', uo.name AS owned_by_' .
+                ', CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner'
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_status']? '' :
                 ($_AUTH['level'] >= LEVEL_COLLABORATOR?
-                    'CASE vog.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,'
+                    ', CASE vog.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name'
                     : ''
                 ) .
-              'ds.name AS status'
+              ', ds.name AS status'
             );
 
         $this->aSQLViewList['FROM'] =
             TABLE_VARIANTS . ' AS vog ' .
             // Added so that Curators and Collaborators can view the variants for which they have
-            // viewing rights in the genomic variant viewlist.
-            (!$_SETT['customization_settings']['show_genome_variant_extra_fields']? '' :
-                ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
-                    'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
-                    'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
-                    : ''
-                ) .
-                'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
-                'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
-                'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
-                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
+            // viewing rights in the genomic variant viewlist. Where condition is set in
+            // object_custom.php
+            ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
+                'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
+                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
+                : ''
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']? '' :
+                'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) '
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
+                'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) '
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_effect']? '' :
+                'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) '
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_owner']? '' :
+                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) '
+            ) .
+            (!$_SETT['customization_settings']['variant_viewlist_show_status']? '' :
                 'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)'
             );
 
@@ -139,16 +156,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $this->aColumnsViewEntry = array_merge(
             array(
                 'individualid_' => 'Individual ID',
-                'chromosome' => 'Chromosome'
-            ),
-            (!$_SETT['customization_settings']['show_genome_variant_extra_fields']? array() :
-                array(
-                    'allele_' => 'Allele',
-                    'effect_reported' => 'Affects function (reported)',
-                    'effect_concluded' => 'Affects function (concluded)',
-                    'curation_status_' => 'Curation status',
-                    'confirmation_status_' => 'Confirmation status'
-                )
+                'chromosome' => 'Chromosome',
+                'allele_' => 'Allele',
+                'effect_reported' => 'Affects function (reported)',
+                'effect_concluded' => 'Affects function (concluded)',
+                'curation_status_' => 'Curation status',
+                'confirmation_status_' => 'Confirmation status'
             ),
             $this->buildViewEntry(),
             array(
@@ -170,7 +183,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
-            (!$_SETT['customization_settings']['show_genome_variant_extra_fields']? array() :
+            (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']? array() :
                 array(
                     'screeningids' => array(
                         'view' => false,
@@ -182,13 +195,17 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                     'view' => array('Variant ID', 90, 'style="text-align : right;"'),
                     'db'   => array('vog.id', 'ASC', true)),
             ),
-            (!$_SETT['customization_settings']['show_genome_variant_extra_fields']? array() :
+            (!$_SETT['customization_settings']['variant_viewlist_show_effect']? array() :
                 array(
                     'effect' => array(
                         'view' => array('Effect', 70),
                         'db'   => array('e.name', 'ASC', true),
                         'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
                                           'The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                )
+            ),
+            (!$_SETT['customization_settings']['variant_viewlist_show_allele']? array() :
+                array(
                     'allele_' => array(
                         'view' => array('Allele', 120),
                         'db'   => array('a.name', 'ASC', true),
@@ -208,25 +225,31 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                             'db'   => array('vog.position_g_end', 'ASC', true)),
             ),
             $this->buildViewList(),
-            (!$_SETT['customization_settings']['show_genome_variant_extra_fields']? array() :
+            (!$_SETT['customization_settings']['variant_viewlist_show_owner']? array() :
                 array(
                     'owned_by_' => array(
                                 'view' => array('Owner', 160),
                                 'db'   => array('uo.name', 'ASC', true)),
                     'owner_countryid' => array(
                                 'view' => false,
-                                'db'   => array('uo.countryid', 'ASC', true)),
+                                'db'   => array('uo.countryid', 'ASC', true))
+                )
+            ),
+            (!$_SETT['customization_settings']['variant_viewlist_show_status']? array() :
+                array(
                     'status' => array(
                                 'view' => array('Status', 70),
                                 'db'   => array('ds.name', false, true),
-                                'auth' => LEVEL_COLLABORATOR),
-                    'created_by' => array(
-                                'view' => false,
-                                'db'   => array('vog.created_by', false, true)),
-                    'created_date' => array(
-                                'view' => false,
-                                'db'   => array('vog.created_date', 'ASC', true)),
+                                'auth' => LEVEL_COLLABORATOR)
                 )
+            ),
+            array(
+                'created_by' => array(
+                            'view' => false,
+                            'db'   => array('vog.created_by', false, true)),
+                'created_date' => array(
+                            'view' => false,
+                            'db'   => array('vog.created_date', 'ASC', true)),
             )
         );
 
