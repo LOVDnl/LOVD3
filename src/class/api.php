@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2017-06-14
+ * Modified    : 2017-06-16
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -154,7 +154,7 @@ class LOVD_API {
             // This API also ignores the Accept header.
             $this->sFormatOutput = 'text/plain';
             // And, we only allow GET.
-            if (!GET && !POST) {
+            if (!GET && !(POST && $this->sResource == 'get_frequencies')) {
                 // Will only allow GET.
                 // $this->aResponse['errors'][] = 'Method not allowed here.';
                 // $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
