@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-04-25
+ * Modified    : 2017-06-16
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1697,7 +1697,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         $sChromosome = 'M';
                                         $sChromBand = '';
                                     } else {
-                                        preg_match('/^(\d{1,2}|[XY])([^\s]+).*$/', $sChromLocation, $aMatches);
+                                        preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches);
                                         $sChromosome = $aMatches[1];
                                         $sChromBand = $aMatches[2];
                                     }

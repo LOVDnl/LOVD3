@@ -127,7 +127,7 @@ $aTableSQL =
     id VARCHAR(25) NOT NULL,
     name VARCHAR(255) NOT NULL,
     chromosome VARCHAR(2),
-    chrom_band VARCHAR(20) NOT NULL DEFAULT "",
+    chrom_band VARCHAR(40) NOT NULL DEFAULT "",
     imprinting VARCHAR(10) NOT NULL DEFAULT "unknown",
     refseq_genomic VARCHAR(15) NOT NULL DEFAULT "",
     refseq_UD VARCHAR(25) NOT NULL DEFAULT "",

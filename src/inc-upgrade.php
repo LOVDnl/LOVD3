@@ -493,7 +493,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             ALTER login_attempts SET DEFAULT 0',
                         'ALTER TABLE ' . TABLE_CHROMOSOMES . ' ALTER sort_id SET DEFAULT 0',
                         'ALTER TABLE ' . TABLE_GENES . '
-                            ALTER chrom_band SET DEFAULT "",
+                            MODIFY chrom_band VARCHAR(40) NOT NULL DEFAULT "",
                             ALTER refseq_genomic SET DEFAULT "",
                             ALTER refseq_UD SET DEFAULT "",
                             ALTER reference SET DEFAULT "",
