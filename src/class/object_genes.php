@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-04-10
+ * Modified    : 2017-06-16
  * For LOVD    : 3.0-18
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -503,7 +503,7 @@ class LOVD_Gene extends LOVD_Object {
 
                     // Assume presence of exon table file in *.txt format. Show link to reading
                     // frame checker.
-                    $zData['rf_checker_'] .= (!$zData['rf_checker_']? '' : ', ') . '<A href="scripts/readingFrameChecker.php?symbol=' . $zData['id'] . '_' . $sNCBI . '">' . $sNCBI . '</A>';
+                    $zData['rf_checker_'] .= (!$zData['rf_checker_']? '' : ', ') . '<A href="#" onclick="lovd_openWindow(\'scripts/readingFrameChecker.php?gene=' . $zData['id'] . '&transcript=' . $sNCBI . '\');">' . $sNCBI . '</A>';
                 }
             }
             if (!$zData['refseq_transcript_']) {
