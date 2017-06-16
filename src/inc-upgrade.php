@@ -481,7 +481,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      array(
                          'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]*-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]*))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID";',
                      ),
-                 '3.0-18b' =>
+                 '3.0-18d' =>
                     array(
                         'ALTER TABLE ' . TABLE_USERS . '
                             ALTER department SET DEFAULT "",
