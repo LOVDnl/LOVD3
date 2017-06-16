@@ -1690,9 +1690,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     // Extract gene information.
                                     list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim) = array_values($aGeneInfo[$sSymbol]);
                                     list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
-                                    if (!ctype_digit($sOmim)) {
-                                        $sOmim = null;
-                                    }
                                     if ($sChromLocation == 'mitochondria') {
                                         $sChromosome = 'M';
                                         $sChromBand = '';
