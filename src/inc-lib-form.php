@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-03-02
+ * Modified    : 2017-04-24
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -623,6 +623,13 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwd
 
     $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
 
+    // Submission emails should have the Reply-To set to the curator
+    //  and the submitter, so both benefit from it.
+    if (strpos($sSubject, 'LOVD submission') === 0) {
+        // Reply-to should be original addressees.
+        $sHeaders .= PHP_EOL . 'Reply-To: ' . $sTo . ', ' . $sCc;
+    }
+
     // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
     $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
     $bSafeMode = ini_get('safe_mode');
@@ -744,6 +751,22 @@ function lovd_setUpdatedDate ($aGenes)
     // Just update the database and we'll see what happens.
     $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = ?, updated_date = NOW() WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')', array_merge(array($_AUTH['id']), $aGenes), false);
     return ($q->rowCount());
+}
+
+
+
+
+
+function lovd_trimField ($sVal)
+{
+    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
+    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
+
+    $sVal = trim($sVal);
+    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
+        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
+    }
+    return trim($sVal);
 }
 
 
@@ -921,7 +944,7 @@ function lovd_viewForm ($a,
 
                 // Output a hidden text field before password field, to catch a possible
                 // mistaken automatic fill of a username.
-                print('<INPUT type="text" style="display:none" />' . PHP_EOL);
+                print('<INPUT type="text" name="fake_username" style="width:0; margin:-3px; padding:0; visibility: hidden" />' . PHP_EOL);
                 // Print indentation for new line.
                 print($sNewLine);
 
@@ -1082,4 +1105,23 @@ function lovd_wrapText ($s, $l = 70, $sCut = ' ')
 
     return $s;
 }
+
+
+
+
+
+function utf8_encode_array ($Data)
+{
+    // Recursively loop array to encode values.
+
+    if (!is_array($Data)) {
+        return utf8_encode($Data);
+    } else {
+        foreach ($Data as $key => $val) {
+            $Data[$key] = utf8_encode_array($val);
+        }
+        return $Data;
+    }
+}
+
 ?>

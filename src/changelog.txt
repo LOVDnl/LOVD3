@@ -34,6 +34,18 @@
    format /variants/chr3:20-200000.
  * Improved variant list error message for genes without transcripts and genes
    without variants.
+ * Removed repeated error message during import if a checkbox field doesn't
+   contain a 0 or 1.
+ * When importing, the 'variants_found' field now allows for values higher than
+   1, even though they will be interpreted as 1, since the field is a flag.
+ * When a form field contains incorrect values (usally when importing), LOVD
+   won't print more than one error message about that field's value anymore.
+ * Included version 3.0-19 of the official LOVD Reference Sequence Parser
+   script.
+   - The "Include link to GenBank record" field in the final step sometimes
+     contained more text than just an GenBank record ID.
+ * Updated all links to the HGVS nomenclature to point to the new website.
+ * Updated all links to the NCBI to use HTTPS.
 
 
 /**************************
@@ -1205,6 +1217,8 @@
  * The screenings & individuals pages now have gene specific page, which shows
    the entries that have been screened for the currently selected gene.
  * Mails are now being sent to the appropriate users after an edit of data.
+ * Submission emails now have their Reply-To set to the curators and submitters,
+   so that both parties can just reply to end up with the correct addressees.
 
 
 /*******************

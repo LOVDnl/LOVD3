@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2016-12-13
- * For LOVD    : 3.0-18
+ * Modified    : 2017-02-15
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -211,44 +211,7 @@ function lovd_setEmptyCheckboxFields ($aForm)
                 // All data in $aLine is handled as a string, therefor we set the checkbox variable as string.
                 $aLine[$sName] = '0';
             }
-            if (isset($aLine[$sName]) && !in_array($aLine[$sName], array('0', '1'))) {
-                lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
-            }
         }
-    }
-}
-
-
-
-
-
-function lovd_trimField ($sVal)
-{
-    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
-    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
-
-    $sVal = trim($sVal);
-    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
-        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
-    }
-    return trim($sVal);
-}
-
-
-
-
-
-function utf8_encode_array ($Data)
-{
-    // Recursively loop array to encode values.
-
-    if (!is_array($Data)) {
-        return utf8_encode($Data);
-    } else {
-        foreach ($Data as $key => $val) {
-            $Data[$key] = utf8_encode_array($val);
-        }
-        return $Data;
     }
 }
 
@@ -867,6 +830,15 @@ if (POST) {
                 $_POST['category'] = $aLine['category'];
                 $_POST['width'] = $aLine['width'];
                 $_POST['workID'] = '';
+            }
+
+            // Special actions for section Screenings.
+            if ($sCurrentSection == 'Screenings') {
+                // For field `variants_found`, interpret any number >1 as 1.
+                if (isset($aLine['variants_found']) && is_numeric($aLine['variants_found']) &&
+                    ((int) $aLine['variants_found']) > 1) {
+                    $aLine['variants_found'] = '1';
+                }
             }
 
             // Build the form, necessary for field-specific actions (currently for checkboxes only).

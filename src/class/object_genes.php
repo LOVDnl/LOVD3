@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-12-07
- * For LOVD    : 3.0-18
+ * Modified    : 2017-06-15
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -64,7 +64,7 @@ class LOVD_Gene extends LOVD_Object {
                                'GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, ' .
+        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
                                            '(MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, ' .
@@ -127,8 +127,6 @@ class LOVD_Gene extends LOVD_Object {
                         'exon_tables' => 'Exon/intron information',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
-                        'allow_download_' => array('Allow public to download all variant entries', LEVEL_COLLABORATOR),
-                        'allow_index_wiki_' => array('Allow data to be indexed by WikiProfessional', LEVEL_COLLABORATOR),
                         'refseq_url_' => 'Refseq URL',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
@@ -136,6 +134,8 @@ class LOVD_Gene extends LOVD_Object {
                         'uniq_variants_' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
+                        'allow_download_' => array('Allow public to download linked information', LEVEL_COLLABORATOR),
+                        'download_' => 'Download all this gene\'s data',
                         'note_index' => 'Notes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => 'Date created',
@@ -311,13 +311,13 @@ class LOVD_Gene extends LOVD_Object {
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             if (lovd_getProjectFile() == '/import.php') {
-                // During import the refseq_genomic is required, else the import 
+                // During import the refseq_genomic is required, else the import
                 // starts complaining that the selected refseq_genomic is not valid
-                // Therefore we set the refseq_genomic in the aFormData property 
+                // Therefore we set the refseq_genomic in the aFormData property
                 // before the getForm() is returned.
                 global $zData;
                 $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
-         
+
                 $this->aFormData['refseq_genomic'] = array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false);
             }
             return parent::getForm();
@@ -486,7 +486,7 @@ class LOVD_Gene extends LOVD_Object {
             $zData['imprinting_'] = $_SETT['gene_imprinting'][$zData['imprinting']];
 
             // FIXME; zou dit een external source moeten zijn?
-            $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
+            $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'https://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
             $zData['refseq_UD_'] = '<A href="' . str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $zData['refseq_UD'] . '.gb" target="_blank">' . $zData['refseq_UD'] . '</A>';
 
             // Transcript links and exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
@@ -497,7 +497,7 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['refseq_transcript_'] .= (!$zData['refseq_transcript_']? '' : ', ') . '<A href="transcripts/' . $nTranscriptID . '">' . $sNCBI . '</A>';
                 $sExonTableFile = ROOT_PATH . 'refseq/' . $zData['id'] . '_' . $sNCBI . '_table.html';
                 if (is_readable($sExonTableFile)) {
-                    $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">' . $sNCBI . '</A>';
+                    $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">' . $sNCBI . ' exon/intron table</A>';
                 }
             }
             if (!$zData['refseq_transcript_']) {
@@ -521,8 +521,15 @@ class LOVD_Gene extends LOVD_Object {
             }
 
             if (isset($zData['reference'])) {
-                // FIXME; is 't niet beter de PubMed custom link data uit de database te halen? Als ie ooit wordt aangepast, gaat dit fout.
-                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+                // FIXME; Isn't it better to take the PubMed custom link from the database? If it ever gets edited, this one should be edited, too.
+                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="https://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+            }
+
+            if ($_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
+                $zData['download_'] = '<A href="download/all/gene/' . $zData['id'] . '">' .
+                    'Download all data</a>';
+            } else {
+                unset($this->aColumnsViewEntry['download_']);
             }
 
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
@@ -630,7 +637,7 @@ class LOVD_Gene extends LOVD_Object {
                 // The weird addition in the end is to fake a proper name in Ensembl.
                 $sURLEnsembl .= $sURLBedFile . rawurlencode('&name=/' . $zData['id'] . ' variants');
                 $zData['ensembl'] = 'Show variants in the Ensembl Genome Browser (<A href="' . $sURLEnsembl . '=labels" target="_blank">full view</A>, <A href="' . $sURLEnsembl . '=normal" target="_blank">compact view</A>)';
-                $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="http://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
+                $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="https://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
 
             } else {
                 unset($this->aColumnsViewEntry['TableStart_Graphs'],$this->aColumnsViewEntry['TableHeader_Graphs'],$this->aColumnsViewEntry['graphs'],$this->aColumnsViewEntry['ucsc'],$this->aColumnsViewEntry['ensembl'],$this->aColumnsViewEntry['ncbi'],$this->aColumnsViewEntry['TableEnd_Graphs'],$this->aColumnsViewEntry['HR_2']);
@@ -655,12 +662,16 @@ class LOVD_Gene extends LOVD_Object {
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID, 2);
                 if (!empty($zData[$sColID])) {
-                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                    // For IDs and the GeneTests link, use the IDs for the URL, otherwise use the gene symbol;
+                    //  for IDs, use the IDs in the visible part of the link, otherwise use the gene symbol.
+                    // FIXME: Note that id_pubmed_gene now uses the gene symbol in the visible part of the link (code below this block);
+                    //  it would be good if we'd standardize that.
+                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }
             }
-            // Link to PubMed articles now shows Entrez Gene ID, which might be misinterpreted as a number of articles. Replace by Gene Symbol.
+            // The link to PubMed articles showed the Entrez Gene ID, which might be misinterpreted as a number of articles. Replaced by Gene Symbol.
             $zData['id_pubmed_gene_'] = str_replace($zData['id_entrez'] . '</A>', $zData['id'] . '</A>', $zData['id_pubmed_gene_']);
 
             // Disclaimer.

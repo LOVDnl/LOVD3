@@ -78,6 +78,7 @@
 4.3.0 html_entity_decode
 4.0.0 htmlspecialchars
 5.1.0 htmlspecialchars_decode
+5.0.0 http_build_query
 4.0.0 if
 4.0.0 ignore_user_abort
 4.0.0 implode
@@ -152,6 +153,7 @@
 4.0.0 sleep
 4.0.0 sort
 4.0.0 sprintf
+4.0.0 strcasecmp
 4.3.0 stream_context_create
 5.0.0 stripos
 4.0.0 stripslashes
