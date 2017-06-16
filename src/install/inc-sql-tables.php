@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2017-04-24
- * For LOVD    : 3.0-18
+ * Modified    : 2017-06-16
+ * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -88,7 +88,7 @@ $aTableSQL =
     login_attempts TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
     last_login DATETIME,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -153,7 +153,7 @@ $aTableSQL =
     footer TEXT,
     footer_align TINYINT(1) NOT NULL DEFAULT -1,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     updated_by SMALLINT(5) UNSIGNED ZEROFILL,
@@ -200,7 +200,7 @@ $aTableSQL =
     position_g_mrna_start INT(10) UNSIGNED NOT NULL,
     position_g_mrna_end INT(10) UNSIGNED NOT NULL,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -223,7 +223,7 @@ $aTableSQL =
     features TEXT,
     remarks TEXT,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -276,7 +276,7 @@ $aTableSQL =
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -341,7 +341,7 @@ $aTableSQL =
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -441,7 +441,7 @@ $aTableSQL =
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -491,7 +491,7 @@ $aTableSQL =
     variants_found BOOLEAN NOT NULL DEFAULT 1,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -569,7 +569,7 @@ $aTableSQL =
     public_add BOOLEAN NOT NULL DEFAULT 1,
     allow_count_all BOOLEAN NOT NULL DEFAULT 0,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -583,7 +583,7 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_ACTIVE_COLS . ' (
     colid VARCHAR(100) NOT NULL,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     PRIMARY KEY (colid),
     INDEX (created_by),
     CONSTRAINT ' . TABLE_ACTIVE_COLS . '_fk_colid FOREIGN KEY (colid) REFERENCES ' . TABLE_COLS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -605,7 +605,7 @@ $aTableSQL =
     public_view BOOLEAN NOT NULL DEFAULT 1,
     public_add BOOLEAN NOT NULL DEFAULT 1,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     UNIQUE (geneid, colid),
@@ -628,7 +628,7 @@ $aTableSQL =
     replace_text TEXT NOT NULL,
     description TEXT,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -697,11 +697,11 @@ $aTableSQL =
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     type VARCHAR(15) NOT NULL DEFAULT "information",
     announcement TEXT NOT NULL,
-    start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL DEFAULT "9999-12-31 23:59:59",
     lovd_read_only BOOLEAN NOT NULL DEFAULT 0,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
-    created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_date DATETIME NOT NULL,
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
@@ -739,7 +739,7 @@ $aTableSQL =
     description VARCHAR(255) NOT NULL DEFAULT "",
     active BOOLEAN NOT NULL DEFAULT 0,
     settings TEXT,
-    installed_date DATE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    installed_date DATE NOT NULL,
     updated_date DATE,
     PRIMARY KEY (id))
     ' . $sSettings

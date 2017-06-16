@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-04-25
+ * Modified    : 2017-06-16
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -490,7 +490,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         'ALTER TABLE ' . TABLE_USERS . ' ALTER level SET DEFAULT 1;',
                         'ALTER TABLE ' . TABLE_USERS . ' ALTER allowed_ip SET DEFAULT \'*\';',
                         'ALTER TABLE ' . TABLE_USERS . ' ALTER login_attempts SET DEFAULT 0;',
-                        'ALTER TABLE ' . TABLE_USERS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_CHROMOSOMES . ' ALTER sort_id SET DEFAULT 0;',
                         'ALTER TABLE ' . TABLE_GENES . ' ALTER chrom_band SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_GENES . ' ALTER refseq_genomic SET DEFAULT \'\';',
@@ -513,25 +512,18 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         'ALTER TABLE ' . TABLE_GENES . ' ALTER header_align SET DEFAULT -1;',
                         'ALTER TABLE ' . TABLE_GENES . ' MODIFY footer TEXT;',
                         'ALTER TABLE ' . TABLE_GENES . ' ALTER footer_align SET DEFAULT -1;',
-                        'ALTER TABLE ' . TABLE_GENES . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_CURATES . ' ALTER allow_edit SET DEFAULT 0;',
                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ALTER id_ensembl SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ALTER id_protein_ncbi SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ALTER id_protein_ensembl SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' ALTER id_protein_uniprot SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY remarks TEXT;',
-                        'ALTER TABLE ' . TABLE_TRANSCRIPTS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_DISEASES . ' ALTER symbol SET DEFAULT "-";',
-                        'ALTER TABLE ' . TABLE_DISEASES . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_DISEASES . ' MODIFY tissues TEXT;',
                         'ALTER TABLE ' . TABLE_DISEASES . ' MODIFY features TEXT;',
                         'ALTER TABLE ' . TABLE_DISEASES . ' MODIFY remarks TEXT;',
                         'ALTER TABLE ' . TABLE_ALLELES . ' ALTER display_order SET DEFAULT 0;',
-                        'ALTER TABLE ' . TABLE_INDIVIDUALS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_VARIANTS . ' ALTER allele SET DEFAULT 0;',
-                        'ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
-                        'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
-                        'ALTER TABLE ' . TABLE_SCREENINGS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_COLS . ' ALTER col_order SET DEFAULT 0;',
                         'ALTER TABLE ' . TABLE_COLS . ' ALTER width SET DEFAULT 50;',
                         'ALTER TABLE ' . TABLE_COLS . ' ALTER hgvs SET DEFAULT 0;',
@@ -547,8 +539,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         'ALTER TABLE ' . TABLE_COLS . ' ALTER public_view SET DEFAULT 1;',
                         'ALTER TABLE ' . TABLE_COLS . ' ALTER public_add SET DEFAULT 1;',
                         'ALTER TABLE ' . TABLE_COLS . ' ALTER allow_count_all SET DEFAULT 0;',
-                        'ALTER TABLE ' . TABLE_COLS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
-                        'ALTER TABLE ' . TABLE_ACTIVE_COLS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_SHARED_COLS . ' ALTER col_order SET DEFAULT 0;',
                         'ALTER TABLE ' . TABLE_SHARED_COLS . ' ALTER width SET DEFAULT 50;',
                         'ALTER TABLE ' . TABLE_SHARED_COLS . ' ALTER mandatory SET DEFAULT 0;',
@@ -558,8 +548,6 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY description_legend_short TEXT;',
                         'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY description_legend_full TEXT;',
                         'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY select_options TEXT;',
-                        'ALTER TABLE ' . TABLE_SHARED_COLS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
-                        'ALTER TABLE ' . TABLE_LINKS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_CONFIG . ' ALTER system_title SET DEFAULT "LOVD - Leiden Open Variation Database";',
                         'ALTER TABLE ' . TABLE_CONFIG . ' ALTER institute SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_CONFIG . ' ALTER location_url SET DEFAULT \'\';',
@@ -581,14 +569,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         'ALTER TABLE ' . TABLE_CONFIG . ' ALTER use_versioning SET DEFAULT 0;',
                         'ALTER TABLE ' . TABLE_CONFIG . ' ALTER lock_uninstall SET DEFAULT 1;',
                         'ALTER TABLE ' . TABLE_STATUS . ' ALTER lock_update SET DEFAULT 0;',
-                        'ALTER TABLE ' . TABLE_ANNOUNCEMENTS . ' ALTER start_date SET DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_ANNOUNCEMENTS . ' ALTER end_date SET DEFAULT \'9999-12-31 23:59:59\';',
-                        'ALTER TABLE ' . TABLE_ANNOUNCEMENTS . ' MODIFY created_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_MODULES . ' ALTER version SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_MODULES . ' ALTER description SET DEFAULT \'\';',
                         'ALTER TABLE ' . TABLE_MODULES . ' ALTER active SET DEFAULT 0;',
                         'ALTER TABLE ' . TABLE_MODULES . ' MODIFY settings TEXT;',
-                        'ALTER TABLE ' . TABLE_MODULES . ' ALTER installed_date SET DEFAULT CURRENT_TIMESTAMP;',
                         'ALTER TABLE ' . TABLE_LINKS . ' MODIFY description TEXT;',
                     ),
              );
