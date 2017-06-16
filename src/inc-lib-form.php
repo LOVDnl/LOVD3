@@ -600,6 +600,8 @@ function lovd_matchUsername ($s)
 
 function lovd_recaptchaV2_verify ($sUserResponse)
 {
+    // Function to verify the "response" from the user with Google.
+
     try {
         // Verify reCaptcha V2 user response with Google.
         $aPostVars = array('secret' => '6Lf_XBsUAAAAAIjtOpBdpVyzwsWYO4AtgmgjxDcb',
@@ -611,7 +613,7 @@ function lovd_recaptchaV2_verify ($sUserResponse)
         $aResponse = json_decode(join('', $aResponseRaw), true);
         return $aResponse['success'];
     } catch (Exception $e) {
-        // Fixme: Consider logging debug information here.
+        // FIXME: Consider logging debug information here.
     }
     return false;
 }
