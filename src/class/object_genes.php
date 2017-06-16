@@ -130,7 +130,6 @@ class LOVD_Gene extends LOVD_Object {
                         'allow_download_' => array('Allow public to download all variant entries', LEVEL_COLLABORATOR),
                         'allow_index_wiki_' => array('Allow data to be indexed by WikiProfessional', LEVEL_COLLABORATOR),
                         'refseq_url_' => 'Refseq URL',
-                        'rf_checker_' => 'Reading frame checker',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
                         'variants_' => 'Total number of public variants reported',
@@ -150,6 +149,7 @@ class LOVD_Gene extends LOVD_Object {
                         'TableStart_Graphs' => '',
                         'TableHeader_Graphs' => 'Graphical displays and utilities',
                         'graphs' => 'Graphs',
+                        'rf_checker_' => 'Reading frame checker',
                         'ucsc' => 'UCSC Genome Browser',
                         'ensembl' => 'Ensembl Genome Browser',
                         'ncbi' => 'NCBI Sequence Viewer',
@@ -312,13 +312,13 @@ class LOVD_Gene extends LOVD_Object {
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             if (lovd_getProjectFile() == '/import.php') {
-                // During import the refseq_genomic is required, else the import 
+                // During import the refseq_genomic is required, else the import
                 // starts complaining that the selected refseq_genomic is not valid
-                // Therefore we set the refseq_genomic in the aFormData property 
+                // Therefore we set the refseq_genomic in the aFormData property
                 // before the getForm() is returned.
                 global $zData;
                 $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
-         
+
                 $this->aFormData['refseq_genomic'] = array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false);
             }
             return parent::getForm();
@@ -503,7 +503,7 @@ class LOVD_Gene extends LOVD_Object {
 
                     // Assume presence of exon table file in *.txt format. Show link to reading
                     // frame checker.
-                    $zData['rf_checker_'] .= (!$zData['rf_checker_']? '' : ', ') . '<A href="#" onclick="lovd_openWindow(\'scripts/readingFrameChecker.php?gene=' . $zData['id'] . '&transcript=' . $sNCBI . '\');">' . $sNCBI . '</A>';
+                    $zData['rf_checker_'] .= (!$zData['rf_checker_']? '' : ', ') . '<A href="#" onclick="lovd_openWindow(\'scripts/readingFrameChecker.php?gene=' . $zData['id'] . '&transcript=' . $sNCBI . '\', \'readingframechecker\', 800, 500); return false;">' . $sNCBI . '</A>';
                 }
             }
             if (!$zData['refseq_transcript_']) {
@@ -511,6 +511,9 @@ class LOVD_Gene extends LOVD_Object {
             }
             if (!$zData['exon_tables']) {
                 unset($this->aColumnsViewEntry['exon_tables']);
+            }
+            if ($zData['rf_checker_']) {
+                $zData['rf_checker_'] = 'The Reading-frame checker generates a prediction of the effect of whole-exon changes. Active for: ' . $zData['rf_checker_'] . '.';
             }
 
             // Associated with diseases...
