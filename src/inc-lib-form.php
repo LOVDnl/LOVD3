@@ -8,8 +8,8 @@
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -588,6 +588,30 @@ function lovd_matchUsername ($s)
     // Matches a string to the username pattern (non standard).
 
     return (preg_match('/^[A-Z][A-Z0-9_.-]{3,19}$/i', $s));
+}
+
+
+
+
+
+function lovd_recaptchaV2_verify ($sUserResponse)
+{
+    // Function to verify the "response" from the user with Google.
+
+    try {
+        // Verify reCaptcha V2 user response with Google.
+        $aPostVars = array('secret' => '6Lf_XBsUAAAAAIjtOpBdpVyzwsWYO4AtgmgjxDcb',
+            'response' => $sUserResponse);
+        $aResponseRaw = lovd_php_file('https://www.google.com/recaptcha/api/siteverify', false,
+            http_build_query($aPostVars), 'Accept: application/json');
+        // Note: "error-codes" in the response object is optional, even when
+        // verification fails.
+        $aResponse = json_decode(join('', $aResponseRaw), true);
+        return $aResponse['success'];
+    } catch (Exception $e) {
+        // FIXME: Consider logging debug information here.
+    }
+    return false;
 }
 
 
