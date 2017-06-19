@@ -13,15 +13,22 @@
    "ONLY_FULL_GROUP_BY" MySQL setting.
    Closes #167: "Manage transcripts feature doesn't allow addition of transcript
    anymore".
+ * Fixed bug; The new page header wasn't properly displayed in Firefox.
+   Closes #166: "New header does not take full width on Firefox".
  * Fixed several problems with MySQL's new default strict mode. LOVD wasn't
    installable, and transcripts couldn't be created if this setting was enabled.
+   Also, made some changes to make it easier to work with this MySQL version.
    Closes #143: "LOVD won't install with error "Invalid default value for
-   'start_date'""
-   Closes #173: "Installation failed on ubuntu 16"
+   'start_date'"".
+   Closes #173: "Installation failed on ubuntu 16".
+   Closes #185: "SQL only full group by error in DBID check".
+   Closes #210: "Default values for non-essential NOT NULL database fields".
  * Fixed bug; The "all variants affecting transcripts" view showed only one
    entry. This was caused by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
    Closes #176: "Viewlist entry count differs from what is displayed".
+ * Updated some code to get ready for newer PHP versions.
+   Closes #156: "LOVD uses old-style constructors".
  * Fixed bug; The gene's graphs pages only showed half of the graphs due to a
    query error introduced by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
@@ -32,12 +39,16 @@
    Closes #106: "Single-letter gene "T" is not fully supported".
  * Added feature to show variants in a certain genomic range, using the URL
    format /variants/chr3:20-200000.
+   Closes #57: "Make all variants within a genomic range viewable".
  * Improved variant list error message for genes without transcripts and genes
    without variants.
+   Closes #89: "Misleading text "No transcripts or variants found"".
  * Removed repeated error message during import if a checkbox field doesn't
    contain a 0 or 1.
  * When importing, the 'variants_found' field now allows for values higher than
    1, even though they will be interpreted as 1, since the field is a flag.
+   Closes #82: "Minor improvements to import.php regarding the 'variants_found'
+   column".
  * When a form field contains incorrect values (usally when importing), LOVD
    won't print more than one error message about that field's value anymore.
  * Included version 3.0-19 of the official LOVD Reference Sequence Parser
@@ -45,10 +56,45 @@
    - The "Include link to GenBank record" field in the final step sometimes
      contained more text than just an GenBank record ID.
  * Updated all links to the HGVS nomenclature to point to the new website.
+   Closes #208: "Links to deprecated HGVS nomenclature website".
+ * Clarified the link name to the exon/intron information table.
+   Closes #207: "Link to Exon/Intron table missing on gene homepage".
+ * Fixed Chrome again adding the username to data entry forms when the user had
+   told Chrome to save their password.
+ * Submission emails now have their Reply-To set to the curators and submitters,
+   so that both parties can just reply to end up with the correct addressees.
+   Closes #217: "Set Reply-To header for submission emails".
  * Updated all links to the NCBI to use HTTPS.
+   Closes #219: "The Reference Sequence Parser no longer downloads GenBank files
+   over a proxy server".
+ * Added a LOVD2 to LOVD3 converter script. It allows for the import of an
+   LOVD2 data file, that together with a user ID translation table generates an
+   LOVD3 import file. The script has been added to the scripts folder.
+   Closes #96: "Include script to convert the LOVD2 download format to the
+   LOVD3 format".
+   Closes #155: "Undefined index notice in LOVD_Custom::checkFields()".
+ * Added the feature to allow the public to make downloads of public gene-
+   specific data, provided the curator has enabled this option.
+   Closes #78: "Download link missing on gene homepage".
+   Closes #175: "Download link missing from gene homepage for public, even if
+   setting is enabled".
+ * Included version 3.0-19 of the official LOVD Reading Frame Checker.
+   This script is ported from LOVD2 and allows you to quickly check whether a
+   whole-exon or multi-exon deletion or duplication leads to a in-frame or out-
+   of-frame change.
+   Closes #139: "Port reading frame checker from LOVD2".
+ * Upgraded the reCAPTCHA integration to version 2.
+   Closes #142: "Upgrade reCAPTCHA".
  * Added feature to open links in tables in a new browser tab. Does not work
    for some older browsers based on webkit.
-   Closes #227: "Let viewlist rows open link in new window with middle-click."
+   Closes #196: "Let viewlist rows open link in new window with middle-click".
+ * Fixed bug with editing individuals with large numbers of diseases.
+   Closes #192: "Changes to individual not saved".
+ * Fixed occasional deadlocks when viewing and editing data at the same time.
+   Closes #233: "Deadlocks in ViewLists".
+ * Fixed bug; The "Select all" feature was not working anymore on some variant
+   views.
+   Closes #205: "The "select all" feature in the options menu is not working".
 
 
 /**************************
