@@ -46,6 +46,9 @@
      contained more text than just an GenBank record ID.
  * Updated all links to the HGVS nomenclature to point to the new website.
  * Updated all links to the NCBI to use HTTPS.
+ * Added feature to open links in tables in a new browser tab. Does not work
+   for some older browsers based on webkit.
+   Closes #227: "Let viewlist rows open link in new window with middle-click."
 
 
 /**************************
