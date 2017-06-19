@@ -8,9 +8,9 @@
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *               Anthony Marty <anthony.marty@unimelb.edu.au>
  *
@@ -2060,10 +2060,11 @@ class LOVD_Object {
             // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
             // function, but we'll try to avoid that due to extreme slowness in some cases.
             // getRowCountForViewList() will take care of that.
-            // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
-            // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
-            // Last checked 2010-01-25, by Ivo Fokkema.
-            $_DB->query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+            // We used to have a 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE' here which
+            //  made sure the VL result count matched the VL results, but as the two queries
+            //  might need other tables to be locked, it could cause deadlocks. Removing the
+            //  isolation level setting, to prevent deadlocks from happening. A possible
+            //  difference in VL result count and the actual results is hypothetical only anyway.
             $_DB->beginTransaction();
 
             // For ALL viewlists, we store the number of hits that we get, including the current filters.
