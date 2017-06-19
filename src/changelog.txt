@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 19
- * 2017-0?-??
+ * 2017-06-19
  *********/
  * Fixed bug; Transcripts could not easily be added to variants anymore. This
    was caused by the recent changes making LOVD compatible with the new default
