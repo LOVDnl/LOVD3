@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-06-06
+ * Modified    : 2017-06-19
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2509,6 +2509,9 @@ FROptions
                                 // in a new window (middle-click event caught with jquery in
                                 // inc-js-viewlist.php).
                                 ' data-href="' . lovd_getInstallURL(false) . $zData['row_link'] . '"' .
+                                // Note: older browsers will also trigger `onClick` events when the middle
+                                // mouse button is clicked, this will interfere with functionality to open
+                                // links in new tabs, provided in inc-js-viewlist.php.
                                 ' onclick="javascript:window.location.href=this.getAttribute(\'data-href\');"')
                         ) . '>');
                 if ($bOptions) {
