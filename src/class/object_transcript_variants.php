@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2016-10-14
+ * Modified    : 2017-04-20
  * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -163,13 +163,13 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         $aForm = parent::buildForm($sPrefix);
         // Link to HVS for nomenclature.
         if (isset($aForm[$sPrefix . 'VariantOnTranscript/DNA'])) {
-            $aForm[$sPrefix . 'VariantOnTranscript/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-DNA.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/DNA'][0]);
+            $aForm[$sPrefix . 'VariantOnTranscript/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/DNA'][0]);
         }
         if (isset($aForm[$sPrefix . 'VariantOnTranscript/RNA'])) {
-            $aForm[$sPrefix . 'VariantOnTranscript/RNA'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-RNA.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/RNA'][0]);
+            $aForm[$sPrefix . 'VariantOnTranscript/RNA'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/RNA" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/RNA'][0]);
         }
         if (isset($aForm[$sPrefix . 'VariantOnTranscript/Protein'])) {
-            $aForm[$sPrefix . 'VariantOnTranscript/Protein'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-prot.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/Protein'][0]);
+            $aForm[$sPrefix . 'VariantOnTranscript/Protein'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/protein" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnTranscript/Protein'][0]);
         }
         return $aForm;
     }

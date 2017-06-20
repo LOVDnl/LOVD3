@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-11-18
- * For LOVD    : 3.0-18
+ * Modified    : 2017-06-16
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -316,7 +316,6 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     if (ACTION == 'register') {
-        require ROOT_PATH . 'lib/reCAPTCHA/inc-lib-recaptcha.php';
         $sCAPTCHAerror = '';
     }
 
@@ -328,14 +327,12 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
         if (ACTION == 'register') {
             // Checking the CAPTCHA response...
             // If no response has been filled in, we need to complain. Otherwise, we should check the answer.
-            if (empty($_POST['recaptcha_response_field'])) {
-                lovd_errorAdd('', 'Please fill in the two words that you see in the image at the bottom of the form.');
+            if (empty($_POST['g-recaptcha-response'])) {
+                lovd_errorAdd('', 'Please check the checkmark and follow the instructions at "Please verify that you are not a robot".');
             } else {
                 // Check answer!
-                $response = recaptcha_check_answer('6Le0JQQAAAAAAB-iLSVi81tR5s8zTajluFFxkTPL', $_SERVER['REMOTE_ADDR'], $_POST['recaptcha_challenge_field'], $_POST['recaptcha_response_field']);
-                if (!($response->is_valid)) {
-                    lovd_errorAdd('', 'Registration authentication failed. Please try again by filling in the two words that you see in the image at the bottom of the form.');
-                    $sCAPTCHAerror = $response->error;
+                if (!lovd_recaptchaV2_verify($_POST['g-recaptcha-response'])) {
+                    lovd_errorAdd('', 'Registration authentication failed. Please try again by checking the checkmark and following the instructions at "Please verify that you are not a robot" at the bottom of the form.');
                 }
             }
 
@@ -572,6 +569,10 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     // Check form (IP address allow list).
     lovd_includeJS('inc-js-submit-userform.php');
 
+    if (ACTION == 'register') {
+        lovd_includeJS('https://www.google.com/recaptcha/api.js');
+    }
+
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
           '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
 
@@ -583,9 +584,8 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     } else {
         $aFormBottom = array(
             'skip',
-            array('', '', 'print', '<B>Registration authentication</B>'),
-            'hr',
-            array('Please fill in the word, words, or numbers that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),
+            array('Please verify that you are not a robot', '',
+                  'print', '<DIV class="g-recaptcha" data-sitekey="6Lf_XBsUAAAAAC4J4fMs3GP_se-qNk8REDYX40P5"></DIV>'),
             'hr',
             'skip',
             array('', '', 'submit', 'Register'),

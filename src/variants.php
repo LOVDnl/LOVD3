@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD) (MODIFIED)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-05-08
+ * Modified    : 2017-06-16
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1710,14 +1710,11 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     // Extract gene information.
                                     list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim) = array_values($aGeneInfo[$sSymbol]);
                                     list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
-                                    if (!ctype_digit($sOmim)) {
-                                        $sOmim = null;
-                                    }
                                     if ($sChromLocation == 'mitochondria') {
                                         $sChromosome = 'M';
                                         $sChromBand = '';
                                     } else {
-                                        preg_match('/^(\d{1,2}|[XY])([^\s]+).*$/', $sChromLocation, $aMatches);
+                                        preg_match('/^(\d{1,2}|[XY])(.*)$/', $sChromLocation, $aMatches);
                                         $sChromosome = $aMatches[1];
                                         $sChromBand = $aMatches[2];
                                     }
