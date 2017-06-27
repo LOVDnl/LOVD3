@@ -33,6 +33,7 @@
             <file>admin_tests/post_finish_add_screening_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_phenotype_info_to_IVA_individual.php</file>
             <file>admin_tests/delete_gene_IVD.php</file>
+            <file>shared_tests/convert_LOVD2_export.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="authorization_tests">

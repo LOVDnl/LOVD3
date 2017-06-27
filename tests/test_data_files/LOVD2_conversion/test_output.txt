@@ -1,0 +1,85 @@
+### LOVD-version 3000-190 ### Full data download ### To import, do not remove or alter this header ###
+## Filter: (gene = IVD)
+# charset = UTF-8
+
+## Columns ## Do not remove or alter this header ##
+## Count = 0
+
+
+
+## Genes ## Do not remove or alter this header ##
+## Count = 0
+
+
+
+## Transcripts ## Do not remove or alter this header ##
+## Count = 0
+
+
+
+## Diseases ## Do not remove or alter this header ##
+## Count = 1
+# Diseases listed here were not found in the database (in either name or symbol field).
+# If this is a mistake, please edit the disease below to reflect the database contents, or edit the disease in the database to match this file, in order to avoid duplication of diseases in the database.
+"{{id}}"	"{{name}}"	"{{symbol}}"
+"1"	"Chickenpox"	""
+
+
+## Genes_To_Diseases ## Do not remove or alter this header ##
+## Count = 0
+
+
+
+## Individuals ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"	"{{owned_by}}"	"{{panel_size}}"	"{{statusid}}"
+"1"	"1"	"2016-07-21 16:52:47"	""	""	"X1"	"ref_X1"	"remarks_X1"	"remarks_private_X1"	"1"	"1"	"2"
+"2"	"1"	"2016-07-21 16:52:47"	""	""	"X2"	"ref_X2"	"remarks_X1"	"remarks_private_X1"	"1002"	"1"	"2"
+
+
+## Individuals_To_Diseases ## Do not remove or alter this header ##
+## Count = 2
+"{{diseaseid}}"	"{{individualid}}"
+"1"	"1"
+"1"	"2"
+
+
+## Phenotypes ## Do not remove or alter this header ##
+## Count = 0
+"{{id}}"	"{{created_by}}"	"{{created_date}}"	"{{diseaseid}}"	"{{edited_by}}"	"{{edited_date}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"
+
+
+## Screenings ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{individualid}}"	"{{owned_by}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
+"1"	"1"	"2016-07-21 16:52:47"	""	""	"1"	"1"	"CMC"	"DNA"
+"2"	"1"	"2016-07-21 16:52:47"	""	""	"2"	"1002"	"CMC"	"DNA"
+
+
+## Screenings_To_Genes ## Do not remove or alter this header ##
+## Count = 2
+"{{geneid}}"	"{{screeningid}}"
+"IVD"	"1"
+"IVD"	"2"
+
+
+## Variants_On_Genome ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{allele}}"	"{{chromosome}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{effectid}}"	"{{owned_by}}"	"{{position_g_end}}"	"{{position_g_start}}"	"{{statusid}}"	"{{type}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Reference}}"	"{{VariantOnGenome/Restriction_site}}"
+"1"	"11"	"15"	"1"	"2016-07-21 16:52:47"	""	""	"99"	"1"	"40698142"	"40698142"	"2"	"del"	"RAB1A_012361"	"g.40698142del"	"ID_submitterid_=1"	""
+"2"	"11"	"15"	"1"	"2016-07-21 16:52:47"	""	""	"99"	"1002"	"40698142"	"40698142"	"2"	"del"	"RAB1A_012362"	"g.40698142del"	"ID_submitterid_=2"	""
+
+
+## Variants_On_Transcripts ## Do not remove or alter this header ##
+## Count = 2
+"{{id}}"	"{{effectid}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{transcriptid}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Frequency}}"	"{{VariantOnTranscript/Location}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
+"1"	"99"	"123"	"0"	"123"	"0"	"00000001"	"c.123del"	"1"	""	"Exon"	""	"r.?"
+"2"	"99"	"123"	"0"	"123"	"0"	"00000001"	"c.123del"	"1"	""	"Exon"	""	"r.?"
+
+
+## Screenings_To_Variants ## Do not remove or alter this header ##
+## Count = 2
+"{{screeningid}}"	"{{variantid}}"
+"1"	"1"
+"2"	"2"
+
