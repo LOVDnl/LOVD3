@@ -5,6 +5,14 @@
  *************/
 
 /**************************
+ * 3.0 Build 20
+ * 2017-09-??
+ *********/
+ * Fixed bug; The link to the Reading Frame Checker was a bit malformed when the
+   gene had no variants to show.
+
+
+/**************************
  * 3.0 Build 19
  * 2017-06-19
  *********/
@@ -1266,8 +1274,6 @@
  * The screenings & individuals pages now have gene specific page, which shows
    the entries that have been screened for the currently selected gene.
  * Mails are now being sent to the appropriate users after an edit of data.
- * Submission emails now have their Reply-To set to the curators and submitters,
-   so that both parties can just reply to end up with the correct addressees.
 
 
 /*******************
