@@ -6,6 +6,14 @@
 
 /**************************
  * 3.0 Build 19
+ * 2017-??-??
+ *********/
+ * Fixed bug; Submitter IDs not translated in LOVD2 conversion.
+   Closes #238: "Submitter IDs not translated in LOVD2 conversion".
+
+
+/**************************
+ * 3.0 Build 19
  * 2017-06-19
  *********/
  * Fixed bug; Transcripts could not easily be added to variants anymore. This
