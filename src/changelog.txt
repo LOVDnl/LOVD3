@@ -5,10 +5,11 @@
  *************/
 
 /**************************
- * 3.0 Build 19
+ * 3.0 Build 20
  * 2017-??-??
  *********/
- * Fixed bug; Submitter IDs not translated in LOVD2 conversion.
+ * Fixed bug; The LOVD2 to LOVD3 converter script did not translate submitter
+   IDs properly.
    Closes #238: "Submitter IDs not translated in LOVD2 conversion".
 
 
