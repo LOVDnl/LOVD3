@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-06-27
- * Modified    : 2017-06-28
+ * Modified    : 2017-07-06
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,10 +58,13 @@ class ConvertLOVD2ExportTest extends LOVDSeleniumWebdriverBaseTestCase
         $copyButtonLocator = WebDriverBy::id('copybutton');
         $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated($copyButtonLocator));
 
-        // Compare generated output with expected output from file.
+        // Compare generated output with expected output from file. (Skip first line in output)
         $sExpectedOutput = file_get_contents(ROOT_PATH .
             '../tests/test_data_files/LOVD2_conversion/test_output.txt');
         $outputArea = $this->driver->findElement(WebDriverBy::id('conversion_output'));
-        $this->assertEquals($sExpectedOutput, $outputArea->getAttribute('value'));
+        $aOutput = explode("\n", $outputArea->getAttribute('value'));
+        array_shift($aOutput); // Remove first line (holds LOVD version)
+        $sOutputTail = join("\n", $aOutput);
+        $this->assertEquals($sExpectedOutput, $sOutputTail);
     }
 }

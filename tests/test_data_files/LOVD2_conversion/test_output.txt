@@ -1,4 +1,3 @@
-### LOVD-version 3000-190 ### Full data download ### To import, do not remove or alter this header ###
 ## Filter: (gene = IVD)
 # charset = UTF-8
 
