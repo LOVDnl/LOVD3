@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-06-15
+ * Modified    : 2017-06-27
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -894,8 +894,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         // Get submitter ID.
         $sSubmitterID = null;
         if (($i = array_search('ID_submitterid_', $aInputHeaders)) !== false) {
-            // Note that the $aRecord[$i] is already translated by lovd_convertSubmitterID()
-            $sSubmitterID = $aRecord[$i];
+            $sSubmitterID = lovd_convertSubmitterID($aRecord[$i]);
         }
 
         // Create new disease if necessary.

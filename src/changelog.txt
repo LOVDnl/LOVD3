@@ -10,6 +10,9 @@
  *********/
  * Fixed bug; The link to the Reading Frame Checker was a bit malformed when the
    gene had no variants to show.
+ * Fixed bug; The LOVD2 to LOVD3 converter script did not translate submitter
+   IDs properly.
+   Closes #238: "Submitter IDs not translated in LOVD2 conversion".
 
 
 /**************************
