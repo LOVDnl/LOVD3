@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/soap_client.php';
 $_WARNINGS = array();
 
 // Array of field names to ignore in input.
-$aIgnoredFields = array_flip(array('ID_sort_'));
+$aIgnoredFields = array_flip(array('ID_sort_', 'ID_submitterid_'));
 
 // Links between LOVD2-LOVD3 fields, with optional conversion function. Format:
 // LOVD2_field => array(LOVD3_section, LOVD3_field, Conversion_function)
