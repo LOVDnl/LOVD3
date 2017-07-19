@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-12-13
- * For LOVD    : 3.0-18
+ * Modified    : 2017-07-19
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -508,12 +508,13 @@ class LOVD_User extends LOVD_Object {
                 $nOwnes = 0;
                 $sOwnes = '';
 
-                // FIXME: Phenotypes is not included, because we don't have a phenotypes overview to link to (must be disease-specific).
-                foreach (array('individuals', 'screenings', 'variants') as $sDataType) {
+                foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
                     $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
                     if ($n) {
                         $nOwnes += $n;
-                        $sOwnes .= (!$sOwnes? '' : ', ') . '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode(html_entity_decode($zData['name'])) . '%22">' . $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType) . '</A>';
+                        $sTitle = $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType);
+                        // Show link because we don't have a phenotypes overview to link to (must be disease-specific).
+                        $sOwnes .= (!$sOwnes? '' : ', ') . ($sDataType == 'phenotypes'? $sTitle : '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode(html_entity_decode($zData['name'])) . '%22">' . $sTitle . '</A>');
                     }
                 }
 
