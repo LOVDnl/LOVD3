@@ -513,7 +513,7 @@ class LOVD_User extends LOVD_Object {
                     if ($n) {
                         $nOwnes += $n;
                         $sTitle = $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType);
-                        // Show link because we don't have a phenotypes overview to link to (must be disease-specific).
+                        // Hide the link for phenotypes, because we don't have a phenotypes overview to link to (must be disease-specific).
                         $sOwnes .= (!$sOwnes? '' : ', ') . ($sDataType == 'phenotypes'? $sTitle : '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode(html_entity_decode($zData['name'])) . '%22">' . $sTitle . '</A>');
                     }
                 }
