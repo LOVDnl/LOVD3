@@ -14,9 +14,8 @@ Update LOVD installations:
 /antwerpen/ heeft aangepaste .htaccess.
 /DNA_profiles/ heeft aangepaste index.php.
 /my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste ajax/viewlist.php, class/graphs.php, class/template.php en import.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
+/shared/ heeft een aangepaste ajax/viewlist.php, class/graphs.php, class/template.php, api.php, import.php, inc-lib-init.php, individuals.php en styles.css en een paar eigen files die niet overschreven mag worden (zoals export.php).
 /whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
-/whole_genome_mirror/ heeft aangepaste files (zie hierboven), NOOIT ZOMAAR OVERSCHRIJVEN!!! (MAG WEL VAN WHOLE_GENOME, excl. de config.ini)
 After updating all installations, send email to team with all improvements summarized.
 
 To debug: XDEBUG_PROFILE=1
@@ -28,6 +27,16 @@ Prioritize:
 
 Website:
 - Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
+
+- Access sharing: Users zouden moeten worden gesorteerd op naam.
+- Gerard: Als ik bij (bijv.) Age examined (Phenotype) '<00y' invul, dus onderzoek aan een ongeboren kind, komt er '<00y (before )' te staan, zou dit '<00y (before birth)' moeten zijn?
+
+Import phenotype data in disease 0 in shared:
+Error (Phenotypes, line 244): Please fill in the 'Phenotype/TSC' field.
+Error (Phenotypes, line 244): Please fill in the 'Phenotype/Colorectal' field.
+Cols staan niet eens aan. Maar is default op mandatory gezet.
+
+Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat in de database.
 
 - Submission API: Implement JSON schema? Earlier version is here:
   https://github.com/VarioML/VarioML/blob/master/json/examples/vreport.json-schema
