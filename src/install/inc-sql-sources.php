@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2017-05-15
- * For LOVD    : 3.0-19
+ * Modified    : 2017-07-20
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  * This file is part of LOVD.
  *
@@ -41,5 +42,6 @@ $aSourceSQL =
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgnc",         "http://www.genenames.org/data/hgnc_data.php?hgnc_id={{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_gene"  ,  "https://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_article", "https://www.ncbi.nlm.nih.gov/pubmed/{{ ID }}")',
+                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hpo_disease", "http://compbio.charite.de/hpoweb/showterm?disease=OMIM:{{ ID }}")',
               );
 ?>
