@@ -10,12 +10,19 @@
  *********/
  * Fixed bug; The link to the Reading Frame Checker was a bit malformed when the
    gene had no variants to show.
+   Closes #237: "Link to reading frame checker improperly displayed for some
+   genes".
  * Fixed bug; The LOVD2 to LOVD3 converter script did not translate submitter
    IDs properly.
    Closes #238: "Submitter IDs not translated in LOVD2 conversion".
  * Fixed bug; variants_found field was missing in LOVD2 to LOVD3 conversion
    output for the section screenings. Now defaults to "1".
    Closes #243: "variants_found missing in LOVD2 to LOVD3 conversion output"
+ * On user's account pages, the number of phenotype entries owned is now also
+   mentioned. We can't link to it however, because there is no system-wide
+   phenotype data listing, but only gene-specific listings.
+   Closes #59: "Add phenotype entries to list of 'Data owner for...'
+   information".
 
 
 /**************************
