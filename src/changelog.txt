@@ -13,6 +13,9 @@
  * Fixed bug; The LOVD2 to LOVD3 converter script did not translate submitter
    IDs properly.
    Closes #238: "Submitter IDs not translated in LOVD2 conversion".
+ * Fixed bug; variants_found field was missing in LOVD2 to LOVD3 conversion
+   output for the section screenings. Now defaults to "1".
+   Closes #243: "variants_found missing in LOVD2 to LOVD3 conversion output"
 
 
 /**************************

@@ -44,15 +44,17 @@
 
 
 ## Phenotypes ## Do not remove or alter this header ##
-## Count = 0
-"{{id}}"	"{{created_by}}"	"{{created_date}}"	"{{diseaseid}}"	"{{edited_by}}"	"{{edited_date}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"
+## Count = 2
+"{{id}}"	"{{created_by}}"	"{{created_date}}"	"{{diseaseid}}"	"{{edited_by}}"	"{{edited_date}}"	"{{individualid}}"	"{{owned_by}}"	"{{Phenotype/Age}}"	"{{Phenotype/Inheritance}}"	"{{statusid}}"
+"1"	"1"	"2016-07-21 16:52:47"	"1"	""	""	"1"	"1"	"18"	"Isolated (sporadic)"	"2"
+"2"	"1"	"2016-07-21 16:52:47"	"1"	""	""	"2"	"1002"	"50"	"Capitalize inheritance"	"2"
 
 
 ## Screenings ## Do not remove or alter this header ##
 ## Count = 2
-"{{id}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{individualid}}"	"{{owned_by}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
-"1"	"1"	"2016-07-21 16:52:47"	""	""	"1"	"1"	"CMC"	"DNA"
-"2"	"1"	"2016-07-21 16:52:47"	""	""	"2"	"1002"	"CMC"	"DNA"
+"{{id}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{individualid}}"	"{{owned_by}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"	"{{variants_found}}"
+"1"	"1"	"2016-07-21 16:52:47"	""	""	"1"	"1"	"CMC"	"DNA"	"1"
+"2"	"1"	"2016-07-21 16:52:47"	""	""	"2"	"1002"	"CMC"	"DNA"	"1"
 
 
 ## Screenings_To_Genes ## Do not remove or alter this header ##
@@ -64,16 +66,16 @@
 
 ## Variants_On_Genome ## Do not remove or alter this header ##
 ## Count = 2
-"{{id}}"	"{{allele}}"	"{{chromosome}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{effectid}}"	"{{owned_by}}"	"{{position_g_end}}"	"{{position_g_start}}"	"{{statusid}}"	"{{type}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Reference}}"	"{{VariantOnGenome/Restriction_site}}"
-"1"	"11"	"15"	"1"	"2016-07-21 16:52:47"	""	""	"99"	"1"	"40698142"	"40698142"	"2"	"del"	"RAB1A_012361"	"g.40698142del"	"ID_submitterid_=1"	""
-"2"	"11"	"15"	"1"	"2016-07-21 16:52:47"	""	""	"99"	"1002"	"40698142"	"40698142"	"2"	"del"	"RAB1A_012362"	"g.40698142del"	"ID_submitterid_=2"	""
+"{{id}}"	"{{allele}}"	"{{chromosome}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{effectid}}"	"{{owned_by}}"	"{{position_g_end}}"	"{{position_g_start}}"	"{{statusid}}"	"{{type}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Frequency}}"	"{{VariantOnGenome/Genetic_origin}}"	"{{VariantOnGenome/Reference}}"	"{{VariantOnGenome/Restriction_site}}"	"{{VariantOnGenome/Segregation}}"	"{{VariantOnTranscript/Domain}}"
+"1"	"11"	"15"	"1"	"2016-07-21 16:52:47"	""	""	"99"	"1"	"40698142"	"40698142"	"2"	"del"	"RAB1A_012361"	"g.40698142del"	"1/2000"	"Germline"	"ID_submitterid_=1"	""	"segregation1"	"Exon"
+"2"	"11"	"15"	"1"	"2016-07-21 16:52:47"	""	""	"99"	"1002"	"40698142"	"40698142"	"2"	"del"	"RAB1A_012362"	"g.40698142del"	"33/30000"	"Capitalize origin"	"ID_submitterid_=2"	""	"segregation2"	"Exon"
 
 
 ## Variants_On_Transcripts ## Do not remove or alter this header ##
 ## Count = 2
-"{{id}}"	"{{effectid}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{transcriptid}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Frequency}}"	"{{VariantOnTranscript/Location}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
-"1"	"99"	"123"	"0"	"123"	"0"	"00000001"	"c.123del"	"1"	""	"Exon"	""	"r.?"
-"2"	"99"	"123"	"0"	"123"	"0"	"00000001"	"c.123del"	"1"	""	"Exon"	""	"r.?"
+"{{id}}"	"{{effectid}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{transcriptid}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
+"1"	"99"	"123"	"0"	"123"	"0"	"00000001"	"c.123del"	"1"	""	"r.?"
+"2"	"99"	"123"	"0"	"123"	"0"	"00000001"	"c.123del"	"1"	""	"r.?"
 
 
 ## Screenings_To_Variants ## Do not remove or alter this header ##

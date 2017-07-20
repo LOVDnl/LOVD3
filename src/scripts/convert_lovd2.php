@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-06-27
+ * Modified    : 2017-07-18
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/soap_client.php';
 $_WARNINGS = array();
 
 // Array of field names to ignore in input.
-$aIgnoredFields = array_flip(array('ID_sort_'));
+$aIgnoredFields = array_flip(array('ID_sort_', 'ID_submitterid_'));
 
 // Links between LOVD2-LOVD3 fields, with optional conversion function. Format:
 // LOVD2_field => array(LOVD3_section, LOVD3_field, Conversion_function)
@@ -55,17 +55,26 @@ $aFieldLinks = array(
     'Variant/DBID' =>                   array('vog',        'VariantOnGenome/DBID',         'lovd_convertDBID'),
     'Variant/Restriction_site' =>       array('vog',        'VariantOnGenome/Restriction_site'),
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
-    'Variant/Genetic_origin' =>         array('vog',        'VariantOnGenome/Genetic_origin'),
+    'Variant/Origin' =>                 array('vog',        'VariantOnGenome/Genetic_origin', 'lovd_convertOrigin'),
+    'Variant/Genetic_origin' =>         array('vog',        'VariantOnGenome/Genetic_origin', 'lovd_convertOrigin'),
     'Variant/Detection/Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
+    'Variant/Detection_Technique' =>    array('screening',  'Screening/Technique',          'lovd_convertScrTech'),
     'Variant/Reference' =>              array('vog',        'VariantOnGenome/Reference','lovd_convertReference'),
+    'Variant/Segregation' =>            array('vog',        'VariantOnGenome/Segregation'),
+    'Variant/Frequency' =>              array('vog',        'VariantOnGenome/Frequency'),
+    'Variant/Location' =>               array('vog',        'VariantOnTranscript/Domain'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
     'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
     'Patient/Times_Reported' =>         array('individual', 'panel_size'),
     'Patient/Phenotype_2' =>            array('phenotype',  'Phenotype/Additional'),
-    // Note that 'Patient/Phenotype/Inheritance' automatically maps to Phenotype/Inheritance as well.
     'Patient/Occurrence' =>             array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
+    'Patient/Phenotype/Inheritance' =>  array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
     'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
+    'Patient/Origin/Ethnic' =>          array('individual', 'Individual/Origin/Population'),
+    'Patient/Age' =>                    array('phenotype',  'Phenotype/Age'),
+    'Patient/Phenotype/Age_exam' =>     array('phenotype',  'Phenotype/Age'),
+    'Patient/Phenotype/Age_onset' =>    array('phenotype',  'Phenotype/Age/Onset'),
     'ID_pathogenic_' =>                 array('vog',        'effectid'),
     'ID_status_' =>                     array('vog',        'statusid',                     'lovd_convertStatus'),
     'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertCuratorID'),
@@ -139,13 +148,14 @@ $aImportSections = array(
         'customcol_prefix' =>       'Phenotype',
         'mandatory_fields' =>       array('id' => '0', 'diseaseid' => '0', 'individualid' => '0',
             'statusid' => '', 'owned_by' => '0', 'created_by' => '0', 'created_date' => '',
-            'edited_by' => '', 'edited_date' => '')),
+            'edited_by' => '', 'edited_date' => '', 'Phenotype/Inheritance' => '-')),
     'screening' =>  array(
         'output_header' =>          'Screenings',
         'customcol_prefix' =>       'Screening',
         'mandatory_fields' =>       array('id' => '0', 'individualid' => '0',
             'Screening/Template' => '?', 'Screening/Technique' => '?', 'owned_by' => '0',
-            'created_by' => '0', 'created_date' => '', 'edited_by' => '', 'edited_date' => '')),
+            'created_by' => '0', 'created_date' => '', 'edited_by' => '', 'edited_date' => '',
+            'variants_found' => '1')),
     's2g' =>        array(
         'output_header' =>          'Screenings_To_Genes',
         'mandatory_fields' =>       array('screeningid' => '0', 'geneid' => '')),
@@ -330,7 +340,7 @@ function lovd_convertInheritance ($sLOVD2Occurrence)
     }
     // Don't lose data. If it's something we don't recognize, just return the
     //  original value.
-    return $sLOVD2Occurrence;
+    return ucfirst($sLOVD2Occurrence);
 }
 
 
@@ -346,7 +356,7 @@ function lovd_convertOrigin ($sLOVD2MutationOrigin)
     }
     // Don't lose data. If it's something we don't recognize, just return the
     //  original value.
-    return $sLOVD2MutationOrigin;
+    return ucfirst($sLOVD2MutationOrigin);
 }
 
 
@@ -529,16 +539,16 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 
             // Special consideration for Variant/DNA_published, as it can be linked to two
             // fields: VariantOnTranscript/Published_as and VariantOnGenome/Published_as,
-            // but the former is preferred.
+            // but the latter is preferred.
             if ($sHeader == 'Variant/DNA_published') {
-                if (!in_array('VariantOnTranscript/Published_as', $aSections['vot']['db_fields']) &&
-                    in_array('VariantOnGenome/Published_as', $aSections['vog']['db_fields'])) {
-                    // Field available on VOG and not on VOT.
-                    $aOutputHeaders['vog'][$i] = 'VariantOnGenome/Published_as';
+                if (!in_array('VariantOnGenome/Published_as', $aSections['vog']['db_fields']) &&
+                    in_array('VariantOnTranscript/Published_as', $aSections['vot']['db_fields'])) {
+                    // Field available on VOT and not on VOG.
+                    $aOutputHeaders['vot'][$i] = 'VariantOnTranscript/Published_as';
                     continue;
                 } else {
-                    // By default put the published_as field on VOT.
-                    $aOutputHeaders['vot'][$i] = 'VariantOnTranscript/Published_as';
+                    // By default put the published_as field on VOG.
+                    $aOutputHeaders['vog'][$i] = 'VariantOnGenome/Published_as';
                     continue;
                 }
             }
