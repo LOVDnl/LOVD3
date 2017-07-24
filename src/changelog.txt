@@ -29,6 +29,8 @@
    visitors to the homepage will be redirected to that gene's page instead of
    the gene list.
    Closes #98: "Configurable homepage".
+ * Added script to fix known errors in variant positions. The script has been
+   added to the scripts folder.
 
 
 /**************************
