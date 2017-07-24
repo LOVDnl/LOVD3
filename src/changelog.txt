@@ -24,7 +24,11 @@
    Closes #59: "Add phenotype entries to list of 'Data owner for...'
    information".
  * Show link to HPO on disease page.
-   Closes #107: "Link on disease page to HPO"
+   Closes #107: "Link on disease page to HPO".
+ * Added feature; if there is only a single gene present in the database,
+   visitors to the homepage will be redirected to that gene's page instead of
+   the gene list.
+   Closes #98: "Configurable homepage".
 
 
 /**************************
