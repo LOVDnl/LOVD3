@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-02-06
+ * Modified    : 2017-06-16
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1271,8 +1271,8 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
     // Use the simple file() method, only if:
     // - We're working with local files, OR:
     // - We're using HTTPS (because our fsockopen() currently doesn't support that, let's hope allow_url_fopen is on), OR:
-    // - Fopen wrappers are on AND we're NOT using POST (because POST doesn't work for now).
-    if (substr($sURL, 0, 4) != 'http' || substr($sURL, 0, 5) == 'https' || (ini_get('allow_url_fopen') && !$sPOST)) {
+    // - Fopen wrappers are on.
+    if (substr($sURL, 0, 4) != 'http' || substr($sURL, 0, 5) == 'https' || ini_get('allow_url_fopen')) {
         // Normal file() is fine.
         $aOptions = array(
             'http' => array(
@@ -1281,6 +1281,13 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
                 'user_agent' => 'LOVDv.' . $_SETT['system']['version'],
             ),
         );
+
+        if ($sPOST) {
+            // Add POST content to HTTP options and headers.
+            $aOptions['http']['content'] = $sPOST;
+            array_unshift($aOptions['http']['header'], 'Content-Type: application/x-www-form-urlencoded');
+        }
+
         // If we're connecting through a proxy, we need to set some additional information.
         if ($_CONF['proxy_host']) {
             $aOptions['http']['proxy'] = 'tcp://' . $_CONF['proxy_host'] . ':' . $_CONF['proxy_port'];

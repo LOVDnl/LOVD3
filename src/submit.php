@@ -1054,6 +1054,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
     $sBody = lovd_formatMail($aBody);
 
     // Set proper subject.
+    // Don't just change this subject, it's being parsed in inc-lib-form.php (lovd_sendMail()).
     $sSubject = 'LOVD submission' . (ACTION != 'edit'? '' : ' update') . (!empty($aGenes)? ' (' . implode(', ', array_slice($aGenes, 0, 20)) . (count($aGenes) > 20? ', ...' : '') . ')' : ''); // Don't just change this; lovd_sendMail() is parsing it.
 
     $aCC = array();

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2017-01-30
+ * Modified    : 2017-06-16
  * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -217,7 +217,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
         // 2016-09-14; 3.0-17; HGNC can actually return multiple OMIM IDs,
         //  take just the first one.
         if (!isset($aGene[$sCol])) {
-            $aGene[$sCol] = '';
+            $aGene[$sCol] = NULL;
         } elseif (is_array($aGene[$sCol])) {
             $aGene[$sCol] = $aGene[$sCol][0];
         }
@@ -310,6 +310,15 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
             foreach (array_diff($aColumns, $aCols) as $sUnwantedColumn) {
                 // Don't return columns the caller hasn't asked for.
                 unset($aHGNCgenes[$sSymbol][$sUnwantedColumn]);
+            }
+
+            // 2017-06-16; 3.0-19; Also clean bulk downloads for multiple OMIM IDs,
+            //  and set to NULL when empty (for strict mode).
+            if (empty($aHGNCgenes[$sSymbol]['md_mim_id'])) {
+                $aHGNCgenes[$sSymbol]['md_mim_id'] = NULL;
+            } elseif (preg_match('/^(\d+), /', $aHGNCgenes[$sSymbol]['md_mim_id'], $aRegs)) {
+                // Just trim the other(s) off.
+                $aHGNCgenes[$sSymbol]['md_mim_id'] = $aRegs[1];
             }
         }
         return $aHGNCgenes;

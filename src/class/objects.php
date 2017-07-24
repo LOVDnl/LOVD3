@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-11-15
- * For LOVD    : 3.0-18
+ * Modified    : 2017-06-19
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *               Anthony Marty <anthony.marty@unimelb.edu.au>
  *
@@ -286,6 +286,12 @@ class LOVD_Object {
 
         $aHeaders = array();
 
+        // Array to store fieldnames as keys for fields where an error is
+        // reported in this checkfields() call. Note that this is different
+        // from $_ERROR['fields'] which contains fieldnames for multiple
+        // records during import, not just the current checkfields() call.
+        $aErroredFields = array();
+
         // Validate form by looking at the form itself, and check what's needed.
         foreach ($aForm as $aField) {
             if (!is_array($aField)) {
@@ -308,6 +314,7 @@ class LOVD_Object {
             // Mandatory fields, as defined by child object.
             if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '')) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
+                $aErroredFields[$sName] = true;
             }
 
             if ($sType == 'select') {
@@ -334,8 +341,10 @@ class LOVD_Object {
                         if (!in_array($sValue, $aOptions)) {
                             if (lovd_getProjectFile() == '/import.php') {
                                 lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aOptions) . '\'.');
+                                $aErroredFields[$sName] = true;
                             } else {
                                 lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
+                                $aErroredFields[$sName] = true;
                             }
                         }
                     }
@@ -350,6 +359,7 @@ class LOVD_Object {
                     $aData[$sName] = 0;
                 } elseif (!in_array($aData[$sName], array('0', '1'))) {
                     lovd_errorAdd($sName, 'The field \'' . $sHeader . '\' must contain either a \'0\' or a \'1\'.');
+                    $aErroredFields[$sName] = true;
                 }
             }
 
@@ -357,6 +367,7 @@ class LOVD_Object {
                 // Password is in the form, it must be checked. Assuming here that it is also considered mandatory.
                 if (!empty($aData['password']) && !lovd_verifyPassword($aData['password'], $_AUTH['password'])) {
                     lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+                    $aErroredFields[$sName] = true;
                 }
             }
         }
@@ -366,8 +377,9 @@ class LOVD_Object {
         //  we do have data to check but no $aForm entry linked to it.
         foreach ($aData as $sFieldname => $sFieldvalue) {
 
-            if (!is_string($sFieldvalue)) {
-                // Checks below currently do not handle non-string values.
+            if (!is_string($sFieldvalue) || isset($aErroredFields[$sFieldname])) {
+                // Do not process non-string values at the moment (currently there are no checks for them),
+                //  and fields for which an (more specific) error has already been reported earlier.
                 continue;
             }
 
@@ -2048,10 +2060,11 @@ class LOVD_Object {
             // First find the amount of rows returned. We can use the SQL_CALC_FOUND_ROWS()
             // function, but we'll try to avoid that due to extreme slowness in some cases.
             // getRowCountForViewList() will take care of that.
-            // There is talk about a possible race condition using this technique on the mysql_num_rows man page, but I could find no evidence of it's existence on InnoDB tables.
-            // Just to be sure, I'm implementing a serializable transaction, which should lock the table between the two SELECT queries to ensure proper results.
-            // Last checked 2010-01-25, by Ivo Fokkema.
-            $_DB->query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+            // We used to have a 'SET TRANSACTION ISOLATION LEVEL SERIALIZABLE' here which
+            //  made sure the VL result count matched the VL results, but as the two queries
+            //  might need other tables to be locked, it could cause deadlocks. Removing the
+            //  isolation level setting, to prevent deadlocks from happening. A possible
+            //  difference in VL result count and the actual results is hypothetical only anyway.
             $_DB->beginTransaction();
 
             // For ALL viewlists, we store the number of hits that we get, including the current filters.
@@ -2487,7 +2500,21 @@ FROptions
                 // FIXME; rawurldecode() in the line below should have a better solution.
                 // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
                 print("\n" .
-                      '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') . (!$zData['row_link']? '' : ' onclick="' . (substr($zData['row_link'], 0, 11) == 'javascript:'? rawurldecode(substr($zData['row_link'], 11)) : 'window.location.href = \'' . lovd_getInstallURL(false) . $zData['row_link'] . '\';') . '"') . '>');
+                      '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') .
+                        (!$zData['row_link']? '' :
+                            (substr($zData['row_link'], 0, 11) == 'javascript:'?
+                                // Rowlink is javascript code, define it with an onClick attribute.
+                                ' onclick="' . rawurldecode(substr($zData['row_link'], 11)) . '"' :
+                                // Rowlink is a URL, define a data-href attribute which is used to
+                                // by javascript open the page in the current window (onclick) or
+                                // in a new window (middle-click event caught with jquery in
+                                // inc-js-viewlist.php).
+                                ' data-href="' . lovd_getInstallURL(false) . $zData['row_link'] . '"' .
+                                // Note: older browsers will also trigger `onClick` events when the middle
+                                // mouse button is clicked, this will interfere with functionality to open
+                                // links in new tabs, provided in inc-js-viewlist.php.
+                                ' onclick="javascript:window.location.href=this.getAttribute(\'data-href\');"')
+                        ) . '>');
                 if ($bOptions) {
                     print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . (in_array($zData['row_id'], $aSessionViewList['checked'])? ' checked' : '') . '></TD>');
                 }
