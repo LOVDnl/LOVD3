@@ -13,6 +13,10 @@
  * Fixed bug; The LOVD2 to LOVD3 converter script did not translate submitter
    IDs properly.
    Closes #238: "Submitter IDs not translated in LOVD2 conversion".
+ * Added feature; if there is only a single gene present in the database,
+   visitors to the homepage will be redirected to that gene's page instead of
+   the gene list.
+   Closes #98: "Configurable homepage".
 
 
 /**************************
