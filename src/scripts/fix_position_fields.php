@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-01-28
- * Modified    : 2017-02-06
- * For LOVD    : 3.0-19
+ * Modified    : 2017-07-24
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,6 +68,10 @@ class LOVD_VariantPositionAnalyses {
         $this->oBAR->setMessageVisibility('done', true);
 
         // Define analyses.
+        // sql_count: Query to run when just checking if this analysis needs to be run or not. Should be a simple query. Will be shown in the table.
+        // sql_fetch_count: If you can only know if this analysis is useful if you run the fix function, define this query to count the entries on which you want to run the function. Will be used to track progress of the analysis, and will only be run when the analysis starts.
+        // sql_fetch: How to fetch the data to run the analysis.
+        // fix: Lambda function that receives the fetched data row, checks it, and optionally fixes the problem. Returns an array, in the form array(entries_matched, entries fixed).
         $this->aAnalyses = array(
             'vog_total_variants' => // Total variants in the database.
                 array(
@@ -278,8 +282,9 @@ class LOVD_VariantPositionAnalyses {
 
                 // First, for the sake of being able to see how far we are, fetch the total number of entries
                 //  we need to look at. If there is a separate query for that (if we don't know the actual
-                //  count before), run that special query. Otherwise, fallback to the normal count. If that
-                //  is also not available, fall back to the total_variants count.
+                //  count before), run that special query. Otherwise, fallback to the normal count query.
+                // If that is also not available, fall back to the total_variants count, we'll be looking at
+                //  all of them.
                 if (!isset($aAnalysis['sql_fetch_count'])) {
                     if (!isset($aAnalysis['count'])) {
                         $nData = $this->aAnalyses[substr($sAnalysis, 0, 3) . '_total_variants']['count'];
@@ -306,7 +311,7 @@ class LOVD_VariantPositionAnalyses {
                     // It returns the number of entries it updated (0 or 1).
                     list($nMatched, $nUpdated) = $aAnalysis['fix']($zData);
                     if ($nMatched && !isset($aAnalysis['sql_count'])) {
-                        // Fix function says this line matched, and we didn't have a count before.
+                        // Fix function says this line matched, and we didn't have a full count before.
                         $this->aAnalyses[$sAnalysis]['count'] += $nMatched;
                     }
                     $this->aAnalyses[$sAnalysis]['fixed'] += $nUpdated;
@@ -373,6 +378,23 @@ class LOVD_VariantPositionAnalyses {
     protected function updateAnalysisRow ($sAnalysis)
     {
         // Update the row in the table, in case the counts ("count" and "fixed" counts) changed.
+        static $aCounts = array();
+
+        // Initiate this analysis' counts. Start at -1, so that the 0's will surely be printed.
+        if (!isset($aCounts[$sAnalysis])) {
+            $aCounts[$sAnalysis] = array('count' => -1, 'fixed' => -1);
+        }
+
+        if ($aCounts[$sAnalysis]['count'] == $this->aAnalyses[$sAnalysis]['count']
+            && $aCounts[$sAnalysis]['fixed'] == $this->aAnalyses[$sAnalysis]['fixed']) {
+            // Nothing changed, so don't update.
+            return false;
+        }
+
+        // Update the counts.
+        $aCounts[$sAnalysis]['count'] = $this->aAnalyses[$sAnalysis]['count'];
+        $aCounts[$sAnalysis]['fixed'] = $this->aAnalyses[$sAnalysis]['fixed'];
+
         $sTotalVariants = substr($sAnalysis, 0, 3) . '_total_variants';
         print('
       <SCRIPT type="text/javascript">
