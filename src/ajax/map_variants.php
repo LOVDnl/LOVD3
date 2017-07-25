@@ -259,17 +259,18 @@ if (!empty($_GET['variantid'])) {
                 // This variant is not going to be mappable until it's got valid positions!
                 $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags | ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aVariants[0]['id']));
                 $aVariants = array();
-            }
 
-            // Flag the variant as MAPPING_IN_PROGRESS, clear the MAPPING_DONE, MAPPING_ERROR and MAPPING_NOT_RECOGNIZED flags too.
-            $aVariantUpdates[$aVariants[0]['id']] = true;
-            $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = (mapping_flags | ' . MAPPING_IN_PROGRESS . ') & ~' . (MAPPING_NOT_RECOGNIZED | MAPPING_ERROR | MAPPING_DONE) . ' WHERE id = ?', array($aVariants[0]['id']));
-            if (!$q->rowCount()) {
-                // There seems to be a race condition. Forget the variant we had selected, we do NOT want to do anything with it!
-                $aVariantUpdates = $aVariants = array();
             } else {
-                // The MAPPING_NOT_RECOGNIZED, MAPPING_ERROR and MAPPING_DONE flags will be set accordingly in the end. We must unset them here, however, otherwise whatever is set now stays set afterwards.
-                $aVariants[0]['mapping_flags'] &= ~(MAPPING_NOT_RECOGNIZED | MAPPING_ERROR | MAPPING_DONE);
+                // Flag the variant as MAPPING_IN_PROGRESS, clear the MAPPING_DONE, MAPPING_ERROR and MAPPING_NOT_RECOGNIZED flags too.
+                $aVariantUpdates[$aVariants[0]['id']] = true;
+                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = (mapping_flags | ' . MAPPING_IN_PROGRESS . ') & ~' . (MAPPING_NOT_RECOGNIZED | MAPPING_ERROR | MAPPING_DONE) . ' WHERE id = ?', array($aVariants[0]['id']));
+                if (!$q->rowCount()) {
+                    // There seems to be a race condition. Forget the variant we had selected, we do NOT want to do anything with it!
+                    $aVariantUpdates = $aVariants = array();
+                } else {
+                    // The MAPPING_NOT_RECOGNIZED, MAPPING_ERROR and MAPPING_DONE flags will be set accordingly in the end. We must unset them here, however, otherwise whatever is set now stays set afterwards.
+                    $aVariants[0]['mapping_flags'] &= ~(MAPPING_NOT_RECOGNIZED | MAPPING_ERROR | MAPPING_DONE);
+                }
             }
         } else {
             // We can't map this variant, forget about it.
