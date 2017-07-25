@@ -4,14 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2016-07-15
- * For LOVD    : 3.0-17
+ * Modified    : 2017-07-25
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -172,7 +172,7 @@ if (!isset($_SESSION['mapping']['total_todo'])) {
     $_SESSION['mapping']['total_todo'] = 0;
 }
 // 0.5 sec for 1M variants. Add index to mapping_flags and/or position_g_start to speed up?
-$_SESSION['mapping']['todo'] = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL')->fetchColumn();
+$_SESSION['mapping']['todo'] = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL AND position_g_start != 0')->fetchColumn();
 if ($_SESSION['mapping']['todo'] > $_SESSION['mapping']['total_todo']) {
     // We didn't have a total set yet, or more variants were added in the process that now need to be mapped as well.
     $_SESSION['mapping']['total_todo'] = $_SESSION['mapping']['todo'];
@@ -255,7 +255,7 @@ if (!empty($_GET['variantid'])) {
         if (($aVariants[0]['mapping_flags'] & MAPPING_ALLOW) && !($aVariants[0]['mapping_flags'] & MAPPING_IN_PROGRESS)) {
             // We've found the variant, and we are actually allowed to map it! Let's go.
 
-            if ($aVariants[0]['position_g_start'] === null || $aVariants[0]['position_g_end'] === null) {
+            if (!$aVariants[0]['position_g_start'] || !$aVariants[0]['position_g_end']) {
                 // This variant is not going to be mappable until it's got valid positions!
                 $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags | ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aVariants[0]['id']));
                 $aVariants = array();
@@ -293,7 +293,7 @@ if (!empty($_GET['variantid'])) {
                              'FROM ' . TABLE_VARIANTS . ' AS vog, (' .
                                  'SELECT chromosome, position_g_start ' .
                                  'FROM ' . TABLE_VARIANTS . ' ' .
-                                 'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' AND position_g_start IS NOT NULL ' .
+                                 'WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' AND position_g_start IS NOT NULL AND position_g_start != 0 ' .
                                  (empty($aArgs)? '' : 'AND chromosome = ? AND position_g_start >= ? ') .
                                  ($_SESSION['mapping']['todo'] > 10000? '' : 'ORDER BY RAND() ') .
                                  'LIMIT 1' .
