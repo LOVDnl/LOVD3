@@ -29,6 +29,8 @@
    visitors to the homepage will be redirected to that gene's page instead of
    the gene list.
    Closes #98: "Configurable homepage".
+ * Fixed bug; The variant mapper gets stuck when encountering variants with no
+   position set.
 
 
 /**************************

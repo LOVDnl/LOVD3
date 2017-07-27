@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2017-07-20
+ * Modified    : 2017-07-25
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -186,6 +186,7 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol' => 'Official abbreviation',
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
+                        'link_HPO_' => 'Human Phenotype Ontology Project (HPO)',
                         'individuals' => 'Individuals reported having this disease',
                         'phenotypes_' => 'Phenotype entries for this disease',
                         'genes_' => 'Associated with',
@@ -196,7 +197,6 @@ class LOVD_Disease extends LOVD_Object {
                         'created_date_' => array('Date created', LEVEL_COLLABORATOR),
                         'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
                         'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
-                        'link_HPO_' => 'Human Phenotype Ontology Project (HPO)',
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
