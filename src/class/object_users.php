@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-07-19
+ * Modified    : 2017-08-04
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -126,6 +126,7 @@ class LOVD_User extends LOVD_Object {
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
                         'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'creates_' => 'Has created', // Will be unset if not viewing himself or manager or up.
                         'colleagues_' => '', // Other users that may access this user's data.
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
@@ -490,7 +491,10 @@ class LOVD_User extends LOVD_Object {
             // Submissions...
             if (lovd_isAuthorized('user', $zData['id']) === false) {
                 // Not authorized to view hidden data for this user; so we're not manager and we're not viewing ourselves. Nevermind then.
-                unset($this->aColumnsViewEntry['ownes_'], $this->aColumnsViewEntry['auth_token_'], $this->aColumnsViewEntry['auth_token_expires_']);
+                unset($this->aColumnsViewEntry['ownes_'],
+                      $this->aColumnsViewEntry['creates_'],
+                      $this->aColumnsViewEntry['auth_token_'],
+                      $this->aColumnsViewEntry['auth_token_expires_']);
             } else {
                 // Either we're viewing ourselves, or we're manager or up.
 
@@ -507,6 +511,8 @@ class LOVD_User extends LOVD_Object {
                 // Since we're manager or viewing ourselves, we don't need to check for the data status of the data.
                 $nOwnes = 0;
                 $sOwnes = '';
+                $nCreates = 0;
+                $sCreates = '';
 
                 foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
                     $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
@@ -516,10 +522,28 @@ class LOVD_User extends LOVD_Object {
                         // Hide the link for phenotypes, because we don't have a phenotypes overview to link to (must be disease-specific).
                         $sOwnes .= (!$sOwnes? '' : ', ') . ($sDataType == 'phenotypes'? $sTitle : '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode(html_entity_decode($zData['name'])) . '%22">' . $sTitle . '</A>');
                     }
+
+                    // Create links to overviews of entries created by user.
+                    $n = $_DB->query('SELECT COUNT(*) FROM ' .
+                        constant('TABLE_' . strtoupper($sDataType)) . ' WHERE created_by = ?',
+                        array($zData['id']))->fetchColumn();
+                    if ($n) {
+                        $nCreates += $n;
+                        $sTitle = $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType);
+                        // Hide the link for phenotypes, because we don't have a phenotypes
+                        // overview to link to (must be disease-specific).
+                        $sCreates .= (!$sCreates? '' : ', ') . ($sDataType == 'phenotypes'?
+                                $sTitle : '<A href="' . $sDataType . '?search_created_by=' .
+                                rawurlencode(html_entity_decode($zData['id'])) . '">' .
+                                $sTitle . '</A>');
+                    }
                 }
 
                 $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
                 $zData['ownes_'] = $sOwnes;
+                $this->aColumnsViewEntry['creates_'] .= ' ' . $nCreates . ' data entr' .
+                    ($nCreates == 1? 'y' : 'ies');
+                $zData['creates_'] = $sCreates;
             }
 
             $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
