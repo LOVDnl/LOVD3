@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-12-07
- * For LOVD    : 3.0-18
+ * Modified    : 2017-08-04
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -1770,7 +1770,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             // Column has already been removed from everything it can be removed from.
             $_T->printHeader();
             $_T->printTitle();
-            lovd_showInfoTable('This column has already been removed from all ' . $aTableInfo['unit'] . 's.', 'stop');
+            lovd_showInfoTable('This column has already been removed from all ' .
+                $aTableInfo['unit'] . 's' . (($_AUTH['level'] >= LEVEL_MANAGER)? '' :
+                ' for which you are authorized to modify') . '.', 'stop');
             $_T->printFooter();
             exit;
         }
