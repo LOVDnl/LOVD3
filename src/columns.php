@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2017-08-04
+ * Modified    : 2017-08-07
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1772,7 +1772,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $_T->printTitle();
             lovd_showInfoTable('This column has already been removed from all ' .
                 $aTableInfo['unit'] . 's' . (($_AUTH['level'] >= LEVEL_MANAGER)? '' :
-                ' for which you are authorized to modify') . '.', 'stop');
+                ' which you are authorized to modify') . '.', 'stop');
             $_T->printFooter();
             exit;
         }
