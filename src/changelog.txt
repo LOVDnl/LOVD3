@@ -31,6 +31,8 @@
    Closes #98: "Configurable homepage".
  * Fixed bug; The variant mapper gets stuck when encountering variants with no
    position set.
+ * Improved message that the curator sees, when he tries to disable a custom
+   column that has already been disabled for all his genes.
 
 
 /**************************
