@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-05-15
- * For LOVD    : 3.0-19
+ * Modified    : 2017-08-08
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -245,9 +245,19 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $this->aCheckMandatory[] = 'effect_concluded';
-        } elseif (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
-            // Submitters must fill in the variant effect field; '0' is not allowed for them.
-            unset($aData['effect_reported']);
+        }
+
+        if (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
+            // `effect_reported` is not allowed to be '0' (Not classified) when user is a submitter
+            // or when the variant has status '9' (Public).
+            if ($_AUTH['level'] < LEVEL_CURATOR) {
+                // Remove the mandatory `effect_reported` field to throw an error.
+                unset($aData['effect_reported']);
+            } elseif (isset($aData['statusid']) && intval($aData['statusid']) == 9) {
+                // Show error for curator/manager trying to publish variant without effect.
+                lovd_errorAdd('effect_reported', 'The \'Affects function (reported)\' field ' .
+                    'must be filled when variant status is Public');
+            }
         }
 
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.
