@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-01-25
- * For LOVD    : 3.0-19
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -55,7 +55,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldec
         $_GET['search_geneid'] = '="' . $sGene . '"';
         lovd_isAuthorized('gene', $sGene);
     }
-    define('PAGE_TITLE', 'View all transcripts' . ($sGene? ' of gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'All transcripts' . ($sGene? ' of gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
     if ($sGene) {
@@ -83,7 +83,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'View transcript #' . $nID);
+    define('PAGE_TITLE', 'Transcript #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -127,7 +127,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     if ($nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchColumn()) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
     } else {
-        define('PAGE_TITLE', 'View transcript');
+        define('PAGE_TITLE', 'Transcript');
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');

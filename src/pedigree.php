@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-22
- * Modified    : 2012-04-24
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -47,7 +48,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1])) {
     // FIXME; should check for the existence of the correct needed custom columns.
 
     $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'View pedigree for individual #' . $nID);
+    define('PAGE_TITLE', 'Pedigree for individual #' . $nID);
     $_T->printHeader(false);
     $_T->printTitle();
 

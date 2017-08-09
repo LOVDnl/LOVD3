@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-06-28
+ * Modified    : 2017-08-09
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -84,7 +84,7 @@ if (!ACTION && (empty($_PE[1]) ||
     require_once ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $aColsToHide = array('allele_');
-    $sTitle = 'View all genomic variants';
+    $sTitle = 'All genomic variants';
 
     // Set conditions on viewlist if a region is specified (e.g. chr3:20-200000)
     if (isset($aRegionArgs)) {
@@ -128,7 +128,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View all variants affecting transcripts');
+    define('PAGE_TITLE', 'All variants affecting transcripts');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -149,7 +149,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     // View all genomic variant entries that were submitted in the given upload.
 
     $nID = sprintf('%015d', $_PE[2]);
-    define('PAGE_TITLE', 'View genomic variants from upload #' . $nID);
+    define('PAGE_TITLE', 'Genomic variants from upload #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -224,10 +224,10 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     }
 
     if ($bUnique) {
-        define('PAGE_TITLE', 'View unique variants in gene ' . $sGene);
+        define('PAGE_TITLE', 'Unique variants in gene ' . $sGene);
         $sViewListID = 'CustomVL_VOTunique_VOG_' . $sGene;
     } else {
-        define('PAGE_TITLE', 'View all transcript variants in gene ' . $sGene);
+        define('PAGE_TITLE', 'All transcript variants in gene ' . $sGene);
         $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
     }
     $_T->printHeader();
@@ -294,7 +294,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'View genomic variant #' . $nID);
+    define('PAGE_TITLE', 'Genomic variant #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 

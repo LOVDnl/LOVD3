@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2016-09-26
- * For LOVD    : 3.0-17-patch-02
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -115,7 +116,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
         exit;
     }
 
-    define('PAGE_TITLE', 'View data for reference: ' . $aPathElements[1]);
+    define('PAGE_TITLE', 'Data for reference: ' . $aPathElements[1]);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -180,7 +181,7 @@ if ($bImage) {
     exit;
 }
 
-define('PAGE_TITLE', 'View data for reference: ' . $aPathElements[1]);
+define('PAGE_TITLE', 'Data for reference: ' . $aPathElements[1]);
 $_T->printHeader();
 $_T->printTitle();
 

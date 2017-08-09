@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2016-12-05
- * For LOVD    : 3.0-18
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -65,7 +65,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         }
     }
 
-    define('PAGE_TITLE', 'View all screenings' . (isset($sGene)? ' for gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'All screenings' . (isset($sGene)? ' for gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
 
@@ -91,7 +91,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'View screening #' . $nID);
+    define('PAGE_TITLE', 'Screening #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
