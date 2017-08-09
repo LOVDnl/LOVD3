@@ -9,7 +9,7 @@ class AddSummaryVariantOnlyDescribedOnGenomicLevelTest extends LOVDSeleniumWebdr
     public function testAddSummaryVariantOnlyDescribedOnGenomicLevel()
     {
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000003$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
