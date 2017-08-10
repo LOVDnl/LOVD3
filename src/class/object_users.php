@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-08-04
+ * Modified    : 2017-08-10
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -509,41 +509,37 @@ class LOVD_User extends LOVD_Object {
                 }
 
                 // Since we're manager or viewing ourselves, we don't need to check for the data status of the data.
-                $nOwnes = 0;
-                $sOwnes = '';
-                $nCreates = 0;
-                $sCreates = '';
+                $aOwnerStats = array(0, '');
+                $aCreatorStats = array(0, '');
 
                 foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
-                    $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
-                    if ($n) {
-                        $nOwnes += $n;
-                        $sTitle = $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType);
-                        // Hide the link for phenotypes, because we don't have a phenotypes overview to link to (must be disease-specific).
-                        $sOwnes .= (!$sOwnes? '' : ', ') . ($sDataType == 'phenotypes'? $sTitle : '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode(html_entity_decode($zData['name'])) . '%22">' . $sTitle . '</A>');
-                    }
+                    foreach (array('owned_by', 'created_by') as $sField) {
+                        $nCount = $_DB->query('SELECT COUNT(*) FROM ' .
+                            constant('TABLE_' . strtoupper($sDataType)) . ' WHERE ' . $sField .
+                            ' = ?', array($zData['id']))->fetchColumn();
+                        $sTitle = $nCount . ' ' . ($nCount == 1? substr($sDataType, 0, -1) :
+                            $sDataType);
+                        $sStat = ($sDataType == 'phenotypes'? $sTitle : '<A href="' . $sDataType .
+                            '?search_' . $sField . ($sField == 'owned_by'? '_=%3D%22' .
+                            rawurlencode(html_entity_decode($zData['name'])) . '%22' : '=' .
+                            $zData['id']) . '">' . $sTitle . '</A>');
 
-                    // Create links to overviews of entries created by user.
-                    $n = $_DB->query('SELECT COUNT(*) FROM ' .
-                        constant('TABLE_' . strtoupper($sDataType)) . ' WHERE created_by = ?',
-                        array($zData['id']))->fetchColumn();
-                    if ($n) {
-                        $nCreates += $n;
-                        $sTitle = $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType);
-                        // Hide the link for phenotypes, because we don't have a phenotypes
-                        // overview to link to (must be disease-specific).
-                        $sCreates .= (!$sCreates? '' : ', ') . ($sDataType == 'phenotypes'?
-                                $sTitle : '<A href="' . $sDataType . '?search_created_by=' .
-                                rawurlencode(html_entity_decode($zData['id'])) . '">' .
-                                $sTitle . '</A>');
+                        if ($sField == 'owned_by') {
+                            $aOwnerStats[0] += $nCount;
+                            $aOwnerStats[1] .= (!$aOwnerStats[1]? '' : ', ') . $sStat;
+                        } else {
+                            $aCreatorStats[0] += $nCount;
+                            $aCreatorStats[1] .= (!$aCreatorStats[1]? '' : ', ') . $sStat;
+                        }
                     }
-                }
+                 }
 
-                $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
-                $zData['ownes_'] = $sOwnes;
-                $this->aColumnsViewEntry['creates_'] .= ' ' . $nCreates . ' data entr' .
-                    ($nCreates == 1? 'y' : 'ies');
-                $zData['creates_'] = $sCreates;
+                $this->aColumnsViewEntry['ownes_'] .= ' ' . $aOwnerStats[0] . ' data entr' .
+                    ($aOwnerStats[0] == 1? 'y' : 'ies');
+                $zData['ownes_'] = $aOwnerStats[1];
+                $this->aColumnsViewEntry['creates_'] .= ' ' . $aCreatorStats[0] . ' data entr' .
+                    ($aCreatorStats[0] == 1? 'y' : 'ies');
+                $zData['creates_'] = $aCreatorStats[1];
             }
 
             $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
