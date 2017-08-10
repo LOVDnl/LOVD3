@@ -594,20 +594,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         }
 
         // Store positions.
+        // FIXME: The handling of the start and end positions are so similar,
+        //  we can group the code with a loop, if we rewrite all variable names.
         // If each position (start, end) has two numeric positions, we choose the
-        //  middle one (latest start, earliest end). Otherwise, we pick the numeric one.
+        //  average of the two positions. Otherwise, we pick the numeric one.
         // We do require at least one numeric start position and one numeric end position.
         if (ctype_digit($sStartPositionEarly) && ctype_digit($sStartPositionLate)) {
-            // Pick the max...
-            if ($sStartPositionEarly > $sStartPositionLate) {
+            // Calculate the average...
+            if ($sStartPositionEarly == $sStartPositionLate) {
+                // Positions are equal, so average the intronic positions if they're there.
                 $aResponse['position_start'] = $sStartPositionEarly;
-                if ($sStartPositionEarlyIntron) {
-                    $aResponse['position_start_intron'] = $sStartPositionEarlyIntron;
+                if ($sStartPositionEarlyIntron || $sStartPositionLateIntron) {
+                    $aResponse['position_start_intron'] = (string) round(($sStartPositionEarlyIntron + $sStartPositionLateIntron) / 2);
                 }
             } else {
-                $aResponse['position_start'] = $sStartPositionLate;
-                if ($sStartPositionLateIntron) {
-                    $aResponse['position_start_intron'] = $sStartPositionLateIntron;
+                $aResponse['position_start'] = (string) round(($sStartPositionEarly + $sStartPositionLate) / 2);
+                // In the unlikely case the average would be 0, pick 1.
+                if (!$aResponse['position_start']) {
+                    $aResponse['position_start'] = '1';
                 }
             }
         } elseif (ctype_digit($sStartPositionEarly)) {
@@ -625,16 +629,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             return false;
         }
         if (ctype_digit($sEndPositionEarly) && ctype_digit($sEndPositionLate)) {
-            // Pick the min...
-            if ($sEndPositionEarly <= $sEndPositionLate) {
+            // Calculate the average...
+            if ($sEndPositionEarly == $sEndPositionLate) {
+                // Positions are equal, so average the intronic positions if they're there.
                 $aResponse['position_end'] = $sEndPositionEarly;
-                if ($sEndPositionEarlyIntron) {
-                    $aResponse['position_end_intron'] = $sEndPositionEarlyIntron;
+                if ($sEndPositionEarlyIntron || $sEndPositionLateIntron) {
+                    $aResponse['position_end_intron'] = (string) round(($sEndPositionEarlyIntron + $sEndPositionLateIntron) / 2);
                 }
             } else {
-                $aResponse['position_end'] = $sEndPositionLate;
-                if ($sEndPositionLateIntron) {
-                    $aResponse['position_end_intron'] = $sEndPositionLateIntron;
+                $aResponse['position_end'] = (string) round(($sEndPositionEarly + $sEndPositionLate) / 2);
+                // In the unlikely case the average would be 0, pick 1.
+                if (!$aResponse['position_end']) {
+                    $aResponse['position_end'] = '1';
                 }
             }
         } elseif (ctype_digit($sEndPositionEarly)) {
