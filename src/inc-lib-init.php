@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-06-16
- * For LOVD    : 3.0-19
+ * Modified    : 2017-08-10
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -588,6 +588,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
         list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
 
+        // Always at least create the intron fields for c. and n. variants.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            $aResponse['position_start_intron'] = $aResponse['position_end_intron'] = 0;
+        }
+
         // Store positions.
         // If each position (start, end) has two numeric positions, we choose the
         //  middle one (latest start, earliest end). Otherwise, we pick the numeric one.
@@ -675,8 +680,45 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         $aResponse['type'] = $sVariant;
     }
 
+    // When strict SQL mode is enabled, we'll get errors when we'll try and
+    //  insert large numbers in the position fields.
+    // Check the positions we extracted; the variant could be described badly,
+    //  and this could cause a query error.
+    // Rather, fix the position fields to their respective maximum values.
+    static $aMinMaxValues = array(
+        'g' => array(
+            'position_start' => array(1, 4294967295),
+            'position_end' => array(1, 4294967295),
+        ),
+        'm' => array(
+            'position_start' => array(1, 4294967295),
+            'position_end' => array(1, 4294967295),
+        ),
+        'c' => array(
+            'position_start' => array(-8388608, 8388607),
+            'position_start_intron' => array(-2147483648, 2147483647),
+            'position_end' => array(-8388608, 8388607),
+            'position_end_intron' => array(-2147483648, 2147483647),
+        ),
+        'n' => array(
+            'position_start' => array(1, 8388607),
+            'position_start_intron' => array(-2147483648, 2147483647),
+            'position_end' => array(1, 8388607),
+            'position_end_intron' => array(-2147483648, 2147483647),
+        ),
+    );
+
+    if (isset($aMinMaxValues[$sPrefix])) {
+        // If the min and max values are defined for this prefix, check the fields.
+        foreach ($aMinMaxValues[$sPrefix] as $sField => $aMinMaxValue) {
+            $aResponse[$sField] = max($aResponse[$sField], $aMinMaxValue[0]);
+            $aResponse[$sField] = min($aResponse[$sField], $aMinMaxValue[1]);
+        }
+    }
+
     return $aResponse;
 }
+
 
 
 
