@@ -503,6 +503,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         'type' => '',
     );
 
+    // If given, check if we already know this transcript.
+    if ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
+        $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
+            array($sTranscriptID, $sTranscriptID))->fetchColumn();
+        if (!$aTranscriptOffsets[$sTranscriptID]) {
+            // Transcript not configured correctly.
+            return false;
+        }
+    }
+
     // Isolate the position(s) from the variant. We don't support combined variants.
     // We're not super picky, and would therefore approve of c.1_2A>C; we also
     //  don't check for the end of the variant, it may contain bases, or not.
@@ -532,16 +542,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             if (!$sTranscriptID) {
                 // No, but we'll need it.
                 return false;
-            }
-
-            // Check if we already know this transcript.
-            if (!isset($aTranscriptOffsets[$sTranscriptID])) {
-                $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
-                    array($sTranscriptID, $sTranscriptID))->fetchColumn();
-                if (!$aTranscriptOffsets[$sTranscriptID]) {
-                    // Transcript not configured correctly.
-                    return false;
-                }
             }
 
             // Translate positions.
@@ -574,7 +574,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
     // If that didn't work, try matching variants with uncertain positions.
     // We're not super picky, and don't check the end of the variant.
-    } elseif (preg_match('/^([cgmn])\.\((\d+|\?)([-+](?:\d+|\?))?_(\d+|\?)([-+](?:\d+|\?))?\)_\((\d+|\?)([-+](?:\d+|\?))?_(\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
         //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                               2 = Earliest start position, might be a question mark.
         //                                       3 = Earlier start position intronic offset, if available.
@@ -591,6 +591,32 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         // Always at least create the intron fields for c. and n. variants.
         if ($sPrefix == 'c' || $sPrefix == 'n') {
             $aResponse['position_start_intron'] = $aResponse['position_end_intron'] = 0;
+        } else {
+            // Genomic coordinates.
+            if ($sStartPositionEarlyIntron || $sStartPositionLateIntron || $sEndPositionEarlyIntron || $sEndPositionLateIntron) {
+                // Anything not c. or n. is regarded genomic, having a max of 2 positions.
+                // Found more positions? Return false.
+                return false;
+            } elseif (!ctype_digit($sStartPositionEarly) || !ctype_digit($sStartPositionLate) || !ctype_digit($sEndPositionEarly) || !ctype_digit($sEndPositionLate)) {
+                // Non-numeric first character of the positions is also impossible for genomic variants.
+                return false;
+            }
+        }
+
+        // Convert 3' UTR notations into normal notations.
+        if ($sStartPositionEarly{0} == '*' || $sStartPositionLate{0} == '*' || $sEndPositionEarly{0} == '*' || $sEndPositionLate{0} == '*') {
+            // Check if a transcript ID has been provided.
+            if (!$sTranscriptID) {
+                // No, but we'll need it.
+                return false;
+            }
+
+            // Translate positions.
+            foreach (array('sStartPositionEarly', 'sStartPositionLate', 'sEndPositionEarly', 'sEndPositionLate') as $sPosition) {
+                if (substr($$sPosition, 0, 1) == '*') {
+                    $$sPosition = substr($$sPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+                }
+            }
         }
 
         // Store positions.
@@ -599,7 +625,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         // If each position (start, end) has two numeric positions, we choose the
         //  average of the two positions. Otherwise, we pick the numeric one.
         // We do require at least one numeric start position and one numeric end position.
-        if (ctype_digit($sStartPositionEarly) && ctype_digit($sStartPositionLate)) {
+        if (is_numeric($sStartPositionEarly) && is_numeric($sStartPositionLate)) {
             // Calculate the average...
             if ($sStartPositionEarly == $sStartPositionLate) {
                 // Positions are equal, so average the intronic positions if they're there.
@@ -614,12 +640,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
                     $aResponse['position_start'] = '1';
                 }
             }
-        } elseif (ctype_digit($sStartPositionEarly)) {
+        } elseif (is_numeric($sStartPositionEarly)) {
             $aResponse['position_start'] = $sStartPositionEarly;
             if ($sStartPositionEarlyIntron) {
                 $aResponse['position_start_intron'] = $sStartPositionEarlyIntron;
             }
-        } elseif (ctype_digit($sStartPositionLate)) {
+        } elseif (is_numeric($sStartPositionLate)) {
             $aResponse['position_start'] = $sStartPositionLate;
             if ($sStartPositionLateIntron) {
                 $aResponse['position_start_intron'] = $sStartPositionLateIntron;
@@ -628,7 +654,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             // Two non-numeric positions. Reject this variant.
             return false;
         }
-        if (ctype_digit($sEndPositionEarly) && ctype_digit($sEndPositionLate)) {
+        if (is_numeric($sEndPositionEarly) && is_numeric($sEndPositionLate)) {
             // Calculate the average...
             if ($sEndPositionEarly == $sEndPositionLate) {
                 // Positions are equal, so average the intronic positions if they're there.
@@ -643,12 +669,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
                     $aResponse['position_end'] = '1';
                 }
             }
-        } elseif (ctype_digit($sEndPositionEarly)) {
+        } elseif (is_numeric($sEndPositionEarly)) {
             $aResponse['position_end'] = $sEndPositionEarly;
             if ($sEndPositionEarlyIntron) {
                 $aResponse['position_end_intron'] = $sEndPositionEarlyIntron;
             }
-        } elseif (ctype_digit($sEndPositionLate)) {
+        } elseif (is_numeric($sEndPositionLate)) {
             $aResponse['position_end'] = $sEndPositionLate;
             if ($sEndPositionLateIntron) {
                 $aResponse['position_end_intron'] = $sEndPositionLateIntron;
