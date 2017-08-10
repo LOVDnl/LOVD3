@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-08-08
+ * Modified    : 2017-08-10
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -253,10 +253,10 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             if ($_AUTH['level'] < LEVEL_CURATOR) {
                 // Remove the mandatory `effect_reported` field to throw an error.
                 unset($aData['effect_reported']);
-            } elseif (isset($aData['statusid']) && intval($aData['statusid']) == 9) {
+            } elseif (isset($aData['statusid']) && $aData['statusid'] == STATUS_OK) {
                 // Show error for curator/manager trying to publish variant without effect.
                 lovd_errorAdd('effect_reported', 'The \'Affects function (reported)\' field ' .
-                    'must be filled when variant status is Public');
+                    'may not be "Not classified" when variant status is "Public".');
             }
         }
 
