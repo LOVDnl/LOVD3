@@ -295,7 +295,7 @@ class LOVD_API_Submissions {
                     // Shouldn't happen for genomic variants.
                     $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Name does not seem to describe a genomic variant. ' .
-                        'Variant must be genomic, indicated by \'g.\' or \'m.\'. ' .
+                        'Variant must be genomic, indicated by \'g.\'. ' .
                         'Variants of other types can only be specified as children of a genomic variant.';
                     return false;
                 }

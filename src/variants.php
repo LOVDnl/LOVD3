@@ -1084,9 +1084,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
         // Use the right prefix for the numbering scheme.
         $sHGVSPrefix = 'g.';
-        if ($aVariantData['chromosome'] == 'M') {
-            $sHGVSPrefix = 'm.';
-        }
 
         // 'Eat' letters from either end - first left, then right - to isolate the difference.
         $sAlleleOriginal = $sAllele;
@@ -1485,9 +1482,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                     // Use the right prefix for the numbering scheme.
                     $sHGVSPrefix = 'g.';
-                    if ($aVariant['chromosome'] == 'M') {
-                        $sHGVSPrefix = 'm.';
-                    }
 
                     // Detect format type.
                     $bSkip = false;

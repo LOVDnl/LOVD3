@@ -59,7 +59,7 @@ function lovd_checkHGVS (e)
     // unless we're a "real" onChange() request.
 
     var bHGVS; // True -> correct syntax; False -> We don't recognize it, but Mutalyzer might.
-    // First check: genomic field should start with g. or m., cDNA field should start with c. or n..
+    // First check: genomic field should start with g., cDNA field should start with c. or n..
     if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA' && !/^(g|m)\./.test(oVariantDNA.val().substring(0, 2))) {
         bHGVS = false;
     } else if (oVariantDNA.attr('name') != 'VariantOnGenome/DNA' && !/^(c|n)\./.test(oVariantDNA.val().substring(0, 2))) {
