@@ -33,6 +33,8 @@
    position set.
  * Improved message that the curator sees, when he tries to disable a custom
    column that has already been disabled for all his genes.
+ * Added links to overviews of created entries on user page.
+   Closes #190: "Add links to records created by user on user's profile page".
 
 
 /**************************
