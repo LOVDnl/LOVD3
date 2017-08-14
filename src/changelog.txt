@@ -32,7 +32,7 @@
  * Fixed bug; The variant mapper gets stuck when encountering variants with no
    position set.
  * Added links to overviews of created entries on user page.
-   Closes #190: "Add Records Created".
+   Closes #190: "Add links to records created by user on user's profile page".
 
 
 /**************************

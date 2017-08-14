@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-08-10
+ * Modified    : 2017-08-14
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -125,8 +125,8 @@ class LOVD_User extends LOVD_Object {
                         'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
-                        'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
-                        'creates_' => 'Has created', // Will be unset if not viewing himself or manager or up.
+                        'entries_owned_by_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'entries_created_by_' => 'Has created', // Will be unset if not viewing himself or manager or up.
                         'colleagues_' => '', // Other users that may access this user's data.
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
@@ -491,8 +491,8 @@ class LOVD_User extends LOVD_Object {
             // Submissions...
             if (lovd_isAuthorized('user', $zData['id']) === false) {
                 // Not authorized to view hidden data for this user; so we're not manager and we're not viewing ourselves. Nevermind then.
-                unset($this->aColumnsViewEntry['ownes_'],
-                      $this->aColumnsViewEntry['creates_'],
+                unset($this->aColumnsViewEntry['entries_owned_by_'],
+                      $this->aColumnsViewEntry['entries_created_by_'],
                       $this->aColumnsViewEntry['auth_token_'],
                       $this->aColumnsViewEntry['auth_token_expires_']);
             } else {
@@ -509,11 +509,9 @@ class LOVD_User extends LOVD_Object {
                 }
 
                 // Since we're manager or viewing ourselves, we don't need to check for the data status of the data.
-                $aOwnerStats = array(0, '');
-                $aCreatorStats = array(0, '');
-
-                foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
-                    foreach (array('owned_by', 'created_by') as $sField) {
+                foreach (array('owned_by', 'created_by') as $sField) {
+                    $aStats = array(0, '');
+                    foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
                         $nCount = $_DB->query('SELECT COUNT(*) FROM ' .
                             constant('TABLE_' . strtoupper($sDataType)) . ' WHERE ' . $sField .
                             ' = ?', array($zData['id']))->fetchColumn();
@@ -524,22 +522,14 @@ class LOVD_User extends LOVD_Object {
                             rawurlencode(html_entity_decode($zData['name'])) . '%22' : '=' .
                             $zData['id']) . '">' . $sTitle . '</A>');
 
-                        if ($sField == 'owned_by') {
-                            $aOwnerStats[0] += $nCount;
-                            $aOwnerStats[1] .= (!$aOwnerStats[1]? '' : ', ') . $sStat;
-                        } else {
-                            $aCreatorStats[0] += $nCount;
-                            $aCreatorStats[1] .= (!$aCreatorStats[1]? '' : ', ') . $sStat;
-                        }
+                        $aStats[0] += $nCount;
+                        $aStats[1] .= (!$aStats[1]? '' : ', ') . $sStat;
                     }
-                 }
 
-                $this->aColumnsViewEntry['ownes_'] .= ' ' . $aOwnerStats[0] . ' data entr' .
-                    ($aOwnerStats[0] == 1? 'y' : 'ies');
-                $zData['ownes_'] = $aOwnerStats[1];
-                $this->aColumnsViewEntry['creates_'] .= ' ' . $aCreatorStats[0] . ' data entr' .
-                    ($aCreatorStats[0] == 1? 'y' : 'ies');
-                $zData['creates_'] = $aCreatorStats[1];
+                    $this->aColumnsViewEntry['entries_' . $sField . '_'] .= ' ' . $aStats[0] . ' data entr' .
+                        ($aStats[0] == 1? 'y' : 'ies');
+                    $zData['entries_' . $sField . '_'] = $aStats[1];
+                }
             }
 
             $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
