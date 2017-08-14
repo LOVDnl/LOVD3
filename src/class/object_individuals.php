@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2017-08-07
+ * Modified    : 2017-08-14
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -339,11 +339,11 @@ class LOVD_Individual extends LOVD_Custom {
                  $this->buildForm(),
                  array(
                         array('Panel size', '', 'text', 'panel_size', 10),
-                        array('', '', 'note', 'Number of individuals this entry represents; e.g.' .
+                        array('', '', 'note', 'The number of individuals this entry represents; e.g.' .
                             ' 1 for an individual, 5 for a family with 5 affected members. To ' .
-                            'report different Individuals from one family link them using the ' .
-                            'field "ID of panel this entry belongs to".'),
-           'panelid' => array('ID of panel this entry belongs to (optional)', 'Fill in LOVD\'s individual ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
+                            'report different Individuals from one family, link them using the ' .
+                            '"ID of panel this entry belongs to" field.'),
+           'panelid' => array('ID of panel this entry belongs to (optional)', 'Different individuals can be linked together. To link, specify here the ID of a previously submitted panel, i.e. an individual with a panel size larger than 1, that this individual belongs to (Optional).', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),

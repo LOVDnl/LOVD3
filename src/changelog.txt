@@ -31,7 +31,8 @@
    Closes #98: "Configurable homepage".
  * Fixed bug; The variant mapper gets stuck when encountering variants with no
    position set.
- * The "Panel size" field for individuals has a clearer description.
+ * The "Panel size" and "ID of panel this entry belongs to" fields on the
+   individuals data entry form have clearer descriptions.
    Closes: #191: "Panel size description could be improved".
 
 
