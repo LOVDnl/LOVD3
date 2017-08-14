@@ -38,6 +38,10 @@
  * The "Panel size" and "ID of panel this entry belongs to" fields on the
    individuals data entry form have clearer descriptions.
    Closes: #191: "Panel size description could be improved".
+ * Fixed bug; A variant could be made public when "Affects function (reported)"
+   was set to "Not classified".
+   Closes #213: "Curator is allowed to leave `effect_reported` set to
+   unclassified."
 
 
 /**************************
