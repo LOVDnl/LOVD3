@@ -31,7 +31,7 @@ class CreateAnnouncementReadOnly extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals($sAnnouncement, $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
 
         // Wait for redirect...
-        $this->waitUntil(WebDriverExpectedCondition::titleContains('View announcement'));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains('Announcement'));
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/announcements\/\d{5}$/', $this->driver->getCurrentURL()));
     }
 }

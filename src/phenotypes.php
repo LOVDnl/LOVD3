@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2016-10-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -82,7 +82,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) 
     // View all phenotype entries for a certain disease.
 
     $nDiseaseID = sprintf('%05d', $_PE[2]);
-    define('PAGE_TITLE', 'View phenotypes for disease #' . $nDiseaseID);
+    define('PAGE_TITLE', 'Phenotypes for disease #' . $nDiseaseID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -105,7 +105,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'View phenotype #' . $nID);
+    define('PAGE_TITLE', 'Phenotype #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 

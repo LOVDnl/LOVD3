@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2016-10-28
- * For LOVD    : 3.0-18
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -68,7 +68,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View all individuals' . (isset($sGene)? ' with variants in gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'All individuals' . (isset($sGene)? ' with variants in gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
 
@@ -96,7 +96,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'View individual #' . $nID);
+    define('PAGE_TITLE', 'Individual #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 

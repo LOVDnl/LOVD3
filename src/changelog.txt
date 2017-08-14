@@ -42,6 +42,8 @@
    was set to "Not classified".
    Closes #213: "Curator is allowed to leave `effect_reported` set to
    unclassified."
+ * Removed redundant "View" in all page titles. E.g. "View all genes" became
+   "All genes".
 
 
 /**************************

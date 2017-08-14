@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-06-16
- * For LOVD    : 3.0-19
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -53,7 +53,7 @@ if (PATH_COUNT == 1 && !ACTION) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View user accounts');
+    define('PAGE_TITLE', 'User accounts');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -78,7 +78,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'View user account #' . $nID);
+    define('PAGE_TITLE', 'User account #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
