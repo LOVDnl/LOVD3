@@ -35,6 +35,9 @@
    column that has already been disabled for all his genes.
  * Added links to overviews of created entries on user page.
    Closes #190: "Add links to records created by user on user's profile page".
+ * The "Panel size" and "ID of panel this entry belongs to" fields on the
+   individuals data entry form have clearer descriptions.
+   Closes: #191: "Panel size description could be improved".
 
 
 /**************************

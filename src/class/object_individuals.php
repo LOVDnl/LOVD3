@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2017-08-04
+ * Modified    : 2017-08-14
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -180,7 +180,9 @@ class LOVD_Individual extends LOVD_Custom {
                         'panel_size' => array(
                                     'view' => array('Panel size', 70, 'style="text-align : right;"'),
                                     'db'   => array('i.panel_size', 'DESC', true),
-                                    'legend' => array('How many individuals does this entry represent?')),
+                                    'legend' => array('Number of individuals this entry ' .
+                                        'represents; e.g. 1 for an individual, 5 for a family ' .
+                                        'with 5 affected members.')),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
@@ -340,8 +342,11 @@ class LOVD_Individual extends LOVD_Custom {
                  $this->buildForm(),
                  array(
                         array('Panel size', '', 'text', 'panel_size', 10),
-                        array('', '', 'note', 'Fill in how many individuals this entry represents (default: 1).'),
-           'panelid' => array('ID of panel this entry belongs to (optional)', 'Fill in LOVD\'s individual ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
+                        array('', '', 'note', 'The number of individuals this entry represents; e.g.' .
+                            ' 1 for an individual, 5 for a family with 5 affected members. To ' .
+                            'report different Individuals from one family, link them using the ' .
+                            '"ID of panel this entry belongs to" field.'),
+           'panelid' => array('ID of panel this entry belongs to (optional)', 'Different individuals can be linked together. To link, specify here the ID of a previously submitted panel, i.e. an individual with a panel size larger than 1, that this individual belongs to (Optional).', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
