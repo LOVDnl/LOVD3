@@ -31,9 +31,9 @@
    Closes #98: "Configurable homepage".
  * Fixed bug; The variant mapper gets stuck when encountering variants with no
    position set.
- * Fixed bug; A variant cannot be made public when `effect_reported` is set to
-   "unclassified".
-   Closes #213: "Curator is allowed to leave `effect_reported` set to 
+ * Fixed bug; A variant could be made public when "Affects function (reported)"
+   was set to "Not classified".
+   Closes #213: "Curator is allowed to leave `effect_reported` set to
    unclassified."
 
 
