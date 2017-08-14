@@ -31,6 +31,8 @@
    Closes #98: "Configurable homepage".
  * Fixed bug; The variant mapper gets stuck when encountering variants with no
    position set.
+ * Removed redundant "View" in all page titles. E.g. "View all genes" became
+   "All genes".
 
 
 /**************************
