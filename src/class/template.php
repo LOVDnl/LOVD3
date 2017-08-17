@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2017-01-25
- * For LOVD    : 3.0-19
+ * Modified    : 2017-08-17
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -818,13 +818,11 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '</TABLE>' . "\n\n" .
               '<IMG src="gfx/trans.png" alt="" width="' . $nTotalTabWidth . '" height="0">' . "\n\n");
 
-        if (!empty($zAnnouncements)) {
-            // Measure the height of the sticky header (can depend on announcements or
-            // font settings and such), and adapt the menu table to have a margin of this height.
-            print('<SCRIPT type="text/javascript">' . "\n" .
-                  '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
-                  '</SCRIPT>' . "\n\n");
-        }
+        // Measure the height of the sticky header (can depend on announcements or
+        // font settings and such), and adapt the menu table to have a margin of this height.
+        print('<SCRIPT type="text/javascript">' . "\n" .
+              '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+              '</SCRIPT>' . "\n\n");
 
         // Attach dropdown menus.
         print('<!-- Start drop down menu definitions -->' . "\n");
