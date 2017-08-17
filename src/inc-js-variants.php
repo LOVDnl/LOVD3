@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2016-06-24
- * For LOVD    : 3.0-16
+ * Modified    : 2017-08-17
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -60,13 +60,13 @@ function lovd_checkHGVS (e)
 
     var bHGVS; // True -> correct syntax; False -> We don't recognize it, but Mutalyzer might.
     // First check: genomic field should start with g., cDNA field should start with c. or n..
-    if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA' && !/^(g|m)\./.test(oVariantDNA.val().substring(0, 2))) {
+    if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA' && !/^g\./.test(oVariantDNA.val().substring(0, 2))) {
         bHGVS = false;
     } else if (oVariantDNA.attr('name') != 'VariantOnGenome/DNA' && !/^(c|n)\./.test(oVariantDNA.val().substring(0, 2))) {
         bHGVS = false;
     } else {
         // Try to match simple stuff: deletions, duplications, insertions, inversions and substitutions.
-        var oRegExp = /^[cgmn]\.\-?\d+([-+]\d+)?([ACGT]>[ACGT]|(_\-?\d+([-+]\d+)?)?d(el|up)([ACGT])*|_\-?\d+([-+]\d+)?(inv|ins([ACGT])+))$/;
+        var oRegExp = /^[cgn]\.\-?\d+([-+]\d+)?([ACGT]>[ACGT]|(_\-?\d+([-+]\d+)?)?d(el|up)([ACGT])*|_\-?\d+([-+]\d+)?(inv|ins([ACGT])+))$/;
         // "false" doesn't necessarily mean false here! Just means this check doesn't recognize it. Mutalyzer may still.
         bHGVS = (oRegExp.test(oVariantDNA.val()));
     }
