@@ -77,7 +77,7 @@ script:
   - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - vendor/bin/phpunit -v ./tests/unit_tests
+  - vendor/bin/phpunit -v --configuration ./tests/unit_tests/phpunit.xml
 
 after_failure:
   - ./tests/upload_test_results.sh
