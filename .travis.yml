@@ -1,13 +1,13 @@
 language: php
 php:
   # aliased to a recent 5.4.x version
-  - 5.4
+#  - 5.4
   # aliased to a recent 5.5.x version
-  - 5.5
+#  - 5.5
   # aliased to a recent 5.6.xversion
   - 5.6
   # aliased to a recent 7.x version
-  - 7.0
+#  - 7.0
 
 env:
   # Let Selenium use Firefox driver.
@@ -18,14 +18,14 @@ env:
 matrix:
   exclude:
     # Exclude some combinations of php version and selenium driver.
-    - php: 5.4
-      env: LOVD_SELENIUM_DRIVER=chrome
-    - php: 5.5
-      env: LOVD_SELENIUM_DRIVER=firefox
+#    - php: 5.4
+#      env: LOVD_SELENIUM_DRIVER=chrome
+#    - php: 5.5
+#      env: LOVD_SELENIUM_DRIVER=firefox
     - php: 5.6
       env: LOVD_SELENIUM_DRIVER=chrome
-    - php: 7.0
-      env: LOVD_SELENIUM_DRIVER=firefox
+#    - php: 7.0
+#      env: LOVD_SELENIUM_DRIVER=firefox
 
 sudo: required
 dist: trusty
@@ -79,5 +79,5 @@ notifications:
       - M.Kroon@lumc.nl
    on_success: never
    ## [always|never|change] # default: change
-   on_failure: always
+   on_failure: never
    ## [always|never|change] # default: always
