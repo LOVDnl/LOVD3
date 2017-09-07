@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-08-18
+ * Modified    : 2017-09-07
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -516,7 +516,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     // Isolate the position(s) from the variant. We don't support combined variants.
     // We're not super picky, and would therefore approve of c.1_2A>C; we also
     //  don't check for the end of the variant, it may contain bases, or not.
-    if (preg_match('/^([cgn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
         //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                       2 = Start position, might be negative or in the 3' UTR.
         //                                   3 = Start position intronic offset, if available.
@@ -574,7 +574,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
     // If that didn't work, try matching variants with uncertain positions.
     // We're not super picky, and don't check the end of the variant.
-    } elseif (preg_match('/^([cgn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
         //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                               2 = Earliest start position, might be a question mark.
         //                                       3 = Earlier start position intronic offset, if available.
@@ -719,6 +719,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     // Rather, fix the position fields to their respective maximum values.
     static $aMinMaxValues = array(
         'g' => array(
+            'position_start' => array(1, 4294967295),
+            'position_end' => array(1, 4294967295),
+        ),
+        'm' => array(
             'position_start' => array(1, 4294967295),
             'position_end' => array(1, 4294967295),
         ),
