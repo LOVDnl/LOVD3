@@ -44,6 +44,7 @@
    unclassified."
  * Removed redundant "View" in all page titles. E.g. "View all genes" became
    "All genes".
+ * Fixed bug; Colleagues couldn't be assigned with MySQL's default strict mode.
 
 
 /**************************
