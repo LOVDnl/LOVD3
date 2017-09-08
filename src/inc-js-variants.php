@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2017-08-17
+ * Modified    : 2017-09-08
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,6 +69,33 @@ function lovd_checkHGVS (e)
         var oRegExp = /^[cgn]\.\-?\d+([-+]\d+)?([ACGT]>[ACGT]|(_\-?\d+([-+]\d+)?)?d(el|up)([ACGT])*|_\-?\d+([-+]\d+)?(inv|ins([ACGT])+))$/;
         // "false" doesn't necessarily mean false here! Just means this check doesn't recognize it. Mutalyzer may still.
         bHGVS = (oRegExp.test(oVariantDNA.val()));
+    }
+
+    // Show tooltip warning about deprecated "m.*" notation for mitochondrial
+    // DNA. Only if DNA field starts with "m." and tooltip isn't already up.
+    if (!bHGVS && oVariantDNA.attr('name') == 'VariantOnGenome/DNA' &&
+        oVariantDNA.val().substring(0, 2) == 'm.' &&
+        !$('div[name="tooltip_mito_notation"').length) {
+        oVariantDNA.tooltip({
+            items: oVariantDNA,
+            content: 'Please be aware that <a href="http://varnomen.hgvs.org/bg-material/refseq/#DNAg">' +
+                '"g." notation is standard</a> for mitochondrial variants.',
+            disabled: true, // Don't show tooltip on mouseover.
+            position: {
+                my: 'center bottom',
+                at: 'center top-15',
+                using: function(position, feedback) {
+                    $(this).css(position);
+                    $('<DIV>')
+                        .addClass('arrow')
+                        .addClass(feedback.vertical)
+                        .addClass(feedback.horizontal)
+                        .appendTo(this);
+                    $(this).removeClass('ui-widget-content');
+                    $(this).attr('name', 'tooltip_mito_notation');
+                }
+            }
+        }).tooltip('open');
     }
 
     // Grab the corresponding protein description field if it exists.

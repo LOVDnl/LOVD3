@@ -3,8 +3,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2016-10-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-09-08
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -178,6 +178,7 @@ div.fnroptionsmenu   {background: #F0F3FF; border: 1px solid #AFC8FA; padding: 4
 .ui-tooltip         {padding: 10px 20px; color: white; border-radius: 20px; width: 340px;
                      font: bold 14px "Helvetica Neue", Sans-Serif; text-transform: uppercase;
                      box-shadow: 0 0 7px black; text-align: center}
+.ui-tooltip a       {color: white;}
 .arrow              {width: 70px; height: 16px; overflow: hidden; position: absolute; left: 50%;
                      margin-left: -35px; bottom: -16px;}
 .arrow.top          {top: -16px; bottom: auto;}
