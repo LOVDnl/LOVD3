@@ -45,6 +45,8 @@
  * Removed redundant "View" in all page titles. E.g. "View all genes" became
    "All genes".
  * Fixed bug; Colleagues couldn't be assigned with MySQL's default strict mode.
+   Closes #283: "Can not add colleagues that are not allowed to edit with
+   MySQL's strict mode enabled".
 
 
 /**************************
