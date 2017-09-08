@@ -71,6 +71,9 @@ if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PR
     define('PROTOCOL', 'http://');
 }
 
+// Prevent some troubles with the menu or lovd_getProjectFile() when the URL contains double slashes or backslashes.
+$_SERVER['SCRIPT_NAME'] = lovd_cleanDirName(str_replace('\\', '/', $_SERVER['SCRIPT_NAME']));
+
 // Our output formats: text/html by default.
 $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
 if (lovd_getProjectFile() == '/api.php') {
@@ -563,9 +566,6 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
     // Store additional version information.
     list(, $_STAT['tree'],, $_STAT['build']) = $aRegsVersion;
 }
-
-// Prevent some troubles with the menu when the URL contains double slashes.
-$_SERVER['SCRIPT_NAME'] = lovd_cleanDirName($_SERVER['SCRIPT_NAME']);
 
 
 

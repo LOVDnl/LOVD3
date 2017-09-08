@@ -44,6 +44,8 @@
    unclassified."
  * Removed redundant "View" in all page titles. E.g. "View all genes" became
    "All genes".
+ * Fixed issues sometimes showing up on Windows servers, like with the data
+   import not working.
 
 
 /**************************
