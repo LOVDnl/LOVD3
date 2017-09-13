@@ -46,6 +46,9 @@
    "All genes".
  * Added script to fix known errors in variant positions. The script has been
    added to the scripts folder.
+ * Let screening page show linked variants, even when `variants_found` flag is
+   not set.
+   Closes #242: "Display of screening with linked variants".
 
 
 /**************************
