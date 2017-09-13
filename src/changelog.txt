@@ -44,6 +44,10 @@
    unclassified."
  * Removed redundant "View" in all page titles. E.g. "View all genes" became
    "All genes".
+ * Fixed bug; Importing a phenotype entry without specifiying a disease ID
+   resulted in a fatal error.
+   Closes #245: "Import file parsing fails with a fatal error when the diseaseid
+   field is left empty for a phenotype record".
 
 
 /**************************
