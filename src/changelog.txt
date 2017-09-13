@@ -44,6 +44,8 @@
    unclassified."
  * Removed redundant "View" in all page titles. E.g. "View all genes" became
    "All genes".
+ * Added script to fix known errors in variant positions. The script has been
+   added to the scripts folder.
 
 
 /**************************

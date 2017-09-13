@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-06-16
- * For LOVD    : 3.0-19
+ * Modified    : 2017-09-07
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -503,14 +503,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         'type' => '',
     );
 
+    // If given, check if we already know this transcript.
+    if ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
+        $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
+            array($sTranscriptID, $sTranscriptID))->fetchColumn();
+        if (!$aTranscriptOffsets[$sTranscriptID]) {
+            // Transcript not configured correctly.
+            return false;
+        }
+    }
+
     // Isolate the position(s) from the variant. We don't support combined variants.
     // We're not super picky, and would therefore approve of c.1_2A>C; we also
     //  don't check for the end of the variant, it may contain bases, or not.
     if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
         //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
-        //                       2 = Start position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.*10del).
+        //                       2 = Start position, might be negative or in the 3' UTR.
         //                                   3 = Start position intronic offset, if available.
-        //                                                        4 = End position, might be negative. FIXME: Currently this does not support any 3' UTR variants (c.300_*10del).
+        //                                                        4 = End position, might be negative or in the 3' UTR.
         //                                                                    5 = End position intronic offset, if available.
         //                                                                                       6 = The variant, which we'll use to determine the type.
 
@@ -532,16 +542,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             if (!$sTranscriptID) {
                 // No, but we'll need it.
                 return false;
-            }
-
-            // Check if we already know this transcript.
-            if (!isset($aTranscriptOffsets[$sTranscriptID])) {
-                $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
-                    array($sTranscriptID, $sTranscriptID))->fetchColumn();
-                if (!$aTranscriptOffsets[$sTranscriptID]) {
-                    // Transcript not configured correctly.
-                    return false;
-                }
             }
 
             // Translate positions.
@@ -567,22 +567,190 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
             // (int) to get rid of the '+' if it's there.
             $aResponse['position_start_intron'] = (int) $sStartPositionIntron;
-            $aResponse['position_end_intron'] = (int) ($sEndPositionIntron? $sEndPositionIntron : $sStartPositionIntron);
+            $aResponse['position_end_intron'] = (int) ($sEndPosition? $sEndPositionIntron : $sStartPositionIntron);
         }
 
-        // Variant type.
-        if (preg_match('/^[ACGT]>[ACGT]$/', $sVariant)) {
-            $aResponse['type'] = 'subst';
+
+
+    // If that didn't work, try matching variants with uncertain positions.
+    // We're not super picky, and don't check the end of the variant.
+    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+        //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
+        //                               2 = Earliest start position, might be a question mark.
+        //                                       3 = Earlier start position intronic offset, if available.
+        //                                                         4 = Latest start position, might be a question mark.
+        //                                                                 5 = Latest start position intronic offset, if available.
+        //                                                                                       6 = Earliest end position, might be a question mark.
+        //                                                                                               7 = Earliest end position intronic offset, if available.
+        //                                                                                                                  8 = Latest end position, might be a question mark.
+        //                                                                                                                          9 = Latest end position intronic offset, if available.
+        //                                                                                                                                              10 = The variant, which we'll use to determine the type.
+
+        list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
+
+        // Always at least create the intron fields for c. and n. variants.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            $aResponse['position_start_intron'] = $aResponse['position_end_intron'] = 0;
         } else {
-            $aResponse['type'] = $sVariant;
+            // Genomic coordinates.
+            if ($sStartPositionEarlyIntron || $sStartPositionLateIntron || $sEndPositionEarlyIntron || $sEndPositionLateIntron) {
+                // Anything not c. or n. is regarded genomic, having a max of 2 positions.
+                // Found more positions? Return false.
+                return false;
+            } elseif (!ctype_digit($sStartPositionEarly) || !ctype_digit($sStartPositionLate) || !ctype_digit($sEndPositionEarly) || !ctype_digit($sEndPositionLate)) {
+                // Non-numeric first character of the positions is also impossible for genomic variants.
+                return false;
+            }
+        }
+
+        // Convert 3' UTR notations into normal notations.
+        if ($sStartPositionEarly{0} == '*' || $sStartPositionLate{0} == '*' || $sEndPositionEarly{0} == '*' || $sEndPositionLate{0} == '*') {
+            // Check if a transcript ID has been provided.
+            if (!$sTranscriptID) {
+                // No, but we'll need it.
+                return false;
+            }
+
+            // Translate positions.
+            foreach (array('sStartPositionEarly', 'sStartPositionLate', 'sEndPositionEarly', 'sEndPositionLate') as $sPosition) {
+                if (substr($$sPosition, 0, 1) == '*') {
+                    $$sPosition = substr($$sPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+                }
+            }
+        }
+
+        // Store positions.
+        // FIXME: The handling of the start and end positions are so similar,
+        //  we can group the code with a loop, if we rewrite all variable names.
+        // If each position (start, end) has two numeric positions, we choose the
+        //  average of the two positions. Otherwise, we pick the numeric one.
+        // We do require at least one numeric start position and one numeric end position.
+        if (is_numeric($sStartPositionEarly) && is_numeric($sStartPositionLate)) {
+            // Calculate the average...
+            if ($sStartPositionEarly == $sStartPositionLate) {
+                // Positions are equal, so average the intronic positions if they're there.
+                $aResponse['position_start'] = $sStartPositionEarly;
+                if ($sStartPositionEarlyIntron || $sStartPositionLateIntron) {
+                    $aResponse['position_start_intron'] = (string) round(($sStartPositionEarlyIntron + $sStartPositionLateIntron) / 2);
+                }
+            } else {
+                $aResponse['position_start'] = (string) round(($sStartPositionEarly + $sStartPositionLate) / 2);
+                // In the unlikely case the average would be 0, pick 1.
+                if (!$aResponse['position_start']) {
+                    $aResponse['position_start'] = '1';
+                }
+            }
+        } elseif (is_numeric($sStartPositionEarly)) {
+            $aResponse['position_start'] = $sStartPositionEarly;
+            if ($sStartPositionEarlyIntron) {
+                $aResponse['position_start_intron'] = $sStartPositionEarlyIntron;
+            }
+        } elseif (is_numeric($sStartPositionLate)) {
+            $aResponse['position_start'] = $sStartPositionLate;
+            if ($sStartPositionLateIntron) {
+                $aResponse['position_start_intron'] = $sStartPositionLateIntron;
+            }
+        } else {
+            // Two non-numeric positions. Reject this variant.
+            return false;
+        }
+        if (is_numeric($sEndPositionEarly) && is_numeric($sEndPositionLate)) {
+            // Calculate the average...
+            if ($sEndPositionEarly == $sEndPositionLate) {
+                // Positions are equal, so average the intronic positions if they're there.
+                $aResponse['position_end'] = $sEndPositionEarly;
+                if ($sEndPositionEarlyIntron || $sEndPositionLateIntron) {
+                    $aResponse['position_end_intron'] = (string) round(($sEndPositionEarlyIntron + $sEndPositionLateIntron) / 2);
+                }
+            } else {
+                $aResponse['position_end'] = (string) round(($sEndPositionEarly + $sEndPositionLate) / 2);
+                // In the unlikely case the average would be 0, pick 1.
+                if (!$aResponse['position_end']) {
+                    $aResponse['position_end'] = '1';
+                }
+            }
+        } elseif (is_numeric($sEndPositionEarly)) {
+            $aResponse['position_end'] = $sEndPositionEarly;
+            if ($sEndPositionEarlyIntron) {
+                $aResponse['position_end_intron'] = $sEndPositionEarlyIntron;
+            }
+        } elseif (is_numeric($sEndPositionLate)) {
+            $aResponse['position_end'] = $sEndPositionLate;
+            if ($sEndPositionLateIntron) {
+                $aResponse['position_end_intron'] = $sEndPositionLateIntron;
+            }
+        } else {
+            // Two non-numeric positions. Reject this variant.
+            return false;
         }
 
     } else {
         return false;
     }
 
+
+
+    // If a variant is described poorly with a start > end, then we'll swap the positions so we will store them correctly.
+    if ($aResponse['position_start'] > $aResponse['position_end']) {
+        // There's many ways of doing this, but this method is the simplest to read.
+        $nTmp = $aResponse['position_start'];
+        $aResponse['position_start'] = $aResponse['position_end'];
+        $aResponse['position_end'] = $nTmp;
+
+        // And intronic, if needed.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            $nTmp = $aResponse['position_start_intron'];
+            $aResponse['position_start_intron'] = $aResponse['position_end_intron'];
+            $aResponse['position_end_intron'] = $nTmp;
+        }
+    }
+
+    // Variant type.
+    if (preg_match('/^[ACGT]>[ACGT]$/', $sVariant)) {
+        $aResponse['type'] = 'subst';
+    } else {
+        $aResponse['type'] = $sVariant;
+    }
+
+    // When strict SQL mode is enabled, we'll get errors when we'll try and
+    //  insert large numbers in the position fields.
+    // Check the positions we extracted; the variant could be described badly,
+    //  and this could cause a query error.
+    // Rather, fix the position fields to their respective maximum values.
+    static $aMinMaxValues = array(
+        'g' => array(
+            'position_start' => array(1, 4294967295),
+            'position_end' => array(1, 4294967295),
+        ),
+        'm' => array(
+            'position_start' => array(1, 4294967295),
+            'position_end' => array(1, 4294967295),
+        ),
+        'c' => array(
+            'position_start' => array(-8388608, 8388607),
+            'position_start_intron' => array(-2147483648, 2147483647),
+            'position_end' => array(-8388608, 8388607),
+            'position_end_intron' => array(-2147483648, 2147483647),
+        ),
+        'n' => array(
+            'position_start' => array(1, 8388607),
+            'position_start_intron' => array(-2147483648, 2147483647),
+            'position_end' => array(1, 8388607),
+            'position_end_intron' => array(-2147483648, 2147483647),
+        ),
+    );
+
+    if (isset($aMinMaxValues[$sPrefix])) {
+        // If the min and max values are defined for this prefix, check the fields.
+        foreach ($aMinMaxValues[$sPrefix] as $sField => $aMinMaxValue) {
+            $aResponse[$sField] = max($aResponse[$sField], $aMinMaxValue[0]);
+            $aResponse[$sField] = min($aResponse[$sField], $aMinMaxValue[1]);
+        }
+    }
+
     return $aResponse;
 }
+
 
 
 
