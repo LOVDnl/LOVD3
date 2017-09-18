@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-06-19
- * For LOVD    : 3.0-19
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -2440,7 +2440,7 @@ FROptions
 
                 if (substr($this->sObject, -7) == 'Variant') {
                     $sUnit = 'variants' . (substr($this->sObject, 0, 10) == 'Transcript'? ' on transcripts' : '');
-                } elseif ($this->sObject == 'Custom_Viewlist') {
+                } elseif ($this->sObject == 'Custom_ViewList') {
                     $sUnit = 'entries';
                 } elseif ($this->sObject == 'Shared_Column') {
                     $sUnit = 'active columns';

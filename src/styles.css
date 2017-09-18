@@ -3,12 +3,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2016-10-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-01-28
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -148,8 +148,11 @@ table.data th.order                      {cursor : pointer;}
 table.data th.ordered                    {background : #8CAFF0; cursor : pointer;}
 table.data td                            {background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
 table.data td.ordered                    {background : #C8DCFA;}
+table.data tr.hover td,
 table.data tr.data:hover td              {background : #C8DCFA;}
+table.data tr.hover td.ordered,
 table.data tr.data:hover td.ordered      {background : #AFC8FA;}
+table.data tr.hover td.checkbox,
 table.data tr.data:hover td.checkbox     {background : #F0F3FF; cursor : default;}
 table.data input:disabled                {color : #000000; background : #FFFFFF; border : 1px solid #224488;}
 table.data tr.del a                      {color : #999999;}
