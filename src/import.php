@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-02-15
- * For LOVD    : 3.0-19
+ * Modified    : 2017-09-13
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -780,11 +780,18 @@ if (POST) {
             }
 
             // For shared objects, load the correct object.
-            if ($sCurrentSection == 'Phenotypes' && $aLine['diseaseid'] !== '') {
-                if (!isset($aSection['objects'][(int) $aLine['diseaseid']])) {
-                    $aSection['objects'][(int) $aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
+            if ($sCurrentSection == 'Phenotypes') {
+                if ($aLine['diseaseid'] !== '') {
+                    // Get the phenotype object for the given disease.
+                    if (!isset($aSection['objects'][(int)$aLine['diseaseid']])) {
+                        $aSection['objects'][(int)$aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
+                    }
+                    $aSection['object'] =& $aSection['objects'][(int)$aLine['diseaseid']];
+                } else {
+                    // For phenotypes without disease (invalid data), make sure there's no object
+                    // set from previous lines.
+                    $aSection['object'] = null;
                 }
-                $aSection['object'] =& $aSection['objects'][(int) $aLine['diseaseid']];
             }
             $sGene = '';
             if ($sCurrentSection == 'Variants_On_Transcripts' && $aLine['transcriptid']) {
@@ -819,6 +826,12 @@ if (POST) {
                     $aSection['object'] =& $aSection['objects'][$sGene];
                 }
             }
+            if ($sCurrentSection == 'Variants_On_Transcripts' && !$sGene) {
+                // For VOTs without a valid transcriptid (invalid data), make sure there's no object
+                // set from previous lines.
+                $aSection['object'] = null;
+                $bGeneInDB = $bTranscriptInDB = false;
+            }
 
             // Special actions for section Columns.
             if ($sCurrentSection == 'Columns') {
@@ -844,20 +857,7 @@ if (POST) {
             // Build the form, necessary for field-specific actions (currently for checkboxes only).
             // Exclude section Genes, because it is not allowed to import this section, it is not necessary to run the getForm().
             if (isset($aSection['object']) && is_object($aSection['object']) && $sCurrentSection != 'Genes') {
-                $aForm = array();
-                switch ($sCurrentSection) {
-                    case 'Phenotypes':
-                        $aForm = $aSection['objects'][(int) $aLine['diseaseid']]->getForm();
-                        break;
-                    case 'Variants_On_Transcripts':
-                        // Only get $aForm when we're sure we've got an object. We might not, which happens if we don't have a valid transcriptid.
-                        if (isset($aSection['objects'][$sGene])) {
-                            $aForm = $aSection['objects'][$sGene]->getForm();
-                        }
-                        break;
-                    default:
-                        $aForm = $aSection['object']->getForm();
-                }
+                $aForm = $aSection['object']->getForm();
                 lovd_setEmptyCheckboxFields($aForm);
             }
 
