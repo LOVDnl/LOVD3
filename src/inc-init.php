@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-07-20
+ * Modified    : 2017-09-20
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -144,7 +144,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-19a',
+                            'version' => '3.0-19b',
                           ),
                 'user_levels' =>
                      array(
@@ -174,6 +174,8 @@ $_SETT = array(
                             0 => 'Not classified', // Submitter cannot select this.
                             5 => 'Effect unknown',
                             9 => 'Affects function',
+                            8 => 'Affects function, not associated with individual\'s disease phenotype',
+                            6 => 'Affects function, not associated with any known phenotype',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
