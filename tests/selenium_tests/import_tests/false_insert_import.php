@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016
- * Modified    : 2016-07-13
- * For LOVD    : 3.0-17
+ * Modified    : 2017-09-18
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2016-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -96,7 +96,6 @@ class FalseInsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Variants_On_Transcripts, line 97\): The field \'position_c_start\' must contain an integer, "abc" does not match\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Variants_On_Transcripts, line 98\): Transcript "00022" does not exist in the database and is not defined in this import file\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Variants_On_Transcripts, line 98\): Genomic Variant "0000000003" does not exist in the database and is not defined in this import file\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Variants_On_Transcripts, line 98\): The field \'position_c_start\' must contain an integer, "abc" does not match\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Variants_On_Transcripts, line 98\): The gene belonging to this variant entry is yet to be inserted into the database\. First create the gene and set up the custom columns, then import the variants\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Screenings_To_Variants, line 105\): ID "3|1" already defined at line 104\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Screenings_To_Variants, line 106\): Screening "0000000022" does not exist in the database and is not defined in this import file\.[\s\S]*$/', $bodyText));
