@@ -8,9 +8,9 @@
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -105,8 +105,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
         $aNavigation[CURRENT_PATH . '?edit']                   = array('menu_edit.png', 'Edit screening information', 1);
-        if ($zData['variants_found']) {
-            $aNavigation['variants?create&amp;target=' . $nID] = array('menu_plus.png', 'Add variant to screening', 1);
+        $aNavigation['variants?create&amp;target=' . $nID] = array('menu_plus.png', 'Add variant to screening', 1);
+        if ($zData['variants_found_']) {
             $aNavigation[CURRENT_PATH . '?removeVariants']     = array('cross.png', 'Remove variants from screening', ($zData['variants_found_'] > 0? 1 : 0));
         }
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
@@ -126,7 +126,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         unset($_GET['search_geneid']);
     }
 
-    if ($zData['variants_found'] || !empty($zData['variants'])) {
+    if ($zData['variants_found_']) {
         $_GET['search_screeningid'] = $nID;
         print('<BR><BR>' . "\n\n");
         $_T->printTitle('Variants found', 'H4');
