@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-08-09
+ * Modified    : 2017-09-27
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -143,7 +143,13 @@ class LOVD_Object {
 
         global $_DB, $_AUTH;
 
-        // Determine field name from select query.
+
+        // Column should be configured to allow Find & Replace.
+        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
+        }
+
+        // Determine field name from column definitions.
         list(, $sFieldname) = $this->getTableAndFieldNameFromViewListCols($sFRFieldname);
 
         // Construct replace statement using viewlist's select query, without ORDER BY and LIMIT.
@@ -987,7 +993,7 @@ class LOVD_Object {
 
 
 
-    private function getTableAndFieldNameFromViewListCols ($sFRFieldname)
+    private function getTableAndFieldNameFromViewListCols ($sVLColumn)
     {
         // Try to translate UI field name to fieldname and tablename in the database based on
         // the SQL query definitions. (note that a field name returned by the interface (returned
@@ -995,19 +1001,15 @@ class LOVD_Object {
 
         // All columns for Find & Replace *must* be defined in the column's list.
         // Check if column exists there. If not, display an error.
-        if (!isset($this->aColumnsViewList[$sFRFieldname])) {
-            lovd_displayError('FindAndReplace', 'Find and Replace requested on undefined field name "' . $sFRFieldname . '".');
-        }
-
-        // Column should be configured to allow Find & Replace.
-        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
-            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
+        if (!isset($this->aColumnsViewList[$sVLColumn])) {
+            lovd_displayError('', 'Cannot find table and field name for undefined column "' .
+                $sVLColumn . '".');
         }
 
         // Column name in the database may be a function, but
         // those columns should not have 'allowfnr' set to true.
         $sTableName = '';
-        $sFieldName = $this->aColumnsViewList[$sFRFieldname]['db'][0];
+        $sFieldName = $this->aColumnsViewList[$sVLColumn]['db'][0];
         if (preg_match('/^([A-Za-z0-9_`]+)\.([A-Za-z0-9_`\/]+)$/', $sFieldName, $aRegs)) {
             $sTableName = $aRegs[1];
             $sFieldName = $aRegs[2];
@@ -1327,6 +1329,11 @@ class LOVD_Object {
 
         global $_DB;
 
+        // Column should be configured to allow Find & Replace.
+        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
+        }
+
         // Try to discover the tablename and fieldname, as $sFRFieldname may be
         // an alias.
         list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromViewListCols($sFRFieldname);
@@ -1537,6 +1544,24 @@ class LOVD_Object {
                 }
             }
         }
+
+        // Handle multivalued search arguments. I.e., filter out records that only have a single
+        // value for certain aggregated columns.
+        if (isset($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
+
+            foreach ($aRequestMVSCols as $sMVSCol) {
+
+                list($sTable, $sField) = $this->getTableAndFieldNameFromViewListCols($sMVSCol);
+
+                // Assume a period in the column name denotes a table as prefix.
+//                list($sTable, $sField) = array_pad(explode('.', $sMVSCol, 2), -2, '');
+
+                // Enclose fieldname with backticks and append it to the having clause.
+                $sMVSColQuoted = ($sTable ? $sTable . '.' : '') . '`' . trim($sField, '`') . '`';
+                $HAVING .= ($HAVING ? ' AND ' : '') . 'count(DISTINCT ' . $sMVSColQuoted . ') > 1';
+            }
+        }
+
         return array($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes);
     }
 
@@ -1866,7 +1891,7 @@ class LOVD_Object {
 
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false,
                        $bHideNav = false, $bOptions = false, $bOnlyRows = false,
-                       $bFindReplace = false)
+                       $bFindReplace = false, $bMultiValueSearch = false)
     {
         // Show a viewlist for the current object.
         // Params:
@@ -1978,7 +2003,9 @@ class LOVD_Object {
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
                   (!ACTION? '' :
                   '        <INPUT type="hidden" name="' . ACTION . '" value="">' . "\n") .
-                  '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">' . "\n");
+                  '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">' . "\n" .
+                  '        <INPUT type="hidden" name="MVSCols" value="' . (!isset($_GET['MVSCols'])?
+                      '' : htmlspecialchars($_GET['MVSCols'])) . '">' . "\n");
             // Skipping (permanently hiding) columns.
             foreach ($aColsToSkip as $sCol) {
                 if (array_key_exists($sCol, $this->aColumnsViewList)) {
@@ -2570,12 +2597,25 @@ FROptions
                     // Add find & replace menu item to viewlist options menu.
                     $sFRMenuOption = <<<FRITEM
 '            <LI class="icon">' +
-'                <A click="lovd_FRColumnSelector(\'$sViewListID\');">' +
+'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_FRShowOptionsMenu, \'allowfnr\');">' +
 '                    <SPAN class="icon" style=""></SPAN>' +
 '                    Find and replace text in column' +
 '                </A>' +
 '            </LI>' +
 FRITEM;
+                }
+
+                $sMVSOption = '';
+                if ($bMultiValueSearch) {
+                    // Add menu option for selecting column to filter based on number of values.
+                    $sMVSOption = <<<MVSItem
+'            <LI class="icon">' +
+'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_toggleMVSCol);">' +
+'                    <SPAN class="icon" style=""></SPAN>' +
+'                    Show only multivalued rows for column...' +
+'                </A>' +
+'            </LI>' +
+MVSItem;
                 }
 
                 print(<<<OPMENU
@@ -2602,6 +2642,7 @@ FRITEM;
 '                </A>' +
 '            </LI>' +
 $sFRMenuOption
+$sMVSOption
 '            ');
 OPMENU
 );
