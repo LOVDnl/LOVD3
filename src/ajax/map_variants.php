@@ -122,6 +122,8 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
 
         // Loop the transcripts and map the variant to them.
         foreach ($aTranscripts as $aTranscript) {
+            // FIXME: When manually mapping transcripts, the numberConversion is just called once, and lovd_getVariantInfo() subsequently for the position fields.
+            // That's probably more efficient than mappingInfo a bunch of times.
             if (empty($aTranscript['id_ncbi'])) {
                 // A transcript without accession number is encountered. Invalid arguments, return false.
                 return false;
@@ -147,6 +149,13 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
             foreach ($aVariantsOnTranscripts[$sVariant] as $sVariantOnTranscript) {
                 if (substr($sVariantOnTranscript, 0, strlen($aTranscript['id_ncbi'])) == $aTranscript['id_ncbi']) {
                     // Got the variant description relative to this transcript.
+                    // 2017-09-22; 3.0-20; The mappingInfo module call does not sort the positions, and as such the "start" and "end" can be in the "wrong" order.
+                    $bSense = ($aMappingInfo['startmain'] < $aMappingInfo['endmain'] || ($aMappingInfo['startmain'] == $aMappingInfo['endmain'] && ($aMappingInfo['startoffset'] < $aMappingInfo['endoffset'] || $aMappingInfo['startoffset'] == $aMappingInfo['endoffset'])));
+                    if (!$bSense) {
+                        list($aMappingInfo['startmain'], $aMappingInfo['endmain']) = array($aMappingInfo['endmain'], $aMappingInfo['startmain']);
+                        list($aMappingInfo['startoffset'], $aMappingInfo['endoffset']) = array($aMappingInfo['endoffset'], $aMappingInfo['startoffset']);
+                    }
+
                     $aReturn[$aTranscript['id_ncbi']] =
                          array(
                                 // NOTE that is this array is changed, and the order or the number of arguments changes, then also in other places the code needs to be modified, because this array is manipulated directly using its numeric keys.

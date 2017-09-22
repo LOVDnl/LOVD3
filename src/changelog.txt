@@ -56,6 +56,8 @@
  * Let screening page show linked variants, even when `variants_found` flag is
    not set.
    Closes #242: "Display of screening with linked variants".
+ * Fixed bug; When automatically mapping variants of genes on the antisense
+   strand, the variant positions were stored in the wrong order.
 
 
 /**************************
