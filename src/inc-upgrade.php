@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-07-20
+ * Modified    : 2017-09-20
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -597,6 +597,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             MODIFY settings TEXT',
                     ),
                  '3.0-19a' => array('INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hpo_disease", "http://compbio.charite.de/hpoweb/showterm?disease=OMIM:{{ ID }}")'),
+                 '3.0-19b' => array('INSERT INTO ' . TABLE_EFFECT . ' VALUES ("06", "./#"), 
+                     ("08", "./+*"), ("16", "-/#"), ("18", "-/+*"), ("36", "-?/#"), 
+                     ("38", "-?/+*"), ("56", "?/#"), ("58", "?/+*"), ("60", "#/."), ("61", "#/-"),
+                     ("63", "#/-?"), ("65", "#/?"), ("66", "#/#"), ("67", "#/+?"), ("68", "#/+*"),
+                     ("69", "#/+"), ("76", "+?/#"), ("78", "+?/+*"), ("80", "+*/."), 
+                     ("81", "+*/-"), ("83", "+*/-?"), ("85", "+*/?"), ("86", "+*/#"), 
+                     ("87", "+*/+?"), ("88", "+*/+*"), ("89", "+*/+"), ("96", "+/#"), 
+                     ("98", "+/+*");'),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

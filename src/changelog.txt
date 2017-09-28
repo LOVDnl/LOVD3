@@ -56,6 +56,10 @@
  * Let screening page show linked variants, even when `variants_found` flag is
    not set.
    Closes #242: "Display of screening with linked variants".
+ * New effect categories for variants that affect protein function but are
+   either not associated with the individual's disease phenotype or not
+   associated with any known disease phenotype.
+   Closes #261: "Additional variant effect values".
 
 
 /**************************
