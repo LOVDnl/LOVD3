@@ -22,8 +22,12 @@ To debug: XDEBUG_PROFILE=1
 
 Prioritize:
 ===========
+Columns we no longer use that can be removed:
+- TABLE_GENES/allow_index_wiki
+- TABLE_TRANSCRIPTS/id_mutalyzer
+- TABLE_USERS/reference
+
 \item[$\circ$] LSDB list: Adding data from dead LSDBs: Brenda?
-\item[$\circ$] Really implement the deletion range recognition. Store inner positions, if 4 given.
 
 Website:
 - Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
