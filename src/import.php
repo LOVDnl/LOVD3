@@ -783,10 +783,10 @@ if (POST) {
             if ($sCurrentSection == 'Phenotypes') {
                 if ($aLine['diseaseid'] !== '') {
                     // Get the phenotype object for the given disease.
-                    if (!isset($aSection['objects'][(int)$aLine['diseaseid']])) {
-                        $aSection['objects'][(int)$aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
+                    if (!isset($aSection['objects'][(int) $aLine['diseaseid']])) {
+                        $aSection['objects'][(int) $aLine['diseaseid']] = new LOVD_Phenotype($aLine['diseaseid']);
                     }
-                    $aSection['object'] =& $aSection['objects'][(int)$aLine['diseaseid']];
+                    $aSection['object'] =& $aSection['objects'][(int) $aLine['diseaseid']];
                 } else {
                     // For phenotypes without disease (invalid data), make sure there's no object
                     // set from previous lines.

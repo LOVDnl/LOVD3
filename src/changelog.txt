@@ -60,6 +60,8 @@
    either not associated with the individual's disease phenotype or not
    associated with any known disease phenotype.
    Closes #261: "Additional variant effect values".
+ * Fixed bug; When automatically mapping variants of genes on the antisense
+   strand, the variant positions were stored in the wrong order.
 
 
 /**************************
