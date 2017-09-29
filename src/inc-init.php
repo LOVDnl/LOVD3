@@ -172,13 +172,13 @@ $_SETT = array(
                 'var_effect' =>
                      array(
                             0 => 'Not classified', // Submitter cannot select this.
-                            5 => 'Effect unknown',
                             9 => 'Affects function',
                             8 => 'Affects function, not associated with individual\'s disease phenotype',
                             6 => 'Affects function, not associated with any known disease phenotype',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
+                            5 => 'Effect unknown',
                           ),
                 'var_effect_default' => '00',
                 'data_status' =>
