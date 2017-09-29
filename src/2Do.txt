@@ -14,7 +14,7 @@ Update LOVD installations:
 /antwerpen/ heeft aangepaste .htaccess.
 /DNA_profiles/ heeft aangepaste index.php.
 /my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste ajax/viewlist.php, class/graphs.php, class/template.php, api.php, import.php, inc-lib-init.php, individuals.php en styles.css en een paar eigen files die niet overschreven mag worden (zoals export.php).
+/shared/ heeft een aangepaste ajax/viewlist.php, class/graphs.php, class/template.php, api.php (tmp), import.php, inc-lib-init.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
 /whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 After updating all installations, send email to team with all improvements summarized.
 
@@ -75,7 +75,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
 - Find a better way to select diseases on the Individual data entry form.
   - Also fix, that changes in this field (and other linking tables?) are not displayed in the submission emails?
   - Use code used to select users to become curators? In a pop over, using JS to read out currently selected options, and enable them on the pop over. When submitting, the form's selection needs to be adapted.
-- mappingInfo sort problem, fix in all spots in variants.php?
 - Indicate the parents using the data entry form, not just the import. Also check the given IDs for the correct (at least not conflicting) gender value, and make sure that during import, the ID is first matched to the file (ignoring own line), and then to the database.
   - Also implement check if given parent is used as both mother and father? Or add check when filling in gender, if it conflicts with used as fatherid/motherid?
   - Check if motherid and fatherid are the same individual?
@@ -98,7 +97,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
 - NRs en NXs horen geen protein description te hebben.
 - Als we voor een bepaalde patient slechts 100 varianten hebben o.i.d., check met een query welke cols uit moeten staan omdat de geselecteerde genen ze niet hebben, en verberg die cols.
 - !!! Nieuw overzicht: individual met alle phenotype kolommen
-- Position_c_start & position_c_end staan in de volgorde op 't genoom; dus voor antisense genen in de niet-oplopende volgorde, dus niet correct vergeleken met de c. nomenclatuur. Willen we dat?!!??
 - in_gene combineren met scr2var, screenings, individuals en ind2dis net zoals de full data view?
 - c.100+?_101-?del wordt verkeerd vertaald naar c.100_101del als je op het formulier op Map variant klikt!!! dit, terwijl mutalyzer hier goed mee om lijkt te gaan...
 - Variant overzicht mag dan wel meevallen, maar variant overzicht op individual pagina of onder screening pagina is absurd traag.
@@ -113,7 +111,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
     "0	99	There are no variants to map in the database"
     Correct zou zijn:
     "1	00	Mapped 0% of 1982330 variants"
-- Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
 - Merge code from Peikuan?
 - Kaart maken met LOVD gebruikers voor op de site? We hebben dan "stad, land" nodig per curator en/of submitter (submitter = ander kleurtje), en deze moeten gemapped worden op een geographische lokatie.
   Daarvoor kun je gebruiken: https://developers.google.com/maps/documentation/geocoding/index?hl=nl
@@ -129,7 +126,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
 - Import: Als db admin moet ik toch wel iets kunnen importeren en zeggen dat LOVD de owner is? Kan nu niet, want LOVD staat niet in de owner selection list.
 - Submission emails don't show diseases connected to individual, or genes connected to screening.
 - Submissions emails easily get sent twice when you reload the URL (no POST data!). Bad, bad. Empty session var?
-- LOVD3 site: how to go back to LOVD2 easily?
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Implement an HGNC mirror (student project?)
@@ -191,7 +187,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
 - BUGS:
   + Column create or import: VARCHAR(999) wordt niet afgevangen door de MySQL type check.
   + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
-  + Als je een VL opent, daarna zoekt, dan terug, dan blijven de search terms staan. Kan de hash parser niet alle search terms laten vervallen op het moment dat er geen hash is?
   + http://grenada.lumc.nl/LOVD2/mendelian_genes/refseq/CYP2C19_codingDNA.html  (NM_000769.1)
     Gen waar de ATG meteen het start van het transcript is. g. nummering gaat helemaal fout op de cDNA pagina.
     The RefSeq parser doesn't annotate the intron files correctly, if the introns are 3' UTR.
@@ -208,12 +203,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
       dat moet dan maar op basis van de geselecteerde IDs die in SESSION worden opgeslagen. Ik wil niet code voor
       het parsen van zoektermen moeten kopieëren naar download oid.
     * Full download zou wellicht ook de active_cols en shared_cols moeten hebben? Wel nodig voor LOVD2->LOVD3 export script.
-  + How does the public make downloads?
-    * Beveiliging!!! Alle niet-publieke entries & kolommen zullen moeten worden verwijderd.
-    * Link from the gene homepage?
-    * Link from the viewList, after applying search terms, just like in LOVD2?
-      - But then, you need to control the viewList from that button, such that the search terms are correct, OR the button is provided by the viewList.
-    * Instelling staat per gen, en de intergene varianten dan?
   + DATA IMPORT
     * Ook voor curatoren, check alles goed na het parsen van de file!
     * Discuss if OK that created_by and created_date are set by users through import to values other than themselves or today.
@@ -257,9 +246,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
 - 5.3.0 required, use bcrypt! Set dan wel maximale ww lengte die verwerkt wordt, om DOS aanval te voorkomen.
 - Diseases hebben alias field nodig (lange tekst), maar nog geen speciale handelingen nodig op het moment.
 - MariaDB noemen als alternatief, en uitleggen dat ze dan vooralsnog 'mysql' als driver moeten kiezen. Config.ini, handleiding, en website. Maar hoe zit dat dan met InnoDB?
-- VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.
-  + Op zich is het verbergen van VOG kolommen gelijk aan de huidige VOT implementatie.
-    * Maar hoe dit op te slaan?
 - Screening kunnen kopieren, zodat je t niet steeds hoeft te herhalen voor een andere patient in dezelfde groep?
   + Screening zegt dat gen X is gescreened, maar er is geen variant aan gekoppeld, dus LOVD kan dan toch zelf c.= toevoegen?
 - Auto generate links to dbSNP?
