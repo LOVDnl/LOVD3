@@ -4,15 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-09-22
+ * Modified    : 2017-09-29
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Zuotian Tatum <Z.Tatum@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -677,8 +677,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
                     array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
             } else {
-                $_POST['position_g_start'] = NULL;
-                $_POST['position_g_end'] = NULL;
+                $_POST['position_g_start'] = 0;
+                $_POST['position_g_end'] = 0;
                 $_POST['type'] = NULL;
             }
 
@@ -2438,14 +2438,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                     list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
                         array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
                 } else {
-                    $_POST['position_g_start'] = NULL;
-                    $_POST['position_g_end'] = NULL;
+                    $_POST['position_g_start'] = 0;
+                    $_POST['position_g_end'] = 0;
                     $_POST['type'] = NULL;
                 }
 
                 // Remove the MAPPING_NOT_RECOGNIZED and MAPPING_DONE flags if the VariantOnGenome/DNA field changes.
                 $_POST['mapping_flags'] = $zData['mapping_flags'] & ~(MAPPING_NOT_RECOGNIZED | MAPPING_DONE);
-                if ($_POST['position_g_start'] === null) {
+                if (!$_POST['position_g_start']) {
                     // We couldn't get a position, mapping will fail.
                     $_POST['mapping_flags'] |= MAPPING_NOT_RECOGNIZED;
                 }
