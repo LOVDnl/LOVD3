@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-09-27
+ * Modified    : 2017-09-29
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -675,7 +675,7 @@ if (!defined('NOT_INSTALLED')) {
             $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN))->fetchRow();
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
         }
 
         // Switch gene.
