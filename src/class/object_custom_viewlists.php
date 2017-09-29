@@ -158,7 +158,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_TRANSCRIPTS . ' AS t';
-                        $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS)->fetchColumn();
+                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
+                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
+                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_TRANSCRIPTS)->fetchColumn();
                     } else {
                         $aSQL['FROM'] .= ' INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (';
                         $nKeyG   = array_search('Gene', $aObjects);
@@ -203,7 +205,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS . ' AS vog';
-                        $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS)->fetchColumn();
+                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
+                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
+                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_VARIANTS)->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vog.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                         $aSQL['ORDER_BY'] = 'MIN(vog.chromosome) ASC, MIN(vog.position_g_start)';
                     } elseif ($nKeyVOTUnique !== false && $nKeyVOTUnique < $nKey) {
@@ -260,7 +264,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
-                        $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
+                        // MAX(id) on the VOT table gets nowhere nearly the correct number of results, but this number
+                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
+                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vot.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                     } elseif ($nKeyVOG !== false && $nKeyVOG < $nKey) {
                         // Previously, VOG was used. We will join VOT with VOG, using GROUP_CONCAT.
@@ -326,8 +332,10 @@ class LOVD_CustomViewList extends LOVD_Object {
                     }
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
-                    // FIXME: On large databases, we might want to skip this, since a COUNT(*) on InnoDB tables isn't fast at all, and nCount doesn't need to be specific at all.
-                    $this->nCount = $_DB->query('SELECT COUNT(DISTINCT `VariantOnTranscript/DNA`) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
+                    // $this->nCount = $_DB->query('SELECT COUNT(DISTINCT `VariantOnTranscript/DNA`) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
+                    // No longer calculate the number of results; this number anyway doesn't need to be correct at all,
+                    //  and this query is too slow on large systems running InnoDB.
+                    $this->nCount = $_DB->query('SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
 
                     $aSQL['GROUP_BY'] = '`position_c_start`, `position_c_start_intron`, `position_c_end`, `position_c_end_intron`, vot_clean_dna_change'; // Necessary for GROUP_CONCAT(), such as in Screening.
 
@@ -350,7 +358,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // First data table in query.
                         $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'MIN(s.id) AS sid';
                         $aSQL['FROM'] = TABLE_SCREENINGS . ' AS s';
-                        $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS)->fetchColumn();
+                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
+                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
+                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_SCREENINGS)->fetchColumn();
                         $aSQL['ORDER_BY'] = 's.id';
                     } else {
                         // SELECT will be different: we will GROUP_CONCAT the whole lot, per column.
@@ -417,7 +427,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
-                        $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
+                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
+                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
+                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
                         $aSQL['ORDER_BY'] = 'i.id';
                         // If no manager, hide lines with hidden individuals (not specific to a gene)!
                         if ($_AUTH['level'] < LEVEL_MANAGER) {
