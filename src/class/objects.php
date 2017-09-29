@@ -1547,14 +1547,11 @@ class LOVD_Object {
 
         // Handle multivalued search arguments. I.e., filter out records that only have a single
         // value for certain aggregated columns.
-        if (isset($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
+        if (!empty($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
 
             foreach ($aRequestMVSCols as $sMVSCol) {
 
                 list($sTable, $sField) = $this->getTableAndFieldNameFromViewListCols($sMVSCol);
-
-                // Assume a period in the column name denotes a table as prefix.
-//                list($sTable, $sField) = array_pad(explode('.', $sMVSCol, 2), -2, '');
 
                 // Enclose fieldname with backticks and append it to the having clause.
                 $sMVSColQuoted = ($sTable ? $sTable . '.' : '') . '`' . trim($sField, '`') . '`';
