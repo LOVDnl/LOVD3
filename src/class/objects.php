@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-09-27
+ * Modified    : 2017-09-29
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2263,6 +2263,13 @@ class LOVD_Object {
         }
 
         if (FORMAT == 'text/html' && ($nTotal || $bSearched)) {
+
+            // Unpack MVSCols, used to give CSS class to HTML TD tags.
+            $aRequestMVSCols = array();
+            if (isset($_GET['MVSCols'])) {
+                $aRequestMVSCols = explode(';', $_GET['MVSCols']);
+            }
+
             // Only print stuff if we're not just loading one entry right now.
             if (!$bOnlyRows) {
                 if (!$bAjax) {
@@ -2383,11 +2390,29 @@ FROptions
                     $nAllowFindAndReplace = (int) !empty($aCol['allowfnr']); // Later allow other columns as well, such as owned_by or statusid or so.
                     $sImg = '';
                     $sAlt = '';
+
+                    // Determine column-specific CSS style.
+                    $aCSSClasses = array();
+                    if ($aOrder[0] == $sField) {
+                        $aCSSClasses[] = 'ordered';
+                    } else if ($bSortable) {
+                        $aCSSClasses[] = 'order';
+                    }
+                    if (in_array($sField, $aRequestMVSCols)) {
+                        $aCSSClasses[] = 'mvs';
+                        // Amend column legend specifying it's being used in multivalued search.
+                        if (empty($aCol['legend'][0])) {
+                            // Make sure this column has a legend.
+                            $aCol['legend'][0] = '';
+                        }
+                        $aCol['legend'][0] .= "\n" . 'Only showing rows with multiple values for this column.';
+                    }
+
                     if ($bSortable && $aOrder[0] == $sField) {
                         $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
-                    print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
+                    print("\n" . '          <TH valign="top"' . (!empty($aCSSClasses)? ' class="' . join(' ', $aCSSClasses) . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
                                  ' data-allowfnr="' . $nAllowFindAndReplace . '" data-fieldname="' . $sField . '">' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
@@ -2549,7 +2574,17 @@ FROptions
                     if (in_array($sField, $aColsToSkip)) {
                         continue;
                     }
-                    print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
+
+                    // Determine column-specific CSS classes.
+                    $aCSSClasses = array();
+                    if ($aOrder[0] == $sField) {
+                        $aCSSClasses[] = 'ordered';
+                    }
+                    if (in_array($sField, $aRequestMVSCols)) {
+                        $aCSSClasses[] = 'mvs';
+                    }
+
+                    print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . (!empty($aCSSClasses)? ' class="' . join(' ', $aCSSClasses) . '"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
                 }
                 print('</TR>');
 
@@ -2597,7 +2632,8 @@ FROptions
                     // Add find & replace menu item to viewlist options menu.
                     $sFRMenuOption = <<<FRITEM
 '            <LI class="icon">' +
-'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_FRShowOptionsMenu, \'allowfnr\');">' +
+'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_FRShowOptionsMenu, ' +
+'                    \'Select column for find & replace\', \'allowfnr\');">' +
 '                    <SPAN class="icon" style=""></SPAN>' +
 '                    Find and replace text in column' +
 '                </A>' +
@@ -2610,9 +2646,10 @@ FRITEM;
                     // Add menu option for selecting column to filter based on number of values.
                     $sMVSOption = <<<MVSItem
 '            <LI class="icon">' +
-'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_toggleMVSCol);">' +
+'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_toggleMVSCol, ' +
+'                    \'Click column to select or deselect it for filtering on multivalued items\');">' +
 '                    <SPAN class="icon" style=""></SPAN>' +
-'                    Show only multivalued rows for column...' +
+'                    Select or deselect column for filtering on multivalued items...' +
 '                </A>' +
 '            </LI>' +
 MVSItem;

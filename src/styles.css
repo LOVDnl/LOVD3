@@ -3,8 +3,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2017-01-28
- * For LOVD    : 3.0-19
+ * Modified    : 2017-09-29
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -146,12 +146,15 @@ table.data a.hide                        {color : #000000; text-decoration : non
 table.data th                            {background : #AFC8FA; padding-left : 4px; padding-right : 4px;}
 table.data th.order                      {cursor : pointer;}
 table.data th.ordered                    {background : #8CAFF0; cursor : pointer;}
+table.data th.mvs                        {background : #9EBCF5; border-left : 2px solid; border-right : 2px solid; border-color : #8CAFF0}
 table.data td                            {background : #F0F3FF; padding-left : 4px; padding-right : 4px;}
 table.data td.ordered                    {background : #C8DCFA;}
+table.data td.mvs                        {background : #DCE8FD; border-left : 2px solid; border-right : 2px solid; border-color : #C8DCFA}
 table.data tr.hover td,
 table.data tr.data:hover td              {background : #C8DCFA;}
 table.data tr.hover td.ordered,
 table.data tr.data:hover td.ordered      {background : #AFC8FA;}
+table.data tr.data:hover td.mvs          {background : #BCD2FA;}
 table.data tr.hover td.checkbox,
 table.data tr.data:hover td.checkbox     {background : #F0F3FF; cursor : default;}
 table.data input:disabled                {color : #000000; background : #FFFFFF; border : 1px solid #224488;}
@@ -161,7 +164,8 @@ table.data tr.del td                     {background : #F8FAFF; color : #999999;
 table.data tr.del td.ordered             {background : #E5E5EF; color : #888888;}
 table.data tr.del:hover td               {background : #E5E5EF; color : #888888;}
 table.data tr.del:hover td.ordered       {background : #D0D0E0; color : #666666;}
-table.data tr.del:hover td.ordered a     {color : #666666;}
+table.data tr.del:hover td.ordered a,
+table.data tr.del:hover td.mvs a         {color : #666666;}
 table.data tr.del:hover td.checkbox      {background : #F8FAFF; cursor : default;}
 table.data tr.marked td                  {background : #FFF0F0;}
 table.data tr.marked td.ordered          {background : #FAD5D5;}

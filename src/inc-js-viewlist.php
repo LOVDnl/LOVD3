@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-09-27
+ * Modified    : 2017-09-29
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -571,7 +571,7 @@ function lovd_getFROptionsElement (sViewListID)
 
 
 function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname, tableHeight,
-                                   sViewListID, sViewListDivSelector, callback)
+                                   sViewListID, sViewListDivSelector, sTooltip, callback)
 {
     // Show an overlay element for the viewlist column denoted by targetTH.
     // The overlay element is given class sOverlayClassname and has a height
@@ -622,7 +622,7 @@ function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname
         });
     } else {
         overlayDiv.on('click', function () {
-            alert('This column is not available for Find & Replace.');
+            alert('This column is not available.');
         });
     }
 
@@ -632,7 +632,7 @@ function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname
         // Show tooltip near first column.
         $(targetTH).tooltip({
             items: targetTH,
-            content: 'Select a column',
+            content: sTooltip,
             disabled: true, // don't show tooltip on mouseover
             position: {
                 my: 'left bottom',
@@ -657,7 +657,7 @@ function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname
 
 
 
-function lovd_columnSelector (sViewListID, colClickCallback, sDataAttribute = '')
+function lovd_columnSelector (sViewListID, colClickCallback, sTooltip, sDataAttribute = '')
 {
     // Show a find & replace column selector for the given viewlist.
 
@@ -682,9 +682,10 @@ function lovd_columnSelector (sViewListID, colClickCallback, sDataAttribute = ''
     $(sVLTableSelector).find('th').each(function (index) {
         // Decide whether current column is selectable based on presence of
         // certain data attribute.
-        bSelectable = sDataAttribute == '' || $(this).data(sDataAttribute) == '1';
+        bSelectable = $(this).is('[data-fieldname]'); // Disable non-content cols like checkbox
+        bSelectable &= sDataAttribute == '' || $(this).data(sDataAttribute) == '1';
         lovd_ShowOverlayColumn(index, bSelectable, this, sOverlayClassname, tableHeight,
-                               sViewListID, sViewListDivSelector, colClickCallback);
+                               sViewListID, sViewListDivSelector, sTooltip, colClickCallback);
     });
 
     // Capture clicks outside the column overlays to cancel the F&R action.
@@ -954,13 +955,10 @@ function lovd_toggleMVSCol (sViewListID, oColumn)
         aCurrentCols = oMVSInput.val().split(';');
     }
 
-    var oMVSMenuIcon = $('LI[name="MVS_' + sMVSCol + '"] A SPAN[class="icon"]');
     if ($.inArray(sMVSCol, aCurrentCols) >= 0) {
         aCurrentCols.splice(aCurrentCols.indexOf(sMVSCol), 1);
-        oMVSMenuIcon.attr('style', '');
     } else {
         aCurrentCols.push(sMVSCol);
-        oMVSMenuIcon.attr('style', 'background-image: url(gfx/check.png);');
     }
     oMVSInput.val(aCurrentCols.join(';'));
     lovd_AJAX_viewListSubmit(sViewListID);
