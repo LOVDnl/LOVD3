@@ -2219,7 +2219,8 @@ class LOVD_Object {
                         // I.e. anything that can be searched by the user.
                         $bSearched = true;
                     } elseif ($this->aColumnsViewList[$sColumn]['view']) {
-                        // Search on hidden columns that have display information in aColumnsViewList.
+                        // Search on hidden columns that have display information in aColumnsViewList,
+                        //  i.e. columns in the $aColsToSkip argument to the ViewList function.
                         $sColHeader = $this->aColumnsViewList[$sColumn]['view'][0];
                         // Make sure all hidden ID columns have "ID" in the header, so we can recognize them.
                         if (substr(rtrim($sColumn, '_'), -2) == 'id' && substr($sColHeader, -3) != ' ID') {
@@ -2228,7 +2229,7 @@ class LOVD_Object {
                         $aSearchOnSkippedCols[$sColHeader] = $value;
                     } else {
                         // Search on hidden columns that have no display information in
-                        // aColumnsViewList.
+                        //  aColumnsViewList, so columns that are meant to always be hidden.
                         $bSearchNonViewableCol = true;
                     }
                 }
@@ -2458,8 +2459,10 @@ FROptions
                 }
                 $sMessage = 'No ' . $sUnit . ' found';
                 if (!empty($aSearchOnSkippedCols) && !$bSearchNonViewableCol) {
-                    // Do not try to display specific message when searched on columns where no
-                    // display information is availabe (e.g. 'view' in aColumnsViewList).
+                    // When searched on columns that have been requested to be hidden for this VL,
+                    //  then display the search items given to provide more information to the user.
+                    // However, do not do this when we also searched on columns where no
+                    //  display information is ever available ('view' set to false in aColumnsViewList).
                     $sWhere = '';
                     foreach ($aSearchOnSkippedCols as $sCol => $sValue) {
                         // If the hidden column has "ID" in its name, it is the primary filter column.
