@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-08-09
+ * Modified    : 2017-09-29
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2208,19 +2208,28 @@ class LOVD_Object {
         // If no results are found, try to figure out if it was because of the user's searching or not.
         if (!$nTotal) {
             $bSearched = false;
-            $aHiddenSearch = array();
+            $aSearchOnSkippedCols = array();
+            $bSearchNonViewableCol = true;
             foreach ($_GET as $key => $value) {
                 if (substr($key, 0, 7) == 'search_') {
                     $sColumn = substr($key, 7);
                     if (!in_array($sColumn, $aColsToSkip)) {
+                        // All visible columns that have been searched on ($aColsToSkip also
+                        // includes everything in aColumnsViewList with false for 'view' key).
+                        // I.e. anything that can be searched by the user.
                         $bSearched = true;
                     } elseif ($this->aColumnsViewList[$sColumn]['view']) {
+                        // Search on hidden columns that have display information in aColumnsViewList.
                         $sColHeader = $this->aColumnsViewList[$sColumn]['view'][0];
                         // Make sure all hidden ID columns have "ID" in the header, so we can recognize them.
                         if (substr(rtrim($sColumn, '_'), -2) == 'id' && substr($sColHeader, -3) != ' ID') {
                             $sColHeader .= ' ID';
                         }
-                        $aHiddenSearch[$sColHeader] = $value;
+                        $aSearchOnSkippedCols[$sColHeader] = $value;
+                    } else {
+                        // Search on hidden columns that have no display information in
+                        // aColumnsViewList.
+                        $bSearchNonViewableCol = true;
                     }
                 }
             }
@@ -2448,9 +2457,11 @@ FROptions
                     $sUnit = strtolower($this->sObject) . 's';
                 }
                 $sMessage = 'No ' . $sUnit . ' found';
-                if (!empty($aHiddenSearch)) {
+                if (!empty($aSearchOnSkippedCols) && !$bSearchNonViewableCol) {
+                    // Do not try to display specific message when searched on columns where no
+                    // display information is availabe (e.g. 'view' in aColumnsViewList).
                     $sWhere = '';
-                    foreach ($aHiddenSearch as $sCol => $sValue) {
+                    foreach ($aSearchOnSkippedCols as $sCol => $sValue) {
                         // If the hidden column has "ID" in its name, it is the primary filter column.
                         if (substr($sCol, -3) == ' ID') {
                             $sWhere .= ($sWhere? ' and ' : ' ') . 'for this ' . strtolower(substr($sCol, 0, -3));
