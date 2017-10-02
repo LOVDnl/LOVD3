@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-09-29
+ * Modified    : 2017-10-04
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1937,6 +1937,13 @@ class LOVD_Object {
         }
 
         $sSQLOrderBy = $this->aColumnsViewList[$aOrder[0]]['db'][0] . ' ' . $aOrder[1];
+        if (preg_match('/AS\s+`?' . preg_quote($aOrder[0], '/') . '/i', $this->aSQLViewList['SELECT'])) {
+            // Current field name is present as an alias in SELECT clause, use
+            // this instead in the ORDER BY clause. (needed for aggregated
+            // fields)
+            $sSQLOrderBy = '`' . trim($aOrder[0], '`') . '` ' . $aOrder[1];
+        }
+
         if (in_array($aOrder[0], array('chromosome','VariantOnGenome/DNA'))) {
             // 2014-03-07; 3.0-10; We need to find the table alias of the VOG or genes table, because otherwise MySQL fails here ('chromosome' is ambiguous) if both are joined.
             // 2014-04-28; 3.0-10; Prefer the genes table, since it joins to VOG as well, but may not have results which messes up the order.
