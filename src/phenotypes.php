@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2017-08-09
+ * Modified    : 2017-10-04
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,7 +46,7 @@ if ($_AUTH) {
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /phenotypes
     // Not supported, forward user to disease-specific overview.
-    header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/disease');
+    header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/disease?search_phenotypes=' . urlencode('!0'));
     exit;
 }
 
@@ -65,7 +65,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'disease' && !ACTION) {
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     $sViewListID = 'Diseases_for_Phenotype_VL';
-    $_GET['search_phenotypes'] = '!0';
     $_DATA->setRowLink($sViewListID, CURRENT_PATH . '/' . $_DATA->sRowID);
     $_DATA->viewList($sViewListID);
 
