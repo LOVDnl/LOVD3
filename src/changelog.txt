@@ -62,6 +62,9 @@
    Closes #261: "Additional variant effect values".
  * Fixed bug; When automatically mapping variants of genes on the antisense
    strand, the variant positions were stored in the wrong order.
+ * Fixed bug; Some search arguments in viewlists got lost when using the 
+   browser's back button.
+   Closes #292: "Fix issue with search params when using browser back button."
 
 
 /**************************
