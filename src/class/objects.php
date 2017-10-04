@@ -1903,6 +1903,9 @@ class LOVD_Object {
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
         // First, check if entries are in the database at all.
+        // FIXME: This check, meant for optimization, proves to be slowing down the entire VL on larger DBs.
+        // FIXME: It would be better to remove this and remove the nCount calculators in the custom VL object completely.
+        // FIXME: Currently anyway we don't provide correct counts there for performance reasons, so the variable name isn't correct.
         $nTotal = $this->getCount();
         if (!$nTotal && FORMAT == 'text/html') {
             if ($bOnlyRows) {
