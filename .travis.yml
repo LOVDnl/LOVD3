@@ -31,12 +31,14 @@ sudo: required
 dist: trusty
 
 addons:
+  firefox: "54.0"
   apt:
     sources:
     - mysql-5.7-trusty
     packages:
     - mysql-server
     - mysql-client
+    - chromium-browser=61.0.3163.100-0ubuntu0.14.04.1202
 
 before_install:
  - ./tests/travis/setup/setup_chrome.sh
