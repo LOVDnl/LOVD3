@@ -180,6 +180,7 @@ $_SETT = array(
                     'show_tab_submit' => !LOVD_LIGHT,
                     'show_transcript_select_on_gene_vl' => LOVD_plus,
                     'show_unique_variants_menu_item' => !LOVD_LIGHT,
+                    'show_unique_variants_on_gene_ve' => !LOVD_LIGHT,
                     'show_variants_on_gene_vl' => !LOVD_LIGHT,
                     'variant_viewlist_show_allele' => !LOVD_LIGHT,
                     'variant_viewlist_show_effect' => !LOVD_LIGHT,

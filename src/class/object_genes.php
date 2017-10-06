@@ -75,7 +75,8 @@ class LOVD_Gene extends LOVD_Object {
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
                                            '(SELECT COUNT(DISTINCT vog.id) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS variants, ' .
-                                           '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ' .
+                                           (!$_SETT['customization_settings']['show_unique_variants_on_gene_ve']? '' :
+                                               '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ') .
                                            '"" AS count_individuals, ' . // Temporarely value, prepareData actually runs this query.
                                            '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS hidden_vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS hidden_vot ON (hidden_vog.id = hidden_vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (hidden_vot.transcriptid = t.id) WHERE t.geneid = g.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') AS hidden_variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
@@ -170,6 +171,9 @@ class LOVD_Gene extends LOVD_Object {
         if (LOVD_plus) {
             unset($this->aColumnsViewEntry['updated_by_']);
             unset($this->aColumnsViewEntry['updated_date_']);
+        }
+        if (!$_SETT['customization_settings']['show_unique_variants_on_gene_ve']) {
+            unset($this->aColumnsViewEntry['uniq_variants_']);
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -601,9 +605,12 @@ class LOVD_Gene extends LOVD_Object {
             if ($zData['variants']) {
                 $zData['variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['variants'] . '</A>';
             }
-            $zData['uniq_variants_'] = 0;
-            if ($zData['uniq_variants']) {
-                $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
+
+            if ($_SETT['customization_settings']['show_unique_variants_on_gene_ve']) {
+                $zData['uniq_variants_'] = 0;
+                if ($zData['uniq_variants']) {
+                    $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
+                }
             }
             //'count_individuals' => 'Individuals with public variants',
             $zData['hidden_variants_'] = $zData['hidden_variants'];
