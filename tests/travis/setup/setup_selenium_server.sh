@@ -5,7 +5,8 @@
 ## Then the selenium server is downloaded and started. 
 ## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
-serverFile=selenium-server-standalone-2.53.1.jar
+serverFile="selenium-server-standalone-3.6.0.jar"
+seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.6/${serverFile}"
 chromeDriverVersion=`curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
 chromeDriverSrc=http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip
 
@@ -14,16 +15,12 @@ phpVersion=`php -v`
 echo "Installing dependencies"
 composer install
 
-#echo "check firefox version"
-#firefox --version
-
 echo "Download Selenium"
-if [ ! -f $serverFile ]; then
-    wget http://selenium-release.storage.googleapis.com/2.53/$serverFile
+if [ ! -f ${seleniumDownloadURL} ]; then
+    curl -L -O ${seleniumDownloadURL};
 fi
 if [ ! -e ${serverFile} ]; then
     echo "Cannot find Selenium Server!"
-    echo "Test is aborted"
     exit
 fi
 
