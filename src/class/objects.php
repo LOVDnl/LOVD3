@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-09-29
+ * Modified    : 2017-10-06
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -136,13 +136,13 @@ class LOVD_Object {
 
 
 
+
     public function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
                                                 $aArgs, $aOptions) {
         // Perform a find and replace action for given field name (column).
         // Return false if update query fails.
 
         global $_DB, $_AUTH;
-
 
         // Column should be configured to allow Find & Replace.
         if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
@@ -981,9 +981,6 @@ class LOVD_Object {
 
 
 
-
-
-
     function getSortDefault ()
     {
         return $this->sSortDefault;
@@ -1022,6 +1019,7 @@ class LOVD_Object {
         // Note: tablename may be an alias.
         return array($sTableName, $sFieldName);
     }
+
 
 
 
@@ -1326,7 +1324,6 @@ class LOVD_Object {
         // sFRSearchValue       Search string.
         // sFRReplaceValue      Replace value.
         // aOptions             F&R options (e.g. match type)
-
         global $_DB;
 
         // Column should be configured to allow Find & Replace.
@@ -1545,17 +1542,15 @@ class LOVD_Object {
             }
         }
 
-        // Handle multivalued search arguments. I.e., filter out records that only have a single
+        // Handle multivalue filter request. I.e., show only records that have more than one
         // value for certain aggregated columns.
         if (!empty($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
-
             foreach ($aRequestMVSCols as $sMVSCol) {
-
                 list($sTable, $sField) = $this->getTableAndFieldNameFromViewListCols($sMVSCol);
 
                 // Enclose fieldname with backticks and append it to the having clause.
-                $sMVSColQuoted = ($sTable ? $sTable . '.' : '') . '`' . trim($sField, '`') . '`';
-                $HAVING .= ($HAVING ? ' AND ' : '') . 'count(DISTINCT ' . $sMVSColQuoted . ') > 1';
+                $sMVSColQuoted = ($sTable? $sTable . '.' : '') . '`' . trim($sField, '`') . '`';
+                $HAVING .= ($HAVING? ' AND ' : '') . 'COUNT(DISTINCT ' . $sMVSColQuoted . ') > 1';
             }
         }
 
@@ -1888,7 +1883,7 @@ class LOVD_Object {
 
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false,
                        $bHideNav = false, $bOptions = false, $bOnlyRows = false,
-                       $bFindReplace = false, $bMultiValueSearch = false)
+                       $bFindReplace = false, $aOptions = array())
     {
         // Show a viewlist for the current object.
         // Params:
@@ -1896,6 +1891,15 @@ class LOVD_Object {
 
         // Views list of entries in the database, allowing search.
         global $_DB, $_INI, $_SETT;
+
+        if (empty($aOptions) || !is_array($aOptions)) {
+            $aOptions = array();
+        }
+        $aOptions = array_replace(
+            array(
+                'multi_value_filter' => false,
+            ),
+            $aOptions);
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
@@ -2639,7 +2643,7 @@ FRITEM;
                 }
 
                 $sMVSOption = '';
-                if ($bMultiValueSearch) {
+                if ($aOptions['multi_value_filter']) {
                     // Add menu option for selecting column to filter based on number of values.
                     $sMVSOption = <<<MVSItem
 '            <LI class="icon">' +
