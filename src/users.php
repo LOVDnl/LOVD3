@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-08-09
+ * Modified    : 2017-10-06
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1121,7 +1121,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'individuals/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true, false, true);
+        $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true, false, array('find_and_replace' => true));
         unset($_GET['search_individualid']);
     } else {
         lovd_showInfoTable('No submissions of individuals found!', 'stop');
@@ -1139,7 +1139,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true, false, true);
+        $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true, false, array('find_and_replace' => true));
     } else {
         lovd_showInfoTable('No submissions of variant screenings found!', 'stop');
     }
@@ -1147,6 +1147,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     $_T->printFooter();
     exit;
 }
+
 
 
 
@@ -1286,5 +1287,4 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_T->printFooter();
     exit;
 }
-
 ?>
