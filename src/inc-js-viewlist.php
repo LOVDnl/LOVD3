@@ -683,7 +683,7 @@ function lovd_columnSelector (sViewListID, colClickCallback, sTooltip, sDataAttr
         // Decide whether current column is selectable based on presence of
         // certain data attribute.
         bSelectable = $(this).is('[data-fieldname]'); // Disable non-content cols like checkbox
-        bSelectable &= sDataAttribute == '' || $(this).data(sDataAttribute) == '1';
+        bSelectable &= (sDataAttribute == '' || $(this).data(sDataAttribute) == '1');
         lovd_ShowOverlayColumn(index, bSelectable, this, sOverlayClassname, tableHeight,
                                sViewListID, sViewListDivSelector, sTooltip, colClickCallback);
     });

@@ -2268,7 +2268,6 @@ class LOVD_Object {
         }
 
         if (FORMAT == 'text/html' && ($nTotal || $bSearched)) {
-
             // Unpack MVSCols, used to give CSS class to HTML TD tags.
             $aRequestMVSCols = array();
             if (isset($_GET['MVSCols'])) {
@@ -2400,7 +2399,7 @@ FROptions
                     $aCSSClasses = array();
                     if ($aOrder[0] == $sField) {
                         $aCSSClasses[] = 'ordered';
-                    } else if ($bSortable) {
+                    } elseif ($bSortable) {
                         $aCSSClasses[] = 'order';
                     }
                     if (in_array($sField, $aRequestMVSCols)) {
@@ -2410,7 +2409,7 @@ FROptions
                             // Make sure this column has a legend.
                             $aCol['legend'][0] = '';
                         }
-                        $aCol['legend'][0] .= "\n" . 'Only showing rows with multiple values for this column.';
+                        $aCol['legend'][0] .= (!$aCol['legend'][0]? '' : "\n") . 'Only showing rows with multiple values for this column.';
                     }
 
                     if ($bSortable && $aOrder[0] == $sField) {
@@ -2652,9 +2651,9 @@ FRITEM;
                     $sMVSOption = <<<MVSItem
 '            <LI class="icon">' +
 '                <A click="lovd_columnSelector(\'$sViewListID\', lovd_toggleMVSCol, ' +
-'                    \'Click column to select or deselect it for filtering on multivalued items\');">' +
+'                    \'Click column to select or deselect it for filtering on rows having multiple values\');">' +
 '                    <SPAN class="icon" style=""></SPAN>' +
-'                    Select or deselect column for filtering on multivalued items...' +
+'                    Enable or disable filtering on multivalued rows' +
 '                </A>' +
 '            </LI>' +
 MVSItem;
@@ -2686,6 +2685,7 @@ MVSItem;
 $sFRMenuOption
 $sMVSOption
 '            ');
+
 OPMENU
 );
                 if (!LOVD_plus) {
@@ -2703,6 +2703,7 @@ OPMENU
 '                    Download selected entries (summary data)' +
 '                </A>' +
 '            </LI>');
+
 OPMENU
 );
                 }
