@@ -5,50 +5,63 @@
 ## Then the selenium server is downloaded and started. 
 ## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
-serverFile="selenium-server-standalone-3.6.0.jar"
-seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.6/${serverFile}"
-chromeDriverVersion=`curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
-chromeDriverSrc=http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip
-
-phpVersion=`php -v`
-
-echo "Installing dependencies"
-composer install
+seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.4/selenium-server-standalone-3.4.0.jar"
+# Currently using a fixed version of the chrome driver.
+# chromeDriverVersion=$(curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+chromeDriverVersion="2.24"
+chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip"
+geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.18.0/geckodriver-v0.18.0-linux64.tar.gz"
 
 echo "Download Selenium"
 if [ ! -f ${seleniumDownloadURL} ]; then
-    curl -L -O ${seleniumDownloadURL};
+    curl -L -O ${seleniumDownloadURL}
 fi
+serverFile=${seleniumDownloadURL##*/}
 if [ ! -e ${serverFile} ]; then
     echo "Cannot find Selenium Server!"
-    exit
+    exit 1
 fi
 
-echo "Download chromedriver from ${chromeDriverSrc}"
-driverArchive=${chromeDriverSrc##*/}
-curl $chromeDriverSrc > $driverArchive
-if [ ! -f $driverArchive ]; then
-    echo "Download of $chromeDriverSrc failed. Aborting."
-    exit
+echo "Download chromedriver from ${chromeDriverURL}";
+chromeDriverArchive=${chromeDriverURL##*/}
+curl -L -O ${chromeDriverURL}
+if [ ! -f ${chromeDriverArchive} ]; then
+    echo "Download of $chromeDriverURL failed. Aborting."
+    exit 1
 fi
-unzip $driverArchive
+unzip ${chromeDriverArchive}
 if [ ! -f "chromedriver" ]; then
     echo "Failed installing chromedriver. Aborting."
-    exit
+    exit 1
 fi
 
-echo "Starting xvfb and Selenium"
-export DISPLAY=:99.0
+echo "Download geckodriver from ${geckoDriverURL}";
+geckoDriverArchive=${geckoDriverURL##*/}
+curl -L -O ${geckoDriverURL}
+if [ ! -f ${geckoDriverArchive} ]; then
+    echo "Download of $geckoDriverURL failed. Aborting."
+    exit 1
+fi
+tar -xzf ${geckoDriverArchive}
+if [ ! -f "geckodriver" ]; then
+    echo "Failed installing geckodriver. Aborting."
+    exit 1
+fi
 
-#sh -e /etc/init.d/xvfb start
-#sleep 3
-sudo java -jar $serverFile -port 4444 -Djava.net.preferIPv4Stack=true -Dwebdriver.chrome.driver=chromedriver > /tmp/selenium.log 2> /tmp/selenium_error.log &
-
+echo "Starting Selenium"
+sudo java -Djava.net.preferIPv4Stack=true \
+    -Dwebdriver.chrome.driver=chromedriver \
+    -Dwebdriver.gecko.driver=geckodriver \
+    -jar ${serverFile} -port 4444 \
+    > /tmp/selenium.log 2> /tmp/selenium_error.log &
 sleep 3
+cat /tmp/selenium.log
 
-wget --retry-connrefused --tries=120 --waitretry=3 --output-file=/dev/null $serverUrl/wd/hub/status -O /dev/null
+wget --retry-connrefused --tries=10 --waitretry=3 --output-file=/dev/null ${serverUrl}/wd/hub/status -O /dev/null
 if [ ! $? -eq 0 ]; then
     echo "Selenium Server not started --> EXIT!"
+    echo "Selenium STDERR:"
+    cat /tmp/selenium_error.log
     exit 1
 else
     echo "Finished setup and selenium is started"

@@ -41,14 +41,12 @@ addons:
     - chromium-browser=61.0.3163.100-0ubuntu0.14.04.1202
 
 before_install:
- - ./tests/travis/setup/setup_chrome.sh
- - ./tests/travis/setup/setup_mysql.sh
-
-before_script:
+  - ./tests/travis/setup/setup_chrome.sh
+  - ./tests/travis/setup/setup_mysql.sh
   - ./tests/travis/setup/setup_apache.sh --githubaccount=LOVDnl
+  - ./tests/travis/setup/setup_php.sh
   - ./tests/travis/setup/setup_config.sh
   - ./tests/travis/setup/setup_selenium_server.sh
-  - phpenv config-rm xdebug.ini
 
 script:
   # Use phpunit or vendor/bin/phpunit to start tests.
