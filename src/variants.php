@@ -8,11 +8,11 @@
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Zuotian Tatum <Z.Tatum@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -110,7 +110,7 @@ if (!ACTION && (empty($_PE[1]) ||
     $_T->printTitle();
 
     $_DATA->viewList('VOG', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER),
-                     false, true);
+                     false, array('find_and_replace' => true));
     $_T->printFooter();
     exit;
 }
@@ -160,7 +160,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     $_GET['search_created_by'] = substr($nID, 0, 5);
     $_GET['search_created_date'] = date('Y-m-d H:i:s', substr($nID, 5, 10));
     $_DATA->viewList('VOG_uploads', array('allele_'), false, false,
-                     (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, true);
+                     (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, array('find_and_replace' => true));
 
     $_T->printFooter();
     exit;
@@ -272,7 +272,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         }
 
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
-        $_DATA->viewList($sViewListID, array('chromosome', 'allele_'), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR), false, !$bUnique, array('multi_value_filter' => $bUnique));
+        $_DATA->viewList($sViewListID, array('chromosome', 'allele_'), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR), false, array('find_and_replace' => !$bUnique, 'multi_value_filter' => $bUnique));
 
         // Notes for the variant listings...
         if (!empty($_SETT['currdb']['note_listing'])) {

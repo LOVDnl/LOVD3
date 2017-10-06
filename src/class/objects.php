@@ -1883,7 +1883,7 @@ class LOVD_Object {
 
     function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false,
                        $bHideNav = false, $bOptions = false, $bOnlyRows = false,
-                       $bFindReplace = false, $aOptions = array())
+                       $aOptions = array())
     {
         // Show a viewlist for the current object.
         // Params:
@@ -1895,8 +1895,12 @@ class LOVD_Object {
         if (empty($aOptions) || !is_array($aOptions)) {
             $aOptions = array();
         }
+        // Apply defaults.
+        // FIXME: Note that $aOptions is currently not sent through ajax/viewlist.php, but those settings are currently just for VL menu options, and that is done just when building the VL.
+        // FIXME: When more options are added to the list, we need to implement a way for these options to be sent properly through to the ajax request.
         $aOptions = array_replace(
             array(
+                'find_and_replace' => false,
                 'multi_value_filter' => false,
             ),
             $aOptions);
@@ -2629,7 +2633,7 @@ FROptions
                   '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
             if ($bOptions) {
                 $sFRMenuOption = '';
-                if ($bFindReplace) {
+                if ($aOptions['find_and_replace']) {
                     // Add find & replace menu item to viewlist options menu.
                     $sFRMenuOption = <<<FRITEM
 '            <LI class="icon">' +

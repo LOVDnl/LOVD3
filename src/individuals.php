@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2017-08-09
+ * Modified    : 2017-10-06
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
     $_DATA->viewList('Individuals', $aColsToHide, false, false,
-                     (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, true);
+                     (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, array('find_and_replace' => true));
 
     $_T->printFooter();
     exit;
