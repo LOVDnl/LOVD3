@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-10-04
+ * Modified    : 2017-10-09
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1937,7 +1937,7 @@ class LOVD_Object {
         }
 
         $sSQLOrderBy = $this->aColumnsViewList[$aOrder[0]]['db'][0] . ' ' . $aOrder[1];
-        if (preg_match('/AS\s+`?' . preg_quote($aOrder[0], '/') . '/i', $this->aSQLViewList['SELECT'])) {
+        if (preg_match('/AS\s+`?' . preg_quote($aOrder[0], '/') . '`?\b/i', $this->aSQLViewList['SELECT'])) {
             // Current field name is present as an alias in SELECT clause, use
             // this instead in the ORDER BY clause. (needed for aggregated
             // fields)
