@@ -6,7 +6,7 @@
 
 /**************************
  * 3.0 Build 20
- * 2017-09-??
+ * 2017-09-10
  *********/
  * Fixed bug; The link to the Reading Frame Checker was a bit malformed when the
    gene had no variants to show.
@@ -33,6 +33,7 @@
    position set.
  * Improved message that the curator sees, when he tries to disable a custom
    column that has already been disabled for all his genes.
+   Closes #162: "Confusing message when curator disables custom column".
  * Added links to overviews of created entries on user page.
    Closes #190: "Add links to records created by user on user's profile page".
  * The "Panel size" and "ID of panel this entry belongs to" fields on the
@@ -44,27 +45,47 @@
    unclassified."
  * Removed redundant "View" in all page titles. E.g. "View all genes" became
    "All genes".
- * Fixed bug; Colleagues couldn't be assigned with MySQL's default strict mode.
-   Closes #283: "Can not add colleagues that are not allowed to edit with
-   MySQL's strict mode enabled".
- * Fixed bug; Importing a phenotype entry without specifiying a disease ID
-   resulted in a fatal error.
-   Closes #245: "Import file parsing fails with a fatal error when the diseaseid
-   field is left empty for a phenotype record".
+   Closes #206: "Gene homepage title has unnecessary word 'view'".
+ * Fixed bug; When the LOVD logo was customized, the page header would sometimes
+   overlap the page data.
+   Closes #277: "The page header isn't properly displayed when system logo is
+   changed".
  * Added script to fix known errors in variant positions. The script has been
    added to the scripts folder.
  * Let screening page show linked variants, even when `variants_found` flag is
    not set.
    Closes #242: "Display of screening with linked variants".
+ * Fixed bug; Importing a phenotype entry without specifiying a disease ID
+   resulted in a fatal error.
+   Closes #245: "Import file parsing fails with a fatal error when the diseaseid
+   field is left empty for a phenotype record".
+ * Fixed bug; Colleagues couldn't be assigned with MySQL's default strict mode.
+   Closes #283: "Can not add colleagues that are not allowed to edit with
+   MySQL's strict mode enabled".
  * New effect categories for variants that affect protein function but are
    either not associated with the individual's disease phenotype or not
    associated with any known disease phenotype.
    Closes #261: "Additional variant effect values".
  * Fixed bug; When automatically mapping variants of genes on the antisense
    strand, the variant positions were stored in the wrong order.
+   Closes #58: "Extract positions from variant description".
+ * Fixed bug; The message shown when a data listing had no results was sometimes
+   unclear.
+   Closes #189: "Viewlist 'no results' warning message sometimes unclear".
+ * Implemented some speed improvements, mostly making a big difference in larger
+   databases or on servers with limited resources.
+ * Added feature for the unique variant view to show only entries where a
+   certain column has different values. This can be useful for quickly finding
+   variants where, for instance, different observations have different variant
+   effects set. The feature is available under the options wheel for curators
+   and up.
+   Closes #202: "Overview of variants with multiple classifications".
  * Fixed bug; Sometimes search arguments in data listings got lost when using
    the browser's back button.
-   Closes #292: "Fix issue with search params when using browser back button."
+   Closes #292: "Some viewlists lose filters when using browser back button".
+ * Fixed bug; Sorting the unique variant view sometimes failed on newer MySQL
+   servers.
+   Closes #291: "Query error on sorting unique variants viewlist".
  * Fixed issues sometimes showing up on Windows servers, like with the data
    import not working.
  * The LOVD2-style API can include the variant effect now, if requested.
