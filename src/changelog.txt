@@ -65,6 +65,8 @@
  * Fixed bug; Sometimes search arguments in data listings got lost when using
    the browser's back button.
    Closes #292: "Fix issue with search params when using browser back button."
+ * Fixed issues sometimes showing up on Windows servers, like with the data
+   import not working.
 
 
 /**************************
