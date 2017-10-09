@@ -1109,6 +1109,26 @@ function lovd_magicUnquoteAll ()
 
 
 
+function lovd_mapCodeToDescription ($aCodes, $aMaps)
+{
+    // Takes an array $aCodes and maps all values using the $aMaps array.
+    // Values not found in $aMaps are not changed in $aCodes.
+
+    if (is_array($aCodes) && !empty($aCodes)) {
+        foreach ($aCodes as $nKey => $sCode) {
+            if (isset($aMaps[$sCode])) {
+                $aCodes[$nKey] = $aMaps[$sCode];
+            }
+        }
+    }
+
+    return $aCodes;
+}
+
+
+
+
+
 function lovd_parseConfigFile($sConfigFile)
 {
     // Parses the given config file, checks all values, and returns array with parsed settings.
@@ -1705,7 +1725,7 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
         }
         if ($bShown) {
             // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
-            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . ($sSubMenu ? '' : lovd_getInstallURL(false))) . ($sSubMenu ? '' : ltrim($sURL, '/')) . '">' .
+            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . ($sSubMenu? '' : lovd_getInstallURL(false))) . ($sSubMenu? '' : ltrim($sURL, '/')) . '">' .
                                 (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
                                 '</A>' . $sSubMenu . '</LI>' . "\n");
         } else {

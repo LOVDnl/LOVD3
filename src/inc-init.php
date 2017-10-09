@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-09-29
+ * Modified    : 2017-10-09
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -182,6 +182,18 @@ $_SETT = array(
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
                             5 => 'Effect unknown',
+                          ),
+                'var_effect_api' =>
+                     array(
+                            // The API requires different, concise but clear, values.
+                            0 => 'notClassified',
+                            9 => 'functionAffected',
+                            8 => 'notThisDisease',
+                            6 => 'notAnyDisease',
+                            7 => 'functionProbablyAffected',
+                            3 => 'functionProbablyNotAffected',
+                            1 => 'functionNotAffected',
+                            5 => 'unknown',
                           ),
                 'var_effect_default' => '00',
                 'data_status' =>

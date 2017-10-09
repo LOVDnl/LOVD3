@@ -67,6 +67,7 @@
    Closes #292: "Fix issue with search params when using browser back button."
  * Fixed issues sometimes showing up on Windows servers, like with the data
    import not working.
+ * The LOVD2-style API can include the variant effect now, if requested.
 
 
 /**************************
