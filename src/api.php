@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2017-05-04
- * For LOVD    : 3.0-19
+ * Modified    : 2017-10-09
+ * For LOVD    : 3.0-20
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -418,13 +418,12 @@ if ($sDataType == 'variants') {
 
         // 2017-05-04; 3.0-19; Optionally, add the variant effect to the output.
         // This addition will allow the central API to gather this info as well.
-        // Just dump everything there, all options. Don't simplify. Use human
-        //  readable format; this can change, yes, but it looks really bad
-        //  otherwise. Return all unique values given.
+        // Just dump everything there, all options. Don't simplify. Use a human
+        //  readable but concise format. Return all unique values given.
         if (!empty($_GET['show_variant_effect'])) {
             $sContent .= "\n" .
-                         'effect_reported:' . implode(';', lovd_mapCodeToDescription(explode(';', $zData['effect_reported']), $_SETT['var_effect'])) . "\n" .
-                         'effect_concluded:' . implode(';', lovd_mapCodeToDescription(explode(';', $zData['effect_concluded']), $_SETT['var_effect']));
+                         'effect_reported:' . implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_reported']), $_SETT['var_effect_api'])) . "\n" .
+                         'effect_concluded:' . implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_concluded']), $_SETT['var_effect_api']));
         }
 
         $_FEED->addEntry($sTitle, $sSelfURL, $sAltURL, $sID, $zData['created_by'], $zData['created_date'], $sContributors, $zData['updated_date'], '', 'text', $sContent);
