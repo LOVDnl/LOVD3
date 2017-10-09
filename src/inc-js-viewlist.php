@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-09-29
+ * Modified    : 2017-10-04
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,7 +79,8 @@ function lovd_AJAX_processViewListHash ()
         }
 
         // Values which are NO LONGER in the Hash (added search term, then back button) need to be removed!!!
-        $(oForm).find('input[name^="search_"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+        // Only for visible search fields (hidden search inputs are set by server).
+        $(oForm).find('input[name^="search_"][type!="hidden"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name^="page"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name="order"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
 
