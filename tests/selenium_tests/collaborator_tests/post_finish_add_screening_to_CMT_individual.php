@@ -8,7 +8,7 @@ class PostFinishAddScreeningToCMTIndividualTest extends LOVDSeleniumWebdriverBas
 {
     public function testPostFinishAddScreeningToCMTIndividual()
     {
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000004$/', $this->driver->getCurrentURL()));
 

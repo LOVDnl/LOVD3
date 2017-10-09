@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-12-06
- * For LOVD    : 3.0-17
+ * Modified    : 2017-07-25
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -186,6 +186,7 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol' => 'Official abbreviation',
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
+                        'link_HPO_' => 'Human Phenotype Ontology Project (HPO)',
                         'individuals' => 'Individuals reported having this disease',
                         'phenotypes_' => 'Phenotype entries for this disease',
                         'genes_' => 'Associated with',
@@ -402,7 +403,12 @@ class LOVD_Disease extends LOVD_Object {
             }
         } else {
             if (!empty($zData['id_omim'])) {
+                $zData['link_HPO_'] = '<A href="' . lovd_getExternalSource('hpo_disease',
+                        $zData['id_omim'], true) . '" target="_blank">HPO</A>';
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
+            } else {
+                // Cannot link to HPO without OMIM ID, hide this row.
+                unset($this->aColumnsViewEntry['link_HPO_']);
             }
             $zData['phenotypes_'] = $zData['phenotypes'];
             if ($zData['phenotypes']) {

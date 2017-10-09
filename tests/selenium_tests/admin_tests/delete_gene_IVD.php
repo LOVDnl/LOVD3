@@ -26,7 +26,7 @@ class DeleteGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals("Successfully deleted the gene information entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View all genes"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("All genes"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes$/', $this->driver->getCurrentURL()));
     }

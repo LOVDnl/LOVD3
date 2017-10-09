@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2016-11-01
- * For LOVD    : 3.0-18
+ * Modified    : 2017-08-21
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -30,7 +30,7 @@
  *************/
 
 // Set up global constants and include path for running tests.
-define('ROOT_PATH', realpath(__DIR__ . '/../../src') . '/');
+define('ROOT_PATH', realpath(__DIR__ . '/../src') . '/');
 define('LOVD_plus', false);
 
 require_once ROOT_PATH . 'inc-lib-init.php';
@@ -40,9 +40,11 @@ $_INI = lovd_parseConfigFile(ROOT_PATH . 'config.ini.php');
 
 // Get root URL from config file.
 if (!isset($_INI['test']['root_url'])) {
-    throw new Exception('Failed to initialize ROOT_URL from ' . ROOT_PATH . 'config.ini.php');
+    fputs(STDERR, 'Warning: failed to initialize ROOT_URL from ' . ROOT_PATH . 'config.ini.php' .
+        PHP_EOL);
+} else {
+    define('ROOT_URL', $_INI['test']['root_url']);
 }
-define('ROOT_URL', $_INI['test']['root_url']);
 
 // Check if XDebug session should be started.
 $bConfigXDebug = isset($_INI['test']['xdebug_enabled']) &&
@@ -50,9 +52,10 @@ $bConfigXDebug = isset($_INI['test']['xdebug_enabled']) &&
 define('XDEBUG_ENABLED', $bConfigXDebug);
 $bXDebugStatus = false;
 
-
-set_include_path(get_include_path() . PATH_SEPARATOR . ROOT_PATH . '../tests/selenium_tests');
-
+// Additions to the include path specifically for files needed in tests.
+set_include_path(get_include_path() . PATH_SEPARATOR .
+    ROOT_PATH . PATH_SEPARATOR .
+    ROOT_PATH . '../tests/selenium_tests');
 
 // Max time for webdriver to wait for a condition by default (in seconds)
 define('WEBDRIVER_MAX_WAIT_DEFAULT', 120);

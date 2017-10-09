@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-03-08
- * For LOVD    : 3.0-19
+ * Modified    : 2017-09-29
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -144,7 +144,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-18a',
+                            'version' => '3.0-19b',
                           ),
                 'user_levels' =>
                      array(
@@ -172,11 +172,13 @@ $_SETT = array(
                 'var_effect' =>
                      array(
                             0 => 'Not classified', // Submitter cannot select this.
-                            5 => 'Effect unknown',
                             9 => 'Affects function',
+                            8 => 'Affects function, not associated with individual\'s disease phenotype',
+                            6 => 'Affects function, not associated with any known disease phenotype',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
+                            5 => 'Effect unknown',
                           ),
                 'var_effect_default' => '00',
                 'data_status' =>
@@ -673,7 +675,7 @@ if (!defined('NOT_INSTALLED')) {
             $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN))->fetchRow();
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
         }
 
         // Switch gene.

@@ -10,7 +10,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
     {
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View individual"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Individual"));
 
         // Mouse hover over Submit tab, to make 'submit new data' link visible.
         $tabElement = $this->driver->findElement(WebDriverBy::xpath("//img[@id='tab_submit']"));
@@ -110,7 +110,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $this->assertContains("Successfully processed your submission and sent an email notification to the relevant curator", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
 
         // wait for page redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertRegExp("/src\/variants\/\d{10}/", $this->driver->getCurrentURL());
     }

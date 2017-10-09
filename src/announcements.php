@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-08-26
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2017-08-09
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -45,7 +46,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     // URL: /announcements
     // View all entries.
 
-    define('PAGE_TITLE', 'View system announcements');
+    define('PAGE_TITLE', 'System announcements');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -69,7 +70,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'View announcement #' . $nID);
+    define('PAGE_TITLE', 'Announcement #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 

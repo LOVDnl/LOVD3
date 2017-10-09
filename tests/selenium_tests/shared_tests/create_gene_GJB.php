@@ -62,7 +62,7 @@ class CreateGeneGJBTest extends LOVDSeleniumWebdriverBaseTestCase
         $element->click();
         $this->assertEquals("Successfully created the gene information entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
 
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View GJB1 gene"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("GJB1 gene homepage"));
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes\/GJB1$/', $this->driver->getCurrentURL()));
     }
 }

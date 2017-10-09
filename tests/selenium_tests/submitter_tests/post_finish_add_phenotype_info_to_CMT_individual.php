@@ -40,7 +40,7 @@ class PostFinishAddPhenotypeInfoToCMTIndividualTest extends LOVDSeleniumWebdrive
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View phenotype"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Phenotype"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000002$/', $this->driver->getCurrentURL()));
     }

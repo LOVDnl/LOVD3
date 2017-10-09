@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-04-24
- * For LOVD    : 3.0-19
+ * Modified    : 2017-09-28
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -164,7 +164,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                     'view' => array('Effect', 70),
                                     'db'   => array('e.name', 'ASC', true),
                                     'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                                      'The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                         'allele_' => array(
                                     'view' => array('Allele', 120),
                                     'db'   => array('a.name', 'ASC', true),
@@ -221,7 +221,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         $aForm = parent::buildForm($sPrefix);
         // Link to HVS for nomenclature.
         if (isset($aForm[$sPrefix . 'VariantOnGenome/DNA'])) {
-            $aForm[$sPrefix . 'VariantOnGenome/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://www.hgvs.org/mutnomen/recs-DNA.html" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnGenome/DNA'][0]);
+            $aForm[$sPrefix . 'VariantOnGenome/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnGenome/DNA'][0]);
         }
         return $aForm;
     }
@@ -232,7 +232,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
     function checkFields ($aData, $zData = false)
     {
-        global $_AUTH, $_CONF, $_SETT;
+        global $_AUTH, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -245,9 +245,19 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $this->aCheckMandatory[] = 'effect_concluded';
-        } elseif (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
-            // Submitters must fill in the variant effect field; '0' is not allowed for them.
-            unset($aData['effect_reported']);
+        }
+
+        if (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
+            // `effect_reported` is not allowed to be '0' (Not classified) when user is a submitter
+            // or when the variant has status '9' (Public).
+            if ($_AUTH['level'] < LEVEL_CURATOR) {
+                // Remove the mandatory `effect_reported` field to throw an error.
+                unset($aData['effect_reported']);
+            } elseif (isset($aData['statusid']) && $aData['statusid'] == STATUS_OK) {
+                // Show error for curator/manager trying to publish variant without effect.
+                lovd_errorAdd('effect_reported', 'The \'Affects function (reported)\' field ' .
+                    'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' . $_SETT['data_status'][STATUS_OK] . '".');
+            }
         }
 
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.
@@ -471,7 +481,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
         // Replace rs numbers with dbSNP links.
         if (!empty($zData['VariantOnGenome/dbSNP'])) {
-            $zData['VariantOnGenome/dbSNP'] = preg_replace('/(rs\d+)/', '<SPAN' . ($sView != 'list'? '' : ' onclick="cancelParentEvent(event);"') . '><A href="http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=' . "$1" . '" target="_blank">' . "$1" . '</A></SPAN>', $zData['VariantOnGenome/dbSNP']);
+            $zData['VariantOnGenome/dbSNP'] = preg_replace('/(rs\d+)/', '<SPAN' . ($sView != 'list'? '' : ' onclick="cancelParentEvent(event);"') . '><A href="https://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=' . "$1" . '" target="_blank">' . "$1" . '</A></SPAN>', $zData['VariantOnGenome/dbSNP']);
         }
 
         return $zData;

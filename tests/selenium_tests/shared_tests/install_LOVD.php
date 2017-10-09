@@ -111,6 +111,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=4$/', $this->driver->getCurrentURL()));
         $button = $this->driver->findElement(WebDriverBy::cssSelector("button"));
         $button->click();
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("LOVD Setup"));
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/setup[\s\S]newly_installed$/', $this->driver->getCurrentURL()));
     }
 

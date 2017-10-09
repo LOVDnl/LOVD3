@@ -104,7 +104,7 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         // Try (successfully) to access individual.
         $this->driver->get(ROOT_URL . '/src/individuals/' . $sIndividualID);
         $header = $this->driver->findElement(WebDriverBy::xpath('//h2[@class="LOVD"]'));
-        $this->assertEquals($header->getText(), 'View individual #' . $sIndividualID);
+        $this->assertEquals($header->getText(), 'Individual #' . $sIndividualID);
         $nonpubFieldHead = $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr[4]/th'));
         $this->assertEquals($nonpubFieldHead->getText(), 'Remarks (non public)');
     }
