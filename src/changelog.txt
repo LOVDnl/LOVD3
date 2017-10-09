@@ -466,6 +466,7 @@
    query error because table names were used directly (with a non-standard table
    prefix) instead of using the table constants.
    Closes #41: "Diseases Query error".
+ * Fixed issues on some Windows environments.
 
 
 /**************************
