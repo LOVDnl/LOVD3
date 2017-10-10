@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-08-09
+ * Modified    : 2017-10-09
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -560,15 +560,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                 $aSuccessTranscripts[] = $sTranscript;
 
                                 // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
-                                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_DONE . ' WHERE chromosome = ? AND (' .
-                                                 '(position_g_start BETWEEN ? AND ?) OR ' .
-                                                 '(position_g_end   BETWEEN ? AND ?) OR ' .
-                                                 '(position_g_start < ? AND position_g_end > ?))',
-                                                 array($_POST['chromosome'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd']));
-                                if ($q->rowCount()) {
-                                    // If we have changed variants, turn on mapping immediately.
-                                    $_SESSION['mapping']['time_complete'] = 0;
-                                }
+                                $_DATA['Transcript']->turnOffMappingDone($_POST['chromosome'], $aTranscriptPositions);
                             }
                         }
                     }
