@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-05-15
+ * Modified    : 2017-10-12
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,7 +52,7 @@ class LOVD_Transcript extends LOVD_Object {
 
     function __construct ()
     {
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         // Default constructor.
 
@@ -77,20 +77,23 @@ class LOVD_Transcript extends LOVD_Object {
 
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
-                                          'g.chromosome, ' .
-                                          'COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 'vot.id' : 'vog.id') . ') AS variants';
+                                          'g.chromosome' .
+                                          (!$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
+                                              ', COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 'vot.id' : 'vog.id') . ') AS variants');
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
-                                          // If user is less than a collaborator, only show public variants and
-                                          // variants owned/created by him.
-                                          ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
-                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
+                                          (!$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
+                                              // If user is less than a collaborator, only show public variants and
+                                              // variants owned/created by him.
+                                              ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                                  'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
                                                   '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
                                                   (!$_AUTH? '' :
                                                       ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
                                                       'vog.owned_by = "' . $_AUTH['id'] . '"'
                                                   ) . ')) '
+                                              )
                                           );
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 
@@ -114,7 +117,7 @@ class LOVD_Transcript extends LOVD_Object {
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
-        $this->aColumnsViewList =
+        $this->aColumnsViewList = array_merge(
             array(
                 'id_' => array(
                     'view' => array('ID', 70, 'style="text-align : right;"'),
@@ -133,11 +136,16 @@ class LOVD_Transcript extends LOVD_Object {
                     'db'   => array('t.id_ncbi', 'ASC', true)),
                 'id_protein_ncbi' => array(
                     'view' => array('NCBI Protein ID', 120),
-                    'db'   => array('t.id_protein_ncbi', 'ASC', true)),
-                'variants' => array(
-                    'view' => array('Variants', 70, 'style="text-align : right;"'),
-                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
-            );
+                    'db'   => array('t.id_protein_ncbi', 'ASC', true))
+            ),
+            (!$_SETT['customization_settings']['transcript_viewlist_show_variants']? array() :
+                array(
+                    'variants' => array(
+                        'view' => array('Variants', 70, 'style="text-align : right;"'),
+                        'db'   => array('variants', 'DESC', 'INT_UNSIGNED'))
+                )
+            )
+        );
         $this->sSortDefault = 'geneid';
 
         // Because the disease information is publicly available, remove some columns for the public.

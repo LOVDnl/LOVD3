@@ -64,7 +64,9 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldec
 
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
-    $_DATA->sSortDefault = ($sGene? 'variants' : 'geneid');
+    if ($sGene && $_SETT['customization_settings']['transcript_viewlist_show_variants']) {
+        $_DATA->sSortDefault = 'variants';
+    }
     $_DATA->viewList('Transcripts', ($sGene? 'geneid' : ''), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
 
     if ($sGene) {

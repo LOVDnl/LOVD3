@@ -183,6 +183,7 @@ $_SETT = array(
                     'show_unique_variants_on_gene_ve' => !LOVD_LIGHT,
                     'show_variants_affecting_transcripts_menu_item' => !LOVD_LIGHT,
                     'show_variants_on_gene_vl' => !LOVD_LIGHT,
+                    'transcript_viewlist_show_variants' => !LOVD_LIGHT,
                     'variant_viewlist_show_allele' => !LOVD_LIGHT,
                     'variant_viewlist_show_effect' => !LOVD_LIGHT,
                     'variant_viewlist_show_owner' => !LOVD_LIGHT,
