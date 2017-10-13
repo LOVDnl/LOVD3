@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2016-09-15
+ * Modified    : 2017-10-13
  * For LOVD    : 3.0-17
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
@@ -193,7 +193,7 @@ class LOVD_SharedColumn extends LOVD_Object {
 
 
 
-    function getCount ($nID = false)
+    function isEmpty ($nID = false)
     {
         // Returns the number of entries in the database table.
         // Redefine here since we don't have an id column, and we also need to select on the parent object.
@@ -201,15 +201,16 @@ class LOVD_SharedColumn extends LOVD_Object {
         global $_DB;
 
         if ($nID) {
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE ' . $this->aTableInfo['unit'] . 'id = ? AND colid = ?', array($this->sObjectID, $nID))->fetchColumn();
+            $result = $_DB->query('SELECT 1 FROM ' . constant($this->sTable) . ' WHERE ' . $this->aTableInfo['unit'] . 'id = ? AND colid = ? LIMIT 1', array($this->sObjectID, $nID))->fetchColumn();
+            return $result === false;
         } else {
-            if ($this->nCount !== '') {
-                return $this->nCount;
+            if (isset($this->isEmpty)) {
+                return $this->isEmpty;
             }
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE ' . $this->aTableInfo['unit'] . 'id = ?', array($this->sObjectID))->fetchColumn();
-            $this->nCount = $nCount;
+            $result = $_DB->query('SELECT 1 FROM ' . constant($this->sTable) . ' WHERE ' . $this->aTableInfo['unit'] . 'id = ? LIMIT 1', array($this->sObjectID))->fetchColumn();
+            $this->isEmpty = $result === false;
+            return $this->isEmpty;
         }
-        return $nCount;
     }
 
 

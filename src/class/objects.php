@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-06-19
+ * Modified    : 2017-10-13
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -653,7 +653,7 @@ class LOVD_Object {
 
 
 
-    function getCount ($ID = false)
+    function isEmpty ($ID = false)
     {
         // Returns the number of entries in the database table.
         // ViewEntry() and ViewList() call this function to see if data exists at all, and actually don't require a precise number.
@@ -675,15 +675,19 @@ class LOVD_Object {
                 $aIDs = array($sIDColumn => $ID);
             }
 
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?', array_values($aIDs))->fetchColumn();
+            $result = $_DB->query('SELECT 1 FROM ' . constant($this->sTable) . ' WHERE ' .
+                implode(' = ? AND ', array_keys($aIDs)) . ' = ? LIMIT 1',
+                array_values($aIDs))->fetchColumn();
+            return $result === false;
         } else {
-            if ($this->nCount !== '') {
-                return $this->nCount;
+            if (isset($this->isEmpty)) {
+                return $this->isEmpty;
             }
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable))->fetchColumn();
-            $this->nCount = $nCount;
+            $result = $_DB->query('SELECT 1 FROM ' . constant($this->sTable) .
+                ' LIMIT 1')->fetchColumn();
+            $this->isEmpty = $result === false;
+            return $this->isEmpty;
         }
-        return $nCount;
     }
 
 
@@ -1768,8 +1772,7 @@ class LOVD_Object {
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
 
         // Check existence of entry.
-        $n = $this->getCount($ID);
-        if (!$n) {
+        if ($this->isEmpty($ID)) {
             lovd_showInfoTable('No such ID!', 'stop');
             if (!$bAjax) {
                 $_T->printFooter();
@@ -1903,8 +1906,7 @@ class LOVD_Object {
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
         // First, check if entries are in the database at all.
-        $nTotal = $this->getCount();
-        if (!$nTotal && FORMAT == 'text/html') {
+        if ($this->isEmpty() && FORMAT == 'text/html') {
             if ($bOnlyRows) {
                 die('0'); // Silent error.
             }
@@ -2045,7 +2047,7 @@ class LOVD_Object {
             'bFRReplaceAll' =>  $bFRReplaceAll
         );
 
-        $nTotal = 0; // Overwrites the previous $nTotal.
+        $nTotal = 0;
         if (!count($aBadSyntaxColumns)) {
             // Build argument list.
             $aArgs = array_merge($aArguments['WHERE'], $aArguments['HAVING']);
