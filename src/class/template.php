@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2017-10-12
+ * Modified    : 2017-10-13
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -412,8 +412,10 @@ class LOVD_Template {
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
-            // In install directory.
+        if ($_SETT['customization_settings']['enable_variant_mapping_in_background'] &&
+            !((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
+            // Allow variant mapping to happen in the background (either manually or
+            // automatically triggered).
             print('
 function lovd_mapVariants ()
 {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-10-12
+ * Modified    : 2017-10-13
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -168,6 +168,7 @@ $_SETT = array(
                 ),
                 'customization_settings' => // Miscellaneous configuration settings.
                 array(
+                    'enable_variant_mapping_in_background' => !LOVD_LIGHT && !LOVD_plus,
                     // Show variant list for whole genome on page `variants/`. If false, variant
                     // counts per chromosome are displayed.
                     'show_full_genome_variant_vl' => !LOVD_LIGHT && !LOVD_plus,
