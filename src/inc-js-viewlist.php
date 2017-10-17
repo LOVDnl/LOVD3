@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-10-04
+ * Modified    : 2017-10-17
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -658,9 +658,17 @@ function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname
 
 
 
-function lovd_columnSelector (sViewListID, colClickCallback, sTooltip, sDataAttribute = '')
+function lovd_columnSelector (sViewListID, colClickCallback, sTooltip, sDataAttribute)
 {
     // Show a find & replace column selector for the given viewlist.
+    // Params:
+    // sDataAttribute   Determine whether column is selectable based on "data-"
+    //                  atribute in column heading (TH element). If undefined
+    //                  empty string, all columns are selectable.
+
+    if (typeof sDataAttribute == "undefined") {
+        sDataAttribute = '';
+    }
 
     if (!FRState.hasOwnProperty(sViewListID)) {
         FRState[sViewListID] = {};
