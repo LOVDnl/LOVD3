@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-10-09
+ * Modified    : 2017-10-17
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -147,7 +147,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-20',
+                            'version' => '3.0-20a',
                           ),
                 'user_levels' =>
                      array(

@@ -4,9 +4,17 @@
  *
  *************/
 
-/**************************
+/***************************************
+ * 3.0 Build 20a (patch 01) (tag:3.0-20)
+ * 2017-10-17
+ ***********/
+ * Fixed bug; Internet Explorer users could no longer operate any of the data
+   listings.
+
+
+/***************************
  * 3.0 Build 20
- * 2017-09-10
+ * 2017-10-10
  *********/
  * Fixed bug; The link to the Reading Frame Checker was a bit malformed when the
    gene had no variants to show.
@@ -55,7 +63,7 @@
  * Let screening page show linked variants, even when `variants_found` flag is
    not set.
    Closes #242: "Display of screening with linked variants".
- * Fixed bug; Importing a phenotype entry without specifiying a disease ID
+ * Fixed bug; Importing a phenotype entry without specifying a disease ID
    resulted in a fatal error.
    Closes #245: "Import file parsing fails with a fatal error when the diseaseid
    field is left empty for a phenotype record".
@@ -91,8 +99,8 @@
  * The LOVD2-style API can include the variant effect now, if requested.
 
 
-/**************************
- * 3.0 Build 19
+/***************************
+ * 3.0 Build 19 (tag:3.0-19)
  * 2017-06-19
  *********/
  * Fixed bug; Transcripts could not easily be added to variants anymore. This
@@ -184,8 +192,8 @@
    Closes #205: "The "select all" feature in the options menu is not working".
 
 
-/**************************
- * 3.0 Build 18
+/***************************
+ * 3.0 Build 18 (tag:3.0-18)
  * 2016-12-23
  *********/
  * Make header stick to the top of the browser's viewport, such that the links
@@ -290,7 +298,7 @@
    using this feature may have destructive consequences.
 
 
-/**************************
+/***************************
  * 3.0 Build 16 (tag:3.0-16)
  * 2016-06-24
  *********/
@@ -328,7 +336,7 @@
    gene" page is loaded.
 
 
-/**************************
+/***************************
  * 3.0 Build 15 (tag:3.0-15)
  * 2016-05-02
  *********/
