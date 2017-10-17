@@ -14,7 +14,7 @@ Update LOVD installations:
 /antwerpen/ heeft aangepaste .htaccess.
 /DNA_profiles/ heeft aangepaste index.php.
 /my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste ajax/viewlist.php, class/graphs.php, class/template.php, api.php (tmp), import.php, inc-lib-init.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
+/shared/ heeft een aangepaste ajax/viewlist.php, class/template.php, import.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
 /whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 After updating all installations, send email to team with all improvements summarized.
 
@@ -453,9 +453,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
 - De afhandeling van text/plain voor de verschillende levels voelt nogal fragiel aan, en is behoorlijk irrirant om door te hebben.
 - Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 - Find & Replace:
-  + Een viewList, met daarboven heel compact het formulier voor de Find & Replace
-  + De voorgestelde verandering is direct zichtbaar gemarkeerd in de viewList (wordt gedaan in PHP/Prepare data), die ze kunnen sorteren, navigeren, etc.
-    * Wellicht niet extra doorzoeken, want dan krijg je verschil DB inhoud/wat je op het scherm ziet.
   + Allowing full regexp mode where you can build your own regular expression; submitting the form will first return
     * all changes that will be made to the database, agreeing will actually perform the find & replace.
     * This is related to the "asterisk wildcard" question of Raymond Dalgleish, April 2010.
@@ -466,17 +463,8 @@ From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 - Cancel knop op submissie formulieren is altijd hetzelfde; aparte opdracht voor lovd_viewForm() voor submit + cancel knop met URL als argument?
 - Screening verwijderd, doorverwezen naar /screenings. Is dat handig?
-- Er is nu niet goed met MT genen te werken; NCBI kent geen transcripten. Mutalyzer heeft wel info, maar nu mist daar het een en ander, juist omdat er geen NMs zijn:
-  + LOVD maakt dan geen UD aan, maar gebruikt de NC direct.
-  + http://localhost/svn/LOVD3/trunk/src/ajax/mutalyzer?getTranscriptsAndInfo&genomicReference=NC_012920.1&geneName=ND1
-  + Ik krijg inderdaad transcript informatie binnen als ik de NC icm het aangepaste gensymbool gebruik, bedankt voor de tip. Ik mis alleen nu, even snel kijkend naar de code, de volgende gegevens die LOVD nodig heeft:
-    * id
-    * chromTransStart
-    * chromTransEnd
-  + position converter werkt ook niet, data is wel uit namechecker te halen, maar dat vereist enorm veel aanpassingen overal in LOVD.
 - DB admin moet kiezen om wel forwards te krijgen van registraties, maar niet van submissies of edits.
   + Managers ook deze keuze geven? Koppelen aan TABLE_USERS ipv system settings?
-- LOVD.nl/GENE_000001 link werkend krijgen voor LOVD3s?
 - Tijdens het mappen meer info invullen? Exon?
 - Submitter er aan herinneren, dat zij consent moeten hebben voor het opslaan van deze data, tenzij de data publiek is (papers)?
 - Christophe Beroud: UMD predictor doet het beter dan SIFT, Polyphen en Mutation Taster.
