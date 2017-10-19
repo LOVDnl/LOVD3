@@ -163,7 +163,7 @@ $_SETT = array(
                 array(
                     // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
                     // has already been called for gene-specific overviews.
-                    'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'see_nonpublic_data' => ((LOVD_plus || LOVD_LIGHT)? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
                 ),
                 'customization_settings' => // Miscellaneous configuration settings.
