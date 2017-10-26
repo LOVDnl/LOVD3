@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-09-13
- * For LOVD    : 3.0-20
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -985,7 +985,15 @@ if (POST) {
 
                 // Use the object's checkFields() to have the values checked.
                 $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
-                $aSection['object']->checkFields($aLine, $zData);
+                $aCheckFieldsOptions = array(
+                    'mandatory_password' => false,  // Password field is not mandatory.
+                    'fieldname_as_header' => true,  // Use field name in errors instead of form
+                                                    // field header.
+                    'trim_fields' => false,         // No trimming of whitespace.
+                    'explode_strings' => true,      // Convert ';'-delimited strings to arrays.
+                    'show_select_alts' => true,     // Show alternatives in errors for select fields.
+                );
+                $aSection['object']->checkFields($aLine, $zData, $aCheckFieldsOptions);
                 for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
                     // When updating, if a error is triggered by a field that is
                     // not in the file, then this error is unrelated to the data

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2017-08-14
- * For LOVD    : 3.0-20
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -207,7 +207,7 @@ class LOVD_Individual extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_DB;
 
@@ -223,7 +223,7 @@ class LOVD_Individual extends LOVD_Custom {
                       );
 
         // Checks fields before submission of data.
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         foreach (array('fatherid', 'motherid') as $sParentalField) {
             // This is not yet implemented correctly. These checks are implemented correctly in import.php in section "Individuals".

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-10-09
- * For LOVD    : 3.0-20
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -265,10 +265,25 @@ class LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_AUTH, $_SETT;
+
+        // Prepare default options.
+        if (empty($aOptions) || !is_array($aOptions)) {
+            $aOptions = array();
+        }
+        $aOptions = array_replace(
+            array(
+                'mandatory_password' => true,   // Ensure password field is mandatory.
+                'fieldname_as_header' => false, // Use field name as header.
+                'trim_fields' => true,          // Trim all whitespace from fields in data array
+                                                // and input (e.g. $_POST or $_GET)
+                'explode_strings' => false,     // Convert ';'-delimited strings to arrays.
+                'show_select_alts' => false,    // Show alternatives in errors for select fields.
+            ),
+            $aOptions);
 
         $aForm = $this->getForm();
         $aFormInfo = array();
@@ -285,8 +300,7 @@ class LOVD_Object {
             $aForm = array();
         }
 
-        if (lovd_getProjectFile() != '/import.php') {
-            // Always mandatory... unless importing.
+        if ($aOptions['mandatory_password']) {
             $this->aCheckMandatory[] = 'password';
         }
 
@@ -305,14 +319,14 @@ class LOVD_Object {
                 continue;
             }
             @list($sHeader, $sHelp, $sType, $sName) = $aField;
-            if (lovd_getProjectFile() == '/import.php') {
+            if ($aOptions['fieldname_as_header']) {
                 // During import, we don't mention the field names how they appear on screen, but using their IDs which are used in the file.
                 $sHeader = $sName;
             }
             $aHeaders[$sName] = $sHeader;
 
             // Trim() all fields. We don't want those spaces in the database anyway.
-            if (lovd_getProjectFile() != '/import.php' && isset($aData[$sName]) && !is_array($aData[$sName])) {
+            if ($aOptions['trim_fields'] && isset($aData[$sName]) && !is_array($aData[$sName])) {
                 $GLOBALS['_' . $aFormInfo[0]][$sName] = trim($GLOBALS['_' . $aFormInfo[0]][$sName]);
                 $aData[$sName] = trim($aData[$sName]);
             }
@@ -336,17 +350,17 @@ class LOVD_Object {
                 // 0 is a valid entry for the check for mandatory fields, so we should also check if 0 is a valid entry in the selection list!
                 if (strpos($sName, '/') === false && isset($aData[$sName]) && $aData[$sName] !== '') {
                     $Val = $aData[$sName];
-                    $aOptions = array_keys($aField[5]);
-                    if (lovd_getProjectFile() == '/import.php' && !is_array($Val)) {
+                    $aSelectOptions = array_keys($aField[5]);
+                    if ($aOptions['explode_strings'] && !is_array($Val)) {
                         $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
                     } elseif (!is_array($Val)) {
                         $Val = array($Val);
                     }
                     foreach ($Val as $sValue) {
                         $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
-                        if (!in_array($sValue, $aOptions)) {
-                            if (lovd_getProjectFile() == '/import.php') {
-                                lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aOptions) . '\'.');
+                        if (!in_array($sValue, $aSelectOptions)) {
+                            if ($aSelectOptions['show_select_alts']) {
+                                lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aSelectOptions) . '\'.');
                                 $aErroredFields[$sName] = true;
                             } else {
                                 lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
