@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-10-26
+ * Modified    : 2017-11-03
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -259,6 +259,74 @@ class LOVD_Object {
             }
         }
         return $sSQLOut;
+    }
+
+
+
+
+
+    protected function checkFieldFRResult ($sFieldname, $sPreviewFieldname, $sFRSearchCondition,
+                                           $aArgs, $sReplaceStmt)
+    {
+        global $_DB, $_ERROR;
+
+        $sSelectSQL = $this->buildSQL(array(
+            'SELECT' => $this->aSQLViewList['SELECT'] . ', ' . $sReplaceStmt . ' AS `' .
+                $sPreviewFieldname . '`',
+            'FROM' => $this->aSQLViewList['FROM'],
+            'WHERE' => $this->aSQLViewList['WHERE'],
+            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+            'HAVING' => $this->aSQLViewList['HAVING'],
+        ));
+        $oResult = $_DB->query('SELECT `' . $sPreviewFieldname . '` AS `' . $sFieldname .
+            '` FROM (' . $sSelectSQL . ') AS subq WHERE ' . $sFRSearchCondition, $aArgs);
+        require_once ROOT_PATH . 'inc-lib-form.php';
+
+        // Determine LOVD object to which F&R column belongs.
+        $object = $this;
+        if ($this->sObject == "Custom_ViewList") {
+            // Determine class based on prefix of custom column name.
+            $sCategory = lovd_getCategoryCustomColFromName($sFieldname);
+            switch ($sCategory) {
+                case 'VariantOnGenome':
+                    require_once ROOT_PATH . 'class/object_genome_variants.php';
+                    $object = new LOVD_GenomeVariant();
+                    break;
+                case 'VariantOnTranscript':
+                    require_once ROOT_PATH . 'class/object_transcript_variants.php';
+                    $object = new LOVD_TranscriptVariant();
+                    break;
+                case 'Screening':
+                    require_once ROOT_PATH . 'class/object_screenings.php';
+                    $object = new LOVD_Screening();
+                    break;
+                case 'Individual':
+                    require_once ROOT_PATH . 'class/object_individuals.php';
+                    $object = new LOVD_Individual();
+                    break;
+            }
+        }
+
+        $aCFOptions = array(
+            'trim_fields' => false,
+            'mandatory_password' => false);
+        $nAffectedRows = 0;
+        while (($aData = $oResult->fetchAssoc()) !== false) {
+            $object->checkFields($aData, false, $aCFOptions);
+            $nAffectedRows++;
+        }
+
+        if (lovd_error()) {
+            // Remove errors relating to fields other than on which Find &
+            // Replace is performed on.
+            for ($i = count($_ERROR['fields']) - 1; $i >= 0; $i--) {
+                if ($_ERROR['fields'][$i] != $sFieldname) {
+                    unset($_ERROR['fields'][$i], $_ERROR['messages'][$i]);
+                }
+            }
+        }
+
+        return array(!lovd_error(), $nAffectedRows);
     }
 
 
@@ -1338,7 +1406,7 @@ class LOVD_Object {
         // sFRSearchValue       Search string.
         // sFRReplaceValue      Replace value.
         // aOptions             F&R options (e.g. match type)
-        global $_DB;
+        global $_DB, $_ERROR;
 
         // Column should be configured to allow Find & Replace.
         if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
@@ -1350,18 +1418,14 @@ class LOVD_Object {
         list($sTablename, $sFieldname) = $this->getTableAndFieldNameFromViewListCols($sFRFieldname);
 
         // Run query with search field to compute number of affected rows, skipping ORDER BY and LIMIT.
-        $sSelectSQL = $this->buildSQL(array(
-            'SELECT' => $this->aSQLViewList['SELECT'],
-            'FROM' => $this->aSQLViewList['FROM'],
-            'WHERE' => $this->aSQLViewList['WHERE'],
-            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
-            'HAVING' => $this->aSQLViewList['HAVING'],
-        ));
+
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
                                                                $sFieldname, $aOptions);
-        $oResult = $_DB->query('SELECT COUNT(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
-                               $sFRSearchCondition, $aArgs);
-        $nAffectedRows = intval($oResult->fetchColumn());
+//        $oResult = $_DB->query('SELECT COUNT(*) FROM (' . $sSelectSQL . ') AS subq WHERE ' .
+//                               $sFRSearchCondition, $aArgs);
+//        $nAffectedRows = intval($oResult->fetchColumn());
+
+
 
         // Construct replace statement.
         $sReplaceStmt = $this->generateViewListFRReplaceStatement($sTablename, $sFieldname,
@@ -1370,6 +1434,16 @@ class LOVD_Object {
         // Set names for preview column.
         $sPreviewFieldname = $sFRFieldname . '_FR';
         $sPreviewFieldDisplayname = $sFRFieldDisplayname . ' (PREVIEW)';
+
+        list($bSuccess, $nAffectedRows) = $this->checkFieldFRResult($sFieldname,
+            $sPreviewFieldname, $sFRSearchCondition, $aArgs, $sReplaceStmt);
+
+        if (!$bSuccess) {
+            lovd_showInfoTable('Some records become invalid after the replace action on ' .
+                'column ' . $sFRFieldname . '. Please tend to the error messages below and ' .
+                'change the options accordingly.', 'warning');
+            lovd_errorPrint();
+        }
 
         // Edit sql in $this->aSQLViewList to include an F&R column.
         $this->aSQLViewList['SELECT'] .= ', ' . $sReplaceStmt . ' AS `' . $sPreviewFieldname . '`';
