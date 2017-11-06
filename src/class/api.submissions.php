@@ -346,7 +346,7 @@ class LOVD_API_Submissions {
                         $aVOT['VariantOnTranscript/DNA'] = $aVariantLevel2['name']['#text'];
 
                         // Fill in the positions. If this fails, this is reason to reject the variant.
-                        $aVariantInfo = lovd_getVariantInfo($aVariantLevel2['name']['#text']);
+                        $aVariantInfo = lovd_getVariantInfo($aVariantLevel2['name']['#text'], $aVOT['transcriptid']);
                         if (!$aVariantInfo) {
                             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': SeqChange #' . $nVariantLevel2 . ': Name not understood. ' .
