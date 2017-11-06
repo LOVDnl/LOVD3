@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-12-07
- * For LOVD    : 3.0-18
+ * Modified    : 2017-11-06
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -503,7 +503,8 @@ class LOVD_API_Submissions {
         if (!$_INI['paths']['data_files']) {
             // There's no way we can do anything with the results, so fail.
             $this->API->aResponse['errors'][] = 'No data file path configured. Without this path, this LOVD API is not able to process files. ' .
-                'Please contact the admin to configure the data file path: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                'Please contact the admin to configure the data file path: ' . $_SETT['admin']['name'] . ' <' .
+                str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>.';
             $this->API->nHTTPStatus = 500; // Send 500 Internal Server Error.
             return false;
         }
@@ -601,7 +602,8 @@ class LOVD_API_Submissions {
             // Data file is not meant for this LSDB.
             $this->API->aResponse['errors'][] = 'VarioML error: LSDB ID in file does not match this LSDB. ' .
                 'Submit your file to the correct LSDB, or if sure you want to submit here, ' .
-                'request the LSDB ID from the admin: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                'request the LSDB ID from the admin: ' . $_SETT['admin']['name'] . ' <' .
+                str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
@@ -934,7 +936,8 @@ class LOVD_API_Submissions {
                             if ($aGenes) {
                                 if (!$aGenesExisting) {
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given genes for this variant are configured in this LOVD. ' .
-                                        'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                                        'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' .
+                                        str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>.';
                                 } else {
                                     // Genes do exist. Mention which transcripts can then be used.
                                     $sTranscriptsAvailable = implode(', ', $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', count($aGenesExisting) - 1) . ') ORDER BY id_ncbi', array($aGenesExisting))->fetchAllColumn());
@@ -944,7 +947,8 @@ class LOVD_API_Submissions {
                             } else {
                                 // No genes were ever given, focus on the transcripts.
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given transcripts for this variant are configured in this LOVD. ' .
-                                    'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                                    'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' .
+                                    str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>.';
                             }
                         } else {
                             // We have at least one matching transcript.
