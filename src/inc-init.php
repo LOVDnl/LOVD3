@@ -147,7 +147,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-20a',
+                            'version' => '3.0-20b',
                           ),
                 'user_levels' =>
                      array(
@@ -449,6 +449,7 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
+                'TABLE_SCHEDULED_IMPORTS' => TABLEPREFIX . '_scheduled_imports',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
