@@ -51,10 +51,19 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
+    // This feature requires you to have the data files and the archive settings configured.
+    if (empty($_INI['paths']['data_files']) || empty($_INI['paths']['data_files_archive'])) {
+        lovd_showInfoTable('To use this feature, you will need to configure both the "data_files" and "data_files_archive" paths.', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
     // Loop through the files in the dir and find importable files.
     $h = @opendir($_INI['paths']['data_files']);
     if (!$h) {
         lovd_showInfoTable('Can\'t open directory: ' . $_INI['paths']['data_files'], 'stop');
+        $_T->printFooter();
+        exit;
     }
 
     // Fetch all info from the database, for annotation and error reporting.
@@ -243,7 +252,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             $sPriorityHTML = (!$nPriority? '' : '
                     <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import" style="float : right;">');
             $sProcessingHTML = (!$bProcessing? '' : '
-                    <IMG src="gfx/menu_clock.png" alt="Processing ..." width="16" height="16" title="Processing ..." style="float : right;">');
+                    <IMG src="gfx/menu_clock.png" alt="Processing ..." width="16" height="16" title="Processing started ' . $zScheduledFiles[$sFile]['processed_date'] . '" style="float : right;">');
             $sErrorsHTML = (!$bError? '' : '
                     <IMG src="gfx/cross.png" alt="Errors while processing" width="16" height="16" title="Errors while processing:' . "\n" . htmlspecialchars($zScheduledFiles[$sFile]['process_errors']) . '" style="float : right;">');
             print('
@@ -260,6 +269,87 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
 
     $_T->printFooter();
     exit;
+}
+
+
+
+
+
+if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
+    // This URL forces FORMAT to be text/plain.
+    // All unneeded output will be prevented.
+    define('FORMAT_ALLOW_TEXTPLAIN', true); // To allow automatic data loading.
+
+    // This feature requires you to have the data files and the archive settings configured.
+    if (empty($_INI['paths']['data_files']) || empty($_INI['paths']['data_files_archive'])) {
+        die('Error: To use this feature, you will need to configure both the "data_files" and "data_files_archive" paths.');
+    }
+
+    // If we have nothing to do, let's stop.
+    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 0')->fetchColumn()) {
+        exit; // Stop silently.
+    }
+
+    // First, check if the database is free, and not currently uploading anything.
+    // Instead of monitoring the number of connections, I really want to check if something is uploading already.
+    // We'll ignore the possibility of a file being manually uploaded. We just check the schedule.
+    // We'll check for active uploads started later than an hour ago, with no errors filled in.
+    $sMaxDate = date('Y-m-d H:i:s', time() - (60*60));
+    if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 1 AND processed_date >= ? AND process_errors IS NULL', array($sMaxDate))->fetchColumn()) {
+        die('Error: Last file is still being imported...' . "\n");
+    }
+
+    // Begin transaction, take rows from the schedule while write locking them, until we find a scheduled file that we can find.
+    // Should be the first, of course. But I'll check anyway, to nicely handle the error message.
+    $_DB->beginTransaction();
+    $sFile = '';
+    for ($i = 0; $sFile = $_DB->query('SELECT filename FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 0 ORDER BY priority DESC, scheduled_date, filename LIMIT ' . $i . ', 1 FOR UPDATE')->fetchColumn(); $i++) {
+        if (!is_readable($_INI['paths']['data_files'] . '/' . $sFile)) {
+            print('Warning: ' . $sFile . ' not found...' . "\n");
+        } else {
+            // Select this file. Since filename is primary key, we don't need more stuff in the WHERE.
+            if (!$_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET in_progress = 1, processed_by = 0, processed_date = NOW() WHERE filename = ?', array($sFile))->rowCount()) {
+                die('Error: Can not obtain processing lock on file ' . $sFile . '.' . "\n");
+            }
+            // We selected our file. Stop going through the list.
+            break;
+        }
+    }
+    $_DB->commit();
+
+    // This can happen when scheduled files are not found.
+    if (!$sFile) {
+        die('Error: Failed to retrieve a filename from the database.' . "\n");
+    }
+
+    // Load necessary authorisation.
+    $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchAssoc();
+    $_AUTH['curates']      = array();
+    $_AUTH['collaborates'] = array();
+    $_AUTH['level'] = LEVEL_MANAGER; // To pass the authorization check downstream.
+
+    // Fake the POSTing of a file.
+    $_POST['mode'] = 'insert';
+    $_POST['charset'] = 'auto';
+// FIXME: TEMP
+$_POST['simulate'] = '1';
+
+    $_FILES =
+        array(
+            'import' =>
+                array(
+                    'name' => $sFile,
+                    'tmp_name' => $_INI['paths']['data_files'] . '/' . $sFile,
+                    'size' => filesize($_INI['paths']['data_files'] . '/' . $sFile),
+                    'error' => 0,
+                )
+        );
+
+    print('Preparing to upload ' . $sFile . ' into database...' . "\n" .
+          'Current time: ' . date('Y-m-d H:i:s.') . "\n");
+
+    // Since we're running automatically, ignore user aborts (dying caller script).
+    ignore_user_abort(true);
 }
 
 
@@ -449,7 +539,7 @@ function lovd_setEmptyCheckboxFields ($aForm)
 
 
 $nWarnings = 0;
-if (POST) {
+if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of files.
     // Form sent, first check the file itself.
     lovd_errorClean();
 
@@ -458,7 +548,7 @@ if (POST) {
         lovd_errorAdd('import', 'There was a problem with the file transfer. Please try again. The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server') . '.');
 
     } elseif ($_FILES['import']['error'] == 4 || !$_FILES['import']['size']) {
-        lovd_errorAdd('import', 'Please select a file to upload.');
+        lovd_errorAdd('import', 'Please select a non-empty file to upload.');
 
     } elseif ($_FILES['import']['size'] > $nMaxSize) {
         lovd_errorAdd('import', 'The file cannot be larger than ' . round($nMaxSize/pow(1024, 2), 1) . ' MB' . ($nMaxSize == $nMaxSizeLOVD? '' : ', due to restrictions on this server') . '.');
@@ -648,7 +738,7 @@ if (POST) {
                                 print('  sMessage = sMessage.replace(/' . preg_quote($sCol, '/') . '/, "' . $sCol . ' (lost ' . $n . ' value' . ($n == 1? '' : 's') . ')");' . "\n");
                             }
                             print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
-                                  '</SCRIPT>');
+                                  '</SCRIPT>' . "\n");
                             $aUnknownCols = $aLostValues = array(); // 2013-10-14; 3.0-08; Reset, because it's normally reset when parsing the next section's columns, which might not be there.
                             flush();
                         }
@@ -848,6 +938,13 @@ if (POST) {
                         if (strpos($sTableName, '2', strlen(TABLEPREFIX)) !== false) {
                             // Linking tables (such as GEN2DIS) require all available columns to be present.
                             $aSection['required_columns'] = $aSection['allowed_columns'];
+                        } elseif (LOVD_plus) {
+                            // LOVD+ selects the IDs less often than LOVD does, to save memory.
+                            // Imports into LOVD+ are always new data, and therefore certain IDs are simply not needed.
+                            // The following sections don't need their IDs fetched, as all data is always present in the files.
+                            if (!in_array($sCurrentSection, array('Phenotypes', 'Screenings', 'Variants_On_Genome', 'Variants_On_Transcripts'))) {
+                                $aSection['ids'] = $_DB->query('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ', 1 FROM ' . $sTableName)->fetchAllCombine();
+                            }
                         } else {
                             // Normal data table, no data links.
                             if ($sCurrentSection == 'Variants_On_Transcripts' && $aParsed['Variants_On_Genome']['ids']) {
@@ -1956,7 +2053,7 @@ if (POST) {
                     print('  sMessage = sMessage.replace(/' . preg_quote($sCol, '/') . '/, "' . $sCol . ' (lost ' . $n . ' value' . ($n == 1? '' : 's') . ')");' . "\n");
                 }
                 print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
-                      '</SCRIPT>');
+                      '</SCRIPT>' . "\n");
                 flush();
             }
         }
@@ -2040,7 +2137,8 @@ if (POST) {
             $nDone = 0;
             $_DB->beginTransaction();
 
-            foreach ($aParsed as $sSection => $aSection) {
+            // Taking $aSection as a reference saves memory.
+            foreach ($aParsed as $sSection => &$aSection) {
                 $aFields = $aSection['allowed_columns'];
                 // We will unset the IDs, and generate new ones. All, but the Column and VOT sections, which don't have an PK AUTO_INCREMENT.
                 if (in_array('id', $aFields) && !in_array($sSection, array('Columns', 'Variants_On_Transcripts'))) {
@@ -2048,7 +2146,8 @@ if (POST) {
                 }
                 $aDone[$sSection] = 0;
 
-                foreach ($aSection['data'] as $nID => $aData) {
+                // Taking $aData as a reference saves memory.
+                foreach ($aSection['data'] as $nID => &$aData) {
                     if (!$aData['todo'] || !in_array($aData['todo'], array('insert', 'update'))) {
                         continue;
                     }
@@ -2274,6 +2373,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 *///////////////////////////////////////////////////////////////////////////////
                     $_BAR[1]->setProgress(($nEntry/$nDataTotal)*100);
                 }
+                unset($aData); // break the reference with the last element.
 
                 // Done with all this section!
                 unset($aParsed[$sSection]['allowed_columns']);
@@ -2287,6 +2387,8 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     unset($aDone[$sSection]);
                 }
             }
+            unset($aSection); // break the reference with the last element.
+
             if (!$bError) {
                 $_DB->commit();
 
@@ -2361,7 +2463,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 if (count($aDone)) {
                     $sMessage = '';
                     foreach ($aDone as $sSection => $n) {
-                        $sMessage .= (!$sMessage ? '' : ', ') . $n . ' ' . $sSection;
+                        $sMessage .= (!$sMessage? '' : ', ') . $n . ' ' . $sSection;
                     }
                     $sMessage = preg_replace('/, ([^,]+)/', " and $1", $sMessage);
                 } else {
@@ -2371,6 +2473,22 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 $nGenes = count($aGenes);
                 lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries' . (!$aGenes? '' : ' (' . ($nGenes > 100? $nGenes . ' genes' : implode(', ', $aGenes)) . ')') . (ACTION != 'autoupload_scheduled_file' || !$sFile? '' : ' (' . $sFile . ')') . '.');
                 lovd_setUpdatedDate($aGenes); // FIXME; regardless of variant status... oh, well...
+
+                // When auto uploading, clean up.
+                if (ACTION == 'autoupload_scheduled_file' && $sFile && false) {
+                    // Move the file to the archive folder, including all its sibling files.
+                    if (is_writable($_INI['paths']['data_files_archive'])) { // Must be set, but still.
+                        $sFilePrefix = substr($sFile, 0, strpos($sFile . '.', '.'));
+                        // Doing this the proper PHP way, would be to open the dir, loop the files, find matching files, and then rename them one by one.
+                        // Instead, I'm doing this in a Linux-specific way, by just calling a simple mv command.
+                        @exec('mv -i ' . $_INI['paths']['data_files'] . '/' . $sFilePrefix . '.* ' . $_INI['paths']['data_files_archive'] . '/');
+                    }
+
+
+                    // Remove the file from the schedule.
+                    $_DB->query('DELETE FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ? AND in_progress = 1', array($sFile));
+
+                }
             }
             // FIXME: Why is this not empty?
             //var_dump(implode("\n", $aData));
@@ -2385,12 +2503,18 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
 
         if (!lovd_error() && !$nDataTotal) {
             if ($sMode == 'update')
-                lovd_showInfoTable('No entries found that can be updated via the import file.', 'stop');
+                $sMessage = 'No entries found that can be updated via the import file.';
             if ($sMode == 'insert') {
-                lovd_showInfoTable('No entries found that need to be imported in the database. Either your uploaded file contains no variants, or all entries are already in the database.', 'stop');
+                $sMessage = 'No entries found that need to be imported in the database. Either your uploaded file contains no variants, or all entries are already in the database.';
             }
-            $_T->printFooter();
-            exit;
+            lovd_showInfoTable($sMessage, 'stop');
+            if (ACTION == 'autoupload_scheduled_file') {
+                // We are to nicely return this error message, so it can be stored.
+                lovd_errorAdd('', $sMessage);
+            } else {
+                $_T->printFooter();
+                exit;
+            }
         }
     }
 
@@ -2399,6 +2523,21 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
     if (in_array(ACTION, array_keys($aModes))) {
         $_POST['mode'] = ACTION;
     }
+}
+
+
+
+if (ACTION == 'autoupload_scheduled_file') {
+    // If we get here, we tried to upload a file automatically, but something failed.
+    // Display the error messages and store them in the database. Then try again.
+    $sErrors = '';
+    foreach ($_ERROR['messages'] as $sMessage) {
+        if ($sMessage) {
+            $sErrors .= (!$sErrors? '' : "\n") . html_entity_decode(strip_tags($sMessage));
+        }
+    }
+    $_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET process_errors = ? WHERE filename = ?', array($sErrors, $sFile));
+    die('Errors while processing file:' . "\n" . $sErrors);
 }
 
 
