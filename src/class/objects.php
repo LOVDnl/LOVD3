@@ -141,13 +141,21 @@ class LOVD_Object {
                                                $aArgs, $aOptions) {
         // Perform a find and replace action for given field name (column).
         // Return false if update query fails.
-
         global $_DB, $_AUTH;
 
         // Column should be configured to allow Find & Replace.
         if (empty($this->aColumnsViewList[$sFRViewlistCol]['allowfnr'])) {
             lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' .
                 $sFRViewlistCol . '", which does not have that feature enabled.');
+        }
+
+        // FIXME: This check should be done earlier, not just when running it.
+        // Check user authorization needed to perform find and replace action.
+        // Fixme: check if authorization level is correctly set for viewlist data.
+        if ($_AUTH['level'] < LEVEL_CURATOR) {
+            $sErr = 'You do not have authorization to perform this action.';
+            lovd_displayError('FindAndReplace', $sErr);
+            return false;
         }
 
         // Determine field name from column definitions.
@@ -171,15 +179,20 @@ class LOVD_Object {
             'HAVING' => $this->aSQLViewList['HAVING'],
         ));
         $sSubqueryAlias = 'subq';
-        $sReplaceStmt = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
+
+        // Get replace statement to use inside subquery. This is needed to
+        // analyse the changed values with checkFields() later on.
+        $sReplaceStmtInsideSubq = $this->generateViewListFRReplaceStatement($sTableRef,
             $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
-        // FIXME: This check should be done earlier, not just when running it.
-        // Check user authorization needed to perform find and replace action.
-        // Fixme: check if authorization level is correctly set for viewlist data.
-        if ($_AUTH['level'] < LEVEL_CURATOR) {
-            $sErr = 'You do not have authorization to perform this action.';
-            lovd_displayError('FindAndReplace', $sErr);
+        // Construct find & replace search condition to select only records
+        // that match the find & replace search options.
+        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sSubqueryAlias,
+                                                               $sFieldname, $aOptions);
+
+        list($bSuccess,) = $this->checkFieldFRResult($sFieldname, $sTablename, $sTableRef,
+            $sFRSearchCondition, $aArgs, $sReplaceStmtInsideSubq);
+        if (!$bSuccess) {
             return false;
         }
 
@@ -190,21 +203,20 @@ class LOVD_Object {
         // would be to get the primary key in a separate query and include that in both the
         // update query and select subquery.
         $sIDField = $sSubqueryIDField = 'id';
-
         if (!is_null($sTableRef)) {
             $sSubqueryIDField = $sTableRef . 'id';
         }
 
-        // Apply find & replace search condition so that only changed records will be updated.
-        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
-                                                               $sFieldname, $aOptions);
+        // Generate replacement statement for outside the subquery.
+        $sReplaceStmtOutsideSubq = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
+            $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
         // Construct and apply update query.
         $sUpdateSQL = 'UPDATE ' . $sTablename .  ', (' . $sSelectSQL . ') AS ' .
             $sSubqueryAlias . ' SET ' . $sTablename . '.`' . $sFieldname .
-            '` = ' . $sReplaceStmt . ', ' . $sTablename . '.edited_by = ?, ' . $sTablename .
-            '.edited_date = ? WHERE ' . $sFRSearchCondition . ' AND ' . $sTablename . '.' .
-            $sIDField . ' = ' . $sSubqueryAlias . '.' . $sSubqueryIDField;
+            '` = ' . $sReplaceStmtOutsideSubq . ', ' . $sTablename . '.edited_by = ?, ' .
+            $sTablename . '.edited_date = ? WHERE ' . $sFRSearchCondition . ' AND ' .
+            $sTablename . '.' . $sIDField . ' = ' . $sSubqueryAlias . '.' . $sSubqueryIDField;
 
         if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
             // Update edited_by/-date fields of variant on genome table if query changes values on
@@ -212,10 +224,10 @@ class LOVD_Object {
             $sUpdateSQL = 'UPDATE ' . TABLE_VARIANTS .  ' vog INNER JOIN ' .
                           TABLE_VARIANTS_ON_TRANSCRIPTS . ' vot ON vog.id = vot.id, (' .
                           $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET vot.`' . $sFieldname .
-                          '` = ' . $sReplaceStmt . ', vog.edited_by = ?, vog.edited_date = ? WHERE ' .
-                          $sFRSearchCondition . ' AND vot.' . $sIDField . ' = ' . $sSubqueryAlias .
-                          '.' . $sSubqueryIDField . ' AND vot.transcriptid = '  . $sSubqueryAlias .
-                          '.transcriptid';
+                          '` = ' . $sReplaceStmtOutsideSubq . ', vog.edited_by = ?, ' .
+                          'vog.edited_date = ? WHERE ' . $sFRSearchCondition . ' AND vot.' .
+                          $sIDField . ' = ' . $sSubqueryAlias . '.' . $sSubqueryIDField .
+                          ' AND vot.transcriptid = '  . $sSubqueryAlias . '.transcriptid';
         }
 
         // Add edit fields to SQL arguments.
@@ -254,21 +266,21 @@ class LOVD_Object {
 
 
     protected function checkFieldFRResult ($sFieldname, $sTablename, $sTableRef,
-                                           $sPreviewFieldname, $sFRSearchCondition, $aArgs,
-                                           $sReplaceStmt)
+                                           $sFRSearchCondition, $aArgs, $sReplaceStmt)
     {
         global $_DB, $_ERROR;
 
+        $sPlaceholderName = 'FRFieldResult';
         $sSelectSQL = $this->buildSQL(array(
             'SELECT' => $this->aSQLViewList['SELECT'] . ', ' . $sReplaceStmt . ' AS `' .
-                $sPreviewFieldname . '`',
+                $sPlaceholderName . '`',
             'FROM' => $this->aSQLViewList['FROM'],
             'WHERE' => $this->aSQLViewList['WHERE'],
             'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
             'HAVING' => $this->aSQLViewList['HAVING'],
         ));
         $sSubqueryID = 'subq.' . $sTableRef . 'id';
-        $oResult = $_DB->query('SELECT tab.*, `' . $sPreviewFieldname . '` FROM (' . $sSelectSQL .
+        $oResult = $_DB->query('SELECT tab.*, `' . $sPlaceholderName . '` FROM (' . $sSelectSQL .
             ') AS subq JOIN ' . $sTablename . ' AS tab ON (tab.id = ' . $sSubqueryID . ') WHERE ' .
             $sFRSearchCondition, $aArgs);
         require_once ROOT_PATH . 'inc-lib-form.php';
@@ -305,7 +317,7 @@ class LOVD_Object {
             'mandatory_password' => false);
         $nAffectedRows = 0;
         while (($aData = $oResult->fetchAssoc()) !== false) {
-            $aData[$sFieldname] = $aData[$sPreviewFieldname];
+            $aData[$sFieldname] = $aData[$sPlaceholderName];
             $object->checkFields($aData, false, $aCFOptions);
             $nAffectedRows++;
         }
@@ -1438,7 +1450,7 @@ class LOVD_Object {
         $sPreviewFieldDisplayname = $sFRFieldDisplayname . ' (PREVIEW)';
 
         list($bSuccess, $nAffectedRows) = $this->checkFieldFRResult($sFieldname, $sTablename,
-             $sTableRef, $sPreviewFieldname, $sFRSearchCondition, $aArgs, $sReplaceStmt);
+             $sTableRef, $sFRSearchCondition, $aArgs, $sReplaceStmt);
 
         if (!$bSuccess) {
             lovd_showInfoTable('Some records become invalid after the replace action on ' .
