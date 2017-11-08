@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2017-11-07
+ * Modified    : 2017-11-08
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1102,7 +1102,7 @@ class LOVD_API_Submissions {
         global $_INI, $_SETT;
 
         // Assuming this file is unique, since we're including the microseconds.
-        $sFileName = 'LOVD_API_submission_' . $this->zAuth['id'] . '_' . date('Y-m-d_H:i:s') . substr(microtime(), 1, 7);
+        $sFileName = 'LOVD_API_submission_' . $this->zAuth['id'] . '_' . date('Y-m-d_H:i:s') . substr(microtime(), 1, 7) . '.lovd';
 
         // Try opening the file.
         $f = @fopen($_INI['paths']['data_files'] . '/' . $sFileName, 'w');
