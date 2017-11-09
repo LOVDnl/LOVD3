@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-11-08
+ * Modified    : 2017-11-09
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -346,7 +346,7 @@ $_POST['simulate'] = '1';
         );
 
     print('Preparing to upload ' . $sFile . ' into database...' . "\n" .
-          'Current time: ' . date('Y-m-d H:i:s.') . "\n");
+          'Current time: ' . date('Y-m-d H:i:s.') . "\n\n");
 
     // Since we're running automatically, ignore user aborts (dying caller script).
     ignore_user_abort(true);
@@ -732,13 +732,15 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                         // If we had at least one unknown column in the previous section, we will mention in the output the number of values gone lost.
                         // The column name has already been written to the output, so we should simply add command to append the number of lost values.
                         if (isset($aUnknownCols) && count($aUnknownCols)) {
-                            print('<SCRIPT type="text/javascript">' . "\n" .
-                                  '  var sMessage = $("#lovd_parser_progress_message_done").html();' . "\n");
-                            foreach ($aLostValues as $sCol => $n) {
-                                print('  sMessage = sMessage.replace(/' . preg_quote($sCol, '/') . '/, "' . $sCol . ' (lost ' . $n . ' value' . ($n == 1? '' : 's') . ')");' . "\n");
+                            if (FORMAT == 'text/html') {
+                                print('<SCRIPT type="text/javascript">' . "\n" .
+                                      '  var sMessage = $("#lovd_parser_progress_message_done").html();' . "\n");
+                                foreach ($aLostValues as $sCol => $n) {
+                                    print('  sMessage = sMessage.replace(/' . preg_quote($sCol, '/') . '/, "' . $sCol . ' (lost ' . $n . ' value' . ($n == 1? '' : 's') . ')");' . "\n");
+                                }
+                                print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
+                                      '</SCRIPT>' . "\n");
                             }
-                            print('  $("#lovd_parser_progress_message_done").html(sMessage);' . "\n" .
-                                  '</SCRIPT>' . "\n");
                             $aUnknownCols = $aLostValues = array(); // 2013-10-14; 3.0-08; Reset, because it's normally reset when parsing the next section's columns, which might not be there.
                             flush();
                         }
@@ -2046,7 +2048,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
 
             // If we had at least one unknown column in the previous section, we will mention in the output the number of values gone lost.
             // The column name has already been written to the output, so we should simply add command to append the number of lost values.
-            if (isset($aUnknownCols) && count($aUnknownCols)) {
+            if (isset($aUnknownCols) && count($aUnknownCols) && FORMAT == 'text/html') {
                 print('<SCRIPT type="text/javascript">' . "\n" .
                       '  var sMessage = $("#lovd_parser_progress_message_done").html();' . "\n");
                 foreach ($aLostValues as $sCol => $n) {

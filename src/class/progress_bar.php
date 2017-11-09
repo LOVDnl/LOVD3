@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-09-10
- * Modified    : 2017-01-27
- * For LOVD    : 3.0-19
+ * Modified    : 2017-11-09
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -156,7 +156,7 @@ class ProgressBar {
         if (FORMAT == 'text/html') {
             print('<SCRIPT type="text/javascript">oPB_' . $this->sID . '_message' . (!$sType? '' : '_done') . '.innerHTML' . ($bAppend? '+' : '') . '=\'' . str_replace(array('\'', "\r", "\n"), array('\\\'', '', '\n'), $sMessage) . '\';</SCRIPT>' . "\n");
         } elseif (FORMAT == 'text/plain') {
-            print(':' . str_replace("\n", "\n:", rtrim(strip_tags($sMessage))) . "\n");
+            print(rtrim(strip_tags($sMessage)) . "\n");
         }
         flush();
         return true;
