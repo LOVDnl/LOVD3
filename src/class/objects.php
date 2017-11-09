@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-08
+ * Modified    : 2017-11-09
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -170,7 +170,8 @@ class LOVD_Object {
             return false;
         }
 
-        // Construct replace statement using viewlist's select query, without ORDER BY and LIMIT.
+        // Construct query to use for updating relevant records, without ORDER
+        // BY and LIMIT clauses.
         $sSelectSQL = $this->buildSQL(array(
             'SELECT' => $this->aSQLViewList['SELECT'],
             'FROM' => $this->aSQLViewList['FROM'],
@@ -190,6 +191,7 @@ class LOVD_Object {
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sSubqueryAlias,
                                                                $sFieldname, $aOptions);
 
+        // Run checkFields() on all changed records.
         list($bSuccess,) = $this->checkFieldFRResult($sFieldname, $sTablename, $sTableRef,
             $sFRSearchCondition, $aArgs, $sReplaceStmtInsideSubq);
         if (!$bSuccess) {
@@ -308,6 +310,16 @@ class LOVD_Object {
                     $object = new LOVD_Individual();
                     break;
             }
+        }
+
+        $aForm = $object->getForm();
+        if (!isset($aForm[$sFieldname])) {
+            // Given field is not part of the object's form, therefore
+            // checkFields() will ignore it and data get corrupted. Return
+            // false to disallow this.
+            lovd_errorAdd($sFieldname, 'LOVD is unable to verify contents of field ' .
+                $sFieldname . ', please contact the administrator.');
+            return array(false, 0);
         }
 
         // Run checkfields on records with find & replace action applied.
