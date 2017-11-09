@@ -582,7 +582,7 @@ function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname
     // Place DIVs overlaying table columns to get column selection.
     var overlayDiv = $().add('<DIV class="' + sOverlayClassname + '"></DIV>');
     var ePos = $(targetTH).offset();
-    // var bAllowFindAndReplace = $(targetTH).data('allowfnr') == '1';
+    // var bAllowFindAndReplace = $(targetTH).data('allow_find_replace') == '1';
 
     // Show 'not-allowed' cursor type for non-custom columns.
     var overlayCursor = 'not-allowed';

@@ -139,12 +139,12 @@ class LOVD_Object {
 
     public function applyColumnFindAndReplace ($sFRViewlistCol, $sFRSearchValue, $sFRReplaceValue,
                                                $aArgs, $aOptions) {
-        // Perform a find and replace action for given field name (column).
-        // Return false if update query fails.
+        // Perform a find and replace action for given viewlist column. Return
+        // false if anything fails.
         global $_DB, $_AUTH;
 
         // Column should be configured to allow Find & Replace.
-        if (empty($this->aColumnsViewList[$sFRViewlistCol]['allowfnr'])) {
+        if (empty($this->aColumnsViewList[$sFRViewlistCol]['allow_find_replace'])) {
             lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' .
                 $sFRViewlistCol . '", which does not have that feature enabled.');
         }
@@ -170,15 +170,7 @@ class LOVD_Object {
             return false;
         }
 
-        // Construct query to use for updating relevant records, without ORDER
-        // BY and LIMIT clauses.
-        $sSelectSQL = $this->buildSQL(array(
-            'SELECT' => $this->aSQLViewList['SELECT'],
-            'FROM' => $this->aSQLViewList['FROM'],
-            'WHERE' => $this->aSQLViewList['WHERE'],
-            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
-            'HAVING' => $this->aSQLViewList['HAVING'],
-        ));
+        // Name of viewlist query to run as subquery.
         $sSubqueryAlias = 'subq';
 
         // Get replace statement to use inside subquery. This is needed to
@@ -197,6 +189,16 @@ class LOVD_Object {
         if (!$bSuccess) {
             return false;
         }
+
+        // Construct query to use for updating relevant records, without ORDER
+        // BY and LIMIT clauses.
+        $sSelectSQL = $this->buildSQL(array(
+            'SELECT' => $this->aSQLViewList['SELECT'],
+            'FROM' => $this->aSQLViewList['FROM'],
+            'WHERE' => $this->aSQLViewList['WHERE'],
+            'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
+            'HAVING' => $this->aSQLViewList['HAVING'],
+        ));
 
         // ID field to connect rows from the original viewlist select query with rows in the
         // update query.
@@ -272,6 +274,10 @@ class LOVD_Object {
     {
         global $_DB, $_ERROR;
 
+        // Generate and execute query to get records that are affected by the
+        // find & replace action, in order to run checkFields() on them. Note,
+        // there is no ORDER BY in this query, the errors reported may have a
+        // different order from how they are present in the shown viewlist.
         $sPlaceholderName = 'FRFieldResult';
         $sSelectSQL = $this->buildSQL(array(
             'SELECT' => $this->aSQLViewList['SELECT'] . ', ' . $sReplaceStmt . ' AS `' .
@@ -694,7 +700,11 @@ class LOVD_Object {
     private function generateViewListFRReplaceStatement ($sTablename, $sFieldname, $sFRSearchValue,
                                                          $sFRReplaceValue, $aOptions)
     {
-        // Return a SQL REPLACE statement for given field name and options.
+        // Return a SQL REPLACE statement for given field name from the
+        // viewlist select query. Note that the generated replace statement
+        // does not work when the value of the field is transformed in the
+        // SELECT clause.
+        // Fixme: allow for replacement of transformed fields in viewlist select query.
         // Params:
         // - $sTableName        Name of the table.
         // - $sFieldname        Name of the table's field on which replace will be called.
@@ -798,19 +808,19 @@ class LOVD_Object {
 
     private function getFieldInfo ($sViewListCol)
     {
-        // Try to translate UI field name to fieldname and tablename in the database based on
-        // the SQL query definitions. (note that a field name returned by the interface (returned
-        // by the select query) may be different from the fieldname in the table due to aliases).
+        // Get information on viewlist column. Returns:
+        // sFieldname   Name of field in database.
+        // sTablename   Name of database table containing field.
+        // sTableRef    Name of reference to table in viewlist query (e.g.
+        //              alias). May be null if there's no explicit reference.
 
-        // All columns for Find & Replace *must* be defined in the column's list.
-        // Check if column exists there. If not, display an error.
         if (!isset($this->aColumnsViewList[$sViewListCol])) {
             lovd_displayError('', 'Cannot find table and field name for undefined column "' .
                 $sViewListCol . '".');
         }
 
-        // Column name in the database may be a function, but
-        // those columns should not have 'allowfnr' set to true.
+        // Get database field name and table reference from 'db' specification
+        // in aColumnsViewList.
         $sTableRef = null;
         $sFieldname = $this->aColumnsViewList[$sViewListCol]['db'][0];
         if (preg_match('/^([A-Za-z0-9_`]+)\.([A-Za-z0-9_`\/]+)$/', $sFieldname, $aRegs)) {
@@ -818,11 +828,11 @@ class LOVD_Object {
             $sFieldname = $aRegs[2];
         }
 
-        // Because we will append the name of the column with something to
-        // create the preview column, we need to trim any backticks off.
+        // Trim any backticks for standardization.
         $sFieldname = trim($sFieldname, '`');
 
-        // Get tablename for custom column.
+        // Get tablename.
+        // Fixme: solve for non-custom columns in custom viewlists.
         $sTablename = null;
         if ($this instanceof LOVD_CustomViewList) {
             $sCat = lovd_getCategoryCustomColFromName($sViewListCol);
@@ -836,8 +846,7 @@ class LOVD_Object {
             $sTablename = constant($this->sTable);
         }
 
-        // Note: sTableRef may be an alias.
-        return array($sFieldname, $sTablename, $sTableRef);
+         return array($sFieldname, $sTablename, $sTableRef);
     }
 
 
@@ -1430,30 +1439,30 @@ class LOVD_Object {
                                                   $sFRSearchValue, $sFRReplaceValue, $aArgs, $aOptions)
     {
         // Append a field to the viewlist showing a preview of changes for a
-        // find and replace (F&R) action. Returns the number of rows that will
-        // be affected by the F&R.
+        // find and replace (F&R) action. Also checks if the resulting data
+        // records are valid through checkFelds() and report any errors.
+        // Returns the number of rows that will be affected by the F&R.
         // Params:
         // $sFRViewListCol      Name of field on which F&R to preview.
         // sFRFieldDisplayname  Display name of field for F&R.
         // sFRSearchValue       Search string.
         // sFRReplaceValue      Replace value.
-        // aOptions             F&R options (e.g. match type)
+        // aOptions             F&R options (e.g. match at start of field)
 
         // Column should be configured to allow Find & Replace.
-        if (empty($this->aColumnsViewList[$sFRViewListCol]['allowfnr'])) {
+        if (empty($this->aColumnsViewList[$sFRViewListCol]['allow_find_replace'])) {
             lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' .
                 $sFRViewListCol . '", which does not have that feature enabled.');
         }
 
-        // Try to discover the tablename and fieldname, as $sFRViewListCol may be
-        // an alias.
+        // Try to discover the tablename and fieldname in the database.
         list($sFieldname, $sTablename, $sTableRef) = $this->getFieldInfo($sFRViewListCol);
 
-        // Run query with search field to compute number of affected rows, skipping ORDER BY and LIMIT.
+        // Get search condition for query to find all records matching F&R action.
         $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, 'subq',
                                                                $sFieldname, $aOptions);
 
-        // Construct replace statement.
+        // Construct replace statement for F&R action.
         $sReplaceStmt = $this->generateViewListFRReplaceStatement($sTableRef, $sFieldname,
             $sFRSearchValue, $sFRReplaceValue, $aOptions);
 
@@ -1461,9 +1470,9 @@ class LOVD_Object {
         $sPreviewFieldname = $sFRViewListCol . '_FR';
         $sPreviewFieldDisplayname = $sFRFieldDisplayname . ' (PREVIEW)';
 
+        // Check affected records with checkFields() and display any errors.
         list($bSuccess, $nAffectedRows) = $this->checkFieldFRResult($sFieldname, $sTablename,
              $sTableRef, $sFRSearchCondition, $aArgs, $sReplaceStmt);
-
         if (!$bSuccess) {
             lovd_showInfoTable('Some records become invalid after the replace action on ' .
                 'column ' . $sFRViewListCol . '. Please tend to the error messages below and ' .
@@ -2525,7 +2534,7 @@ FROptions
 
                     $bSortable   = !empty($aCol['db'][1]) && $bSortableVL; // If we can't sort at all, nothing is sortable.
                     $bSearchable = !empty($aCol['db'][2]);
-                    $nAllowFindAndReplace = (int) !empty($aCol['allowfnr']); // Later allow other columns as well, such as owned_by or statusid or so.
+                    $nAllowFindAndReplace = (int) !empty($aCol['allow_find_replace']); // Later allow other columns as well, such as owned_by or statusid or so.
                     $sImg = '';
                     $sAlt = '';
 
@@ -2551,7 +2560,7 @@ FROptions
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
                     print("\n" . '          <TH valign="top"' . (!empty($aCSSClasses)? ' class="' . join(' ', $aCSSClasses) . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
-                                 ' data-allowfnr="' . $nAllowFindAndReplace . '" data-fieldname="' . $sField . '">' . "\n" .
+                                 ' data-allow_find_replace="' . $nAllowFindAndReplace . '" data-fieldname="' . $sField . '">' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
                                  "\n" .
@@ -2775,7 +2784,7 @@ FROptions
                     $sFRMenuOption = <<<FRITEM
 '            <LI class="icon">' +
 '                <A click="lovd_columnSelector(\'$sViewListID\', lovd_FRShowOptionsMenu, ' +
-'                    \'Select column for find & replace\', \'allowfnr\');">' +
+'                    \'Select column for find & replace\', \'allow_find_replace\');">' +
 '                    <SPAN class="icon" style=""></SPAN>' +
 '                    Find and replace text in column' +
 '                </A>' +
