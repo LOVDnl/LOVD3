@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-10-17
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-09
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -714,6 +714,12 @@ function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
     }
     if (typeof oNewOptions != 'undefined') {
         $.extend(FRState[sViewListID], oNewOptions);
+    }
+
+    if (FRState[sViewListID]['phase'] == 'preview' && FRState[sViewListID]['bShowSubmit']) {
+        // When previewing changes, only show submit button when there are no
+        // errors displayed.
+        FRState[sViewListID]['bShowSubmit'] = $('div.err').length == 0;
     }
 
     if (FRState[sViewListID]['phase'] == 'input' || FRState[sViewListID]['phase'] == 'preview') {
