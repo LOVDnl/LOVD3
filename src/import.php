@@ -2479,19 +2479,51 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 lovd_setUpdatedDate($aGenes); // FIXME; regardless of variant status... oh, well...
 
                 // When auto uploading, clean up.
-                if (ACTION == 'autoupload_scheduled_file' && $sFile && false) {
+                if (ACTION == 'autoupload_scheduled_file' && $sFile) {
                     // Move the file to the archive folder, including all its sibling files.
                     if (is_writable($_INI['paths']['data_files_archive'])) { // Must be set, but still.
-                        $sFilePrefix = substr($sFile, 0, strpos($sFile . '.', '.'));
-                        // Doing this the proper PHP way, would be to open the dir, loop the files, find matching files, and then rename them one by one.
-                        // Instead, I'm doing this in a Linux-specific way, by just calling a simple mv command.
-                        @exec('mv -i ' . $_INI['paths']['data_files'] . '/' . $sFilePrefix . '.* ' . $_INI['paths']['data_files_archive'] . '/');
+                        // I'm deliberately not saving the file suffixes elsewhere, because we should support old and new suffixes.
+                        // Sort these in most specific -> least specific, that's the order in which they will be tried.
+                        $aSuffixes = array(
+                            '.total.data.lovd',
+                            '.lovd',
+                        );
+                        $sFilePrefix = $sFile;
+                        // Determine the prefix by trying all suffixes and removing those.
+                        // Once successful, we quit trying.
+                        foreach ($aSuffixes as $sSuffix) {
+                            $sFilePrefix = preg_replace('/' . preg_quote($sSuffix, '/') . '$/', '', $sFilePrefix);
+                            if ($sFilePrefix != $sFile) {
+                                // That worked!
+                                break;
+                            }
+                        }
+
+                        // I could just do a "mv", but that's the Linux way, and I'd like to keep this cross-platform.
+                        // Loop through the files in the dir and find matching files.
+                        $aFilesToMove = array();
+                        $h = @opendir($_INI['paths']['data_files']);
+                        if ($h) {
+                            // Failure is silent, continue only when we have a handler.
+                            while (($sFileRead = readdir($h)) !== false) {
+                                if (substr($sFileRead, 0, strlen($sFilePrefix)) == $sFilePrefix) {
+                                    // This file is movable.
+                                    $aFilesToMove[] = $sFileRead;
+                                }
+                            }
+
+                            $nFilesMoved = 0;
+                            foreach ($aFilesToMove as $sFileToMove) {
+                                $nFilesMoved += (int) @rename($_INI['paths']['data_files'] . '/' . $sFileToMove, $_INI['paths']['data_files_archive'] . '/' . $sFileToMove);
+                            }
+
+                            // Only delete from schedule when we moved file(s) successfully, otherwise it'll be unclear that it's been processed already.
+                            if ($nFilesMoved == count($aFilesToMove)) {
+                                // Remove the file from the schedule.
+                                $_DB->query('DELETE FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ? AND in_progress = 1', array($sFile));
+                            }
+                        }
                     }
-
-
-                    // Remove the file from the schedule.
-                    $_DB->query('DELETE FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ? AND in_progress = 1', array($sFile));
-
                 }
             }
             // FIXME: Why is this not empty?
