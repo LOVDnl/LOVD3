@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2017-11-09
+ * Modified    : 2017-11-10
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -157,11 +157,11 @@ class LOVD_API_Submissions {
         // FIXME: For shared columns, it would be more correct to take the select_options from each parent,
         //  and store whether or not the column is mandatory, per parent. This will take more resources (CPU and memory),
         //  but will prevent us from picking default values for columns that do not need default values.
-        $sSQL = 'SELECT SUBSTRING_INDEX(c.id, "/", 1) AS category, c.id, c.select_options
+        $sSQL = 'SELECT "global" AS type, SUBSTRING_INDEX(c.id, "/", 1) AS category, c.id, c.select_options
                  FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid)
                  WHERE c.id NOT LIKE "VariantOnTranscript/%" AND c.id NOT LIKE "Phenotype/%" AND c.mandatory = 1
                  UNION
-                 SELECT SUBSTRING_INDEX(c.id, "/", 1) AS category, c.id, MIN(c.select_options) AS select_options
+                 SELECT "shared" AS type, SUBSTRING_INDEX(c.id, "/", 1) AS category, c.id, MIN(c.select_options) AS select_options
                  FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid)
                  WHERE (c.id LIKE "VariantOnTranscript/%" OR c.id LIKE "Phenotype/%") AND sc.mandatory = 1
                  GROUP BY c.id';
@@ -189,6 +189,15 @@ class LOVD_API_Submissions {
                     break;
                 }
             }
+
+            // FIXME: If the field is not a selection list, we could just put a ?,
+            //  but right now we're not handling the shared columns right, and I
+            //  don't want default values to end up in non-mandatory fields.
+            // For non-shared columns, that surely are a problem, put a '?'.
+            if (!$sDefaultValue && $zColumn['type'] == 'global') {
+                $sDefaultValue = '?';
+            }
+
             // Store default value, in case we found any.
             $this->aMandatoryCustomColumns[$sCategory][$zColumn['id']] = $sDefaultValue;
         }
