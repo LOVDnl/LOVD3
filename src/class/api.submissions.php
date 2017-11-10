@@ -144,9 +144,6 @@ class LOVD_API_Submissions {
         // Then, addMandatoryDefaultValues() should fill those in, per entry.
         global $_DB;
 
-        // FIXME: This is not implemented for Screenings and Phenotypes at the moment,
-        //  since they don't build their arrays using the $this->aObjects array.
-
         if ($this->aMandatoryCustomColumns) {
             // We ran before.
             return false;
@@ -200,6 +197,27 @@ class LOVD_API_Submissions {
 
             // Store default value, in case we found any.
             $this->aMandatoryCustomColumns[$sCategory][$zColumn['id']] = $sDefaultValue;
+        }
+
+        return true;
+    }
+
+
+
+
+
+    private function addMandatoryDefaultValues ($sCategory, &$aData)
+    {
+        // This function applies default values for an entry, as definied in the
+        //  $this->aMandatoryCustomColumns() array.
+
+        if (!isset($this->aMandatoryCustomColumns[$sCategory])) {
+            // No mandatory fields defined for this category.
+            return false;
+        }
+
+        foreach ($this->aMandatoryCustomColumns[$sCategory] as $sField => $sDefaultValue) {
+            $aData[$sField] = $sDefaultValue;
         }
 
         return true;
@@ -343,15 +361,24 @@ class LOVD_API_Submissions {
                 // We're assuming here, that the Phenotype/Additional column is
                 //  active. It's an LOVD-standard custom column added to new
                 //  diseases by default.
+                $aPhenotype = array_fill_keys($this->aObjects['Phenotypes'], ''); // Instantiate all columns.
                 $nPhenotypeID = count($aData['Phenotypes']) + 1;
-                $aData['Phenotypes'][] = array(
-                    'id' => $nPhenotypeID,
-                    'diseaseid' => $nDiseaseIDForHPO,
-                    'individualid' => $nIndividualID,
-                    'owned_by' => $this->zAuth['id'],
-                    'statusid' => STATUS_PENDING,
-                    'created_by' => $this->zAuth['id'],
-                    'Phenotype/Additional' => $sPhenotype,
+
+                // Apply defaults, only for columns mandatory in this LOVD instance.
+                // This function will try and get the default values from LOVD itself.
+                $this->addMandatoryDefaultValues('Phenotypes', $aPhenotype);
+
+                $aData['Phenotypes'][] = array_merge(
+                    $aPhenotype,
+                    array(
+                        'id' => $nPhenotypeID,
+                        'diseaseid' => $nDiseaseIDForHPO,
+                        'individualid' => $nIndividualID,
+                        'owned_by' => $this->zAuth['id'],
+                        'statusid' => STATUS_PENDING,
+                        'created_by' => $this->zAuth['id'],
+                        'Phenotype/Additional' => $sPhenotype,
+                    )
                 );
             }
 
@@ -396,20 +423,30 @@ class LOVD_API_Submissions {
                 $aVOG['position_g_end'] = $aVariantInfo['position_end'];
 
                 // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
-                $nScreeningID = count($aData['Screenings']) + 1;
                 $aTemplates = array();
                 $aTechniques = array();
                 foreach ($aVariant['variant_detection'] as $aScreening) {
                     $aTemplates[] = $aScreening['@template'];
                     $aTechniques = array_merge($aTechniques, explode(';', $aScreening['@technique']));
                 }
-                $aData['Screenings'][] = array(
-                    'id' => $nScreeningID,
-                    'individualid' => $nIndividualID,
-                    'owned_by' => $this->zAuth['id'],
-                    'created_by' => $this->zAuth['id'],
-                    'Screening/Template' => implode(';', array_unique($aTemplates)),
-                    'Screening/Technique' => implode(';', array_unique($aTechniques)),
+
+                $aScreening = array_fill_keys($this->aObjects['Screenings'], ''); // Instantiate all columns.
+                $nScreeningID = count($aData['Screenings']) + 1;
+
+                // Apply defaults, only for columns mandatory in this LOVD instance.
+                // This function will try and get the default values from LOVD itself.
+                $this->addMandatoryDefaultValues('Screenings', $aScreening);
+
+                $aData['Screenings'][] = array_merge(
+                    $aScreening,
+                    array(
+                        'id' => $nScreeningID,
+                        'individualid' => $nIndividualID,
+                        'owned_by' => $this->zAuth['id'],
+                        'created_by' => $this->zAuth['id'],
+                        'Screening/Template' => implode(';', array_unique($aTemplates)),
+                        'Screening/Technique' => implode(';', array_unique($aTechniques)),
+                    )
                 );
                 $aData['Screenings_To_Variants'][] = array(
                     'screeningid' => $nScreeningID,
