@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-11-09
+ * Modified    : 2017-11-10
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -331,8 +331,6 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
     // Fake the POSTing of a file.
     $_POST['mode'] = 'insert';
     $_POST['charset'] = 'auto';
-// FIXME: TEMP
-$_POST['simulate'] = '1';
 
     $_FILES =
         array(
@@ -2131,7 +2129,11 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
         require ROOT_PATH . 'inc-lib-actions.php';
         if (!lovd_error() && $nDataTotal) {
             define('LOG_EVENT', 'Import');
-            print('<BR>');
+            if (FORMAT == 'text/html') {
+                print('<BR>');
+            } else {
+                print("\n");
+            }
             $_BAR[] = new ProgressBar('sql', 'Applying changes...');
             $nEntry = 0;
             $bError = false;
