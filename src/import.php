@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-10-26
+ * Modified    : 2017-11-13
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -821,7 +821,7 @@ if (POST) {
                 // Only instantiate an object when a gene is found for a transcript.
                 if ($sGene) {
                     if (!isset($aSection['objects'][$sGene])) {
-                        $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
+                        $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene, '', false);
                     }
                     $aSection['object'] =& $aSection['objects'][$sGene];
                 }

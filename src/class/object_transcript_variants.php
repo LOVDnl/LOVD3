@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2017-10-26
+ * Modified    : 2017-11-13
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,12 +49,14 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     var $sTable = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
     var $bShared = true;
     var $aTranscripts = array();
+    var $bPrefixTranscriptFields = true; // Flag to give transcript-specific fields used in
+                                         // getForm() and checkFields() a prefix to separate them.
 
 
 
 
 
-    function __construct ($sObjectID = '', $nID = '')
+    function __construct ($sObjectID = '', $nID = '', $bLoadAllTranscripts = true)
     {
         // Default constructor.
         global $_DB;
@@ -141,11 +143,26 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // Because the disease information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
 
-        // Set list of transcripts available for this variant for getForm(), checkFields(), etc...
-        if (ACTION == 'create' || lovd_getProjectFile() == '/import.php') {
-            $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', substr_count($sObjectID, ',')) . ') ' . (lovd_getProjectFile() == '/import.php'? 'LIMIT 1' : 'ORDER BY id_ncbi'), explode(',', $sObjectID))->fetchAllRow();
+
+        if (!empty($this->nID)) {
+            // Known ID, load transcript for existing variant.
+            $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' .
+                TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS .
+                ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, ' .
+                't.id_ncbi', array($this->nID))->fetchAllRow();
         } else {
-            $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, t.id_ncbi', array($this->nID))->fetchAllRow();
+            // Set list of transcripts available for this variant for getForm(), checkFields(), etc...
+            $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' .
+                TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' .
+                str_repeat(', ?', substr_count($sObjectID, ',')) . ') ' .
+                (!$bLoadAllTranscripts? 'LIMIT 1' : 'ORDER BY id_ncbi'),
+                explode(',', $sObjectID))->fetchAllRow();
+
+            if (!$bLoadAllTranscripts) {
+                // Only a single transcript, don't use field prefixes for getForm() and
+                // checkFields()
+                $this->bPrefixTranscriptFields = false;
+            }
         }
         foreach ($aTranscripts as $aTranscript) {
             $this->aTranscripts[$aTranscript[0]] = array($aTranscript[1], $aTranscript[2], $aTranscript[3]);
@@ -192,7 +209,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             if (!empty($aData['ignore_' . $nTranscriptID])) {
                 continue;
             }
-            $sPrefix = (lovd_getProjectFile() == '/import.php'? '' : $nTranscriptID . '_');
+            $sPrefix = (!$this->bPrefixTranscriptFields? '' : $nTranscriptID . '_');
             foreach ($this->aColumns as $sCol => $aCol) {
                 if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
                     continue;
@@ -242,7 +259,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             if ($sGene != $this->sObjectID) {
                 continue;
             }
-            $sPrefix = (lovd_getProjectFile() == '/import.php'? '' : $nTranscriptID . '_');
+            $sPrefix = (!$this->bPrefixTranscriptFields? '' : $nTranscriptID . '_');
             $aEffectForm = array(array('Affects function (reported)', '', 'select', $sPrefix . 'effect_reported', 1, $_SETT['var_effect'], false, false, false));
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aEffectForm[] = array('Affects function (concluded)', '', 'select', $sPrefix . 'effect_concluded', 1, $_SETT['var_effect'], false, false, false);

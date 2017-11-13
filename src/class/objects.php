@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-09
+ * Modified    : 2017-11-13
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -305,7 +305,9 @@ class LOVD_Object {
                     break;
                 case 'VariantOnTranscript':
                     require_once ROOT_PATH . 'class/object_transcript_variants.php';
-                    $object = new LOVD_TranscriptVariant();
+                    // Create gene-specific VOT object with a single transcript.
+                    // Fixme: check assumption that nID is always gene symbol in this case
+                    $object = new LOVD_TranscriptVariant($this->nID, '', false);
                     break;
                 case 'Screening':
                     require_once ROOT_PATH . 'class/object_screenings.php';
