@@ -1507,6 +1507,13 @@ class LOVD_Object {
         $this->aColumnsViewList = lovd_arrayInsertAfter($sFRViewListCol, $this->aColumnsViewList,
             $sPreviewFieldname, $aFRColValues);
 
+        // Copy any custom column info from the original field to the preview
+        // field (e.g. custom links).
+        if (isset($this->aColumns) && isset($this->aColumns[$sFRViewListCol])) {
+            $this->aColumns[$sPreviewFieldname] = $this->aColumns[$sFRViewListCol];
+            $this->aColumns[$sPreviewFieldname]['id'] = $sPreviewFieldname;
+        }
+
         return $nAffectedRows;
     }
 
