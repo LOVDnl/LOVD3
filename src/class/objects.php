@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-13
+ * Modified    : 2017-11-14
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -288,9 +288,18 @@ class LOVD_Object {
             'HAVING' => $this->aSQLViewList['HAVING'],
         ));
         $sSubqueryID = 'subq.' . $sTableRef . 'id';
-        $oResult = $_DB->query('SELECT tab.*, `' . $sPlaceholderName . '` FROM (' . $sSelectSQL .
+
+        $oQuery = 'SELECT tab.*, `' . $sPlaceholderName . '` FROM (' . $sSelectSQL .
             ') AS subq JOIN ' . $sTablename . ' AS tab ON (tab.id = ' . $sSubqueryID . ') WHERE ' .
-            $sFRSearchCondition, $aArgs);
+            $sFRSearchCondition;
+        if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
+            // Select by variant ID and transcript ID for VOT records.
+            $oQuery = 'SELECT tab.*, `' . $sPlaceholderName . '` FROM (' . $sSelectSQL .
+                ') AS subq JOIN ' . $sTablename . ' AS tab ON (tab.id = ' . $sSubqueryID .
+                ' AND tab.transcriptid = subq.transcriptid) WHERE ' .
+                $sFRSearchCondition;
+        }
+        $oResult = $_DB->query($oQuery, $aArgs);
         require_once ROOT_PATH . 'inc-lib-form.php';
 
         // Determine LOVD object to which F&R column belongs.
