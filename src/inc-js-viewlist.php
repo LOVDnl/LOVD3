@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-11-09
+ * Modified    : 2017-11-15
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -303,8 +303,18 @@ if (!isset($_GET['nohistory'])) {
                         if (prevHash != 'no_rehash') {
                             // The following adds the page to the history in Firefox, such that the user *can* push the back button.
                             // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
-                            $(oForm).find('input').each(function(){
-                                if (!this.disabled && this.value && this.name != 'viewlistid' && this.name != 'object' && this.name.substring(0,6) != 'check_') {
+                            $(oForm).find('input[type!="button"]').each(function(){
+                                if (!this.disabled && this.value && this.name != 'viewlistid' &&
+                                    this.name != 'object' && this.name.substring(0,6) != 'check_' &&
+                                    this.name.substring(0,12) != 'FRFieldname_' &&
+                                    this.name.substring(0,19) != 'FRFieldDisplayname_' &&
+                                    this.name.substring(0,9) != 'FRSearch_' &&
+                                    this.name.substring(0,12) != 'FRMatchType_' &&
+                                    this.name.substring(0,10) != 'FRReplace_' &&
+                                    this.name.substring(0,13) != 'FRReplaceAll_' &&
+                                    this.name.substring(0,7) != 'Preview' &&
+                                    this.name.substring(0,6) != 'Cancel' &&
+                                    this.name.substring(0,6) != 'Submit') {
                                     sHash += (sHash? '&' : '') + this.name + '=' + encodeURIComponent(this.value);
                                 }
                             });
