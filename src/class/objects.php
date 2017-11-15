@@ -2047,12 +2047,6 @@ class LOVD_Object {
                     }
                 }
             }
-            if ($aOptions['hide_nav']) {
-                print('        <INPUT type="hidden" name="hidenav" value="true">' . "\n");
-            }
-            if ($aOptions['show_options']) {
-                print('        <INPUT type="hidden" name="options" value="true">' . "\n");
-            }
             print("\n");
         }
 
