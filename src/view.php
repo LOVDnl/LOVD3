@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2017-10-06
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-15
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -126,8 +126,15 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     if ($nTranscriptsWithVariants > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome', 'Screening', 'Individual'), $sGene);
-        $_DATA->viewList($sViewListID, array('chromosome'), false, false,
-                         ($_AUTH['level'] >= LEVEL_CURATOR), false, array('find_and_replace' => true));
+        $aVLOptions = array(
+            'cols_to_skip' => array('chromosome'),
+            'no_history' => false,
+            'hide_nav' => false,
+            'show_options' => $_AUTH['level'] >= LEVEL_CURATOR,
+            'only_rows' => false,
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
 
         // Notes for the variant listings...
         if (!empty($_SETT['currdb']['note_listing'])) {

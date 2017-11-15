@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2016-12-08
- * For LOVD    : 3.0-18
+ * Modified    : 2017-11-15
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -296,7 +296,12 @@ if (PATH_COUNT == 4 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && $_PE[3
     $_GET['search_individualid'] = $nID;
     $_GET['page_size'] = '10';
     $_DATA->setRowLink('Screenings_submissions', 'variants?create&target=' . $_DATA->sRowID);
-    $_DATA->viewList('Screenings_submissions', array('individualid', 'owned_by_', 'created_date'), false, false);
+    $aVLOptions = array(
+        'cols_to_skip' => array('individualid', 'owned_by_', 'created_date'),
+        'no_history' => false,
+        'hide_nav' => false,
+    );
+    $_DATA->viewList('Screenings_submissions', $aVLOptions);
 
     $_T->printFooter();
     exit;

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2017-08-09
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-15
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -161,12 +161,22 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
           '       </UL>' . "\n" .
           '       <DIV id="tabs-variants">' . "\n");
     if (!empty($_DATAvariants)){
-        $_DATAvariants->viewList('Variants_per_reference', $aColsToHide['VariantOnGenome'], true, true);
+        $aVLOptions = array(
+            'cols_to_skip' => $aColsToHide['VariantOnGenome'],
+            'no_history' => true,
+            'hide_nav' => true,
+        );
+        $_DATAvariants->viewList('Variants_per_reference', $aVLOptions);
     }
     print('       </DIV>' . "\n" .
           '       <DIV id="tabs-individuals">' . "\n");
     if (!empty($_DATAindividuals)){
-        $_DATAindividuals->viewList('Individuals_per_reference', $aColsToHide['Individual'], true, true);
+        $aVLOptions = array(
+            'cols_to_skip' => $aColsToHide['Individual'],
+            'no_history' => true,
+            'hide_nav' => true,
+        );
+        $_DATAindividuals->viewList('Individuals_per_reference', $aVLOptions);
     }
     print('       </DIV>' . "\n" .
           '   </DIV>');

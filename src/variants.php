@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-10-06
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-15
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -109,8 +109,15 @@ if (!ACTION && (empty($_PE[1]) ||
     $_T->printHeader();
     $_T->printTitle();
 
-    $_DATA->viewList('VOG', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER),
-                     false, array('find_and_replace' => true));
+    $aVLOptions = array(
+        'cols_to_skip' => $aColsToHide,
+        'no_history' => false,
+        'hide_nav' => false,
+        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
+        'only_rows' => false,
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('VOG', $aVLOptions);
     $_T->printFooter();
     exit;
 }
@@ -134,7 +141,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
 
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
-    $_DATA->viewList('CustomVL_IN_GENE', array('name', 'id_protein_ncbi'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $aVLOptions = array(
+        'cols_to_skip' => array('name', 'id_protein_ncbi'),
+        'no_history' => false,
+        'hide_nav' => false,
+        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
+    );
+    $_DATA->viewList('CustomVL_IN_GENE', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -159,8 +172,15 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     $_DATA = new LOVD_GenomeVariant();
     $_GET['search_created_by'] = substr($nID, 0, 5);
     $_GET['search_created_date'] = date('Y-m-d H:i:s', substr($nID, 5, 10));
-    $_DATA->viewList('VOG_uploads', array('allele_'), false, false,
-                     (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, array('find_and_replace' => true));
+    $aVLOptions = array(
+        'cols_to_skip' => array('allele_'),
+        'no_history' => false,
+        'hide_nav' => false,
+        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
+        'only_rows' => false,
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('VOG_uploads', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -272,7 +292,16 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         }
 
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
-        $_DATA->viewList($sViewListID, array('chromosome', 'allele_'), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR), false, array('find_and_replace' => !$bUnique, 'multi_value_filter' => $bUnique));
+        $aVLOptions = array(
+            'cols_to_skip' => array('chromosome', 'allele_'),
+            'no_history' => false,
+            'hide_nav' => false,
+            'show_options' => $_AUTH['level'] >= LEVEL_CURATOR,
+            'only_rows' => false,
+            'find_and_replace' => !$bUnique,
+            'multi_value_filter' => $bUnique,
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
 
         // Notes for the variant listings...
         if (!empty($_SETT['currdb']['note_listing'])) {
@@ -417,7 +446,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_TranscriptVariant('', $nID);
     $_DATA->setRowID('VOT_for_VOG_VE', 'VOT_{{transcriptid}}');
     $_DATA->setRowLink('VOT_for_VOG_VE', 'javascript:window.location.hash = \'{{transcriptid}}\'; return false');
-    $_DATA->viewList('VOT_for_VOG_VE', array('id_', 'transcriptid', 'status'), true, true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('id_', 'transcriptid', 'status'),
+        'no_history' => true,
+        'hide_nav' => true,
+    );
+    $_DATA->viewList('VOT_for_VOG_VE', $aVLOptions);
     unset($_GET['search_id_']);
 ?>
 
@@ -469,7 +503,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_T->printTitle('Screenings', 'H4');
         require ROOT_PATH . 'class/object_screenings.php';
         $_DATA = new LOVD_Screening();
-        $_DATA->viewList('Screenings_for_VOG_VE', array('individualid', 'created_date', 'edited_date'), true, true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('individualid', 'created_date', 'edited_date'),
+            'no_history' => true,
+            'hide_nav' => true,
+        );
+        $_DATA->viewList('Screenings_for_VOG_VE', $aVLOptions);
     }
 
     $_T->printFooter();
@@ -602,7 +641,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         $_GET['search_transcripts'] = '>0';
         print('      <DIV id="container" style="display : none;">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
         lovd_showInfoTable('Please find the gene for which you wish to submit this variant below, using the search fields if needed. <B>Click on the gene to proceed to the variant entry form</B>.<BR>If a gene is not shown in this display, but it does exist in this LOVD, then it does not have a transcript configured yet.', 'information', 600);
-        $_DATA->viewList($sViewListID, array('transcripts', 'variants', 'diseases_', 'updated_date_'));
+        $aVLOptions = array(
+            'cols_to_skip' => array('transcripts', 'variants', 'diseases_', 'updated_date_'),
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
         print('      </DIV>' . "\n" .
               (!$bSubmit? '' : '      <INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n"));
 
@@ -3013,7 +3055,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
     $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
-    $_DATA->viewList('VOT_map', array(), true);
+    $aVLOptions = array(
+        'cols_to_skip' => array(),
+        'no_history' => true,
+    );
+    $_DATA->viewList('VOT_map', $aVLOptions);
     print('      <BR><BR>' . "\n\n");
 
     lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');

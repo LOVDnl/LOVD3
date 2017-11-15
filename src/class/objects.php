@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-06
+ * Modified    : 2017-11-15
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1881,9 +1881,7 @@ class LOVD_Object {
 
 
 
-    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false,
-                       $bHideNav = false, $bOptions = false, $bOnlyRows = false,
-                       $aOptions = array())
+    function viewList ($sViewListID = false, $aOptions = array())
     {
         // Show a viewlist for the current object.
         // Params:
@@ -1895,15 +1893,31 @@ class LOVD_Object {
         if (empty($aOptions) || !is_array($aOptions)) {
             $aOptions = array();
         }
-        // Apply defaults.
-        // FIXME: Note that $aOptions is currently not sent through ajax/viewlist.php, but those settings are currently just for VL menu options, and that is done just when building the VL.
-        // FIXME: When more options are added to the list, we need to implement a way for these options to be sent properly through to the ajax request.
+
+        // Append existing options from session, if available.
+        if (isset($_SESSION['viewlists'][$sViewListID]['options'])) {
+            $aOptions = array_replace($_SESSION['viewlists'][$sViewListID]['options'], $aOptions);
+        }
+
+        // Append defaults for any remaining options.
         $aOptions = array_replace(
             array(
-                'find_and_replace' => false,
-                'multi_value_filter' => false,
+                'cols_to_skip' => array(),      // Names of columns to hide.
+                'no_history' => false,          // Disable browser history on AJAX VL requests.
+                'hide_nav' => false,            // Hide paging and navigation buttons.
+                'show_options' => false,        // Show options menu.
+                'only_rows' => false,           // Only put the table rows in the output.
+                'find_and_replace' => false,    // Allow find and replace on columns.
+                'multi_value_filter' => false,  // Allow multi valued search on columns.
             ),
             $aOptions);
+
+        // Disallow F&R and multivalue search when options menu is hidden.
+        $aOptions['find_and_replace'] &= $aOptions['show_options'];
+        $aOptions['multi_value_filter'] &= $aOptions['show_options'];
+
+        // Save viewlist options to session.
+        $_SESSION['viewlists'][$sViewListID]['options'] = $aOptions;
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
@@ -1921,12 +1935,12 @@ class LOVD_Object {
             $sViewListID = preg_replace('/[^A-Z0-9._-]+/i', '', $sViewListID);
         }
 
-        if (!is_array($aColsToSkip)) {
-            $aColsToSkip = array($aColsToSkip);
+        if (!is_array($aOptions['cols_to_skip'])) {
+            $aOptions['cols_to_skip'] = array($aOptions['cols_to_skip']);
         }
         foreach ($this->aColumnsViewList as $sCol => $aCol) {
-            if (!$aCol['view'] && !in_array($sCol, $aColsToSkip)) {
-                $aColsToSkip[] = $sCol;
+            if (!$aCol['view'] && !in_array($sCol, $aOptions['cols_to_skip'])) {
+                $aOptions['cols_to_skip'][] = $sCol;
             }
         }
 
@@ -1938,7 +1952,7 @@ class LOVD_Object {
         // FIXME: Currently anyway we don't provide correct counts there for performance reasons, so the variable name isn't correct.
         $nTotal = $this->getCount();
         if (!$nTotal && FORMAT == 'text/html') {
-            if ($bOnlyRows) {
+            if ($aOptions['only_rows']) {
                 die('0'); // Silent error.
             }
             lovd_showInfoTable('No entries in the database yet!', 'stop');
@@ -2002,7 +2016,7 @@ class LOVD_Object {
         // Only print stuff if we're not in Ajax right now.
         if (!$bAjax && FORMAT == 'text/html') {
             // Keep the URL clean; disable any fields that are not used.
-            lovd_includeJS('inc-js-viewlist.php' . (!$bNoHistory? '' : '?nohistory'));
+            lovd_includeJS('inc-js-viewlist.php' . (!$aOptions['no_history']? '' : '?nohistory'));
             lovd_includeJS('inc-js-tooltip.php');
 
             // Print form; required for sorting and searching.
@@ -2022,7 +2036,7 @@ class LOVD_Object {
                   '        <INPUT type="hidden" name="MVSCols" value="' . (!isset($_GET['MVSCols'])?
                       '' : htmlspecialchars($_GET['MVSCols'])) . '">' . "\n");
             // Skipping (permanently hiding) columns.
-            foreach ($aColsToSkip as $sCol) {
+            foreach ($aOptions['cols_to_skip'] as $sCol) {
                 if (array_key_exists($sCol, $this->aColumnsViewList)) {
                     // Internet Explorer refuses to submit input with equal names. If names are different, everything works fine.
                     // Somebody please tell me it's a bug and nobody's logical thinking. Had to include $sCol to make it work.
@@ -2033,10 +2047,10 @@ class LOVD_Object {
                     }
                 }
             }
-            if ($bHideNav) {
+            if ($aOptions['hide_nav']) {
                 print('        <INPUT type="hidden" name="hidenav" value="true">' . "\n");
             }
-            if ($bOptions) {
+            if ($aOptions['show_options']) {
                 print('        <INPUT type="hidden" name="options" value="true">' . "\n");
             }
             print("\n");
@@ -2143,7 +2157,7 @@ class LOVD_Object {
                 $bSQLCALCFOUNDROWS = true;
             }
 
-            if ($bOptions) {
+            if ($aOptions['show_options']) {
                 // If the session variable does not exist, create it!
                 if (!isset($aSessionViewList['checked'])) {
                     $aSessionViewList['checked'] = array();
@@ -2214,7 +2228,7 @@ class LOVD_Object {
                 $this->aSQLViewList['ORDER_BY'] = $sCol;
             }
 
-            if (!$bHideNav && FORMAT == 'text/html') {
+            if (!$aOptions['hide_nav'] && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
                 // We have a problem here, because we don't know how many hits there are,
                 // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
@@ -2255,14 +2269,14 @@ class LOVD_Object {
             foreach ($_GET as $key => $value) {
                 if (substr($key, 0, 7) == 'search_') {
                     $sColumn = substr($key, 7);
-                    if (!in_array($sColumn, $aColsToSkip)) {
-                        // All visible columns that have been searched on ($aColsToSkip also
+                    if (!in_array($sColumn, $aOptions['cols_to_skip'])) {
+                        // All visible columns that have been searched on ($aOptions['cols_to_skip'] also
                         // includes everything in aColumnsViewList with false for 'view' key).
                         // I.e. anything that can be searched by the user.
                         $bSearched = true;
                     } elseif ($this->aColumnsViewList[$sColumn]['view']) {
                         // Search on hidden columns that have display information in aColumnsViewList,
-                        //  i.e. columns in the $aColsToSkip argument to the ViewList function.
+                        //  i.e. columns in the $aOptions['cols_to_skip'] argument to the ViewList function.
                         $sColHeader = $this->aColumnsViewList[$sColumn]['view'][0];
                         // Make sure all hidden ID columns have "ID" in the header, so we can recognize them.
                         if (substr(rtrim($sColumn, '_'), -2) == 'id' && substr($sColHeader, -3) != ' ID') {
@@ -2295,7 +2309,7 @@ class LOVD_Object {
             }
 
             // Only print stuff if we're not just loading one entry right now.
-            if (!$bOnlyRows) {
+            if (!$aOptions['only_rows']) {
                 if (!$bAjax) {
                     print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
                 }
@@ -2333,7 +2347,7 @@ class LOVD_Object {
                 }
                 print('      </DIV>' . "\n\n");
 
-                if (!$bHideNav) {
+                if (!$aOptions['hide_nav']) {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
@@ -2401,11 +2415,11 @@ FROptions
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                       '        <THEAD>' . "\n" .
                       '        <TR>' .
-   ($bOptions? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
+   ($aOptions['show_options']? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
                       '            <IMG id="viewlistOptionsButton_' . $sViewListID . '" src="gfx/options.png" width="16" height="16" style="cursor : pointer;"></TH>' : ''));
 
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
-                    if (in_array($sField, $aColsToSkip)) {
+                    if (in_array($sField, $aOptions['cols_to_skip'])) {
                         continue;
                     }
 
@@ -2477,7 +2491,7 @@ FROptions
             print('# charset=UTF-8' . "\r\n");
             $i = 0;
             foreach ($this->aColumnsViewList as $sField => $aCol) {
-                if (in_array($sField, $aColsToSkip)) {
+                if (in_array($sField, $aOptions['cols_to_skip'])) {
                     continue;
                 }
 
@@ -2494,12 +2508,12 @@ FROptions
                 $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
                 $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) > 1? 's contain' : ' contains') . ' incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
                 $sMessage = (empty($aBadSyntaxColumns)? $sMessageNormal : $sMessageBadSyntax);
-                if ($bOnlyRows) {
+                if ($aOptions['only_rows']) {
                     die('0'); // Silent error.
                 }
                 // FIXME; This code is sort of duplicated, some 100 lines below we also print this, *if* results are found.
                 print('</TABLE><BR>' . "\n"); // <BR> is necessary to keep the InfoTable apart from the data headers.
-                if (!$bHideNav) {
+                if (!$aOptions['hide_nav']) {
                     print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                           '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                           '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
@@ -2508,7 +2522,7 @@ FROptions
                 print('      </DIV></FORM>' . "\n\n");
 
             } else {
-                if ($bOnlyRows) {
+                if ($aOptions['only_rows']) {
                     die('0'); // Silent error.
                 }
 
@@ -2595,11 +2609,11 @@ FROptions
                                 // links in new tabs, provided in inc-js-viewlist.php.
                                 ' onclick="javascript:window.location.href=this.getAttribute(\'data-href\');"')
                         ) . '>');
-                if ($bOptions) {
+                if ($aOptions['show_options']) {
                     print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . (in_array($zData['row_id'], $aSessionViewList['checked'])? ' checked' : '') . '></TD>');
                 }
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
-                    if (in_array($sField, $aColsToSkip)) {
+                    if (in_array($sField, $aOptions['cols_to_skip'])) {
                         continue;
                     }
 
@@ -2625,7 +2639,7 @@ FROptions
 
                 $i = 0;
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
-                    if (in_array($sField, $aColsToSkip)) {
+                    if (in_array($sField, $aOptions['cols_to_skip'])) {
                         continue;
                     }
                     print(($i ++? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes(html_entity_decode(strip_tags($zData[$sField])))) . '"');
@@ -2635,9 +2649,9 @@ FROptions
         }
 
         // Only print stuff if we're not just loading one entry right now.
-        if ($nTotal && !$bOnlyRows && FORMAT == 'text/html') {
+        if ($nTotal && !$aOptions['only_rows'] && FORMAT == 'text/html') {
             print('</TABLE>' . "\n");
-            if (!$bHideNav) {
+            if (!$aOptions['hide_nav']) {
                 print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
@@ -2654,7 +2668,7 @@ FROptions
             print('      <SCRIPT type="text/javascript">' . "\n" .
                   '        // This has to be run when the document has finished loading everything, because only then can it get the proper width from IE7 and lower!' . "\n" .
                   '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
-            if ($bOptions) {
+            if ($aOptions['show_options']) {
                 $sFRMenuOption = '';
                 if ($aOptions['find_and_replace']) {
                     // Add find & replace menu item to viewlist options menu.
