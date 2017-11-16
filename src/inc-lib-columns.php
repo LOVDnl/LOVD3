@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-08-31
- * For LOVD    : 3.0-17
+ * Modified    : 2017-11-16
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -82,60 +82,4 @@ function lovd_getCategoryCustomColFromName ($sName)
 }
 
 
-
-
-
-function lovd_getTableInfoByCategory ($sCategory)
-{
-    // Returns information on the LOVD table that holds the data for this given
-    // custom column category.
-
-    $aTables =
-         array(
-                'Individual' =>
-                     array(
-                            'table_sql' => TABLE_INDIVIDUALS,
-                            'table_name' => 'Individual',
-                            'table_alias' => 'i',
-                            'shared' => false,
-                            'unit' => '',
-                          ),
-                'Phenotype' =>
-                     array(
-                            'table_sql' => TABLE_PHENOTYPES,
-                            'table_name' => 'Phenotype',
-                            'table_alias' => 'p',
-                            'shared' => true,
-                            'unit' => 'disease', // Is also used to determine the key (diseaseid).
-                          ),
-                'Screening' =>
-                     array(
-                            'table_sql' => TABLE_SCREENINGS,
-                            'table_name' => 'Screening',
-                            'table_alias' => 's',
-                            'shared' => false,
-                            'unit' => '',
-                          ),
-                'VariantOnGenome' =>
-                     array(
-                            'table_sql' => TABLE_VARIANTS,
-                            'table_name' => 'Genomic Variant',
-                            'table_alias' => 'vog',
-                            'shared' => false,
-                            'unit' => '',
-                          ),
-                'VariantOnTranscript' =>
-                     array(
-                            'table_sql' => TABLE_VARIANTS_ON_TRANSCRIPTS,
-                            'table_name' => 'Transcript Variant',
-                            'table_alias' => 'vot',
-                            'shared' => true,
-                            'unit' => 'gene', // Is also used to determine the key (geneid).
-                          ),
-              );
-    if (!array_key_exists($sCategory, $aTables)) {
-        return false;
-    }
-    return $aTables[$sCategory];
-}
 ?>

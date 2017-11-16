@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-14
+ * Modified    : 2017-11-16
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,14 +36,6 @@
 if (!defined('ROOT_PATH')) {
     exit;
 }
-
-// FIXME: This includes the file in pretty much every page load in LOVD.
-// Check which functions are really used that often and put them in a more
-//  general place, like in inc-lib-init.php or perhaps as a method.
-require_once ROOT_PATH . 'inc-lib-columns.php';
-
-
-
 
 
 class LOVD_Object {
@@ -141,6 +133,7 @@ class LOVD_Object {
                                                $aArgs, $aOptions) {
         // Perform a find and replace action for given viewlist column. Return
         // false if anything fails.
+        require_once ROOT_PATH . 'inc-lib-columns.php';
         global $_DB, $_AUTH;
 
         // Column should be configured to allow Find & Replace.
@@ -1460,6 +1453,8 @@ class LOVD_Object {
         // sFRReplaceValue      Replace value.
         // aOptions             F&R options (e.g. match at start of field)
 
+        require_once ROOT_PATH . 'inc-lib-columns.php';
+
         // Column should be configured to allow Find & Replace.
         if (empty($this->aColumnsViewList[$sFRViewListCol]['allow_find_replace'])) {
             lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' .
@@ -1686,6 +1681,7 @@ class LOVD_Object {
         // Handle multivalue filter request. I.e., show only records that have more than one
         // value for certain aggregated columns.
         if (!empty($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
+            require_once ROOT_PATH . 'inc-lib-columns.php';
             foreach ($aRequestMVSCols as $sMVSCol) {
                 list($sField,, $sTableRef) = $this->getFieldInfo($sMVSCol);
 
