@@ -225,20 +225,22 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             $bScheduled = (!$bUnscheduled);
             $nPriority = (9 - $nReversePriority);
             $nAgeInDays = floor(($tNow - strtotime($sFileModified))/(60*60*24));
+            // Build the link for actions for already scheduled files.
+            $sAjaxActions = 'onclick="$.get(\'ajax/import_scheduler.php/' . urlencode($sFile) . '?view\').fail(function(){alert(\'Error retrieving actions, please try again later.\');}); return false;"';
             if ($i) {
                 // Already processed.
                 $bError = !empty($zScheduledFiles[$sFile]['process_errors']);
                 $bProcessing = ($zScheduledFiles[$sFile]['in_progress'] && !$bError);
 
                 print("\n" .
-                      '                <TR class="' . ($bError || $bFileLost? 'colRed' : 'del') . '">');
+                      '                <TR class="' . ($bError? 'colRed' : 'del') . '" ' . $sAjaxActions . '>');
             } else {
                 $bError = false;
                 $bProcessing = false;
                 if ($bScheduled) {
                     // Not imported yet, but scheduled.
                     print("\n" .
-                          '                <TR class="del">
+                          '                <TR class="del" ' . $sAjaxActions . '>
                   <TD width="30" style="text-align : center;"><IMG src="gfx/menu_clock.png" alt="Scheduled" width="16" height="16" title="Scheduled for import"></TD>');
                 } else {
                     // Not imported yet, can be scheduled.
