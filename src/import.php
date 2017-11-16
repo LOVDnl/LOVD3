@@ -252,7 +252,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             $sInformationHTML = ($bUnscheduled? '' : '
                     <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . $sFile . ' - scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
             $sPriorityHTML = (!$nPriority? '' : '
-                    <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import" style="float : right;">');
+                    <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import: ' . $_SETT['import_priorities'][$nPriority] . '" style="float : right;">');
             $sProcessingHTML = (!$bProcessing? '' : '
                     <IMG src="gfx/menu_clock.png" alt="Processing ..." width="16" height="16" title="Processing started ' . $zScheduledFiles[$sFile]['processed_date'] . '" style="float : right;">');
             $sErrorsHTML = (!$bError? '' : '
