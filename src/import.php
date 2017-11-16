@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-11-10
+ * Modified    : 2017-11-16
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
         array(),
     );
 
-    // Read out directory and store files in the right array.
+    // Read out directory and store files in the correct array.
     $nFilesSchedulable = 0; // Keeping track of how many files on disk are not scheduled yet.
     while (($sFile = readdir($h)) !== false) {
         if (preg_match('/(^LOVD_API_submission.+|.total.data).lovd$/', $sFile, $aRegs)) {
@@ -200,6 +200,10 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                   <TH' . ($i? '' : '></TH><TH') . ' class="S16">' . ($i? 'Files already processed' : 'Files to be processed') . '</TH></TR>');
         foreach ($aFiles[$i] as $sFile => $sSortString) {
             list($bUnscheduled, $nReversePriority, $sProcessedDate, $sScheduledDate, $sFileModified) = explode(',', $sSortString);
+            // Scheduled that no longer exist, have the name of the file as their modification date.
+            // FIXME: Allow to unschedule file from this interface?
+            $bFileLost = ($sFile == $sFileModified);
+
             // For LOVD API submissions, we change the annotation.
             // File names are long, we can shorten it and annotate better.
             // We deliberately overwrite $sFileModified here.
@@ -217,10 +221,6 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 $bAPI = false;
                 $sFileDisplayName = $sFile;
             }
-
-            // Scheduled that no longer exist, have the name of the file as their modification date.
-            // FIXME: Allow to unschedule file from this interface?
-            $bFileLost = ($sFile == $sFileModified);
 
             $bScheduled = (!$bUnscheduled);
             $nPriority = (9 - $nReversePriority);
@@ -248,7 +248,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 }
             }
             $sInformationHTML = ($bUnscheduled? '' : '
-                    <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="Scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
+                    <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . $sFile . ' - scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
             $sPriorityHTML = (!$nPriority? '' : '
                     <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import" style="float : right;">');
             $sProcessingHTML = (!$bProcessing? '' : '
