@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-07-18
- * For LOVD    : 3.0-19
+ * Modified    : 2017-11-17
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -1152,7 +1152,7 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
     $_DATA = new LOVD_Transcript();
     $_DATA->setRowLink('Transcripts', 'javascript: $("input[name=\'transcriptid\']").val("{{ID}}"); return false;');
     $_GET['page_size'] = 10;
-    $_DATA->viewList('Transcripts', array('ID', 'variants'));
+    $_DATA->viewList('Transcripts_convert_LOVD2', array('ID', 'variants'));
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION .
         '" method="post" enctype="multipart/form-data">' . "\n");
