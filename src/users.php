@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-10-06
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,7 +63,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
-    $_DATA->viewList('Users', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $_DATA->viewList('Users', array('show_options' => ($_AUTH['level'] >= LEVEL_MANAGER)));
 
     $_T->printFooter();
     exit;
@@ -150,7 +150,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_Log();
         $_GET['page_size'] = 10;
         $_GET['search_userid'] = $nID;
-        $_DATA->viewList('Logs_for_Users_VE', array('user_', 'del'), true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('user_', 'del'),
+            'track_history' => false,
+        );
+        $_DATA->viewList('Logs_for_Users_VE', $aVLOptions);
     }
 
     $_T->printFooter();
@@ -1121,7 +1125,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'individuals/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true, false, array('find_and_replace' => true));
+        $aVLOptions = array(
+            'cols_to_skip' => array('individualid', 'diseaseids', 'owned_by_', 'status'),
+            'show_options' => true,
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList('Individuals_submissions', $aVLOptions);
         unset($_GET['search_individualid']);
     } else {
         lovd_showInfoTable('No submissions of individuals found!', 'stop');
@@ -1139,7 +1148,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true, false, array('find_and_replace' => true));
+        $aVLOptions = array(
+            'cols_to_skip' => array('owned_by_', 'created_date', 'edited_date'),
+            'show_options' => true,
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList('Screenings_submissions', $aVLOptions);
     } else {
         lovd_showInfoTable('No submissions of variant screenings found!', 'stop');
     }
@@ -1267,7 +1281,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_DATA->setRowLink('users_share_access',
         'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}"}, lovd_addUserShareAccess); return false;');
     // The columns hidden here are also specified (enforced) in ajax/viewlist.php to make sure Submitters can't hack their way into the users table.
-    $_DATA->viewList($sUserListID, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'),
+        'track_history' => false,
+    );
+    $_DATA->viewList($sUserListID, $aVLOptions);
 
     lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $nID . ')</B> shares access to all
                        data owned by him with the users listed below.', 'information');

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2017-10-06
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -76,7 +76,12 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
 
     require ROOT_PATH . 'class/object_screenings.php';
     $_DATA = new LOVD_Screening();
-    $_DATA->viewList('Screenings', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, array('find_and_replace' => true));
+    $aVLOptions = array(
+        'cols_to_skip' => $aColsToHide,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('Screenings', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -122,7 +127,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_genes.php';
         $_DATA = new LOVD_Gene();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList('Genes_for_S_VE', array(), true, true);
+        $aVLOptions = array(
+            'track_history' => false,
+            'show_navigation' => false,
+        );
+        $_DATA->viewList('Genes_for_S_VE', $aVLOptions);
         unset($_GET['search_geneid']);
     }
 
@@ -133,7 +142,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         // VOG needs to be first, so it groups by the VOG ID.
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
-        $_DATA->viewList('CustomVL_VOT_for_S_VE', array('transcriptid'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+        $aVLOptions = array(
+            'cols_to_skip' => array('transcriptid'),
+            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        );
+        $_DATA->viewList('CustomVL_VOT_for_S_VE', $aVLOptions);
     }
 
     $_T->printFooter();
@@ -633,7 +646,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     $_GET['search_screeningids'] .= ' !' . $nID;
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
-    $_DATA->viewList('Screenings_' . $nID . '_confirmVariants', array('id_', 'chromosome'), true, false, true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('id_', 'chromosome'),
+        'track_history' => false,
+        'show_options' => true,
+    );
+    $_DATA->viewList('Screenings_' . $nID . '_confirmVariants', $aVLOptions);
 
     print('      <BR><BR>' . "\n\n");
 
@@ -789,8 +807,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     $_GET['search_id_'] = (count($aInvalidVariants)? '!' . implode(' !', $aInvalidVariants) : '');
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
-    $_DATA->viewList('Screenings_' . $nID . '_removeVariants',
-                     array('id_', 'screeningids', 'chromosome'), true, false, true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('id_', 'screeningids', 'chromosome'),
+        'track_history' => false,
+        'show_options' => true,
+    );
+    $_DATA->viewList('Screenings_' . $nID . '_removeVariants', $aVLOptions);
 
     print('      <BR><BR>' . "\n\n");
 

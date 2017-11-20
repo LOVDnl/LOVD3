@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2017-10-06
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -89,7 +89,12 @@ if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) 
 
     $_DATA = new LOVD_Phenotype($nDiseaseID);
     $_GET['search_diseaseid'] = $nDiseaseID;
-    $_DATA->viewList('Phenotypes_for_Disease_' . $nDiseaseID, array('diseaseid'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, array('find_and_replace' => true));
+    $aVLOptions = array(
+        'cols_to_skip' => array('diseaseid'),
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('Phenotypes_for_Disease_' . $nDiseaseID, $aVLOptions);
 
     $_T->printFooter();
     exit;
