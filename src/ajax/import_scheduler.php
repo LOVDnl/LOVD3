@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-16
- * Modified    : 2017-11-16
+ * Modified    : 2017-11-17
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -87,6 +87,7 @@ $sMessageReschedule  = 'You can also reschedule this file, resetting it and putt
 // Set JS variables and objects.
 print('
 var bFileLost              = ' . (int) $bFileLost . ';
+var bProcessed             = ' . (int) $bProcessed . ';
 var bError                 = ' . (int) $bError . ';
 var oButtonUnschedule      = {"Unschedule file":function () { $.get("' . CURRENT_PATH . '?unschedule"); }};
 var oButtonSetPriority     = {"Set priority":function () { $.get("' . CURRENT_PATH . '?set_priority"); }};
@@ -267,7 +268,7 @@ if (ACTION == 'view') {
     print('
     $("#import_scheduler_dialog").html("' . $sMessageIntro . '<BR>");
     $("#import_scheduler_dialog").append("' . $sMessageUnschedule . '<BR>");
-    if (!bError && !bFileLost) {
+    if (!bError && !bFileLost && !bProcessed) {
         $("#import_scheduler_dialog").append("' . $sMessageSetPriority . '<BR>");
     }
     if (bError && !bFileLost) {
@@ -277,7 +278,7 @@ if (ACTION == 'view') {
     
     // Select the right buttons.
     var oButtons = $.extend({}, oButtonUnschedule);
-    if (!bError && !bFileLost) {
+    if (!bError && !bFileLost && !bProcessed) {
         $.extend(oButtons, oButtonSetPriority);
     }
     if (bError && !bFileLost) {

@@ -201,7 +201,6 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
         foreach ($aFiles[$i] as $sFile => $sSortString) {
             list($bUnscheduled, $nReversePriority, $sProcessedDate, $sScheduledDate, $sFileModified) = explode(',', $sSortString);
             // Scheduled that no longer exist, have the name of the file as their modification date.
-            // FIXME: Allow to unschedule file from this interface?
             $bFileLost = ($sFile == $sFileModified);
 
             // For LOVD API submissions, we change the annotation.
@@ -250,7 +249,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 }
             }
             $sInformationHTML = ($bUnscheduled? '' : '
-                    <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . $sFile . ' - scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
+                    <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . ($sFile == $sFileDisplayName? '' : $sFile . ' - ') . 'Scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
             $sPriorityHTML = (!$nPriority? '' : '
                     <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import: ' . $_SETT['import_priorities'][$nPriority] . '" style="float : right;">');
             $sProcessingHTML = (!$bProcessing? '' : '
