@@ -2037,14 +2037,9 @@ class LOVD_Object {
                       '' : htmlspecialchars($_GET['MVSCols'])) . '">' . "\n");
             // Skipping (permanently hiding) columns.
             foreach ($aOptions['cols_to_skip'] as $sCol) {
-                if (array_key_exists($sCol, $this->aColumnsViewList)) {
-                    // Internet Explorer refuses to submit input with equal names. If names are different, everything works fine.
-                    // Somebody please tell me it's a bug and nobody's logical thinking. Had to include $sCol to make it work.
-                    print('        <INPUT type="hidden" name="skip[' . $sCol . ']" value="' . $sCol . '">' . "\n");
-                    // Check if we're skipping columns, that do have a search value. If so, it needs to be sent on like this.
-                    if (isset($_GET['search_' . $sCol])) {
-                        print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
-                    }
+                // Check if we're skipping columns, that do have a search value. If so, it needs to be sent on like this.
+                if (array_key_exists($sCol, $this->aColumnsViewList) && isset($_GET['search_' . $sCol])) {
+                    print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
                 }
             }
             print("\n");
