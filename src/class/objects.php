@@ -2352,7 +2352,8 @@ class LOVD_Object {
                 $sFRReplaceValue = htmlspecialchars($sFRReplaceValue);
 
                 // Print options menu for find & replace (hidden by default).
-                print(<<<FROptions
+                if ($aOptions['find_and_replace']) {
+                    print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" class="fnroptionsmenu" style="display: none;">
     <SPAN><B style="color: red">Note that find &amp; replace is still in BETA. Changes made using this feature are not checked for errors, therefore using find &amp; replace may have destructive consequences.<BR>Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR>
         Applying find &amp; replace to column
@@ -2398,7 +2399,8 @@ class LOVD_Object {
     </DIV>
 </DIV>
 FROptions
-                );
+                    );
+                }
 
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
