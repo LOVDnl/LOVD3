@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -91,10 +91,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) 
     $_GET['search_diseaseid'] = $nDiseaseID;
     $aVLOptions = array(
         'cols_to_skip' => array('diseaseid'),
-        'no_history' => false,
-        'hide_nav' => false,
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
-        'only_rows' => false,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
     );
     $_DATA->viewList('Phenotypes_for_Disease_' . $nDiseaseID, $aVLOptions);

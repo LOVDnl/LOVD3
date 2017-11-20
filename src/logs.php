@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-26
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -60,13 +60,7 @@ $_DATA = new LOVD_Log();
 print('      <UL id="viewlistMenu_Logs" class="jeegoocontext jeegooviewlist">' . "\n" .
       '        <LI class="icon"><A click="lovd_AJAX_viewListSubmit(\'Logs\', function(){$.get(\'ajax/delete_log.php?id=selected\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully deleted \' + sResponse.substring(2) + \' log entries.\');lovd_AJAX_viewListSubmit(\'Logs\');}}).fail(function(){alert(\'Log entries could not be deleted.\');});});"><SPAN class="icon" style="background-image: url(gfx/cross.png);"></SPAN>Delete selected entries</A></LI>' . "\n" .
       '      </UL>' . "\n\n");
-$aVLOptions = array(
-    'cols_to_skip' => array(),
-    'no_history' => false,
-    'hide_nav' => false,
-    'show_options' => true,
-);
-$_DATA->viewList('Logs', $aVLOptions); // Don't change viewListID, the log's prepareData() and ajax/delete_log.php are referring to it.
+$_DATA->viewList('Logs', array('show_options' => true)); // Don't change viewListID, the log's prepareData() and ajax/delete_log.php are referring to it.
 
 $_T->printFooter();
 ?>

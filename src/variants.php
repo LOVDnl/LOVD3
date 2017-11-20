@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -111,10 +111,7 @@ if (!ACTION && (empty($_PE[1]) ||
 
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'no_history' => false,
-        'hide_nav' => false,
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
-        'only_rows' => false,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
     );
     $_DATA->viewList('VOG', $aVLOptions);
@@ -143,9 +140,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
     $aVLOptions = array(
         'cols_to_skip' => array('name', 'id_protein_ncbi'),
-        'no_history' => false,
-        'hide_nav' => false,
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
     );
     $_DATA->viewList('CustomVL_IN_GENE', $aVLOptions);
 
@@ -174,10 +169,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     $_GET['search_created_date'] = date('Y-m-d H:i:s', substr($nID, 5, 10));
     $aVLOptions = array(
         'cols_to_skip' => array('allele_'),
-        'no_history' => false,
-        'hide_nav' => false,
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
-        'only_rows' => false,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
     );
     $_DATA->viewList('VOG_uploads', $aVLOptions);
@@ -294,10 +286,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $aVLOptions = array(
             'cols_to_skip' => array('chromosome', 'allele_'),
-            'no_history' => false,
-            'hide_nav' => false,
-            'show_options' => $_AUTH['level'] >= LEVEL_CURATOR,
-            'only_rows' => false,
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
             'find_and_replace' => !$bUnique,
             'multi_value_filter' => $bUnique,
         );
@@ -3055,11 +3044,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
     $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
-    $aVLOptions = array(
-        'cols_to_skip' => array(),
-        'no_history' => true,
-    );
-    $_DATA->viewList('VOT_map', $aVLOptions);
+    $_DATA->viewList('VOT_map', array('no_history' => true));
     print('      <BR><BR>' . "\n\n");
 
     lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');

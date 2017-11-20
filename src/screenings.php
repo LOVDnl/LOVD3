@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -78,10 +78,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     $_DATA = new LOVD_Screening();
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'no_history' => false,
-        'hide_nav' => false,
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
-        'only_rows' => false,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
     );
     $_DATA->viewList('Screenings', $aVLOptions);
@@ -131,7 +128,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_Gene();
         $_DATA->setSortDefault('id');
         $aVLOptions = array(
-            'cols_to_skip' => array(),
             'no_history' => true,
             'hide_nav' => true,
         );
@@ -148,9 +144,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVLOptions = array(
             'cols_to_skip' => array('transcriptid'),
-            'no_history' => false,
-            'hide_nav' => false,
-            'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
+            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         );
         $_DATA->viewList('CustomVL_VOT_for_S_VE', $aVLOptions);
     }
@@ -655,7 +649,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'chromosome'),
         'no_history' => true,
-        'hide_nav' => false,
         'show_options' => true,
     );
     $_DATA->viewList('Screenings_' . $nID . '_confirmVariants', $aVLOptions);
@@ -817,7 +810,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'screeningids', 'chromosome'),
         'no_history' => true,
-        'hide_nav' => false,
         'show_options' => true,
     );
     $_DATA->viewList('Screenings_' . $nID . '_removeVariants', $aVLOptions);

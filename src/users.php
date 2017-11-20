@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -63,13 +63,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
-    $aVLOptions = array(
-        'cols_to_skip' => array(),
-        'no_history' => false,
-        'hide_nav' => false,
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
-    );
-    $_DATA->viewList('Users', $aVLOptions);
+    $_DATA->viewList('Users', array('show_options' => ($_AUTH['level'] >= LEVEL_MANAGER)));
 
     $_T->printFooter();
     exit;
@@ -1133,10 +1127,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         }
         $aVLOptions = array(
             'cols_to_skip' => array('individualid', 'diseaseids', 'owned_by_', 'status'),
-            'no_history' => false,
-            'hide_nav' => false,
             'show_options' => true,
-            'only_rows' => false,
             'find_and_replace' => true,
         );
         $_DATA->viewList('Individuals_submissions', $aVLOptions);
@@ -1159,10 +1150,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         }
         $aVLOptions = array(
             'cols_to_skip' => array('owned_by_', 'created_date', 'edited_date'),
-            'no_history' => false,
-            'hide_nav' => false,
             'show_options' => true,
-            'only_rows' => false,
             'find_and_replace' => true,
         );
         $_DATA->viewList('Screenings_submissions', $aVLOptions);

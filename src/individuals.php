@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,10 +82,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     $_DATA = new LOVD_Individual();
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'no_history' => false,
-        'hide_nav' => false,
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
-        'only_rows' => false,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
     );
     $_DATA->viewList('Individuals', $aVLOptions);
@@ -184,10 +181,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // VOG needs to be first, so it groups by the VOG ID.
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVariantVLOptions = array(
-            'cols_to_skip' => array(),
-            'no_history' => false,
-            'hide_nav' => false,
-            'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
+            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         );
         $_DATA->viewList('CustomVL_VOT_for_I_VE', $aVariantVLOptions);
     }
