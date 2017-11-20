@@ -438,7 +438,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'transcriptid', 'status'),
         'track_history' => false,
-        'hide_nav' => true,
+        'show_navigation' => false,
     );
     $_DATA->viewList('VOT_for_VOG_VE', $aVLOptions);
     unset($_GET['search_id_']);
@@ -495,7 +495,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aVLOptions = array(
             'cols_to_skip' => array('individualid', 'created_date', 'edited_date'),
             'track_history' => false,
-            'hide_nav' => true,
+            'show_navigation' => false,
         );
         $_DATA->viewList('Screenings_for_VOG_VE', $aVLOptions);
     }

@@ -147,7 +147,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
                 $aVLOptions = array(
                     'cols_to_skip' => array('phenotypeid', 'individualid', 'diseaseid'),
                     'track_history' => false,
-                    'hide_nav' => true,
+                    'show_navigation' => false,
                 );
                 $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, $aVLOptions);
             }
@@ -168,7 +168,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aScreeningVLOptions = array(
             'cols_to_skip' => array('screeningid', 'individualid', 'created_date', 'edited_date'),
             'track_history' => false,
-            'hide_nav' => true,
+            'show_navigation' => false,
         );
         $_DATA->viewList('Screenings_for_I_VE', $aScreeningVLOptions);
         unset($_GET['search_individualid']);

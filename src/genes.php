@@ -215,7 +215,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     $aVLOptions = array(
         'cols_to_skip' => array('geneid'),
         'track_history' => false,
-        'hide_nav' => true,
+        'show_navigation' => false,
     );
     $_DATA->viewList('Transcripts_for_G_VE', $aVLOptions);
 

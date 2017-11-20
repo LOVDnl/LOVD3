@@ -129,7 +129,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA->setSortDefault('id');
         $aVLOptions = array(
             'track_history' => false,
-            'hide_nav' => true,
+            'show_navigation' => false,
         );
         $_DATA->viewList('Genes_for_S_VE', $aVLOptions);
         unset($_GET['search_geneid']);

@@ -1904,7 +1904,7 @@ class LOVD_Object {
             array(
                 'cols_to_skip' => array(),      // Names of columns to hide.
                 'track_history' => true,        // Track actions of AJAX VL requests in the browser history.
-                'hide_nav' => false,            // Hide paging and navigation buttons.
+                'show_navigation' => true,      // Show paging and navigation buttons.
                 'show_options' => false,        // Show options menu.
                 'only_rows' => false,           // Only put the table rows in the output.
                 'find_and_replace' => false,    // Allow find and replace on columns.
@@ -2222,7 +2222,7 @@ class LOVD_Object {
                 $this->aSQLViewList['ORDER_BY'] = $sCol;
             }
 
-            if (!$aOptions['hide_nav'] && FORMAT == 'text/html') {
+            if ($aOptions['show_navigation'] && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
                 // We have a problem here, because we don't know how many hits there are,
                 // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
@@ -2341,7 +2341,7 @@ class LOVD_Object {
                 }
                 print('      </DIV>' . "\n\n");
 
-                if (!$aOptions['hide_nav']) {
+                if ($aOptions['show_navigation']) {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
@@ -2507,7 +2507,7 @@ FROptions
                 }
                 // FIXME; This code is sort of duplicated, some 100 lines below we also print this, *if* results are found.
                 print('</TABLE><BR>' . "\n"); // <BR> is necessary to keep the InfoTable apart from the data headers.
-                if (!$aOptions['hide_nav']) {
+                if ($aOptions['show_navigation']) {
                     print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                           '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                           '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
@@ -2645,7 +2645,7 @@ FROptions
         // Only print stuff if we're not just loading one entry right now.
         if ($nTotal && !$aOptions['only_rows'] && FORMAT == 'text/html') {
             print('</TABLE>' . "\n");
-            if (!$aOptions['hide_nav']) {
+            if ($aOptions['show_navigation']) {
                 print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");

@@ -164,7 +164,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
         $aVLOptions = array(
             'cols_to_skip' => $aColsToHide['VariantOnGenome'],
             'track_history' => false,
-            'hide_nav' => true,
+            'show_navigation' => false,
         );
         $_DATAvariants->viewList('Variants_per_reference', $aVLOptions);
     }
@@ -174,7 +174,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
         $aVLOptions = array(
             'cols_to_skip' => $aColsToHide['Individual'],
             'track_history' => false,
-            'hide_nav' => true,
+            'show_navigation' => false,
         );
         $_DATAindividuals->viewList('Individuals_per_reference', $aVLOptions);
     }
