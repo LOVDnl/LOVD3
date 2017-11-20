@@ -150,8 +150,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $aVLOptions = array(
-        'cols_to_skip' => array(),
-        'show_options' => $_AUTH['level'] >= LEVEL_MANAGER,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
     );
     $_DATA->viewList('Genes', $aVLOptions);
 
