@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1903,7 +1903,7 @@ class LOVD_Object {
         $aOptions = array_replace(
             array(
                 'cols_to_skip' => array(),      // Names of columns to hide.
-                'no_history' => false,          // Disable browser history on AJAX VL requests.
+                'track_history' => true,        // Track actions of AJAX VL requests in the browser history.
                 'hide_nav' => false,            // Hide paging and navigation buttons.
                 'show_options' => false,        // Show options menu.
                 'only_rows' => false,           // Only put the table rows in the output.
@@ -2016,7 +2016,7 @@ class LOVD_Object {
         // Only print stuff if we're not in Ajax right now.
         if (!$bAjax && FORMAT == 'text/html') {
             // Keep the URL clean; disable any fields that are not used.
-            lovd_includeJS('inc-js-viewlist.php' . (!$aOptions['no_history']? '' : '?nohistory'));
+            lovd_includeJS('inc-js-viewlist.php' . ($aOptions['track_history']? '' : '?nohistory'));
             lovd_includeJS('inc-js-tooltip.php');
 
             // Print form; required for sorting and searching.

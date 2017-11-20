@@ -146,7 +146,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
                 print('<B>' . $sName . ' (<A href="diseases/' . $nDiseaseID . '">' . $sSymbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $nDiseaseID . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
                 $aVLOptions = array(
                     'cols_to_skip' => array('phenotypeid', 'individualid', 'diseaseid'),
-                    'no_history' => true,
+                    'track_history' => false,
                     'hide_nav' => true,
                 );
                 $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, $aVLOptions);
@@ -167,7 +167,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA->setSortDefault('id');
         $aScreeningVLOptions = array(
             'cols_to_skip' => array('screeningid', 'individualid', 'created_date', 'edited_date'),
-            'no_history' => true,
+            'track_history' => false,
             'hide_nav' => true,
         );
         $_DATA->viewList('Screenings_for_I_VE', $aScreeningVLOptions);

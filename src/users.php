@@ -152,7 +152,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_GET['search_userid'] = $nID;
         $aVLOptions = array(
             'cols_to_skip' => array('user_', 'del'),
-            'no_history' => true,
+            'track_history' => false,
         );
         $_DATA->viewList('Logs_for_Users_VE', $aVLOptions);
     }
@@ -1283,7 +1283,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // The columns hidden here are also specified (enforced) in ajax/viewlist.php to make sure Submitters can't hack their way into the users table.
     $aVLOptions = array(
         'cols_to_skip' => array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'),
-        'no_history' => true,
+        'track_history' => false,
     );
     $_DATA->viewList($sUserListID, $aVLOptions);
 

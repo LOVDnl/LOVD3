@@ -214,7 +214,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     $_DATA->setSortDefault('variants');
     $aVLOptions = array(
         'cols_to_skip' => array('geneid'),
-        'no_history' => true,
+        'track_history' => false,
         'hide_nav' => true,
     );
     $_DATA->viewList('Transcripts_for_G_VE', $aVLOptions);
@@ -1696,7 +1696,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
         $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}", level: "{{zData_level}}"}, lovd_authorizeUser); return false;');
         $aVLOptions = array(
             'cols_to_skip' => array('id', 'status_', 'last_login_', 'created_date_'),
-            'no_history' => true,
+            'track_history' => false,
         );
         $_DATA->viewList('Genes_AuthorizeUser', $aVLOptions); // Create known viewListID for lovd_unauthorizeUser().
 

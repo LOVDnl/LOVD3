@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -163,7 +163,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
     if (!empty($_DATAvariants)){
         $aVLOptions = array(
             'cols_to_skip' => $aColsToHide['VariantOnGenome'],
-            'no_history' => true,
+            'track_history' => false,
             'hide_nav' => true,
         );
         $_DATAvariants->viewList('Variants_per_reference', $aVLOptions);
@@ -173,7 +173,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
     if (!empty($_DATAindividuals)){
         $aVLOptions = array(
             'cols_to_skip' => $aColsToHide['Individual'],
-            'no_history' => true,
+            'track_history' => false,
             'hide_nav' => true,
         );
         $_DATAindividuals->viewList('Individuals_per_reference', $aVLOptions);

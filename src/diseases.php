@@ -134,7 +134,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA->setSortDefault('id');
         $aVLOptions = array(
             'cols_to_skip' => array('panelid', 'diseaseids'),
-            'no_history' => true,
+            'track_history' => false,
             'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
             'find_and_replace' => true,
         );

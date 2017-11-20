@@ -437,7 +437,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA->setRowLink('VOT_for_VOG_VE', 'javascript:window.location.hash = \'{{transcriptid}}\'; return false');
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'transcriptid', 'status'),
-        'no_history' => true,
+        'track_history' => false,
         'hide_nav' => true,
     );
     $_DATA->viewList('VOT_for_VOG_VE', $aVLOptions);
@@ -494,7 +494,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_Screening();
         $aVLOptions = array(
             'cols_to_skip' => array('individualid', 'created_date', 'edited_date'),
-            'no_history' => true,
+            'track_history' => false,
             'hide_nav' => true,
         );
         $_DATA->viewList('Screenings_for_VOG_VE', $aVLOptions);
@@ -3044,7 +3044,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
     $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
-    $_DATA->viewList('VOT_map', array('no_history' => true));
+    $_DATA->viewList('VOT_map', array('track_history' => false));
     print('      <BR><BR>' . "\n\n");
 
     lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');

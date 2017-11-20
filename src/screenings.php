@@ -128,7 +128,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_Gene();
         $_DATA->setSortDefault('id');
         $aVLOptions = array(
-            'no_history' => true,
+            'track_history' => false,
             'hide_nav' => true,
         );
         $_DATA->viewList('Genes_for_S_VE', $aVLOptions);
@@ -648,7 +648,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     $_DATA = new LOVD_GenomeVariant();
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'chromosome'),
-        'no_history' => true,
+        'track_history' => false,
         'show_options' => true,
     );
     $_DATA->viewList('Screenings_' . $nID . '_confirmVariants', $aVLOptions);
@@ -809,7 +809,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     $_DATA = new LOVD_GenomeVariant();
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'screeningids', 'chromosome'),
-        'no_history' => true,
+        'track_history' => false,
         'show_options' => true,
     );
     $_DATA->viewList('Screenings_' . $nID . '_removeVariants', $aVLOptions);
