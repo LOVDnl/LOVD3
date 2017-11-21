@@ -1345,7 +1345,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
 
     print('<H3>Conversion log:</H3>
     <TEXTAREA id="header_log" cols="100" rows="10" style="font-family: monospace; 
-        white-space: nowrap; overflow: scroll;">' .
+        white-space: pre; overflow: scroll;">' .
         implode("\n", $_WARNINGS) .
     '</TEXTAREA><BR><BR>');
 
@@ -1366,7 +1366,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
 
     print('<H3>LOVD3 import data:</H3>
         <TEXTAREA id="conversion_output" cols="100" rows="20" style="font-family: monospace; 
-    white-space: nowrap; overflow: scroll;">' .
+    white-space: pre; overflow: scroll;">' .
         $sOutput .
         '</TEXTAREA><BR>
         <BUTTON id="copybutton">Copy content to clipboard</BUTTON>
