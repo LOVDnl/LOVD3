@@ -1152,7 +1152,7 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
     $_DATA = new LOVD_Transcript();
     $_DATA->setRowLink('Transcripts', 'javascript: $("input[name=\'transcriptid\']").val("{{ID}}"); return false;');
     $_GET['page_size'] = 10;
-    $_DATA->viewList('Transcripts', array('cols_to_skip' => array('id_', 'variants')));
+    $_DATA->viewList('Transcripts_convert_LOVD2', array('cols_to_skip' => array('id_', 'variants')));
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION .
         '" method="post" enctype="multipart/form-data">' . "\n");
