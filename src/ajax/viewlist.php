@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2017-11-15
+ * Modified    : 2017-11-20
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -113,13 +113,7 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
     }
 }
 
-// 2016-07-14; 3.0-17; Submitters should not be allowed to retrieve more
-// information about users than the info the access sharing page gives them.
-$aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
-if ($sObject == 'User' && $_AUTH['level'] == LEVEL_SUBMITTER) {
-    // Force removal of certain columns, regardless of this has been requested or not.
-    $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
-}
+
 
 // Require special clearance?
 if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
@@ -200,6 +194,6 @@ if (POST && ACTION == 'applyFR') {
     die(AJAX_DATA_ERROR);
 }
 
-// Set $bHideNav to false always, since this ajax request could only have been sent if there were navigation buttons.
-$_DATA->viewList($_GET['viewlistid'], $aColsToSkip, (!empty($_GET['nohistory'])? true : false), (!empty($_GET['hidenav'])? true : false), (!empty($_GET['options'])? true : false), (!empty($_GET['only_rows'])? true : false));
+// Show the viewlist (parameters are assumed to be in $_SESSION).
+$_DATA->viewList($_GET['viewlistid']);
 ?>

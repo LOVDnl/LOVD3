@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-10-17
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-07
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,11 +63,9 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
 if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
     define('SSL', true);
-    define('SSL_PROTOCOL', $_SERVER['SSL_PROTOCOL']);
     define('PROTOCOL', 'https://');
 } else {
     define('SSL', false);
-    define('SSL_PROTOCOL', '');
     define('PROTOCOL', 'http://');
 }
 
@@ -688,6 +686,8 @@ if (!defined('NOT_INSTALLED')) {
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
             list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
+            // Add a cleaned email address, because perhaps the admin has multiple addresses.
+            $_SETT['admin']['address_formatted'] = $_SETT['admin']['name'] . ' <' . str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>';
         }
 
         // Switch gene.

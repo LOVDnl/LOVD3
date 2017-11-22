@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-07-18
- * For LOVD    : 3.0-19
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -1152,7 +1152,7 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
     $_DATA = new LOVD_Transcript();
     $_DATA->setRowLink('Transcripts', 'javascript: $("input[name=\'transcriptid\']").val("{{ID}}"); return false;');
     $_GET['page_size'] = 10;
-    $_DATA->viewList('Transcripts', array('ID', 'variants'));
+    $_DATA->viewList('Transcripts_convert_LOVD2', array('cols_to_skip' => array('id_', 'variants')));
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION .
         '" method="post" enctype="multipart/form-data">' . "\n");
@@ -1345,7 +1345,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
 
     print('<H3>Conversion log:</H3>
     <TEXTAREA id="header_log" cols="100" rows="10" style="font-family: monospace; 
-        white-space: nowrap; overflow: scroll;">' .
+        white-space: pre; overflow: scroll;">' .
         implode("\n", $_WARNINGS) .
     '</TEXTAREA><BR><BR>');
 
@@ -1366,7 +1366,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
 
     print('<H3>LOVD3 import data:</H3>
         <TEXTAREA id="conversion_output" cols="100" rows="20" style="font-family: monospace; 
-    white-space: nowrap; overflow: scroll;">' .
+    white-space: pre; overflow: scroll;">' .
         $sOutput .
         '</TEXTAREA><BR>
         <BUTTON id="copybutton">Copy content to clipboard</BUTTON>
