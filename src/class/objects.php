@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-16
+ * Modified    : 2017-11-22
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2488,8 +2488,7 @@ class LOVD_Object {
                 // Print options menu for find & replace (hidden by default).
                 print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" class="fnroptionsmenu" style="display: none;">
-    <SPAN><B style="color: red">Note that find &amp; replace is still in BETA. Changes made using this feature are not checked for errors, therefore using find &amp; replace may have destructive consequences.<BR>Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR>
-        Applying find &amp; replace to column
+    <SPAN>Applying find &amp; replace to column
         &quot;<B id="viewlistFRColDisplay_$sViewListID">$sFRViewListCol</B>&quot;.
         <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
                value="$sFRViewListCol" />
