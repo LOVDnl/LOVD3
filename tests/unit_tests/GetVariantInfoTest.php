@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2017-09-07
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-23
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -73,6 +73,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'dup'
+            )),
+            array('g.(?_112043201)_(112181937_?)del', array(
+                'position_start' => 112043201,
+                'position_end' => 112181937,
+                'type' => 'del'
             )),
         );
     }

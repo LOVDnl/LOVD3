@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-09-07
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-23
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -597,7 +597,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
                 // Anything not c. or n. is regarded genomic, having a max of 2 positions.
                 // Found more positions? Return false.
                 return false;
-            } elseif (!ctype_digit($sStartPositionEarly) || !ctype_digit($sStartPositionLate) || !ctype_digit($sEndPositionEarly) || !ctype_digit($sEndPositionLate)) {
+            } elseif ((!ctype_digit($sStartPositionEarly) && $sStartPositionEarly != '?' ) ||
+                (!ctype_digit($sStartPositionLate) && $sStartPositionLate != '?') ||
+                (!ctype_digit($sEndPositionEarly) && $sEndPositionEarly != '?') ||
+                (!ctype_digit($sEndPositionLate) && $sEndPositionLate != '?')) {
                 // Non-numeric first character of the positions is also impossible for genomic variants.
                 return false;
             }
