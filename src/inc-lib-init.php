@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-09-07
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-27
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -577,14 +577,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
         //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                               2 = Earliest start position, might be a question mark.
-        //                                       3 = Earlier start position intronic offset, if available.
-        //                                                         4 = Latest start position, might be a question mark.
-        //                                                                 5 = Latest start position intronic offset, if available.
-        //                                                                                       6 = Earliest end position, might be a question mark.
-        //                                                                                               7 = Earliest end position intronic offset, if available.
-        //                                                                                                                  8 = Latest end position, might be a question mark.
-        //                                                                                                                          9 = Latest end position intronic offset, if available.
-        //                                                                                                                                              10 = The variant, which we'll use to determine the type.
+        //                                              3 = Earlier start position intronic offset, if available.
+        //                                                                4 = Latest start position, might be a question mark.
+        //                                                                               5 = Latest start position intronic offset, if available.
+        //                                                                                                     6 = Earliest end position, might be a question mark.
+        //                                                                                                                    7 = Earliest end position intronic offset, if available.
+        //                                                                                                                                      8 = Latest end position, might be a question mark.
+        //                                                                                                                                                     9 = Latest end position intronic offset, if available.
+        //                                                                                                                                                                        10 = The variant, which we'll use to determine the type.
 
         list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
 
@@ -597,8 +597,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
                 // Anything not c. or n. is regarded genomic, having a max of 2 positions.
                 // Found more positions? Return false.
                 return false;
-            } elseif (!ctype_digit($sStartPositionEarly) || !ctype_digit($sStartPositionLate) || !ctype_digit($sEndPositionEarly) || !ctype_digit($sEndPositionLate)) {
-                // Non-numeric first character of the positions is also impossible for genomic variants.
+            } elseif (
+                (!ctype_digit($sStartPositionEarly) && $sStartPositionEarly != '?' ) ||
+                (!ctype_digit($sStartPositionLate) && $sStartPositionLate != '?') ||
+                (!ctype_digit($sEndPositionEarly) && $sEndPositionEarly != '?') ||
+                (!ctype_digit($sEndPositionLate) && $sEndPositionLate != '?')) {
+                // Non-numeric first character of the positions (- or *) is also impossible for genomic variants.
                 return false;
             }
         }

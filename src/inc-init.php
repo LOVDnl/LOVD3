@@ -492,7 +492,7 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
-// Help prevent cookie theft trough JavaScript; XSS defensive line.
+// Help prevent cookie theft through JavaScript; XSS defensive line.
 // See: http://nl.php.net/manual/en/session.configuration.php#ini.session.cookie-httponly
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
