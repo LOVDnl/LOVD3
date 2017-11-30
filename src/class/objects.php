@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-20
+ * Modified    : 2017-11-30
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1289,7 +1289,31 @@ class LOVD_Object {
                     list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['analyzer'];
                     $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
                 }
-                // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
+            }
+            // Status coloring will only be done, when we have authorization.
+            // Instead of having the logic in separate objects and the custom VL object, put it together here.
+            // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
+            if (!LOVD_plus && $_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                // Mark row according to the lowest status; Marked is red; lower will be gray.
+                // NOTE: Do we need to worry about adding values here that are defaults?
+                // I'd rather not copy $zData...
+                $zData += array(
+                    'statusid' => STATUS_OK,
+                    'var_statusid' => STATUS_OK,
+                    'ind_statusid' => STATUS_OK,
+                );
+                // The individual's status can be empty, if there is none,
+                //  but that doesn't mean it's non-public.
+                $zData['ind_statusid'] = ($zData['ind_statusid']?: STATUS_OK);
+                // In the VariantOnTranscriptUnique view the var_statusid can contain multiple IDs, these IDs are separated by a ",".
+                // PHP always takes the first integer-like part of a string when a string and an integer are compared.
+                // But to avoid problems in the future, only the first character is compared.
+                $nStatus = min($zData['statusid'], substr($zData['var_statusid'], 0, 1), $zData['ind_statusid']);
+                $zData['class_name'] = '';
+                if ($nStatus <= STATUS_MARKED) {
+                    $zData['class_name'] = ($nStatus == STATUS_MARKED ? 'marked' : 'del');
+                }
+            } else {
                 $zData['class_name'] = '';
             }
 
