@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-11-16
+ * Modified    : 2017-12-01
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,7 +79,10 @@ $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other value
 if (lovd_getProjectFile() == '/api.php') {
     $aFormats[] = 'text/bed';
 } elseif (lovd_getProjectFile() == '/import.php' && substr($_SERVER['QUERY_STRING'], 0, 25) == 'autoupload_scheduled_file') {
-    $_GET['format'] = 'text/plain';
+    // Set format to text/plain only when none is requested.
+    if (empty($_GET['format']) || !in_array($_GET['format'], $aFormats)) {
+        $_GET['format'] = 'text/plain';
+    }
 }
 if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
     define('FORMAT', $_GET['format']);

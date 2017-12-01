@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-11-16
+ * Modified    : 2017-12-01
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -177,9 +177,20 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     // Sort the file list (the DB list is already sorted).
     asort($aFiles[0]); // Sort data files, keeping indices.
     asort($aFiles[1]); // Sort data files, keeping indices.
-    $nFilesTotal = count($aFiles[0]) + count($aFiles[1]);
+    $nFilesProcessed = count($aFiles[1]);
+    $nFilesScheduled = count($zScheduledFiles);
+    $nFilesTotal = count($aFiles[0]) + $nFilesProcessed;
+    $bFilesToImport = ($nFilesScheduled - $nFilesProcessed);
 
-    lovd_showInfoTable($nFilesSchedulable . ' file' . ($nFilesSchedulable == 1? '' : 's') . ' unscheduled, ' . $nFilesTotal . ' file' . ($nFilesTotal == 1? '' : 's') . ' in total.', 'information');
+    lovd_showInfoTable(
+        $nFilesSchedulable . ' file' . ($nFilesSchedulable == 1? '' : 's') . ' unscheduled, ' .
+        $nFilesScheduled . ' file' . ($nFilesScheduled == 1? '' : 's') . ' scheduled' .
+        (!$nFilesProcessed? '' : ' (of which ' . $nFilesProcessed . ' processed)') . ', ' .
+        $nFilesTotal . ' file' . ($nFilesTotal == 1? '' : 's') . ' in total.' .
+        (!$bFilesToImport? '' : '<BR>If you don\'t have automated imports configured, click here to import a scheduled file manually.'),
+        'information',
+        '100%',
+        (!$bFilesToImport? '' : 'lovd_openWindow(\'' . CURRENT_PATH . '?autoupload_scheduled_file&amp;in_window&amp;format=text/html\', \'AutoUploadScheduledFile\', 950, 550);'));
 
     if ($nScheduled) {
         // We also just scheduled some files.
@@ -344,8 +355,10 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
                 )
         );
 
-    print('Preparing to upload ' . $sFile . ' into database...' . "\n" .
-          'Current time: ' . date('Y-m-d H:i:s.') . "\n\n");
+    if (FORMAT == 'text/plain') {
+        print('Preparing to upload ' . $sFile . ' into database...' . "\n" .
+              'Current time: ' . date('Y-m-d H:i:s.') . "\n\n");
+    }
 
     // Since we're running automatically, ignore user aborts (dying caller script).
     ignore_user_abort(true);
@@ -2574,7 +2587,16 @@ if (ACTION == 'autoupload_scheduled_file') {
         }
     }
     $_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET process_errors = ? WHERE filename = ?', array($sErrors, $sFile));
-    die('Errors while processing file:' . "\n" . $sErrors);
+
+    if (FORMAT == 'text/html') {
+        // HTML output for manually run auto imports.
+        lovd_errorPrint();
+        $_T->printFooter();
+        exit;
+    } else {
+        // Default for automatically run auto imports.
+        die('Errors while processing file:' . "\n" . $sErrors);
+    }
 }
 
 
