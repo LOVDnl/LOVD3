@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2017-11-10
+ * Modified    : 2017-12-01
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -668,10 +668,10 @@ class LOVD_API_Submissions {
         }
 
         // Remove comments from JSON file, and trim.
-        $sInput = trim(preg_replace('/\/\*.+\*\//Us', '', $sInput));
+        $sInputClean = trim(preg_replace('/\/\*.+\*\//Us', '', $sInput));
 
         // Then, check the first character. Should be an '{'.
-        if ($sInput{0} != '{') {
+        if ($sInputClean{0} != '{') {
             // Can't be JSON...
             $this->API->aResponse['errors'][] = 'Unsupported media type. Expecting: application/json.';
             $this->API->nHTTPStatus = 415; // Send 415 Unsupported Media Type.
@@ -679,7 +679,7 @@ class LOVD_API_Submissions {
         }
 
         // If it appears to be JSON, have PHP try and convert it into an array.
-        $aInput = $this->jsonDecode($sInput);
+        $aInput = $this->jsonDecode($sInputClean);
         // If $aInput is false, we failed somewhere. Function should have set response and HTTP status.
         if ($aInput === false) {
             return false;
@@ -702,8 +702,8 @@ class LOVD_API_Submissions {
             return false;
         }
 
-        // Write the LOVD3 output file.
-        return $this->writeImportFile($aData);
+        // Write the LOVD3 output file (and optionally, the JSON data).
+        return $this->writeImportFile($aData, $sInput);
     }
 
 
@@ -1228,10 +1228,12 @@ class LOVD_API_Submissions {
 
 
 
-    private function writeImportFile ($aData)
+    private function writeImportFile ($aData, $sJSON = '')
     {
         // This function takes the input file and writes an LOVD3 import file to
         //  the data file path as configured in $_INI['paths']['data_files'].
+        // If $sJSON is given, it will write the contents
+        //  of that string to a .json file.
         // Calling this function assumes the input is a properly verified LOVD
         //  database array.
         global $_INI, $_SETT;
@@ -1277,6 +1279,18 @@ class LOVD_API_Submissions {
             fputs($f, "\r\n\r\n");
         }
         fclose($f);
+
+        // Store the JSON too, if we have the data.
+        if ($sJSON) {
+            $sFileNameJSON = preg_replace('/.lovd$/', '.json', $sFileName);
+            if (defined('JSON_PRETTY_PRINT')) {
+                // Make the JSON look pretty, if you can.
+                // (if it was, it now isn't anymore).
+                // JSON_PRETTY_PRINT is available from PHP 5.4.0.
+                $sJSON = json_encode(json_decode($sJSON, true), JSON_PRETTY_PRINT);
+            }
+            @file_put_contents($_INI['paths']['data_files'] . '/' . $sFileNameJSON, $sJSON);
+        }
 
         // Create log entry.
         $sMessage = '';
