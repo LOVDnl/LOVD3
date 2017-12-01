@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-11-30
+ * Modified    : 2017-12-04
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -44,7 +44,7 @@ define('CLINVAR_URL', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs
 //define('CLINVAR_URL', 'file:///home/mkroon/LOVD/data/clinvar/hgvs4variation.txt.gz');
 
 // LOVD user ID used to store variants under.
-define('CLINVAR_USERID', '2236');
+define('CLINVAR_USERID_DEFAULT', '2236');
 
 // Name used in custom link to denote link to Clinvar with AlleleID.
 define('CLINVAR_ALLELE_LINK_NAME', 'ClinVarAlleleID');
@@ -62,14 +62,12 @@ define('CLINVAR_FILE_SIZE', 171447886);
 <HTML>
     <BODY>
 
-
 <?php
-
 
 function getChromosomeForReference ($sReference, $sBuild)
 {
-    // Return an LOVD chromosome identifier for the given reference accession
-    // and genome build. Return false if it can't be found.
+    // Return an LOVD chromosome identifier (e.g. "4" or "Y") for the given
+    // reference accession and genome build. Return false if it can't be found.
 
     global $_SETT;
 
@@ -90,11 +88,11 @@ function getChromosomeForReference ($sReference, $sBuild)
 
 
 
-function getLOVDVariantsByAlleleID(&$aVarAlleleMap)
+function getLOVDVariantsByAlleleID(&$aVarAlleleMap, $nClinvarUserID)
 {
     // Return current state of Clinvar variants in LOVD as an associative
-    // array by reference with Clinvar's AlleleID as key and an array of
-    // several LOVD's VOG and VOT fields as value. Specifically:
+    // array with Clinvar's AlleleID as key and an array of several fields of
+    // LOVD's VOG and VOT tables as value. Specifically:
     // $aVarAlleleMap[AlleleID] = array(
     //     'id' => vog.id
     //     'dna' => vog.`VariantOnGenome/DNA`
@@ -105,33 +103,34 @@ function getLOVDVariantsByAlleleID(&$aVarAlleleMap)
     //         ...
     //     )
     // )
+    // Note: the array is accessed by reference and modified in-place.
 
     global $_DB;
     $aVarAlleleMap = array();
 
-    // Query all records linked to a special "ClinVar user".
+    // Query all records linked to a special ClinVar user.
     $sLOVDClinVarQuery = <<<QUERY
 SELECT
   vog.id,
   vog.`VariantOnGenome/Reference` AS reference,
   vog.`VariantOnGenome/DNA` AS dna,
   GROUP_CONCAT(vot.transcriptid SEPARATOR ';') AS transcripts,
-  GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR '|') AS cdnas
+  GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR '|') AS cds_descriptions
 FROM %s AS vog
   LEFT OUTER JOIN %s AS vot ON vog.id = vot.id
 WHERE vog.owned_by = '%s'
 GROUP BY vog.id;
 QUERY;
-    $oResult = $_DB->query(sprintf($sLOVDClinVarQuery, TABLE_VARIANTS, TABLE_VARIANTS_ON_TRANSCRIPTS,
-        CLINVAR_USERID));
+    $oResult = $_DB->query(sprintf($sLOVDClinVarQuery, TABLE_VARIANTS,
+        TABLE_VARIANTS_ON_TRANSCRIPTS, $nClinvarUserID));
 
     // Store query result indexed by ClinVar AlleleID.
     while (($aRow = $oResult->fetchAssoc()) !== false) {
         if (preg_match('/{' . CLINVAR_ALLELE_LINK_NAME . ':([0-9]+)}/', $aRow['reference'],
             $aMatches)) {
-            $aRow['cdna'] = array_combine(explode(';', $aRow['transcripts']),
-                                          explode('|', $aRow['cdnas']));
-            unset($aRow['cdnas'], $aRow['transcripts']);
+            $aRow['cds'] = array_combine(explode(';', $aRow['transcripts']),
+                                         explode('|', $aRow['cds_descriptions']));
+            unset($aRow['cds'], $aRow['transcripts']);
             $aVarAlleleMap[$aMatches[1]] = $aRow;
         }
         // Fixme: handle situation where variant is owned by ClinVar user, but has no
@@ -145,26 +144,38 @@ QUERY;
 
 function main ()
 {
+    // Main entry point to Clinvar import script. This function guides the
+    // process of importing variants from Clinvar.
     global $_T;
 
+    // Note: building $aVarAlleleMap takes a lot of space.
+    ini_set('memory_limit', '512M');
     set_time_limit(0);
     lovd_requireAUTH(LEVEL_MANAGER);
 
     // Print HTML header/title and submission form.
     $_T->printHeader(true);
     $_T->printTitle();
+    $nClinvarUserID = isset($_REQUEST['user'])? intval($_REQUEST['user']) : CLINVAR_USERID_DEFAULT;
     $bDryRun = isset($_REQUEST['dry_run']) || !ACTION;
     $sFileURL = isset($_REQUEST['url'])? $_REQUEST['url'] : CLINVAR_URL;
-    printClinvarImportForm($sFileURL, $bDryRun);
+    printClinvarImportForm($nClinvarUserID, $sFileURL, $bDryRun);
 
     if (!ACTION) {
+        // Form is not submitted, do not start processing.
         $_T->printFooter();
         return;
     }
 
+    // Get current state of Clinvar variants in LOVD database.
+    $aVarAlleleMap = array();
+    getLOVDVariantsByAlleleID($aVarAlleleMap, $nClinvarUserID);
+
+    // Initialize stats.
     $aStats = array(
+        'existing_clinvar_vars' => count($aVarAlleleMap),
         'invalid_hgvs' => 0,
-        'removed_del_seq' => 0,
+        'removed_seq' => 0,
         'get_variant_info_fail' => 0,
         'vog_new' => 0,
         'vog_updated' => 0,
@@ -177,10 +188,8 @@ function main ()
         'vot_unknown_transcript' => 0,
     );
 
-    $aVarAlleleMap = array();
-    getLOVDVariantsByAlleleID($aVarAlleleMap);
-
-    print('<HR><H3>Process genomic variants</H3>');
+    // Loop through Clinvar HGVS file to find genomic variant descriptions.
+    print('<HR><H3>Genomic variants</H3>');
     $oFile = new ClinvarFile($sFileURL, true);
     while (($aData = $oFile->fetchRecord()) !== false) {
         if ($aData['Assembly'] != 'GRCh37' || $aData['AlleleID'] == '-1') {
@@ -188,22 +197,28 @@ function main ()
             continue;
         }
 
+        // Split and normalize full variant description.
         list($sReference,
              $sDescription,
              $aPositions) = readClinvarVariant($aData['NucleotideExpression'], $aStats);
         $sChrom = getChromosomeForReference($sReference, 'hg19');
         if ($sChrom !== false) {
+            // Try to store current genomic variant.
             processVOGRecord($aData['AlleleID'], $sChrom, $sDescription, $aPositions,
-                $aVarAlleleMap, $aStats, $bDryRun);
+                $nClinvarUserID, $aVarAlleleMap, $aStats, $bDryRun);
         } else {
             $aStats['vog_unknown_reference'] += 1;
         }
     }
 
+    // Refresh state of Clinvar variants in LOVD database to include those
+    // added in the first pass of the Clinvar file.
     $aVarAlleleMap = array();
-    getLOVDVariantsByAlleleID($aVarAlleleMap);
+    getLOVDVariantsByAlleleID($aVarAlleleMap, $nClinvarUserID);
 
-    print('<HR><H3>Process transcript variants</H3>');
+    // Loop a second time through the CLinvar file to find transcript variant
+    // descriptions.
+    print('<HR><H3>Transcript variants</H3>');
     $oFile = new ClinvarFile($sFileURL, true);
     while (($aData = $oFile->fetchRecord()) !== false) {
         if (strpos($aData['NucleotideChange'], 'c.') === false || $aData['AlleleID'] == '-1') {
@@ -211,15 +226,18 @@ function main ()
             continue;
         }
 
+        // Split and normalize full variant description.
         list($sReference,
             $sDescription,
             $aPositions) = readClinvarVariant($aData['NucleotideExpression'], $aStats);
+        // Try to store current transcript variant.
         processVOTRecord($aData['AlleleID'], $sReference, $sDescription, $aPositions, $aVarAlleleMap,
             $aStats, $bDryRun);
     }
 
-    print_stats($aStats, $aVarAlleleMap);
-
+    // Print processing stats and quit.
+    print('<HR><H3>Import statistics</H3>');
+    print_stats($aStats);
     $_T->printFooter();
 }
 
@@ -227,17 +245,23 @@ function main ()
 
 
 
-
-function printClinvarImportForm($sURL, $bDryRun)
+function printClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
 {
+    // Print HTML for form, containing adjustable parameters for:
+    // $nClinvarUserID  User ID used for owned_by field of genomic variants.
+    // $sURL            URL of Clinvar HGVS file.
+    // $bDryRun         Boolean flag for preventing changes to the database.
 ?>
     <FORM action="<?=CURRENT_PATH?>?import" method="POST">
         <TABLE>
             <TR><TD><B>Clinvar URL (gzipped hgvs4variation file):</B></TD>
-                <TD><input type="text" name="url" size="50" value="<?php echo $sURL ?>" /></TD>
+                <TD><input type="text" name="url" size="50" value="<?php echo $sURL; ?>" /></TD>
             </TR>
             <TR><TD><B>Genome build:</B></TD>
                 <TD>hg19</TD>
+            </TR>
+            <TR><TD><B>Import as user:</B></TD>
+                <TD><input type="text" name="user" size="10" value="<?php echo strval($nClinvarUserID); ?>" /></TD>
             </TR>
             <TR><TD><B>Dry run (no changes to database):</B></TD>
                 <TD><input type="checkbox" name="dry_run" <?php echo ($bDryRun)? 'checked' : ''; ?> /></TD>
@@ -253,10 +277,12 @@ function printClinvarImportForm($sURL, $bDryRun)
 
 
 
+
 function readClinvarVariant($sVar, &$aStats)
 {
-    // Read given variant description. Return the reference accession and a
-    // normalized DNA description. The positions are false when $sVar is not
+    // Given full variant description, return the reference accession, a
+    // normalized DNA description and positions returned from
+    // lovd_getVariantInfo(). The positions are false when $sVar is not
     // valid HGVS.
 
     // Split variant into reference name and genomic description.
@@ -276,9 +302,8 @@ function readClinvarVariant($sVar, &$aStats)
     // convert "...delX..." descriptions to "...del...").
     $sDescriptionNorm = $sDescription;
     if (preg_match('/^(.+(del|dup))([ACGT]+|[0-9]+)(.*)$/', $sDescription, $aMatches)) {
-//        print('del or dup with seq: ' . $sDescription . ' -> ' . $aMatches[1] . $aMatches[4] . "<BR>\n");
         $sDescriptionNorm = $aMatches[1] . $aMatches[4];
-        $aStats['removed_del_seq'] += 1;
+        $aStats['removed_seq'] += 1;
     }
 
     return array($sReference, $sDescriptionNorm, $aPositions);
@@ -287,22 +312,40 @@ function readClinvarVariant($sVar, &$aStats)
 
 
 
-function print_stats(&$aStats, &$aVariantIDMap) {
-//    print('#variants in LOVD: ' . count($aVariantIDMap) . '<BR>' . "\n");
-//    print('#variants in ClinVar: ' . ($aStats['known'] + $aStats['unknown']) . '<BR>' . "\n");
-//    print('#variants in ClinVar known to LOVD: ' . $aStats['known'] . '<BR>' . "\n");
-//    print('#variants in ClinVar unknown to LOVD: ' . $aStats['unknown'] . '<BR>' . "\n");
-    var_dump($aStats);
+function print_stats(&$aStats) {
+    // Print HMTL table with statistics gathered during parsing.
+    $aStatDescriptions = array(
+        'Pre-existing Clinvar variants in LOVD' => $aStats['existing_clinvar_vars'],
+        'Removed deleted or duplicated sequence from HGVS' => $aStats['removed_seq'],
+        'Failed to parse HGVS' => $aStats['get_variant_info_fail'],
+        'Genomic variants newly added' => $aStats['vog_new'],
+        'Genomic variants already known (updated)' => $aStats['vog_updated'],
+        'Genomic variants already known (no update needed)' => $aStats['vog_no_update_needed'],
+        'Genomic variants with unknown reference' => $aStats['vog_unknown_reference'],
+        'Transcript variants newly added' => $aStats['vot_new'],
+        'Transcript variants already known (updated)' => $aStats['vot_updated'],
+        'Transcript variants already known (no update needed)' => $aStats['vot_no_update_needed'],
+        'Transcript variants unlinkable to genomic variant' => $aStats['vot_unknown_allele'],
+        'Transcript variants for unknown transcript' => $aStats['vot_unknown_transcript'],
+    );
+
+    $sStatsHTML = '<TABLE>' . "\n";
+    foreach ($aStatDescriptions as $sLabel => $nValue) {
+        $sStatsHTML .= '<TR><TD><B>' . $sLabel . '</B></TD><TD>' . strval($nValue) .
+            '</TD></TR>' . "\n";
+    }
+    print($sStatsHTML . '</TABLE>' . "\n");
 }
 
 
 
-function processVOGRecord($sAlleleID, $sChrom, $sDescription, $aPositions, &$aVarAlleleMap,
-                          &$aStats, $bDryRun)
+function processVOGRecord($sAlleleID, $sChrom, $sDescription, $aPositions, $nClinvarUserID,
+                          &$aVarAlleleMap, &$aStats, $bDryRun)
 {
+    // Try to store or update a genomic variant in the database.
 
     if ($aPositions === false && !preg_match('/\[.*;.*\]/', $sDescription)) {
-        // Non-parsable description. Skip it if it's not a series of changes.
+        // Non-parsable description and not describing a series of changes.
         // Note: since LOVD cannot parse descriptions with a series of changes,
         // allow anything that resembles variants like "g.[change1;change2]".
         return;
@@ -316,16 +359,19 @@ function processVOGRecord($sAlleleID, $sChrom, $sDescription, $aPositions, &$aVa
 
     static $oVar, $aVarDefaults;
     if (!isset($oVar)) {
+        // Create object to run insertEntry() on.
         $oVar = new LOVD_GenomeVariant();
+
+        // Default field values for new genomic variants.
         $aCustomFields = $oVar->buildFields();
         $aVarDefaults = array_merge(
             array(
                 'allele' => '0',
                 'effectid' => '0',
                 'type' => '',
-                'owned_by' => CLINVAR_USERID,
+                'owned_by' => $nClinvarUserID,
                 'statusid' => STATUS_OK,
-                'created_by' => CLINVAR_USERID,
+                'created_by' => $nClinvarUserID,
                 'created_date' => date('Y-m-d H:i:s')
             ),
             // Add custom fields with empty values.
@@ -333,6 +379,7 @@ function processVOGRecord($sAlleleID, $sChrom, $sDescription, $aPositions, &$aVa
         );
     }
 
+    // Field values specific to current variant.
     $aVarValues = array(
         // Fixme: log truncated descriptions (over 150 chars)?
         'VariantOnGenome/DNA' => substr($sDescription, 0, 150),
@@ -375,6 +422,7 @@ function processVOGRecord($sAlleleID, $sChrom, $sDescription, $aPositions, &$aVa
 function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &$aVarAlleleMap,
                           &$aStats, $bDryRun)
 {
+    // Try to store or update a transcript variant in the database.
 
     global $_DB;
 
@@ -384,6 +432,7 @@ function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &
         return;
     }
 
+    // Setup cache for looking up transcripts.
     static $aTranscripts;
     if (!isset($aTranscripts)) {
         $sTranscriptQuery = 'SELECT id_ncbi, id FROM ' . TABLE_TRANSCRIPTS . ';';
@@ -391,12 +440,13 @@ function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &
     }
 
     if (!isset($aTranscripts[$sReference])) {
+        // Transcript not known to LOVD.
         $aStats['vot_unknown_transcript'] += 1;
         return;
     }
 
     if ($aPositions === false && !preg_match('/\[.*;.*\]/', $sDescription)) {
-        // Non-parsable description. Skip it if it's not a series of changes.
+        // Non-parsable description and not describing a series of changes.
         // Note: since LOVD cannot parse descriptions with a series of changes,
         // allow anything that resembles variants like "c.[change1;change2]".
         return;
@@ -412,7 +462,10 @@ function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &
 
     static $oVOT, $aVarDefaults;
     if (!isset($oVOT)) {
+        // Initialize object to run insertEntry() or updateEntry() on.
         $oVOT = new LOVD_TranscriptVariant();
+
+        // Set default values for new entries.
         $aTableFields = lovd_getColumnList(TABLE_VARIANTS_ON_TRANSCRIPTS);
         $aVarDefaults = array_merge(
             // Add table fields with empty values.
@@ -423,6 +476,7 @@ function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &
         );
     }
 
+    // Field values specific to current variant.
     $aVarValues = array(
         // Fixme: log truncated descriptions (over 100 chars)?
         'VariantOnTranscript/DNA' => substr($sDescription, 0, 100),
@@ -459,6 +513,10 @@ function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &
         $aStats['vot_new'] += 1;
     }
 }
+
+
+
+
 
 main();
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-11-30
+ * Modified    : 2017-12-04
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,7 +35,7 @@ class ClinvarFile {
     var $nLinesToSkip = 15; // Number of lines at top of file to ignore.
     var $aHeader = null;    // Column names.
     var $sLinePart = null;  // Temp storage of incomplete records split over file chunks.
-    var $nChunkCount = 0;        // File chunk counter.
+    var $nChunkCount = 0;   // File chunk counter.
     var $aBuffer = array(); // Record buffer.
     var $nBufferCursor = 0; // Index of record in buffer currently processing.
     var $bProgressBar;      // Flag denoting if progress bar is shown.
@@ -90,7 +90,7 @@ class ClinvarFile {
         }
 
         // Note: gzread() returns an empty string at EOF (instead of false).
-        if ($sChunk === '' || $this->nChunkCount++ > 2000) {
+        if ($sChunk === '') {
             fclose($this->oFileHandle);
             return false;
         }
