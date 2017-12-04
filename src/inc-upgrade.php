@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-09-20
+ * Modified    : 2017-12-04
  * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -605,6 +605,12 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      ("81", "+*/-"), ("83", "+*/-?"), ("85", "+*/?"), ("86", "+*/#"), 
                      ("87", "+*/+?"), ("88", "+*/+*"), ("89", "+*/+"), ("96", "+/#"), 
                      ("98", "+/+*");'),
+                 '3.0-20c' => array(
+                     'ALTER TABLE ' . TABLE_CHROMOSOMES . ' ADD COLUMN hg38_id_ncbi VARCHAR(20) NOT NULL AFTER hg19_id_ncbi',
+                     // Weird, but much simpler... so, oh well. All chromosomes got updated one version, except M.
+                     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = CONCAT(LEFT(hg19_id_ncbi, 10), (TRIM(LEADING "." FROM RIGHT(hg19_id_ncbi, 2))+1)) WHERE name != "M"',
+                     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = hg19_id_ncbi WHERE name = "M"',
+                 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

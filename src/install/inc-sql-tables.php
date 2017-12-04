@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2017-06-16
- * For LOVD    : 3.0-19
+ * Modified    : 2017-12-01
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -119,6 +119,7 @@ $aTableSQL =
     sort_id TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
     hg18_id_ncbi VARCHAR(20) NOT NULL,
     hg19_id_ncbi VARCHAR(20) NOT NULL,
+    hg38_id_ncbi VARCHAR(20) NOT NULL,
     PRIMARY KEY (name))
     ' . $sSettings
 
