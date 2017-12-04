@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-16
- * Modified    : 2017-11-17
+ * Modified    : 2017-12-04
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -148,7 +148,7 @@ if (ACTION == 'unschedule' && POST) {
     setTimeout(\'window.location.href = window.location.href;\', 1000);
     
     // Select the right buttons.
-    $("#import_scheduler_dialog").dialog({buttons: oButtonBack}); 
+    $("#import_scheduler_dialog").dialog({buttons: oButtonClose}); 
     ');
     exit;
 }

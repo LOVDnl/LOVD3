@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-12-01
+ * Modified    : 2017-12-04
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -334,11 +334,20 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
         die('Error: Failed to retrieve a filename from the database.' . "\n");
     }
 
-    // Load necessary authorisation.
-    $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchAssoc();
-    $_AUTH['curates']      = array();
-    $_AUTH['collaborates'] = array();
-    $_AUTH['level'] = LEVEL_MANAGER; // To pass the authorization check downstream.
+    // Load necessary authorisation, only if we have none (automatic run by script).
+    if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
+        $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchAssoc();
+        $_AUTH['curates']      = array();
+        $_AUTH['collaborates'] = array();
+        $_AUTH['level'] = LEVEL_MANAGER; // To pass the authorization check downstream.
+    }
+
+    // Also attempt to read the data for the user who has submitted this file, for the emails that are to be sent.
+    $zUser = array();
+    if (preg_match('/^LOVD_API_submission_(\d+)_/', $sFile, $aRegs)) {
+        list(, $nUserID) = $aRegs;
+        $zUser = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchAssoc();
+    }
 
     // Fake the POSTing of a file.
     $_POST['mode'] = 'insert';
@@ -2139,6 +2148,176 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
 
 
 
+        function lovd_notifyCuratorsOfNewUpload ()
+        {
+            // Emails the curators and managers of the new (automatic) import, in case non-public data was uploaded.
+            // Sends one email per gene. In case emails can't be sent, reports the gene(s) for which no emails were sent.
+            // Reports success or failure in an lovd_showInfoTable().
+            global $_AUTH, $_CONF, $_DB, $_SETT, $aParsed, $zUser;
+
+            // If we have no $zUser, we don't know where this import comes from, and we'll just assign it to $_AUTH.
+            // API submissions will always have an $zUser.
+            if (!$zUser) {
+                $zUser = $_AUTH;
+            }
+
+            // Collect IDs of data that got added. We're assuming here,
+            //  that when at least one individual has been submitted,
+            //  that all data is attached to an individual.
+            $sSQL = '';
+            $aIDs = array();
+            if (count($aParsed['Individuals']['data'])) {
+                // Individuals were submitted.
+                // Collect genes and the individual IDs.
+                // If no genes are available, we'll email the managers.
+                foreach ($aParsed['Individuals']['data'] as $nID => $aIndividual) {
+                    if (isset($aIndividual['newID'])) {
+                        $aIDs[] = $aIndividual['newID'];
+                    }
+                }
+                $sSQL = 'SELECT t.geneid, GROUP_CONCAT(DISTINCT "individuals/", s.individualid ORDER BY s.individualid SEPARATOR ";")
+                                 FROM ' . TABLE_SCREENINGS . ' AS s
+                                   INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid)
+                                   INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id)
+                                   LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
+                                   LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                                 WHERE vog.statusid < ?
+                                   AND s.individualid IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
+                                 GROUP BY t.geneid
+                                 ORDER BY t.geneid';
+            } elseif (count($aParsed['Variants_On_Genome']['data'])) {
+                // We have separate variants instead.
+                // Collect genes and the variant IDs.
+                // If no genes are available, we'll email the managers.
+                foreach ($aParsed['Variants_On_Genome']['data'] as $nID => $aVOG) {
+                    if (isset($aVOG['newID'])) {
+                        $aIDs[] = $aVOG['newID'];
+                    }
+                }
+                $sSQL = 'SELECT DISTINCT t.geneid, GROUP_CONCAT(DISTINCT "variants/", vog.id ORDER BY vog.id SEPARATOR ";")
+                                 FROM ' . TABLE_VARIANTS . ' AS vog
+                                   LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
+                                   LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                                 WHERE vog.statusid < ?
+                                   AND vog.id IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
+                                 GROUP BY t.geneid
+                                 ORDER BY t.geneid';
+            }
+            $aGenesToNotify = $_DB->query($sSQL, array_merge(array(STATUS_MARKED), $aIDs))->fetchAllCombine();
+            $aFailedGenes = array(); // Which emails were *NOT* successfully sent?
+
+            // Loop through all genes we have ($sGene might be empty),
+            //  and send emails.
+            $aManagers = array();
+            $sManagers = '';
+            if (isset($aGenesToNotify[''])) {
+                $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
+                foreach ($aManagers as $aUser) {
+                    $sManagers .= (!$sManagers? '' : ', ') . $aUser[0];
+                }
+            }
+
+            // Arrays containing submitter & data fields.
+            $aSubmitterDetails =
+                array(
+                    'zUser',
+                    'id' => 'User ID',
+                    'name' => 'Name',
+                    'institute' => 'Institute',
+                    'department' => 'Department',
+                    'address' => 'Address',
+                    'city' => 'City',
+                    'country_' => 'Country',
+                    'email' => 'Email address',
+                    'telephone' => 'Telephone',
+                    'reference' => 'Reference',
+                );
+            $zUser['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($zUser['countryid']))->fetchColumn();
+
+            foreach ($aGenesToNotify as $sGene => $sLinks) {
+                $aLinks = explode(';', $sLinks);
+                if ($sGene) {
+                    // Select all curators that need to be mailed.
+                    $aTo = $_DB->query('SELECT u.name, u.email
+                                        FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id)
+                                        WHERE c.geneid = ? AND allow_edit = 1 ORDER BY u.level DESC, u.name', array($sGene))->fetchAllRow();
+                    $sTo = '';
+                    foreach ($aTo as $aUser) {
+                        $sTo .= (!$sTo? '' : ', ') . $aUser[0];
+                    }
+                } else {
+                    $aTo = $aManagers;
+                    $sTo = $sManagers;
+                }
+
+                // Introduction message to curators/managers.
+                $sHead = '';
+                $sMessage = 'Dear ';
+                if ($sGene) {
+                    $sHead .= 'Curator' . (count($aTo) > 1? 's' : '') . ': ' . $sTo . "\n";
+                    $sMessage .= 'Curator' . (count($aTo) > 1? 's' : '');
+                } else {
+                    $sHead .= 'Manager' . (count($aTo) > 1? 's' : '') . ': ' . $sTo . "\n";
+                    $sMessage .= 'Manager' . (count($aTo) > 1? 's' : '');
+                }
+                $sMessage = $sHead . "\n" .
+                    $sMessage . ',' . "\n\n" .
+                    'An uploaded file from ' . $zUser['name'] . ' has automatically been imported into the LOVD database.' . "\n" .
+                    '(Part of) this submission won\'t be viewable to the public until you as curator agree with the additions. You can do so by viewing the entry in LOVD (make sure you\'re logged in), and selecting "Publish" in the options menu. Below is a copy of the submission.' . "\n\n";
+
+                if ($_CONF['location_url']) {
+                    $sMessage .= 'To view the new entr' . (count($aLinks) == 1? 'y' : 'ies') . ', click this link (you may need to log in first):' . "\n";
+                    foreach ($aLinks as $sLink) {
+                        $sMessage .= $_CONF['location_url'] . $sLink . "\n";
+                    }
+                    print("\n");
+                }
+                $sMessage .= 'Regards,' . "\n" .
+                             '    LOVD system at ' . $_CONF['institute'] . "\n\n";
+
+                // Build the mail format.
+                $aBody = array($sMessage, 'submitter_details' => $aSubmitterDetails);
+                $sBody = lovd_formatMail($aBody);
+
+                // Set proper subject.
+                // Don't just change this subject, it's being parsed in inc-lib-form.php (lovd_sendMail()).
+                $sSubject = 'LOVD submission (' . (ACTION != 'autoupload_scheduled_file'? '' : 'automatic ') . 'import)' . (!$sGene? '' : ' (' . $sGene . ')');
+
+                // Set submitter address.
+                $aCC = array(array($zUser['name'], $zUser['email']));
+
+                // Send mail.
+                // FIXME; When messaging system is built in, maybe queue message for curators?
+                $bMail = lovd_sendMail($aTo, $sSubject, $sBody, $_SETT['email_headers'], false, $_CONF['send_admin_submissions'], $aCC);
+                if (!$bMail) {
+                    $aFailedGenes[] = $sGene;
+                }
+            }
+
+            // Report outcome.
+            if (!$aFailedGenes) {
+                lovd_showInfoTable('Successfully processed import and sent an email notification to the relevant curator(s)!', 'success');
+            } else {
+                $sFailedGenesAddressees = '';
+                if ($aFailedGenes[0] == '') {
+                    // Managers could not be mailed.
+                    $sFailedGenesAddressees = 'managers';
+                    unset($aFailedGenes[0]);
+                }
+                if ($aFailedGenes) {
+                    // Genes left, add to the list of addressees (purely a description for the current user).
+                    $sFailedGenesAddressees .= (!$sFailedGenesAddressees? '' : ' and to the ') . 'curators of ' . implode(', ', $aFailedGenes);
+                }
+                lovd_showInfoTable('LOVD wasn\'t able to send an email notification to the ' . $sFailedGenesAddressees . '!<BR>Please contact them and notify them of the new upload so that they can curate the data!', 'warning');
+            }
+
+            return !$aFailedGenes;
+        }
+
+
+
+
+
         // Now we have everything parsed. If there were errors, we are stopping now.
         require ROOT_PATH . 'inc-lib-actions.php';
         if (!lovd_error() && $nDataTotal) {
@@ -2491,6 +2670,11 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                 $nGenes = count($aGenes);
                 lovd_writeLog('Event', LOG_EVENT, 'Imported ' . $sMessage . '; ran ' . $nDone . ' queries' . (!$aGenes? '' : ' (' . ($nGenes > 100? $nGenes . ' genes' : implode(', ', $aGenes)) . ')') . (ACTION != 'autoupload_scheduled_file' || !$sFile? '' : ' (' . $sFile . ')') . '.');
                 lovd_setUpdatedDate($aGenes); // FIXME; regardless of variant status... oh, well...
+
+                // When auto uploading non-public data, make sure we notify the curators (not for LOVD+).
+                if (!LOVD_plus && ACTION == 'autoupload_scheduled_file') {
+                    lovd_notifyCuratorsOfNewUpload();
+                }
 
                 // When auto uploading, clean up.
                 if (ACTION == 'autoupload_scheduled_file' && $sFile) {
