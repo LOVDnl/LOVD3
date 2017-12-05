@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-11-20
+ * Modified    : 2017-12-05
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -162,14 +162,30 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && !ACTION) {
+if (PATH_COUNT == 2 && preg_match('/^([a-z][a-z0-9#@-]*|([0-9]+))$/i', rawurldecode($_PE[1]), $aPEMatches) && !ACTION) {
     // URL: /genes/DMD
-    // View specific entry.
+    // URL: /genes/2928
+    // View specific entry by symbol or HGNC ID.
 
-    $sID = rawurldecode($_PE[1]);
+    if (isset($aPEMatches[2])) {
+        // Numeric identifier given, assume it's a HGNC ID.
+        $sID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc=?',
+            array($aPEMatches[2]))->fetchColumn();
+    } else {
+        // Gene symbol given.
+        $sID = rawurldecode($_PE[1]);
+    }
+
     define('PAGE_TITLE', $sID . ' gene homepage');
     $_T->printHeader();
     $_T->printTitle();
+
+    if ($sID === false) {
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
     lovd_printGeneHeader();
 
     // Load appropriate user level for this gene.
