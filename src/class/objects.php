@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-20
+ * Modified    : 2017-12-06
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1266,7 +1266,7 @@ class LOVD_Object {
                 }
             }
             // If we find an owned_by_ field, and an owner array, we set up the popups as well (but not for the "LOVD" user).
-            if (isset($zData['owned_by']) && (int) $zData['owned_by'] && !empty($zData['owner'])) {
+            if (isset($zData['owned_by_']) && !empty($zData['owner'])) {
                 if(!is_array($zData['owner'][0])) {
                     $zData['owner'] = array($zData['owner']);
                 }
@@ -1275,6 +1275,11 @@ class LOVD_Object {
                 foreach($zData['owner'] as $aLinkData) {
                     if (count($aLinkData) >= 6) {
                         list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
+
+                        if (intval($nID) === 0) {
+                            // Skip special "LOVD" user.
+                            continue;
+                        }
                         // Call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table, and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
                         $zData['owned_by_'] .= (!$zData['owned_by_']? '' : ', ') .
                             '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
