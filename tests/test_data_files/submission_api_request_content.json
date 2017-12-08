@@ -1,0 +1,107 @@
+{
+  "lsdb": {
+    "@id": "53786324d4c6cf1d33a3e594a92591aa",
+    "@uri": "http://databases.lovd.nl/shared/",
+    "source": {
+      "name": "name of lab",
+      "contact": {
+        "name": "name of submitter",
+        "email": "email@institute.org",
+        "db_xref": [
+          {
+            "@source": "lovd",
+            "@accession": "12345"
+          },
+          {
+            "@source": "lovd_auth_token",
+            "@accession": "aX7unp00nswXS7u"
+          }
+        ]
+      }
+    },
+    "individual": [
+      {
+        "@id": "patient_ID",
+        "gender": {
+          "@code": "2"
+        },
+        "phenotype": [
+          {
+            "@term": "Phenotypic abnormality",
+            "@source": "HPO",
+            "@accession": "0000118"
+          }
+        ],
+        "variant": [
+          {
+            "@copy_count": "1",
+            "@type": "DNA",
+            "ref_seq": {
+              "@source": "genbank",
+              "@accession": "NC_000015.9"
+            },
+            "name": {
+              "@scheme": "HGVS",
+              "#text": "g.40702997G>A"
+            },
+            "pathogenicity": {
+              "@scope": "individual",
+              "@term": "Pathogenic"
+            },
+            "variant_detection": [
+              {
+                "@template": "DNA",
+                "@technique": "SEQ"
+              },
+              {
+                "@template": "RNA",
+                "@technique": "RT-PCR"
+              }
+            ],
+            "seq_changes": {
+              "variant": [
+                {
+                  "@type": "cDNA",
+                  "gene": {
+                    "@source": "HGNC",
+                    "@accession": "IVD"
+                  },
+                  "ref_seq": {
+                    "@source": "genbank",
+                    "@accession": "NM_002225.3"
+                  },
+                  "name": {
+                    "@scheme": "HGVS",
+                    "#text": "c.465+1G>A"
+                  },
+                  "seq_changes": {
+                    "variant": [
+                      {
+                        "@type": "RNA",
+                        "name": {
+                          "@scheme": "HGVS",
+                          "#text": "r.296_465del"
+                        },
+                        "seq_changes": {
+                          "variant": [
+                            {
+                              "@type": "AA",
+                              "name": {
+                                "@scheme": "HGVS",
+                                "#text": "p.Val99Alafs*5"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
