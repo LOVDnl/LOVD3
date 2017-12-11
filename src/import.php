@@ -149,13 +149,16 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     // To make sure we see entries where the file is gone, but the entry persists in the schedule, add all scheduled files that are not found.
     foreach ($zScheduledFiles as $sFile => $zScheduledFile) {
         if (!isset($aFiles[0][$sFile]) && !isset($aFiles[1][$sFile])) {
+            // Lost files are deliberately shown as processed.
+            // The importer will nicely skip missing files. Having these show up
+            //  here makes them more visible so they can be unscheduled.
             $aFiles[1][$sFile] = array(
                 'scheduled' => 1,
                 'priority' => $zScheduledFile['priority'],
                 'processed_date' => (!$zScheduledFile['processed_date']? '0000-00-00 00:00:00' : $zScheduledFile['processed_date']),
                 'scheduled_date' => $zScheduledFile['scheduled_date'],
                 'file_lost' => 1,
-                'file_date' => $sFile,
+                'file_date' => '',
             );
         }
     }
@@ -328,6 +331,12 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
 
     // If we have nothing to do, let's stop.
     if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 0')->fetchColumn()) {
+        // Nothing to do. When using HTML output, tell the user.
+        if (FORMAT == 'text/html') {
+            $_T->printHeader(false);
+            lovd_showInfoTable('No scheduled files left to import.', 'stop');
+            $_T->printFooter(false);
+        }
         exit; // Stop silently.
     }
 
