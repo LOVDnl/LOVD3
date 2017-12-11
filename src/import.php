@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-12-04
+ * Modified    : 2017-12-11
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,6 +66,39 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
         exit;
     }
 
+
+
+    function lovd_sortFilesToImport ($aFile1, $aFile2)
+    {
+        // Function to be passed to uasort() to sort files that are to be
+        //  imported. They are sorted on a whole range of variables.
+        // The comparison function must return an integer less than, equal to,
+        //  or greater than zero if the first argument is considered to be
+        //  respectively less than, equal to, or greater than the second.
+        // This function assumes you're passing valid import file arrays.
+
+        if ($aFile1['scheduled'] != $aFile2['scheduled']) {
+            // Scheduled files should go on top.
+            return ($aFile1['scheduled']? -1 : 1);
+        } elseif ($aFile1['priority'] != $aFile2['priority']) {
+            // Then, priority samples should go on top.
+            return ($aFile1['priority'] > $aFile2['priority']? -1 : 1);
+        } elseif ($aFile1['processed_date'] != $aFile2['processed_date']) {
+            // Then, sort on date processed.
+            return ($aFile1['processed_date'] < $aFile2['processed_date']? -1 : 1);
+        } elseif ($aFile1['scheduled_date'] != $aFile2['scheduled_date']) {
+            // Then, sort on date scheduled.
+            return ($aFile1['scheduled_date'] < $aFile2['scheduled_date']? -1 : 1);
+        } elseif ($aFile1['file_date'] != $aFile2['file_date']) {
+            // Then, sort on the file's timestamp.
+            return ($aFile1['file_date'] < $aFile2['file_date']? -1 : 1);
+        } else {
+            return 0;
+        }
+    }
+
+
+
     // Fetch all info from the database, for annotation and error reporting.
     // This will group by filename.
     $zScheduledFiles = $_DB->query('SELECT sf.*, u.name AS scheduled_by_name
@@ -74,8 +107,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                            ->fetchAllGroupAssoc();
 
     // [0/1] indicates processed no/yes.
-    // Files in format [filename] = sort_code (unscheduled(0|1), reverse_priority(0-9), processed_date, scheduled_date, file_timestamp).
-    // NOTE: If you change the sort code, be sure to update this comment, the code that builds it, the code the fills in the orphaned database entries, and the scheduling part.
+    // Files in format [filename] = array(scheduled => (0|1), priority => [0-9], processed_date => Y-m-d H:i:s, scheduled_date => Y-m-d H:i:s, file_lost => (0|1), file_date => Y-m-d H:i:s).
     $aFiles = array(
         array(),
         array(),
@@ -100,21 +132,15 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             }
             $tFileModified = filemtime($_INI['paths']['data_files'] . '/' . $sFile);
 
-            // Build the sorting code by concatenating a few variables.
-            $sSorting = '';
-            // Scheduled files should go on top.
-            $sSorting .= (int) !$bScheduled . ',';
-            // Then, priority samples should go on top.
-            $sSorting .= (9 - $nPriority) . ',';
-            // Then, sort on date processed.
-            $sSorting .= $sProcessedDate . ',';
-            // Then, sort on date scheduled.
-            $sSorting .= $sScheduledDate . ',';
-            // Then, sort on the file's timestamp.
-            $sSorting .= date('Y-m-d H:i:s', $tFileModified);
-
             // Store file in the files array.
-            $aFiles[$bProcessed][$sFile] = $sSorting;
+            $aFiles[$bProcessed][$sFile] = array(
+                'scheduled' => $bScheduled,
+                'priority' => $nPriority,
+                'processed_date' => $sProcessedDate,
+                'scheduled_date' => $sScheduledDate,
+                'file_lost' => 0,
+                'file_date' => date('Y-m-d H:i:s', $tFileModified),
+            );
 
             $nFilesSchedulable += (int) !$bScheduled;
         }
@@ -123,12 +149,14 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     // To make sure we see entries where the file is gone, but the entry persists in the schedule, add all scheduled files that are not found.
     foreach ($zScheduledFiles as $sFile => $zScheduledFile) {
         if (!isset($aFiles[0][$sFile]) && !isset($aFiles[1][$sFile])) {
-            $aFiles[1][$sFile] =
-                '0,' .
-                (9 - $zScheduledFile['priority']) . ',' .
-                (!$zScheduledFile['processed_date']? '0000-00-00 00:00:00' : $zScheduledFile['processed_date']) . ',' .
-                 $zScheduledFile['scheduled_date'] . ',' .
-                 $sFile;
+            $aFiles[1][$sFile] = array(
+                'scheduled' => 0,
+                'priority' => $zScheduledFile['priority'],
+                'processed_date' => (!$zScheduledFile['processed_date']? '0000-00-00 00:00:00' : $zScheduledFile['processed_date']),
+                'scheduled_date' => $zScheduledFile['scheduled_date'],
+                'file_lost' => 1,
+                'file_date' => $sFile,
+            );
         }
     }
 
@@ -157,8 +185,15 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                     lovd_writeLog('Event', LOG_EVENT, 'Scheduled ' . $sFile . ' for import');
 
                     // Now, to facilitate proper sorting, refresh the information in the files array.
-                    // FIXME: This assumes a priority of 0 (stored as 9); we need to change this when we implement priority scheduling.
-                    $aFiles[0][$sFile] = '0,9,0000-00-00 00:00:00,' . date('Y-m-d H:i:s') . substr($aFiles[0][$sFile], 43);
+                    // FIXME: This assumes a priority of 0; we need to change this when we implement priority scheduling.
+                    $aFiles[0][$sFile] = array(
+                        'scheduled' => 0,
+                        'priority' => 0,
+                        'processed_date' => '0000-00-00 00:00:00',
+                        'scheduled_date' => date('Y-m-d H:i:s'),
+                        'file_lost' => $aFiles[0][$sFile]['file_lost'],
+                        'file_date' => $aFiles[0][$sFile]['file_date'],
+                    );
 
                     // Also, to display statistics, load the file's info.
                     // This includes the filename field, that we usually don't have, but whatever.
@@ -175,8 +210,8 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
 
 
     // Sort the file list (the DB list is already sorted).
-    asort($aFiles[0]); // Sort data files, keeping indices.
-    asort($aFiles[1]); // Sort data files, keeping indices.
+    uasort($aFiles[0], 'lovd_sortFilesToImport'); // Sort data files, keeping indices.
+    uasort($aFiles[1], 'lovd_sortFilesToImport'); // Sort data files, keeping indices.
     $nFilesProcessed = count($aFiles[1]);
     $nFilesScheduled = count($zScheduledFiles);
     $nFilesTotal = count($aFiles[0]) + $nFilesProcessed;
@@ -209,19 +244,15 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
               <TABLE border="0" cellpadding="10" cellspacing="1" width="' . ($i? '350' : '450') . '" class="data" style="font-size : 13px;">
                 <TR>
                   <TH' . ($i? '' : '></TH><TH') . ' class="S16">' . ($i? 'Files already processed' : 'Files to be processed') . '</TH></TR>');
-        foreach ($aFiles[$i] as $sFile => $sSortString) {
-            list($bUnscheduled, $nReversePriority, $sProcessedDate, $sScheduledDate, $sFileModified) = explode(',', $sSortString);
-            // Scheduled that no longer exist, have the name of the file as their modification date.
-            $bFileLost = ($sFile == $sFileModified);
-
+        foreach ($aFiles[$i] as $sFile => $aFile) {
             // For LOVD API submissions, we change the annotation.
             // File names are long, we can shorten it and annotate better.
-            // We deliberately overwrite $sFileModified here.
+            // We deliberately overwrite $aFile['file_date'] here.
             if (preg_match('/^LOVD_API_submission_(\d+)_([0-9:_-]+)\.(\d+)\.lovd$/', $sFile, $aRegs)) {
                 $bAPI = true;
-                list(, $nUserID, $sFileModified) = $aRegs;
+                list(, $nUserID, $aFile['file_date']) = $aRegs;
                 $nUserID = sprintf('%0' . $_SETT['objectid_length']['users'] . 'd', $nUserID);
-                $sFileModified = str_replace('_', ' ', $sFileModified);
+                $aFile['file_date'] = str_replace('_', ' ', $aFile['file_date']);
                 $sFileDisplayName = 'API submission (' . $nUserID . ': ';
                 if (!isset($aUsers[$nUserID])) {
                     $aUsers[$nUserID] = $_DB->query('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchColumn();
@@ -232,9 +263,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 $sFileDisplayName = $sFile;
             }
 
-            $bScheduled = (!$bUnscheduled);
-            $nPriority = (9 - $nReversePriority);
-            $nAgeInDays = floor(($tNow - strtotime($sFileModified))/(60*60*24));
+            $nAgeInDays = floor(($tNow - strtotime($aFile['file_date']))/(60*60*24));
             // Build the link for actions for already scheduled files.
             $sAjaxActions = 'onclick="$.get(\'ajax/import_scheduler.php/' . urlencode($sFile) . '?view\').fail(function(){alert(\'Error retrieving actions, please try again later.\');}); return false;"';
             if ($i) {
@@ -247,7 +276,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             } else {
                 $bError = false;
                 $bProcessing = false;
-                if ($bScheduled) {
+                if ($aFile['scheduled']) {
                     // Not imported yet, but scheduled.
                     print("\n" .
                           '                <TR class="del" ' . $sAjaxActions . '>
@@ -259,10 +288,10 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                   <TD width="30" style="text-align : center;"><INPUT type="checkbox" name="files_to_schedule[]" value="' . $sFile . '" style="display : none;"><IMG src="gfx/check.png" alt="Import" width="16" height="16" style="display : none;"></TD>');
                 }
             }
-            $sInformationHTML = ($bUnscheduled? '' : '
+            $sInformationHTML = (!$aFile['scheduled']? '' : '
                     <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . ($sFile == $sFileDisplayName? '' : $sFile . ' - ') . 'Scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
-            $sPriorityHTML = (!$nPriority? '' : '
-                    <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import: ' . $_SETT['import_priorities'][$nPriority] . '" style="float : right;">');
+            $sPriorityHTML = (!$aFile['priority']? '' : '
+                    <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import: ' . $_SETT['import_priorities'][$aFile['priority']] . '" style="float : right;">');
             $sProcessingHTML = (!$bProcessing? '' : '
                     <IMG src="gfx/menu_clock.png" alt="Processing ..." width="16" height="16" title="Processing started ' . $zScheduledFiles[$sFile]['processed_date'] . '" style="float : right;">');
             $sErrorsHTML = (!$bError? '' : '
@@ -270,7 +299,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             print('
                   <TD>' . $sInformationHTML . $sPriorityHTML . $sProcessingHTML . $sErrorsHTML . '
                     <B>' . $sFileDisplayName . '</B><BR>
-                    <SPAN class="S11">' . ($bFileLost? 'File not found' : $sFileModified . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $nAgeInDays . ' day' . ($nAgeInDays == 1? '' : 's') . ' ago') . '</SPAN>
+                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $nAgeInDays . ' day' . ($nAgeInDays == 1? '' : 's') . ' ago') . '</SPAN>
                   </TD></TR>');
         }
         print('</TABLE></TD>' . "\n");
