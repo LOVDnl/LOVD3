@@ -150,7 +150,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     foreach ($zScheduledFiles as $sFile => $zScheduledFile) {
         if (!isset($aFiles[0][$sFile]) && !isset($aFiles[1][$sFile])) {
             $aFiles[1][$sFile] = array(
-                'scheduled' => 0,
+                'scheduled' => 1,
                 'priority' => $zScheduledFile['priority'],
                 'processed_date' => (!$zScheduledFile['processed_date']? '0000-00-00 00:00:00' : $zScheduledFile['processed_date']),
                 'scheduled_date' => $zScheduledFile['scheduled_date'],
@@ -187,7 +187,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                     // Now, to facilitate proper sorting, refresh the information in the files array.
                     // FIXME: This assumes a priority of 0; we need to change this when we implement priority scheduling.
                     $aFiles[0][$sFile] = array(
-                        'scheduled' => 0,
+                        'scheduled' => 1,
                         'priority' => 0,
                         'processed_date' => '0000-00-00 00:00:00',
                         'scheduled_date' => date('Y-m-d H:i:s'),
