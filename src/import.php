@@ -287,10 +287,12 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 } else {
                     // Not imported yet, can be scheduled.
                     print("\n" .
-                          '                <TR class="data" style="cursor : pointer;" onclick="if ($(this).find(\':checkbox\').prop(\'checked\')) { $(this).find(\':checkbox\').attr(\'checked\', false); $(this).find(\'img\').hide(); $(this).removeClass(\'colGreen\'); } else { $(this).find(\':checkbox\').attr(\'checked\', true);  $(this).find(\'img\').show(); $(this).addClass(\'colGreen\'); }">
+                          '                <TR class="data" style="cursor : pointer;" onclick="if ($(this).find(\':checkbox\').prop(\'checked\')) { $(this).find(\':checkbox\').attr(\'checked\', false); $(this).find(\'img\').first().hide(); $(this).removeClass(\'colGreen\'); } else { $(this).find(\':checkbox\').attr(\'checked\', true);  $(this).find(\'img\').show(); $(this).addClass(\'colGreen\'); }">
                   <TD width="30" style="text-align : center;"><INPUT type="checkbox" name="files_to_schedule[]" value="' . $sFile . '" style="display : none;"><IMG src="gfx/check.png" alt="Import" width="16" height="16" style="display : none;"></TD>');
                 }
             }
+            $sDownloadHTML = ($aFile['file_lost']? '' : '
+                    <A href="' . CURRENT_PATH . '?download_scheduled_file&amp;file=' . $sFile . '" target="_blank" onclick="event.stopPropagation();"><IMG src="gfx/menu_save.png" alt="Download" width="16" height="16" title="Download file" style="float : right;"></A>');
             $sInformationHTML = (!$aFile['scheduled']? '' : '
                     <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . ($sFile == $sFileDisplayName? '' : $sFile . ' - ') . 'Scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
             $sPriorityHTML = (!$aFile['priority']? '' : '
@@ -300,7 +302,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             $sErrorsHTML = (!$bError? '' : '
                     <IMG src="gfx/cross.png" alt="Errors while processing" width="16" height="16" title="Errors while processing:' . "\n" . htmlspecialchars($zScheduledFiles[$sFile]['process_errors']) . '" style="float : right;">');
             print('
-                  <TD>' . $sInformationHTML . $sPriorityHTML . $sProcessingHTML . $sErrorsHTML . '
+                  <TD>' . $sDownloadHTML . $sInformationHTML . $sPriorityHTML . $sProcessingHTML . $sErrorsHTML . '
                     <B>' . $sFileDisplayName . '</B><BR>
                     <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $nAgeInDays . ' day' . ($nAgeInDays == 1? '' : 's') . ' ago') . '</SPAN>
                   </TD></TR>');
@@ -313,6 +315,40 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
 
     $_T->printFooter();
     exit;
+}
+
+
+
+
+
+if (ACTION == 'download_scheduled_file' && PATH_COUNT == 1 && !empty($_GET['file'])) {
+    // URL: /import?download_scheduled_file&file=LOVD_API_submission_00001_2017-11-01_13:47:02.955519.lovd
+    // Download files from data directory.
+    // This code could go into download.php, but that's currently quite specific
+    //  for LOVD data, generated out of the database.
+
+    // Require manager clearance.
+    lovd_requireAUTH(LEVEL_MANAGER);
+
+    // This feature requires you to have the data files and the archive settings configured.
+    if (empty($_INI['paths']['data_files']) || empty($_INI['paths']['data_files_archive'])) {
+        $_T->printHeader();
+        lovd_showInfoTable('To use this feature, you will need to configure both the "data_files" and "data_files_archive" paths.', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
+    if (!is_readable($_INI['paths']['data_files'])) {
+        $_T->printHeader();
+        lovd_showInfoTable('File not found!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
+    // If we get here, we can print the header already.
+    header('Content-Disposition: attachment; filename="' . $_GET['file'] . '"');
+    header('Pragma: public');
+    die(file_get_contents($_INI['paths']['data_files'] . '/' . $_GET['file']));
 }
 
 
