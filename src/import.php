@@ -291,8 +291,18 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                   <TD width="30" style="text-align : center;"><INPUT type="checkbox" name="files_to_schedule[]" value="' . $sFile . '" style="display : none;"><IMG src="gfx/check.png" alt="Import" width="16" height="16" style="display : none;"></TD>');
                 }
             }
+            $sDownloadWarningMessage = 'You can download the file to inspect it prior to import, but do not use the downloaded file to import the data. ';
+            if ($bError) {
+                $sDownloadWarningMessage .= 'To import the data, fix the errors in the file on the disk, and reschedule the file for import.';
+            } elseif ($bProcessing) {
+                $sDownloadWarningMessage .= 'The data is currently being imported.';
+            } elseif ($aFile['scheduled']) {
+                $sDownloadWarningMessage .= 'To import the data, configure automated imports (see INSTALL.txt) or click the information box above.';
+            } else {
+                $sDownloadWarningMessage = 'To import the data, schedule this file for import by clicking on the file and selecting \\\'Schedule for import\\\'.';
+            }
             $sDownloadHTML = ($aFile['file_lost']? '' : '
-                    <A href="' . CURRENT_PATH . '?download_scheduled_file&amp;file=' . $sFile . '" target="_blank" onclick="event.stopPropagation();"><IMG src="gfx/menu_save.png" alt="Download" width="16" height="16" title="Download file" style="float : right;"></A>');
+                    <A href="' . CURRENT_PATH . '?download_scheduled_file&amp;file=' . $sFile . '" target="_blank" onclick="event.stopPropagation(); if (!window.confirm(\'' . $sDownloadWarningMessage . '\')) { return false; }"><IMG src="gfx/menu_save.png" alt="Download" width="16" height="16" title="Download file" style="float : right;"></A>');
             $sInformationHTML = (!$aFile['scheduled']? '' : '
                     <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . ($sFile == $sFileDisplayName? '' : $sFile . ' - ') . 'Scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
             $sPriorityHTML = (!$aFile['priority']? '' : '
