@@ -69,8 +69,16 @@ LOVD data file) will be stored, and set data_files_archive to the folder where
 the data files will be moved to after a successful import.
 
 Submitted files can be scheduled for automatic import by the scheduling feature
-available from the Setup area. To facilitate automatic import of the scheduled
-import files, insert the following cronjob, for a user of your choice:
+available from the Setup area. Make sure you watch the contents of this folder
+with a cronjob, or keep an eye on the scheduling page to make sure you don't
+miss any submissions.
+To check every 4 hours for submissions and send an email when files are found,
+insert the following cronjob, for a user who has access to the file path:
+
+0 */4 * * * [ "$(ls -1A /path/to/files | grep 'lovd$')" ] && ls -1 /path/to/files | grep 'lovd$' | mail -s "Files ready to import" "your_email@address.org"
+
+To facilitate automatic import of the scheduled import files, insert the
+following cronjob, for a user of your choice:
 
 */15 0-5,19-23 * * * GET "http://URL_to_LOVD/import?autoupload_scheduled_file" -t 2h
 

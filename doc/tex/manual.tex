@@ -5,7 +5,7 @@
 % To convert the manual to an html file use: pdf2htmlEX --zoom 1.3 --embed-css 2 manual.pdf
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-17}
+\setLOVDversion{3.0-21}
 \title{LOVD 3.0 user manual \\\vskip 0.2cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \setpointercolor{red}
@@ -2766,8 +2766,13 @@ You can add more information to your submission at any later time, like new vari
 If you are a submitter level user, all new data submissions have to be published by a curator
  before the data is visible to the public.
 When finishing a submission, the curator will receive an email notification, inviting him to publish the data.
+\vskip \baselineskip
 
-
+This chapter describes adding data to LOVD using the web forms.
+If you are a curator or up and you wish to add data to LOVD using a tab-delimited file upload,
+ please see chapter ``\hyperlink{chap:download_n_import}{\nameref{chap:download_n_import}}''.
+If you're a programmer and you would like to submit data in JSON format directly from your application
+ using the LOVD3 submission API, please see chapter ``\hyperlink{chap:api}{\nameref{chap:api}}''.
 
 
 
@@ -2798,7 +2803,9 @@ You can check the help icon next to the form fields to see details
 After completing the form, click ``Create individual information entry''.
 When successful, a message is displayed several seconds: ``Successfully created the individual information entry!''.
 Hereafter, you are redirected to the menu as displayed in figure \ref{fig:submission_of_individual}, where you can
- choose how to proceed:
+ choose how to proceed.
+\clearpage
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_menu_add_information_to_individual.png}}%
@@ -2812,7 +2819,6 @@ Hereafter, you are redirected to the menu as displayed in figure \ref{fig:submis
 
 
 
-\clearpage
 \hypertarget{ssec:add_phenotype_information_to_an_individual}{}
 \subsection{Adding phenotype information to the individual}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -2851,7 +2857,9 @@ For ``Detection template'', ``Technique(s) used'' and ``Genes screened'', more t
 Complete the form, and when ready click ``Create screening information entry''.
 When the entry is successful, a message is displayed for several seconds:
  ``Successfully created the screening entry!''.
-Hereafter you are redirected to a menu where you can choose how to proceed:
+Hereafter you are redirected to a menu as displayed in figure \ref{fig:submission_of_screening},
+ where you can choose how to proceed.
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_menu_add_variant_to_screening.png}}%
@@ -2859,6 +2867,7 @@ Hereafter you are redirected to a menu where you can choose how to proceed:
     After adding a screening, you can add a variant to this screening.
     ``Back to the individual'' will leave this screening unfinished, and will return
      you to the choice to add phenotype information or another screening.}
+  \label{fig:submission_of_screening}
   \end{shaded}
 \end{figure}
 
@@ -2893,9 +2902,10 @@ Multiple screenings can be linked to the same variant, or have their own sets of
 The option to confirm variants using a screening is only available when at least two
  screenings are added to the individual and variants have already been submitted.
 After choosing this option, you are shown a list of variants already linked to other screenings
- of the individual, but not to the currently selected screening.
+ of the individual, but not to the currently selected screening (see figure \ref{fig:confirm_variants}).
 Click the checkmarks left of the variants that you would like to mark as confirmed, and click ``Save variant
  list''.
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_confirm_variant_using_screening.png}}%
@@ -2903,11 +2913,12 @@ Click the checkmarks left of the variants that you would like to mark as confirm
     Select a variant to confirm.
     Shown are the variants already linked to other screenings of the individual,
      but not to the currently selected screening.}
+    \label{fig:confirm_variants}
   \end{shaded}
 \end{figure}
 
 \subsubsection{Adding a variant located within a gene}
-After choosing this option, you are shown a list of genes.
+After choosing this option, you are shown a list of genes (see figure \ref{fig:select_gene_for_variant_submission}).
 If certain genes have been selected while creating the screening, these are pre-selected.
 You can remove or edit the pre-selection by removing or editing the configured filter in the ``Symbol'' column.
 Then click the gene for which you want add a variant to proceed to the variant entry form.
@@ -2915,11 +2926,13 @@ You can check the help icon next to the form fields to see details
  about the fields and suggestions on how to use the fields.
 Complete the form, and when ready, click the ``Create variant entry'' button.
 If successful, you are redirected to the options to submit more variants, or return to the individual.
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_add_variant_located_within_gene.png}}%
   \caption{%
     Click the gene for which you want to submit a variant.}
+    \label{fig:select_gene_for_variant_submission}
   \end{shaded}
 \end{figure}
 
@@ -2959,7 +2972,6 @@ When you want to add a variant to the individual, using a screening you previous
 Click the ``Add a variant to this individual'' option, then click the screening you wish to add another variant to,
  and you will be redirected to the menu where you can submit a new variant.
 See section ``\hyperlink{ssec:add_variant_to_a_screening}{\nameref{ssec:add_variant_to_a_screening}}''.
-\clearpage
 
 
 
@@ -3121,6 +3133,7 @@ After you submitted the phenotype data, LOVD sends an email
 
 \hypertarget{chap:download_n_import}{}
 \chapter{Downloading \& importing data}
+\label{chap:download_n_import}
 \hypertarget{sec:download_import_format}{}
 \section{The LOVD3 import format}
 \label{sec:download_import_format}
@@ -3999,7 +4012,18 @@ See section ``\hyperlink{ssec:importing_full_data}{\nameref{ssec:importing_full_
 
 
 
-\chapter{The LOVD API}
+\hypertarget{chap:api}{}
+\chapter{The LOVD APIs}
+\label{chap:api}
+LOVD3 contains an LOVD2-style data retrieval API, useful for simple queries and retrieval of basic
+ gene and variant information, and a new data submission API, introduced in LOVD 3.0-21, useful for submitting data
+ from other software tools without the need of using the web forms.
+
+
+
+
+
+\section{Data retrieval API}
 Just like LOVD2 (from version 2.0-22, released October 5th 2009), LOVD3 includes a simple
  webservice enabling simple queries or listing of variant data (not patient data).
 This API only shows very basic information and can therefore not be disabled.
@@ -4019,9 +4043,7 @@ This API will be configurable, so submitters decide for themselves under
 
 
 
-
-
-\section{Terms of service and fair use policy}
+\subsection{Terms of service and fair use policy}
 \begin{warntable}
   These terms of service and fair use policy are applicable to \emph{all} APIs present on the LOVD site
    and any LOVD installations hosted by the Leiden University Medical Center, recognizable by domain names ending
@@ -4031,7 +4053,7 @@ This API will be configurable, so submitters decide for themselves under
 \end{warntable}
 
 \begin{itemize}
-  \item Read the \hyperlink{sec:api_possibilities}{API possibilities} below carefully,
+  \item Read the \hyperlink{ssec:api_possibilities}{API possibilities} below carefully,
     and choose the most efficient method to query the API --- meaning,
     the least amount of requests to get the information you need.
   \item Limit your requests to a maximum of 5 per second per server/domain name.
@@ -4043,9 +4065,7 @@ This API will be configurable, so submitters decide for themselves under
 
 
 
-
-
-\section{Format}
+\subsection{Format}
 When searching for genes, an Atom feed is returned with zero or more entries.
 When requesting a specific entry, just the Atom entry is returned.
 The Atom format is described in detail on \href{http://en.wikipedia.org/wiki/Atom_(standard)}{Wikipedia}.
@@ -4057,10 +4077,7 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
  \href{http://www.varioml.org/}{VarioML} and \href{http://www.json.org/}{JSON},
  most likely not wrapped in Atom feeds, since this API serves a different purpose.
 
-
-
-\clearpage
-\subsection{Genes}
+\subsubsection{Genes}
 \begin{figure}[ht]
   \begin{shaded}
     \scriptsize
@@ -4131,9 +4148,7 @@ Please note, also for consistency with the LOVD2 API, that the `refseq\_mrna' fi
  contain only one value whilst in LOVD3 one gene can contain multiple transcripts.
 The LOVD API shows only the first transcript added to the gene.
 
-
-
-\subsection{Variants}
+\subsubsection{Variants}
 \begin{figure}[ht]
   \begin{shaded}
     \scriptsize
@@ -4201,17 +4216,14 @@ When variant observations are grouped together, the `Times\_reported' field
 
 
 
-
-
-\hypertarget{sec:api_possibilities}{}
-\section{Possibilities}
+\hypertarget{ssec:api_possibilities}{}
+\subsection{Possibilities}
+\label{ssec:api_possibilities}
 A full list of options for this API is included below.
 Please note that although ``rest.php'' is included in all the URLs, simply ``rest'' will work also.
 However, for LOVD2 installations, this does not always work, and as such the extension is included.
 
-
-
-\subsection{Genes}
+\subsubsection{Genes}
 \begin{description}
   \item[Listing of all genes in the database]\hfill \\
   \href{http://databases.lovd.nl/shared/api/rest.php/genes}{http://databases.lovd.nl/shared/api/rest.php/genes}
@@ -4240,10 +4252,9 @@ However, for LOVD2 installations, this does not always work, and as such the ext
        {http://databases.lovd.nl/shared/api/rest.php/genes?\\
        \phantom{..........}search\_position=chr15:40657686\_40762512\&position\_match=partial}
 \end{description}
+\clearpage
 
-
-
-\subsection{Variants}
+\subsubsection{Variants}
 \begin{description}
   \item[Listing of all variant entries in a certain gene]\hfill \\
   \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD}
@@ -4267,7 +4278,6 @@ However, for LOVD2 installations, this does not always work, and as such the ext
   \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=partial}
        {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
        \phantom{..........}search\_position=g.40710300\_40710410\&position\_match=partial}
-  \clearpage
   \item[Searching on the DNA field]\hfill \\
   \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DNA=c.157C\%3ET}
        {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
@@ -4289,6 +4299,161 @@ There is also a world-wide LOVD query API that allows you to query a genomic loc
  whether there is a variant reported in any public LOVD installation that has registered at
  \href{http://lovd.nl/3.0/public_list}{LOVD.nl}.
 Please \href{http://www.lovd.nl/3.0/contact}{contact us directly} for more information on that API.
+\clearpage
+
+
+
+
+
+\section{Data submission API}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Submitter\\
+    Available from: LOVD 3.0 Build 18/21
+  \end{leftbar}
+\end{wrapfigure}
+LOVD3 includes a data submission API, useful for submitting JSON data files directly into LOVD3
+ without the need of web forms.
+This is especially useful for diagnostic labs that wish to submit their found variants
+ to LOVD3 without the hassle of having to submit them manually or to construct LOVD3 import files.
+
+Note that this API was introduced in LOVD 3.0-18, but was only fully functional from LOVD 3.0-21.
+
+
+
+\subsection{The submission format}
+The format used by the submission API is a JSON implementation of the \hyperlink{http://varioml.org/}{VarioML format}.
+For an example file, please see \url{http://LOVD.nl/3.0/submission_api_format.json}.
+Since Vario\-ML is originally an XML format, all XML attributes have been prefixed by an `\texttt{@}' character,
+ and text nodes are stored in `\texttt{\#text}' elements.
+The JSON format allows for multiple individuals to be submitted at once;
+ the file is required to contain at least one individual with each at least one variant.
+The mandatory columns are the same as otherwise mandatory in LOVD3.
+For fields that require a fixed set of options, such as the individual's gender,
+ the possible options are mentioned in a comment next to the field.
+JSON officially can't contain comments so a JSON parser might fail on the example file, but LOVD3 is OK with them.
+
+Do note that not all fields that may be configured in LOVD3 will be representable (yet) in this format.
+All fields currently supported are present in the example file (see above).
+If you have more data that you'd like to submit using this format,
+ please \hyperlink{http://www.LOVD.nl/3.0/contact?question}{contact us}.
+We aim to map as many LOVD3 fields as possible to VarioML.
+
+
+
+\subsection{Mandatory fields to set before submission}
+Before you can submit your data using this example file, you'll have to change the values of some of the fields.
+The `\texttt{lsdb}' element has an `\texttt{@id}' and an `\texttt{@uri}' field that needs to be set.
+The `\texttt{@id}' is the LOVD's ID, which can be found by
+ the database administrator in the API authorization token dialog
+ (see ``\hyperlink{ssec:getting_your_auth_token}{\nameref{ssec:getting_your_auth_token}}''.
+If you do not know who the LOVD's administrator is, submit the file without a valid ID
+ (see ``\hyperlink{ssec:submitting_the_json_file}{\nameref{ssec:submitting_the_json_file}}'')
+ and LOVD will respond with the administrator's contact information.
+\vskip \baselineskip
+
+The `\texttt{source}' element under `\texttt{lsdb}' also requires a few fields to be filled in.
+For `\texttt{name}', fill in the name of the lab that is submitting the data.
+% Note that the above field is never used, but it is a requirement from VarioML.
+Under `\texttt{contact}', fill in your name under `\texttt{name}', and your email under `\texttt{email}'.
+The `\texttt{db\_xref}' fields are also required, and are explained below.
+
+
+
+\hypertarget{ssec:getting_your_auth_token}{}
+\subsection{Getting your authorization token}
+\label{ssec:getting_your_auth_token}
+To submit data to LOVD3 using the submission API, you need to create an authorization token for your submitter account.
+To do so, log into LOVD3 and proceed to your account page
+ by clicking the ``Your account'' link in the top right side of the screen.
+In the ``API token'' field, click ``Show / More information''.
+In the new dialog, click the ``Create new token'' button to create a token.
+Select the desired validity and click ``Create new token''.
+If the token was created successfully, click ``Back'' and copy your token from the bottom of the information dialog
+ (see figure \ref{fig:auth_token_created}).
+In the JSON data, under `\texttt{lsdb}' / `\texttt{source}' / `\texttt{contact}' / `\texttt{db\_xref}',
+ fill in both `\texttt{@accession}' fields.
+Where `\texttt{@source}' is `\texttt{lovd}', fill in your numeric account ID (on the top of your account page).
+Where `\texttt{@source}' is `\texttt{lovd\_auth\_token}', fill in your created token.
+
+\begin{figure}[ht]
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{screenshot_auth_token_created.png}}%
+  \caption{%
+    The authorization token dialog, showing your current token at the bottom
+     and including buttons to create a new token or just revoking the current one.
+    The database administrator also can find the LOVD's ID at the top of this dialog.}
+  \label{fig:auth_token_created}
+  \end{shaded}
+\end{figure}
+
+
+
+\hypertarget{ssec:submitting_the_json_file}{}
+\subsection{Submitting the JSON file}
+\label{ssec:submitting_the_json_file}
+To submit your JSON file, \texttt{POST} it to \texttt{/api/submissions} for the intended LOVD instance.
+In case the intended LOVD is located at \url{https://databases.lovd.nl/shared/},
+ then \texttt{POST} your file to \url{https://databases.lovd.nl/shared/api/submissions}.
+Before submitting though, please read the information under
+ ``\hyperlink{ssec:different_versions_of_submission_api}{\nameref{ssec:different_versions_of_submission_api}}''.
+
+The submission API will respond in JSON, sending its version, a messages array,
+ a warnings array, an errors array, and a data array (see figure \ref{fig:submission_api_output_error}).
+
+\begin{figure}[ht]
+  \begin{shaded}
+    \small
+    \begin{verbatim}
+{
+    "version": 1,
+    "messages": [],
+    "warnings": [],
+    "errors": [
+        "VarioML error: LSDB root element not found, or has no ID."
+    ],
+    "data": []
+}
+    \end{verbatim}
+  \caption{%
+    Example submission API output, when sending ``\texttt{\{"lsdb":\{\}\}}''.
+    All arrays shown are always present, but can be empty.}
+    \label{fig:submission_api_output_error}
+  \end{shaded}
+\end{figure}
+
+The `\texttt{messages}' array is for information of successful submissions.
+The `\texttt{warnings}' array is for output of information you should review because it might be a potential problem,
+ although it will not prevent a successful submission.
+The `\texttt{errors}' array contain fatal errors.
+The `\texttt{data}' array is reserved for returning data and not used in \texttt{POST} requests.
+\vskip \baselineskip
+
+A successful submission results in an LOVD3 import file being created on the server.
+This file then needs to be imported into LOVD3.
+In LOVD 3.0-21, submissions done through the API are not yet scheduled for import automatically,
+ it requires manual intervention of a manager.
+See the \texttt{INSTALL.txt} file that is shipped with LOVD for more information.
+
+
+
+\hypertarget{ssec:different_versions_of_submission_api}{}
+\subsection{Different versions of this API}
+\label{ssec:different_versions_of_submission_api}
+\begin{warntable}
+Before you submit, make sure you read this information, to prevent unexpected problems if we would update the API.
+\end{warntable}
+
+To allow easy further development of this API,
+ we might change the way the API works or change the way the API returns data.
+To make sure this doesn't harm your application, you can instruct LOVD to use an older version of the API.
+To do so, you must include the APIs version in the URL.
+For instance, to always use version 1 of the API, even when version 2 is already released, use
+ \texttt{/api/v1/submissions} instead of \texttt{/api/submissions}.
+\emph{When you're not supplying a version number in the URL you \texttt{POST} to,
+ LOVD will automatically use the latest version of the API.}
+Make a decision based on what works best for you in your situation.
 
 
 
