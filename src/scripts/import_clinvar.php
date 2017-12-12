@@ -32,9 +32,11 @@
 define('ROOT_PATH', '../');
 require_once ROOT_PATH . 'inc-init.php';
 require_once ROOT_PATH . 'inc-lib-clinvar.php';
+require_once ROOT_PATH . 'inc-lib-form.php';
 require_once ROOT_PATH . 'inc-lib-init.php';
 require_once ROOT_PATH . 'class/object_genome_variants.php';
 require_once ROOT_PATH . 'class/object_transcript_variants.php';
+require_once ROOT_PATH . 'class/object_users.php';
 require_once ROOT_PATH . 'class/progress_bar.php';
 
 // Page title
@@ -42,9 +44,6 @@ define('PAGE_TITLE', 'Import ClinVar variants');
 
 define('CLINVAR_URL', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs4variation.txt.gz');
 //define('CLINVAR_URL', 'file:///home/mkroon/LOVD/data/clinvar/hgvs4variation.txt.gz');
-
-// LOVD user ID used to store variants under.
-define('CLINVAR_USERID_DEFAULT', '2236');
 
 // Name used in custom link to denote link to Clinvar with AlleleID.
 define('CLINVAR_ALLELE_LINK_NAME', 'ClinVarAlleleID');
@@ -147,13 +146,15 @@ function main ()
     // Print HTML header/title and submission form.
     $_T->printHeader(true);
     $_T->printTitle();
-    $nClinvarUserID = isset($_REQUEST['user'])? intval($_REQUEST['user']) : CLINVAR_USERID_DEFAULT;
+    $nClinvarUserID = !isset($_REQUEST['user']) || $_REQUEST['user'] == ''? '' :
+        intval($_REQUEST['user']);
     $bDryRun = isset($_REQUEST['dry_run']) || !ACTION;
     $sFileURL = isset($_REQUEST['url'])? $_REQUEST['url'] : CLINVAR_URL;
-    printClinvarImportForm($nClinvarUserID, $sFileURL, $bDryRun);
+    $bError = handleClinvarImportForm($nClinvarUserID, $sFileURL, $bDryRun);
 
-    if (!ACTION) {
-        // Form is not submitted, do not start processing.
+    if (!ACTION || $bError) {
+        // Form is not submitted or submitted with invalid values, do not
+        // start processing.
         $_T->printFooter();
         return;
     }
@@ -236,12 +237,34 @@ function main ()
 
 
 
-function printClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
+function handleClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
 {
     // Print HTML for form, containing adjustable parameters for:
     // $nClinvarUserID  User ID used for owned_by field of genomic variants.
     // $sURL            URL of Clinvar HGVS file.
     // $bDryRun         Boolean flag for preventing changes to the database.
+    // Returns false if form was submitted with invalid values.
+    global $_DB;
+
+    $bError = false;
+    $sUserQuery = 'SELECT count(id) FROM ' . TABLE_USERS . ' WHERE id=?';
+    if (ACTION && (empty($nClinvarUserID) ||
+            !$_DB->query($sUserQuery, array($nClinvarUserID))->fetchColumn())) {
+        // Form submitted, but invalid user ID.
+        lovd_errorAdd('user', 'Invalid user ID provided.');
+        lovd_errorPrint();
+
+        // Remember error manually, as lovd_errorPrint() removes it.
+        $bError = true;
+    }
+
+    $_DATA = new LOVD_User();
+    $_DATA->setRowLink('Users_clinvar_import',
+        'javascript: $("input[name=\'user\']").val("{{ID}}"); return false;');
+    $aOptions = array('cols_to_skip' => array('orcid_id_', 'country_', 'curates', 'status_',
+        'last_login_', 'created_date_', 'level_'));
+    $_GET['page_size'] = 10;
+    $_GET['search_username'] = 'clinvar';
 ?>
     <FORM action="<?=CURRENT_PATH?>?import" method="POST">
         <TABLE>
@@ -251,8 +274,10 @@ function printClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
             <TR><TD><B>Genome build:</B></TD>
                 <TD>hg19</TD>
             </TR>
-            <TR><TD><B>Import as user:</B></TD>
-                <TD><input type="text" name="user" size="10" value="<?php echo strval($nClinvarUserID); ?>" /></TD>
+            <TR><TD valign="top"><B>Import as user:</B></TD>
+                <TD><B>Click on a username below to select it</B>
+                    <?php $_DATA->viewList('Users_clinvar_import', $aOptions); ?>
+                    <input type="text" name="user" size="10" value="<?php echo strval($nClinvarUserID); ?>" /></TD>
             </TR>
             <TR><TD><B>Dry run (no changes to database):</B></TD>
                 <TD><input type="checkbox" name="dry_run" <?php echo ($bDryRun)? 'checked' : ''; ?> /></TD>
@@ -263,6 +288,7 @@ function printClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
         </TABLE>
     </FORM>
 <?php
+    return $bError;
 }
 
 
