@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-12-04
+ * Modified    : 2017-12-12
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -54,15 +54,6 @@ define('CLINVAR_CHUNK_SIZE', 8192);
 
 // Estimation of size of decompressed Clinvar file (current value measured at 2017-11-28).
 define('CLINVAR_FILE_SIZE', 171447886);
-
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-          "http://www.w3.org/TR/html4/loose.dtd">
-
-<HTML>
-    <BODY>
-
-<?php
 
 function getChromosomeForReference ($sReference, $sBuild)
 {
