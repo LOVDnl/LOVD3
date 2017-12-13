@@ -9,6 +9,10 @@ pwd
 echo "Set username and password"
 echo "and create lovd config file"
 
+# Create directories for storing/archiving automatic submissions.
+mkdir -m a=rwx /home/travis/build/data_files
+mkdir -m a=rwx /home/travis/build/data_files_archive
+
 cat << EOF > ./src/config.ini.php
                                 <?php exit(); ?>
 #################### DO NOT MODIFY OR REMOVE THE LINE ABOVE ####################
@@ -56,6 +60,14 @@ table_prefix = lovd_v3
 # Root URL (base URL to reach this installation via a web browser)
 # This is only needed for running tests.
 root_url = http://localhost/LOVD3
+
+
+[paths]
+
+# Data paths for submission api
+data_files = /home/travis/build/data_files
+data_files_archive = /home/travis/build/data_files_archive
+
 
 EOF
 

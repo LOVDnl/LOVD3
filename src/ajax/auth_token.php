@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-17
- * Modified    : 2017-11-06
+ * Modified    : 2017-12-11
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -78,7 +78,7 @@ function lovd_reloadUserVE ()
 $sFormCreate    = '<FORM id=\'auth_token_create_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Please select the validity of the token.<BR><SELECT name=\'auth_token_expires\'><OPTION value=\'\'>forever</OPTION><OPTION value=\'604800\'>1 week</OPTION><OPTION value=\'2592000\'>1 month</OPTION><OPTION value=\'7776000\'>3 months</OPTION><OPTION value=\'31536000\'>1 year</OPTION></SELECT></FORM>';
 $sFormRevoke    = '<FORM id=\'auth_token_revoke_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>Are you sure you want to revoke your current API key?</FORM>';
 $sMessageLSDBID = ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>This LOVD\'s ID: ' . md5($_STAT['signature']) . '</B><BR><BR>');
-$sMessageIntro  = 'Since LOVD 3.0-18, LOVD contains an API that allows for the direct submission of data into the database. This API is currently undocumented and still in beta. To use this API, you\'ll need an API token that serves to authorize you instead of using your username and password in the data file.';
+$sMessageIntro  = 'Since LOVD 3.0-18, LOVD contains an API that allows for the direct submission of data into the database. To use this API, you\'ll need an API token that serves to authorize you instead of using your username and password in the data file.';
 $sMessageCreate = 'You can create a new token by clicking &quot;Create new token&quot; below. This will revoke any existing tokens, if any. This also allows you to set an expiration to your token; after the expiration date, you will no longer be able to use this token and you will need to renew it.';
 $sMessageRevoke = 'You can also revoke your token completely, without creating a new one, blocking access of this token to the API completely. You can do this by clicking &quot;Revoke token&quot; below.';
 $bToken = !empty($zUser['auth_token']);
