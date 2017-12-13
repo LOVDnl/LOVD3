@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-12-12
+ * Modified    : 2017-12-13
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,17 +42,20 @@ require_once ROOT_PATH . 'class/progress_bar.php';
 // Page title
 define('PAGE_TITLE', 'Import ClinVar variants');
 
+// Default source file
 define('CLINVAR_URL', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs4variation.txt.gz');
-//define('CLINVAR_URL', 'file:///home/mkroon/LOVD/data/clinvar/hgvs4variation.txt.gz');
 
 // Name used in custom link to denote link to Clinvar with AlleleID.
 define('CLINVAR_ALLELE_LINK_NAME', 'ClinVarAlleleID');
 
 // Size in bytes of chunks to be read from Clinvar file.
-define('CLINVAR_CHUNK_SIZE', 8192);
+//define('CLINVAR_CHUNK_SIZE', 8192);
+define('CLINVAR_CHUNK_SIZE', 32768);
 
 // Estimation of size of decompressed Clinvar file (current value measured at 2017-11-28).
-define('CLINVAR_FILE_SIZE', 171447886);
+define('CLINVAR_FILE_SIZE', 171644808);
+
+define('LOG_FILENAME', 'clinvar_unparsable_variants.txt');
 
 function getChromosomeForReference ($sReference, $sBuild)
 {
@@ -138,19 +141,32 @@ function main ()
     // process of importing variants from Clinvar.
     global $_T;
 
-    // Note: building $aVarAlleleMap takes a lot of space.
-    ini_set('memory_limit', '512M');
-    set_time_limit(0);
     lovd_requireAUTH(LEVEL_MANAGER);
+
+    if (ACTION == 'download_unparsable') {
+        $sFilePath = join('/', array(sys_get_temp_dir(), LOG_FILENAME));
+
+        if (!is_readable($sFilePath)) {
+            $_T->printHeader();
+            lovd_showInfoTable('Log file unavailable: ' . $sFilePath, 'stop');
+            $_T->printFooter();
+            exit;
+        }
+
+        header('Content-Disposition: attachment; filename="' . LOG_FILENAME . '"');
+        header('Pragma: public');
+        die(file_get_contents($sFilePath));
+    }
 
     // Print HTML header/title and submission form.
     $_T->printHeader(true);
     $_T->printTitle();
     $nClinvarUserID = !isset($_REQUEST['user']) || $_REQUEST['user'] == ''? '' :
         intval($_REQUEST['user']);
-    $bDryRun = isset($_REQUEST['dry_run']) || !ACTION;
+    $bDryRun = isset($_REQUEST['dry_run']) || ACTION != 'import';
     $sFileURL = isset($_REQUEST['url'])? $_REQUEST['url'] : CLINVAR_URL;
     $bError = handleClinvarImportForm($nClinvarUserID, $sFileURL, $bDryRun);
+
 
     if (!ACTION || $bError) {
         // Form is not submitted or submitted with invalid values, do not
@@ -159,6 +175,10 @@ function main ()
         return;
     }
 
+    // Note: building $aVarAlleleMap takes a lot of space.
+    ini_set('memory_limit', '512M');
+    set_time_limit(0);
+
     // Get current state of Clinvar variants in LOVD database.
     $aVarAlleleMap = array();
     getLOVDVariantsByAlleleID($aVarAlleleMap, $nClinvarUserID);
@@ -166,7 +186,6 @@ function main ()
     // Initialize stats.
     $aStats = array(
         'existing_clinvar_vars' => count($aVarAlleleMap),
-        'invalid_hgvs' => 0,
         'removed_seq' => 0,
         'get_variant_info_fail' => 0,
         'vog_new' => 0,
@@ -178,6 +197,7 @@ function main ()
         'vot_no_update_needed' => 0,
         'vot_unknown_allele' => 0,
         'vot_unknown_transcript' => 0,
+        'get_variant_info_fail_records' => array(),
     );
 
     // Loop through Clinvar HGVS file to find genomic variant descriptions.
@@ -230,6 +250,7 @@ function main ()
     // Print processing stats and quit.
     print('<HR><H3>Import statistics</H3>');
     print_stats($aStats);
+    print('<BR><A href="' . $_SERVER['PHP_SELF'] . '?download_unparsable">Download list of unparsable variants</A>');
     $_T->printFooter();
 }
 
@@ -313,6 +334,7 @@ function readClinvarVariant($sVar, &$aStats)
     $aPositions = lovd_getVariantInfo($sDescription);
     if ($aPositions === false) {
         $aStats['get_variant_info_fail'] += 1;
+        $aStats['get_variant_info_fail_records'][] = $sVar;
     }
 
     // Normalize by removing mentions of deleted or duplicated sequences (e.g.
@@ -352,6 +374,13 @@ function print_stats(&$aStats) {
             '</TD></TR>' . "\n";
     }
     print($sStatsHTML . '</TABLE>' . "\n");
+
+    $sLogfile = join('/', array(sys_get_temp_dir(), LOG_FILENAME));
+    $oLogFile = fopen($sLogfile, 'w');
+    foreach ($aStats['get_variant_info_fail_records'] as $sVar) {
+        fwrite($oLogFile, $sVar . PHP_EOL);
+    }
+    fclose($oLogFile);
 }
 
 
