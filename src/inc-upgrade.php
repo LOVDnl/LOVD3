@@ -605,12 +605,30 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      ("81", "+*/-"), ("83", "+*/-?"), ("85", "+*/?"), ("86", "+*/#"), 
                      ("87", "+*/+?"), ("88", "+*/+*"), ("89", "+*/+"), ("96", "+/#"), 
                      ("98", "+/+*");'),
+                 '3.0-20b' => array(
+                     'CREATE TABLE IF NOT EXISTS ' . TABLE_SCHEDULED_IMPORTS . ' (
+                          filename VARCHAR(255) NOT NULL,
+                          priority TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+                          in_progress BOOLEAN NOT NULL DEFAULT 0,
+                          scheduled_by SMALLINT(5) UNSIGNED ZEROFILL,
+                          scheduled_date DATETIME NOT NULL,
+                          process_errors TEXT,
+                          processed_by SMALLINT(5) UNSIGNED ZEROFILL,
+                          processed_date DATETIME,
+                          PRIMARY KEY (filename),
+                          INDEX (scheduled_by),
+                          INDEX (processed_by),
+                          CONSTRAINT ' . TABLE_SCHEDULED_IMPORTS . '_fk_scheduled_by FOREIGN KEY (scheduled_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+                          CONSTRAINT ' . TABLE_SCHEDULED_IMPORTS . '_fk_processed_by FOREIGN KEY (processed_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+                      ENGINE=InnoDB,
+                      DEFAULT CHARACTER SET utf8',
+		 ),
                  '3.0-20c' => array(
                      'ALTER TABLE ' . TABLE_CHROMOSOMES . ' ADD COLUMN hg38_id_ncbi VARCHAR(20) NOT NULL AFTER hg19_id_ncbi',
                      // Weird, but much simpler... so, oh well. All chromosomes got updated one version, except M.
                      'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = CONCAT(LEFT(hg19_id_ncbi, 10), (TRIM(LEADING "." FROM RIGHT(hg19_id_ncbi, 2))+1)) WHERE name != "M"',
-                     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = hg19_id_ncbi WHERE name = "M"',
-                 ),
+		     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = hg19_id_ncbi WHERE name = "M"',
+		 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

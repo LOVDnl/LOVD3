@@ -744,6 +744,23 @@ $aTableSQL =
     updated_date DATE,
     PRIMARY KEY (id))
     ' . $sSettings
+
+        , 'TABLE_SCHEDULED_IMPORTS' =>
+   'CREATE TABLE ' . TABLE_SCHEDULED_IMPORTS . ' (
+    filename VARCHAR(255) NOT NULL,
+    priority TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+    in_progress BOOLEAN NOT NULL DEFAULT 0,
+    scheduled_by SMALLINT(5) UNSIGNED ZEROFILL,
+    scheduled_date DATETIME NOT NULL,
+    process_errors TEXT,
+    processed_by SMALLINT(5) UNSIGNED ZEROFILL,
+    processed_date DATETIME,
+    PRIMARY KEY (filename),
+    INDEX (scheduled_by),
+    INDEX (processed_by),
+    CONSTRAINT ' . TABLE_SCHEDULED_IMPORTS . '_fk_scheduled_by FOREIGN KEY (scheduled_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT ' . TABLE_SCHEDULED_IMPORTS . '_fk_processed_by FOREIGN KEY (processed_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+    ' . $sSettings
           );
 
 if (lovd_getProjectFile() == '/install/inc-sql-tables.php') {

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2017-09-29
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-30
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -820,23 +820,6 @@ class LOVD_CustomViewList extends LOVD_Object {
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
-
-        // Mark all statusses from Marked and lower; Marked will be red, all others gray.
-        // In the VariantOnTranscriptUnique view the var_statusid can contain multiple IDs, these IDs are separated by a ",".
-        // PHP always takes the first integer-like part of a string when a string and an integer are compared.
-        // But to avoid problems in the future, only the first character is compared.
-        // We disable this feature in LOVD+.
-        $bVarStatus = (!LOVD_plus && !empty($zData['var_statusid']) && substr($zData['var_statusid'], 0, 1) <= STATUS_MARKED);
-        $bIndStatus = (!LOVD_plus && !empty($zData['ind_statusid']) && $zData['ind_statusid'] <= STATUS_MARKED);
-
-        if ($bVarStatus && $bIndStatus) {
-            $nStatus = min(substr($zData['var_statusid'], 0, 1), $zData['ind_statusid']);
-            $zData['class_name'] = ($nStatus == STATUS_MARKED? 'marked' : 'del');
-        } elseif ($bVarStatus) {
-            $zData['class_name'] = (substr($zData['var_statusid'], 0, 1) == STATUS_MARKED? 'marked' : 'del');
-        } elseif ($bIndStatus) {
-            $zData['class_name'] = ($zData['ind_statusid'] == STATUS_MARKED? 'marked' : 'del');
-        }
 
         // Replace rs numbers with dbSNP links.
         if (!empty($zData['VariantOnGenome/dbSNP'])) {
