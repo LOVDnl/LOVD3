@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-12-01
+ * Modified    : 2017-12-04
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -150,7 +150,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-20b',
+                            'version' => '3.0-20c',
                           ),
                 'user_levels' =>
                      array(
@@ -267,6 +267,8 @@ $_SETT = array(
                             'hg18' =>
                                      array(
                                             'ncbi_name'      => 'Build 36.1',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.9',
@@ -299,6 +301,8 @@ $_SETT = array(
                             'hg19' =>
                                      array(
                                             'ncbi_name'      => 'GRCh37',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.10',
@@ -332,6 +336,8 @@ $_SETT = array(
                             'hg38' =>
                                      array(
                                             'ncbi_name'      => 'GRCh38',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.11',
