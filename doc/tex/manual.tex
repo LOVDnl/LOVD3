@@ -4308,7 +4308,7 @@ JSON officially can't contain comments so a JSON parser might fail on the exampl
 Do note that not all fields that may be configured in LOVD3 will be representable (yet) in this format.
 All fields currently supported are present in the example file (see above).
 If you have more data that you'd like to submit using this format,
- please \hyperlink{http://www.LOVD.nl/3.0/contact?question}{contact us}.
+ please \href{http://www.LOVD.nl/3.0/contact?question}{contact us}.
 We aim to map as many LOVD3 fields as possible to VarioML.
 
 
@@ -4364,6 +4364,20 @@ To submit your JSON file, \texttt{POST} it to \texttt{/api/submissions} for the 
 In case the intended LOVD is located at \url{https://databases.lovd.nl/shared/},
  then \texttt{POST} your file to \url{https://databases.lovd.nl/shared/api/submissions}.
 Before submitting though, please read the information under ``\nameref{ssec:different_versions_of_submission_api}''.
+See figure \ref{fig:submission_api_curl_example} for an example on how to submit using \texttt{curl}.
+
+\begin{figure}[ht]
+  \begin{shaded}
+    \small
+    \begin{verbatim}
+curl --data @submission.json "https://databases.lovd.nl/shared/api/submissions"
+\end{verbatim}
+  \caption{%
+    Example of how to submit a VarioML JSON file to the submission API, using \texttt{curl}.
+    In this example, the JSON file is named \texttt{submission.json} and is located in the current working directory.}
+    \label{fig:submission_api_curl_example}
+  \end{shaded}
+\end{figure}
 
 The submission API will respond in JSON, sending its version, a messages array,
  a warnings array, an errors array, and a data array (see figure \ref{fig:submission_api_output_error}).
@@ -4381,7 +4395,7 @@ The submission API will respond in JSON, sending its version, a messages array,
     ],
     "data": []
 }
-    \end{verbatim}
+\end{verbatim}
   \caption{%
     Example submission API output, when sending ``\texttt{\{"lsdb":\{\}\}}''.
     All arrays shown are always present, but can be empty.}
@@ -4412,7 +4426,7 @@ Before you submit, make sure you read this information, to prevent unexpected pr
 
 To allow easy further development of this API,
  we might change the way the API works or change the way the API returns data.
-To make sure this doesn't harm your application, you can instruct LOVD to use an older version of the API.
+To make sure this doesn't harm your application, you can instruct LOVD to use a fixed version of the API.
 To do so, you must include the APIs version in the URL.
 For instance, to always use version 1 of the API, even when version 2 is already released, use
  \texttt{/api/v1/submissions} instead of \texttt{/api/submissions}.
