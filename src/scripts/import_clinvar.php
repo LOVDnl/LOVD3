@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-12-14
+ * Modified    : 2017-12-19
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -286,19 +286,20 @@ function handleClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
         'last_login_', 'created_date_', 'level_'));
     $_GET['page_size'] = 10;
     $_GET['search_username'] = 'clinvar';
+
+    print('<B>Click on a username below to select it</B>');
+    $_DATA->viewList('Users_clinvar_import', $aOptions);
 ?>
     <FORM action="<?=CURRENT_PATH?>?import" method="POST">
         <TABLE>
+            <TR><TD valign="top"><B>Import as user:</B></TD>
+                <TD><input type="text" name="user" size="10" value="<?php echo strval($nClinvarUserID); ?>" /></TD>
+            </TR>
             <TR><TD><B>Clinvar URL (gzipped hgvs4variation file):</B></TD>
                 <TD><input type="text" name="url" size="50" value="<?php echo $sURL; ?>" /></TD>
             </TR>
             <TR><TD><B>Genome build:</B></TD>
                 <TD>hg19</TD>
-            </TR>
-            <TR><TD valign="top"><B>Import as user:</B></TD>
-                <TD><B>Click on a username below to select it</B>
-                    <?php $_DATA->viewList('Users_clinvar_import', $aOptions); ?>
-                    <input type="text" name="user" size="10" value="<?php echo strval($nClinvarUserID); ?>" /></TD>
             </TR>
             <TR><TD><B>Dry run (no changes to database):</B></TD>
                 <TD><input type="checkbox" name="dry_run" <?php echo ($bDryRun)? 'checked' : ''; ?> /></TD>
