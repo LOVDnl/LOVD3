@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-12-04
+ * Modified    : 2017-12-21
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,10 +29,20 @@
  *
  *************/
 
+// Emperically estimated compression factor (i.e. how many times
+// bigger the uncompressed data is compared to the gzipped file.
+// This is used to estimate progress of reading the gzipped file since
+// the uncompressed size is not easy to determine.
+define('CLINVAR_COMPRESSION_FACTOR', 10.93);
+
+// Size in bytes of chunks to be read from Clinvar file.
+define('CLINVAR_CHUNK_SIZE', 32768);
+
+
 
 class ClinvarFile {
 
-    var $nLinesToSkip = 15; // Number of lines at top of file to ignore.
+    var $nLinesToSkip;      // Number of lines at top of file to ignore.
     var $aHeader = null;    // Column names.
     var $sLinePart = null;  // Temp storage of incomplete records split over file chunks.
     var $nChunkCount = 0;   // File chunk counter.
@@ -47,10 +57,11 @@ class ClinvarFile {
 
 
 
-    function __construct($sLocation, $bProgressBar=false)
+    function __construct($sLocation, $bProgressBar=false, $nLinesToSkip=0)
     {
         // Setup progress bar.
         $this->bProgressBar = $bProgressBar;
+        $this->nLinesToSkip = $nLinesToSkip;
         if ($bProgressBar) {
             // Create a progress bar instance with a pseudo random string as its identifier.
             $sPBID = join('', array_map('chr', array_rand(array_flip(range(65, 90)), 10)));
@@ -58,8 +69,9 @@ class ClinvarFile {
         }
 
         // Open gzipped Clinvar file.
+        $this->nChunksTotal = round((filesize($sLocation) * CLINVAR_COMPRESSION_FACTOR) /
+            CLINVAR_CHUNK_SIZE);
         $this->oFileHandle = gzopen($sLocation, 'r');
-        $this->nChunksTotal = intval(CLINVAR_FILE_SIZE / CLINVAR_CHUNK_SIZE);
     }
 
 

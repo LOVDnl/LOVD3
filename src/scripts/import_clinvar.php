@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-12-19
+ * Modified    : 2017-12-22
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,20 +42,42 @@ require_once ROOT_PATH . 'class/progress_bar.php';
 // Page title
 define('PAGE_TITLE', 'Import ClinVar variants');
 
-// Default source file
-define('CLINVAR_URL', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs4variation.txt.gz');
+// Default HGVS source file
+//define('CLINVAR_URL_HGVS', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs4variation.txt.gz');
+define('CLINVAR_URL_HGVS', 'file:///home/mkroon/LOVD/data/clinvar/hgvs4variation.100.txt.gz');
+
+// Default variant summary source file
+define('CLINVAR_URL_SUMMARY', 'file:///home/mkroon/LOVD/data/clinvar/variant_summary.txt.gz');
 
 // Name used in custom link to denote link to Clinvar with AlleleID.
 define('CLINVAR_ALLELE_LINK_NAME', 'ClinVarAlleleID');
 
-// Size in bytes of chunks to be read from Clinvar file.
-//define('CLINVAR_CHUNK_SIZE', 8192);
-define('CLINVAR_CHUNK_SIZE', 32768);
-
-// Estimation of size of decompressed Clinvar file (current value measured at 2017-11-28).
-define('CLINVAR_FILE_SIZE', 171644808);
-
 define('LOG_FILENAME', 'clinvar_unparsable_variants.txt');
+
+
+// Translation from Clinvar clinical significance to LOVD's variant effect. In
+// the form of an array where the key is an perl-compatible regex pattern
+// matching the Clinvar description in a string and the value is the matching
+// variant effect code as described in `$_SETT['var_effect']`.
+$aClassTranslations = array(
+    '/Pathogenic(?!\/)/' => 9,
+    '/Pathogenic\/Likely pathogenic/' => 7,
+    '/Likely pathogenic/' => 7,
+    '/drug response/' => 8,
+    '/Affects/' => 6,
+    '/risk factor/' => 0,
+    '/association/' => 0,
+    '/Likely benign/' => 3,
+    '/Benign\/Likely benign/' => 3,
+    '/Benign/' => 1,
+    '/Uncertain significance/' => 5,
+    '/Conflicting interpretations of pathogenicity/' => 5,
+    '/conflicting data from submitters/' => 5,
+    '/other/' => 5,
+    '/not provided/' => 0,
+    '/-/' => 0,
+);
+
 
 function getChromosomeForReference ($sReference, $sBuild)
 {
@@ -105,6 +127,7 @@ function getLOVDVariantsByAlleleID(&$aVarAlleleMap, $nClinvarUserID)
     $sLOVDClinVarQuery = <<<QUERY
 SELECT
   vog.id,
+  vog.effectid,
   vog.`VariantOnGenome/Reference` AS reference,
   vog.`VariantOnGenome/DNA` AS dna,
   GROUP_CONCAT(vot.transcriptid SEPARATOR ';') AS transcripts,
@@ -118,6 +141,7 @@ QUERY;
         TABLE_VARIANTS_ON_TRANSCRIPTS, $nClinvarUserID));
 
     // Store query result indexed by ClinVar AlleleID.
+    // Fixme: decide when to save memory by using numerical indexed arrays.
     while (($aRow = $oResult->fetchAssoc()) !== false) {
         if (preg_match('/{' . CLINVAR_ALLELE_LINK_NAME . ':([0-9]+)}/', $aRow['reference'],
             $aMatches)) {
@@ -139,7 +163,7 @@ function main ()
 {
     // Main entry point to Clinvar import script. This function guides the
     // process of importing variants from Clinvar.
-    global $_T;
+    global $_T, $aClassTranslations;
 
     lovd_requireAUTH(LEVEL_MANAGER);
 
@@ -164,8 +188,10 @@ function main ()
     $nClinvarUserID = !isset($_REQUEST['user']) || $_REQUEST['user'] == ''? '' :
         intval($_REQUEST['user']);
     $bDryRun = isset($_REQUEST['dry_run']) || ACTION != 'import';
-    $sFileURL = isset($_REQUEST['url'])? $_REQUEST['url'] : CLINVAR_URL;
-    $bError = handleClinvarImportForm($nClinvarUserID, $sFileURL, $bDryRun);
+    $sHGVSFileURL = isset($_REQUEST['url_hgvs'])? $_REQUEST['url_hgvs'] : CLINVAR_URL_HGVS;
+    $sSummaryFileURL = isset($_REQUEST['url_summary'])? $_REQUEST['url_summary'] :
+        CLINVAR_URL_SUMMARY;
+    $bError = handleClinvarImportForm($nClinvarUserID, $sHGVSFileURL, $sSummaryFileURL, $bDryRun);
 
 
     if (!ACTION || $bError) {
@@ -180,7 +206,6 @@ function main ()
     set_time_limit(0);
 
     // Get current state of Clinvar variants in LOVD database.
-    $aVarAlleleMap = array();
     getLOVDVariantsByAlleleID($aVarAlleleMap, $nClinvarUserID);
 
     // Initialize stats.
@@ -202,8 +227,8 @@ function main ()
 
     // Loop through Clinvar HGVS file to find genomic variant descriptions.
     print('<HR><H3>Genomic variants</H3>');
-    $oFile = new ClinvarFile($sFileURL, true);
-    while (($aData = $oFile->fetchRecord()) !== false) {
+    $oHGVSFileGenome = new ClinvarFile($sHGVSFileURL, true, 15);
+    while (($aData = $oHGVSFileGenome->fetchRecord()) !== false) {
         if ($aData['Assembly'] != 'GRCh37' || $aData['AlleleID'] == '-1') {
             // Cannot handle record.
             continue;
@@ -225,14 +250,13 @@ function main ()
 
     // Refresh state of Clinvar variants in LOVD database to include those
     // added in the first pass of the Clinvar file.
-    $aVarAlleleMap = array();
     getLOVDVariantsByAlleleID($aVarAlleleMap, $nClinvarUserID);
 
     // Loop a second time through the CLinvar file to find transcript variant
     // descriptions.
     print('<HR><H3>Transcript variants</H3>');
-    $oFile = new ClinvarFile($sFileURL, true);
-    while (($aData = $oFile->fetchRecord()) !== false) {
+    $oHGVSFileTranscript = new ClinvarFile($sHGVSFileURL, true, 15);
+    while (($aData = $oHGVSFileTranscript->fetchRecord()) !== false) {
         if (strpos($aData['NucleotideChange'], 'c.') === false || $aData['AlleleID'] == '-1') {
             // Cannot handle record.
             continue;
@@ -243,14 +267,31 @@ function main ()
             $sDescription,
             $aPositions) = readClinvarVariant($aData['NucleotideExpression'], $aStats);
         // Try to store current transcript variant.
-        processVOTRecord($aData['AlleleID'], $sReference, $sDescription, $aPositions, $aVarAlleleMap,
-            $aStats, $bDryRun);
+        processVOTRecord($aData['AlleleID'], $sReference, $sDescription, $aPositions,
+            $aVarAlleleMap, $aStats, $bDryRun);
+    }
+
+    print('<HR><H3>Variant effects</H3>');
+    $oSummaryFile = new ClinvarFile($sSummaryFileURL, true);
+    while (($aData = $oSummaryFile->fetchRecord()) !== false) {
+        if ($aData['Assembly'] != 'GRCh37' || $aData['#AlleleID'] == '-1') {
+            // Cannot handle record.
+            continue;
+        }
+
+        foreach ($aClassTranslations as $sPattern => $nVarEffect) {
+            if (preg_match($sPattern, $aData['ClinicalSignificance'])) {
+                processSummaryRecord($aData['#AlleleID'], $nVarEffect, $aVarAlleleMap, $bDryRun);
+                continue;
+            }
+        }
     }
 
     // Print processing stats and quit.
     print('<HR><H3>Import statistics</H3>');
     print_stats($aStats);
-    print('<BR><A href="' . $_SERVER['PHP_SELF'] . '?download_unparsable">Download list of unparsable variants</A>');
+    print('<BR><A href="' . $_SERVER['PHP_SELF'] .
+        '?download_unparsable">Download list of unparsable variants</A>');
     $_T->printFooter();
 }
 
@@ -258,11 +299,12 @@ function main ()
 
 
 
-function handleClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
+function handleClinvarImportForm($nClinvarUserID, $sHGVSURL, $sSummaryURL, $bDryRun)
 {
     // Print HTML for form, containing adjustable parameters for:
     // $nClinvarUserID  User ID used for owned_by field of genomic variants.
-    // $sURL            URL of Clinvar HGVS file.
+    // $sHGVSURL        URL of Clinvar HGVS file.
+    // $sSummaryURL     URL of Clinvar variant summary file.
     // $bDryRun         Boolean flag for preventing changes to the database.
     // Returns false if form was submitted with invalid values.
     global $_DB;
@@ -296,7 +338,10 @@ function handleClinvarImportForm($nClinvarUserID, $sURL, $bDryRun)
                 <TD><input type="text" name="user" size="10" value="<?php echo strval($nClinvarUserID); ?>" /></TD>
             </TR>
             <TR><TD><B>Clinvar URL (gzipped hgvs4variation file):</B></TD>
-                <TD><input type="text" name="url" size="50" value="<?php echo $sURL; ?>" /></TD>
+                <TD><input type="text" name="url_hgvs" size="50" value="<?php echo $sHGVSURL; ?>" /></TD>
+            </TR>
+            <TR><TD><B>Clinvar URL (gzipped variant summary file):</B></TD>
+                <TD><input type="text" name="url_summary" size="50" value="<?php echo $sSummaryURL; ?>" /></TD>
             </TR>
             <TR><TD><B>Genome build:</B></TD>
                 <TD>hg19</TD>
@@ -388,6 +433,32 @@ function print_stats(&$aStats) {
     }
     fclose($oLogFile);
 }
+
+
+
+
+
+function processSummaryRecord($sAlleleID, $nVarEffect, &$aVarAlleleMap, $bDryRun)
+{
+    // Generate reported/concluded
+    // Note: reported effect is always '0' (i.e. 'Not classified') meaning the
+    // data from Clinvar is assumed to be curated.
+
+    static $oVar;
+    if (!isset($oVar)) {
+        // Create object to run updateEntry() on.
+        $oVar = new LOVD_GenomeVariant();
+    }
+
+    $sEffectCodes = '0' . strval($nVarEffect);
+    if (!$bDryRun && isset($aVarAlleleMap[$sAlleleID]) &&
+        $aVarAlleleMap[$sAlleleID]['effectid'] != $sEffectCodes) {
+        // Overwrite effectID in database.
+        $oVar->updateEntry($aVarAlleleMap[$sAlleleID]['id'], array('effectid' => $sEffectCodes));
+    }
+}
+
+
 
 
 
