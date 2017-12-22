@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2017-11-30
+ * Modified    : 2017-12-22
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,7 @@ class ClinvarFileTest extends PHPUnit_Framework_TestCase
     {
         // Test for reader of gzipped Clinvar HGVS file.
 
-        $oFile = new ClinvarFile(CLINVAR_TEST_FILE, false);
+        $oFile = new ClinvarFile(CLINVAR_TEST_FILE, false, 15);
 
         $nCounter = 0;
         while (($aData = $oFile->fetchRecord()) !== false) {
