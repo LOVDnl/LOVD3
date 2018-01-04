@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-11-20
+ * Modified    : 2018-01-04
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -685,6 +685,33 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (POST) {
+        // Determine missing genomic effect values using transcript effects.
+        if (isset($sGene) && (!isset($_POST['effect_reported']) ||
+            (!isset($_POST['effect_concluded']) && $_AUTH['level'] >= LEVEL_CURATOR))) {
+            $nMaxEffectReported = 0;
+            $nMaxEffectConcluded = 0;
+            // Loop over effect values for transcripts, store the max (worst) value.
+            foreach (array_keys($_DATA['Transcript'][$sGene]->aTranscripts) as $sTranscript) {
+                if (isset($_POST[$sTranscript . '_effect_reported'])) {
+                    $nMaxEffectReported = max($nMaxEffectReported,
+                        intval($_POST[$sTranscript . '_effect_reported']));
+                }
+                if (isset($_POST[$sTranscript . '_effect_concluded'])) {
+                    $nMaxEffectConcluded = max($nMaxEffectConcluded,
+                        intval($_POST[$sTranscript . '_effect_concluded']));
+                }
+            }
+
+            // Set missing request values for variant effect.
+            if (!isset($_POST['effect_reported'])) {
+                $_POST['effect_reported'] = strval($nMaxEffectReported);
+            }
+
+            if (!isset($_POST['effect_concluded']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+                $_POST['effect_concluded'] = strval($nMaxEffectConcluded);
+            }
+        }
+
         lovd_errorClean();
 
         if (isset($sGene)) {
@@ -2435,6 +2462,35 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
     if (POST || ACTION == 'publish') {
         lovd_errorClean();
+
+        // Determine missing genomic effect values using transcript effects.
+        if ($bGene && (!isset($_POST['effect_reported']) ||
+                       (!isset($_POST['effect_concluded']) && $_AUTH['level'] >= LEVEL_CURATOR))) {
+            $nMaxEffectReported = 0;
+            $nMaxEffectConcluded = 0;
+            foreach ($aGenes as $sGene) {
+                // Loop over effect values for transcripts, store the max (worst) value.
+                foreach (array_keys($_DATA['Transcript'][$sGene]->aTranscripts) as $sTranscript) {
+                    if (isset($_POST[$sTranscript . '_effect_reported'])) {
+                        $nMaxEffectReported = max($nMaxEffectReported,
+                            intval($_POST[$sTranscript . '_effect_reported']));
+                    }
+                    if (isset($_POST[$sTranscript . '_effect_concluded'])) {
+                        $nMaxEffectConcluded = max($nMaxEffectConcluded,
+                            intval($_POST[$sTranscript . '_effect_concluded']));
+                    }
+                }
+            }
+
+            // Set missing request values for variant effect.
+            if (!isset($_POST['effect_reported'])) {
+                $_POST['effect_reported'] = strval($nMaxEffectReported);
+            }
+
+            if (!isset($_POST['effect_concluded']) && $_AUTH['level'] >= LEVEL_CURATOR) {
+                $_POST['effect_concluded'] = strval($nMaxEffectConcluded);
+            }
+        }
 
         if ($bGene) {
             foreach ($aGenes as $sGene) {
