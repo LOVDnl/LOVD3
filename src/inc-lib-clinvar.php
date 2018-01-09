@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-12-21
+ * Modified    : 2018-01-09
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2017-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
 
  *
@@ -33,7 +33,9 @@
 // bigger the uncompressed data is compared to the gzipped file.
 // This is used to estimate progress of reading the gzipped file since
 // the uncompressed size is not easy to determine.
-define('CLINVAR_COMPRESSION_FACTOR', 10.93);
+// Note: this estimation is based on variant_summary.txt.gz.
+//       hgvs4variation.txt.gz is more compressable.
+define('CLINVAR_DEFAULT_COMPRESSION_FACTOR', 10.93);
 
 // Size in bytes of chunks to be read from Clinvar file.
 define('CLINVAR_CHUNK_SIZE', 32768);
@@ -57,8 +59,17 @@ class ClinvarFile {
 
 
 
-    function __construct($sLocation, $bProgressBar=false, $nLinesToSkip=0)
+    function __construct($sLocation, $bProgressBar=false, $nLinesToSkip=0,
+                         $nCompressionFactor=null)
     {
+        // Create object to read records from Clinvar export file.
+        // Params:
+        // $sLocation           Location of gzipped file as passed to `gzopen()`.
+        // $bProgressBar        Flag stating whether to show a progress bar or not.
+        // $nLinesToSkip        Number of lines to ignore at start of file.
+        // $nCompressionFactor  Expected compression factor for given file to use for
+        //                      progress estimation.
+
         // Setup progress bar.
         $this->bProgressBar = $bProgressBar;
         $this->nLinesToSkip = $nLinesToSkip;
@@ -68,8 +79,12 @@ class ClinvarFile {
             $this->oProgressBar = new ProgressBar($sPBID, 'Reading from ' . $sLocation, 'Done.');
         }
 
+        if (is_null($nCompressionFactor)) {
+            $nCompressionFactor = CLINVAR_DEFAULT_COMPRESSION_FACTOR;
+        }
+
         // Open gzipped Clinvar file.
-        $this->nChunksTotal = round((filesize($sLocation) * CLINVAR_COMPRESSION_FACTOR) /
+        $this->nChunksTotal = round((filesize($sLocation) * $nCompressionFactor) /
             CLINVAR_CHUNK_SIZE);
         $this->oFileHandle = gzopen($sLocation, 'r');
     }

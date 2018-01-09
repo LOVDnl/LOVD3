@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-12-22
+ * Modified    : 2018-01-09
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2017-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
 
  *
@@ -44,7 +44,7 @@ define('PAGE_TITLE', 'Import ClinVar variants');
 
 // Default HGVS source file
 //define('CLINVAR_URL_HGVS', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs4variation.txt.gz');
-define('CLINVAR_URL_HGVS', 'file:///home/mkroon/LOVD/data/clinvar/hgvs4variation.100.txt.gz');
+define('CLINVAR_URL_HGVS', 'file:///home/mkroon/LOVD/data/clinvar/hgvs4variation.txt.gz');
 
 // Default variant summary source file
 define('CLINVAR_URL_SUMMARY', 'file:///home/mkroon/LOVD/data/clinvar/variant_summary.txt.gz');
@@ -60,22 +60,23 @@ define('LOG_FILENAME', 'clinvar_unparsable_variants.txt');
 // matching the Clinvar description in a string and the value is the matching
 // variant effect code as described in `$_SETT['var_effect']`.
 $aClassTranslations = array(
-    '/Pathogenic(?!\/)/' => 9,
-    '/Pathogenic\/Likely pathogenic/' => 7,
-    '/Likely pathogenic/' => 7,
-    '/drug response/' => 8,
-    '/Affects/' => 6,
-    '/risk factor/' => 0,
-    '/association/' => 0,
-    '/Likely benign/' => 3,
-    '/Benign\/Likely benign/' => 3,
-    '/Benign/' => 1,
-    '/Uncertain significance/' => 5,
-    '/Conflicting interpretations of pathogenicity/' => 5,
-    '/conflicting data from submitters/' => 5,
-    '/other/' => 5,
-    '/not provided/' => 0,
-    '/-/' => 0,
+    '/Pathogenic(?!\/)/'                => 9, // Affects function
+    '/Pathogenic\/Likely pathogenic/'   => 7, // Probably affects function
+    '/Likely pathogenic/'               => 7, // Probably affects function
+    '/drug response/'                   => 8, // Affects function, not ...individual\'s disease...
+    '/Affects/'                         => 6, // Affects function, not ...any disease...
+    '/Likely benign/'                   => 3, // Probably does not affect function
+    '/Benign\/Likely benign/'           => 3, // Probably does not affect function
+    '/Benign/'                          => 1, // Does not affect function
+    '/Uncertain significance/'          => 5, // Effect unknown
+    '/Conflicting interpretations of /' => 5, // Effect unknown
+    '/conflicting data from submitters/'=> 5, // Effect unknown
+    '/other/'                           => 5, // Effect unknown
+    '/risk factor/'                     => 5, // Effect unknown
+    '/protective/'                      => 5, // Effect unknown
+    '/association/'                     => 5, // Effect unknown
+    '/not provided/'                    => 0, // Not classified
+    '/-/'                               => 0, // Not classified
 );
 
 
@@ -112,7 +113,7 @@ function getLOVDVariantsByAlleleID(&$aVarAlleleMap, $nClinvarUserID)
     //     'id' => vog.id
     //     'dna' => vog.`VariantOnGenome/DNA`
     //     'reference' => vog.`VariantOnGenome/Reference`
-    //     'cdna' => array(
+    //     'cds' => array(
     //         vot.transcriptid => vot.`VariantOnTranscript/DNA`,
     //         vot.transcriptid => vot.`VariantOnTranscript/DNA`,
     //         ...
@@ -145,9 +146,11 @@ QUERY;
     while (($aRow = $oResult->fetchAssoc()) !== false) {
         if (preg_match('/{' . CLINVAR_ALLELE_LINK_NAME . ':([0-9]+)}/', $aRow['reference'],
             $aMatches)) {
-            $aRow['cds'] = array_combine(explode(';', $aRow['transcripts']),
-                                         explode('|', $aRow['cds_descriptions']));
-            unset($aRow['cds'], $aRow['transcripts']);
+            if ($aRow['transcripts'] != '') {
+                $aRow['cds'] = array_combine(explode(';', $aRow['transcripts']),
+                                             explode('|', $aRow['cds_descriptions']));
+            }
+            unset($aRow['cds_descriptions'], $aRow['transcripts']);
             $aVarAlleleMap[$aMatches[1]] = $aRow;
         }
         // Fixme: handle situation where variant is owned by ClinVar user, but has no
@@ -227,7 +230,7 @@ function main ()
 
     // Loop through Clinvar HGVS file to find genomic variant descriptions.
     print('<HR><H3>Genomic variants</H3>');
-    $oHGVSFileGenome = new ClinvarFile($sHGVSFileURL, true, 15);
+    $oHGVSFileGenome = new ClinvarFile($sHGVSFileURL, true, 15, 7.27);
     while (($aData = $oHGVSFileGenome->fetchRecord()) !== false) {
         if ($aData['Assembly'] != 'GRCh37' || $aData['AlleleID'] == '-1') {
             // Cannot handle record.
@@ -255,7 +258,7 @@ function main ()
     // Loop a second time through the CLinvar file to find transcript variant
     // descriptions.
     print('<HR><H3>Transcript variants</H3>');
-    $oHGVSFileTranscript = new ClinvarFile($sHGVSFileURL, true, 15);
+    $oHGVSFileTranscript = new ClinvarFile($sHGVSFileURL, true, 15, 7.27);
     while (($aData = $oHGVSFileTranscript->fetchRecord()) !== false) {
         if (strpos($aData['NucleotideChange'], 'c.') === false || $aData['AlleleID'] == '-1') {
             // Cannot handle record.
@@ -271,6 +274,10 @@ function main ()
             $aVarAlleleMap, $aStats, $bDryRun);
     }
 
+    // Refresh state of Clinvar variants in LOVD database to include those
+    // added in the first pass of the Clinvar file.
+    getLOVDVariantsByAlleleID($aVarAlleleMap, $nClinvarUserID);
+
     print('<HR><H3>Variant effects</H3>');
     $oSummaryFile = new ClinvarFile($sSummaryFileURL, true);
     while (($aData = $oSummaryFile->fetchRecord()) !== false) {
@@ -279,11 +286,21 @@ function main ()
             continue;
         }
 
+        $bProcessed = false;
         foreach ($aClassTranslations as $sPattern => $nVarEffect) {
             if (preg_match($sPattern, $aData['ClinicalSignificance'])) {
-                processSummaryRecord($aData['#AlleleID'], $nVarEffect, $aVarAlleleMap, $bDryRun);
+                processSummaryRecord($aData['#AlleleID'], $nVarEffect,
+                    $aData['ClinicalSignificance'], $aVarAlleleMap, $bDryRun);
+                $bProcessed = true;
                 continue;
             }
+        }
+
+        if (!$bProcessed) {
+            // Could not determine Clinvar's classification, store as "not
+            // classified".
+            processSummaryRecord($aData['#AlleleID'], 0, $aData['ClinicalSignificance'],
+                $aVarAlleleMap, $bDryRun);
         }
     }
 
@@ -438,16 +455,19 @@ function print_stats(&$aStats) {
 
 
 
-function processSummaryRecord($sAlleleID, $nVarEffect, &$aVarAlleleMap, $bDryRun)
+function processSummaryRecord($sAlleleID, $nVarEffect, $sCVEffect, &$aVarAlleleMap, $bDryRun)
 {
-    // Generate reported/concluded
+    // Translate Clinvar's clinical significance values to LOVD's variant
+    // effect and store them. Clinvar's original values are stored in
+    // `VariantOnTranscript/Classification`.
     // Note: reported effect is always '0' (i.e. 'Not classified') meaning the
-    // data from Clinvar is assumed to be curated.
+    //       data from Clinvar is assumed to be curated.
 
-    static $oVar;
+    static $oVar, $oVOT;
     if (!isset($oVar)) {
-        // Create object to run updateEntry() on.
+        // Create objects to run updateEntry() on.
         $oVar = new LOVD_GenomeVariant();
+        $oVOT = new LOVD_TranscriptVariant();
     }
 
     $sEffectCodes = '0' . strval($nVarEffect);
@@ -455,6 +475,15 @@ function processSummaryRecord($sAlleleID, $nVarEffect, &$aVarAlleleMap, $bDryRun
         $aVarAlleleMap[$sAlleleID]['effectid'] != $sEffectCodes) {
         // Overwrite effectID in database.
         $oVar->updateEntry($aVarAlleleMap[$sAlleleID]['id'], array('effectid' => $sEffectCodes));
+
+        if (isset($aVarAlleleMap[$sAlleleID]['cds'])) {
+            // Store Clinvar's original clinical significance value in
+            // `VariantOnTranscript/Classification`.
+            $aData = array('VariantOnTranscript/Classification' => 'CV: ' . $sCVEffect);
+            foreach (array_keys($aVarAlleleMap[$sAlleleID]['cds']) as $nTranscript) {
+                $oVOT->updateEntry($aVarAlleleMap[$sAlleleID]['id'] . '|' . $nTranscript, $aData);
+            }
+        }
     }
 }
 
@@ -611,8 +640,8 @@ function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &
         'position_c_end_intron' => $aPositions['position_end_intron'],
     );
 
-    if (isset($aVarAlleleMap[$sAlleleID]['cdna'][$aTranscripts[$sReference]])) {
-        if ($sDescription != $aVarAlleleMap[$sAlleleID]['cdna'][$aTranscripts[$sReference]]) {
+    if (isset($aVarAlleleMap[$sAlleleID]['cds'][$aTranscripts[$sReference]])) {
+        if ($sDescription != $aVarAlleleMap[$sAlleleID]['cds'][$aTranscripts[$sReference]]) {
             // Variant exists in DB, but with different description: update it.
             if (!$bDryRun) {
                 $oVOT->updateEntry($aVarValues['id'] . '|' . $aVarValues['transcriptid'],
@@ -632,7 +661,7 @@ function processVOTRecord($sAlleleID, $sReference, $sDescription, $aPositions, &
 
         // Add new description to variant map, as some AlleleID-transcriptid
         // combinations may occur multiple times.
-        $aVarAlleleMap[$sAlleleID]['cdna'][$aTranscripts[$sReference]] = $sDescription;
+        $aVarAlleleMap[$sAlleleID]['cds'][$aTranscripts[$sReference]] = $sDescription;
         $aStats['vot_new'] += 1;
     }
 }
