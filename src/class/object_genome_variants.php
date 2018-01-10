@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-04
+ * Modified    : 2018-01-10
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -385,16 +385,23 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             // with the current effects on the transcripts and not set to
             // 'not classifed' will the form field be shown, so that the user
             // must manually correct the current value.
+            $bReplaceEffectConcluded = false;
             $nVOGEffectConcluded = intval($zData['effectid']{1});
             if ($nVOGEffectConcluded === 0) {
-                unset($this->aFormData['effect_concluded']);
+                $bReplaceEffectConcluded = true;
             } else {
                 $nMaxEffectReported = max(array_map(function ($sEffectID) {
                     return intval($sEffectID{1});
                 }, $aTranscriptEffects));
                 if ($nVOGEffectConcluded == $nMaxEffectReported) {
-                    unset($this->aFormData['effect_concluded']);
+                    $bReplaceEffectConcluded = true;
                 }
+            }
+
+            if ($bReplaceEffectConcluded) {
+                $this->aFormData['effect_concluded'] = array(
+                    $this->aFormData['effect_concluded'][0], '', 'print',
+                    '<i>Effect will automatically be determined by effect on transcripts</i>');
             }
         }
 
@@ -406,16 +413,23 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             // with the current effects on the transcripts and not set to
             // 'not classifed' will the form field be shown, so that the user
             // must manually correct the current value.
+            $bReplaceEffectReported = false;
             $nVOGEffectReported = intval($zData['effectid']{0});
             if ($nVOGEffectReported === 0) {
-                unset($this->aFormData['effect_reported']);
+                $bReplaceEffectReported = true;
             } else {
                 $nMaxEffectReported = max(array_map(function ($sEffectID) {
                     return intval($sEffectID{0});
                 }, $aTranscriptEffects));
                 if ($nVOGEffectReported == $nMaxEffectReported) {
-                    unset($this->aFormData['effect_reported']);
+                    $bReplaceEffectReported = true;
                 }
+            }
+
+            if ($bReplaceEffectReported) {
+                $this->aFormData['effect_reported'] = array(
+                    $this->aFormData['effect_reported'][0], '', 'print',
+                    '<i>Effect will automatically be determined by effect on transcripts</i>');
             }
         }
 
