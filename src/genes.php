@@ -162,29 +162,35 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^([a-z][a-z0-9#@-]*|([0-9]+))$/i', rawurldecode($_PE[1]), $aPEMatches) && !ACTION) {
-    // URL: /genes/DMD
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /genes/2928
-    // View specific entry by symbol or HGNC ID.
+    // Try to find a gene by its HGNC ID and forward.
 
-    if (isset($aPEMatches[2])) {
-        // Numeric identifier given, assume it's a HGNC ID.
-        $sID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc=?',
-            array($aPEMatches[2]))->fetchColumn();
+    if ($sID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($_PE[1]))->fetchColumn()) {
+        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
     } else {
-        // Gene symbol given.
-        $sID = rawurldecode($_PE[1]);
+        define('PAGE_TITLE', 'Genes with HGNC ID #' . $_PE[1]);
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Gene not found!', 'stop');
+        $_T->printFooter();
     }
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && !ACTION) {
+    // URL: /genes/DMD
+    // View specific entry.
+
+    $sID = rawurldecode($_PE[1]);
 
     define('PAGE_TITLE', $sID . ' gene homepage');
     $_T->printHeader();
     $_T->printTitle();
-
-    if ($sID === false) {
-        lovd_showInfoTable('No such ID!', 'stop');
-        $_T->printFooter();
-        exit;
-    }
 
     lovd_printGeneHeader();
 
