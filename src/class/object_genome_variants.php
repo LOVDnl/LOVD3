@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-02
+ * Modified    : 2018-01-15
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -127,7 +127,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'individualid_' => 'Individual ID',
                         'chromosome' => 'Chromosome',
                         'allele_' => 'Allele',
-                        'effect_reported' => 'Affects function (by submitter)',
+                        'effect_reported' => 'Affects function (as reported)',
                         'effect_concluded' => 'Affects function (by curator)',
                         'curation_status_' => 'Curation status',
                         'confirmation_status_' => 'Confirmation status',
@@ -252,7 +252,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 unset($aData['effect_reported']);
             } elseif (isset($aData['statusid']) && $aData['statusid'] == STATUS_OK) {
                 // Show error for curator/manager trying to publish variant without effect.
-                lovd_errorAdd('effect_reported', 'The \'Affects function (by submitter)\' field ' .
+                lovd_errorAdd('effect_reported', 'The \'Affects function (as reported)\' field ' .
                     'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' . $_SETT['data_status'][STATUS_OK] . '".');
             }
         }
@@ -350,7 +350,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                  $this->buildForm(),
                  array(
-                        array('Affects function (by submitter)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
+                        array('Affects function (as reported)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
             'effect' => array('Affects function (by curator)', '', 'select', 'effect_concluded', 1, $_SETT['var_effect'], false, false, false),
                         'hr',
       'general_skip' => 'skip',
