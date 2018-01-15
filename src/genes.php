@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-11-20
+ * Modified    : 2018-01-12
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -155,6 +155,26 @@ if (PATH_COUNT == 1 && !ACTION) {
     $_DATA->viewList('Genes', $aVLOptions);
 
     $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
+    // URL: /genes/2928
+    // Try to find a gene by its HGNC ID and forward.
+
+    if ($sID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($_PE[1]))->fetchColumn()) {
+        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
+    } else {
+        define('PAGE_TITLE', 'Genes with HGNC ID #' . $_PE[1]);
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Gene not found!', 'stop');
+        $_T->printFooter();
+    }
     exit;
 }
 
