@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2017-09-28
- * For LOVD    : 3.0-20
+ * Modified    : 2018-01-16
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -95,8 +95,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                  array(
                         'geneid_' => 'Gene',
                         'id_ncbi_' => 'Transcript ID',
-                        'effect_reported' => 'Affects function (reported)',
-                        'effect_concluded' => 'Affects function (concluded)',
+                        'effect_reported' => 'Affects function (as reported)',
+                        'effect_concluded' => 'Affects function (by curator)',
                       ),
                  $this->buildViewEntry());
         if (LOVD_plus) {
@@ -122,8 +122,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'effect' => array(
                                     'view' => array('Affects function', 70),
                                     'db'   => array('e.name', 'ASC', true),
-                                    'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                    'legend' => array('The variant\'s effect on the protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                                        'The variant\'s effect on the protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                       ),
                  $this->buildViewList(),
                  array(
@@ -243,9 +243,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 continue;
             }
             $sPrefix = (lovd_getProjectFile() == '/import.php'? '' : $nTranscriptID . '_');
-            $aEffectForm = array(array('Affects function (reported)', '', 'select', $sPrefix . 'effect_reported', 1, $_SETT['var_effect'], false, false, false));
+            $aEffectForm = array(array('Affects function (as reported)', '', 'select', $sPrefix . 'effect_reported', 1, $_SETT['var_effect'], false, false, false));
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
-                $aEffectForm[] = array('Affects function (concluded)', '', 'select', $sPrefix . 'effect_concluded', 1, $_SETT['var_effect'], false, false, false);
+                $aEffectForm[] = array('Affects function (by curator)', '', 'select', $sPrefix . 'effect_concluded', 1, $_SETT['var_effect'], false, false, false);
             }
             $this->aFormData = array_merge(
                                             $this->aFormData,
