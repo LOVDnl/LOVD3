@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2018-01-09
+ * Modified    : 2018-01-18
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2017-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -43,11 +43,10 @@ require_once ROOT_PATH . 'class/progress_bar.php';
 define('PAGE_TITLE', 'Import ClinVar variants');
 
 // Default HGVS source file
-//define('CLINVAR_URL_HGVS', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs4variation.txt.gz');
-define('CLINVAR_URL_HGVS', 'file:///home/mkroon/LOVD/data/clinvar/hgvs4variation.txt.gz');
+define('CLINVAR_URL_HGVS', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/hgvs4variation.txt.gz');
 
 // Default variant summary source file
-define('CLINVAR_URL_SUMMARY', 'file:///home/mkroon/LOVD/data/clinvar/variant_summary.txt.gz');
+define('CLINVAR_URL_SUMMARY', 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz');
 
 // Name used in custom link to denote link to Clinvar with AlleleID.
 define('CLINVAR_ALLELE_LINK_NAME', 'ClinVarAlleleID');
