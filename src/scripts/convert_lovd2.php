@@ -34,7 +34,6 @@ require_once ROOT_PATH . 'inc-init.php';
 require_once ROOT_PATH . 'inc-lib-form.php';
 require_once ROOT_PATH . 'class/object_transcripts.php';
 require_once ROOT_PATH . 'class/progress_bar.php';
-require_once ROOT_PATH . 'class/soap_client.php';
 
 // Global for storing warning messages during conversion.
 $_WARNINGS = array();
@@ -237,6 +236,7 @@ function lovd_autoIncScreeningID ()
 function lovd_callJSONService ($sURL)
 {
     // Call $sURL using lovd_php_file() and return the decoded JSON output.
+    // FIXME: Can be replaced by lovd_callMutalyzer().
 
     $sResponse = @join('', lovd_php_file($sURL));
     if ($sResponse) {
@@ -1032,6 +1032,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
             'variant' => $sVariant);
         $sMappingURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']);
         $sMappingURL .= '/json/mappingInfo?' . http_build_query($aMappingInfoArgs);
+        // FIXME: Can be replaced by lovd_callMutalyzer().
         $oResponse = lovd_callJSONService($sMappingURL);
         if ($oResponse && !isset($oResponse->errorcode) && !isset($oResponse->faultcode)) {
             $aVOGRecord['position_g_start'] =   min($oResponse->start_g, $oResponse->end_g);
@@ -1050,6 +1051,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
             'variant' => $zTranscript['id_ncbi'] . ':' . $sVariant);
         $sNumberConvURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) .
                           '/json/numberConversion?' . http_build_query($aNumberConvArgs);
+        // FIXME: Can be replaced by lovd_callMutalyzer().
         $oResponse = lovd_callJSONService($sNumberConvURL);
         if ($oResponse && !isset($oResponse->errorcode) && !isset($oResponse->faultcode) &&
             count($oResponse) > 0 && !empty($oResponse[0])) {
