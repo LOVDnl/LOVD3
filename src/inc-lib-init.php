@@ -113,6 +113,68 @@ function lovd_calculateVersion ($sVersion)
 
 
 
+function lovd_callMutalyzer ($sMethod, $aArgs = array())
+{
+    // Wrapper function to call Mutalyzer's REST+JSON webservice.
+    // Because we have a wrapper, we can implement CURL, which is much faster on repeated calls.
+    global $_CONF;
+
+    // Build URL, regardless of how we'll connect to it.
+    $sURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/' . $sMethod;
+    if ($aArgs) {
+        $i = 0;
+        foreach ($aArgs as $sVariable => $sValue) {
+            $sURL .= ($i? '&' : '?');
+            $i++;
+            $sURL .= $sVariable . '=' . rawurlencode($sValue);
+        }
+    }
+    $sJSONResponse = '';
+
+    if (function_exists('curl_init')) {
+        // Initialize curl connection.
+        static $hCurl;
+
+        if (!$hCurl) {
+            $hCurl = curl_init();
+            curl_setopt($hCurl, CURLOPT_RETURNTRANSFER, true); // Return the result as a string.
+
+            // Set proxy.
+            if ($_CONF['proxy_host']) {
+                curl_setopt($hCurl, CURLOPT_PROXY, $_CONF['proxy_host'] . ':' . $_CONF['proxy_port']);
+                if (!empty($_CONF['proxy_username']) || !empty($_CONF['proxy_password'])) {
+                    curl_setopt($hCurl, CURLOPT_PROXYUSERPWD, $_CONF['proxy_username'] . ':' . $_CONF['proxy_password']);
+                }
+            }
+        }
+
+        curl_setopt($hCurl, CURLOPT_URL, $sURL);
+        $sJSONResponse = curl_exec($hCurl);
+
+    } else {
+        // Backup method, no curl installed. Too bad, we'll do it the "slow" way.
+        $aJSONResponse = lovd_php_file($sURL);
+        if ($aJSONResponse !== false) {
+            $sJSONResponse = implode("\n", $aJSONResponse);
+        }
+    }
+
+
+
+    if ($sJSONResponse) {
+        $aJSONResponse = json_decode($sJSONResponse, true);
+        if ($aJSONResponse !== false) {
+            return $aJSONResponse;
+        }
+    }
+    // Something went wrong...
+    return false;
+}
+
+
+
+
+
 function lovd_cleanDirName ($s)
 {
     // Cleans a given path by resolving a relative path.
