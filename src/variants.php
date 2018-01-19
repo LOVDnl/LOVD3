@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-11-20
+ * Modified    : 2018-01-19
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -2910,8 +2910,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
             $aNewTranscripts = array();
             $aToRemove = array();
             $aVariantDescriptions = array();
-            require ROOT_PATH . 'class/soap_client.php';
-            $_Mutalyzer = new LOVD_SoapClient();
             $aGenesUpdated = array();
 
             foreach ($_POST['transcripts'] as $nTranscript) {
@@ -2923,11 +2921,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                     // Call the numberConversion module of mutalyzer to get the VariantOnTranscript/DNA value for this variant on this transcript.
                     // Check if we already have the converted positions for this gene, if so, we won't have to call mutalyzer again for this information.
                     if (!array_key_exists($zTranscript['geneid'], $aVariantDescriptions)) {
-                        try {
-                            $oOutput = $_Mutalyzer->numberConversion(array('build' => $_CONF['refseq_build'], 'variant' => 'chr' . $zData['chromosome'] . ':' . $zData['VariantOnGenome/DNA'], 'gene' => $zTranscript['geneid']))->numberConversionResult;
-                        } catch (Exception $e) {}
-                        if (isset($oOutput) && isset($oOutput->string)) {
-                            $aVariantDescriptions[$zTranscript['geneid']] = $oOutput->string;
+                        $aResponse = lovd_callMutalyzer('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => 'chr' . $zData['chromosome'] . ':' . $zData['VariantOnGenome/DNA'], 'gene' => $zTranscript['geneid']));
+                        if (!empty($aResponse)) {
+                            $aVariantDescriptions[$zTranscript['geneid']] = $aResponse;
                         } else {
                             $aVariantDescriptions[$zTranscript['geneid']] = array();
                         }
