@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-11-27
+ * Modified    : 2018-01-19
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -1453,6 +1453,22 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
     } else {
         return(array($aHeaders, $aOutput));
     }
+}
+
+
+
+
+
+function lovd_php_gethostbyaddr ($sIP)
+{
+    // LOVD's gethostbyaddr implementation, that easily turns off all DNS lookups if offline.
+    if (!defined('OFFLINE_MODE') && OFFLINE_MODE) {
+        // We're offline. Don't do lookups.
+        return $sIP;
+    }
+
+    // Else, do a lookup.
+    return gethostbyaddr($sIP);
 }
 
 

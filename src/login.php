@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2016-11-11
- * For LOVD    : 3.0-18
+ * Modified    : 2018-01-19
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -62,7 +62,7 @@ if (!empty($_POST)) {
 
                 // Instead of having inc-auth.php stop the user when his IP is not allowed to log in, it's better to do that here.
                 if ($zUser['allowed_ip'] && !lovd_validateIP($zUser['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
-                    lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
+                    lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
 
                     // Provide manager information, so that the user knows where to go for help.
                     $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? ORDER BY name', array(LEVEL_MANAGER))->fetchAllAssoc();
@@ -85,7 +85,7 @@ if (!empty($_POST)) {
                     $_SESSION['auth'] = $zUser;
                     $_AUTH = & $_SESSION['auth'];
 
-                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/unlocking code');
+                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/unlocking code');
                     $_SESSION['last_login'] = $_AUTH['last_login'];
                     // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
                     if (!(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
@@ -130,7 +130,7 @@ if (!empty($_POST)) {
 
 
 
-                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
+                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
                     $_SESSION['last_login'] = $_AUTH['last_login'];
                     // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
                     if (!(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
@@ -168,7 +168,7 @@ if (!empty($_POST)) {
 
             // The bad logins end up here!
             if (!$zUser || (!lovd_error() && !lovd_verifyPassword($_POST['password'], $zUser['password']))) {
-                lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
+                lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
                 lovd_errorAdd('', 'Invalid Username/Password combination.');
 
                 // This may not actually update (user misspelled his username) but we can call the query anyway.
