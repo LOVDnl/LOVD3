@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2017-06-16
- * For LOVD    : 3.0-19
+ * Modified    : 2018-01-19
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -417,9 +417,9 @@ function lovd_getUDForGene ($sBuild, $sGene)
     $sUD = '';
 
     // Let's get the mapping information.
-    $sJSONResponse = lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene);
-    // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but file_get_contents() just returns false.
-    if ($sJSONResponse && $aResponse = json_decode(implode("\n", $sJSONResponse), true)) {
+    $aResponse = lovd_callMutalyzer('getGeneLocation', array('build' => $sBuild, 'gene' => $sGene));
+    // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but lovd_callMutalyzer() just returns false.
+    if ($aResponse) {
         $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
         $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
         $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
