@@ -1411,8 +1411,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                 require ROOT_PATH . 'inc-lib-actions.php';
                 require ROOT_PATH . 'inc-lib-genes.php';
-                require ROOT_PATH . 'class/soap_client.php';
-                $_Mutalyzer = new LOVD_SoapClient();
 
                 $aIupacTable = array(
                     'A' => array('A'),
@@ -1652,9 +1650,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                 // ONLY attempt to fetch gene information in case we're allowed to create this (apparently new) transcript.
                                 // Otherwise, why bother?
                                 // FIXME: Isn't it easier to just check the geneList column? See if that contains just one gene, and use that?
-                                try {
-                                    $sSymbol = $_Mutalyzer->getGeneName(array('build' => $_CONF['refseq_build'], 'accno' => $sAccession))->getGeneNameResult;
-                                } catch (SoapFault $e) {}
+                                $sSymbol = lovd_callMutalyzer('getGeneName', array('build' => $_CONF['refseq_build'], 'accno' => $sAccession));
                             }
                             if (empty($sSymbol)) {
                                 $sSymbol = 'none';
@@ -1866,30 +1862,24 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         }
                                         var_dump($aTranscripts);exit;
                                         */
-                                        try {
-                                            // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
-                                            $aTranscripts = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol))->getTranscriptsAndInfoResult->TranscriptInfo;
-                                        } catch (SoapFault $e) {
-                                            // 2014-06-25; Can fail with no proper reason; for now, don't die on this error.
-                                            // lovd_soapError($e);
-                                        }
-                                        if (!empty($aTranscripts) && is_array($aTranscripts)) {
-                                            foreach ($aTranscripts as $oTranscript) {
+                                        $aTranscripts = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol));
+                                        if (!empty($aTranscripts)) {
+                                            foreach ($aTranscripts as $aTranscript) {
                                                 // Remember the data for each of this gene's transcripts. We may insert them as needed.
-                                                $aFieldsTranscript[$sSymbol][$oTranscript->id] = array(
+                                                $aFieldsTranscript[$sSymbol][$aTranscript['id']] = array(
                                                     'geneid' => $sSymbol,
-                                                    'name' => str_replace($aGenesChecked[$sSymbol]['name'] . ', ', '', $oTranscript->product),
-                                                    'id_mutalyzer' => str_replace($sSymbol . '_v', '', $oTranscript->name),
-                                                    'id_ncbi' => $oTranscript->id,
+                                                    'name' => str_replace($aGenesChecked[$sSymbol]['name'] . ', ', '', $aTranscript['product']),
+                                                    'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscript['name']),
+                                                    'id_ncbi' => $aTranscript['id'],
                                                     'id_ensembl' => '',
-                                                    'id_protein_ncbi' => (!isset($oTranscript->proteinTranscript)? '' : $oTranscript->proteinTranscript->id),
+                                                    'id_protein_ncbi' => (!isset($aTranscript['proteinTranscript'])? '' : $aTranscript['proteinTranscript']['id']),
                                                     'id_protein_ensembl' => '',
                                                     'id_protein_uniprot' => '',
-                                                    'position_c_mrna_start' => $oTranscript->cTransStart,
-                                                    'position_c_mrna_end' => $oTranscript->sortableTransEnd,
-                                                    'position_c_cds_end' => $oTranscript->cCDSStop,
-                                                    'position_g_mrna_start' => $oTranscript->chromTransStart,
-                                                    'position_g_mrna_end' => $oTranscript->chromTransEnd,
+                                                    'position_c_mrna_start' => $aTranscript['cTransStart'],
+                                                    'position_c_mrna_end' => $aTranscript['sortableTransEnd'],
+                                                    'position_c_cds_end' => $aTranscript['cCDSStop'],
+                                                    'position_g_mrna_start' => $aTranscript['chromTransStart'],
+                                                    'position_g_mrna_end' => $aTranscript['chromTransEnd'],
                                                     'created_by' => 0,
                                                     'created_date' => date('Y-m-d H:i:s'));
                                             }
@@ -1983,11 +1973,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         }
 
                                         if (!$aNumberConversion[$j]) {
-                                            try {
-                                                $aOutput = $_Mutalyzer->numberConversion(array('build' => $_CONF['refseq_build'], 'variant' => $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aFieldsVOG['VariantOnGenome/DNA']))->numberConversionResult->string;
-                                            } catch (SoapFault $e) {}
-                                            if (!empty($aOutput)) {
-                                                $aNumberConversion[$j] = $aOutput;
+                                            $aResponse = lovd_callMutalyzer('numberConversion', array('build' => $_CONF['refseq_build'], 'variant' => $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$aVariant['chromosome']] . ':' . $aFieldsVOG['VariantOnGenome/DNA']));
+                                            if (!empty($aResponse)) {
+                                                $aNumberConversion[$j] = $aResponse;
                                             } else {
                                                 $aNumberConversion[$j] = array();
                                             }
@@ -2017,19 +2005,17 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                 );
                                             } else {
                                                 // Basically only variants in the 3'UTR should get here.
-                                                $aMappingInfo = array();
-                                                try {
-                                                    $aMappingInfo = get_object_vars($_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $sAccession, 'variant' => $aFieldsVOG['VariantOnGenome/DNA']))->mappingInfoResult);
-                                                    if (isset($aMappingInfo['errorcode'])) {
-                                                        throw new Exception();
-                                                    }
+                                                $aMappingInfo = lovd_callMutalyzer('mappingInfo', array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $sAccession, 'variant' => $aFieldsVOG['VariantOnGenome/DNA']));
+                                                if (isset($aMappingInfo['errorcode'])) {
+                                                    $aMappingInfo = array();
+                                                } else {
                                                     // 2014-02-25; 3.0-10; The mappingInfo module call does not sort the positions, and as such the "start" and "end" can be in the "wrong" order.
                                                     $bSense = ($aMappingInfo['startmain'] < $aMappingInfo['endmain'] || ($aMappingInfo['startmain'] == $aMappingInfo['endmain'] && ($aMappingInfo['startoffset'] < $aMappingInfo['endoffset'] || $aMappingInfo['startoffset'] == $aMappingInfo['endoffset'])));
                                                     if (!$bSense) {
                                                         list($aMappingInfo['startmain'], $aMappingInfo['endmain']) = array($aMappingInfo['endmain'], $aMappingInfo['startmain']);
                                                         list($aMappingInfo['startoffset'], $aMappingInfo['endoffset']) = array($aMappingInfo['endoffset'], $aMappingInfo['startoffset']);
                                                     }
-                                                } catch (Exception $e) {}
+                                                }
                                             }
                                             if (isset($aMappingInfo['startmain']) && $aMappingInfo['startmain'] !== '') {
                                                 // Also got mapping information. Prepare the VariantOnTranscript data for insertion.
