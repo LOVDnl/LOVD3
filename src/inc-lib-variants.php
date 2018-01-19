@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2016-06-24
- * For LOVD    : 3.0-16
+ * Modified    : 2018-01-19
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Bsc. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -52,9 +52,6 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 {
     global $_CONF, $_SETT;
 
-    // Needs to be a require_once in case other code has already included this, and also for repeated calls to this function.
-    require_once ROOT_PATH . 'class/soap_client.php';
-
     $aMutalyzerData = array();
 
     // Regex pattern to match a reference accession number in variant description.
@@ -93,25 +90,23 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
         '?name=' . urlencode($sFullVariantDescription) . '&standalone=1';
 
     // Make call to mutalyzer to check variant description.
-    $_Mutalyzer = new LOVD_SoapClient();
-    try {
-        $oOutput = $_Mutalyzer->runMutalyzer(array('variant' => $sFullVariantDescription))->runMutalyzerResult;
-    } catch (SoapFault $e) {
+    $aResponse = lovd_callMutalyzer('runMutalyzer', array('variant' => $sFullVariantDescription));
+    if ($aResponse === false) {
         $aMutalyzerData['mutalyzer_error'] = 'Unexpected response from Mutalyzer. Please try again later.';
         return $aMutalyzerData;
     }
 
-    // When transcript is not found, attempt fallback to newer version of transcript
-    foreach (getMutalyzerMessages($oOutput) as $oSoapMessage) {
-        if ($oSoapMessage->errorcode === 'EINVALIDTRANSVAR') {
+    // When transcript is not found, attempt fallback to newer version of transcript.
+    foreach (getMutalyzerMessages($aResponse) as $aMessage) {
+        if ($aMessage['errorcode'] === 'EINVALIDTRANSVAR') {
             // Invalid transcript variant.
 
-            if (isset($oOutput->legend) && !empty($oOutput->legend->LegendRecord)) {
+            if (!empty($aResponse['legend'])) {
                 // Check if a newer version of the transcript is available from the legend.
                 list($sAccession, $sVersion) = explode('.', $sNCBITranscriptID);
 
-                foreach ($oOutput->legend->LegendRecord as $oRecord) {
-                    $aRecordFields = explode('.', $oRecord->id);
+                foreach ($aResponse['legend'] as $aRecord) {
+                    $aRecordFields = explode('.', $aRecord['id']);
                     if (count($aRecordFields) != 2) {
                         continue;
                     }
@@ -120,9 +115,9 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
                     if ($sAccession == $sAltAccession &&
                         intval($sAltVersion) > intval($sVersion)) {
                         // Found a newer version of the transcript. Try to do protein
-                        // prediction using that record instead.
+                        //  prediction using that record instead.
                         $aAltMutalyzerOutput = lovd_getRNAProteinPrediction($sReference, $sGene,
-                            $oRecord->id, $sVariant);
+                            $aRecord['id'], $sVariant);
                         if (!isset($aAltMutalyzerOutput['mutalyzer_error']) &&
                             !isset($aAltMutalyzerOutput['error']) &&
                             !empty($aAltMutalyzerOutput['predict'])) {
@@ -138,30 +133,29 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
                 }
 
                 // Could not find a newer version of the transcript.
-                $aMutalyzerData['error'][$oSoapMessage->errorcode] = trim($oSoapMessage->message);
+                $aMutalyzerData['error'][$aMessage['errorcode']] = trim($aMessage['message']);
                 return $aMutalyzerData;
             }
         }
     }
 
     // Find protein prediction in mutalyzer output.
-    if (isset($oOutput->legend) && !empty($oOutput->legend->LegendRecord) &&
-        !empty($oOutput->proteinDescriptions->string)) {
+    if (!empty($aResponse['legend']) && !empty($aResponse['proteinDescriptions'])) {
         $sMutProteinName = null;
 
         // Loop over legend records to find transcript name (v-number).
-        foreach ($oOutput->legend->LegendRecord as $oRecord) {
-            if (isset($oRecord->id) && $oRecord->id == $sNCBITranscriptID &&
-                substr($oRecord->name, -4, 1) == 'v') {
+        foreach ($aResponse['legend'] as $aRecord) {
+            if (isset($aRecord['id']) && $aRecord['id'] == $sNCBITranscriptID &&
+                substr($aRecord['name'], -4, 1) == 'v') {
                 // Generate protein isoform name (i-number) from transcript name (v-number)
-                $sMutProteinName = str_replace('_v', '_i', $oRecord->name);
+                $sMutProteinName = str_replace('_v', '_i', $aRecord['name']);
                 break;
             }
         }
 
         if (isset($sMutProteinName)) {
             // Select protein description based on protein isoform (i-number).
-            $sProteinDescriptions = implode('|', $oOutput->proteinDescriptions->string);
+            $sProteinDescriptions = implode('|', $aResponse['proteinDescriptions']);
             preg_match('/' . $sRefseqPattern . '\(' . preg_quote($sMutProteinName) .
                        '\):(p\..+?)(\||$)/', $sProteinDescriptions, $aProteinMatches);
             if (isset($aProteinMatches[2])) {
@@ -172,8 +166,8 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 
 
 
-    foreach (getMutalyzerMessages($oOutput) as $oSoapMessage) {
-        if ($oSoapMessage->errorcode === 'ERANGE') {
+    foreach (getMutalyzerMessages($aResponse) as $aMessage) {
+        if ($aMessage['errorcode'] === 'ERANGE') {
             // Ignore 'ERANGE' as an actual error, because we can always interpret this as p.(=), p.? or p.0.
             $sDNAChange = substr($sVariant, strpos($sVariant, ':') + 1);
             $aVariantRange = explode('_', $sDNAChange);
@@ -203,7 +197,7 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
             $aMutalyzerData['predict']['protein'] = $sPredictP;
             $aMutalyzerData['predict']['RNA'] = $sPredictR;
             continue;
-        } elseif ($oSoapMessage->errorcode === 'WSPLICE') {
+        } elseif ($aMessage['errorcode'] === 'WSPLICE') {
             // Mutalyzer now (2012-12-07) returns a WSPLICE for <= 5 nucleotides from the site,
             // even though there internally is a difference between variants in splice sites,
             // and variants close to splice sites.
@@ -212,14 +206,14 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
             $aMutalyzerData['predict']['RNA'] = 'r.spl?';
         }
 
-        if (isset($oSoapMessage->errorcode) && substr($oSoapMessage->errorcode, 0, 1) === 'E') {
-            $aMutalyzerData['error'][trim($oSoapMessage->errorcode)] =  trim($oSoapMessage->message);
-        } elseif (isset($oSoapMessage->errorcode)) {
-            $aMutalyzerData['warning'][trim($oSoapMessage->errorcode)] = trim($oSoapMessage->message);
+        if (isset($aMessage['errorcode']) && substr($aMessage['errorcode'], 0, 1) === 'E') {
+            $aMutalyzerData['error'][trim($aMessage['errorcode'])] =  trim($aMessage['message']);
+        } elseif (isset($aMessage['errorcode'])) {
+            $aMutalyzerData['warning'][trim($aMessage['errorcode'])] = trim($aMessage['message']);
         }
     }
 
-    if ($oOutput->errors === 0 && empty($aMutalyzerData['predict']['RNA'])) {
+    if ($aResponse['errors'] === 0 && empty($aMutalyzerData['predict']['RNA'])) {
         // RNA not filled in yet.
         if (!isset($aMutalyzerData['predict']['protein'])) {
             // Non-coding transcript, Mutalyzer does not return a protein field, but also no error.
@@ -244,20 +238,22 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 
 
 
-function getMutalyzerMessages($oOutput) {
+function getMutalyzerMessages ($aOutput)
+{
     // Return an array of messages from mutalyzer SOAP output. Only messages
     // related to the gene in the original request are returned.
 
     $aMessages = array();
 
-    if (isset($oOutput->messages->SoapMessage)) {
-        foreach ($oOutput->messages->SoapMessage as $oSoapMessage) {
-            if (preg_match('/_OTHER$/', $oSoapMessage->errorcode) !== 0) {
+    if (isset($aOutput['messages'])) {
+        foreach ($aOutput['messages'] as $aMessage) {
+            if (preg_match('/_OTHER$/', $aMessage['errorcode']) !== 0) {
                 // Whatever error it is, it's not about this gene!
                 continue;
             }
-            $aMessages[] = $oSoapMessage;
+            $aMessages[] = $aMessage;
         }
     }
     return $aMessages;
 }
+?>
