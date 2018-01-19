@@ -369,11 +369,9 @@ if (!empty($aVariants)) {
         $nVariants = 0;
     }
 
-    if (!empty($aTranscriptsWithinRange) && is_array($aTranscriptsWithinRange)){
+    if (!empty($aTranscriptsWithinRange)) {
         // Of the detected transcripts, we want to know their GENE and POSITIONS.
-        foreach ($aTranscriptsWithinRange as $oTranscript) {
-            $aTranscript = get_object_vars($oTranscript);
-
+        foreach ($aTranscriptsWithinRange as $aTranscript) {
             // Record the transcript accession, gene symbol and start and end positions.
             $sTranscriptNM = $aTranscript['name'];
             $nVersion = $aTranscript['version'];
@@ -526,7 +524,7 @@ if (!empty($aVariants)) {
                 }
                 if (empty($aRefseqsTranscript)) {
                     // We couldn't get any recommended transcripts from HGNC or the LOVD api, so we will just default to the first transcript that Mutalyzer returns.
-                    $aRefseqsTranscript[] = array('id_ncbi' => $aTranscriptsInUD[0]->id);
+                    $aRefseqsTranscript[] = array('id_ncbi' => $aTranscriptsInUD[0]['id']);
                 }
 
                 // Split chromosomal location in chromosome and band.
@@ -562,8 +560,7 @@ if (!empty($aVariants)) {
                         // The variant can't be mapped here, ignore...
                         continue;
                     }
-                    foreach ($aTranscriptsInUD as $oTranscriptInUD) {
-                        $aTranscriptInUD = get_object_vars($oTranscriptInUD);
+                    foreach ($aTranscriptsInUD as $aTranscriptInUD) {
                         if ($aTranscriptInUD['id'] == $sTranscriptNM || strpos($aTranscriptInUD['id'], preg_replace('/\.\d+$/', '.', $sTranscriptNM)) === 0) {
                             // We'll be inserting the transcript we got from the HGNC (could be a different version). It's either the most studied or the longest for this gene.
 
@@ -576,7 +573,7 @@ if (!empty($aVariants)) {
 //                                                       'id_ncbi' => $aTranscriptInUD['id'],
                                                        'id_ncbi' => $sTranscriptNM,
                                                        'id_ensembl' => '',
-                                                       'id_protein_ncbi' => (!isset($aTranscriptInUD['proteinTranscript'])? '' : $aTranscriptInUD['proteinTranscript']->id),
+                                                       'id_protein_ncbi' => (!isset($aTranscriptInUD['proteinTranscript'])? '' : $aTranscriptInUD['proteinTranscript']['id']),
                                                        'id_protein_ensembl' => '',
                                                        'id_protein_uniprot' => '',
                                                        'position_c_mrna_start' => $aTranscriptInUD['cTransStart'],
