@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-19
+ * Modified    : 2018-01-24
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -327,7 +327,7 @@ class LOVD_Transcript extends LOVD_Object {
                         'cTransEnd' => $aTranscript['sortableTransEnd'],
                         'cCDSStop' => $aTranscript['cCDSStop'],
                     );
-                $aTranscripts['protein'][$aTranscript['id']] = (!isset($aTranscript['proteinTranscript'])? '' : $aTranscript['proteinTranscript']['id']);
+                $aTranscripts['protein'][$aTranscript['id']] = (empty($aTranscript['proteinTranscript']['id'])? '' : $aTranscript['proteinTranscript']['id']);
             }
             $_BAR->setProgress($nProgress);
         }

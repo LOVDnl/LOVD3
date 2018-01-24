@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2018-01-19
+ * Modified    : 2018-01-24
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1872,7 +1872,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                                     'id_mutalyzer' => str_replace($sSymbol . '_v', '', $aTranscript['name']),
                                                     'id_ncbi' => $aTranscript['id'],
                                                     'id_ensembl' => '',
-                                                    'id_protein_ncbi' => (!isset($aTranscript['proteinTranscript'])? '' : $aTranscript['proteinTranscript']['id']),
+                                                    'id_protein_ncbi' => (empty($aTranscript['proteinTranscript']['id'])? '' : $aTranscript['proteinTranscript']['id']),
                                                     'id_protein_ensembl' => '',
                                                     'id_protein_uniprot' => '',
                                                     'position_c_mrna_start' => $aTranscript['cTransStart'],
