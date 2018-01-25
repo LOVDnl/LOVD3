@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2018-01-12
+ * Modified    : 2018-01-25
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -209,7 +209,7 @@ class LOVD_Individual extends LOVD_Custom {
             $this->aSQLViewList['SELECT'] .= ', GROUP_CONCAT(DISTINCT p.`Phenotype/Additional` ORDER BY p.`Phenotype/Additional` SEPARATOR ", ") AS phenotypes_';
 
             $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid';
-            if (true || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+            if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
                 $this->aSQLViewList['FROM'] .= ' AND (p.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (p.created_by = "' . $_AUTH['id'] . '" OR p.owned_by IN (' . join(', ', array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL))) . '))') . ')';
             }
             $this->aSQLViewList['FROM'] .= ')';
