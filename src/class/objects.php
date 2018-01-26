@@ -307,7 +307,8 @@ class LOVD_Object {
                 case 'VariantOnTranscript':
                     require_once ROOT_PATH . 'class/object_transcript_variants.php';
                     // Create gene-specific VOT object with a single transcript.
-                    // Fixme: check assumption that nID is always gene symbol in this case
+                    // VLs with VOT columns that allow F&R *must* be Custom VLs with a gene ID!
+                    // Otherwise, the data can not be checked properly.
                     $object = new LOVD_TranscriptVariant($this->nID, '', false);
                     break;
                 case 'Screening':
@@ -324,14 +325,14 @@ class LOVD_Object {
         $aForm = $object->getForm();
         if (!isset($aForm[$sFieldname])) {
             // Given field is not part of the object's form, therefore
-            // checkFields() will ignore it and data get corrupted. Return
+            // checkFields() will ignore it and data could get corrupted. Return
             // false to disallow this.
             lovd_errorAdd($sFieldname, 'LOVD is unable to verify contents of field ' .
                 $sFieldname . ', please contact the administrator.');
             return array(false, 0);
         }
 
-        // Run checkfields on records with find & replace action applied.
+        // Run checkFields() on records with find & replace action applied.
         // Other fields in the table are left unchanged.
         $aCFOptions = array(
             'trim_fields' => false,
@@ -346,8 +347,8 @@ class LOVD_Object {
         if (lovd_error()) {
             // Remove errors relating to fields other than on which Find &
             // Replace is performed on.
-            for ($i = count($_ERROR['fields']) - 1; $i >= 0; $i--) {
-                if ($_ERROR['fields'][$i] != $sFieldname) {
+            foreach ($_ERROR['fields'] as $i => $sField) {
+                if ($sField != $sFieldname) {
                     unset($_ERROR['fields'][$i], $_ERROR['messages'][$i]);
                 }
             }
@@ -396,6 +397,7 @@ class LOVD_Object {
         }
 
         if ($aOptions['mandatory_password']) {
+            // Password is not mandatory for importing or F&R, check only when mandatory.
             $this->aCheckMandatory[] = 'password';
         }
 
@@ -454,8 +456,7 @@ class LOVD_Object {
                     foreach ($Val as $sValue) {
                         $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                         if (!in_array($sValue, $aSelectOptions)) {
-                            if (isset($aSelectOptions['show_select_alts']) &&
-                                $aSelectOptions['show_select_alts']) {
+                            if (!empty($aOptions['show_select_alts'])) {
                                 lovd_errorAdd($sName, 'Please select a valid entry from the \'' . $sHeader . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aSelectOptions) . '\'.');
                                 $aErroredFields[$sName] = true;
                             } else {
@@ -741,7 +742,7 @@ class LOVD_Object {
         // viewlist select query. Note that the generated replace statement
         // does not work when the value of the field is transformed in the
         // SELECT clause.
-        // Fixme: allow for replacement of transformed fields in viewlist select query.
+        // FIXME: Allow for replacement of transformed fields in viewlist select query.
         // Params:
         // - $sTableName        Name of the table.
         // - $sFieldname        Name of the table's field on which replace will be called.
@@ -892,7 +893,7 @@ class LOVD_Object {
         $sFieldname = trim($sFieldname, '`');
 
         // Get tablename.
-        // Fixme: solve for non-custom columns in custom viewlists.
+        // FIXME: Solve for non-custom columns in custom viewlists.
         $sTablename = null;
         if ($this instanceof LOVD_CustomViewList) {
             $sCat = $this->getCategoryFromCustomColName($sViewListCol);
@@ -906,7 +907,7 @@ class LOVD_Object {
             $sTablename = constant($this->sTable);
         }
 
-         return array($sFieldname, $sTablename, $sTableRef);
+        return array($sFieldname, $sTablename, $sTableRef);
     }
 
 
@@ -2282,7 +2283,7 @@ class LOVD_Object {
         // User clicked preview.
         $bFRPreview =          (!empty($_GET['FRPreviewClicked_' . $sViewListID]));
         // Selected field name for replace.
-        $sFRViewListCol =        (isset($_GET['FRFieldname_' . $sViewListID])?
+        $sFRViewListCol =      (isset($_GET['FRFieldname_' . $sViewListID])?
                                 $_GET['FRFieldname_' . $sViewListID] : null);
         // Display name of selected field.
         $sFRFieldDisplayname = (isset($_GET['FRFieldDisplayname_' . $sViewListID])?
@@ -2571,7 +2572,8 @@ class LOVD_Object {
                 if ($aOptions['find_and_replace']) {
                     print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" class="fnroptionsmenu" style="display: none;">
-    <SPAN>Applying find &amp; replace to column
+    <SPAN><B>Note that using Find &amp; Replace may have destructive consequences.<BR>Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR><BR>
+        Applying find &amp; replace to column
         &quot;<B id="viewlistFRColDisplay_$sViewListID">$sFRViewListCol</B>&quot;.
         <INPUT id="FRFieldname_$sViewListID" type="hidden" name="FRFieldname_$sViewListID"
                value="$sFRViewListCol" />
