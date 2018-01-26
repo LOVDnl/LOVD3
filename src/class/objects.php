@@ -297,9 +297,9 @@ class LOVD_Object {
 
         // Determine LOVD object to which F&R column belongs.
         $object = $this;
-        if ($this->sObject == "Custom_ViewList") {
+        if ($this->sObject == 'Custom_ViewList') {
             // Determine class based on prefix of custom column name.
-            $sCategory = lovd_getCategoryCustomColFromName($sFieldname);
+            $sCategory = $this->getCategoryFromCustomColName($sFieldname);
             switch ($sCategory) {
                 case 'VariantOnGenome':
                     require_once ROOT_PATH . 'class/object_genome_variants.php';
@@ -774,6 +774,29 @@ class LOVD_Object {
 
 
 
+    private function getCategoryFromCustomColName ($sName)
+    {
+        // Returns category (object type) for custom column fieldname. Fieldname
+        // may be anything used in code or SQL to refer to that column.
+        // Examples:
+        //      "Phenotype/Age" => "Phenotype"
+        //      "vot.`VariantOnTranscript/DNA`" => "VariantOnTranscript"
+        //      "`VariantOnTranscript/Enzyme/Kinase_activity`" =>
+        //          "VariantOnTranscript"
+
+        preg_match('/^(\w+\.)?`?(\w+)\/.+$/', $sName, $aMatches);
+        if ($aMatches) {
+            return $aMatches[2];
+        }
+
+        // Unable to parse name.
+        return false;
+    }
+
+
+
+
+
     function getCount ($ID = false)
     {
         // Returns the number of entries in the database table.
@@ -840,7 +863,7 @@ class LOVD_Object {
         // Fixme: solve for non-custom columns in custom viewlists.
         $sTablename = null;
         if ($this instanceof LOVD_CustomViewList) {
-            $sCat = lovd_getCategoryCustomColFromName($sViewListCol);
+            $sCat = $this->getCategoryFromCustomColName($sViewListCol);
             if ($sCat !== false) {
                 $aTableInfo = lovd_getTableInfoByCategory($sCat);
                 if ($aTableInfo !== false) {

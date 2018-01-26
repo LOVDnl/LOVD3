@@ -57,29 +57,4 @@ function lovd_describeFormType ($zData) {
 
     return $sFormType;
 }
-
-
-
-
-
-function lovd_getCategoryCustomColFromName ($sName)
-{
-    // Returns category (object type) for custom column fieldname. Fieldname
-    // may be anything used in code or SQL to refer to that column.
-    // Examples:
-    //      "Phenotype/Age" => "Phenotype"
-    //      "vot.`VariantOnTranscript/DNA`" => "VariantOnTranscript"
-    //      "`VariantOnTranscript/Enzyme/Kinase_activity`" =>
-    //          "VariantOnTranscript"
-
-    preg_match('/^(\w+\.)?`?(\w+)\/.+$/', $sName, $aMatches);
-    if ($aMatches) {
-        return $aMatches[2];
-    }
-
-    // Unable to parse name.
-    return false;
-}
-
-
 ?>
