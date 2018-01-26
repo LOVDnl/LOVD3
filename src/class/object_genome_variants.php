@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-16
+ * Modified    : 2018-01-26
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -377,59 +377,61 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['effect_concluded'], $this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
-        } else if (!empty($_DATA['Transcript'])) {
+        } elseif (!empty($_DATA['Transcript'])) {
             // Determine whether to show the `effect_concluded` field.
             // When a variant is linked to one or more transcripts, its effect
-            // on the genomic level will be determined by the effect on the
-            // transcript levels. Only if the effect value is non-concordant
-            // with the current effects on the transcripts and not set to
-            // 'not classifed' will the form field be shown, so that the user
-            // must manually correct the current value.
-            $bReplaceEffectConcluded = false;
+            //  on the genomic level will be determined by the "worst" effect on the
+            //  transcript levels. Only if the currently set effect is non-concordant
+            //  with the current effects on the transcripts and not set to
+            //  'not classifed' will the form field be shown, so that the user
+            //  must manually correct the current value.
+            $bHideEffectConcluded = false;
             $nVOGEffectConcluded = intval($zData['effectid']{1});
             if ($nVOGEffectConcluded === 0) {
-                $bReplaceEffectConcluded = true;
+                // Set to "Not classified", we'll fill it in.
+                $bHideEffectConcluded = true;
             } else {
                 $nMaxEffectReported = max(array_map(function ($sEffectID) {
                     return intval($sEffectID{1});
                 }, $aTranscriptEffects));
                 if ($nVOGEffectConcluded == $nMaxEffectReported) {
-                    $bReplaceEffectConcluded = true;
+                    $bHideEffectConcluded = true;
                 }
             }
 
-            if ($bReplaceEffectConcluded) {
+            if ($bHideEffectConcluded) {
                 $this->aFormData['effect_concluded'] = array(
-                    $this->aFormData['effect_concluded'][0], '', 'print',
-                    '<i>Effect will automatically be determined by effect on transcripts</i>');
+                    $this->aFormData['effect_concluded'][0], '', 'note',
+                    'Effect on genomic level will be determined by the variant\'s effect on transcript(s).');
             }
         }
 
         // Determine whether to show the `effect_reported` field.
         if (!empty($_DATA['Transcript'])) {
             // When a variant is linked to one or more transcripts, its effect
-            // on the genomic level will be determined by the effect on the
-            // transcript levels. Only if the effect value is non-concordant
-            // with the current effects on the transcripts and not set to
-            // 'not classifed' will the form field be shown, so that the user
-            // must manually correct the current value.
-            $bReplaceEffectReported = false;
+            //  on the genomic level will be determined by the "worst" effect on the
+            //  transcript levels. Only if the currently set effect is non-concordant
+            //  with the current effects on the transcripts and not set to
+            //  'not classifed' will the form field be shown, so that the user
+            //  must manually correct the current value.
+            $bHideEffectReported = false;
             $nVOGEffectReported = intval($zData['effectid']{0});
             if ($nVOGEffectReported === 0) {
-                $bReplaceEffectReported = true;
+                // Set to "Not classified", we'll fill it in.
+                $bHideEffectReported = true;
             } else {
                 $nMaxEffectReported = max(array_map(function ($sEffectID) {
                     return intval($sEffectID{0});
                 }, $aTranscriptEffects));
                 if ($nVOGEffectReported == $nMaxEffectReported) {
-                    $bReplaceEffectReported = true;
+                    $bHideEffectReported = true;
                 }
             }
 
-            if ($bReplaceEffectReported) {
+            if ($bHideEffectReported) {
                 $this->aFormData['effect_reported'] = array(
-                    $this->aFormData['effect_reported'][0], '', 'print',
-                    '<i>Effect will automatically be determined by effect on transcripts</i>');
+                    $this->aFormData['effect_reported'][0], '', 'note',
+                    'Effect on genomic level will be determined by the variant\'s effect on transcript(s).');
             }
         }
 
