@@ -1,7 +1,3 @@
-branches:
-  except:
-    - lovd_light
-
 language: php
 php:
   # aliased to a recent 5.4.x version
