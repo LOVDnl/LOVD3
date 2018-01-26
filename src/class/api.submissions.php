@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-12-07
- * For LOVD    : 3.0-18
+ * Modified    : 2017-12-01
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -59,6 +59,7 @@ class LOVD_API_Submissions {
             '2' => '3',
         ),
         // Let's hope this one doesn't clash, otherwise we need to rebuild this array.
+        // FIXME: This will clash if we want to support genetic_origin.
         '@term' => array(
             'Non-pathogenic' => '10',
             'Probably Not Pathogenic' => '30',
@@ -93,6 +94,8 @@ class LOVD_API_Submissions {
     );
 
     // The sections/objects and their columns that we'll use.
+    // FIXME: Support */Reference fields parsing <db_xref accession="12345" source="pubmed"/>?
+    // FIXME: Support VariantOnGenome/Genetic_origin (and allele) by parsing <genetic_origin term="inherited"><source term="paternal"/><evidence_code term="inferred"/></genetic_origin>
     private $aObjects = array(
         'Columns' => array(),
         'Genes' => array(),
@@ -109,6 +112,11 @@ class LOVD_API_Submissions {
         'Screenings_To_Variants' => array('screeningid', 'variantid'),
     );
 
+    // The mandatory custom colums in this LOVD, that we'll need to find defaults for.
+    // This variable will be filled by addMandatoryColumns() and will have the structure:
+    // [category][column ID] = default value;
+    private $aMandatoryCustomColumns = array();
+
 
 
 
@@ -122,6 +130,96 @@ class LOVD_API_Submissions {
         }
 
         $this->API = $oAPI;
+        return true;
+    }
+
+
+
+
+
+    private function addMandatoryColumns ()
+    {
+        // Adds mandatory columns to $this->aObjects, so they'll at least be set.
+        // Also try and predict the default value, and store.
+        // Then, addMandatoryDefaultValues() should fill those in, per entry.
+        global $_DB;
+
+        if ($this->aMandatoryCustomColumns) {
+            // We ran before.
+            return false;
+        }
+
+        // Collect names of custom columns, per category, together with their form type and selection options, since we'll need those.
+        // Note that for the shared columns we take c.select_options instead of from sc, because we won't know what all the genes may do.
+        // FIXME: For shared columns, it would be more correct to take the select_options from each parent,
+        //  and store whether or not the column is mandatory, per parent. This will take more resources (CPU and memory),
+        //  but will prevent us from picking default values for columns that do not need default values.
+        $sSQL = 'SELECT "global" AS type, SUBSTRING_INDEX(c.id, "/", 1) AS category, c.id, c.select_options
+                 FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid)
+                 WHERE c.id NOT LIKE "VariantOnTranscript/%" AND c.id NOT LIKE "Phenotype/%" AND c.mandatory = 1
+                 UNION
+                 SELECT "shared" AS type, SUBSTRING_INDEX(c.id, "/", 1) AS category, c.id, MIN(c.select_options) AS select_options
+                 FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid)
+                 WHERE (c.id LIKE "VariantOnTranscript/%" OR c.id LIKE "Phenotype/%") AND sc.mandatory = 1
+                 GROUP BY c.id';
+        foreach ($_DB->query($sSQL)->fetchAllAssoc() as $zColumn) {
+            // Translate the category to that used in the file.
+            // FIXME: Why is there no function for this?
+            $sCategory = str_replace('Genomes', 'Genome', str_replace('On', 's_On_', $zColumn['category'] . 's'));
+
+            // Some values should not get defaults, because they are considered
+            //  mandatory by this API, or handled in general by this API.
+            // All those columns are defined in the $aObjects array.
+            if (in_array($zColumn['id'], $this->aObjects[$sCategory])) {
+                continue;
+            } else {
+                // Store column in the objects array, so it will defined in the file and entry.
+                $this->aObjects[$sCategory][] = $zColumn['id'];
+            }
+
+            // Try and take the default value from the selection options, if available.
+            $sDefaultValue = '';
+            $aOptions = explode("\r\n", $zColumn['select_options']);
+            foreach (array('Unknown', 'unknown', '?', '-') as $sValue) {
+                if (in_array($sValue, $aOptions)) {
+                    $sDefaultValue = $sValue;
+                    break;
+                }
+            }
+
+            // FIXME: If the field is not a selection list, we could just put a ?,
+            //  but right now we're not handling the shared columns right, and I
+            //  don't want default values to end up in non-mandatory fields.
+            // For non-shared columns, that surely are a problem, put a '?'.
+            if (!$sDefaultValue && $zColumn['type'] == 'global') {
+                $sDefaultValue = '?';
+            }
+
+            // Store default value, in case we found any.
+            $this->aMandatoryCustomColumns[$sCategory][$zColumn['id']] = $sDefaultValue;
+        }
+
+        return true;
+    }
+
+
+
+
+
+    private function addMandatoryDefaultValues ($sCategory, &$aData)
+    {
+        // This function applies default values for an entry, as definied in the
+        //  $this->aMandatoryCustomColumns() array.
+
+        if (!isset($this->aMandatoryCustomColumns[$sCategory])) {
+            // No mandatory fields defined for this category.
+            return false;
+        }
+
+        foreach ($this->aMandatoryCustomColumns[$sCategory] as $sField => $sDefaultValue) {
+            $aData[$sField] = $sDefaultValue;
+        }
+
         return true;
     }
 
@@ -179,10 +277,19 @@ class LOVD_API_Submissions {
         // Array of transcripts we have already seen.
         static $aTranscripts = array();
 
+        // To make sure we can actually import the result, we should check for columns that are mandatory, but not currently supported.
+        // We should try and give those defaults. First, identify these columns.
+        // This function will annotate $this->aObjects with mandatory columns, so we'll at least have them in the file.
+        $this->addMandatoryColumns();
+
         // Loop VarioML data, fill in $aData array.
         foreach ($aInput['lsdb']['individual'] as $nIndividualKey => $aIndividual) {
             $nIndividualID = $nIndividualKey + 1;
             $aData['Individuals'][$nIndividualKey] = array_fill_keys($this->aObjects['Individuals'], ''); // Instantiate all columns.
+
+            // Apply defaults, only for columns mandatory in this LOVD instance.
+            // This function will try and get the default values from LOVD itself.
+            $this->addMandatoryDefaultValues('Individuals', $aData['Individuals'][$nIndividualKey]);
 
             // Map the data.
             $aData['Individuals'][$nIndividualKey]['id'] = $nIndividualID;
@@ -254,15 +361,24 @@ class LOVD_API_Submissions {
                 // We're assuming here, that the Phenotype/Additional column is
                 //  active. It's an LOVD-standard custom column added to new
                 //  diseases by default.
+                $aPhenotype = array_fill_keys($this->aObjects['Phenotypes'], ''); // Instantiate all columns.
                 $nPhenotypeID = count($aData['Phenotypes']) + 1;
-                $aData['Phenotypes'][] = array(
-                    'id' => $nPhenotypeID,
-                    'diseaseid' => $nDiseaseIDForHPO,
-                    'individualid' => $nIndividualID,
-                    'owned_by' => $this->zAuth['id'],
-                    'statusid' => STATUS_PENDING,
-                    'created_by' => $this->zAuth['id'],
-                    'Phenotype/Additional' => $sPhenotype,
+
+                // Apply defaults, only for columns mandatory in this LOVD instance.
+                // This function will try and get the default values from LOVD itself.
+                $this->addMandatoryDefaultValues('Phenotypes', $aPhenotype);
+
+                $aData['Phenotypes'][] = array_merge(
+                    $aPhenotype,
+                    array(
+                        'id' => $nPhenotypeID,
+                        'diseaseid' => $nDiseaseIDForHPO,
+                        'individualid' => $nIndividualID,
+                        'owned_by' => $this->zAuth['id'],
+                        'statusid' => STATUS_PENDING,
+                        'created_by' => $this->zAuth['id'],
+                        'Phenotype/Additional' => $sPhenotype,
+                    )
                 );
             }
 
@@ -273,6 +389,10 @@ class LOVD_API_Submissions {
                 // Prepare the VOG that we're building now.
                 $aVOG = array_fill_keys($this->aObjects['Variants_On_Genome'], ''); // Instantiate all columns.
                 $nVariantID = count($aData['Variants_On_Genome']) + 1;
+
+                // Apply defaults, only for columns mandatory in this LOVD instance.
+                // This function will try and get the default values from LOVD itself.
+                $this->addMandatoryDefaultValues('Variants_On_Genome', $aVOG);
 
                 // Map the data.
                 $aVOG['id'] = $nVariantID;
@@ -303,20 +423,30 @@ class LOVD_API_Submissions {
                 $aVOG['position_g_end'] = $aVariantInfo['position_end'];
 
                 // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
-                $nScreeningID = count($aData['Screenings']) + 1;
                 $aTemplates = array();
                 $aTechniques = array();
                 foreach ($aVariant['variant_detection'] as $aScreening) {
                     $aTemplates[] = $aScreening['@template'];
                     $aTechniques = array_merge($aTechniques, explode(';', $aScreening['@technique']));
                 }
-                $aData['Screenings'][] = array(
-                    'id' => $nScreeningID,
-                    'individualid' => $nIndividualID,
-                    'owned_by' => $this->zAuth['id'],
-                    'created_by' => $this->zAuth['id'],
-                    'Screening/Template' => implode(';', array_unique($aTemplates)),
-                    'Screening/Technique' => implode(';', array_unique($aTechniques)),
+
+                $aScreening = array_fill_keys($this->aObjects['Screenings'], ''); // Instantiate all columns.
+                $nScreeningID = count($aData['Screenings']) + 1;
+
+                // Apply defaults, only for columns mandatory in this LOVD instance.
+                // This function will try and get the default values from LOVD itself.
+                $this->addMandatoryDefaultValues('Screenings', $aScreening);
+
+                $aData['Screenings'][] = array_merge(
+                    $aScreening,
+                    array(
+                        'id' => $nScreeningID,
+                        'individualid' => $nIndividualID,
+                        'owned_by' => $this->zAuth['id'],
+                        'created_by' => $this->zAuth['id'],
+                        'Screening/Template' => implode(';', array_unique($aTemplates)),
+                        'Screening/Technique' => implode(';', array_unique($aTechniques)),
+                    )
                 );
                 $aData['Screenings_To_Variants'][] = array(
                     'screeningid' => $nScreeningID,
@@ -330,7 +460,8 @@ class LOVD_API_Submissions {
                     // Loop through all VOTs. They've already been checked, so have to be cDNA, [RNA], [AA].
                     foreach ($aVariant['seq_changes']['variant'] as $nVariantLevel2 => $aVariantLevel2) {
                         $nVariantLevel2 ++;
-                        $aVOT = array('id' => $nVariantID); // The VOT that we're building now.
+                        $aVOT = array_fill_keys($this->aObjects['Variants_On_Transcripts'], ''); // Instantiate all columns.
+                        $aVOT['id'] = $nVariantID; // The VOT that we're building now.
 
                         // Type must be cDNA, we already checked.
                         // We ignore the gene.
@@ -341,12 +472,16 @@ class LOVD_API_Submissions {
                         }
                         $aVOT['transcriptid'] = $aTranscripts[$aVariantLevel2['ref_seq']['@accession']];
 
+                        // Apply defaults, only for columns mandatory in this LOVD instance.
+                        // This function will try and get the default values from LOVD itself.
+                        $this->addMandatoryDefaultValues('Variants_On_Transcripts', $aVOT);
+
                         // Map the data.
                         $aVOT['effectid'] = $aVOG['effectid'];
                         $aVOT['VariantOnTranscript/DNA'] = $aVariantLevel2['name']['#text'];
 
                         // Fill in the positions. If this fails, this is reason to reject the variant.
-                        $aVariantInfo = lovd_getVariantInfo($aVariantLevel2['name']['#text']);
+                        $aVariantInfo = lovd_getVariantInfo($aVariantLevel2['name']['#text'], $aVOT['transcriptid']);
                         if (!$aVariantInfo) {
                             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': SeqChange #' . $nVariantLevel2 . ': Name not understood. ' .
@@ -503,7 +638,7 @@ class LOVD_API_Submissions {
         if (!$_INI['paths']['data_files']) {
             // There's no way we can do anything with the results, so fail.
             $this->API->aResponse['errors'][] = 'No data file path configured. Without this path, this LOVD API is not able to process files. ' .
-                'Please contact the admin to configure the data file path: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                'Please contact the admin to configure the data file path: ' . $_SETT['admin']['address_formatted'] . '.';
             $this->API->nHTTPStatus = 500; // Send 500 Internal Server Error.
             return false;
         }
@@ -533,10 +668,10 @@ class LOVD_API_Submissions {
         }
 
         // Remove comments from JSON file, and trim.
-        $sInput = trim(preg_replace('/\/\*.+\*\//Us', '', $sInput));
+        $sInputClean = trim(preg_replace('/\/\*.+\*\//Us', '', $sInput));
 
         // Then, check the first character. Should be an '{'.
-        if ($sInput{0} != '{') {
+        if ($sInputClean{0} != '{') {
             // Can't be JSON...
             $this->API->aResponse['errors'][] = 'Unsupported media type. Expecting: application/json.';
             $this->API->nHTTPStatus = 415; // Send 415 Unsupported Media Type.
@@ -544,7 +679,7 @@ class LOVD_API_Submissions {
         }
 
         // If it appears to be JSON, have PHP try and convert it into an array.
-        $aInput = $this->jsonDecode($sInput);
+        $aInput = $this->jsonDecode($sInputClean);
         // If $aInput is false, we failed somewhere. Function should have set response and HTTP status.
         if ($aInput === false) {
             return false;
@@ -567,8 +702,8 @@ class LOVD_API_Submissions {
             return false;
         }
 
-        // Write the LOVD3 output file.
-        return $this->writeImportFile($aData);
+        // Write the LOVD3 output file (and optionally, the JSON data).
+        return $this->writeImportFile($aData, $sInput);
     }
 
 
@@ -601,7 +736,7 @@ class LOVD_API_Submissions {
             // Data file is not meant for this LSDB.
             $this->API->aResponse['errors'][] = 'VarioML error: LSDB ID in file does not match this LSDB. ' .
                 'Submit your file to the correct LSDB, or if sure you want to submit here, ' .
-                'request the LSDB ID from the admin: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                'request the LSDB ID from the admin: ' . $_SETT['admin']['address_formatted'] . '.';
             $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
             return false;
         }
@@ -934,7 +1069,7 @@ class LOVD_API_Submissions {
                             if ($aGenes) {
                                 if (!$aGenesExisting) {
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given genes for this variant are configured in this LOVD. ' .
-                                        'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                                        'Please request the admin to create them: ' . $_SETT['admin']['address_formatted'] . '.';
                                 } else {
                                     // Genes do exist. Mention which transcripts can then be used.
                                     $sTranscriptsAvailable = implode(', ', $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', count($aGenesExisting) - 1) . ') ORDER BY id_ncbi', array($aGenesExisting))->fetchAllColumn());
@@ -944,7 +1079,7 @@ class LOVD_API_Submissions {
                             } else {
                                 // No genes were ever given, focus on the transcripts.
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given transcripts for this variant are configured in this LOVD. ' .
-                                    'Please request the admin to create them: ' . $_SETT['admin']['name'] . ' <' . $_SETT['admin']['email'] . '>.';
+                                    'Please request the admin to create them: ' . $_SETT['admin']['address_formatted'] . '.';
                             }
                         } else {
                             // We have at least one matching transcript.
@@ -1093,16 +1228,18 @@ class LOVD_API_Submissions {
 
 
 
-    private function writeImportFile ($aData)
+    private function writeImportFile ($aData, $sJSON = '')
     {
         // This function takes the input file and writes an LOVD3 import file to
         //  the data file path as configured in $_INI['paths']['data_files'].
+        // If $sJSON is given, it will write the contents
+        //  of that string to a .json file.
         // Calling this function assumes the input is a properly verified LOVD
         //  database array.
         global $_INI, $_SETT;
 
         // Assuming this file is unique, since we're including the microseconds.
-        $sFileName = 'LOVD_API_submission_' . $this->zAuth['id'] . '_' . date('Y-m-d_H:i:s') . substr(microtime(), 1, 7);
+        $sFileName = 'LOVD_API_submission_' . $this->zAuth['id'] . '_' . date('Y-m-d_H:i:s') . substr(microtime(), 1, 7) . '.lovd';
 
         // Try opening the file.
         $f = @fopen($_INI['paths']['data_files'] . '/' . $sFileName, 'w');
@@ -1140,6 +1277,19 @@ class LOVD_API_Submissions {
                 fputs($f, "\r\n");
             }
             fputs($f, "\r\n\r\n");
+        }
+        fclose($f);
+
+        // Store the JSON too, if we have the data.
+        if ($sJSON) {
+            $sFileNameJSON = preg_replace('/.lovd$/', '.json', $sFileName);
+            if (defined('JSON_PRETTY_PRINT')) {
+                // Make the JSON look pretty, if you can.
+                // (if it was, it now isn't anymore).
+                // JSON_PRETTY_PRINT is available from PHP 5.4.0.
+                $sJSON = json_encode(json_decode($sJSON, true), JSON_PRETTY_PRINT);
+            }
+            @file_put_contents($_INI['paths']['data_files'] . '/' . $sFileNameJSON, $sJSON);
         }
 
         // Create log entry.

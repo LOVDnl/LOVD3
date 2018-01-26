@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2016-06-17
- * For LOVD    : 3.0-16
+ * Modified    : 2017-11-06
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -101,7 +101,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $sMessage = 'Dear ' . $zData['name'] . ',' . "\n\n" .
                         'Your password from your LOVD account has been reset, as requested. Your new, randomly generated, password can be found below. Please log in to LOVD and choose a new password.' . "\n\n" .
                         'Below is a copy of your updated account information.' . "\n\n" .
-                        'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the Database administrator ' . $_SETT['admin']['name'] . ', email: ' . $_SETT['admin']['email'] . ', who can investigate possible misuse of the system.' . "\n\n";
+                        'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the Database administrator ' . $_SETT['admin']['name'] . ', email: ' . str_replace(array("\r\n", "\r", "\n"), ' or ', trim($_SETT['admin']['email'])) . ', who can investigate possible misuse of the system.' . "\n\n";
 
             // Add the location of the database, so that the user can just click the link.
             if ($_CONF['location_url']) {

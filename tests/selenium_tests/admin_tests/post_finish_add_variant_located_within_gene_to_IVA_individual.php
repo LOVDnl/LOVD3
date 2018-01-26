@@ -76,7 +76,7 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertContains("/src/variants/0000000334", $this->driver->getCurrentURL());
     }

@@ -34,6 +34,15 @@ matrix:
 sudo: required
 dist: trusty
 
+# Currently running on an image that was deprecated 2017-06-21. The latest
+# Trusty image does not have a firefox version that plays well with the
+# facebook webdriver client and Selenium 2.53 or 3.4 stack. At least partially
+# due to this bug: https://github.com/SeleniumHQ/selenium/issues/3607 which
+# also seems to affect the PHP client. Travis will disable the deprecated image
+# by first of September, a solution is needed by then.
+# FIXME: upgrade to latest Trusty image by removing line below.
+group: deprecated-2017Q2
+
 addons:
   apt:
     packages:
@@ -72,6 +81,7 @@ script:
   - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --configuration ./tests/unit_tests/phpunit.xml
 
 after_failure:
   - ./tests/upload_test_results.sh

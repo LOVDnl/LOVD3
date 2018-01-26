@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-06-16
+ * Modified    : 2017-06-26
  * For LOVD    : 3.0-19
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -659,7 +659,18 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="https://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
 
             } else {
-                unset($this->aColumnsViewEntry['TableStart_Graphs'],$this->aColumnsViewEntry['TableHeader_Graphs'],$this->aColumnsViewEntry['graphs'],$this->aColumnsViewEntry['ucsc'],$this->aColumnsViewEntry['ensembl'],$this->aColumnsViewEntry['ncbi'],$this->aColumnsViewEntry['TableEnd_Graphs'],$this->aColumnsViewEntry['HR_2']);
+                if (!$zData['rf_checker_']) {
+                    // Remove the displays/utilities info table when there are also no reading
+                    // frame checker results.
+                    unset($this->aColumnsViewEntry['TableStart_Graphs'],
+                          $this->aColumnsViewEntry['TableHeader_Graphs'],
+                          $this->aColumnsViewEntry['TableEnd_Graphs'],
+                          $this->aColumnsViewEntry['HR_2']);
+                }
+                unset($this->aColumnsViewEntry['graphs'],
+                      $this->aColumnsViewEntry['ucsc'],
+                      $this->aColumnsViewEntry['ensembl'],
+                      $this->aColumnsViewEntry['ncbi']);
             }
 
             // URLs for "Links to other resources".

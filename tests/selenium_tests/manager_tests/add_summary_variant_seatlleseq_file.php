@@ -38,7 +38,7 @@ class AddSummaryVariantSeatlleseqFileTest extends LOVDSeleniumWebdriverBaseTestC
     public function testAddSummaryVariantSeatlleseqFile()
     {
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertContains("/src/variants/0000000167", $this->driver->getCurrentURL());
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));

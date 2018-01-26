@@ -31,7 +31,7 @@ class CreateDiseaseCMTTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
 
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View disease"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Disease"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/diseases\/00001$/', $this->driver->getCurrentURL()));
 

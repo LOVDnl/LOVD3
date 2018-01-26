@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-10-19
- * For LOVD    : 3.0-19
+ * Modified    : 2018-01-16
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -115,10 +115,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 ', CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner'
             ) .
             (!$_SETT['customization_settings']['variant_viewlist_show_status']? '' :
-                ($_AUTH['level'] >= LEVEL_COLLABORATOR?
-                    ', CASE vog.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name'
-                    : ''
-                ) .
               ', ds.name AS status'
             );
 
@@ -156,28 +152,26 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-            array(
-                'individualid_' => 'Individual ID',
-                'chromosome' => 'Chromosome',
-                'allele_' => 'Allele',
-                'effect_reported' => 'Affects function (reported)',
-                'effect_concluded' => 'Affects function (concluded)',
-                'curation_status_' => 'Curation status',
-                'confirmation_status_' => 'Confirmation status'
-            ),
-            $this->buildViewEntry(),
-            array(
-                'mapping_flags_' => array('Automatic mapping', LEVEL_COLLABORATOR),
-                // Removed this column  'average_frequency_' => 'Average frequency (large NGS studies)',
-                'owned_by_' => 'Owner',
-                'status' => array('Variant data status', LEVEL_COLLABORATOR),
-                'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
-              )
+                 array(
+                        'individualid_' => 'Individual ID',
+                        'chromosome' => 'Chromosome',
+                        'allele_' => 'Allele',
+                        'effect_reported' => 'Affects function (as reported)',
+                        'effect_concluded' => 'Affects function (by curator)',
+                        'curation_status_' => 'Curation status',
+                        'confirmation_status_' => 'Confirmation status',
+                      ),
+                 $this->buildViewEntry(),
+                 array(
+                        'mapping_flags_' => array('Automatic mapping', LEVEL_COLLABORATOR),
+                        'owned_by_' => 'Owner',
+                        'status' => array('Variant data status', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
+                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
+                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
+                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                 )
         );
-
         if (!LOVD_plus) {
             unset($this->aColumnsViewEntry['curation_status_']);
             unset($this->aColumnsViewEntry['confirmation_status_']);
@@ -202,8 +196,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                     'effect' => array(
                         'view' => array('Effect', 70),
                         'db'   => array('e.name', 'ASC', true),
-                        'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                          'The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                        'legend' => array('The variant\'s effect on a protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                            'The variant\'s effect on a protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                 )
             ),
             (!$_SETT['customization_settings']['variant_viewlist_show_allele']? array() :
@@ -287,7 +281,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
     function checkFields ($aData, $zData = false)
     {
-        global $_AUTH, $_CONF, $_SETT;
+        global $_AUTH, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -300,9 +294,19 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
             $this->aCheckMandatory[] = 'effect_concluded';
-        } elseif (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
-            // Submitters must fill in the variant effect field; '0' is not allowed for them.
-            unset($aData['effect_reported']);
+        }
+
+        if (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
+            // `effect_reported` is not allowed to be '0' (Not classified) when user is a submitter
+            // or when the variant has status '9' (Public).
+            if ($_AUTH['level'] < LEVEL_CURATOR) {
+                // Remove the mandatory `effect_reported` field to throw an error.
+                unset($aData['effect_reported']);
+            } elseif (isset($aData['statusid']) && $aData['statusid'] == STATUS_OK) {
+                // Show error for curator/manager trying to publish variant without effect.
+                lovd_errorAdd('effect_reported', 'The \'Affects function (as reported)\' field ' .
+                    'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' . $_SETT['data_status'][STATUS_OK] . '".');
+            }
         }
 
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.
@@ -398,8 +402,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                  $this->buildForm(),
                  array(
-                        array('Affects function (reported)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
-            'effect' => array('Affects function (concluded)', '', 'select', 'effect_concluded', 1, $_SETT['var_effect'], false, false, false),
+                        array('Affects function (as reported)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
+            'effect' => array('Affects function (by curator)', '', 'select', 'effect_concluded', 1, $_SETT['var_effect'], false, false, false),
                         'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),

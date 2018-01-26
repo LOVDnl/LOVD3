@@ -4,8 +4,103 @@
  *
  *************/
 
-/**************************
- * 3.0 Build 19
+/***************************************
+ * 3.0 Build 20a (patch 01) (tag:3.0-20)
+ * 2017-10-17
+ ***********/
+ * Fixed bug; Internet Explorer users could no longer operate any of the data
+   listings.
+
+
+/***************************
+ * 3.0 Build 20
+ * 2017-10-10
+ *********/
+ * Fixed bug; The link to the Reading Frame Checker was a bit malformed when the
+   gene had no variants to show.
+   Closes #237: "Link to reading frame checker improperly displayed for some
+   genes".
+ * Fixed bug; The LOVD2 to LOVD3 converter script did not translate submitter
+   IDs properly.
+   Closes #238: "Submitter IDs not translated in LOVD2 conversion".
+ * Fixed bug; variants_found field was missing in LOVD2 to LOVD3 conversion
+   output for the section screenings. Now defaults to "1".
+   Closes #243: "variants_found missing in LOVD2 to LOVD3 conversion output"
+ * On user's account pages, the number of phenotype entries owned is now also
+   mentioned. We can't link to it however, because there is no system-wide
+   phenotype data listing, but only gene-specific listings.
+   Closes #59: "Add phenotype entries to list of 'Data owner for...'
+   information".
+ * Show link to HPO on disease page.
+   Closes #107: "Link on disease page to HPO".
+ * Added feature; if there is only a single gene present in the database,
+   visitors to the homepage will be redirected to that gene's page instead of
+   the gene list.
+   Closes #98: "Configurable homepage".
+ * Fixed bug; The variant mapper gets stuck when encountering variants with no
+   position set.
+ * Improved message that the curator sees, when he tries to disable a custom
+   column that has already been disabled for all his genes.
+   Closes #162: "Confusing message when curator disables custom column".
+ * Added links to overviews of created entries on user page.
+   Closes #190: "Add links to records created by user on user's profile page".
+ * The "Panel size" and "ID of panel this entry belongs to" fields on the
+   individuals data entry form have clearer descriptions.
+   Closes: #191: "Panel size description could be improved".
+ * Fixed bug; A variant could be made public when "Affects function (reported)"
+   was set to "Not classified".
+   Closes #213: "Curator is allowed to leave `effect_reported` set to
+   unclassified."
+ * Removed redundant "View" in all page titles. E.g. "View all genes" became
+   "All genes".
+   Closes #206: "Gene homepage title has unnecessary word 'view'".
+ * Fixed bug; When the LOVD logo was customized, the page header would sometimes
+   overlap the page data.
+   Closes #277: "The page header isn't properly displayed when system logo is
+   changed".
+ * Added script to fix known errors in variant positions. The script has been
+   added to the scripts folder.
+ * Let screening page show linked variants, even when `variants_found` flag is
+   not set.
+   Closes #242: "Display of screening with linked variants".
+ * Fixed bug; Importing a phenotype entry without specifying a disease ID
+   resulted in a fatal error.
+   Closes #245: "Import file parsing fails with a fatal error when the diseaseid
+   field is left empty for a phenotype record".
+ * Fixed bug; Colleagues couldn't be assigned with MySQL's default strict mode.
+   Closes #283: "Can not add colleagues that are not allowed to edit with
+   MySQL's strict mode enabled".
+ * New effect categories for variants that affect protein function but are
+   either not associated with the individual's disease phenotype or not
+   associated with any known disease phenotype.
+   Closes #261: "Additional variant effect values".
+ * Fixed bug; When automatically mapping variants of genes on the antisense
+   strand, the variant positions were stored in the wrong order.
+   Closes #58: "Extract positions from variant description".
+ * Fixed bug; The message shown when a data listing had no results was sometimes
+   unclear.
+   Closes #189: "Viewlist 'no results' warning message sometimes unclear".
+ * Implemented some speed improvements, mostly making a big difference in larger
+   databases or on servers with limited resources.
+ * Added feature for the unique variant view to show only entries where a
+   certain column has different values. This can be useful for quickly finding
+   variants where, for instance, different observations have different variant
+   effects set. The feature is available under the options wheel for curators
+   and up.
+   Closes #202: "Overview of variants with multiple classifications".
+ * Fixed bug; Sometimes search arguments in data listings got lost when using
+   the browser's back button.
+   Closes #292: "Some viewlists lose filters when using browser back button".
+ * Fixed bug; Sorting the unique variant view sometimes failed on newer MySQL
+   servers.
+   Closes #291: "Query error on sorting unique variants viewlist".
+ * Fixed issues sometimes showing up on Windows servers, like with the data
+   import not working.
+ * The LOVD2-style API can include the variant effect now, if requested.
+
+
+/***************************
+ * 3.0 Build 19 (tag:3.0-19)
  * 2017-06-19
  *********/
  * Fixed bug; Transcripts could not easily be added to variants anymore. This
@@ -97,8 +192,8 @@
    Closes #205: "The "select all" feature in the options menu is not working".
 
 
-/**************************
- * 3.0 Build 18
+/***************************
+ * 3.0 Build 18 (tag:3.0-18)
  * 2016-12-23
  *********/
  * Make header stick to the top of the browser's viewport, such that the links
@@ -203,7 +298,7 @@
    using this feature may have destructive consequences.
 
 
-/**************************
+/***************************
  * 3.0 Build 16 (tag:3.0-16)
  * 2016-06-24
  *********/
@@ -241,7 +336,7 @@
    gene" page is loaded.
 
 
-/**************************
+/***************************
  * 3.0 Build 15 (tag:3.0-15)
  * 2016-05-02
  *********/
@@ -1266,8 +1361,6 @@
  * The screenings & individuals pages now have gene specific page, which shows
    the entries that have been screened for the currently selected gene.
  * Mails are now being sent to the appropriate users after an edit of data.
- * Submission emails now have their Reply-To set to the curators and submitters,
-   so that both parties can just reply to end up with the correct addressees.
 
 
 /*******************

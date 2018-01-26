@@ -16,7 +16,7 @@ class FinishIndividualDiagnosedWithCMTTest extends LOVDSeleniumWebdriverBaseTest
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View individual"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Individual"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/00000001$/', $this->driver->getCurrentURL()));
     }

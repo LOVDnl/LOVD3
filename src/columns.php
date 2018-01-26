@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2017-10-13
- * For LOVD    : 3.0-18
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -96,7 +96,11 @@ if (PATH_COUNT < 3 && !ACTION) {
     }
     print('        <LI class="icon"><A click="lovd_openWindow(\'' . lovd_getInstallURL() . 'download/columns' . (empty($_PE[1])? '' : '/' . $_PE[1]) . '\', \'ColumnDownload\', 800, 500);"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries (full data)</A></LI>' . "\n" .
           '      </UL>' . "\n\n");
-    $_DATA->viewList('Columns', $aSkip, false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
+    $aVLOptions = array(
+        'cols_to_skip' => $aSkip,
+        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+    );
+    $_DATA->viewList('Columns', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -115,7 +119,7 @@ if (PATH_COUNT > 2 && !ACTION) {
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
 
-    define('PAGE_TITLE', 'View custom data column ' . $sColumnID);
+    define('PAGE_TITLE', 'Custom data column ' . $sColumnID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1770,7 +1774,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             // Column has already been removed from everything it can be removed from.
             $_T->printHeader();
             $_T->printTitle();
-            lovd_showInfoTable('This column has already been removed from all ' . $aTableInfo['unit'] . 's.', 'stop');
+            lovd_showInfoTable('This column has already been removed from all ' .
+                $aTableInfo['unit'] . 's' . (($_AUTH['level'] >= LEVEL_MANAGER)? '' :
+                ' which you are authorized to modify') . '.', 'stop');
             $_T->printFooter();
             exit;
         }

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-06-06
- * For LOVD    : 3.0-19
+ * Modified    : 2017-10-17
+ * For LOVD    : 3.0-20
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -79,7 +79,8 @@ function lovd_AJAX_processViewListHash ()
         }
 
         // Values which are NO LONGER in the Hash (added search term, then back button) need to be removed!!!
-        $(oForm).find('input[name^="search_"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+        // Only for visible search fields (hidden search inputs are set by server).
+        $(oForm).find('input[name^="search_"][type!="hidden"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name^="page"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name="order"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
 
@@ -570,8 +571,8 @@ function lovd_getFROptionsElement (sViewListID)
 
 
 
-function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeight,
-                                   sViewListID, sViewListDivSelector)
+function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname, tableHeight,
+                                   sViewListID, sViewListDivSelector, sTooltip, callback)
 {
     // Show an overlay element for the viewlist column denoted by targetTH.
     // The overlay element is given class sOverlayClassname and has a height
@@ -581,11 +582,11 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
     // Place DIVs overlaying table columns to get column selection.
     var overlayDiv = $().add('<DIV class="' + sOverlayClassname + '"></DIV>');
     var ePos = $(targetTH).offset();
-    var bAllowFindAndReplace = $(targetTH).data('allowfnr') == '1';
+    // var bAllowFindAndReplace = $(targetTH).data('allowfnr') == '1';
 
     // Show 'not-allowed' cursor type for non-custom columns.
     var overlayCursor = 'not-allowed';
-    if (bAllowFindAndReplace) {
+    if (bSelectable) {
         overlayCursor = 'pointer';
     }
 
@@ -600,7 +601,7 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
     });
 
     // Only make custom columns selectable.
-    if (bAllowFindAndReplace) {
+    if (bSelectable) {
         var oCurrentOptions = {
             sFieldname: $(targetTH).data('fieldname'),
             sDisplayname: $(targetTH).text().trim(),
@@ -617,11 +618,12 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
 
             // Open F&R options menu (including tooltip, which closes on next
             // click event).
-            lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
+            // lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
+            callback(sViewListID, oCurrentOptions);
         });
     } else {
         overlayDiv.on('click', function () {
-            alert('This column is not available for Find & Replace.');
+            alert('This column is not available.');
         });
     }
 
@@ -631,7 +633,7 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
         // Show tooltip near first column.
         $(targetTH).tooltip({
             items: targetTH,
-            content: 'Select a column to use for Find & Replace',
+            content: sTooltip,
             disabled: true, // don't show tooltip on mouseover
             position: {
                 my: 'left bottom',
@@ -656,9 +658,17 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
 
 
 
-function lovd_FRColumnSelector (sViewListID)
+function lovd_columnSelector (sViewListID, colClickCallback, sTooltip, sDataAttribute)
 {
     // Show a find & replace column selector for the given viewlist.
+    // Params:
+    // sDataAttribute   Determine whether column is selectable based on "data-"
+    //                  atribute in column heading (TH element). If undefined
+    //                  empty string, all columns are selectable.
+
+    if (typeof sDataAttribute == "undefined") {
+        sDataAttribute = '';
+    }
 
     if (!FRState.hasOwnProperty(sViewListID)) {
         FRState[sViewListID] = {};
@@ -679,8 +689,12 @@ function lovd_FRColumnSelector (sViewListID)
     // it.
     var sOverlayClassname = 'vl_overlay';
     $(sVLTableSelector).find('th').each(function (index) {
-        lovd_FRShowOverlayColumn(index, this, sOverlayClassname, tableHeight,
-                                 sViewListID, sViewListDivSelector);
+        // Decide whether current column is selectable based on presence of
+        // certain data attribute.
+        bSelectable = $(this).is('[data-fieldname]'); // Disable non-content cols like checkbox
+        bSelectable &= (sDataAttribute == '' || $(this).data(sDataAttribute) == '1');
+        lovd_ShowOverlayColumn(index, bSelectable, this, sOverlayClassname, tableHeight,
+                               sViewListID, sViewListDivSelector, sTooltip, colClickCallback);
     });
 
     // Capture clicks outside the column overlays to cancel the F&R action.
@@ -933,6 +947,30 @@ function lovd_passAndRemoveViewListRow (sViewListID, sRowID, aRowData, callback)
 
     // Function call to callback with the ViewList row as argument.
     callback(aRowData);
+}
+
+
+
+
+
+function lovd_toggleMVSCol (sViewListID, oColumn)
+{
+    // Add or remove (depending on its presence) multivalued search argument
+    // oColumn to a semicolon-separated list stored in form field.
+    var sMVSCol = oColumn.sFieldname;
+    var oMVSInput = $('#viewlistForm_' + sViewListID + ' input[name="MVSCols"]');
+    var aCurrentCols = [];
+    if (oMVSInput.val().length > 0) {
+        aCurrentCols = oMVSInput.val().split(';');
+    }
+
+    if ($.inArray(sMVSCol, aCurrentCols) >= 0) {
+        aCurrentCols.splice(aCurrentCols.indexOf(sMVSCol), 1);
+    } else {
+        aCurrentCols.push(sMVSCol);
+    }
+    oMVSInput.val(aCurrentCols.join(';'));
+    lovd_AJAX_viewListSubmit(sViewListID);
 }
 
 

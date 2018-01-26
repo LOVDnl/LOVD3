@@ -9,7 +9,7 @@ class PostFinishAddVariantLocatedWithinGeneToCMTTest extends LOVDSeleniumWebdriv
     public function testPostFinishAddVariantLocatedWithinGeneToCMT()
     {
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertContains("/src/variants/0000000331", $this->driver->getCurrentURL());
         $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));

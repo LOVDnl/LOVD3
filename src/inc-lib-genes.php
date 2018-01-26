@@ -417,9 +417,9 @@ function lovd_getUDForGene ($sBuild, $sGene)
     $sUD = '';
 
     // Let's get the mapping information.
-    $sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene));
+    $sJSONResponse = lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene);
     // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but file_get_contents() just returns false.
-    if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
+    if ($sJSONResponse && $aResponse = json_decode(implode("\n", $sJSONResponse), true)) {
         $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
         $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
         $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
