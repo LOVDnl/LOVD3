@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-16
+ * Modified    : 2018-01-26
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -164,6 +164,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                  $this->buildViewEntry(),
                  array(
                         'mapping_flags_' => array('Automatic mapping', LEVEL_COLLABORATOR),
+                        'average_frequency_' => 'Average frequency (large NGS studies)',
                         'owned_by_' => 'Owner',
                         'status' => array('Variant data status', LEVEL_COLLABORATOR),
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
