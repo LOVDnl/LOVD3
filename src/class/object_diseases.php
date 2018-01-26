@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2017-07-25
- * For LOVD    : 3.0-20
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -242,7 +242,7 @@ class LOVD_Disease extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_AUTH, $_DB;
@@ -256,7 +256,7 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol',
                         'name',
                       );
-        $aData = parent::checkFields($aData);
+        $aData = parent::checkFields($aData, $zData, $aOptions);
 
         if (!empty($aData['id_omim']) && !preg_match('/^[1-9]\d{5}$/', $aData['id_omim'])) {
             lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');

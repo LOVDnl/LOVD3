@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2016-09-15
- * For LOVD    : 3.0-17
+ * Modified    : 2018-01-26
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -159,7 +159,7 @@ class LOVD_SharedColumn extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
 
@@ -171,7 +171,7 @@ class LOVD_SharedColumn extends LOVD_Object {
                         'width',
                       );
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // Width can not be less than 20 or more than 500.
         // These numbers are also defined in object_columns.php and inc-js-columns.php.
@@ -278,7 +278,7 @@ class LOVD_SharedColumn extends LOVD_Object {
                 $zData['row_link'] = (ctype_digit($this->sObjectID)? 'diseases' : 'genes') . '/' . $this->sObjectID . '/columns/' . $zData['colid']; // Note: I chose not to use rawurlencode() here!
                 $zData['colid_']   = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['colid'] . '</A>';
             }
-            $zData['form_type_']  = lovd_describeFormType($zData);
+            $zData['form_type_'] = $this->describeFormType($zData);
         } else {
             // Remove unnecessary columns.
             if ($zData['edited_by'] == NULL) {

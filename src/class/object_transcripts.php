@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-05-15
- * For LOVD    : 3.0-19
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -150,11 +150,11 @@ class LOVD_Transcript extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();

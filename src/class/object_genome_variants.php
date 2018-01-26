@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-10
+ * Modified    : 2018-01-16
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -127,8 +127,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'individualid_' => 'Individual ID',
                         'chromosome' => 'Chromosome',
                         'allele_' => 'Allele',
-                        'effect_reported' => 'Affects function (reported)',
-                        'effect_concluded' => 'Affects function (concluded)',
+                        'effect_reported' => 'Affects function (as reported)',
+                        'effect_concluded' => 'Affects function (by curator)',
                         'curation_status_' => 'Curation status',
                         'confirmation_status_' => 'Confirmation status',
                       ),
@@ -160,8 +160,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'effect' => array(
                                     'view' => array('Effect', 70),
                                     'db'   => array('e.name', 'ASC', true),
-                                    'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                    'legend' => array('The variant\'s effect on a protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                                                      'The variant\'s effect on a protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
                         'allele_' => array(
                                     'view' => array('Allele', 120),
                                     'db'   => array('a.name', 'ASC', true),
@@ -227,7 +227,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_AUTH, $_SETT;
 
@@ -252,7 +252,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                 unset($aData['effect_reported']);
             } elseif (isset($aData['statusid']) && $aData['statusid'] == STATUS_OK) {
                 // Show error for curator/manager trying to publish variant without effect.
-                lovd_errorAdd('effect_reported', 'The \'Affects function (reported)\' field ' .
+                lovd_errorAdd('effect_reported', 'The \'Affects function (as reported)\' field ' .
                     'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' . $_SETT['data_status'][STATUS_OK] . '".');
             }
         }
@@ -273,7 +273,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         lovd_checkXSS();
     }
@@ -324,7 +324,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
         $aTranscriptEffects = array();
         $aTranscriptsForm = array();
-        if (!empty($_DATA['Transcript'])) {
+        if (is_array($_DATA) && !empty($_DATA['Transcript'])) {
             foreach (array_keys($_DATA['Transcript']) as $sGene) {
                 $aTranscriptsForm = array_merge($aTranscriptsForm, $_DATA['Transcript'][$sGene]->getForm());
 
@@ -358,8 +358,8 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                  $this->buildForm(),
                  array(
-   'effect_reported' => array('Affects function (reported)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
-  'effect_concluded' => array('Affects function (concluded)', '', 'select', 'effect_concluded', 1, $_SETT['var_effect'], false, false, false),
+   'effect_reported' => array('Affects function (as reported)', '', 'select', 'effect_reported', 1, $_SETT['var_effect'], false, false, false),
+  'effect_concluded' => array('Affects function (by curator)', '', 'select', 'effect_concluded', 1, $_SETT['var_effect'], false, false, false),
                         'hr',
       'general_skip' => 'skip',
            'general' => array('', '', 'print', '<B>General information</B>'),

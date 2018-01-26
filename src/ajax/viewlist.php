@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2017-11-20
+ * Modified    : 2018-01-16
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -106,7 +106,7 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
 
         // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
         // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
-        if (in_array($sObjectID, array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscriptUnique,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_GET['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_GET['search_transcriptid'], $_GET['id']))->fetchColumn())) {
+        if (in_array($sObjectID, array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscriptUnique,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_REQUEST['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
             die(AJAX_NO_AUTH);
         }
         lovd_isAuthorized('gene', $nID); // Authorize for the gene currently loaded.
@@ -119,6 +119,16 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
 if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
     // If not authorized, die with error message.
     die(AJAX_NO_AUTH);
+}
+
+// Load the columns to skip from the request. The external viewer uses this.
+$aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
+
+// Submitters should not be allowed to retrieve more information
+//  about users than the info the access sharing page gives them.
+if ($sObject == 'User' && $_AUTH['level'] < LEVEL_MANAGER) {
+    // Force removal of certain columns, regardless of this has been requested or not.
+    $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
 }
 
 // Managers, and sometimes curators, are allowed to download lists...
@@ -194,6 +204,11 @@ if (POST && ACTION == 'applyFR') {
     die(AJAX_DATA_ERROR);
 }
 
-// Show the viewlist (parameters are assumed to be in $_SESSION).
-$_DATA->viewList($_GET['viewlistid']);
+// Show the viewlist.
+// Parameters are assumed to be in $_SESSION, only cols_to_skip can be overridden. This is for the external viewer.
+$aOptions = array();
+if ($aColsToSkip) {
+    $aOptions['cols_to_skip'] = $aColsToSkip;
+}
+$_DATA->viewList($_GET['viewlistid'], $aOptions);
 ?>

@@ -147,7 +147,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -155,7 +155,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                         'owned_by',
                         'statusid',
                       );
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         lovd_checkXSS();
     }

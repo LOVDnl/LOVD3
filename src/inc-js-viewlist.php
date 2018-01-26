@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-10-17
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-15
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -303,8 +303,10 @@ if (!isset($_GET['nohistory'])) {
                         if (prevHash != 'no_rehash') {
                             // The following adds the page to the history in Firefox, such that the user *can* push the back button.
                             // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
-                            $(oForm).find('input').each(function(){
-                                if (!this.disabled && this.value && this.name != 'viewlistid' && this.name != 'object' && this.name.substring(0,6) != 'check_') {
+                            $(oForm).find('input[type!="button"]').each(function(){
+                                if (!this.disabled && this.value && this.name != 'viewlistid' &&
+                                    this.name != 'object' && this.name.substring(0,6) != 'check_' &&
+                                    this.name.substring(0,2) != 'FR') {
                                     sHash += (sHash? '&' : '') + this.name + '=' + encodeURIComponent(this.value);
                                 }
                             });
@@ -582,7 +584,7 @@ function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname
     // Place DIVs overlaying table columns to get column selection.
     var overlayDiv = $().add('<DIV class="' + sOverlayClassname + '"></DIV>');
     var ePos = $(targetTH).offset();
-    // var bAllowFindAndReplace = $(targetTH).data('allowfnr') == '1';
+    // var bAllowFindAndReplace = $(targetTH).data('allow_find_replace') == '1';
 
     // Show 'not-allowed' cursor type for non-custom columns.
     var overlayCursor = 'not-allowed';
@@ -714,6 +716,12 @@ function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
     }
     if (typeof oNewOptions != 'undefined') {
         $.extend(FRState[sViewListID], oNewOptions);
+    }
+
+    if (FRState[sViewListID]['phase'] == 'preview' && FRState[sViewListID]['bShowSubmit']) {
+        // When previewing changes, only show submit button when there are no
+        // errors displayed.
+        FRState[sViewListID]['bShowSubmit'] = $('div.err').length == 0;
     }
 
     if (FRState[sViewListID]['phase'] == 'input' || FRState[sViewListID]['phase'] == 'preview') {
