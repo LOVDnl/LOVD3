@@ -1254,7 +1254,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                 // Only instantiate an object when a gene is found for a transcript.
                 if ($sGene) {
                     if (!isset($aSection['objects'][$sGene])) {
-                        $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
+                        $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene, '', false);
                     }
                     $aSection['object'] =& $aSection['objects'][$sGene];
                 }
@@ -1418,7 +1418,14 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
 
                 // Use the object's checkFields() to have the values checked.
                 $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
-                $aSection['object']->checkFields($aLine, $zData);
+                $aCheckFieldsOptions = array(
+                    'mandatory_password' => false,  // Password field is not mandatory.
+                    'fieldname_as_header' => true,  // Use field name in errors instead of form field header.
+                    'trim_fields' => false,         // No trimming of whitespace.
+                    'explode_strings' => true,      // Multiple selection lists are input as simple strings here.
+                    'show_select_alts' => true,     // Show alternatives in errors for select fields.
+                );
+                $aSection['object']->checkFields($aLine, $zData, $aCheckFieldsOptions);
                 for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
                     // When updating, if a error is triggered by a field that is
                     // not in the file, then this error is unrelated to the data

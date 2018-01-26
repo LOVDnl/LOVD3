@@ -37,6 +37,7 @@
             <file>shared_tests/test_submission_api_fail.php</file>
             <file>shared_tests/test_submission_api_success.php</file>
             <file>admin_tests/delete_gene_IVD.php</file>
+            <file>admin_tests/multi_value_search.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="authorization_tests">

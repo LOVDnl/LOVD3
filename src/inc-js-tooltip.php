@@ -33,7 +33,7 @@ header('Content-type: text/javascript; charset=UTF-8');
 header('Expires: ' . date('r', time()+(180*60)));
 ?>
 
-// Firstly, create the new tooltop DIV.
+// Firstly, create the new tooltip DIV.
 var oTT = window.document.createElement('div');
 oTT.setAttribute('id', 'tooltip');
 oTT.className = 'tooltip';

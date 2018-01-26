@@ -1,0 +1,239 @@
+
+
+# LOVD viewlist find & replace
+
+
+## Execution flow
+
+Flow of execution and user decisions for applying a find and replace 
+(F&R) action in a viewlist. The execution is directed in the front-end
+javascript code, which is described in the next section. The php 
+backend does most of the work to generate html regarding F&R in the 
+boxes marked 1 and 2 and are described in more detail below.
+
+***********************************************************
+*        *                 .-------------.                *
+*        |                 |             |                *
+*        v                 |             v                *
+* .-------------.          |          .-----.             *
+* |  Original   |          |         /       \            *
+* |  viewlist   |<--+------(--------+ Submit  +           *
+* '------+------'   |      |  Cancel \ form? /            *
+*        |          |      |          '--+--'             *
+*        |          |      |             |                *
+*        v          |      |             | Preview        *
+*     .-----.       |      |             v                *
+*    / Click \      |      |      .-------------.         *
+*   + F&R menu+-----+      |      |1  Preview   |         *
+*    \ item? /  No  |      |      |   Changes   |<------. *
+*     '--+--'       |      |      '------+------'       | *
+*        | Yes      |      |             |              | *
+*        |          |      |             v              | *
+*        v          |      |          .-----.           | *
+* .-------------.   |      |         /       \          | *
+* |Select column|   +------(--------+ Submit  +---------+ *
+* |   dialog    |   |      |  Cancel \ form? /  Preview | *
+* '------+------'   |      |          '--+--'           | *
+*        |          |      |             | Submit       | *
+*        |          |      |             |              | *
+*        v          |      |             v              | *
+*     .-----.       |      |          .-----.           | *
+*    / Click \      |      |         /       \          | *
+*   +suitable +-----+      |        + Confirm?+---------' *
+*    \column?/  No (click  |         \       /  Cancel    *
+*     '--+--'   elsewhere) |          '--+--'             *
+*        | Yes             |             | OK             *
+*        |                 |             |                *
+*        v                 |             v                *
+* .-------------.          |      .-------------.         *
+* | F&R options |          |      |2  Changed   |         *
+* |    menu     |          |      |   Viewlist  |         *
+* '------+------'          |      '------+------'         *
+*        |                 |             |                *
+*        |                 |             v                *
+*        '-----------------'             *                *
+*                                                         *
+***********************************************************
+
+
+## Process view
+
+### Frontend
+
+Javascript execution flow. Manual interactions are denoted between 
+parentheses.
+
+*****************************************************************************
+* Page                                                                      *
+* ||                                                                        *
+* ||       columnSelector()                                                 *
+* ||              ||                                                        *
+* || (click menu  ||                                                        *
+* ||  option)     ||                                                        *
+* || viewlistID   ||      showOverlayColumn()                               *
+* || callback     ||               ||                                       *
+* || tooltip      ||               ||     FRShowOptionsMenu()               *
+* || data-attr    ||  viewlistID   ||              ||                       *
+* ||------------->||  callback     ||  (click col. ||  getFROptionsElement()*
+* ||              ||  targetTH     ||   callback)  ||              ||       *
+* ||              ||-------------->||  viewlistID  ||              ||       *
+* ||                               ||  options     ||              ||       *
+* ||                               ||------------->||              ||       *
+* ||                                               ||  ViewlistID  ||       *
+* ||                                               ||------------->||       *
+* ||                                               ||              ||       *
+* ||                                               ||  FROptions   ||       *
+* ||                                               ||<-------------||       *
+* ||                                                                        *
+* ||                     FRPreview()                                        *
+* ||                        ||                                              *
+* || (click preview button) ||           viewlistSubmit()                   *
+* || ViewlistID             ||                  ||                          *
+* ||----------------------->||                  ||                          *
+* ||                        ||  ViewlistID      ||                          *
+* ||                        ||----------------->||                          *
+* ||                                                                        *
+* ||                     FRSubmit()                                         *
+* ||                        ||                                              *
+* || (click submit button)  ||             viewlist.php?applyFR             *
+* || ViewlistID             ||                       ||                     *
+* ||----------------------->||                       ||                     *
+* ||                        ||  FR options form      ||                     *
+* ||                        ||---------------------->||                     *
+* ||                        ||                       ||                     *
+* ||                        ||  Return code          ||                     *
+* ||                        ||<----------------------||                     *
+*****************************************************************************
+
+
+### Preview (php backend)
+
+Process for generating preview (box 1 in flow diagram). Note that 
+function `generateViewListFRReplaceStatement()` is abbreviated to 
+`generateVLFRReplaceStmt()` for readability purposes. The main 
+operations are done in `previewColumnFindAndReplace()` where the 
+preview column is added to the viewlist and the SQL query is amended.
+
+*****************************************************************************
+* LOVD_Object::viewlist()                                                   *
+* ||                                                                        *
+* ||  previewColumnFindAndReplace()                                         *
+* ||               ||                                                       *
+* || FRFieldname   ||        getFieldInfo()                                 *
+* || FRSearchValue ||              ||                                       *
+* || FRReplaceVal. ||              ||  generateFRSearchCondition()          *
+* || FROptions     ||              ||          ||                           *
+* ||-------------->||  FRFieldname ||          ||  generateVLFRReplaceStmt()*
+* ||               ||------------->||          ||   ||                      *
+* ||               ||              ||          ||   ||  checkFieldFRResult()*
+* ||               ||  FieldName   ||          ||   ||       ||             *
+* ||               ||  TableName   ||          ||   ||       ||             *
+* ||               ||  TableRef    ||          ||   ||       ||             *
+* ||               ||<-------------||          ||   ||       ||             *
+* ||               ||                          ||   ||       ||             *
+* ||               ||  FieldName               ||   ||       ||             *
+* ||               ||  FRSearchValue           ||   ||       ||             *
+* ||               ||  FROptions               ||   ||       ||             *
+* ||               ||------------------------->||   ||       ||             *
+* ||               ||                          ||   ||       ||             *
+* ||               ||  SearchCondition         ||   ||       ||             *
+* ||               ||<-------------------------||   ||       ||             *
+* ||               ||                               ||       ||             *
+* ||               ||  TableName                    ||       ||             *
+* ||               ||  FieldName                    ||       ||             *
+* ||               ||  FRSearchValue                ||       ||             *
+* ||               ||  FRReplaceValue               ||       ||             *
+* ||               ||  FROptions                    ||       ||             *
+* ||               ||------------------------------>||       ||             *
+* ||               ||                               ||       ||             *
+* ||               ||  ReplaceStatement             ||       ||             *
+* ||               ||<------------------------------||       ||             *
+* ||               ||                                        ||             *
+* ||               ||  FieldName                             ||             *
+* ||               ||  TableName                             ||             *
+* ||               ||  TableRef                              ||             *
+* ||               ||  SearchCondition                       ||             *
+* ||               ||  ReplaceStatement                      ||             *
+* ||               ||--------------------------------------->||             *
+* ||               ||                                        ||             *
+* ||               ||  Success                               ||             *
+* ||               ||  AffectedRows                          ||             *
+* ||               ||<---------------------------------------||             *
+* || AffectedRows  ||                                                       *
+* ||<--------------||                                                       *
+*****************************************************************************
+
+
+### Submit (php backend)
+
+Process for applying find & replace action (box 2 in flow diagram). 
+Note that function `generateViewListFRReplaceStatement()` is 
+abbreviated to `generateVLFRReplaceStmt()` for readability purposes. 
+The main operations are done in `applyColumnFindAndReplace()` where the
+data is changed in the database.
+
+*******************************************************************************
+* viewlist.php                                                                *
+* ||                                                                          *
+* ||  applyColumnFindAndReplace()                                             *
+* ||               ||                                                         *
+* || FRFieldname   ||        getFieldInfo()                                   *
+* || FRSearchValue ||              ||                                         *
+* || FRReplaceVal. ||              ||  generateVLFRReplaceStmt()              *
+* || FROptions     ||              ||          ||                             *
+* ||-------------->||  FRFieldname ||          ||  generateFRSearchCondition()*
+* ||               ||------------->||          ||   ||                        *
+* ||               ||              ||          ||   ||  checkFieldFRResult()  *
+* ||               ||  FieldName   ||          ||   ||       ||               *
+* ||               ||  TableName   ||          ||   ||       ||               *
+* ||               ||  TableRef    ||          ||   ||       ||               *
+* ||               ||<-------------||          ||   ||       ||               *
+* ||               ||                          ||   ||       ||               *
+* ||               ||  TableName               ||   ||       ||               *
+* ||               ||  FieldName               ||   ||       ||               *
+* ||               ||  FRSearchValue           ||   ||       ||               *
+* ||               ||  FRReplaceValue          ||   ||       ||               *
+* ||               ||  FROptions               ||   ||       ||               *
+* ||               ||------------------------->||   ||       ||               *
+* ||               ||                          ||   ||       ||               *
+* ||               ||  ReplaceStatement        ||   ||       ||               *
+* ||               ||<-------------------------||   ||       ||               *
+* ||               ||                               ||       ||               *
+* ||               ||  FieldName                    ||       ||               *
+* ||               ||  FRSearchValue                ||       ||               *
+* ||               ||  FROptions                    ||       ||               *
+* ||               ||------------------------------>||       ||               *
+* ||               ||                               ||       ||               *
+* ||               ||  SearchCondition              ||       ||               *
+* ||               ||<------------------------------||       ||               *
+* ||               ||                                        ||               *
+* ||               ||  FieldName                             ||               *
+* ||               ||  TableName                             ||               *
+* ||               ||  TableRef                              ||               *
+* ||               ||  SearchCondition                       ||               *
+* ||               ||  ReplaceStatement                      ||               *
+* ||               ||--------------------------------------->||               *
+* ||               ||                                        ||               *
+* ||               ||  Success                               ||               *
+* ||               ||  AffectedRows                          ||               *
+* ||               ||<---------------------------------------||               *
+* || Success       ||                                                         *
+* ||<--------------||                                                         *
+*******************************************************************************
+
+
+## Notes
+
+The viewlist SELECT query is in some places used as a subquery to 
+display or filter the relevant records. The code assumes standard 
+naming of ID fields and table references. For example when replacing
+values in field "vot.Exon" an identifying column named "votid" is 
+expected.
+
+Currently the function `generateViewListFRReplaceStatement()` cannot
+handle cases where the source field is transformed in the viewlist 
+select statement. To handle such fields, the transformation should be
+reversed in the replace statement, with the change applied somehow.
+
+
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

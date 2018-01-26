@@ -228,7 +228,7 @@ class LOVD_Individual extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_DB;
 
@@ -244,7 +244,7 @@ class LOVD_Individual extends LOVD_Custom {
                       );
 
         // Checks fields before submission of data.
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         foreach (array('fatherid', 'motherid') as $sParentalField) {
             // This is not yet implemented correctly. These checks are implemented correctly in import.php in section "Individuals".

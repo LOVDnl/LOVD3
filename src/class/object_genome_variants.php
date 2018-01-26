@@ -227,7 +227,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_AUTH, $_SETT;
 
@@ -273,7 +273,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             }
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         lovd_checkXSS();
     }
@@ -323,7 +323,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         $aTranscriptsForm = array();
-        if (!empty($_DATA['Transcript'])) {
+        if (is_array($_DATA) && !empty($_DATA['Transcript'])) {
             foreach (array_keys($_DATA['Transcript']) as $sGene) {
                 $aTranscriptsForm = array_merge($aTranscriptsForm, $_DATA['Transcript'][$sGene]->getForm());
             }
