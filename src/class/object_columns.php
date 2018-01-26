@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2017-10-26
+ * Modified    : 2018-01-26
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -383,7 +383,7 @@ class LOVD_Column extends LOVD_Object {
             $zData['row_id']      = $zData['id'];
             $zData['row_link']    = 'columns/' . $zData['id']; // Note: I chose not to use rawurlencode() here!
             $zData['colid_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['colid'] . '</A>';
-            $zData['form_type_']  = lovd_describeFormType($zData);
+            $zData['form_type_']  = $this->describeFormType($zData);
         } else {
             // Remove unnecessary columns.
             if ($zData['edited_by'] == NULL) {
@@ -402,7 +402,7 @@ class LOVD_Column extends LOVD_Object {
             $zData['mandatory_']       = '<IMG src="gfx/mark_' . $zData['mandatory'] . '.png" alt="" width="11" height="11">';
             $zData['description_legend_short'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_short']));
             $zData['description_legend_full'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_full']));
-            $zData['form_type_']       = lovd_describeFormType($zData) . '<BR>' . $zData['form_type'];
+            $zData['form_type_']       = $this->describeFormType($zData) . '<BR>' . $zData['form_type'];
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';
 

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-12-11
+ * Modified    : 2018-01-26
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -133,7 +133,6 @@ class LOVD_Object {
                                                $aArgs, $aOptions) {
         // Perform a find and replace action for given viewlist column. Return
         // false if anything fails.
-        require_once ROOT_PATH . 'inc-lib-columns.php';
         global $_DB, $_AUTH;
 
         // Column should be configured to allow Find & Replace.
@@ -627,6 +626,39 @@ class LOVD_Object {
             }
         }
         return $q->rowCount();
+    }
+
+
+
+
+
+    function describeFormType ($zData)
+    {
+        // Returns sensible form type information based on form type code.
+
+        if (!is_array($zData) || empty($zData['form_type']) || substr_count($zData['form_type'], '|') < 2) {
+            return false;
+        }
+
+        $aFormType = explode('|', $zData['form_type']);
+        $sFormType = ucfirst($aFormType[2]);
+        switch ($aFormType[2]) {
+            case 'text':
+            case 'password':
+                $sFormType .= ' (' . $aFormType[3] . ' chars)';
+                break;
+            case 'textarea':
+                $sFormType .= ' (' . $aFormType[3] . ' cols, ' . $aFormType[4] . ' rows)';
+                break;
+            case 'select':
+                $nOptions = substr_count($zData['select_options'], "\r\n") + 1;
+                if ($nOptions) {
+                    $sFormType .= ' (' . ($aFormType[5] == 'true'? 'multiple; ' : '') . $nOptions . ' option' . ($nOptions == 1? '' : 's') . ')';
+                }
+                break;
+        }
+
+        return $sFormType;
     }
 
 
@@ -1503,8 +1535,6 @@ class LOVD_Object {
         // sFRReplaceValue      Replace value.
         // aOptions             F&R options (e.g. match at start of field)
 
-        require_once ROOT_PATH . 'inc-lib-columns.php';
-
         // Column should be configured to allow Find & Replace.
         if (empty($this->aColumnsViewList[$sFRViewListCol]['allow_find_replace'])) {
             lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' .
@@ -1731,7 +1761,6 @@ class LOVD_Object {
         // Handle multivalue filter request. I.e., show only records that have more than one
         // value for certain aggregated columns.
         if (!empty($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
-            require_once ROOT_PATH . 'inc-lib-columns.php';
             foreach ($aRequestMVSCols as $sMVSCol) {
                 list($sField,, $sTableRef) = $this->getFieldInfo($sMVSCol);
 
