@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2016-12-05
- * For LOVD    : 3.0-18
+ * Modified    : 2017-10-09
+ * For LOVD    : 3.0-20
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -17,6 +17,7 @@
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_position=g.1234_5678&position_match=exact|exclusive|partial
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_Variant%2FDNA=c.1234C>G (c.1234C%3EG)
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_Variant%2FDBID=DMD_01234
+ *  3.0-19       /api/rest.php/variants/{{ GENE }}?show_variant_effect=1
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?format=text/bed
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?format=text/bed&visibility=2
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?format=text/bed&PMID={{ PMID }}
@@ -29,7 +30,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -171,8 +172,10 @@ if ($sDataType == 'variants') {
         }
 
     } else {
+        // Normal API output; Atom feed with one entry per variant.
         // First build query.
-        $sQ = 'SELECT MIN(vog.id) AS id, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MAX(vog.position_g_start) AS position_g_start, MAX(vog.position_g_end) AS position_g_end, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times
+        // Note that the MIN()s and MAX()es don't mean much if $bUnique is false, since we'll group by the vog.id anyway.
+        $sQ = 'SELECT MIN(vog.id) AS id, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MAX(vog.position_g_start) AS position_g_start, MAX(vog.position_g_end) AS position_g_end, GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported, GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times
                FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                WHERE vot.transcriptid = ' . $nRefSeqID . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
@@ -247,6 +250,9 @@ if ($sDataType == 'variants') {
 } elseif ($sDataType == 'genes') {
     // Listing or simple request on gene symbol.
     // First build query.
+    // FIXME: All transcripts are listed here, ordered by the NCBI ID. However, the variant API chooses the first transcript based on its internal ID and shows only the variants on that one.
+    // FIXME: This causes a bit of a problem since varcache stores the transcripts string with the gene and doesn't know what transcript the variants are on until it reads out the variant list.
+    // FIXME: Decided to solve this for varcache by updating the NM in the database after the variants have been read. Leaving this here for now.
     $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi) AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ", ") AS curators
            FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id) LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
            WHERE 1=1';
@@ -412,6 +418,17 @@ if ($sDataType == 'variants') {
                     'Variant/DNA:' . htmlspecialchars($zData['VariantOnTranscript/DNA']) . "\n" .
                     'Variant/DBID:' . $zData['VariantOnGenome/DBID'] . "\n" .
                     'Times_reported:' . $zData['Times'];
+
+        // 2017-05-04; 3.0-19; Optionally, add the variant effect to the output.
+        // This addition will allow the central API to gather this info as well.
+        // Just dump everything there, all options. Don't simplify. Use a human
+        //  readable but concise format. Return all unique values given.
+        if (!empty($_GET['show_variant_effect'])) {
+            $sContent .= "\n" .
+                         'effect_reported:' . implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_reported']), $_SETT['var_effect_api'])) . "\n" .
+                         'effect_concluded:' . implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_concluded']), $_SETT['var_effect_api']));
+        }
+
         $_FEED->addEntry($sTitle, $sSelfURL, $sAltURL, $sID, $zData['created_by'], $zData['created_date'], $sContributors, $zData['updated_date'], '', 'text', $sContent);
     }
 

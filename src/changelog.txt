@@ -4,31 +4,196 @@
  *
  *************/
 
-/**************************
- * 3.0 Build 19
- * 2017-0?-??
+/***************************************
+ * 3.0 Build 20a (patch 01) (tag:3.0-20)
+ * 2017-10-17
+ ***********/
+ * Fixed bug; Internet Explorer users could no longer operate any of the data
+   listings.
+
+
+/***************************
+ * 3.0 Build 20
+ * 2017-10-10
+ *********/
+ * Fixed bug; The link to the Reading Frame Checker was a bit malformed when the
+   gene had no variants to show.
+   Closes #237: "Link to reading frame checker improperly displayed for some
+   genes".
+ * Fixed bug; The LOVD2 to LOVD3 converter script did not translate submitter
+   IDs properly.
+   Closes #238: "Submitter IDs not translated in LOVD2 conversion".
+ * Fixed bug; variants_found field was missing in LOVD2 to LOVD3 conversion
+   output for the section screenings. Now defaults to "1".
+   Closes #243: "variants_found missing in LOVD2 to LOVD3 conversion output"
+ * On user's account pages, the number of phenotype entries owned is now also
+   mentioned. We can't link to it however, because there is no system-wide
+   phenotype data listing, but only gene-specific listings.
+   Closes #59: "Add phenotype entries to list of 'Data owner for...'
+   information".
+ * Show link to HPO on disease page.
+   Closes #107: "Link on disease page to HPO".
+ * Added feature; if there is only a single gene present in the database,
+   visitors to the homepage will be redirected to that gene's page instead of
+   the gene list.
+   Closes #98: "Configurable homepage".
+ * Fixed bug; The variant mapper gets stuck when encountering variants with no
+   position set.
+ * Improved message that the curator sees, when he tries to disable a custom
+   column that has already been disabled for all his genes.
+   Closes #162: "Confusing message when curator disables custom column".
+ * Added links to overviews of created entries on user page.
+   Closes #190: "Add links to records created by user on user's profile page".
+ * The "Panel size" and "ID of panel this entry belongs to" fields on the
+   individuals data entry form have clearer descriptions.
+   Closes: #191: "Panel size description could be improved".
+ * Fixed bug; A variant could be made public when "Affects function (reported)"
+   was set to "Not classified".
+   Closes #213: "Curator is allowed to leave `effect_reported` set to
+   unclassified."
+ * Removed redundant "View" in all page titles. E.g. "View all genes" became
+   "All genes".
+   Closes #206: "Gene homepage title has unnecessary word 'view'".
+ * Fixed bug; When the LOVD logo was customized, the page header would sometimes
+   overlap the page data.
+   Closes #277: "The page header isn't properly displayed when system logo is
+   changed".
+ * Added script to fix known errors in variant positions. The script has been
+   added to the scripts folder.
+ * Let screening page show linked variants, even when `variants_found` flag is
+   not set.
+   Closes #242: "Display of screening with linked variants".
+ * Fixed bug; Importing a phenotype entry without specifying a disease ID
+   resulted in a fatal error.
+   Closes #245: "Import file parsing fails with a fatal error when the diseaseid
+   field is left empty for a phenotype record".
+ * Fixed bug; Colleagues couldn't be assigned with MySQL's default strict mode.
+   Closes #283: "Can not add colleagues that are not allowed to edit with
+   MySQL's strict mode enabled".
+ * New effect categories for variants that affect protein function but are
+   either not associated with the individual's disease phenotype or not
+   associated with any known disease phenotype.
+   Closes #261: "Additional variant effect values".
+ * Fixed bug; When automatically mapping variants of genes on the antisense
+   strand, the variant positions were stored in the wrong order.
+   Closes #58: "Extract positions from variant description".
+ * Fixed bug; The message shown when a data listing had no results was sometimes
+   unclear.
+   Closes #189: "Viewlist 'no results' warning message sometimes unclear".
+ * Implemented some speed improvements, mostly making a big difference in larger
+   databases or on servers with limited resources.
+ * Added feature for the unique variant view to show only entries where a
+   certain column has different values. This can be useful for quickly finding
+   variants where, for instance, different observations have different variant
+   effects set. The feature is available under the options wheel for curators
+   and up.
+   Closes #202: "Overview of variants with multiple classifications".
+ * Fixed bug; Sometimes search arguments in data listings got lost when using
+   the browser's back button.
+   Closes #292: "Some viewlists lose filters when using browser back button".
+ * Fixed bug; Sorting the unique variant view sometimes failed on newer MySQL
+   servers.
+   Closes #291: "Query error on sorting unique variants viewlist".
+ * Fixed issues sometimes showing up on Windows servers, like with the data
+   import not working.
+ * The LOVD2-style API can include the variant effect now, if requested.
+
+
+/***************************
+ * 3.0 Build 19 (tag:3.0-19)
+ * 2017-06-19
  *********/
  * Fixed bug; Transcripts could not easily be added to variants anymore. This
    was caused by the recent changes making LOVD compatible with the new default
    "ONLY_FULL_GROUP_BY" MySQL setting.
    Closes #167: "Manage transcripts feature doesn't allow addition of transcript
    anymore".
+ * Fixed bug; The new page header wasn't properly displayed in Firefox.
+   Closes #166: "New header does not take full width on Firefox".
  * Fixed several problems with MySQL's new default strict mode. LOVD wasn't
    installable, and transcripts couldn't be created if this setting was enabled.
+   Also, made some changes to make it easier to work with this MySQL version.
    Closes #143: "LOVD won't install with error "Invalid default value for
-   'start_date'""
-   Closes #173: "Installation failed on ubuntu 16"
+   'start_date'"".
+   Closes #173: "Installation failed on ubuntu 16".
+   Closes #185: "SQL only full group by error in DBID check".
+   Closes #210: "Default values for non-essential NOT NULL database fields".
  * Fixed bug; The "all variants affecting transcripts" view showed only one
    entry. This was caused by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
    Closes #176: "Viewlist entry count differs from what is displayed".
+ * Updated some code to get ready for newer PHP versions.
+   Closes #156: "LOVD uses old-style constructors".
  * Fixed bug; The gene's graphs pages only showed half of the graphs due to a
    query error introduced by the recent changes making LOVD compatible with the
    new default "ONLY_FULL_GROUP_BY" MySQL setting.
+ * Fixed bug; Gene editing page failed to save changes in certain (rare) cases.
+   Closes #200: "Fatal error on editing particular gene (on shared
+   installation)"
+ * Fixed bug; Single letter genes, like T, were not fully supported by LOVD.
+   Closes #106: "Single-letter gene "T" is not fully supported".
+ * Added feature to show variants in a certain genomic range, using the URL
+   format /variants/chr3:20-200000.
+   Closes #57: "Make all variants within a genomic range viewable".
+ * Improved variant list error message for genes without transcripts and genes
+   without variants.
+   Closes #89: "Misleading text "No transcripts or variants found"".
+ * Removed repeated error message during import if a checkbox field doesn't
+   contain a 0 or 1.
+ * When importing, the 'variants_found' field now allows for values higher than
+   1, even though they will be interpreted as 1, since the field is a flag.
+   Closes #82: "Minor improvements to import.php regarding the 'variants_found'
+   column".
+ * When a form field contains incorrect values (usally when importing), LOVD
+   won't print more than one error message about that field's value anymore.
+ * Included version 3.0-19 of the official LOVD Reference Sequence Parser
+   script.
+   - The "Include link to GenBank record" field in the final step sometimes
+     contained more text than just an GenBank record ID.
+ * Updated all links to the HGVS nomenclature to point to the new website.
+   Closes #208: "Links to deprecated HGVS nomenclature website".
+ * Clarified the link name to the exon/intron information table.
+   Closes #207: "Link to Exon/Intron table missing on gene homepage".
+ * Fixed Chrome again adding the username to data entry forms when the user had
+   told Chrome to save their password.
+ * Submission emails now have their Reply-To set to the curators and submitters,
+   so that both parties can just reply to end up with the correct addressees.
+   Closes #217: "Set Reply-To header for submission emails".
+ * Updated all links to the NCBI to use HTTPS.
+   Closes #219: "The Reference Sequence Parser no longer downloads GenBank files
+   over a proxy server".
+ * Added a LOVD2 to LOVD3 converter script. It allows for the import of an
+   LOVD2 data file, that together with a user ID translation table generates an
+   LOVD3 import file. The script has been added to the scripts folder.
+   Closes #96: "Include script to convert the LOVD2 download format to the
+   LOVD3 format".
+   Closes #155: "Undefined index notice in LOVD_Custom::checkFields()".
+ * Added the feature to allow the public to make downloads of public gene-
+   specific data, provided the curator has enabled this option.
+   Closes #78: "Download link missing on gene homepage".
+   Closes #175: "Download link missing from gene homepage for public, even if
+   setting is enabled".
+ * Included version 3.0-19 of the official LOVD Reading Frame Checker.
+   This script is ported from LOVD2 and allows you to quickly check whether a
+   whole-exon or multi-exon deletion or duplication leads to a in-frame or out-
+   of-frame change.
+   Closes #139: "Port reading frame checker from LOVD2".
+ * Upgraded the reCAPTCHA integration to version 2.
+   Closes #142: "Upgrade reCAPTCHA".
+ * Added feature to open links in tables in a new browser tab. Does not work
+   for some older browsers based on webkit.
+   Closes #196: "Let viewlist rows open link in new window with middle-click".
+ * Fixed bug with editing individuals with large numbers of diseases.
+   Closes #192: "Changes to individual not saved".
+ * Fixed occasional deadlocks when viewing and editing data at the same time.
+   Closes #233: "Deadlocks in ViewLists".
+ * Fixed bug; The "Select all" feature was not working anymore on some variant
+   views.
+   Closes #205: "The "select all" feature in the options menu is not working".
 
 
-/**************************
- * 3.0 Build 18
+/***************************
+ * 3.0 Build 18 (tag:3.0-18)
  * 2016-12-23
  *********/
  * Make header stick to the top of the browser's viewport, such that the links
@@ -133,7 +298,7 @@
    using this feature may have destructive consequences.
 
 
-/**************************
+/***************************
  * 3.0 Build 16 (tag:3.0-16)
  * 2016-06-24
  *********/
@@ -171,7 +336,7 @@
    gene" page is loaded.
 
 
-/**************************
+/***************************
  * 3.0 Build 15 (tag:3.0-15)
  * 2016-05-02
  *********/

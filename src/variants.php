@@ -4,15 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-01-13
- * For LOVD    : 3.0-19
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Zuotian Tatum <Z.Tatum@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -69,9 +69,11 @@ if (!ACTION && !empty($_GET['select_db'])) {
 
 
 
-if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) {
+if (!ACTION && (empty($_PE[1]) ||
+        preg_match('/^(chr[0-9A-Z]{1,2})(?::([0-9]+)-([0-9]+))?$/', $_PE[1], $aRegionArgs))) {
     // URL: /variants
     // URL: /variants/chrX
+    // URL: /variants/chr3:20-200000
     // View all genomic variant entries, optionally restricted by chromosome.
 
     // Managers are allowed to download this list...
@@ -79,26 +81,40 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^chr[0-9A-Z]{1,2}$/', $_PE[1]))) 
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    if (!empty($_PE[1])) {
-        $sChr = $_PE[1];
-    } else {
-        $sChr = '';
+    require_once ROOT_PATH . 'class/object_genome_variants.php';
+    $_DATA = new LOVD_GenomeVariant();
+    $aColsToHide = array('allele_');
+    $sTitle = 'All genomic variants';
+
+    // Set conditions on viewlist if a region is specified (e.g. chr3:20-200000)
+    if (isset($aRegionArgs)) {
+        list($sRegion, $sChr, $sPositionStart, $sPositionEnd) = array_pad($aRegionArgs, 4, null);
+
+        // Set search condition for chromosome.
+        $_GET['search_chromosome'] = '="' . substr($sChr, 3) . '"';
+        $aColsToHide[] = 'chromosome';
+
+        if (!is_null($sPositionStart) && !is_null($sPositionEnd)) {
+            // Set search conditions for start and end of region.
+            $_GET['search_position_g_start'] = '>=' . $sPositionStart;
+            $_GET['search_position_g_end'] = '<=' . $sPositionEnd;
+            $sTitle .= ' in region ' . $sRegion;
+        } else {
+            $sTitle .= ' on chromosome ' . substr($sChr, 3);
+        }
     }
 
-    define('PAGE_TITLE', 'View all genomic variants' . (!$sChr? '' : ' on chromosome ' . substr($sChr, 3)));
+    // Show page with variant viewlist.
+    define('PAGE_TITLE', $sTitle);
     $_T->printHeader();
     $_T->printTitle();
 
-    require ROOT_PATH . 'class/object_genome_variants.php';
-    $_DATA = new LOVD_GenomeVariant();
-    $aColsToHide = array('allele_');
-    if ($sChr) {
-        $_GET['search_chromosome'] = '="' . substr($sChr, 3) . '"';
-        $aColsToHide[] = 'chromosome';
-    }
-    $_DATA->viewList('VOG', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER),
-                     false, true);
-
+    $aVLOptions = array(
+        'cols_to_skip' => $aColsToHide,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('VOG', $aVLOptions);
     $_T->printFooter();
     exit;
 }
@@ -116,13 +132,17 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View all variants affecting transcripts');
+    define('PAGE_TITLE', 'All variants affecting transcripts');
     $_T->printHeader();
     $_T->printTitle();
 
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
-    $_DATA->viewList('CustomVL_IN_GENE', array('name', 'id_protein_ncbi'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $aVLOptions = array(
+        'cols_to_skip' => array('name', 'id_protein_ncbi'),
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+    );
+    $_DATA->viewList('CustomVL_IN_GENE', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -137,7 +157,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     // View all genomic variant entries that were submitted in the given upload.
 
     $nID = sprintf('%015d', $_PE[2]);
-    define('PAGE_TITLE', 'View genomic variants from upload #' . $nID);
+    define('PAGE_TITLE', 'Genomic variants from upload #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -147,8 +167,12 @@ if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     $_DATA = new LOVD_GenomeVariant();
     $_GET['search_created_by'] = substr($nID, 0, 5);
     $_GET['search_created_date'] = date('Y-m-d H:i:s', substr($nID, 5, 10));
-    $_DATA->viewList('VOG_uploads', array('allele_'), false, false,
-                     (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('allele_'),
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('VOG_uploads', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -169,7 +193,12 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     if ((isset($_PE[2]) && $_PE[2] == 'unique') || (isset($_PE[3]) && $_PE[3] == 'unique')) {
         $bUnique = true;
     }
-    $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
+
+    $qGene = $_DB->query('SELECT g.id, count(t.id) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' .
+                         TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid WHERE g.id = ?',
+                         array(rawurldecode($_PE[1])));
+    list($sGene, $nTranscripts) = $qGene->fetchRow();
+
     if ($sGene) {
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
@@ -179,19 +208,23 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         }
 
         // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
-        $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE t.geneid = ? AND vot.id IS NOT NULL', array($sGene))->fetchAllCombine();
-        $nTranscripts = count($aTranscripts);
+        $aTranscriptsWithVariants = $_DB->query(
+            'SELECT t.id, t.id_ncbi
+             FROM ' . TABLE_TRANSCRIPTS . ' AS t
+               INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+             WHERE t.geneid = ?', array($sGene))->fetchAllCombine();
+        $nTranscriptsWithVariants = count($aTranscriptsWithVariants);
 
-        // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscripts.
+        // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscriptsWithVariants.
         if (!empty($_PE[2]) && $_PE[2] != 'unique') {
-            $nTranscript = array_search($_PE[2], $aTranscripts);
+            $nTranscript = array_search($_PE[2], $aTranscriptsWithVariants);
             if ($nTranscript === false) {
-                // NM does not exist. Throw error or just simply redirect?
+                // NM does not exist, or has no variants. Throw error or just simply redirect?
                 header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1] . (!$bUnique? '' : '/unique'));
                 exit;
             } else {
-                $aTranscripts = array($nTranscript => $aTranscripts[$nTranscript]);
-                $nTranscripts = 1;
+                $aTranscriptsWithVariants = array($nTranscript => $aTranscriptsWithVariants[$nTranscript]);
+                $nTranscriptsWithVariants = 1;
             }
         }
     } else {
@@ -203,10 +236,10 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     }
 
     if ($bUnique) {
-        define('PAGE_TITLE', 'View unique variants in gene ' . $sGene);
+        define('PAGE_TITLE', 'Unique variants in gene ' . $sGene);
         $sViewListID = 'CustomVL_VOTunique_VOG_' . $sGene;
     } else {
-        define('PAGE_TITLE', 'View all transcript variants in gene ' . $sGene);
+        define('PAGE_TITLE', 'All transcript variants in gene ' . $sGene);
         $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
     }
     $_T->printHeader();
@@ -215,29 +248,32 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
-    list($nTranscriptID, $sTranscript) = each($aTranscripts);
+    list($nTranscriptID, $sTranscript) = each($aTranscriptsWithVariants);
     if (!$nTranscripts) {
-        $sMessage = 'No transcripts or variants found for this gene.';
-    } elseif ($nTranscripts == 1) {
+        $sMessage = 'No transcripts found for this gene.';
+    } elseif (!$nTranscriptsWithVariants) {
+        $sMessage = 'No variants found for this gene.';
+    } elseif ($nTranscriptsWithVariants == 1) {
         $_GET['search_transcriptid'] = $nTranscriptID;
         $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
     } else {
         // Create select box.
         // We would like to be able to link to this list, focusing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
-        if (!isset($_GET['search_transcriptid']) || !isset($aTranscripts[$_GET['search_transcriptid']])) {
+        if (!isset($_GET['search_transcriptid']) || !isset($aTranscriptsWithVariants[$_GET['search_transcriptid']])) {
             $_GET['search_transcriptid'] = $nTranscriptID;
         }
         $sSelect = '<SELECT id="change_transcript" onchange="$(\'input[name=\\\'search_transcriptid\\\']\').val($(this).val()); lovd_AJAX_viewListSubmit(\'' . $sViewListID . '\');">';
-        foreach ($aTranscripts as $nTranscriptID => $sTranscript) {
+        foreach ($aTranscriptsWithVariants as $nTranscriptID => $sTranscript) {
             $sSelect .= '<OPTION value="' . $nTranscriptID . '"' . ($_GET['search_transcriptid'] != $nTranscriptID? '' : ' selected') . '>' . $sTranscript . '</OPTION>';
         }
-        $sMessage = 'The variants shown are described using the ' . $sSelect . '</SELECT> transcript reference sequence.';
+        $sSelect .= '</SELECT>';
+        $sMessage = 'The variants shown are described using the ' . $sSelect . ' transcript reference sequence.';
     }
     if (FORMAT == 'text/html') {
         lovd_showInfoTable($sMessage);
     }
 
-    if ($nTranscripts > 0) {
+    if ($nTranscriptsWithVariants > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         if ($bUnique) {
             // When this ViewListID is changed, also change the prepareData in object_custom_viewluists.php
@@ -248,7 +284,13 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         }
 
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
-        $_DATA->viewList($sViewListID, array('chromosome', 'allele_'), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR), false, !$bUnique);
+        $aVLOptions = array(
+            'cols_to_skip' => array('chromosome', 'allele_'),
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'find_and_replace' => !$bUnique,
+            'multi_value_filter' => $bUnique,
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
 
         // Notes for the variant listings...
         if (!empty($_SETT['currdb']['note_listing'])) {
@@ -270,7 +312,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'View genomic variant #' . $nID);
+    define('PAGE_TITLE', 'Genomic variant #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -393,7 +435,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_TranscriptVariant('', $nID);
     $_DATA->setRowID('VOT_for_VOG_VE', 'VOT_{{transcriptid}}');
     $_DATA->setRowLink('VOT_for_VOG_VE', 'javascript:window.location.hash = \'{{transcriptid}}\'; return false');
-    $_DATA->viewList('VOT_for_VOG_VE', array('id_', 'transcriptid', 'status'), true, true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('id_', 'transcriptid', 'status'),
+        'track_history' => false,
+        'show_navigation' => false,
+    );
+    $_DATA->viewList('VOT_for_VOG_VE', $aVLOptions);
     unset($_GET['search_id_']);
 ?>
 
@@ -445,7 +492,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_T->printTitle('Screenings', 'H4');
         require ROOT_PATH . 'class/object_screenings.php';
         $_DATA = new LOVD_Screening();
-        $_DATA->viewList('Screenings_for_VOG_VE', array('individualid', 'created_date', 'edited_date'), true, true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('individualid', 'created_date', 'edited_date'),
+            'track_history' => false,
+            'show_navigation' => false,
+        );
+        $_DATA->viewList('Screenings_for_VOG_VE', $aVLOptions);
     }
 
     $_T->printFooter();
@@ -578,7 +630,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         $_GET['search_transcripts'] = '>0';
         print('      <DIV id="container" style="display : none;">' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
         lovd_showInfoTable('Please find the gene for which you wish to submit this variant below, using the search fields if needed. <B>Click on the gene to proceed to the variant entry form</B>.<BR>If a gene is not shown in this display, but it does exist in this LOVD, then it does not have a transcript configured yet.', 'information', 600);
-        $_DATA->viewList($sViewListID, array('transcripts', 'variants', 'diseases_', 'updated_date_'));
+        $aVLOptions = array(
+            'cols_to_skip' => array('transcripts', 'variants', 'diseases_', 'updated_date_'),
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
         print('      </DIV>' . "\n" .
               (!$bSubmit? '' : '      <INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'submit/screening/' . $_POST['screeningid'] . '\'; return false;" style="border : 1px solid #FF4422;">' . "\n"));
 
@@ -646,20 +701,15 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
 
-            require ROOT_PATH . 'class/soap_client.php';
-            $_Mutalyzer = new LOVD_SoapClient();
-            try {
-                // NM is chosen at random, but we need to provide one just so we can get to the variant type.
-                $oOutput = @$_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']))->mappingInfoResult;
-                if (isset($oOutput->errorcode)) {
-                    throw new Exception();
-                }
-                $_POST['position_g_start'] = $oOutput->start_g;
-                $_POST['position_g_end'] = $oOutput->end_g;
-                $_POST['type'] = $oOutput->mutationType;
-            } catch (Exception $e) {
-                $_POST['position_g_start'] = NULL;
-                $_POST['position_g_end'] = NULL;
+            // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+            // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
+            $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+            if ($aResponse) {
+                list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                    array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+            } else {
+                $_POST['position_g_start'] = 0;
+                $_POST['position_g_end'] = 0;
                 $_POST['type'] = NULL;
             }
 
@@ -675,18 +725,20 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_POST['id'] = $nID;
                 foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                     if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
-                        try {
-                            $oOutput = $_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']))->mappingInfoResult;
-                            if (isset($oOutput->errorcode)) {
-                                throw new Exception();
-                            }
-                            $_POST[$nTranscriptID . '_position_c_start'] = $oOutput->startmain;
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $oOutput->startoffset;
-                            $_POST[$nTranscriptID . '_position_c_end'] = $oOutput->endmain;
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $oOutput->endoffset;
-                        } catch (SoapFault $e) {
-                            lovd_soapError($e);
-                        } catch (Exception $e) {} // Pass when we get a "nice" Soap Error (variant not recognized, for instance).
+                        // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                        // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
+                        $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
+                        if ($aResponse) {
+                            $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
+                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
+                            $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
+                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
+                        } else {
+                            $_POST[$nTranscriptID . '_position_c_start'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_end'] = 0;
+                            $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
+                        }
                     }
                     if (empty($_POST[$nTranscriptID . '_position_c_start'])) {
                         // Variant not recognized, or no DNA given and thus no Soap call done.
@@ -1665,7 +1717,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     // Got gene information, prepare to add the gene to the database.
                                     // Extract gene information.
                                     list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim) = array_values($aGeneInfo[$sSymbol]);
-                                    list($sEntrez, $sOmim) = array_map('trim', array($sEntrez, $sOmim));
+                                    list($sEntrez, $sOmim) = array_map(function($var) {
+                                        return is_string($var)? trim($var) : $var;
+                                    }, array($sEntrez, $sOmim));
                                     if ($sChromLocation == 'mitochondria') {
                                         $sChromosome = 'M';
                                         $sChromBand = '';
@@ -2406,28 +2460,23 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 $_POST['statusid'] = STATUS_MARKED;
             }
 
-            require ROOT_PATH . 'class/soap_client.php';
-            $_Mutalyzer = new LOVD_SoapClient();
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
-                try {
-                    // NM is chosen at random, but we need to provide one just so we can get to the variant type.
-                    $oOutput = @$_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => 'NM_001100.3', 'variant' => $_POST['VariantOnGenome/DNA']))->mappingInfoResult;
-                    if (isset($oOutput->errorcode)) {
-                        throw new Exception();
-                    }
-                    $_POST['position_g_start'] = $oOutput->start_g;
-                    $_POST['position_g_end'] = $oOutput->end_g;
-                    $_POST['type'] = $oOutput->mutationType;
-                } catch (Exception $e) {
-                    $_POST['position_g_start'] = NULL;
-                    $_POST['position_g_end'] = NULL;
+                // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
+                $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+                if ($aResponse) {
+                    list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                        array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+                } else {
+                    $_POST['position_g_start'] = 0;
+                    $_POST['position_g_end'] = 0;
                     $_POST['type'] = NULL;
                 }
 
                 // Remove the MAPPING_NOT_RECOGNIZED and MAPPING_DONE flags if the VariantOnGenome/DNA field changes.
                 $_POST['mapping_flags'] = $zData['mapping_flags'] & ~(MAPPING_NOT_RECOGNIZED | MAPPING_DONE);
-                if ($_POST['position_g_start'] === null) {
+                if (!$_POST['position_g_start']) {
                     // We couldn't get a position, mapping will fail.
                     $_POST['mapping_flags'] |= MAPPING_NOT_RECOGNIZED;
                 }
@@ -2455,29 +2504,20 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             if ($bGene) {
                 foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                     if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
-                        if (strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) < 6) {
+                        // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                        // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
+                        // Normally we'd check for a minimum length of 6 characters, but the function is fast anyway.
+                        $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
+                        if ($aResponse) {
+                            $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
+                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
+                            $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
+                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
+                        } else {
                             $_POST[$nTranscriptID . '_position_c_start'] = 0;
                             $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
                             $_POST[$nTranscriptID . '_position_c_end'] = 0;
                             $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
-                        } else {
-                            try {
-                                $oOutput = $_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $aTranscript[0], 'variant' => $_POST[$nTranscriptID . '_VariantOnTranscript/DNA']))->mappingInfoResult;
-                                if (isset($oOutput->errorcode)) {
-                                    throw new Exception();
-                                }
-                                $_POST[$nTranscriptID . '_position_c_start'] = $oOutput->startmain;
-                                $_POST[$nTranscriptID . '_position_c_start_intron'] = $oOutput->startoffset;
-                                $_POST[$nTranscriptID . '_position_c_end'] = $oOutput->endmain;
-                                $_POST[$nTranscriptID . '_position_c_end_intron'] = $oOutput->endoffset;
-                            } catch (SoapFault $e) {
-                                lovd_soapError($e);
-                            } catch (Exception $e) {
-                                $_POST[$nTranscriptID . '_position_c_start'] = 0;
-                                $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
-                                $_POST[$nTranscriptID . '_position_c_end'] = 0;
-                                $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
-                            }
                         }
                     } else {
                         $_POST[$nTranscriptID . '_position_c_start'] = $zData[$nTranscriptID . '_position_c_start'];
@@ -2901,19 +2941,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                             if (!empty($sVariant) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':([cn]\..+)$/', $sVariant, $aMatches)) {
                                 // Call the mappingInfo module of mutalyzer to get the start & stop positions of this variant on the transcript.
                                 $aMapping = array();
-                                try {
-                                    $oOutput = $_Mutalyzer->mappingInfo(array('LOVD_ver' => $_SETT['system']['version'], 'build' => $_CONF['refseq_build'], 'accNo' => $zTranscript['id_ncbi'], 'variant' => $aMatches[1]))->mappingInfoResult;
-                                    if (isset($oOutput->errorcode)) {
-                                        throw new Exception();
-                                    }
+                                // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                                // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
+                                $aResponse = lovd_getVariantInfo($aMatches[1], $zTranscript['id_ncbi']);
+                                if ($aResponse) {
                                     $aMapping = array(
-                                        'position_c_start' => $oOutput->startmain,
-                                        'position_c_start_intron' => $oOutput->startoffset,
-                                        'position_c_end' => $oOutput->endmain,
-                                        'position_c_end_intron' => $oOutput->endoffset,
+                                        'position_c_start' => $aResponse['position_start'],
+                                        'position_c_start_intron' => $aResponse['position_start_intron'],
+                                        'position_c_end' => $aResponse['position_end'],
+                                        'position_c_end_intron' => $aResponse['position_end_intron'],
                                     );
-                                } catch (Exception $e) {}
-                                if (!$aMapping) {
+                                } else {
                                     $aMapping = array(
                                         'position_c_start' => 0,
                                         'position_c_start_intron' => 0,
@@ -3006,7 +3044,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     require ROOT_PATH . 'class/object_custom_viewlists.php';
     $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
     $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
-    $_DATA->viewList('VOT_map', array(), true);
+    $_DATA->viewList('VOT_map', array('track_history' => false));
     print('      <BR><BR>' . "\n\n");
 
     lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');

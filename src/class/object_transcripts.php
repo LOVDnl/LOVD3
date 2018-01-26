@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2016-07-20
- * For LOVD    : 3.0-17
+ * Modified    : 2017-05-15
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -214,7 +214,7 @@ class LOVD_Transcript extends LOVD_Object {
             if (isset($_SETT['mito_genes_aliases'][$zData['geneid']])) {
                 $sNCBILink = str_replace('(' . $_SETT['mito_genes_aliases'][$zData['geneid']] . '_v001)', '', $zData['id_ncbi']);
             }
-            $zData['id_ncbi_'] = '<A href="http://www.ncbi.nlm.nih.gov/nuccore/' . $sNCBILink . '" target="_blank">' . $zData['id_ncbi'] . '</A>';
+            $zData['id_ncbi_'] = '<A href="https://www.ncbi.nlm.nih.gov/nuccore/' . $sNCBILink . '" target="_blank">' . $zData['id_ncbi'] . '</A>';
 
             // Exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
             $sExonTable = '';

@@ -9,7 +9,7 @@ class PostFinishAddScreeningToCMTTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testPostFinishAddScreeningToCMT()
     {
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertContains("/src/variants/0000000332", $this->driver->getCurrentURL());
         $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));

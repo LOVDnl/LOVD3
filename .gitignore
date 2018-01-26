@@ -1,7 +1,9 @@
 .idea
 doc/tex/manual.aux
+doc/tex/manual.html
 doc/tex/manual.log
 doc/tex/manual.out
+doc/tex/manual.pdf
 doc/tex/manual.toc
 src/_sett
 src/refseq

@@ -78,6 +78,7 @@
 4.3.0 html_entity_decode
 4.0.0 htmlspecialchars
 5.1.0 htmlspecialchars_decode
+5.0.0 http_build_query
 4.0.0 if
 4.0.0 ignore_user_abort
 4.0.0 implode
@@ -152,6 +153,7 @@
 4.0.0 sleep
 4.0.0 sort
 4.0.0 sprintf
+4.0.0 strcasecmp
 4.3.0 stream_context_create
 5.0.0 stripos
 4.0.0 stripslashes
@@ -198,6 +200,7 @@
 5.3.0 anonymous functions introduced. I got parse errors in inc-lib-form (needed to log in even!) so I now realize that 5.3.0 is required, which means we could use bcrypt as well!!!
 5.3.0 bcrypt built into PHP (before that, availability depends on the system)
 5.3.3 PDO::inTransaction() (already in use, but we check for it)
+5.4.0 JSON_PRETTY_PRINT is available (now I'm using it if available)
 =====-========
 5.3.0 REQUIRED
 

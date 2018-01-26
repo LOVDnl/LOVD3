@@ -9,5 +9,5 @@ for file in `ls -1 -t -r ${GLOB}/test_results/error_screenshots/*.png`; do
 
     # Upload to transfer.sh, this command will output the URL on which the
     # uploaded file can be reached.
-    curl --upload-file ${file} http://transfer.sh
+    curl --upload-file ${file} https://transfer.sh
 done

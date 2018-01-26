@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-12-23
- * For LOVD    : 3.0-18
+ * Modified    : 2017-12-04
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -477,6 +477,158 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                          'INSERT IGNORE INTO ' . TABLE_LINKS . ' VALUES (NULL, "Alamut", "{Alamut:[1]:[2]}", "<A href=\"http://127.0.0.1:10000/show?request=[1]:[2]\" target=\"_blank\">Alamut</A>", "Links directly to the variant in the Alamut software.\r\n[1] = The chromosome letter or number.\r\n[2] = The genetic change on genome level.\r\n\r\nExample:\r\n{Alamut:16:21854780G>A}", 0, NOW(), NULL, NULL)',
                          'UPDATE ' . TABLE_COLS . ' SET mandatory = 0 WHERE id = "VariantOnTranscript/Exon"',
                      ),
+                 '3.0-18a' =>
+                     array(
+                         'UPDATE ' . TABLE_COLS . ' SET preg_pattern = "/^(chr(\\\\d{1,2}|[XYM])|(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*-|[A-Z][A-Z0-9]*-)?(C(\\\\d{1,2}|[XYM])orf[\\\\d][\\\\dA-Z]*|[A-Z][A-Z0-9-]*))_\\\\d{6}$/" WHERE id = "VariantOnGenome/DBID";',
+                     ),
+                 '3.0-18b' =>
+                     array(
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/gene?cmd=Retrieve&dopt=full_report&list_uids={{ ID }}" WHERE id = "entrez"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/nuccore/{{ ID }}" WHERE id = "genbank"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/gtr/genes/{{ ID }}" WHERE id = "genetests"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}" WHERE id = "pubmed_gene"',
+                         'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.ncbi.nlm.nih.gov/pubmed/{{ ID }}" WHERE id = "pubmed_article"',
+                     ),
+                 '3.0-18c' =>
+                     array(
+                         'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>" WHERE name = "PubMed" AND replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>"',
+                         'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=[1]\" target=\"_blank\">dbSNP</A>" WHERE name = "DbSNP" AND replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=[1]\" target=\"_blank\">dbSNP</A>"',
+                         'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/nuccore/[1]\" target=\"_blank\">GenBank</A>" WHERE name = "GenBank" AND replace_text = "<A href=\"http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?cmd=Retrieve&amp;db=nucleotide&amp;dopt=GenBank&amp;list_uids=[1]\" target=\"_blank\">GenBank</A>"',
+                     ),
+                 '3.0-18d' =>
+                    array(
+                        'ALTER TABLE ' . TABLE_USERS . '
+                            ALTER department SET DEFAULT "",
+                            ALTER telephone SET DEFAULT "",
+                            ALTER reference SET DEFAULT "",
+                            ALTER password_force_change SET DEFAULT 0,
+                            ALTER level SET DEFAULT 1,
+                            ALTER allowed_ip SET DEFAULT "*",
+                            ALTER login_attempts SET DEFAULT 0',
+                        'ALTER TABLE ' . TABLE_CHROMOSOMES . ' ALTER sort_id SET DEFAULT 0',
+                        'ALTER TABLE ' . TABLE_GENES . '
+                            MODIFY chrom_band VARCHAR(40) NOT NULL DEFAULT "",
+                            ALTER refseq_genomic SET DEFAULT "",
+                            ALTER refseq_UD SET DEFAULT "",
+                            ALTER reference SET DEFAULT "",
+                            ALTER url_homepage SET DEFAULT "",
+                            MODIFY url_external TEXT,
+                            ALTER allow_download SET DEFAULT 0,
+                            ALTER allow_index_wiki SET DEFAULT 0,
+                            ALTER show_hgmd SET DEFAULT 0,
+                            ALTER show_genecards SET DEFAULT 0,
+                            ALTER show_genetests SET DEFAULT 0,
+                            MODIFY note_index TEXT,
+                            MODIFY note_listing TEXT,
+                            ALTER refseq SET DEFAULT "",
+                            ALTER refseq_url SET DEFAULT "",
+                            ALTER disclaimer SET DEFAULT 1,
+                            MODIFY disclaimer_text TEXT,
+                            MODIFY header TEXT,
+                            ALTER header_align SET DEFAULT -1,
+                            MODIFY footer TEXT,
+                            ALTER footer_align SET DEFAULT -1',
+                        'ALTER TABLE ' . TABLE_CURATES . ' ALTER allow_edit SET DEFAULT 0',
+                        'ALTER TABLE ' . TABLE_TRANSCRIPTS . '
+                            ALTER id_ensembl SET DEFAULT "",
+                            ALTER id_protein_ncbi SET DEFAULT "",
+                            ALTER id_protein_ensembl SET DEFAULT "",
+                            ALTER id_protein_uniprot SET DEFAULT "",
+                            MODIFY remarks TEXT',
+                        'ALTER TABLE ' . TABLE_DISEASES . '
+                            ALTER symbol SET DEFAULT "-",
+                            MODIFY tissues TEXT,
+                            MODIFY features TEXT,
+                            MODIFY remarks TEXT',
+                        'ALTER TABLE ' . TABLE_ALLELES . ' ALTER display_order SET DEFAULT 0',
+                        'ALTER TABLE ' . TABLE_VARIANTS . ' ALTER allele SET DEFAULT 0',
+                        'ALTER TABLE ' . TABLE_COLS . '
+                            ALTER col_order SET DEFAULT 0,
+                            ALTER width SET DEFAULT 50,
+                            ALTER hgvs SET DEFAULT 0,
+                            ALTER standard SET DEFAULT 0,
+                            ALTER mandatory SET DEFAULT 0,
+                            MODIFY description_form TEXT,
+                            MODIFY description_legend_short TEXT,
+                            MODIFY description_legend_full TEXT,
+                            ALTER mysql_type SET DEFAULT "VARCHAR(50)",
+                            MODIFY form_type TEXT,
+                            MODIFY select_options TEXT,
+                            ALTER preg_pattern SET DEFAULT "",
+                            ALTER public_view SET DEFAULT 1,
+                            ALTER public_add SET DEFAULT 1,
+                            ALTER allow_count_all SET DEFAULT 0',
+                        'ALTER TABLE ' . TABLE_SHARED_COLS . '
+                            ALTER col_order SET DEFAULT 0,
+                            ALTER width SET DEFAULT 50,
+                            ALTER mandatory SET DEFAULT 0,
+                            MODIFY description_form TEXT,
+                            MODIFY description_legend_short TEXT,
+                            MODIFY description_legend_full TEXT,
+                            MODIFY select_options TEXT,
+                            ALTER public_view SET DEFAULT 1,
+                            ALTER public_add SET DEFAULT 1',
+                        'ALTER TABLE ' . TABLE_LINKS . ' MODIFY description TEXT',
+                        'ALTER TABLE ' . TABLE_CONFIG . ' ALTER system_title SET DEFAULT "LOVD - Leiden Open Variation Database",
+                            ALTER institute SET DEFAULT "",
+                            ALTER location_url SET DEFAULT "",
+                            ALTER email_address SET DEFAULT "",
+                            ALTER send_admin_submissions SET DEFAULT 0,
+                            ALTER api_feed_history SET DEFAULT 0,
+                            ALTER refseq_build SET DEFAULT "hg38",
+                            ALTER proxy_host SET DEFAULT "",
+                            ALTER proxy_username SET DEFAULT "",
+                            ALTER proxy_password SET DEFAULT "",
+                            ALTER omim_apikey SET DEFAULT "",
+                            ALTER send_stats SET DEFAULT 1,
+                            ALTER include_in_listing SET DEFAULT 1,
+                            ALTER lock_users SET DEFAULT 1,
+                            ALTER allow_unlock_accounts SET DEFAULT 1,
+                            ALTER allow_submitter_mods SET DEFAULT 1,
+                            ALTER allow_count_hidden_entries SET DEFAULT 0,
+                            ALTER use_ssl SET DEFAULT 0,
+                            ALTER use_versioning SET DEFAULT 0,
+                            ALTER lock_uninstall SET DEFAULT 1',
+                        'ALTER TABLE ' . TABLE_STATUS . ' ALTER lock_update SET DEFAULT 0',
+                        'ALTER TABLE ' . TABLE_MODULES . '
+                            ALTER version SET DEFAULT "",
+                            ALTER description SET DEFAULT "",
+                            ALTER active SET DEFAULT 0,
+                            MODIFY settings TEXT',
+                    ),
+                 '3.0-19a' => array('INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hpo_disease", "http://compbio.charite.de/hpoweb/showterm?disease=OMIM:{{ ID }}")'),
+                 '3.0-19b' => array('INSERT INTO ' . TABLE_EFFECT . ' VALUES ("06", "./#"), 
+                     ("08", "./+*"), ("16", "-/#"), ("18", "-/+*"), ("36", "-?/#"), 
+                     ("38", "-?/+*"), ("56", "?/#"), ("58", "?/+*"), ("60", "#/."), ("61", "#/-"),
+                     ("63", "#/-?"), ("65", "#/?"), ("66", "#/#"), ("67", "#/+?"), ("68", "#/+*"),
+                     ("69", "#/+"), ("76", "+?/#"), ("78", "+?/+*"), ("80", "+*/."), 
+                     ("81", "+*/-"), ("83", "+*/-?"), ("85", "+*/?"), ("86", "+*/#"), 
+                     ("87", "+*/+?"), ("88", "+*/+*"), ("89", "+*/+"), ("96", "+/#"), 
+                     ("98", "+/+*");'),
+                 '3.0-20b' => array(
+                     'CREATE TABLE IF NOT EXISTS ' . TABLE_SCHEDULED_IMPORTS . ' (
+                          filename VARCHAR(255) NOT NULL,
+                          priority TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
+                          in_progress BOOLEAN NOT NULL DEFAULT 0,
+                          scheduled_by SMALLINT(5) UNSIGNED ZEROFILL,
+                          scheduled_date DATETIME NOT NULL,
+                          process_errors TEXT,
+                          processed_by SMALLINT(5) UNSIGNED ZEROFILL,
+                          processed_date DATETIME,
+                          PRIMARY KEY (filename),
+                          INDEX (scheduled_by),
+                          INDEX (processed_by),
+                          CONSTRAINT ' . TABLE_SCHEDULED_IMPORTS . '_fk_scheduled_by FOREIGN KEY (scheduled_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+                          CONSTRAINT ' . TABLE_SCHEDULED_IMPORTS . '_fk_processed_by FOREIGN KEY (processed_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+                      ENGINE=InnoDB,
+                      DEFAULT CHARACTER SET utf8',
+		 ),
+                 '3.0-20c' => array(
+                     'ALTER TABLE ' . TABLE_CHROMOSOMES . ' ADD COLUMN hg38_id_ncbi VARCHAR(20) NOT NULL AFTER hg19_id_ncbi',
+                     // Weird, but much simpler... so, oh well. All chromosomes got updated one version, except M.
+                     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = CONCAT(LEFT(hg19_id_ncbi, 10), (TRIM(LEADING "." FROM RIGHT(hg19_id_ncbi, 2))+1)) WHERE name != "M"',
+		     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = hg19_id_ncbi WHERE name = "M"',
+		 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

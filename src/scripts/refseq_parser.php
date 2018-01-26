@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2014-10-02
- * For LOVD    : 3.0-12
+ * Modified    : 2017-05-15
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ir. Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -113,7 +114,7 @@ if ($_GET['step'] == 1) {
             // Read file into an array.
             $sFileID = (substr($sFileID, 0, 2) == 'UD'?
                 str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $sFileID . '.gb' :
-                'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $sFileID . '&rettype=gb');
+                'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $sFileID . '&rettype=gb');
             // FIXME: Since Mutalyzer only allows for https communication since Sept 2014, lovd_php_file()'s socket communication doesn't work.
             // 2014-10-02; 3.0-12; Modified lovd_php_file() to allow http(s) communication through PHP's file() as long as there's allow_url_fopen and no POST.
             // This is a temporary fix, depends on a PHP setting, and does not work with proxies at the moment (although than can be fixed with providing a context to file()).
@@ -144,7 +145,7 @@ if ($_GET['step'] == 1) {
                     }
                     // Determine the accession number, including version.
                     if (substr($line, 0, 7) == 'VERSION') {
-                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\s+.*$/', "$1", rtrim($line));
+                        $_POST['version_id'] = preg_replace('/^VERSION\s+(N[CG]_[0-9]+\.[0-9]+)\b.*/', "$1", rtrim($line));
                     }
                     if ('/gene="' . $_POST['symbol'] . '"' == preg_replace('/\s+/', '', $line)) {
                         // We are in the right gene.
@@ -1355,7 +1356,7 @@ if ($_GET['step'] == 3) {
                 }
                 // 2009-12-03; 2.0-23; added the mRNA accession number, but only if it is the same in the database
                 if (!empty($_POST['version_id'])) {
-                    $_POST['note'] .= ' The sequence was taken from <a href="http://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['version_id'] . '">' . $_POST['version_id'] . '</a>' . ($bStep2 ? ', covering ' . $_POST['symbol'] . ' transcript <a href="http://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['transcript_id'] . '">' . $_POST['transcript_id'] . '</a>.' : '.') .'</p>';
+                    $_POST['note'] .= ' The sequence was taken from <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['version_id'] . '">' . $_POST['version_id'] . '</a>' . ($bStep2 ? ', covering ' . $_POST['symbol'] . ' transcript <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['transcript_id'] . '">' . $_POST['transcript_id'] . '</a>.' : '.') .'</p>';
                 }
 
                 if (trim($_POST['note'])) {
@@ -1902,13 +1903,13 @@ if ($_GET['step'] == 3) {
                         "</PRE>\n\n" .
                         ($_POST['legend']?
                             "<SPAN style=\"font-size : 15px;\"><U><B>Legend:</B></U></SPAN><BR>\n" .
-                                "Nucleotide numbering (following the rules of the <A href=\"http://www.HGVS.org/mutnomen/\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift variants, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
+                                "Nucleotide numbering (following the rules of the <A href=\"http://varnomen.hgvs.org\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift variants, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
                 } else {
                     fputs($fCoding, ' (downstream sequence)' . "\n" .
                         "</PRE>\n\n" .
                         ($_POST['legend']?
                             "<SPAN style=\"font-size : 15px;\"><U><B>Legend:</B></U></SPAN><BR>\n" .
-                                "Nucleotide numbering (following the rules of the <A href=\"http://www.HGVS.org/mutnomen/\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift variants, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
+                                "Nucleotide numbering (following the rules of the <A href=\"http://varnomen.hgvs.org\" target=\"_blank\">HGVS</A> for a 'Coding DNA Reference Sequence') is indicated at the right of the sequence, counting the A of the ATG translation initiating Methionine as 1. Every 10<SUP>th</SUP> nucleotide is indicated by a &quot;.&quot; above the sequence. The " . ucfirst($_POST['gene']) . " protein sequence is shown below the coding DNA sequence, with numbering indicated at the right starting with 1 for the translation initiating Methionine. Every 10<SUP>th</SUP> amino acid is shown in bold. The position of introns is indicated by a vertical line, splitting the two exons. The start of the first exon (transcription initiation site) is indicated by a '\', the end of the last exon (poly-A addition site) by a '/'. The exon number is indicated above the first nucleotide(s) of the exon. To aid the description of frame shift variants, all <B>stop codons in the +1 frame are shown in bold</B> while all <U>stop codons in the +2 frame are underlined</U>.<BR>\n\n" : ""));
                 }
 
                 // 2008-10-30; 2.0-13; link to coding sequence added by Gerard
@@ -2027,7 +2028,7 @@ if ($_GET['step'] == 3) {
             $_POST['exists'] = 'overwrite';
         }
 
-        $_POST['note'] = '<p>This file was created to facilitate the description of sequence variants' . (empty($_POST['symbol'])? '' : (empty($_POST['transcript_id'])? '' : ' on transcript ' . $_POST['transcript_id']) . ' in the ' . $_POST['symbol'] . ' gene') . ' based on a coding DNA reference sequence following <a href="http://www.HGVS.org/mutnomen/">the HGVS recommendations</a>.</p>';
+        $_POST['note'] = '<p>This file was created to facilitate the description of sequence variants' . (empty($_POST['symbol'])? '' : (empty($_POST['transcript_id'])? '' : ' on transcript ' . $_POST['transcript_id']) . ' in the ' . $_POST['symbol'] . ' gene') . ' based on a coding DNA reference sequence following <a href="http://varnomen.hgvs.org">the HGVS recommendations</a>.</p>';
         $_POST['legend'] = 1;
 
         // 2009-03-17; 2.0-17; by Gerard: box should only be ticked when coming from step 2 (links to intronic sequences)

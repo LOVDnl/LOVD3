@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-12-13
- * For LOVD    : 3.0-18
+ * Modified    : 2017-08-14
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -125,7 +125,8 @@ class LOVD_User extends LOVD_Object {
                         'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
-                        'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'entries_owned_by_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'entries_created_by_' => 'Has created', // Will be unset if not viewing himself or manager or up.
                         'colleagues_' => '', // Other users that may access this user's data.
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
@@ -490,7 +491,10 @@ class LOVD_User extends LOVD_Object {
             // Submissions...
             if (lovd_isAuthorized('user', $zData['id']) === false) {
                 // Not authorized to view hidden data for this user; so we're not manager and we're not viewing ourselves. Nevermind then.
-                unset($this->aColumnsViewEntry['ownes_'], $this->aColumnsViewEntry['auth_token_'], $this->aColumnsViewEntry['auth_token_expires_']);
+                unset($this->aColumnsViewEntry['entries_owned_by_'],
+                      $this->aColumnsViewEntry['entries_created_by_'],
+                      $this->aColumnsViewEntry['auth_token_'],
+                      $this->aColumnsViewEntry['auth_token_expires_']);
             } else {
                 // Either we're viewing ourselves, or we're manager or up.
 
@@ -505,20 +509,27 @@ class LOVD_User extends LOVD_Object {
                 }
 
                 // Since we're manager or viewing ourselves, we don't need to check for the data status of the data.
-                $nOwnes = 0;
-                $sOwnes = '';
+                foreach (array('owned_by', 'created_by') as $sField) {
+                    $aStats = array(0, '');
+                    foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
+                        $nCount = $_DB->query('SELECT COUNT(*) FROM ' .
+                            constant('TABLE_' . strtoupper($sDataType)) . ' WHERE ' . $sField .
+                            ' = ?', array($zData['id']))->fetchColumn();
+                        $sTitle = $nCount . ' ' . ($nCount == 1? substr($sDataType, 0, -1) :
+                            $sDataType);
+                        $sStat = ($sDataType == 'phenotypes'? $sTitle : '<A href="' . $sDataType .
+                            '?search_' . $sField . ($sField == 'owned_by'? '_=%3D%22' .
+                            rawurlencode(html_entity_decode($zData['name'])) . '%22' : '=' .
+                            $zData['id']) . '">' . $sTitle . '</A>');
 
-                // FIXME: Phenotypes is not included, because we don't have a phenotypes overview to link to (must be disease-specific).
-                foreach (array('individuals', 'screenings', 'variants') as $sDataType) {
-                    $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
-                    if ($n) {
-                        $nOwnes += $n;
-                        $sOwnes .= (!$sOwnes? '' : ', ') . '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode(html_entity_decode($zData['name'])) . '%22">' . $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType) . '</A>';
+                        $aStats[0] += $nCount;
+                        $aStats[1] .= (!$aStats[1]? '' : ', ') . $sStat;
                     }
-                }
 
-                $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
-                $zData['ownes_'] = $sOwnes;
+                    $this->aColumnsViewEntry['entries_' . $sField . '_'] .= ' ' . $aStats[0] . ' data entr' .
+                        ($aStats[0] == 1? 'y' : 'ies');
+                    $zData['entries_' . $sField . '_'] = $aStats[1];
+                }
             }
 
             $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
