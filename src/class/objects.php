@@ -375,7 +375,7 @@ class LOVD_Object {
                 'fieldname_as_header' => false, // Use field name as header.
                 'trim_fields' => true,          // Trim all whitespace from fields in data array
                                                 // and input (e.g. $_POST or $_GET)
-                'explode_strings' => false,     // Convert ';'-delimited strings to arrays.
+                'explode_strings' => false,     // Do multiple-selection lists need to be converted to arrays manually?
                 'show_select_alts' => false,    // Show alternatives in errors for select fields.
             ),
             $aOptions);
@@ -2610,7 +2610,7 @@ class LOVD_Object {
         <BR>
         Enter your password to apply find and replace:<BR> 
         <INPUT type="password" name="password" size="20" />
-        <INPUT id="FRSubmit_$sViewListID" type="submit" value="Submit" />
+        <INPUT name="FRSubmit_$sViewListID" id="FRSubmit_$sViewListID" type="submit" value="Submit" />
     </DIV>
 </DIV>
 FROptions

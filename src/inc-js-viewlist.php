@@ -306,15 +306,7 @@ if (!isset($_GET['nohistory'])) {
                             $(oForm).find('input[type!="button"]').each(function(){
                                 if (!this.disabled && this.value && this.name != 'viewlistid' &&
                                     this.name != 'object' && this.name.substring(0,6) != 'check_' &&
-                                    this.name.substring(0,12) != 'FRFieldname_' &&
-                                    this.name.substring(0,19) != 'FRFieldDisplayname_' &&
-                                    this.name.substring(0,9) != 'FRSearch_' &&
-                                    this.name.substring(0,12) != 'FRMatchType_' &&
-                                    this.name.substring(0,10) != 'FRReplace_' &&
-                                    this.name.substring(0,13) != 'FRReplaceAll_' &&
-                                    this.name.substring(0,7) != 'Preview' &&
-                                    this.name.substring(0,6) != 'Cancel' &&
-                                    this.name.substring(0,6) != 'Submit') {
+                                    this.name.substring(0,2) != 'FR') {
                                     sHash += (sHash? '&' : '') + this.name + '=' + encodeURIComponent(this.value);
                                 }
                             });

@@ -1420,10 +1420,9 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                 $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
                 $aCheckFieldsOptions = array(
                     'mandatory_password' => false,  // Password field is not mandatory.
-                    'fieldname_as_header' => true,  // Use field name in errors instead of form
-                                                    // field header.
+                    'fieldname_as_header' => true,  // Use field name in errors instead of form field header.
                     'trim_fields' => false,         // No trimming of whitespace.
-                    'explode_strings' => true,      // Convert ';'-delimited strings to arrays.
+                    'explode_strings' => true,      // Multiple selection lists are input as simple strings here.
                     'show_select_alts' => true,     // Show alternatives in errors for select fields.
                 );
                 $aSection['object']->checkFields($aLine, $zData, $aCheckFieldsOptions);

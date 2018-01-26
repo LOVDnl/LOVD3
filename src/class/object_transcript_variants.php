@@ -49,8 +49,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     var $sTable = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
     var $bShared = true;
     var $aTranscripts = array();
-    var $bPrefixTranscriptFields = true; // Flag to give transcript-specific fields used in
-                                         // getForm() and checkFields() a prefix to separate them.
+    // Flag to give transcript-specific fields used in getForm() and checkFields() a prefix to separate them.
+    var $bPrefixTranscriptFields = true;
 
 
 
@@ -145,13 +145,14 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
         if (!empty($this->nID)) {
-            // Known ID, load transcript for existing variant.
+            // Known variant ID, load all transcripts for existing variant.
             $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' .
                 TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS .
                 ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, ' .
                 't.id_ncbi', array($this->nID))->fetchAllRow();
         } else {
-            // Set list of transcripts available for this variant for getForm(), checkFields(), etc...
+            // Unknown variant, but then we must have a gene symbol ($sObjectID).
+            // Get list of transcript(s) available for this gene for getForm(), checkFields(), etc...
             $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' .
                 TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' .
                 str_repeat(', ?', substr_count($sObjectID, ',')) . ') ' .
