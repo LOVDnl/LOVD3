@@ -1,4 +1,4 @@
-<phpunit bootstrap="phpunit_bootstrap.php">
+<phpunit bootstrap="../phpunit_bootstrap.php">
     <testsuites>
         <testsuite name="admin_tests">
             <file>shared_tests/install_LOVD.php</file>
@@ -33,6 +33,9 @@
             <file>admin_tests/post_finish_add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_screening_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_phenotype_info_to_IVA_individual.php</file>
+            <file>shared_tests/test_create_token.php</file>
+            <file>shared_tests/test_submission_api_fail.php</file>
+            <file>shared_tests/test_submission_api_success.php</file>
             <file>admin_tests/delete_gene_IVD.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-08-09
- * For LOVD    : 3.0-20
+ * Modified    : 2018-01-12
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -149,9 +149,32 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
-    $_DATA->viewList('Genes', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $aVLOptions = array(
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+    );
+    $_DATA->viewList('Genes', $aVLOptions);
 
     $_T->printFooter();
+    exit;
+}
+
+
+
+
+
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
+    // URL: /genes/2928
+    // Try to find a gene by its HGNC ID and forward.
+
+    if ($sID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($_PE[1]))->fetchColumn()) {
+        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
+    } else {
+        define('PAGE_TITLE', 'Genes with HGNC ID #' . $_PE[1]);
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('Gene not found!', 'stop');
+        $_T->printFooter();
+    }
     exit;
 }
 
@@ -208,7 +231,12 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->setSortDefault('variants');
-    $_DATA->viewList('Transcripts_for_G_VE', 'geneid', true, true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('geneid'),
+        'track_history' => false,
+        'show_navigation' => false,
+    );
+    $_DATA->viewList('Transcripts_for_G_VE', $aVLOptions);
 
     // Disclaimer.
     if ($zData['disclaimer']) {
@@ -560,15 +588,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                 $aSuccessTranscripts[] = $sTranscript;
 
                                 // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
-                                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_DONE . ' WHERE chromosome = ? AND (' .
-                                                 '(position_g_start BETWEEN ? AND ?) OR ' .
-                                                 '(position_g_end   BETWEEN ? AND ?) OR ' .
-                                                 '(position_g_start < ? AND position_g_end > ?))',
-                                                 array($_POST['chromosome'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd']));
-                                if ($q->rowCount()) {
-                                    // If we have changed variants, turn on mapping immediately.
-                                    $_SESSION['mapping']['time_complete'] = 0;
-                                }
+                                $_DATA['Transcript']->turnOffMappingDone($_POST['chromosome'], $aTranscriptPositions);
                             }
                         }
                     }
@@ -1693,7 +1713,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
         }
         $_GET['page_size'] = 10;
         $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}", level: "{{zData_level}}"}, lovd_authorizeUser); return false;');
-        $_DATA->viewList('Genes_AuthorizeUser', array('id', 'status_', 'last_login_', 'created_date_'), true); // Create known viewListID for lovd_unauthorizeUser().
+        $aVLOptions = array(
+            'cols_to_skip' => array('id', 'status_', 'last_login_', 'created_date_'),
+            'track_history' => false,
+        );
+        $_DATA->viewList('Genes_AuthorizeUser', $aVLOptions); // Create known viewListID for lovd_unauthorizeUser().
 
 
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-08-09
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -65,7 +65,11 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldec
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->sSortDefault = ($sGene? 'variants' : 'geneid');
-    $_DATA->viewList('Transcripts', ($sGene? 'geneid' : ''), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
+    $aVLOptions = array(
+        'cols_to_skip' => ($sGene? array('geneid') : array()),
+        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+    );
+    $_DATA->viewList('Transcripts', $aVLOptions);
 
     if ($sGene) {
         lovd_printGeneFooter();
@@ -108,7 +112,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
     $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
     $_DATA->setRowLink('VOT_for_T_VE', 'javascript:window.location.href=\'' . lovd_getInstallURL() . 'variants/{{ID}}#{{transcriptid}}\'; return false');
-    $_DATA->viewList('VOT_for_T_VE', array('geneid', 'transcriptid', 'id_ncbi', 'id_'));
+    $aVLOptions = array(
+        'cols_to_skip' => array('geneid', 'transcriptid', 'id_ncbi', 'id_'),
+    );
+    $_DATA->viewList('VOT_for_T_VE', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -368,15 +375,7 @@ if (ACTION == 'create') {
                             $aSuccessTranscripts[] = $sTranscript;
 
                             // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
-                            $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_DONE . ' WHERE chromosome = ? AND (' .
-                                             '(position_g_start BETWEEN ? AND ?) OR ' .
-                                             '(position_g_end   BETWEEN ? AND ?) OR ' .
-                                             '(position_g_start < ? AND position_g_end > ?))',
-                                             array($zData['gene']['chromosome'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd']));
-                            if ($q->rowCount()) {
-                                // If we have changed variants, turn on mapping immediately.
-                                $_SESSION['mapping']['time_complete'] = 0;
-                            }
+                            $_DATA->turnOffMappingDone($zData['gene']['chromosome'], $aTranscriptPositions);
                         }
                     }
                 }

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-06-19
- * For LOVD    : 3.0-19
+ * Modified    : 2017-12-11
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -136,6 +136,7 @@ class LOVD_Object {
 
 
 
+
     public function applyColumnFindAndReplace ($sFRFieldname, $sFRSearchValue, $sFRReplaceValue,
                                                 $aArgs, $aOptions) {
         // Perform a find and replace action for given field name (column).
@@ -143,7 +144,12 @@ class LOVD_Object {
 
         global $_DB, $_AUTH;
 
-        // Determine field name from select query.
+        // Column should be configured to allow Find & Replace.
+        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
+        }
+
+        // Determine field name from column definitions.
         list(, $sFieldname) = $this->getTableAndFieldNameFromViewListCols($sFRFieldname);
 
         // Construct replace statement using viewlist's select query, without ORDER BY and LIMIT.
@@ -373,7 +379,7 @@ class LOVD_Object {
         }
 
         // Check all fields that we receive for data type and maximum length.
-        // No longer to this through $aForm, because when importing,
+        // No longer do this through $aForm, because when importing,
         //  we do have data to check but no $aForm entry linked to it.
         foreach ($aData as $sFieldname => $sFieldvalue) {
 
@@ -784,7 +790,7 @@ class LOVD_Object {
             // Analyzing the SELECT. This is quite difficult as we can have simple SELECTs but also really complicated ones,
             // such as GROUP_CONCAT() or subselects. These should all be parsed and needed tables should be identified.
             //                    t.* || t.col                    [t.col || "value" || (t.col ... val) || FUNCTION() || CASE ... END] AS alias
-            if (preg_match_all('/(([a-z0-9_]+)\.(?:\*|[a-z0-9_]+)|(?:(?:([a-z0-9_]+)\.[a-z0-9_]+|".*"|[A-Z_]*\(.+\)|CASE .+ END) AS +([a-z0-9_]+|`[A-Za-z0-9_\/]+`)))(?:,|$)/U', $aSQL['SELECT'], $aRegs)) {
+            if (preg_match_all('/(([a-z0-9_]+)\.(?:\*|[a-z0-9_]+)|(?:(?:([a-z0-9_]+)\.[a-z0-9_]+|".*"|[A-Z_]*\(.+\)|CASE .+ END)\s+AS\s+([A-Za-z0-9_]+|`[A-Za-z0-9_\/]+`)))(?:,|$)/Us', $aSQL['SELECT'], $aRegs)) {
                 for ($i = 0; $i < count($aRegs[0]); $i ++) {
                     // First we'll store the column information, later we'll loop though it to see which tables they refer to.
                     // 1: entire SELECT string incl. possible alias;
@@ -849,7 +855,7 @@ class LOVD_Object {
                     // OK, this really shouldn't happen. Either the column wasn't a
                     // category we recognized, or the SQL was too complicated?
                     // Let's log this.
-                    lovd_writeLog('Error', 'LOVD-Lib', 'LOVD_Object::getRowCountForViewList() - Function identified custom column category ' . $sCategory . ', but couldn\'t find corresponding table alias in query.' . "\n" . 'URL: ' . preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . "\n" . 'From: ' . $aSQL['FROM']);
+                    lovd_writeLog('Error', 'LOVD-Lib', 'LOVD_Object::' . __FUNCTION__ . '() - Function identified custom column category ' . $sCategory . ', but couldn\'t find corresponding table alias in query.' . "\n" . 'URL: ' . preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . "\n" . 'From: ' . $aSQL['FROM']);
                 }
             }
         }
@@ -975,9 +981,6 @@ class LOVD_Object {
 
 
 
-
-
-
     function getSortDefault ()
     {
         return $this->sSortDefault;
@@ -987,7 +990,7 @@ class LOVD_Object {
 
 
 
-    private function getTableAndFieldNameFromViewListCols ($sFRFieldname)
+    private function getTableAndFieldNameFromViewListCols ($sVLColumn)
     {
         // Try to translate UI field name to fieldname and tablename in the database based on
         // the SQL query definitions. (note that a field name returned by the interface (returned
@@ -995,19 +998,15 @@ class LOVD_Object {
 
         // All columns for Find & Replace *must* be defined in the column's list.
         // Check if column exists there. If not, display an error.
-        if (!isset($this->aColumnsViewList[$sFRFieldname])) {
-            lovd_displayError('FindAndReplace', 'Find and Replace requested on undefined field name "' . $sFRFieldname . '".');
-        }
-
-        // Column should be configured to allow Find & Replace.
-        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
-            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
+        if (!isset($this->aColumnsViewList[$sVLColumn])) {
+            lovd_displayError('', 'Cannot find table and field name for undefined column "' .
+                $sVLColumn . '".');
         }
 
         // Column name in the database may be a function, but
         // those columns should not have 'allowfnr' set to true.
         $sTableName = '';
-        $sFieldName = $this->aColumnsViewList[$sFRFieldname]['db'][0];
+        $sFieldName = $this->aColumnsViewList[$sVLColumn]['db'][0];
         if (preg_match('/^([A-Za-z0-9_`]+)\.([A-Za-z0-9_`\/]+)$/', $sFieldName, $aRegs)) {
             $sTableName = $aRegs[1];
             $sFieldName = $aRegs[2];
@@ -1020,6 +1019,7 @@ class LOVD_Object {
         // Note: tablename may be an alias.
         return array($sTableName, $sFieldName);
     }
+
 
 
 
@@ -1265,9 +1265,9 @@ class LOVD_Object {
                     }
                 }
             }
-            // If we find an owned_by_ field, and an owner array, we set up the popups as well (but not for the "LOVD" user).
-            if (isset($zData['owned_by']) && (int) $zData['owned_by'] && !empty($zData['owner'])) {
-                if(!is_array($zData['owner'][0])) {
+            // If we find an owned_by_ field, and an owner array, we set up the popups as well.
+            if (isset($zData['owned_by_']) && !empty($zData['owner'])) {
+                if (!is_array($zData['owner'][0])) {
                     $zData['owner'] = array($zData['owner']);
                 }
                 // We are going to overwrite the 'owned_by_' field.
@@ -1275,6 +1275,10 @@ class LOVD_Object {
                 foreach($zData['owner'] as $aLinkData) {
                     if (count($aLinkData) >= 6) {
                         list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
+                        if (intval($nID) === 0) {
+                            // Skip special "LOVD" user.
+                            continue;
+                        }
                         // Call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table, and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
                         $zData['owned_by_'] .= (!$zData['owned_by_']? '' : ', ') .
                             '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
@@ -1289,8 +1293,30 @@ class LOVD_Object {
                     list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['analyzer'];
                     $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
                 }
-                // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
-                $zData['class_name'] = '';
+            }
+            // Determine minimum status for all data in current VL row.
+            $nRowStatus = STATUS_OK;
+            // Status coloring will only be done, when we have authorization.
+            // Instead of having the logic in separate objects and the custom VL object, put it together here.
+            // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
+            if (!LOVD_plus && $_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                // Loop through possible status fields, always keep the minimum.
+                foreach (array('statusid', 'var_statusid', 'ind_statusid') as $sField) {
+                    if (!empty($zData[$sField])) {
+                        // In the VariantOnTranscriptUnique view the var_statusid can contain multiple IDs, separated by ",".
+                        // PHP always takes the first integer-like part of a string when converting to an integer.
+                        // But to avoid problems in the future, only the first character is compared.
+                        $nRowStatus = min($nRowStatus, (int) substr($zData[$sField], 0, 1));
+                    }
+                }
+            }
+
+            // Mark row according to the lowest status; Marked is red; lower will be gray.
+            $zData['class_name'] = '';
+            if ($nRowStatus == STATUS_MARKED) {
+                $zData['class_name'] = 'marked';
+            } elseif ($nRowStatus < STATUS_MARKED) {
+                $zData['class_name'] = 'del';
             }
 
         } else {
@@ -1324,8 +1350,12 @@ class LOVD_Object {
         // sFRSearchValue       Search string.
         // sFRReplaceValue      Replace value.
         // aOptions             F&R options (e.g. match type)
-
         global $_DB;
+
+        // Column should be configured to allow Find & Replace.
+        if (empty($this->aColumnsViewList[$sFRFieldname]['allowfnr'])) {
+            lovd_displayError('FindAndReplace', 'Find and Replace requested on field "' . $sFRFieldname . '", which does not have that feature enabled.');
+        }
 
         // Try to discover the tablename and fieldname, as $sFRFieldname may be
         // an alias.
@@ -1537,6 +1567,19 @@ class LOVD_Object {
                 }
             }
         }
+
+        // Handle multivalue filter request. I.e., show only records that have more than one
+        // value for certain aggregated columns.
+        if (!empty($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
+            foreach ($aRequestMVSCols as $sMVSCol) {
+                list($sTable, $sField) = $this->getTableAndFieldNameFromViewListCols($sMVSCol);
+
+                // Enclose fieldname with backticks and append it to the having clause.
+                $sMVSColQuoted = ($sTable? $sTable . '.' : '') . '`' . trim($sField, '`') . '`';
+                $HAVING .= ($HAVING? ' AND ' : '') . 'COUNT(DISTINCT ' . $sMVSColQuoted . ') > 1';
+            }
+        }
+
         return array($WHERE, $HAVING, $aArguments, $aBadSyntaxColumns, $aColTypes);
     }
 
@@ -1864,9 +1907,7 @@ class LOVD_Object {
 
 
 
-    function viewList ($sViewListID = false, $aColsToSkip = array(), $bNoHistory = false,
-                       $bHideNav = false, $bOptions = false, $bOnlyRows = false,
-                       $bFindReplace = false)
+    function viewList ($sViewListID = false, $aOptions = array())
     {
         // Show a viewlist for the current object.
         // Params:
@@ -1874,6 +1915,35 @@ class LOVD_Object {
 
         // Views list of entries in the database, allowing search.
         global $_DB, $_INI, $_SETT;
+
+        if (empty($aOptions) || !is_array($aOptions)) {
+            $aOptions = array();
+        }
+
+        // Append existing options from session, if available.
+        if (isset($_SESSION['viewlists'][$sViewListID]['options'])) {
+            $aOptions = array_replace($_SESSION['viewlists'][$sViewListID]['options'], $aOptions);
+        }
+
+        // Append defaults for any remaining options.
+        $aOptions = array_replace(
+            array(
+                'cols_to_skip' => array(),      // Names of columns to hide.
+                'track_history' => true,        // Track actions of AJAX VL requests in the browser history.
+                'show_navigation' => true,      // Show paging and navigation buttons.
+                'show_options' => false,        // Show options menu.
+                'only_rows' => false,           // Only put the table rows in the output.
+                'find_and_replace' => false,    // Allow find and replace on columns.
+                'multi_value_filter' => false,  // Allow multi valued search on columns.
+            ),
+            $aOptions);
+
+        // Disallow F&R and multivalue search when options menu is hidden.
+        $aOptions['find_and_replace'] &= $aOptions['show_options'];
+        $aOptions['multi_value_filter'] &= $aOptions['show_options'];
+
+        // Save viewlist options to session.
+        $_SESSION['viewlists'][$sViewListID]['options'] = $aOptions;
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');
@@ -1891,21 +1961,24 @@ class LOVD_Object {
             $sViewListID = preg_replace('/[^A-Z0-9._-]+/i', '', $sViewListID);
         }
 
-        if (!is_array($aColsToSkip)) {
-            $aColsToSkip = array($aColsToSkip);
+        if (!is_array($aOptions['cols_to_skip'])) {
+            $aOptions['cols_to_skip'] = array($aOptions['cols_to_skip']);
         }
         foreach ($this->aColumnsViewList as $sCol => $aCol) {
-            if (!$aCol['view'] && !in_array($sCol, $aColsToSkip)) {
-                $aColsToSkip[] = $sCol;
+            if (!$aCol['view'] && !in_array($sCol, $aOptions['cols_to_skip'])) {
+                $aOptions['cols_to_skip'][] = $sCol;
             }
         }
 
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
         // First, check if entries are in the database at all.
+        // FIXME: This check, meant for optimization, proves to be slowing down the entire VL on larger DBs.
+        // FIXME: It would be better to remove this and remove the nCount calculators in the custom VL object completely.
+        // FIXME: Currently anyway we don't provide correct counts there for performance reasons, so the variable name isn't correct.
         $nTotal = $this->getCount();
         if (!$nTotal && FORMAT == 'text/html') {
-            if ($bOnlyRows) {
+            if ($aOptions['only_rows']) {
                 die('0'); // Silent error.
             }
             lovd_showInfoTable('No entries in the database yet!', 'stop');
@@ -1937,6 +2010,13 @@ class LOVD_Object {
         }
 
         $sSQLOrderBy = $this->aColumnsViewList[$aOrder[0]]['db'][0] . ' ' . $aOrder[1];
+        if (preg_match('/AS\s+`?' . preg_quote($aOrder[0], '/') . '`?\b/i', $this->aSQLViewList['SELECT'])) {
+            // Current field name is present as an alias in SELECT clause, use
+            // this instead in the ORDER BY clause. (needed for aggregated
+            // fields)
+            $sSQLOrderBy = '`' . trim($aOrder[0], '`') . '` ' . $aOrder[1];
+        }
+
         if (in_array($aOrder[0], array('chromosome','VariantOnGenome/DNA'))) {
             // 2014-03-07; 3.0-10; We need to find the table alias of the VOG or genes table, because otherwise MySQL fails here ('chromosome' is ambiguous) if both are joined.
             // 2014-04-28; 3.0-10; Prefer the genes table, since it joins to VOG as well, but may not have results which messes up the order.
@@ -1962,7 +2042,7 @@ class LOVD_Object {
         // Only print stuff if we're not in Ajax right now.
         if (!$bAjax && FORMAT == 'text/html') {
             // Keep the URL clean; disable any fields that are not used.
-            lovd_includeJS('inc-js-viewlist.php' . (!$bNoHistory? '' : '?nohistory'));
+            lovd_includeJS('inc-js-viewlist.php' . ($aOptions['track_history']? '' : '?nohistory'));
             lovd_includeJS('inc-js-tooltip.php');
 
             // Print form; required for sorting and searching.
@@ -1978,24 +2058,15 @@ class LOVD_Object {
 // FIXME; if we do need to send action, we can't do it this way... URL?action=&bla=bla does not get ACTION recognized.
                   (!ACTION? '' :
                   '        <INPUT type="hidden" name="' . ACTION . '" value="">' . "\n") .
-                  '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">' . "\n");
+                  '        <INPUT type="hidden" name="order" value="' . implode(',', $aOrder) . '">' . "\n" .
+                  '        <INPUT type="hidden" name="MVSCols" value="' . (!isset($_GET['MVSCols'])?
+                      '' : htmlspecialchars($_GET['MVSCols'])) . '">' . "\n");
             // Skipping (permanently hiding) columns.
-            foreach ($aColsToSkip as $sCol) {
-                if (array_key_exists($sCol, $this->aColumnsViewList)) {
-                    // Internet Explorer refuses to submit input with equal names. If names are different, everything works fine.
-                    // Somebody please tell me it's a bug and nobody's logical thinking. Had to include $sCol to make it work.
-                    print('        <INPUT type="hidden" name="skip[' . $sCol . ']" value="' . $sCol . '">' . "\n");
-                    // Check if we're skipping columns, that do have a search value. If so, it needs to be sent on like this.
-                    if (isset($_GET['search_' . $sCol])) {
-                        print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
-                    }
+            foreach ($aOptions['cols_to_skip'] as $sCol) {
+                // Check if we're skipping columns, that do have a search value. If so, it needs to be sent on like this.
+                if (array_key_exists($sCol, $this->aColumnsViewList) && isset($_GET['search_' . $sCol])) {
+                    print('        <INPUT type="hidden" name="search_' . $sCol . '" value="' . htmlspecialchars($_GET['search_' . $sCol]) . '">' . "\n");
                 }
-            }
-            if ($bHideNav) {
-                print('        <INPUT type="hidden" name="hidenav" value="true">' . "\n");
-            }
-            if ($bOptions) {
-                print('        <INPUT type="hidden" name="options" value="true">' . "\n");
             }
             print("\n");
         }
@@ -2101,7 +2172,7 @@ class LOVD_Object {
                 $bSQLCALCFOUNDROWS = true;
             }
 
-            if ($bOptions) {
+            if ($aOptions['show_options']) {
                 // If the session variable does not exist, create it!
                 if (!isset($aSessionViewList['checked'])) {
                     $aSessionViewList['checked'] = array();
@@ -2172,7 +2243,7 @@ class LOVD_Object {
                 $this->aSQLViewList['ORDER_BY'] = $sCol;
             }
 
-            if (!$bHideNav && FORMAT == 'text/html') {
+            if ($aOptions['show_navigation'] && FORMAT == 'text/html') {
                 // Implement LIMIT only if navigation is not hidden.
                 // We have a problem here, because we don't know how many hits there are,
                 // because we're using SQL_CALC_FOUND_ROWS which only gives us the number
@@ -2208,19 +2279,29 @@ class LOVD_Object {
         // If no results are found, try to figure out if it was because of the user's searching or not.
         if (!$nTotal) {
             $bSearched = false;
-            $aHiddenSearch = array();
+            $aSearchOnSkippedCols = array();
+            $bSearchNonViewableCol = true;
             foreach ($_GET as $key => $value) {
                 if (substr($key, 0, 7) == 'search_') {
                     $sColumn = substr($key, 7);
-                    if (!in_array($sColumn, $aColsToSkip)) {
+                    if (!in_array($sColumn, $aOptions['cols_to_skip'])) {
+                        // All visible columns that have been searched on ($aOptions['cols_to_skip'] also
+                        // includes everything in aColumnsViewList with false for 'view' key).
+                        // I.e. anything that can be searched by the user.
                         $bSearched = true;
                     } elseif ($this->aColumnsViewList[$sColumn]['view']) {
+                        // Search on hidden columns that have display information in aColumnsViewList,
+                        //  i.e. columns in the $aOptions['cols_to_skip'] argument to the ViewList function.
                         $sColHeader = $this->aColumnsViewList[$sColumn]['view'][0];
                         // Make sure all hidden ID columns have "ID" in the header, so we can recognize them.
                         if (substr(rtrim($sColumn, '_'), -2) == 'id' && substr($sColHeader, -3) != ' ID') {
                             $sColHeader .= ' ID';
                         }
-                        $aHiddenSearch[$sColHeader] = $value;
+                        $aSearchOnSkippedCols[$sColHeader] = $value;
+                    } else {
+                        // Search on hidden columns that have no display information in
+                        //  aColumnsViewList, so columns that are meant to always be hidden.
+                        $bSearchNonViewableCol = true;
                     }
                 }
             }
@@ -2236,8 +2317,14 @@ class LOVD_Object {
         }
 
         if (FORMAT == 'text/html' && ($nTotal || $bSearched)) {
+            // Unpack MVSCols, used to give CSS class to HTML TD tags.
+            $aRequestMVSCols = array();
+            if (isset($_GET['MVSCols'])) {
+                $aRequestMVSCols = explode(';', $_GET['MVSCols']);
+            }
+
             // Only print stuff if we're not just loading one entry right now.
-            if (!$bOnlyRows) {
+            if (!$aOptions['only_rows']) {
                 if (!$bAjax) {
                     print('      <DIV id="viewlistDiv_' . $sViewListID . '">' . "\n"); // These contents will be replaced by Ajax.
                 }
@@ -2275,7 +2362,7 @@ class LOVD_Object {
                 }
                 print('      </DIV>' . "\n\n");
 
-                if (!$bHideNav) {
+                if ($aOptions['show_navigation']) {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
                 }
 
@@ -2291,7 +2378,8 @@ class LOVD_Object {
                 $sFRReplaceValue = htmlspecialchars($sFRReplaceValue);
 
                 // Print options menu for find & replace (hidden by default).
-                print(<<<FROptions
+                if ($aOptions['find_and_replace']) {
+                    print(<<<FROptions
 <DIV id="viewlistFRFormContainer_$sViewListID" class="fnroptionsmenu" style="display: none;">
     <SPAN><B style="color: red">Note that find &amp; replace is still in BETA. Changes made using this feature are not checked for errors, therefore using find &amp; replace may have destructive consequences.<BR>Make a download or backup of the data you're about to edit. If uncertain, use the edit form of the data entries instead.</B><BR>
         Applying find &amp; replace to column
@@ -2337,17 +2425,18 @@ class LOVD_Object {
     </DIV>
 </DIV>
 FROptions
-                );
+                    );
+                }
 
                 // Table and search headers (if applicable).
                 print('      <TABLE border="0" cellpadding="0" cellspacing="1" class="data" id="viewlistTable_' . $sViewListID . '">' . "\n" .
                       '        <THEAD>' . "\n" .
                       '        <TR>' .
-   ($bOptions? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
+   ($aOptions['show_options']? "\n" . '          <TH valign="center" style="text-align:center;">' . "\n" .
                       '            <IMG id="viewlistOptionsButton_' . $sViewListID . '" src="gfx/options.png" width="16" height="16" style="cursor : pointer;"></TH>' : ''));
 
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
-                    if (in_array($sField, $aColsToSkip)) {
+                    if (in_array($sField, $aOptions['cols_to_skip'])) {
                         continue;
                     }
 
@@ -2356,11 +2445,29 @@ FROptions
                     $nAllowFindAndReplace = (int) !empty($aCol['allowfnr']); // Later allow other columns as well, such as owned_by or statusid or so.
                     $sImg = '';
                     $sAlt = '';
+
+                    // Determine column-specific CSS style.
+                    $aCSSClasses = array();
+                    if ($aOrder[0] == $sField) {
+                        $aCSSClasses[] = 'ordered';
+                    } elseif ($bSortable) {
+                        $aCSSClasses[] = 'order';
+                    }
+                    if (in_array($sField, $aRequestMVSCols)) {
+                        $aCSSClasses[] = 'mvs';
+                        // Amend column legend specifying it's being used in multivalued search.
+                        if (empty($aCol['legend'][0])) {
+                            // Make sure this column has a legend.
+                            $aCol['legend'][0] = '';
+                        }
+                        $aCol['legend'][0] .= (!$aCol['legend'][0]? '' : "\n") . 'Only showing rows with multiple values for this column.';
+                    }
+
                     if ($bSortable && $aOrder[0] == $sField) {
                         $sImg = ($aOrder[1] == 'DESC'? '_desc' : '_asc');
                         $sAlt = ($aOrder[1] == 'DESC'? 'Descending' : 'Ascending');
                     }
-                    print("\n" . '          <TH valign="top"' . ($bSortable? ' class="order' . ($aOrder[0] == $sField? 'ed' : '') . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
+                    print("\n" . '          <TH valign="top"' . (!empty($aCSSClasses)? ' class="' . join(' ', $aCSSClasses) . '"' : '') . (empty($aCol['legend'][0])? '' : ' title="' . htmlspecialchars($aCol['legend'][0]) . '"') .
                                  ' data-allowfnr="' . $nAllowFindAndReplace . '" data-fieldname="' . $sField . '">' . "\n" .
                                  '            <IMG src="gfx/trans.png" alt="" width="' . $aCol['view'][1] . '" height="1" id="viewlistTable_' . $sViewListID . '_colwidth_' . $sField . '"><BR>' .
                             (!$bSortable? str_replace(' ', '&nbsp;', $aCol['view'][0]) . '<BR>' :
@@ -2401,7 +2508,7 @@ FROptions
             print('# charset=UTF-8' . "\r\n");
             $i = 0;
             foreach ($this->aColumnsViewList as $sField => $aCol) {
-                if (in_array($sField, $aColsToSkip)) {
+                if (in_array($sField, $aOptions['cols_to_skip'])) {
                     continue;
                 }
 
@@ -2418,12 +2525,12 @@ FROptions
                 $sMessageNormal = 'No results have been found that match your criteria.<BR>Please redefine your search criteria.';
                 $sMessageBadSyntax = 'Your search column' . (count($aBadSyntaxColumns) > 1? 's contain' : ' contains') . ' incorrect search expression syntax at: ' . $sBadSyntaxColumns . '.';
                 $sMessage = (empty($aBadSyntaxColumns)? $sMessageNormal : $sMessageBadSyntax);
-                if ($bOnlyRows) {
+                if ($aOptions['only_rows']) {
                     die('0'); // Silent error.
                 }
                 // FIXME; This code is sort of duplicated, some 100 lines below we also print this, *if* results are found.
                 print('</TABLE><BR>' . "\n"); // <BR> is necessary to keep the InfoTable apart from the data headers.
-                if (!$bHideNav) {
+                if ($aOptions['show_navigation']) {
                     print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                           '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                           '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
@@ -2432,7 +2539,7 @@ FROptions
                 print('      </DIV></FORM>' . "\n\n");
 
             } else {
-                if ($bOnlyRows) {
+                if ($aOptions['only_rows']) {
                     die('0'); // Silent error.
                 }
 
@@ -2440,7 +2547,7 @@ FROptions
 
                 if (substr($this->sObject, -7) == 'Variant') {
                     $sUnit = 'variants' . (substr($this->sObject, 0, 10) == 'Transcript'? ' on transcripts' : '');
-                } elseif ($this->sObject == 'Custom_Viewlist') {
+                } elseif ($this->sObject == 'Custom_ViewList') {
                     $sUnit = 'entries';
                 } elseif ($this->sObject == 'Shared_Column') {
                     $sUnit = 'active columns';
@@ -2448,9 +2555,13 @@ FROptions
                     $sUnit = strtolower($this->sObject) . 's';
                 }
                 $sMessage = 'No ' . $sUnit . ' found';
-                if (!empty($aHiddenSearch)) {
+                if (!empty($aSearchOnSkippedCols) && !$bSearchNonViewableCol) {
+                    // When searched on columns that have been requested to be hidden for this VL,
+                    //  then display the search items given to provide more information to the user.
+                    // However, do not do this when we also searched on columns where no
+                    //  display information is ever available ('view' set to false in aColumnsViewList).
                     $sWhere = '';
-                    foreach ($aHiddenSearch as $sCol => $sValue) {
+                    foreach ($aSearchOnSkippedCols as $sCol => $sValue) {
                         // If the hidden column has "ID" in its name, it is the primary filter column.
                         if (substr($sCol, -3) == ' ID') {
                             $sWhere .= ($sWhere? ' and ' : ' ') . 'for this ' . strtolower(substr($sCol, 0, -3));
@@ -2515,14 +2626,24 @@ FROptions
                                 // links in new tabs, provided in inc-js-viewlist.php.
                                 ' onclick="javascript:window.location.href=this.getAttribute(\'data-href\');"')
                         ) . '>');
-                if ($bOptions) {
+                if ($aOptions['show_options']) {
                     print("\n" . '          <TD align="center" class="checkbox" onclick="cancelParentEvent(event);"><INPUT id="check_' . $zData['row_id'] . '" class="checkbox" type="checkbox" name="check_' . $zData['row_id'] . '" onclick="lovd_recordCheckChanges(this, \'' . $sViewListID . '\');"' . (in_array($zData['row_id'], $aSessionViewList['checked'])? ' checked' : '') . '></TD>');
                 }
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
-                    if (in_array($sField, $aColsToSkip)) {
+                    if (in_array($sField, $aOptions['cols_to_skip'])) {
                         continue;
                     }
-                    print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . ($aOrder[0] == $sField? ' class="ordered"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
+
+                    // Determine column-specific CSS classes.
+                    $aCSSClasses = array();
+                    if ($aOrder[0] == $sField) {
+                        $aCSSClasses[] = 'ordered';
+                    }
+                    if (in_array($sField, $aRequestMVSCols)) {
+                        $aCSSClasses[] = 'mvs';
+                    }
+
+                    print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . (!empty($aCSSClasses)? ' class="' . join(' ', $aCSSClasses) . '"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
                 }
                 print('</TR>');
 
@@ -2535,7 +2656,7 @@ FROptions
 
                 $i = 0;
                 foreach ($this->aColumnsViewList as $sField => $aCol) {
-                    if (in_array($sField, $aColsToSkip)) {
+                    if (in_array($sField, $aOptions['cols_to_skip'])) {
                         continue;
                     }
                     print(($i ++? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n"), array('\r\n', '\r', '\n'), addslashes(html_entity_decode(strip_tags($zData[$sField])))) . '"');
@@ -2545,9 +2666,9 @@ FROptions
         }
 
         // Only print stuff if we're not just loading one entry right now.
-        if ($nTotal && !$bOnlyRows && FORMAT == 'text/html') {
+        if ($nTotal && !$aOptions['only_rows'] && FORMAT == 'text/html') {
             print('</TABLE>' . "\n");
-            if (!$bHideNav) {
+            if ($aOptions['show_navigation']) {
                 print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
                       '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
                       '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
@@ -2564,18 +2685,33 @@ FROptions
             print('      <SCRIPT type="text/javascript">' . "\n" .
                   '        // This has to be run when the document has finished loading everything, because only then can it get the proper width from IE7 and lower!' . "\n" .
                   '        $( function () {lovd_stretchInputs(\'' . $sViewListID . '\');});' . "\n");
-            if ($bOptions) {
+            if ($aOptions['show_options']) {
                 $sFRMenuOption = '';
-                if ($bFindReplace) {
+                if ($aOptions['find_and_replace']) {
                     // Add find & replace menu item to viewlist options menu.
                     $sFRMenuOption = <<<FRITEM
 '            <LI class="icon">' +
-'                <A click="lovd_FRColumnSelector(\'$sViewListID\');">' +
+'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_FRShowOptionsMenu, ' +
+'                    \'Select column for find & replace\', \'allowfnr\');">' +
 '                    <SPAN class="icon" style=""></SPAN>' +
 '                    Find and replace text in column' +
 '                </A>' +
 '            </LI>' +
 FRITEM;
+                }
+
+                $sMVSOption = '';
+                if ($aOptions['multi_value_filter']) {
+                    // Add menu option for selecting column to filter based on number of values.
+                    $sMVSOption = <<<MVSItem
+'            <LI class="icon">' +
+'                <A click="lovd_columnSelector(\'$sViewListID\', lovd_toggleMVSCol, ' +
+'                    \'Click column to select or deselect it for filtering on rows having multiple values\');">' +
+'                    <SPAN class="icon" style=""></SPAN>' +
+'                    Enable or disable filtering on multivalued rows' +
+'                </A>' +
+'            </LI>' +
+MVSItem;
                 }
 
                 print(<<<OPMENU
@@ -2602,7 +2738,9 @@ FRITEM;
 '                </A>' +
 '            </LI>' +
 $sFRMenuOption
+$sMVSOption
 '            ');
+
 OPMENU
 );
                 if (!LOVD_plus) {
@@ -2620,6 +2758,7 @@ OPMENU
 '                    Download selected entries (summary data)' +
 '                </A>' +
 '            </LI>');
+
 OPMENU
 );
                 }

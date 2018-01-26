@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2017-08-09
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -46,7 +46,7 @@ if ($_AUTH) {
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /phenotypes
     // Not supported, forward user to disease-specific overview.
-    header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/disease');
+    header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/disease?search_phenotypes=' . urlencode('!0'));
     exit;
 }
 
@@ -65,7 +65,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'disease' && !ACTION) {
     require ROOT_PATH . 'class/object_diseases.php';
     $_DATA = new LOVD_Disease();
     $sViewListID = 'Diseases_for_Phenotype_VL';
-    $_GET['search_phenotypes'] = '!0';
     $_DATA->setRowLink($sViewListID, CURRENT_PATH . '/' . $_DATA->sRowID);
     $_DATA->viewList($sViewListID);
 
@@ -90,7 +89,12 @@ if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) 
 
     $_DATA = new LOVD_Phenotype($nDiseaseID);
     $_GET['search_diseaseid'] = $nDiseaseID;
-    $_DATA->viewList('Phenotypes_for_Disease_' . $nDiseaseID, array('diseaseid'), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('diseaseid'),
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('Phenotypes_for_Disease_' . $nDiseaseID, $aVLOptions);
 
     $_T->printFooter();
     exit;

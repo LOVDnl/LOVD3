@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2017-04-24
- * For LOVD    : 3.0-19
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -126,8 +126,12 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     if ($nTranscriptsWithVariants > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome', 'Screening', 'Individual'), $sGene);
-        $_DATA->viewList($sViewListID, array('chromosome'), false, false,
-                         ($_AUTH['level'] >= LEVEL_CURATOR), false, true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('chromosome'),
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
 
         // Notes for the variant listings...
         if (!empty($_SETT['currdb']['note_listing'])) {

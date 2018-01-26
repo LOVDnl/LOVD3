@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2017-08-09
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -69,7 +69,11 @@ if (PATH_COUNT == 1 && !ACTION) {
     if (isset($_GET['no_links'])) {
         $_DATA->setRowLink('Diseases', '');
     }
-    $_DATA->viewList('Diseases', $aColsToHide, false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $aVLOptions = array(
+        'cols_to_skip' => $aColsToHide,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+    );
+    $_DATA->viewList('Diseases', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -128,7 +132,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_individuals.php';
         $_DATA = new LOVD_Individual();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList('Individuals_for_D_VE', array('panelid', 'diseaseids'), true, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('panelid', 'diseaseids'),
+            'track_history' => false,
+            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList('Individuals_for_D_VE', $aVLOptions);
     }
 
     $_T->printFooter();

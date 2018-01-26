@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2016-10-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-11-08
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -166,8 +166,6 @@ if ($_CONF['lock_uninstall'] || $_AUTH['level'] < LEVEL_ADMIN) {
 if (LOVD_plus) {
     unset($aItems['Custom data columns']['download']);
     unset($aItems['Download & Import']['download']);
-} else {
-    unset($aItems['Download & Import']['schedule']);
 }
 
 foreach ($aItems as $sTitle => $aLinks) {

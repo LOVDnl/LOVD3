@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-07-20
- * For LOVD    : 3.0-20
+ * Modified    : 2017-12-04
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -63,18 +63,24 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
 if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
     define('SSL', true);
-    define('SSL_PROTOCOL', $_SERVER['SSL_PROTOCOL']);
     define('PROTOCOL', 'https://');
 } else {
     define('SSL', false);
-    define('SSL_PROTOCOL', '');
     define('PROTOCOL', 'http://');
 }
+
+// Prevent some troubles with the menu or lovd_getProjectFile() when the URL contains double slashes or backslashes.
+$_SERVER['SCRIPT_NAME'] = lovd_cleanDirName(str_replace('\\', '/', $_SERVER['SCRIPT_NAME']));
 
 // Our output formats: text/html by default.
 $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
 if (lovd_getProjectFile() == '/api.php') {
     $aFormats[] = 'text/bed';
+} elseif (lovd_getProjectFile() == '/import.php' && substr($_SERVER['QUERY_STRING'], 0, 25) == 'autoupload_scheduled_file') {
+    // Set format to text/plain only when none is requested.
+    if (empty($_GET['format']) || !in_array($_GET['format'], $aFormats)) {
+        $_GET['format'] = 'text/plain';
+    }
 }
 if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
     define('FORMAT', $_GET['format']);
@@ -144,7 +150,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-19a',
+                            'version' => '3.0-20c',
                           ),
                 'user_levels' =>
                      array(
@@ -172,11 +178,25 @@ $_SETT = array(
                 'var_effect' =>
                      array(
                             0 => 'Not classified', // Submitter cannot select this.
-                            5 => 'Effect unknown',
                             9 => 'Affects function',
+                            8 => 'Affects function, not associated with individual\'s disease phenotype',
+                            6 => 'Affects function, not associated with any known disease phenotype',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
+                            5 => 'Effect unknown',
+                          ),
+                'var_effect_api' =>
+                     array(
+                            // The API requires different, concise but clear, values.
+                            0 => 'notClassified',
+                            9 => 'functionAffected',
+                            8 => 'notThisDisease',
+                            6 => 'notAnyDisease',
+                            7 => 'functionProbablyAffected',
+                            3 => 'functionProbablyNotAffected',
+                            1 => 'functionNotAffected',
+                            5 => 'unknown',
                           ),
                 'var_effect_default' => '00',
                 'data_status' =>
@@ -187,6 +207,12 @@ $_SETT = array(
                             STATUS_MARKED => 'Marked',
                             STATUS_OK => 'Public',
                           ),
+                'import_priorities' =>
+                    array(
+                        0 => 'Default',
+                        4 => 'Medium priority',
+                        9 => 'High priority',
+                    ),
                 'update_levels' =>
                      array(
                             1 => 'Optional',
@@ -241,6 +267,8 @@ $_SETT = array(
                             'hg18' =>
                                      array(
                                             'ncbi_name'      => 'Build 36.1',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.9',
@@ -273,6 +301,8 @@ $_SETT = array(
                             'hg19' =>
                                      array(
                                             'ncbi_name'      => 'GRCh37',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.10',
@@ -306,6 +336,8 @@ $_SETT = array(
                             'hg38' =>
                                      array(
                                             'ncbi_name'      => 'GRCh38',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.11',
@@ -432,6 +464,7 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
+                'TABLE_SCHEDULED_IMPORTS' => TABLEPREFIX . '_scheduled_imports',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
@@ -477,7 +510,7 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
-// Help prevent cookie theft trough JavaScript; XSS defensive line.
+// Help prevent cookie theft through JavaScript; XSS defensive line.
 // See: http://nl.php.net/manual/en/session.configuration.php#ini.session.cookie-httponly
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
@@ -563,9 +596,6 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
     // Store additional version information.
     list(, $_STAT['tree'],, $_STAT['build']) = $aRegsVersion;
 }
-
-// Prevent some troubles with the menu when the URL contains double slashes.
-$_SERVER['SCRIPT_NAME'] = lovd_cleanDirName($_SERVER['SCRIPT_NAME']);
 
 
 
@@ -673,7 +703,9 @@ if (!defined('NOT_INSTALLED')) {
             $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN))->fetchRow();
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
+            // Add a cleaned email address, because perhaps the admin has multiple addresses.
+            $_SETT['admin']['address_formatted'] = $_SETT['admin']['name'] . ' <' . str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>';
         }
 
         // Switch gene.
