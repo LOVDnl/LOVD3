@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2017-11-09
+ * Modified    : 2018-01-16
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -485,6 +485,12 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
 
+        // The effectid legend is often repeated.
+        $aLegendVarEffect = array(
+            'The variant\'s effect on the protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+            'The variant\'s effect on the protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.',
+        );
+
         // Now build $this->aColumnsViewList, from the order given by $aObjects and TABLE_COLS.col_order.
         foreach ($aObjects as $nKey => $sObject) {
             switch ($sObject) {
@@ -560,8 +566,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'vog_effect' => array(
                                         'view' => array('Effect', 70),
                                         'db'   => array('eg.name', 'ASC', true),
-                                        'legend' => array('The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                          'The variant\'s effect on a protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                        'legend' => array(
+                                            str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
+                                            str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
                               ));
                     if (in_array('VariantOnTranscript', $aObjects) || in_array('VariantOnTranscriptUnique', $aObjects)) {
                         unset($this->aColumnsViewList['vog_effect']);
@@ -602,8 +609,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'vot_effect' => array(
                                         'view' => array('Effect', 70),
                                         'db'   => array('et.name', 'ASC', true),
-                                        'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                          'The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                        'legend' => $aLegendVarEffect),
                               ));
                     // Only show the gene symbol when we have Scr2Var included, because these are the Individual- and Screening-specific views.
                     // FIXME: Perhaps it would be better to always show this column with VOT, but then hide it in all views that don't need it.
@@ -627,8 +633,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'vot_effect' => array(
                                         'view' => array('Effect', 70),
                                         'db'   => array('et.name', 'ASC', true),
-                                        'legend' => array('The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                          'The variant\'s effect on the protein\'s function, in the format Reported/Curator concluded; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                        'legend' => $aLegendVarEffect),
                                 'vot_reported' => array(
                                         'view' => array('Reported', 70, 'style="text-align : right;"'),
                                         'db'   => array('vot_reported', 'ASC', 'INT_UNSIGNED'),
@@ -820,23 +825,6 @@ class LOVD_CustomViewList extends LOVD_Object {
 
         // Makes sure it's an array and htmlspecialchars() all the values.
         $zData = parent::prepareData($zData, $sView);
-
-        // Mark all statusses from Marked and lower; Marked will be red, all others gray.
-        // In the VariantOnTranscriptUnique view the var_statusid can contain multiple IDs, these IDs are separated by a ",".
-        // PHP always takes the first integer-like part of a string when a string and an integer are compared.
-        // But to avoid problems in the future, only the first character is compared.
-        // We disable this feature in LOVD+.
-        $bVarStatus = (!LOVD_plus && !empty($zData['var_statusid']) && substr($zData['var_statusid'], 0, 1) <= STATUS_MARKED);
-        $bIndStatus = (!LOVD_plus && !empty($zData['ind_statusid']) && $zData['ind_statusid'] <= STATUS_MARKED);
-
-        if ($bVarStatus && $bIndStatus) {
-            $nStatus = min(substr($zData['var_statusid'], 0, 1), $zData['ind_statusid']);
-            $zData['class_name'] = ($nStatus == STATUS_MARKED? 'marked' : 'del');
-        } elseif ($bVarStatus) {
-            $zData['class_name'] = (substr($zData['var_statusid'], 0, 1) == STATUS_MARKED? 'marked' : 'del');
-        } elseif ($bIndStatus) {
-            $zData['class_name'] = ($zData['ind_statusid'] == STATUS_MARKED? 'marked' : 'del');
-        }
 
         // Replace rs numbers with dbSNP links.
         if (!empty($zData['VariantOnGenome/dbSNP'])) {

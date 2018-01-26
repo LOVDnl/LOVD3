@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-11-22
+ * Modified    : 2017-12-11
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1393,9 +1393,9 @@ class LOVD_Object {
                     }
                 }
             }
-            // If we find an owned_by_ field, and an owner array, we set up the popups as well (but not for the "LOVD" user).
-            if (isset($zData['owned_by']) && (int) $zData['owned_by'] && !empty($zData['owner'])) {
-                if(!is_array($zData['owner'][0])) {
+            // If we find an owned_by_ field, and an owner array, we set up the popups as well.
+            if (isset($zData['owned_by_']) && !empty($zData['owner'])) {
+                if (!is_array($zData['owner'][0])) {
                     $zData['owner'] = array($zData['owner']);
                 }
                 // We are going to overwrite the 'owned_by_' field.
@@ -1403,6 +1403,10 @@ class LOVD_Object {
                 foreach($zData['owner'] as $aLinkData) {
                     if (count($aLinkData) >= 6) {
                         list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
+                        if (intval($nID) === 0) {
+                            // Skip special "LOVD" user.
+                            continue;
+                        }
                         // Call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table, and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
                         $zData['owned_by_'] .= (!$zData['owned_by_']? '' : ', ') .
                             '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
@@ -1417,8 +1421,30 @@ class LOVD_Object {
                     list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['analyzer'];
                     $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
                 }
-                // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
-                $zData['class_name'] = '';
+            }
+            // Determine minimum status for all data in current VL row.
+            $nRowStatus = STATUS_OK;
+            // Status coloring will only be done, when we have authorization.
+            // Instead of having the logic in separate objects and the custom VL object, put it together here.
+            // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
+            if (!LOVD_plus && $_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                // Loop through possible status fields, always keep the minimum.
+                foreach (array('statusid', 'var_statusid', 'ind_statusid') as $sField) {
+                    if (!empty($zData[$sField])) {
+                        // In the VariantOnTranscriptUnique view the var_statusid can contain multiple IDs, separated by ",".
+                        // PHP always takes the first integer-like part of a string when converting to an integer.
+                        // But to avoid problems in the future, only the first character is compared.
+                        $nRowStatus = min($nRowStatus, (int) substr($zData[$sField], 0, 1));
+                    }
+                }
+            }
+
+            // Mark row according to the lowest status; Marked is red; lower will be gray.
+            $zData['class_name'] = '';
+            if ($nRowStatus == STATUS_MARKED) {
+                $zData['class_name'] = 'marked';
+            } elseif ($nRowStatus < STATUS_MARKED) {
+                $zData['class_name'] = 'del';
             }
 
         } else {
@@ -1445,7 +1471,7 @@ class LOVD_Object {
     {
         // Append a field to the viewlist showing a preview of changes for a
         // find and replace (F&R) action. Also checks if the resulting data
-        // records are valid through checkFelds() and report any errors.
+        // records are valid through checkFields() and report any errors.
         // Returns the number of rows that will be affected by the F&R.
         // Params:
         // $sFRViewListCol      Name of field on which F&R to preview.

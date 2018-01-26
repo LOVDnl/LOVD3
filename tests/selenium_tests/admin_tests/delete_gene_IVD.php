@@ -19,7 +19,7 @@ class DeleteGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Delete gene information entry']"));
         $element->click();
-        $this->assertEquals("You are about to delete 1 transcript(s) and related information on 3 variant(s) on those transcripts. Please fill in your password one more time to confirm the removal of gene IVD.", $this->driver->findElement(WebDriverBy::xpath("//*/table[@class='info'][2]"))->getText());
+        $this->assertEquals("You are about to delete 1 transcript(s) and related information on 4 variant(s) on those transcripts. Please fill in your password one more time to confirm the removal of gene IVD.", $this->driver->findElement(WebDriverBy::xpath("//*/table[@class='info'][2]"))->getText());
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Delete gene information entry']"));
         $element->click();

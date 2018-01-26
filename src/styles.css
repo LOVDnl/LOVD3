@@ -3,8 +3,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2017-09-29
- * For LOVD    : 3.0-20
+ * Modified    : 2017-11-08
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -199,6 +199,25 @@ div.fnroptionsmenu   {background: #F0F3FF; border: 1px solid #AFC8FA; padding: 4
 table.data tr.del_hover td.ordered    {background : #AFC8FA;}
 table.data tr.marked td.ordered {background : #FFD5D5;}
 table.data tr.marked_hover td.ordered {background : #FFC0C0;}*/
+
+/* Color coding the variants */
+table.data tr.colRed td                   {background : #FAD5D5;}
+table.data tr.colRed td.ordered           {background : #FFB5B5;}
+table.data tr.colRed:hover td             {background : #FFB5B5;}
+table.data tr.colRed:hover td.ordered     {background : #FF9090;}
+table.data tr.colRed:hover td.checkbox    {background : #FAD5D5; cursor : default;}
+
+table.data tr.colGreen td                 {background : #D0FFD0;}
+table.data tr.colGreen td.ordered         {background : #B0FFB0;}
+table.data tr.colGreen:hover td           {background : #B0FFB0;}
+table.data tr.colGreen:hover td.ordered   {background : #80FF80;}
+table.data tr.colGreen:hover td.checkbox  {background : #D0FFD0; cursor : default;}
+
+table.data tr.colOrange td                {background : #FFE5C0;}
+table.data tr.colOrange td.ordered        {background : #FFD090;}
+table.data tr.colOrange:hover td          {background : #FFD090;}
+table.data tr.colOrange:hover td.ordered  {background : #FFC070;}
+table.data tr.colOrange:hover td.checkbox {background : #FFE5C0; cursor : default;}
 
 /* Searching styles... */
 table.data input                {font-size : 11px;}

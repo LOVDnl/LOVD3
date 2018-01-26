@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-11-07
+ * Modified    : 2017-12-04
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -76,6 +76,11 @@ $_SERVER['SCRIPT_NAME'] = lovd_cleanDirName(str_replace('\\', '/', $_SERVER['SCR
 $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
 if (lovd_getProjectFile() == '/api.php') {
     $aFormats[] = 'text/bed';
+} elseif (lovd_getProjectFile() == '/import.php' && substr($_SERVER['QUERY_STRING'], 0, 25) == 'autoupload_scheduled_file') {
+    // Set format to text/plain only when none is requested.
+    if (empty($_GET['format']) || !in_array($_GET['format'], $aFormats)) {
+        $_GET['format'] = 'text/plain';
+    }
 }
 if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
     define('FORMAT', $_GET['format']);
@@ -145,7 +150,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-20a',
+                            'version' => '3.0-20c',
                           ),
                 'user_levels' =>
                      array(
@@ -202,6 +207,12 @@ $_SETT = array(
                             STATUS_MARKED => 'Marked',
                             STATUS_OK => 'Public',
                           ),
+                'import_priorities' =>
+                    array(
+                        0 => 'Default',
+                        4 => 'Medium priority',
+                        9 => 'High priority',
+                    ),
                 'update_levels' =>
                      array(
                             1 => 'Optional',
@@ -256,6 +267,8 @@ $_SETT = array(
                             'hg18' =>
                                      array(
                                             'ncbi_name'      => 'Build 36.1',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.9',
@@ -288,6 +301,8 @@ $_SETT = array(
                             'hg19' =>
                                      array(
                                             'ncbi_name'      => 'GRCh37',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.10',
@@ -321,6 +336,8 @@ $_SETT = array(
                             'hg38' =>
                                      array(
                                             'ncbi_name'      => 'GRCh38',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.11',
@@ -447,6 +464,7 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
+                'TABLE_SCHEDULED_IMPORTS' => TABLEPREFIX . '_scheduled_imports',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
@@ -492,7 +510,7 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
-// Help prevent cookie theft trough JavaScript; XSS defensive line.
+// Help prevent cookie theft through JavaScript; XSS defensive line.
 // See: http://nl.php.net/manual/en/session.configuration.php#ini.session.cookie-httponly
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
