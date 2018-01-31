@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-26
+ * Modified    : 2018-01-31
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -377,7 +377,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
         if ($_AUTH['level'] < LEVEL_CURATOR) {
             unset($this->aFormData['effect_concluded'], $this->aFormData['general_skip'], $this->aFormData['general'], $this->aFormData['general_hr1'], $this->aFormData['owner'], $this->aFormData['status'], $this->aFormData['general_hr2']);
-        } elseif (!empty($_DATA['Transcript'])) {
+        } elseif (is_array($_DATA) && !empty($_DATA['Transcript'])) {
             // Determine whether to show the `effect_concluded` field.
             // When a variant is linked to one or more transcripts, its effect
             //  on the genomic level will be determined by the "worst" effect on the
@@ -407,7 +407,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         // Determine whether to show the `effect_reported` field.
-        if (!empty($_DATA['Transcript'])) {
+        if (is_array($_DATA) && !empty($_DATA['Transcript'])) {
             // When a variant is linked to one or more transcripts, its effect
             //  on the genomic level will be determined by the "worst" effect on the
             //  transcript levels. Only if the currently set effect is non-concordant
