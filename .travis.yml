@@ -38,7 +38,8 @@ addons:
     packages:
     - mysql-server
     - mysql-client
-    - chromium-browser=61.0.3163.100-0ubuntu0.14.04.1202
+#    - chromium-browser=61.0.3163.100-0ubuntu0.14.04.1202
+    - chromium-browser
 
 before_install:
   - ./tests/travis/setup/setup_chrome.sh
