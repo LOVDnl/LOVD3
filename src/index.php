@@ -39,6 +39,8 @@ if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
     $sFile = 'configuration';
 } elseif ($_SESSION['currdb']) {
     $sFile = 'genes/' . $_SESSION['currdb'];
+} elseif (AGHA) {
+    $sFile = 'variants/in_gene';
 } else {
 
     $aGeneIDs = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' LIMIT 2')->fetchAllColumn();

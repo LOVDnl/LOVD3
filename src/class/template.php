@@ -799,6 +799,10 @@ foreach ($zAnnouncements as $zAnnouncement) {
                     $sURL = $sPrefix . '?search_genes_=' . $_SESSION['currdb'];
                 }
             }
+            // AGHA: When clicking the variant tab, show the in_gene view.
+            if (AGHA && $sPrefix == 'variants') {
+                $sURL = 'variants/in_gene';
+            }
             $nTotalTabWidth += $aImage[0];
             print('      <A href="' . $sURL . '"><IMG src="' . $sFileName . '" alt="' . $Title . '" id="' . $sFile . '" ' . $sSize . ' align="left"></A>' . "\n");
 

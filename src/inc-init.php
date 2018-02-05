@@ -128,6 +128,8 @@ define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 // Diagnostics: To make it easier to share certain code between
 // LOVD and LOVD+, simply define if we're active or not.
 @define('LOVD_plus', false);
+// AGHA specific settings.
+@define('AGHA', true);
 
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
