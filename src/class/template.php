@@ -107,6 +107,7 @@ class LOVD_Template {
                          array(
                                 '' => array('menu_magnifying_glass.png', 'View all genomic variants', 0),
                                 '/variants/in_gene' => array('menu_magnifying_glass.png', 'View all variants affecting transcripts', 0),
+                                '/variants/in_gene/unique' => array('menu_magnifying_glass.png', 'View all unique variants affecting transcripts', 0),
                              'hr',
                                 '/variants/' . $_SESSION['currdb'] . '/unique' => array('menu_magnifying_glass.png', 'View unique variants in gene ' . $_SESSION['currdb'], 0),
                                 '/variants/' . $_SESSION['currdb'] => array('menu_magnifying_glass.png', 'View all variants in gene ' . $_SESSION['currdb'], 0),
