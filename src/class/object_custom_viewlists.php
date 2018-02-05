@@ -478,7 +478,7 @@ class LOVD_CustomViewList extends LOVD_Object {
 
 
 
-        if ($this->sObjectID == 'Transcript,VariantOnTranscript,VariantOnGenome') {
+        if (!AGHA && $this->sObjectID == 'Transcript,VariantOnTranscript,VariantOnGenome') {
             // The joining of the tables needed for this view are in this order, but I want a different order on display.
             $aObjects = array('Transcript', 'VariantOnGenome', 'VariantOnTranscript');
         }
