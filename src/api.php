@@ -175,8 +175,8 @@ if ($sDataType == 'variants') {
         // Normal API output; Atom feed with one entry per variant.
         // First build query.
         // Note that the MIN()s and MAX()es don't mean much if $bUnique is false, since we'll group by the vog.id anyway.
-        $sQ = 'SELECT MIN(vog.id) AS id, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MAX(vog.position_g_start) AS position_g_start, MAX(vog.position_g_end) AS position_g_end, GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported, GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times
-               FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
+        $sQ = 'SELECT MIN(vog.id) AS id, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MAX(vog.position_g_start) AS position_g_start, MAX(vog.position_g_end) AS position_g_end, GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported, GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, SUM(IFNULL(i.panel_size, 1)) AS Times, GROUP_CONCAT(DISTINCT NULLIF(uc.name, "") SEPARATOR ", ") AS created_by_, GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_
+               FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ') LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
                WHERE vot.transcriptid = ' . $nRefSeqID . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
         if ($nID) {
@@ -388,8 +388,8 @@ if ($sDataType == 'variants') {
         $zData['created_date'] = '1970-01-01 00:00:00';
         $zData['updated_date'] = '1970-01-01 00:00:00';
         $sID                   = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . substr($zData['created_date'], 0, 10) . ':' . $sSymbol . '/' . $zData['id'];
-        $zData['created_by']   = 'Unknown'; // We need to get this data from two tables... too much work?
-        $sContributors         = 'Unknown'; // We need to get this data from two tables... too much work?
+        $zData['created_by']   = $zData['created_by_'];
+        $sContributors         = $zData['owned_by_'];
         if ($sRefSeq && $zData['position_c_start']) {
             $sDNAStart = lovd_convertDNAPositionToHR($nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $zData['position_c_start'], $zData['position_c_start_intron']);
             if ($zData['position_c_start'] == $zData['position_c_end']) {
