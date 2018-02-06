@@ -321,7 +321,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     $aSQL['SELECT'] .= ', TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change' .
                                        ', GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect' .
                                        ', GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_' .
-                                       ', GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) SEPARATOR ";;") AS __owner';
+                                       ', GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, IF(IFNULL(uo.department, "") = "", "-", uo.department), IF(IFNULL(uo.countryid, "") = "", "-", uo.countryid)) SEPARATOR ";;") AS __owner';
                     // dsg.id GROUP_CONCAT is ascendingly ordered. This is done for the color marking.
                     // In prepareData() the lowest var_statusid is used to determine the coloring.
                     $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id ASC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status' .
