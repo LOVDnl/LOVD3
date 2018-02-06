@@ -83,6 +83,7 @@ function lovd_AJAX_processViewListHash ()
         $(oForm).find('input[name^="search_"][type!="hidden"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name^="page"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name="order"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+        $(oForm).find('input[name="MVSCols"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
 
         if (!window.location.hash) {
             // We don't have a hash anymore. This means we went back to the original viewlist. We must reload it, WITHOUT

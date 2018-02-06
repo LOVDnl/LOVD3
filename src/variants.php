@@ -202,6 +202,7 @@ if (AGHA && PATH_COUNT == 3 && $_PE[1] == 'in_gene' && $_PE[2] == 'unique' && !A
     $aVLOptions = array(
         'cols_to_skip' => array('name', 'id_protein_ncbi'),
         'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'multi_value_filter' => true,
     );
     $_DATA->viewList($sViewListID, $aVLOptions);
 
