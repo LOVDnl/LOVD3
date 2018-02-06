@@ -301,8 +301,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                             $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vot.id IS NOT NULL';
                             // Then also make sure we group on the VOT's ID, unless we're already grouping on something.
                             if (!$aSQL['GROUP_BY']) {
-                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used t.id).
-                                $aSQL['GROUP_BY'] = 't.geneid, vot.id';
+                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used just t.id).
+                                $aSQL['GROUP_BY'] = 't.geneid, t.id, vot.id';
                             }
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
@@ -346,7 +346,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                             $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vot.id IS NOT NULL';
                             // Then also make sure we group on the Transcript ID, unless we're already grouping on something.
                             if (!$aSQL['GROUP_BY']) {
-                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used t.id).
+                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used just t.id).
                                 $aSQL['GROUP_BY'] = 't.geneid, t.id';
                             }
                         }
