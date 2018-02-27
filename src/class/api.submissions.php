@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2017-12-01
+ * Modified    : 2018-02-27
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -703,7 +703,7 @@ class LOVD_API_Submissions {
         }
 
         // Write the LOVD3 output file (and optionally, the JSON data).
-        return $this->writeImportFile($aData, $sInput);
+        return $this->writeImportFile($aData, $sInputClean);
     }
 
 
