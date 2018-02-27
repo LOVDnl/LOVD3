@@ -116,7 +116,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     // Read out directory and store files in the correct array.
     $nFilesSchedulable = 0; // Keeping track of how many files on disk are not scheduled yet.
     while (($sFile = readdir($h)) !== false) {
-        if (preg_match('/(^LOVD_API_submission.+|.total.data).lovd$/', $sFile, $aRegs)) {
+        if (preg_match('/(^(LOVD_API_submission)_(\d+)_([0-9:_-]+)\.(\d+)|\.total\.data)\.lovd$/', $sFile, $aRegs)) {
             // This should be an importable file.
             $bScheduled = isset($zScheduledFiles[$sFile]);
             if ($bScheduled) {
@@ -131,6 +131,11 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 $sScheduledDate = '0000-00-00 00:00:00';
             }
             $tFileModified = filemtime($_INI['paths']['data_files'] . '/' . $sFile);
+
+            // For files sent over the API, always take the date from the file, and not the timestamp of the file.
+            if ($aRegs[2] == 'LOVD_API_submission') {
+                $tFileModified = strtotime(str_replace('_', ' ', $aRegs[4]));
+            }
 
             // Store file in the files array.
             $aFiles[$bProcessed][$sFile] = array(
@@ -251,11 +256,10 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             // For LOVD API submissions, we change the annotation.
             // File names are long, we can shorten it and annotate better.
             // We deliberately overwrite $aFile['file_date'] here.
-            if (preg_match('/^LOVD_API_submission_(\d+)_([0-9:_-]+)\.(\d+)\.lovd$/', $sFile, $aRegs)) {
+            if (preg_match('/^LOVD_API_submission_(\d+)_/', $sFile, $aRegs)) {
                 $bAPI = true;
-                list(, $nUserID, $aFile['file_date']) = $aRegs;
+                list(, $nUserID) = $aRegs;
                 $nUserID = sprintf('%0' . $_SETT['objectid_length']['users'] . 'd', $nUserID);
-                $aFile['file_date'] = str_replace('_', ' ', $aFile['file_date']);
                 $sFileDisplayName = 'API submission (' . $nUserID . ': ';
                 if (!isset($aUsers[$nUserID])) {
                     $aUsers[$nUserID] = $_DB->query('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchColumn();
