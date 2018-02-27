@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-11-27
+ * Modified    : 2018-02-27
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -1986,10 +1986,13 @@ function lovd_convertIniValueToBytes ($sValue)
 
 
 
-function lovd_convertSecondsToTime ($sValue, $nDecimals = 0)
+function lovd_convertSecondsToTime ($sValue, $nDecimals = 0, $bVerbose = false)
 {
     // This function takes a number of seconds and converts it into whole
     // minutes, hours, days, months or years.
+    // $nDecimals indicates the number of decimals to use in the returned value.
+    // $bVerbose defines whether to use short notation (s, m, h, d, y) or long notation
+    //   (seconds, minutes, hours, days, years).
     // FIXME; Implement proper checks here? Regexp?
 
     $nValue = (int) $sValue;
@@ -2001,10 +2004,12 @@ function lovd_convertSecondsToTime ($sValue, $nDecimals = 0)
 
     $aConversion =
         array(
-            's' => array(60, 'm'),
-            'm' => array(60, 'h'),
-            'h' => array(24, 'd'),
-            'd' => array(265, 'y'),
+            's' => array(60, 'm', 'second'),
+            'm' => array(60, 'h', 'minute'),
+            'h' => array(24, 'd', 'hour'),
+            'd' => array(265, 'y', 'day'),
+            'y' => array(100, 'c', 'year'),
+            'c' => array(100, '', 'century'), // Above is not supported.
         );
 
     foreach ($aConversion as $sUnit => $aConvert) {
@@ -2015,6 +2020,12 @@ function lovd_convertSecondsToTime ($sValue, $nDecimals = 0)
         }
     }
 
-    return round($nValue, $nDecimals) . $sLast;
+    $nValue = round($nValue, $nDecimals);
+    if ($bVerbose) {
+        // Make it "3 years" instead of "3y".
+        return $nValue . ' ' . $aConversion[$sLast][2] . ($nValue == 1? '' : 's');
+    } else {
+        return $nValue . $sLast;
+    }
 }
 ?>
