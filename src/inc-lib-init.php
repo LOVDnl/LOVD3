@@ -2020,10 +2020,13 @@ function lovd_convertIniValueToBytes ($sValue)
 
 
 
-function lovd_convertSecondsToTime ($sValue, $nDecimals = 0)
+function lovd_convertSecondsToTime ($sValue, $nDecimals = 0, $bVerbose = false)
 {
     // This function takes a number of seconds and converts it into whole
     // minutes, hours, days, months or years.
+    // $nDecimals indicates the number of decimals to use in the returned value.
+    // $bVerbose defines whether to use short notation (s, m, h, d, y) or long notation
+    //   (seconds, minutes, hours, days, years).
     // FIXME; Implement proper checks here? Regexp?
 
     $nValue = (int) $sValue;
@@ -2035,10 +2038,12 @@ function lovd_convertSecondsToTime ($sValue, $nDecimals = 0)
 
     $aConversion =
         array(
-            's' => array(60, 'm'),
-            'm' => array(60, 'h'),
-            'h' => array(24, 'd'),
-            'd' => array(265, 'y'),
+            's' => array(60, 'm', 'second'),
+            'm' => array(60, 'h', 'minute'),
+            'h' => array(24, 'd', 'hour'),
+            'd' => array(265, 'y', 'day'),
+            'y' => array(100, 'c', 'year'),
+            'c' => array(100, '', 'century'), // Above is not supported.
         );
 
     foreach ($aConversion as $sUnit => $aConvert) {
@@ -2049,6 +2054,12 @@ function lovd_convertSecondsToTime ($sValue, $nDecimals = 0)
         }
     }
 
-    return round($nValue, $nDecimals) . $sLast;
+    $nValue = round($nValue, $nDecimals);
+    if ($bVerbose) {
+        // Make it "3 years" instead of "3y".
+        return $nValue . ' ' . $aConversion[$sLast][2] . ($nValue == 1? '' : 's');
+    } else {
+        return $nValue . $sLast;
+    }
 }
 ?>

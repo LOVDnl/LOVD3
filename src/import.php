@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-12-11
+ * Modified    : 2018-02-27
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -266,7 +266,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 $sFileDisplayName = $sFile;
             }
 
-            $nAgeInDays = floor(($tNow - strtotime($aFile['file_date']))/(60*60*24));
+            $sAge = lovd_convertSecondsToTime($tNow - strtotime($aFile['file_date']), 0, true);
             // Build the link for actions for already scheduled files.
             $sAjaxActions = 'onclick="$.get(\'ajax/import_scheduler.php/' . urlencode($sFile) . '?view\').fail(function(){alert(\'Error retrieving actions, please try again later.\');}); return false;"';
             if ($i) {
@@ -314,7 +314,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             print('
                   <TD>' . $sDownloadHTML . $sInformationHTML . $sPriorityHTML . $sProcessingHTML . $sErrorsHTML . '
                     <B>' . $sFileDisplayName . '</B><BR>
-                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $nAgeInDays . ' day' . ($nAgeInDays == 1? '' : 's') . ' ago') . '</SPAN>
+                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $sAge . ' ago') . '</SPAN>
                   </TD></TR>');
         }
         print('</TABLE></TD>' . "\n");
