@@ -487,9 +487,11 @@ class LOVD_API_Submissions {
 
 
                 // Check for VOTs.
+                $nVOTs = 0; // Merely to count the number of VOTs per VOG.
                 if (isset($aVariant['seq_changes']) && isset($aVariant['seq_changes']['variant'])) {
                     // Loop through all VOTs. They've already been checked, so have to be cDNA, [RNA], [AA].
                     foreach ($aVariant['seq_changes']['variant'] as $nVariantLevel2 => $aVariantLevel2) {
+                        $nVOTs ++;
                         $nVariantLevel2 ++;
                         $aVOT = array_fill_keys($this->aObjects['Variants_On_Transcripts'], ''); // Instantiate all columns.
                         $aVOT['id'] = $nVariantID; // The VOT that we're building now.
@@ -594,6 +596,20 @@ class LOVD_API_Submissions {
                         $aVOT['VariantOnTranscript/Protein'] = $sProtein;
                         $aData['Variants_On_Transcripts'][] = $aVOT;
                     }
+                }
+
+                // Special implementation for the API; Fill in VariantOnGenome/Transcript/Submitted, if available.
+                // Only if field is active, we have one VOT, and field is empty or equal to the column's default value.
+                if (isset($aVOG['VariantOnGenome/Transcript/Submitted']) && $nVOTs == 1
+                    && (!$aVOG['VariantOnGenome/Transcript/Submitted']
+                        || (!empty($this->aMandatoryCustomColumns['Variants_On_Genome']['VariantOnGenome/Transcript/Submitted'])
+                            && $aVOG['VariantOnGenome/Transcript/Submitted'] == $this->aMandatoryCustomColumns['Variants_On_Genome']['VariantOnGenome/Transcript/Submitted']))) {
+                    // This field is built to record which NM was used for submission,
+                    //  in case it gets mapped to other transcripts as well. Currently,
+                    //  we only fill it in when we have just one single VOT.
+                    // Note, this transcript might not be the version actually submitted,
+                    //  we may have replaced it with the version that we have available.
+                    $aVOG['VariantOnGenome/Transcript/Submitted'] = $aVariantLevel2['ref_seq']['@accession'];
                 }
 
                 $aData['Variants_On_Genome'][] = $aVOG;
