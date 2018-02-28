@@ -105,7 +105,7 @@ class LOVD_API_Submissions {
         'Individuals' => array('id', 'panel_size', 'owned_by', 'statusid', 'created_by', 'Individual/Lab_ID', 'Individual/Gender'),
         'Individuals_To_Diseases' => array('individualid', 'diseaseid'),
         'Phenotypes' => array('id', 'diseaseid', 'individualid', 'owned_by', 'statusid', 'created_by', 'Phenotype/Additional'),
-        'Screenings' => array('id', 'individualid', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
+        'Screenings' => array('id', 'individualid', 'variants_found', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
         'Screenings_To_Genes' => array(),
         'Variants_On_Genome' => array('id', 'allele', 'effectid', 'chromosome', 'position_g_start', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID'),
         'Variants_On_Transcripts' => array('id', 'transcriptid', 'effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
@@ -445,6 +445,7 @@ class LOVD_API_Submissions {
                     array(
                         'id' => $nScreeningID,
                         'individualid' => $nIndividualID,
+                        'variants_found' => 1,
                         'owned_by' => $this->zAuth['id'],
                         'created_by' => $this->zAuth['id'],
                         'Screening/Template' => implode(';', array_unique($aTemplates)),
