@@ -10,6 +10,10 @@
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
+ *               TODO: When updating the API to the next version:
+ *               - Fix submission API output; "successfully scheduled" but it didn't schedule the file at that point
+ *                 yet. Take that out, perhaps put it in a separate message.
+ *
  *
  * This file is part of LOVD.
  *

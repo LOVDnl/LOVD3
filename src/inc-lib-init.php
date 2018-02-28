@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2018-02-27
+ * Modified    : 2018-02-28
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1936,7 +1936,7 @@ function lovd_verifyPassword ($sPassword, $sOriHash)
 
 
 
-function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
+function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = NULL)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Writes timestamps and messages to given log in the database.
@@ -1953,7 +1953,7 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
 
     // Insert new line in logs table.
     $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
-        array($sLog, $sTime, ($nAuthID? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
+        array($sLog, $sTime, ($nAuthID !== NULL? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 

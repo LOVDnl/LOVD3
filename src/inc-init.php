@@ -525,6 +525,11 @@ if ($_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
         // Ignore errors, in case the table doesn't exist yet.
         $qAnnouncements = @$_DB->query('SELECT COUNT(*) FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW() AND lovd_read_only = 1', array(), false);
         $_CONF['lovd_read_only'] = ($qAnnouncements && $qAnnouncements->fetchColumn());
+
+        // Temporary adapting of $_CONF array until we put this elsewhere.
+        // We might want to actually implement this in $_CONF,
+        //  or put it in instance-specific settings, but for now, this will do.
+        $_CONF['api_auto_schedule'] = 0; // Schedule files submitted through the API automatically?
     }
 }
 if (!$_CONF) {

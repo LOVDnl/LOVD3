@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2018-02-27
+ * Modified    : 2018-02-28
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -632,7 +632,9 @@ class LOVD_API_Submissions {
     public function processPOST ()
     {
         // Handle POST requests for submissions.
-        global $_INI, $_SETT;
+        global $_CONF, $_INI, $_SETT;
+
+        define('LOG_EVENT', 'API:SubmissionCreate');
 
         // Check if we have data path to write the resulting file to.
         if (!$_INI['paths']['data_files']) {
@@ -703,7 +705,39 @@ class LOVD_API_Submissions {
         }
 
         // Write the LOVD3 output file (and optionally, the JSON data).
-        return $this->writeImportFile($aData, $sInputClean);
+        $sFileName = $this->writeImportFile($aData, $sInputClean);
+
+        if ($sFileName && $_CONF['api_auto_schedule']) {
+            // Automatic scheduling of file has been requested in this instance.
+            // Schedule with user ID 0, meaning LOVD.
+            $bSuccess = $this->scheduleFile($sFileName, 0);
+
+            // We report a failed schedule attempt.
+            if (!$bSuccess) {
+                $this->API->aResponse['warnings'][] = 'Data successfully received, but failed to auto schedule for import. Your file will need to be scheduled by a manager.';
+            }
+        }
+
+        return (bool) $sFileName;
+    }
+
+
+
+
+
+    private function scheduleFile ($sFileName, $nUserID)
+    {
+        // Schedules the given file in the auto upload schedule.
+        // Either because the instance has the auto scheduling enabled, or because it's manually requested.
+        global $_DB;
+
+        if ($_DB->query('INSERT IGNORE INTO ' . TABLE_SCHEDULED_IMPORTS . ' (filename, scheduled_by, scheduled_date) VALUES (?, ?, NOW())', array($sFileName, $nUserID))->rowCount()) {
+            // Scheduled successfully, didn't exist yet.
+            // Log to database. Log event will point to LOVD user, as this is an internal
+            lovd_writeLog('Event', LOG_EVENT, 'Scheduled ' . $sFileName . ' for import', $nUserID);
+            return true;
+        }
+        return false;
     }
 
 
@@ -1236,6 +1270,7 @@ class LOVD_API_Submissions {
         //  of that string to a .json file.
         // Calling this function assumes the input is a properly verified LOVD
         //  database array.
+        // Returns false on failure, or the filename on success.
         global $_INI, $_SETT;
 
         // Assuming this file is unique, since we're including the microseconds.
@@ -1301,13 +1336,17 @@ class LOVD_API_Submissions {
             }
         }
         $sMessage = preg_replace('/, ([^,]+)/', " and $1", $sMessage);
-        lovd_writeLog('Event', 'API:SubmissionCreate', 'Created LOVD import file ' . $sFileName . ' using LOVD API v' . $this->API->nVersion . ' (' . $sMessage . ')', $this->zAuth['id']);
+        lovd_writeLog('Event', LOG_EVENT, 'Created LOVD import file ' . $sFileName . ' using LOVD API v' . $this->API->nVersion . ' (' . $sMessage . ')', $this->zAuth['id']);
 
         $nBytes = filesize($_INI['paths']['data_files'] . '/' . $sFileName);
+        // FIXME: This is not correct; the data has not successfully been scheduled, but simply has been written to disk.
+        // The scheduling will take place in a next step. Fix this output in a next version of the API,
+        //  I can't change the output as I might break existing client implementations
+        //  (that shouldn't rely on parsing my text, but oh well).
         $this->API->aResponse['messages'][] = 'Data successfully scheduled for import. Data file name: ' . $sFileName . '. File size: ' . $nBytes . ' bytes.';
         $this->API->nHTTPStatus = 202; // Send 202 Accepted.
 
-        return true;
+        return $sFileName;
     }
 }
 ?>
