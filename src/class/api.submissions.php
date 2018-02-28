@@ -437,7 +437,10 @@ class LOVD_API_Submissions {
                 // This function will try and get the default values from LOVD itself.
                 $this->addMandatoryDefaultValues('Screenings', $aScreening);
 
-                $aData['Screenings'][] = array_merge(
+                // Before we add this screening to the list of screenings, let's see if we're not duplicating screenings.
+                // When sending in multiple variants per individual, we'd be repeating the screening information for every variant.
+                // Loop the list of screenings. If we find the same one, don't duplicate it.
+                $aScreening = array_merge(
                     $aScreening,
                     array(
                         'id' => $nScreeningID,
@@ -448,6 +451,33 @@ class LOVD_API_Submissions {
                         'Screening/Technique' => implode(';', array_unique($aTechniques)),
                     )
                 );
+                $bScreeningIsNew = true;
+                foreach ($aData['Screenings'] as $aProcessedScreening) {
+                    foreach ($aProcessedScreening as $sKey => $sValue) {
+                        // We could just do $a == $b, but the 'id' key will always be different.
+                        // So, just compare key by key, ignoring the 'id' key.
+                        if ($sKey != 'id' && $sValue != $aScreening[$sKey]) {
+                            // Found a difference.
+                            // Continue to the next screening.
+                            continue 2;
+                        }
+                    }
+
+                    // When we get here, no differences were found. Just one more thing to check.
+                    if (array_keys($aProcessedScreening) == array_keys($aScreening)) {
+                        // Yup, all fields match.
+                        // The screening we see in the data is the same as this one that we previously saw.
+                        $nScreeningID = $aProcessedScreening['id'];
+                        $bScreeningIsNew = false;
+                        break;
+                    }
+                }
+
+                if ($bScreeningIsNew) {
+                    // We didn't find a screening that was the same.
+                    $aData['Screenings'][] = $aScreening;
+                }
+
                 $aData['Screenings_To_Variants'][] = array(
                     'screeningid' => $nScreeningID,
                     'variantid' => $nVariantID,
