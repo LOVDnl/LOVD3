@@ -359,6 +359,11 @@ if ($sDataType == 'variants' && FORMAT == 'text/bed') {
 require ROOT_PATH . 'class/feeds.php';
 if ($sFeedType == 'feed') {
     if ($sDataType == 'variants') {
+        // Quick implementation of an JSON API.
+        if ($_GET['format'] == 'text/json') {
+            die(json_encode(array('chromosome' => $sChromosome, 'id_ncbi' => $sRefSeq, 'data' => $aData)));
+        }
+
         $sTitle = ($bSearching? ($n? 'R' : 'No r') . 'esults for your query of' : 'Listing of all public variants in') . ' the ' . $sSymbol . ' gene database';
     } elseif ($sDataType == 'genes') {
         // This overview needs some more time to be generated.
