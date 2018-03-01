@@ -1,0 +1,103 @@
+{
+    "lsdb": {
+        "@id": "2270bb645327bc027c6ced1d02b54888",
+        "@uri": "https:\/\/aghademo.lovd.nl\/",
+        "source": {
+            "name": "OPTIONAL_NAME_OF_LAB",
+            "contact": {
+                "name": "Demo User",
+                "email": "test@LOVD.nl",
+                "db_xref": [
+                    {
+                        "@source": "lovd",
+                        "@accession": "2"
+                    },
+                    {
+                        "@source": "lovd_auth_token",
+                        "@accession": "9d336569e116e731368b3c5034decd91"
+                    }
+                ]
+            }
+        },
+        "individual": [
+            {
+                "@id": "PATIENT_ID_2",
+                "gender": {
+                    "@code": "2"
+                },
+                "phenotype": [
+                    {
+                        "@term": "Alzheimer disease 1, familial",
+                        "@source": "OMIM",
+                        "@accession": "104300"
+                    }
+                ],
+                "variant": [
+                    {
+                        "@copy_count": "2",
+                        "@type": "DNA",
+                        "ref_seq": {
+                            "@source": "genbank",
+                            "@accession": "NC_000021.8"
+                        },
+                        "name": {
+                            "@scheme": "HGVS",
+                            "#text": "g.27425556T>C"
+                        },
+                        "pathogenicity": {
+                            "@scope": "individual",
+                            "@term": "Pathogenic"
+                        },
+                        "variant_detection": [
+                            {
+                                "@template": "DNA",
+                                "@technique": "SEQ"
+                            }
+                        ],
+                        "seq_changes": {
+                            "variant": [
+                                {
+                                    "@type": "cDNA",
+                                    "gene": {
+                                        "@source": "HGNC",
+                                        "@accession": "APP"
+                                    },
+                                    "ref_seq": {
+                                        "@source": "genbank",
+                                        "@accession": "NM_000484.3"
+                                    },
+                                    "name": {
+                                        "@scheme": "HGVS",
+                                        "#text": "c.464A>G"
+                                    },
+                                    "seq_changes": {
+                                        "variant": [
+                                            {
+                                                "@type": "RNA",
+                                                "name": {
+                                                    "@scheme": "HGVS",
+                                                    "#text": "r.(?)"
+                                                },
+                                                "seq_changes": {
+                                                    "variant": [
+                                                        {
+                                                            "@type": "AA",
+                                                            "name": {
+                                                                "@scheme": "HGVS",
+                                                                "#text": "p.(Lys155Arg)"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
