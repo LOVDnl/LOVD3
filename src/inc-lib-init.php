@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-11-27
+ * Modified    : 2018-03-09
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -107,6 +107,68 @@ function lovd_calculateVersion ($sVersion)
     } else {
         return false;
     }
+}
+
+
+
+
+
+function lovd_callMutalyzer ($sMethod, $aArgs = array())
+{
+    // Wrapper function to call Mutalyzer's REST+JSON webservice.
+    // Because we have a wrapper, we can implement CURL, which is much faster on repeated calls.
+    global $_CONF;
+
+    // Build URL, regardless of how we'll connect to it.
+    $sURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/' . $sMethod;
+    if ($aArgs) {
+        $i = 0;
+        foreach ($aArgs as $sVariable => $sValue) {
+            $sURL .= ($i? '&' : '?');
+            $i++;
+            $sURL .= $sVariable . '=' . rawurlencode($sValue);
+        }
+    }
+    $sJSONResponse = '';
+
+    if (function_exists('curl_init')) {
+        // Initialize curl connection.
+        static $hCurl;
+
+        if (!$hCurl) {
+            $hCurl = curl_init();
+            curl_setopt($hCurl, CURLOPT_RETURNTRANSFER, true); // Return the result as a string.
+
+            // Set proxy.
+            if ($_CONF['proxy_host']) {
+                curl_setopt($hCurl, CURLOPT_PROXY, $_CONF['proxy_host'] . ':' . $_CONF['proxy_port']);
+                if (!empty($_CONF['proxy_username']) || !empty($_CONF['proxy_password'])) {
+                    curl_setopt($hCurl, CURLOPT_PROXYUSERPWD, $_CONF['proxy_username'] . ':' . $_CONF['proxy_password']);
+                }
+            }
+        }
+
+        curl_setopt($hCurl, CURLOPT_URL, $sURL);
+        $sJSONResponse = curl_exec($hCurl);
+
+    } else {
+        // Backup method, no curl installed. Too bad, we'll do it the "slow" way.
+        $aJSONResponse = lovd_php_file($sURL);
+        if ($aJSONResponse !== false) {
+            $sJSONResponse = implode("\n", $aJSONResponse);
+        }
+    }
+
+
+
+    if ($sJSONResponse) {
+        $aJSONResponse = json_decode($sJSONResponse, true);
+        if ($aJSONResponse !== false) {
+            return $aJSONResponse;
+        }
+    }
+    // Something went wrong...
+    return false;
 }
 
 
@@ -1517,6 +1579,22 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
 
 
 
+function lovd_php_gethostbyaddr ($sIP)
+{
+    // LOVD's gethostbyaddr implementation, that easily turns off all DNS lookups if offline.
+    if (!defined('OFFLINE_MODE') && OFFLINE_MODE) {
+        // We're offline. Don't do lookups.
+        return $sIP;
+    }
+
+    // Else, do a lookup.
+    return gethostbyaddr($sIP);
+}
+
+
+
+
+
 function lovd_php_htmlspecialchars ($Var)
 {
     // Recursively run htmlspecialchars(), even with unknown depth.
@@ -1820,50 +1898,6 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '    $(\'#viewentryOptionsButton_' . $sID . '\').jeegoocontext(\'viewentryMenu_' . $sID . '\', aMenuOptions);' . "\n" .
           $sPrefix . '  });' . "\n" .
           $sPrefix . '</SCRIPT>' . "\n\n");
-}
-
-
-
-
-
-function lovd_soapError ($e, $bHalt = true)
-{
-    // Formats SOAP errors for the error log, and optionally halts the system.
-
-    if (!is_object($e)) {
-        return false;
-    }
-
-    // Try to detect if arguments have been passed, and isolate them from the stacktrace.
-    $sMethod = '';
-    $sArgs = '';
-    foreach ($e->getTrace() as $aTrace) {
-        if (isset($aTrace['function']) && $aTrace['function'] == '__call') {
-            // This is the low level SOAP call. Isolate used method and arguments from here.
-            list($sMethod, $aArgs) = $aTrace['args'];
-            if ($aArgs && is_array($aArgs) && isset($aArgs[0])) {
-                $aArgs = $aArgs[0]; // Not sure why the call's argument are in a sub array, but oh, well.
-                foreach ($aArgs as $sArg => $sValue) {
-                    $sArgs .= (!$sArgs? '' : "\n") . "\t\t" . $sArg . ':' . $sValue;
-                }
-            }
-            break;
-        }
-    }
-
-    // Format the error message.
-    $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in module \'' . $sMethod . '\'.' . "\n" .
-        (!$sArgs? '' : 'Arguments:' . "\n" . $sArgs . "\n") .
-        'Error message:' . "\n" .
-        str_replace("\n", "\n\t\t", $e->__toString());
-
-    // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
-    // write it to the system log, and halt the system. Otherwise, just log it to the database.
-    if ($bHalt) {
-        return lovd_displayError('SOAP', $sError);
-    } else {
-        return lovd_writeLog('Error', 'SOAP', $sError);
-    }
 }
 
 

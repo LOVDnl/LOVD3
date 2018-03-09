@@ -115,9 +115,6 @@ if ($_GET['step'] == 1) {
             $sFileID = (substr($sFileID, 0, 2) == 'UD'?
                 str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $sFileID . '.gb' :
                 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=' . $sFileID . '&rettype=gb');
-            // FIXME: Since Mutalyzer only allows for https communication since Sept 2014, lovd_php_file()'s socket communication doesn't work.
-            // 2014-10-02; 3.0-12; Modified lovd_php_file() to allow http(s) communication through PHP's file() as long as there's allow_url_fopen and no POST.
-            // This is a temporary fix, depends on a PHP setting, and does not work with proxies at the moment (although than can be fixed with providing a context to file()).
             $aGenBank = lovd_php_file($sFileID);
 
             if (!$aGenBank) {

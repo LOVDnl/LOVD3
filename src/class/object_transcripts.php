@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-10-26
+ * Modified    : 2018-01-24
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -255,7 +255,6 @@ class LOVD_Transcript extends LOVD_Object {
     {
         global $_BAR, $_SETT, $_DB;
 
-        $_Mutalyzer = new LOVD_SoapClient();
         $aTranscripts = array(
             'id' => array(),
             'name' => array(),
@@ -273,12 +272,7 @@ class LOVD_Transcript extends LOVD_Object {
             $sAliasSymbol = $_SETT['mito_genes_aliases'][$sSymbol];
         }
 
-        try {
-            // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
-            $aTranscripts['info'] = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $sRefseqUD, 'geneName' => $sAliasSymbol))->getTranscriptsAndInfoResult->TranscriptInfo;
-        } catch (SoapFault $e) {
-            lovd_soapError($e);
-        }
+        $aTranscripts['info'] = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $sRefseqUD, 'geneName' => $sAliasSymbol));
         if (empty($aTranscripts['info'])) {
             // No transcripts found.
             $aTranscripts['info'] = array();
@@ -286,9 +280,9 @@ class LOVD_Transcript extends LOVD_Object {
         }
 
         $nTranscripts = count($aTranscripts['info']);
-        foreach($aTranscripts['info'] as $oTranscript) {
+        foreach($aTranscripts['info'] as $aTranscript) {
             $nProgress += ((100 - $nProgress)/$nTranscripts);
-            $_BAR->setMessage('Collecting ' . $oTranscript->id . ' info...');
+            $_BAR->setMessage('Collecting ' . $aTranscript['id'] . ' info...');
 
             if (isset($_SETT['mito_genes_aliases'][$sSymbol])) {
                 // For mitochondrial genes, we won't be able to get any proper transcript information. Fake one.
@@ -308,32 +302,32 @@ class LOVD_Transcript extends LOVD_Object {
                 $aTranscripts['positions'] = array($sRefseqNM =>
                     array(
                         // For mitochondrial genes we used the NC to call getTranscriptAndInfo, therefore we can use the gTransStart and gTransEnd.
-                        'chromTransStart' => (isset($oTranscript->gTransStart)? $oTranscript->gTransStart : 0),
-                        'chromTransEnd' => (isset($oTranscript->gTransEnd)? $oTranscript->gTransEnd : 0),
-                        'cTransStart' => (isset($oTranscript->cTransStart)? $oTranscript->cTransStart : 0),
-                        'cTransEnd' => (isset($oTranscript->sortableTransEnd)? $oTranscript->sortableTransEnd : 0),
-                        'cCDSStop' => (isset($oTranscript->cCDSStop)? $oTranscript->cCDSStop : 0),
+                        'chromTransStart' => (isset($aTranscript['gTransStart'])? $aTranscript['gTransStart'] : 0),
+                        'chromTransEnd' => (isset($aTranscript['gTransEnd'])? $aTranscript['gTransEnd'] : 0),
+                        'cTransStart' => (isset($aTranscript['cTransStart'])? $aTranscript['cTransStart'] : 0),
+                        'cTransEnd' => (isset($aTranscript['sortableTransEnd'])? $aTranscript['sortableTransEnd'] : 0),
+                        'cCDSStop' => (isset($aTranscript['cCDSStop'])? $aTranscript['cCDSStop'] : 0),
                     )
                 );
             } else {
-                if (in_array($oTranscript->id, $aTranscripts['added'])) {
+                if (in_array($aTranscript['id'], $aTranscripts['added'])) {
                     // Transcript already exists; continue to the next transcript.
                     continue;
                 }
-                $aTranscripts['id'][] = $oTranscript->id;
+                $aTranscripts['id'][] = $aTranscript['id'];
                 // Until revision 679 the transcript version was not used in the index. The version number was removed with preg_replace.
                 // Can not figure out why version is not included. Therefore, for now we will do without preg_replace.
-                $aTranscripts['name'][$oTranscript->id] = str_replace($sGeneName . ', ', '', $oTranscript->product);
-                $aTranscripts['mutalyzer'][$oTranscript->id] = str_replace($sSymbol . '_v', '', $oTranscript->name);
-                $aTranscripts['positions'][$oTranscript->id] =
+                $aTranscripts['name'][$aTranscript['id']] = str_replace($sGeneName . ', ', '', $aTranscript['product']);
+                $aTranscripts['mutalyzer'][$aTranscript['id']] = str_replace($sSymbol . '_v', '', $aTranscript['name']);
+                $aTranscripts['positions'][$aTranscript['id']] =
                     array(
-                        'chromTransStart' => (isset($oTranscript->chromTransStart)? $oTranscript->chromTransStart : 0),
-                        'chromTransEnd' => (isset($oTranscript->chromTransEnd)? $oTranscript->chromTransEnd : 0),
-                        'cTransStart' => $oTranscript->cTransStart,
-                        'cTransEnd' => $oTranscript->sortableTransEnd,
-                        'cCDSStop' => $oTranscript->cCDSStop,
+                        'chromTransStart' => (isset($aTranscript['chromTransStart'])? $aTranscript['chromTransStart'] : 0),
+                        'chromTransEnd' => (isset($aTranscript['chromTransEnd'])? $aTranscript['chromTransEnd'] : 0),
+                        'cTransStart' => $aTranscript['cTransStart'],
+                        'cTransEnd' => $aTranscript['sortableTransEnd'],
+                        'cCDSStop' => $aTranscript['cCDSStop'],
                     );
-                $aTranscripts['protein'][$oTranscript->id] = (!isset($oTranscript->proteinTranscript)? '' : $oTranscript->proteinTranscript->id);
+                $aTranscripts['protein'][$aTranscript['id']] = (empty($aTranscript['proteinTranscript']['id'])? '' : $aTranscript['proteinTranscript']['id']);
             }
             $_BAR->setProgress($nProgress);
         }

@@ -492,7 +492,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                 $_AUTH['collaborates'] = array();
 
                 // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
+                lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
 
             } else {
                 // Write to log...

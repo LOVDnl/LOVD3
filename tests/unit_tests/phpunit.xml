@@ -1,4 +1,4 @@
-<phpunit bootstrap="../phpunit_bootstrap.php">
+<phpunit stopOnFailure="true" bootstrap="../phpunit_bootstrap.php">
     <testsuites>
         <testsuite name="main">
             <file>GetVariantInfoTest.php</file>
