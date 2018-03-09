@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2018-01-19
+ * Modified    : 2018-03-09
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1898,50 +1898,6 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '    $(\'#viewentryOptionsButton_' . $sID . '\').jeegoocontext(\'viewentryMenu_' . $sID . '\', aMenuOptions);' . "\n" .
           $sPrefix . '  });' . "\n" .
           $sPrefix . '</SCRIPT>' . "\n\n");
-}
-
-
-
-
-
-function lovd_soapError ($e, $bHalt = true)
-{
-    // Formats SOAP errors for the error log, and optionally halts the system.
-
-    if (!is_object($e)) {
-        return false;
-    }
-
-    // Try to detect if arguments have been passed, and isolate them from the stacktrace.
-    $sMethod = '';
-    $sArgs = '';
-    foreach ($e->getTrace() as $aTrace) {
-        if (isset($aTrace['function']) && $aTrace['function'] == '__call') {
-            // This is the low level SOAP call. Isolate used method and arguments from here.
-            list($sMethod, $aArgs) = $aTrace['args'];
-            if ($aArgs && is_array($aArgs) && isset($aArgs[0])) {
-                $aArgs = $aArgs[0]; // Not sure why the call's argument are in a sub array, but oh, well.
-                foreach ($aArgs as $sArg => $sValue) {
-                    $sArgs .= (!$sArgs? '' : "\n") . "\t\t" . $sArg . ':' . $sValue;
-                }
-            }
-            break;
-        }
-    }
-
-    // Format the error message.
-    $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in module \'' . $sMethod . '\'.' . "\n" .
-        (!$sArgs? '' : 'Arguments:' . "\n" . $sArgs . "\n") .
-        'Error message:' . "\n" .
-        str_replace("\n", "\n\t\t", $e->__toString());
-
-    // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
-    // write it to the system log, and halt the system. Otherwise, just log it to the database.
-    if ($bHalt) {
-        return lovd_displayError('SOAP', $sError);
-    } else {
-        return lovd_writeLog('Error', 'SOAP', $sError);
-    }
 }
 
 

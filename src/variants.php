@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2018-01-26
+ * Modified    : 2018-03-09
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -740,7 +740,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
 
-            // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+            // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
             // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
             $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
             if ($aResponse) {
@@ -764,7 +764,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_POST['id'] = $nID;
                 foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                     if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
-                        // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                        // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
                         // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
                         $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
                         if ($aResponse) {
@@ -780,7 +780,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         }
                     }
                     if (empty($_POST[$nTranscriptID . '_position_c_start'])) {
-                        // Variant not recognized, or no DNA given and thus no Soap call done.
+                        // Variant not recognized, or no DNA given.
                         $_POST[$nTranscriptID . '_position_c_start'] = 0;
                         $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
                         $_POST[$nTranscriptID . '_position_c_end'] = 0;
@@ -1799,10 +1799,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     }
 
                                     // Get UDID from Mutalyzer.
-                                    $sRefseqUD = '';
-                                    try {
-                                        $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                                    } catch (SoapFault $e) {} // Sometimes we don't have mapping information for the gene, and thus no slice.
+                                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
 
                                     // Not adding the gene just yet, but we remember its data...
                                     // FIXME: Need to define all fields here to prevent problems with strict mode on. Most of these fields however, can just allow for NULL values.
@@ -1890,17 +1887,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         $aFieldsTranscript[$sSymbol] = array();
                                         $_BAR->setMessage('Loading transcript information for ' . $sSymbol . '...', 'done');
 
-                                        /* FIXME: Fatal error with unknown reason.
-                                        try {
-                                            // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
-                                            $aTranscripts = $_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => 'UD_132085330279', 'geneName' => 'IVD')); // Works fine.
-                                            $aTranscripts = $_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => 'UD_139396270809', 'geneName' => 'C1orf86')); // Error: list index out of range.
-                                            var_dump($aTranscripts);
-                                        } catch (SoapFault $e) {
-                                            lovd_soapError($e);
-                                        }
-                                        var_dump($aTranscripts);exit;
-                                        */
                                         $aTranscripts = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol));
                                         if (!empty($aTranscripts)) {
                                             foreach ($aTranscripts as $aTranscript) {
@@ -2498,7 +2484,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
-                // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
                 // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
                 $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
                 if ($aResponse) {
@@ -2540,7 +2526,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             if ($bGene) {
                 foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                     if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
-                        // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                        // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
                         // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
                         // Normally we'd check for a minimum length of 6 characters, but the function is fast anyway.
                         $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
@@ -2973,7 +2959,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
                             if (!empty($sVariant) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':([cn]\..+)$/', $sVariant, $aMatches)) {
                                 // Call the mappingInfo module of mutalyzer to get the start & stop positions of this variant on the transcript.
                                 $aMapping = array();
-                                // 2017-09-22; 3.0-20; Replacing the old SOAP call to Mutalyzer with our new lovd_getVariantInfo() function.
+                                // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
                                 // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
                                 $aResponse = lovd_getVariantInfo($aMatches[1], $zTranscript['id_ncbi']);
                                 if ($aResponse) {

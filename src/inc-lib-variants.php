@@ -240,7 +240,7 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 
 function getMutalyzerMessages ($aOutput)
 {
-    // Return an array of messages from mutalyzer SOAP output. Only messages
+    // Return an array of messages from mutalyzer's API output. Only messages
     // related to the gene in the original request are returned.
 
     $aMessages = array();

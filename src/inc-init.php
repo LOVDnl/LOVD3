@@ -141,7 +141,6 @@ $aRequired =
                           ),
                 'PHP_classes' =>
                      array(
-                            'SoapClient',
                           ),
                 'MySQL' => '4.1.2',
               );
