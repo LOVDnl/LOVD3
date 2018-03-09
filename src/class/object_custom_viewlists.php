@@ -701,7 +701,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'view' => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
                                 'db'   => array($sPrefix . '`' . $aCol['id'] . '`', 'ASC', lovd_getColumnType('', $aCol['mysql_type'])),
                                 'legend' => array($aCol['description_legend_short'], $aCol['description_legend_full']),
-                                'allowfnr' => true,
+                                'allow_find_replace' => true,
                               );
                 }
             }

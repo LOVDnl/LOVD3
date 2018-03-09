@@ -842,6 +842,64 @@ function lovd_getProjectFile ()
 
 
 
+function lovd_getTableInfoByCategory ($sCategory)
+{
+    // Returns information on the LOVD table that holds the data for this given
+    // custom column category.
+
+    $aTables =
+        array(
+            'Individual' =>
+                array(
+                    'table_sql' => TABLE_INDIVIDUALS,
+                    'table_name' => 'Individual',
+                    'table_alias' => 'i',
+                    'shared' => false,
+                    'unit' => '',
+                ),
+            'Phenotype' =>
+                array(
+                    'table_sql' => TABLE_PHENOTYPES,
+                    'table_name' => 'Phenotype',
+                    'table_alias' => 'p',
+                    'shared' => true,
+                    'unit' => 'disease', // Is also used to determine the key (diseaseid).
+                ),
+            'Screening' =>
+                array(
+                    'table_sql' => TABLE_SCREENINGS,
+                    'table_name' => 'Screening',
+                    'table_alias' => 's',
+                    'shared' => false,
+                    'unit' => '',
+                ),
+            'VariantOnGenome' =>
+                array(
+                    'table_sql' => TABLE_VARIANTS,
+                    'table_name' => 'Genomic Variant',
+                    'table_alias' => 'vog',
+                    'shared' => false,
+                    'unit' => '',
+                ),
+            'VariantOnTranscript' =>
+                array(
+                    'table_sql' => TABLE_VARIANTS_ON_TRANSCRIPTS,
+                    'table_name' => 'Transcript Variant',
+                    'table_alias' => 'vot',
+                    'shared' => true,
+                    'unit' => 'gene', // Is also used to determine the key (geneid).
+                ),
+        );
+    if (!array_key_exists($sCategory, $aTables)) {
+        return false;
+    }
+    return $aTables[$sCategory];
+}
+
+
+
+
+
 function lovd_includeJS ($sFile, $nPrefix = 3)
 {
     // Searches for and includes a .js include file.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2018-01-19
+ * Modified    : 2018-03-09
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -222,49 +222,100 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                     lovd_errorAdd('orcid', 'There is already an account registered with this ORCID ID.' . (!$_CONF['allow_unlock_accounts']? '' : ' Did you <A href="reset_password">forget your password</A>?'));
                 } else {
                     // Contact ORCID to retrieve public info.
-                    // 2014-05-09; 3.0-11; ORCID changed their API... but at least they understood including a version might help. Not changing to the new one.
-                    $aOutput = lovd_php_file('http://pub.orcid.org/v1.2/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
+                    // Fix ORCID API to a certain version, but note that ORCID's API can drop the version if they feel like it.
+                    $aOutput = lovd_php_file('https://pub.orcid.org/v2.1/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
                     if (!$aOutput) {
                         lovd_errorAdd('orcid', 'The given ORCID ID can not be found at ORCID.org.');
                     } else {
                         $aORCID = array(
                             'orcid-identifier' => array('path' => ''),
-                            'orcid-bio' => array(
-                                'personal-details' => array(
+                            'person' => array(
+                                'name' => array(
                                     'family-name' => array('value' => ''),
                                     'given-names' => array('value' => ''),
                                     'credit-name' => array('value' => ''),
                                 ),
-                                'contact-details' => array(
-                                    'email' => array('value' => ''),
+                                'emails' => array(
+                                    'email' => array(
+                                        0 => array('email' => ''),
+                                    ),
+                                ),
+                                'addresses' => array(
                                     'address' => array(
-                                        'country' => array('value' => ''),
+                                        0 => array(
+                                            'country' => array('value' => ''),
+                                        ),
                                     ),
                                 ),
                             ),
-                            'orcid-history' => array(
-                                'verified-email' => array('value' => ''),
+                            'activities-summary' => array(
+                                'employments' => array(
+                                    'employment-summary' => array(
+                                        0 => array(
+                                            'department-name' => '',
+                                            'role-title' => '',
+                                            'start-date' => array(
+                                                'year' => array('value' => ''),
+                                                'month' => array('value' => ''),
+                                                'day' => array('value' => ''),
+                                            ),
+                                            'end-date' => null,
+                                            'organization' => array(
+                                                'name' => '',
+                                                'address' => array(
+                                                    'city' => '',
+                                                    'country' => '',
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'history' => array(
+                                'verified-email' => false,
+                                'verified-primary-email' => false,
                             ),
                         );
 
                         $aOutput = json_decode(implode('', $aOutput), true);
-                        $aORCID = array_replace_recursive($aORCID, $aOutput['orcid-profile']);
+                        $aORCID = array_replace_recursive($aORCID, $aOutput);
                         $nID = $aORCID['orcid-identifier']['path'];
-                        $sNameComposed = $aORCID['orcid-bio']['personal-details']['family-name']['value'] . ', ' . $aORCID['orcid-bio']['personal-details']['given-names']['value'];
-                        $sNameDisplay = $aORCID['orcid-bio']['personal-details']['credit-name']['value'];
+                        $sNameComposed = $aORCID['person']['name']['family-name']['value'] . ', ' . $aORCID['person']['name']['given-names']['value'];
+                        $sNameDisplay = $aORCID['person']['name']['credit-name']['value'];
                         if (!$sNameDisplay) {
-                            $sNameDisplay = $aORCID['orcid-bio']['personal-details']['given-names']['value'] . ' ' . $aORCID['orcid-bio']['personal-details']['family-name']['value'];
+                            $sNameDisplay = $aORCID['person']['name']['given-names']['value'] . ' ' . $aORCID['person']['name']['family-name']['value'];
                         }
-                        $sEmail = $aORCID['orcid-bio']['contact-details']['email']['value'];
-                        $bEmailVerified = $aORCID['orcid-history']['verified-email']['value'];
-                        $sCountryCode = $aORCID['orcid-bio']['contact-details']['address']['country']['value'];
+                        $sInstitute = '';
+                        $sDepartment = '';
+                        $sCountryCode = '';
+                        // Just loop all employments, and choose the first without end date.
+                        foreach ($aORCID['activities-summary']['employments']['employment-summary'] as $aEmployment) {
+                            if (empty($aEmployment['end-date'])) {
+                                $sInstitute = $aEmployment['organization']['name'];
+                                $sDepartment = $aEmployment['department-name'];
+                                $sCountryCode = $aEmployment['organization']['address']['country'];
+                                break;
+                            }
+                        }
+                        $aEmails = array();
+                        foreach ($aORCID['person']['emails']['email'] as $aEmail) {
+                            $aEmails[] = $aEmail['email'];
+                        }
+                        $sEmailDisplay = implode(', ', $aEmails);
+                        // FIXME: We can also receive this from the email settings itself, if public.
+                        $bEmailVerified = ($aORCID['history']['verified-email'] || $aORCID['history']['verified-primary-email']);
+                        // If we didn't get a country from the affiliation, take it from the addresses.
+                        // FIXME: Do we need to loop through the addresses?
+                        $sCountryCode = ($sCountryCode?: $aORCID['person']['addresses']['address'][0]['country']['value']);
                         if ($sCountryCode) {
                             $sCountry = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($sCountryCode))->fetchColumn();
                         } else {
                             $sCountry = '';
                         }
                         $_SESSION['orcid_data']['name'] = $sNameDisplay;
-                        $_SESSION['orcid_data']['email'] = $sEmail;
+                        $_SESSION['orcid_data']['institute'] = $sInstitute;
+                        $_SESSION['orcid_data']['department'] = $sDepartment;
+                        $_SESSION['orcid_data']['email'] = $aEmails;
                         $_SESSION['orcid_data']['countryid'] = $sCountryCode;
 
                         // Report found ID, and have user confirm or deny.
@@ -274,8 +325,9 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         $sMessage = 'We have retrieved the following information from ORCID. Please verify if this information is correct:<BR>' .
                             '<B>' . $nID . '</B><BR>' .
                             $sNameComposed . ' (' . $sNameDisplay . ')<BR>' .
+                            (!$sInstitute? '' : $sInstitute . (!$sDepartment? '' : ' (' . $sDepartment . ')') . '<BR>') .
                             $sCountry . '<BR>' .
-                            $sEmail;
+                            $sEmailDisplay;
                         lovd_showInfoTable($sMessage, 'question');
 
                         print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
@@ -548,7 +600,9 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
         // ORCID DATA?
         if ($_POST['orcid_id'] != 'none') {
             $_POST['name'] = $_SESSION['orcid_data']['name'];
-            $_POST['email'] = $_SESSION['orcid_data']['email'];
+            $_POST['institute'] = $_SESSION['orcid_data']['institute'];
+            $_POST['department'] = $_SESSION['orcid_data']['department'];
+            $_POST['email'] = implode("\r\n", $_SESSION['orcid_data']['email']);
             $_POST['countryid'] = $_SESSION['orcid_data']['countryid'];
         }
     }

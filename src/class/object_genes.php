@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2017-06-26
- * For LOVD    : 3.0-19
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -231,7 +231,7 @@ class LOVD_Gene extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_DB;
@@ -242,7 +242,7 @@ class LOVD_Gene extends LOVD_Object {
             unset($aData['workID']);
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         if (ACTION == 'create') {
             if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->fetchColumn()) {

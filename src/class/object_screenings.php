@@ -167,7 +167,7 @@ class LOVD_Screening extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
 
@@ -176,7 +176,7 @@ class LOVD_Screening extends LOVD_Custom {
                  array(
                         'owned_by',
                       );
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
             if (count($aData['genes']) > 15) {
