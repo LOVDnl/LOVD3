@@ -4,6 +4,67 @@
  *
  *************/
 
+/***************************
+ * 3.0 Build 21 (tag:3.0-21)
+ * 2018-03-14
+ *********/
+ * Many changes to the submission API.
+   - Display the admin's email address better when it's multiple addresses.
+   - Added LSDB ID to Admin's Auth Token dialog, so the Admin can find out which
+     ID the clients need to use to start submitting data into the LOVD.
+   - Fixed bug; 3'UTR variants were not accepted.
+   - Built scheduling interface for importing files submitted through the API.
+     Files submitted through the API are displayed and ranked, showing
+     information on the file and possible import errors, and action handles to
+     download the file or to (re/un)schedule it for import or set the priority.
+   - Various improvements to the import script, allowing automation of importing
+     new data into LOVD3.
+   - Fixed bug; The LOVD receiving a submission might have more custom columns
+     that are mandatory. Try to predict the default values for those, and fill
+     those in.
+   - Fixed bug; API submissions had their screenings set to "no variants found".
+   - Keep the JSON file for each API submission.
+   - Imports can be run manually or run automatically.
+   - Documented the automation in INSTALL.txt.
+   - The autoimporter sends an email to every curator (or the managers in case
+     of intragenic data) that is affected by the imported data, in case
+     non-public data was included (which is the default).
+   - Added a section in the manual on the submission API.
+   Closes #149: "Create API to submit data into".
+ * Fixed bug; The LOVD2 to LOVD3 converter script caused some problems with
+   other data views.
+   Closes #313: "Cannot click through on transcripts viewlist".
+ * Fixed bug; The data status color coding was visible to the public, which
+   caused confusion with users.
+ * Fixed bug; The Owner field didn't always show a tooltip in data listings.
+   Closes #307: "Owner field doesn't always show tooltip".
+ * Allow genes to be viewed by their HGNC ID.
+   Closes #270: "Redirect genes/HGNC_ID to genes/SYMBOL".
+ * The concluded variant effect is renamed to "by curator".
+ * The Phenotype/Additional column will now be added to the Individuals data
+   listing, if it's available.
+   Closes #327: "Create new view: Individuals and Phenotypes".
+ * Fixed bug; Fields edited through the Find & Replace feature will now actually
+   be checked, and some other minor changes.
+   Closes #127: "Find & Replace improvements".
+   Closes #214: "Custom links not shown properly during find & replace".
+ * The variant effect fields for the genomic level will now only show on the
+   data entry form, now when there is more than one transcript associated with
+   the variant, or when there is a conflict between the variant effect on the
+   genomic and transcript level.
+   Closes #305: "Don't duplicate the "Variant effect" fields unnecessarily".
+ * Updated the ORCID API from v.1.2 to v.2.1; users could no longer register
+   with their ORCID.
+   Closes #340: "ORCID returning ID not found error when creating new user".
+ * Rewrote communication with Mutalyzer to use a more stable method.
+ * Fixed bug; In the grouped views, data owners were not shown when the
+   department field was empty.
+ * Fixed bug; The "variants affecting transcripts" view didn't show all
+   transcripts associated with each variant, but only each gene. This
+   resulted in unpredictable sorting and the not showing of transcripts that did
+   have variants.
+
+
 /***************************************
  * 3.0 Build 20a (patch 01) (tag:3.0-20)
  * 2017-10-17
