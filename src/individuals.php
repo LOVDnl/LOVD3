@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2017-11-20
+ * Modified    : 2018-04-13
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,8 +51,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     if (!empty($_PE[1])) {
         $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
         if ($sGene) {
-            // We need the authorization call once we show the individuals with VARIANTS in gene X, not before!
-//            lovd_isAuthorized('gene', $sGene); // To show non public entries.
+            lovd_isAuthorized('gene', $sGene); // To show non public entries.
             $_GET['search_genes_searched'] = '="' . $sGene . '"';
         } else {
             // Command or gene not understood.
