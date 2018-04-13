@@ -707,6 +707,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         require ROOT_PATH . 'class/object_transcript_variants.php';
         $_DATA['Transcript'][$sGene] = new LOVD_TranscriptVariant($sGene);
         // This is done so that fetchDBID can have this information and can give a better prediction.
+        // buildForm() also uses it to check some things.
         $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
         $_POST['chromosome'] = $_DB->query('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn();
     }
