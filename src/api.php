@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2017-10-09
- * For LOVD    : 3.0-20
+ * Modified    : 2018-04-16
+ * For LOVD    : 3.0-22
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -28,6 +28,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
+ *  3.0-22       /api/rest.php/*****?format=text/json   (JSON output for whole LOVD2-style API)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
@@ -374,22 +375,34 @@ $_FEED = new Feed($sFeedType, $sTitle, $sLink, $sID, 'atom');
 
 // Now we will create entries in the feed with the fetched data.
 if ($sDataType == 'variants') {
-    foreach ($aData as $zData) {
-        // Prepare other fields to be included.
-        $sTitle = substr($sSymbol, 0, strpos($sSymbol . '_', '_')) . ':' . htmlspecialchars($zData['VariantOnTranscript/DNA']);
-        if ($sFeedType == 'feed') {
-            $sSelfURL = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'api/rest.php/variants/' . $sSymbol . '/' . $zData['id'];
-        } else {
-            $sSelfURL = '';
-        }
+    // Define fields for Atom content.
+    $aFieldsAtomContent = array(
+        'symbol',
+        'id' => 'id',
+        'position_mRNA',
+        'position_genomic',
+        'Variant/DNA',
+        'Variant/DBID',
+        'Times_reported',
+    );
+    if ($bUnique) {
+        unset($aFieldsAtomContent['id']);
+    }
+    if (!empty($_GET['show_variant_effect'])) {
+        $aFieldsAtomContent[] = 'effect_reported';
+        $aFieldsAtomContent[] = 'effect_concluded';
+    }
+
+    // Make all transformations.
+    $aData = array_map(function ($zData)
+    {
+        global $bUnique, $nPositionCDSEnd, $nPositionMRNAStart, $nPositionMRNAEnd, $sChromosome, $sRefSeq, $sSymbol, $_SETT;
+
+        // Format fields for JSON payload.
+        // The Atom data will also use these transformations, but may have less fields and in a different order.
+
         // We're assuming here that the start of the DBID field will always be the ID, like the column's default RegExp forces.
-        $zData['VariantOnGenome/DBID'] = preg_replace('/^(\w+).*$/', "$1", $zData['VariantOnGenome/DBID']);
-        $sAltURL               = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants/' . $sSymbol . '/' . $sRefSeq . '?search_VariantOnGenome%2FDBID=' . rawurlencode($zData['VariantOnGenome/DBID']);
-        $zData['created_date'] = '1970-01-01 00:00:00';
-        $zData['updated_date'] = '1970-01-01 00:00:00';
-        $sID                   = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . substr($zData['created_date'], 0, 10) . ':' . $sSymbol . '/' . $zData['id'];
-        $zData['created_by']   = 'Unknown'; // We need to get this data from two tables... too much work?
-        $sContributors         = 'Unknown'; // We need to get this data from two tables... too much work?
+        $zData['Variant/DBID'] = preg_replace('/^(\w+).*$/', "$1", $zData['VariantOnGenome/DBID']);
         if ($sRefSeq && $zData['position_c_start']) {
             $sDNAStart = lovd_convertDNAPositionToHR($nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $zData['position_c_start'], $zData['position_c_start_intron']);
             if ($zData['position_c_start'] == $zData['position_c_end']) {
@@ -403,30 +416,73 @@ if ($sDataType == 'variants') {
             $sPosition_mRNA    = lovd_variantToPosition($zData['VariantOnTranscript/DNA']);
             $sPosition_genomic = 'chr' . $sChromosome . ':?';
         }
-        // Really not quite the best solution, but it kind of works. $n is decreased and if there are no more matches, it will give a 404 anyway. Still has a misleading Feed title, though!
-        // FIXME; do we want to fix that by implementing a $_FEED->setTitle()?
-        if (!$sRefSeq && $bSearching && !empty($_GET['search_position']) && $_GET['search_position'] != $sPosition_mRNA) {
-            // This was a false positive! (only when there is no Reference Sequence LOVD will try the DNA field to find the position) Partial match that should not have been reported. Byeeeeeeee...
-            $n --; // Does not really matter at this point.
-            continue;
+
+        $aReturn = array(
+            'symbol' => $sSymbol,
+            'id' => $zData['id'],
+            'position_mRNA' => $sPosition_mRNA,
+            'position_genomic' => $sPosition_genomic,
+            'Variant/DNA' => $zData['VariantOnTranscript/DNA'],
+            'Variant/DBID' => $zData['Variant/DBID'],
+            'Times_reported' => $zData['Times'],
+            'created_by' => 'Unknown', // FIXME: Fetch from table.
+            'created_date' => '1970-01-01 00:00:00', // FIXME: Why empty?
+            'edited_by' => 'Unknown', // FIXME: Fetch from table.
+            'updated_date' => '1970-01-01 00:00:00', // FIXME: Why empty?
+        );
+
+        if ($bUnique) {
+            unset($aReturn['id']);
         }
-        $sContent = 'symbol:' . $sSymbol . "\n" .
-                    ($bUnique? '' :
-                    'id:' . $zData['id'] . "\n") .
-                    'position_mRNA:' . $sPosition_mRNA . "\n" .
-                    'position_genomic:' . $sPosition_genomic . "\n" .
-                    'Variant/DNA:' . htmlspecialchars($zData['VariantOnTranscript/DNA']) . "\n" .
-                    'Variant/DBID:' . $zData['VariantOnGenome/DBID'] . "\n" .
-                    'Times_reported:' . $zData['Times'];
 
         // 2017-05-04; 3.0-19; Optionally, add the variant effect to the output.
         // This addition will allow the central API to gather this info as well.
         // Just dump everything there, all options. Don't simplify. Use a human
         //  readable but concise format. Return all unique values given.
         if (!empty($_GET['show_variant_effect'])) {
-            $sContent .= "\n" .
-                         'effect_reported:' . implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_reported']), $_SETT['var_effect_api'])) . "\n" .
-                         'effect_concluded:' . implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_concluded']), $_SETT['var_effect_api']));
+            $aReturn = array_merge(
+                $aReturn,
+                array(
+                    'effect_reported' => implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_reported']), $_SETT['var_effect_api'])),
+                    'effect_concluded' => implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_concluded']), $_SETT['var_effect_api'])),
+                )
+            );
+        }
+
+        return $aReturn;
+    }, $aData);
+
+    if (FORMAT == 'application/json') {
+        // Dump JSON and die.
+        die(json_encode($aData));
+    }
+
+
+
+    foreach ($aData as $zData) {
+        // Prepare other fields to be included.
+        $sTitle = substr($sSymbol, 0, strpos($sSymbol . '_', '_')) . ':' . htmlspecialchars($zData['Variant/DNA']);
+        if ($sFeedType == 'feed') {
+            $sSelfURL = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'api/rest.php/variants/' . $sSymbol . '/' . $zData['id'];
+        } else {
+            $sSelfURL = '';
+        }
+        $sAltURL               = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants/' . $sSymbol . '/' . $sRefSeq . '?search_VariantOnGenome%2FDBID=' . rawurlencode($zData['Variant/DBID']);
+        $sID                   = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . substr($zData['created_date'], 0, 10) . ':' . $sSymbol . '/' . $zData['id'];
+        $sContributors         = 'Unknown'; // We need to get this data from two tables... too much work?
+
+        // Really not quite the best solution, but it kind of works. $n is decreased and if there are no more matches, it will give a 404 anyway. Still has a misleading Feed title, though!
+        // FIXME; do we want to fix that by implementing a $_FEED->setTitle()?
+        if (!$sRefSeq && $bSearching && !empty($_GET['search_position']) && $_GET['search_position'] != $zData['position_mRNA']) {
+            // This was a false positive! (only when there is no Reference Sequence LOVD will try the DNA field to find the position) Partial match that should not have been reported. Byeeeeeeee...
+            $n --; // Does not really matter at this point.
+            continue;
+        }
+
+        $sContent = '';
+        $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA']);
+        foreach ($aFieldsAtomContent as $sKey) {
+            $sContent .= $sKey . ':' . $zData[$sKey] . "\n";
         }
 
         $_FEED->addEntry($sTitle, $sSelfURL, $sAltURL, $sID, $zData['created_by'], $zData['created_date'], $sContributors, $zData['updated_date'], '', 'text', $sContent);
@@ -483,6 +539,8 @@ if ($sDataType == 'variants') {
         // Dump JSON and die.
         die(json_encode($aData));
     }
+
+
 
     foreach ($aData as $zData) {
         // Prepare other fields to be included.
