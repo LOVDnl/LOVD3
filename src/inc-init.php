@@ -75,6 +75,7 @@ $_SERVER['SCRIPT_NAME'] = lovd_cleanDirName(str_replace('\\', '/', $_SERVER['SCR
 // Our output formats: text/html by default.
 $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
 if (lovd_getProjectFile() == '/api.php') {
+    $aFormats[] = 'application/json';
     $aFormats[] = 'text/bed';
 } elseif (lovd_getProjectFile() == '/import.php' && substr($_SERVER['QUERY_STRING'], 0, 25) == 'autoupload_scheduled_file') {
     // Set format to text/plain only when none is requested.

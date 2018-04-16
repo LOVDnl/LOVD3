@@ -164,7 +164,7 @@ class Feed {
                 $sContentType = 'text';
             }
             $sEntry = str_replace('{{ ENTRY_CONTENT_TYPE }}', $sContentType, $sEntry);
-            $sEntry = str_replace('{{ ENTRY_CONTENT }}', str_replace("\n", "\n      ", $sContent), $sEntry);
+            $sEntry = str_replace('{{ ENTRY_CONTENT }}', str_replace("\n", "\n      ", trim($sContent)), $sEntry);
         } else {
             $sEntry = preg_replace('/.+[\r\n]{1,2}.+{{ ENTRY_CONTENT }}.*[\r\n]{1,2}.+[\r\n]{1,2}/', '', $sEntry); // This removes the entire line plus the ones directly before and after.
         }

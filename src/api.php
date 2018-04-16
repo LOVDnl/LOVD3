@@ -253,7 +253,7 @@ if ($sDataType == 'variants') {
     // FIXME: All transcripts are listed here, ordered by the NCBI ID. However, the variant API chooses the first transcript based on its internal ID and shows only the variants on that one.
     // FIXME: This causes a bit of a problem since varcache stores the transcripts string with the gene and doesn't know what transcript the variants are on until it reads out the variant list.
     // FIXME: Decided to solve this for varcache by updating the NM in the database after the variants have been read. Leaving this here for now.
-    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi) AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ", ") AS curators
+    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";") AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ", ") AS curators
            FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id) LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
            WHERE 1=1';
 
@@ -435,6 +435,55 @@ if ($sDataType == 'variants') {
 
 
 } elseif ($sDataType == 'genes') {
+    // Define fields for Atom content.
+    $aFieldsAtomContent = array(
+        'id',
+        'entrez_id',
+        'symbol',
+        'name',
+        'chromosome_location',
+        'position_start',
+        'position_end',
+        'refseq_genomic',
+        'refseq_mrna',
+        'refseq_build'
+    );
+
+    // Make all transformations.
+    $aData = array_map(function ($zData)
+    {
+        global $_CONF;
+
+        // Format fields for JSON payload.
+        // The Atom data will also use these transformations, but may have less fields and in a different order.
+        $aReturn = array(
+            'id' => $zData['id'],
+            'entrez_id' => $zData['id_entrez'],
+            'symbol' => $zData['id'],
+            'name' => $zData['name'],
+            'chromosome' => $zData['chromosome'],
+            'chromosome_location' => $zData['chromosome'] . $zData['chrom_band'],
+            // In LOVD3, we couldn't get the start and end positions in the correct order because of the multiple
+            //  transcripts, so they are always in sense. Switch them if necessary.
+            'position_start' => 'chr' . $zData['chromosome'] . ':' . ($zData['sense']? $zData['position_g_mrna_start'] : $zData['position_g_mrna_end']),
+            'position_end' => 'chr' . $zData['chromosome'] . ':' . ($zData['sense']? $zData['position_g_mrna_end'] : $zData['position_g_mrna_start']),
+            'refseq_genomic' => $zData['refseq_genomic'],
+            'refseq_mrna' => explode(';', $zData['id_ncbi']),
+            'refseq_build' => $_CONF['refseq_build'],
+            'created_by' => $zData['created_by'],
+            'created_date' => $zData['created_date'],
+            'curators' => $zData['curators'],
+            'updated_date' => $zData['updated_date'],
+        );
+
+        return $aReturn;
+    }, $aData);
+
+    if (FORMAT == 'application/json') {
+        // Dump JSON and die.
+        die(json_encode($aData));
+    }
+
     foreach ($aData as $zData) {
         // Prepare other fields to be included.
         $sTitle = $zData['id'];
@@ -443,22 +492,14 @@ if ($sDataType == 'variants') {
         } else {
             $sSelfURL = '';
         }
-        $sChromosome         = $zData['chromosome'];
         $sAltURL             = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'genes/' . $zData['id'];
         $sID                 = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . substr($zData['created_date'], 0, 10) . ':' . $zData['id'];
-        $sContributors       = '';
-        $sContributors .= ($sContributors? ', ' : '') . htmlspecialchars($zData['curators']);
-        $sContent = 'id:' . $zData['id'] . "\n" .
-                    'entrez_id:' . $zData['id_entrez'] . "\n" .
-                    'symbol:' . $zData['id'] . "\n" .
-                    'name:' . $zData['name'] . "\n" .
-                    'chromosome_location:' . $zData['chromosome'] . $zData['chrom_band'] . "\n" .
-                    // In LOVD3, we couldn't get the start and end positions in the correct order because of the multiple transcripts, so they are always in sense. Switch them if necessary.
-                    'position_start:chr' . $sChromosome . ':' . ($zData['sense']? $zData['position_g_mrna_start'] : $zData['position_g_mrna_end']) . "\n" .
-                    'position_end:chr' . $sChromosome . ':' . ($zData['sense']? $zData['position_g_mrna_end'] : $zData['position_g_mrna_start']) . "\n" .
-                    'refseq_genomic:' . $zData['refseq_genomic'] . "\n" .
-                    'refseq_mrna:' . $zData['id_ncbi'] . "\n" .
-                    'refseq_build:' . $_CONF['refseq_build'];
+        $sContributors       = htmlspecialchars($zData['curators']);
+        $sContent = '';
+        $zData['refseq_mrna'] = implode(',', $zData['refseq_mrna']);
+        foreach ($aFieldsAtomContent as $sKey) {
+            $sContent .= $sKey . ':' . $zData[$sKey] . "\n";
+        }
         $_FEED->addEntry($sTitle, $sSelfURL, $sAltURL, $sID, $zData['created_by'], $zData['created_date'], $sContributors, $zData['updated_date'], '', 'text', $sContent);
     }
 }
