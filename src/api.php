@@ -176,8 +176,29 @@ if ($sDataType == 'variants') {
         // Normal API output; Atom feed with one entry per variant.
         // First build query.
         // Note that the MIN()s and MAX()es don't mean much if $bUnique is false, since we'll group by the vog.id anyway.
-        $sQ = 'SELECT MIN(vog.id) AS id, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MAX(vog.position_g_start) AS position_g_start, MAX(vog.position_g_end) AS position_g_end, GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported, GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded, vot.`VariantOnTranscript/DNA`, vog.`VariantOnGenome/DBID`, MIN(vog.created_date) AS created_date, MAX(IFNULL(vog.edited_date, vog.created_date)) AS edited_date, SUM(IFNULL(i.panel_size, 1)) AS Times
-               FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
+        $sQ = 'SELECT MIN(vog.id) AS id,
+                 MAX(vot.position_c_start) AS position_c_start,
+                 MAX(vot.position_c_start_intron) AS position_c_start_intron,
+                 MAX(vot.position_c_end) AS position_c_end,
+                 MAX(vot.position_c_end_intron) AS position_c_end_intron,
+                 MAX(vog.position_g_start) AS position_g_start,
+                 MAX(vog.position_g_end) AS position_g_end,
+                 GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
+                 GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
+                 vot.`VariantOnTranscript/DNA`,
+                 vog.`VariantOnGenome/DBID`,
+                 GROUP_CONCAT(DISTINCT uc.name SEPARATOR ";") AS _created_by,
+                 MIN(vog.created_date) AS created_date,
+                 GROUP_CONCAT(DISTINCT uo.name SEPARATOR ";") AS _owned_by,
+                 MAX(IFNULL(vog.edited_date, vog.created_date)) AS edited_date,
+                 SUM(IFNULL(i.panel_size, 1)) AS Times
+               FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                 INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id)
+                 LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                 LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                 LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
+                 LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
+                 LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
                WHERE vot.transcriptid = ' . $nRefSeqID . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
         if ($nID) {
@@ -425,10 +446,10 @@ if ($sDataType == 'variants') {
             'Variant/DNA' => $zData['VariantOnTranscript/DNA'],
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
-            'created_by' => 'Unknown', // FIXME: Fetch from table.
+            'owned_by' => explode(';', $zData['_owned_by']),
+            'created_by' => explode(';', $zData['_created_by']),
             'created_date' => $zData['created_date'],
-            'edited_by' => 'Unknown', // FIXME: Fetch from table.
-            'updated_date' => $zData['edited_date'],
+            'edited_date' => $zData['edited_date'],
         );
 
         if ($bUnique && FORMAT == 'application/json') {
@@ -469,7 +490,7 @@ if ($sDataType == 'variants') {
         }
         $sAltURL               = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants/' . $sSymbol . '/' . $sRefSeq . '?search_VariantOnGenome%2FDBID=' . rawurlencode($zData['Variant/DBID']);
         $sID                   = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . substr($zData['created_date'], 0, 10) . ':' . $sSymbol . '/' . $zData['id'];
-        $sContributors         = 'Unknown'; // We need to get this data from two tables... too much work?
+        $sContributors         = implode(', ', $zData['owned_by']);
 
         // Really not quite the best solution, but it kind of works. $n is decreased and if there are no more matches, it will give a 404 anyway. Still has a misleading Feed title, though!
         // FIXME; do we want to fix that by implementing a $_FEED->setTitle()?
@@ -485,7 +506,8 @@ if ($sDataType == 'variants') {
             $sContent .= $sKey . ':' . $zData[$sKey] . "\n";
         }
 
-        $_FEED->addEntry($sTitle, $sSelfURL, $sAltURL, $sID, $zData['created_by'], $zData['created_date'], $sContributors, $zData['updated_date'], '', 'text', $sContent);
+        $zData['created_by'] = implode(', ', $zData['created_by']);
+        $_FEED->addEntry($sTitle, $sSelfURL, $sAltURL, $sID, $zData['created_by'], $zData['created_date'], $sContributors, $zData['edited_date'], '', 'text', $sContent);
     }
 
 
