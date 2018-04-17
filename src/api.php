@@ -431,7 +431,7 @@ if ($sDataType == 'variants') {
             'updated_date' => $zData['edited_date'],
         );
 
-        if ($bUnique) {
+        if ($bUnique && FORMAT == 'application/json') {
             unset($aReturn['id']);
         }
 
