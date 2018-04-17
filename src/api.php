@@ -464,8 +464,8 @@ if ($sDataType == 'variants') {
             $aReturn = array_merge(
                 $aReturn,
                 array(
-                    'effect_reported' => implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_reported']), $_SETT['var_effect_api'])),
-                    'effect_concluded' => implode(',', lovd_mapCodeToDescription(explode(';', $zData['effect_concluded']), $_SETT['var_effect_api'])),
+                    'effect_reported' => lovd_mapCodeToDescription(explode(';', $zData['effect_reported']), $_SETT['var_effect_api']),
+                    'effect_concluded' => lovd_mapCodeToDescription(explode(';', $zData['effect_concluded']), $_SETT['var_effect_api']),
                 )
             );
         }
@@ -502,6 +502,8 @@ if ($sDataType == 'variants') {
 
         $sContent = '';
         $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA']);
+        $zData['effect_reported'] = implode(',', $zData['effect_reported']);
+        $zData['effect_concluded'] = implode(',', $zData['effect_concluded']);
         foreach ($aFieldsAtomContent as $sKey) {
             $sContent .= $sKey . ':' . $zData[$sKey] . "\n";
         }
