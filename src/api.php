@@ -505,8 +505,11 @@ if ($sDataType == 'variants') {
 
         $sContent = '';
         $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA']);
-        $zData['effect_reported'] = implode(',', $zData['effect_reported']);
-        $zData['effect_concluded'] = implode(',', $zData['effect_concluded']);
+        if (!empty($_GET['show_variant_effect'])) {
+            // Optionally, add the variant effect to the output.
+            $zData['effect_reported'] = implode(',', $zData['effect_reported']);
+            $zData['effect_concluded'] = implode(',', $zData['effect_concluded']);
+        }
         foreach ($aFieldsAtomContent as $sKey) {
             $sContent .= $sKey . ':' . $zData[$sKey] . "\n";
         }
