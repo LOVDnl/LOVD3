@@ -141,6 +141,11 @@ if ($sDataType == 'variants') {
                      WHERE g.id = ? ORDER BY t.id ASC LIMIT 1',
             array($sSymbol))->fetchRow();
 
+    if (FORMAT == 'application/json') {
+        // For JSON output, we show all transcripts.
+        $nRefSeqID = null;
+    }
+
     if (FORMAT == 'text/bed') {
         // We're exporting a BED file for a Genome Browser.
         $sBuild = $_CONF['refseq_build'];
@@ -214,7 +219,7 @@ if ($sDataType == 'variants') {
                        )
                      )
                    )
-                   ORDER BY t.id = ' . $nRefSeqID . ' DESC, t.id_ncbi
+                   ORDER BY t.id_ncbi
                    SEPARATOR ";"
                  ) AS _position_mRNA,
                  MAX(
@@ -229,7 +234,8 @@ if ($sDataType == 'variants') {
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
                  MAX(vog.`VariantOnGenome/DNA`) AS `VariantOnGenome/DNA`,
-                 vot.`VariantOnTranscript/DNA`,
+                 GROUP_CONCAT(' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'vot.`VariantOnTranscript/DNA`
+                   ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
                  vog.`VariantOnGenome/DBID`,
                  GROUP_CONCAT(DISTINCT uc.name SEPARATOR ";") AS _created_by,
                  MIN(vog.created_date) AS created_date,
@@ -244,7 +250,7 @@ if ($sDataType == 'variants') {
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
-               WHERE ' . (FORMAT == 'application/json'? '' : 'vot.transcriptid = ' . $nRefSeqID . ' AND ') . 'vog.statusid >= ' . STATUS_MARKED;
+               WHERE ' . (!$nRefSeqID? '' : 'vot.transcriptid = ' . $nRefSeqID . ' AND ') . 'vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
         if ($nID) {
             $sFeedType = 'entry';
@@ -462,30 +468,42 @@ if ($sDataType == 'variants') {
     // Make all transformations.
     $aData = array_map(function ($zData)
     {
-        global $bUnique, $sChromosome, $sRefSeq, $sSymbol, $_SETT;
+        global $bUnique, $nRefSeqID, $sChromosome, $sRefSeq, $sSymbol, $_SETT;
 
         // Format fields for JSON payload.
         // The Atom data will also use these transformations, but may have less fields and in a different order.
 
         // We're assuming here that the start of the DBID field will always be the ID, like the column's default RegExp forces.
         $zData['Variant/DBID'] = preg_replace('/^(\w+).*$/', "$1", $zData['VariantOnGenome/DBID']);
-        if (!$sRefSeq || !$zData['_position_mRNA']) {
-            $zData['_position_mRNA'] = (!$sRefSeq? '' : $sRefSeq . ':') . lovd_variantToPosition($zData['VariantOnTranscript/DNA']);
+        if (!$zData['_position_mRNA']) {
+            $zData['_position_mRNA'] = array();
+            foreach (explode(';;', $zData['__VariantOnTranscript/DNA']) as $sDNA) {
+                if ($nRefSeqID) {
+                    // We only have one transcript.
+                    $sTranscript = $sRefSeq;
+                } else {
+                    list($sTranscript, $sDNA) = explode(':', $sDNA, 2);
+                }
+                // FIXME: Use lovd_getVariantInfo() here, but now the following is much simpler to generate a position string.
+                $zData['_position_mRNA'][] = $sTranscript . ':' . (lovd_variantToPosition($sDNA)?: '?');
+            }
             $aVariantGenomic = lovd_getVariantInfo($zData['VariantOnGenome/DNA']);
-            if ($aVariantGenomic['position_start']) {
+            if ($aVariantGenomic && $aVariantGenomic['position_start']) {
                 $zData['position_genomic'] = 'chr' . $sChromosome . ':' . $aVariantGenomic['position_start'] .
                     ($aVariantGenomic['position_start'] == $aVariantGenomic['position_end']? '' : '_' . $aVariantGenomic['position_end']);
             } else {
                 $zData['position_genomic'] = 'chr' . $sChromosome . ':?';
             }
+        } else {
+            $zData['_position_mRNA'] = explode(';', $zData['_position_mRNA']);
         }
 
         $aReturn = array(
             'symbol' => $sSymbol,
             'id' => $zData['id'],
-            'position_mRNA' => explode(';', $zData['_position_mRNA']),
+            'position_mRNA' => $zData['_position_mRNA'],
             'position_genomic' => $zData['position_genomic'],
-            'Variant/DNA' => $zData['VariantOnTranscript/DNA'],
+            'Variant/DNA' => explode(';;', $zData['__VariantOnTranscript/DNA']),
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
             'owned_by' => explode(';', $zData['_owned_by']),
@@ -527,7 +545,7 @@ if ($sDataType == 'variants') {
 
     foreach ($aData as $zData) {
         // Prepare other fields to be included.
-        $sTitle = substr($sSymbol, 0, strpos($sSymbol . '_', '_')) . ':' . htmlspecialchars($zData['Variant/DNA']);
+        $sTitle = substr($sSymbol, 0, strpos($sSymbol . '_', '_')) . ':' . htmlspecialchars($zData['Variant/DNA'][0]);
         if ($sFeedType == 'feed') {
             $sSelfURL = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'api/rest.php/variants/' . $sSymbol . '/' . $zData['id'];
         } else {
@@ -547,7 +565,7 @@ if ($sDataType == 'variants') {
 
         $sContent = '';
         $zData['position_mRNA'] = $zData['position_mRNA'][0];
-        $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA']);
+        $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA'][0]);
         if (!empty($_GET['show_variant_effect'])) {
             // Optionally, add the variant effect to the output.
             $zData['effect_reported'] = implode(',', $zData['effect_reported']);
