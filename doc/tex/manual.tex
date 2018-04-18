@@ -427,15 +427,12 @@ When a gene is selected (shown in the page header),
 When no gene is selected, the default page of the screenings tab shows all screenings.
 When a gene is selected (shown in the page header),
  the default page of the screenings tab shows all screenings that screened for variants in the selected gene.
+\clearpage
 
 \begin{description}
   \item [View all screenings] \hfill \\
   This view shows all the screenings in the database.
   You can click on a screening to view its details.
-\end{description}
-
-% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
-\begin{description}
   \item [View all screenings for a gene] \hfill \\
   This view displays all screenings that screened for variants in the currently selected gene.
   You can click on a screening to view its details.
@@ -1208,13 +1205,6 @@ Curators do not require a separate submitter account; they can use their curator
 
 \hypertarget{sec:submitter_register}{}
 \section{Registering a new account}
-\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
-  \vspace{-25pt}
-  \begin{leftbar}
-    Required level: None (public)\\
-    Available from: LOVD 3.0 Build 01
-  \end{leftbar}
-\end{wrapfigure}
 \begin{warntable}
 Please note that you do \textbf{NOT} need to register to view the data available in the database.
 You only need an account for submitting new variant data.
@@ -1227,6 +1217,13 @@ The major difference between registration and direct creation of a new account b
 The registration form is protected using a \emph{reCAPTCHA} module, which makes sure the form can only be used by humans, and not by spam bots.
 \vskip \baselineskip
 
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: None (public)\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
 To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
 First, you are asked to provide an ORCID ID, if you have one.
 \href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and,
@@ -3193,7 +3190,8 @@ When this line is not included in the file that is imported, LOVD cannot process
   Please NOTE that spreadsheets are well known for introducing errors in importing/exporting
    text files, due to automatic interpretation of the values.
   When using a spreadsheet program to edit a downloaded file,
-   format all cells to "Text" \textbf{before} importing/pasting the downloaded data.\\
+   format all cells to "Text" \textbf{before} importing/pasting the downloaded data.
+  \vskip \baselineskip
 
   Also some cases have been reported where MS Excel removed contents of large text fields (> 255 characters).
 \end{warntable}
@@ -4070,7 +4068,7 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
     Results for your query of the database
   </title>
   <link rel="alternate" type="text/html" href="https://databases.lovd.nl/shared/"/>
-  <link rel="self" type="application/atom+xml" href="https://databases.lovd.nl/shared/api/rest/genes"/>
+  <link rel="self" type="application/atom+xml" href="http://databases.lovd.nl/shared/api/rest/genes"/>
   <updated>2018-04-17T20:15:10+02:00</updated>
   <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
   <generator uri="http://www.LOVD.nl/" version="3.0-21">
@@ -4079,8 +4077,8 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
   <rights>Copyright (c), the curators of this database</rights>
   <entry xmlns="http://www.w3.org/2005/Atom">
     <title>IVD</title>
-    <link rel="alternate" type="text/html" href="https://databases.lovd.nl/shared/genes/IVD"/>
-    <link rel="self" type="application/atom+xml" href="https://d...lovd.nl/shared/api/rest/genes/IVD"/>
+    <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/genes/IVD"/>
+    <link rel="self" type="application/atom+xml" href="http://d...lovd.nl/shared/api/rest/genes/IVD"/>
     <id>tag:databases.lovd.nl,2011-04-05:IVD</id>
     <author>
       <name>Gerard C.P. Schaafsma</name>
@@ -4642,9 +4640,10 @@ Depending on whether or not LOVD has found that there is an update available,\
 \begin{center}
 \begin{tabular}{ | p{0.8cm} p{10cm} | }
   \hline
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newer.png}} & There is an update available. \\
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newest.png}} & There is no update available. \\
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_error.png}} & There was an error while checking for updates. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_newer.png}} & There is an update available. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_newest.png}} & There is no update available. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_error.png}} &
+   There was an error while checking for updates. \\
   \hline
 \end{tabular}
 \end{center}
