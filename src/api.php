@@ -177,14 +177,58 @@ if ($sDataType == 'variants') {
         // First build query.
         // Note that the MIN()s and MAX()es don't mean much if $bUnique is false, since we'll group by the vog.id anyway.
         $sQ = 'SELECT MIN(vog.id) AS id,
-                 MAX(vot.position_c_start) AS position_c_start,
-                 MAX(vot.position_c_start_intron) AS position_c_start_intron,
-                 MAX(vot.position_c_end) AS position_c_end,
-                 MAX(vot.position_c_end_intron) AS position_c_end_intron,
-                 MAX(vog.position_g_start) AS position_g_start,
-                 MAX(vog.position_g_end) AS position_g_end,
+                 GROUP_CONCAT(
+                   DISTINCT t.id_ncbi, ":c.",
+                   IF(
+                     vot.position_c_start = vot.position_c_end AND vot.position_c_start_intron = vot.position_c_end_intron,
+                     CONCAT(
+                       vot.position_c_start,
+                       IF(
+                         IFNULL(vot.position_c_start_intron, 0) = 0,
+                         "",
+                         CONCAT(
+                           IF(vot.position_c_start_intron < 0, "", "+"),
+                           vot.position_c_start_intron
+                         )
+                       )
+                     ),
+                     CONCAT(
+                       vot.position_c_start,
+                       IF(
+                         IFNULL(vot.position_c_start_intron, 0) = 0,
+                         "",
+                         CONCAT(
+                           IF(vot.position_c_start_intron < 0, "", "+"),
+                           vot.position_c_start_intron
+                         )
+                       ),
+                       "_",
+                       vot.position_c_end,
+                       IF(
+                         IFNULL(vot.position_c_end_intron, 0) = 0,
+                         "",
+                         CONCAT(
+                           IF(vot.position_c_end_intron < 0, "", "+"),
+                           vot.position_c_end_intron
+                         )
+                       )
+                     )
+                   )
+                   ORDER BY t.id = ' . $nRefSeqID . ' DESC, t.id_ncbi
+                   SEPARATOR ";"
+                 ) AS _position_mRNA,
+                 MAX(
+                   CONCAT("chr", vog.chromosome, ":' . (FORMAT == 'application/json'? 'g.' : '') . '", 
+                     IF(
+                       vog.position_g_start = vog.position_g_end,
+                       vog.position_g_start,
+                       CONCAT(vog.position_g_start, "_", vog.position_g_end)
+                     )
+                   )
+                 ) AS position_genomic,
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
+                 MAX(vog.`VariantOnGenome/DNA`) AS `VariantOnGenome/DNA`,
                  vot.`VariantOnTranscript/DNA`,
                  vog.`VariantOnGenome/DBID`,
                  GROUP_CONCAT(DISTINCT uc.name SEPARATOR ";") AS _created_by,
@@ -192,14 +236,15 @@ if ($sDataType == 'variants') {
                  GROUP_CONCAT(DISTINCT uo.name SEPARATOR ";") AS _owned_by,
                  MAX(IFNULL(vog.edited_date, vog.created_date)) AS edited_date,
                  SUM(IFNULL(i.panel_size, 1)) AS Times
-               FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
-                 INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id)
+               FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                 INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                 INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
                  LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
                  LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
-               WHERE vot.transcriptid = ' . $nRefSeqID . ' AND vog.statusid >= ' . STATUS_MARKED;
+               WHERE ' . (FORMAT == 'application/json'? '' : 'vot.transcriptid = ' . $nRefSeqID . ' AND ') . 'vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
         if ($nID) {
             $sFeedType = 'entry';
@@ -417,32 +462,29 @@ if ($sDataType == 'variants') {
     // Make all transformations.
     $aData = array_map(function ($zData)
     {
-        global $bUnique, $nPositionCDSEnd, $nPositionMRNAStart, $nPositionMRNAEnd, $sChromosome, $sRefSeq, $sSymbol, $_SETT;
+        global $bUnique, $sChromosome, $sRefSeq, $sSymbol, $_SETT;
 
         // Format fields for JSON payload.
         // The Atom data will also use these transformations, but may have less fields and in a different order.
 
         // We're assuming here that the start of the DBID field will always be the ID, like the column's default RegExp forces.
         $zData['Variant/DBID'] = preg_replace('/^(\w+).*$/', "$1", $zData['VariantOnGenome/DBID']);
-        if ($sRefSeq && $zData['position_c_start']) {
-            $sDNAStart = lovd_convertDNAPositionToHR($nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $zData['position_c_start'], $zData['position_c_start_intron']);
-            if ($zData['position_c_start'] == $zData['position_c_end']) {
-                $sDNAEnd = $sDNAStart;
+        if (!$sRefSeq || !$zData['_position_mRNA']) {
+            $zData['_position_mRNA'] = (!$sRefSeq? '' : $sRefSeq . ':') . lovd_variantToPosition($zData['VariantOnTranscript/DNA']);
+            $aVariantGenomic = lovd_getVariantInfo($zData['VariantOnGenome/DNA']);
+            if ($aVariantGenomic['position_start']) {
+                $zData['position_genomic'] = 'chr' . $sChromosome . ':' . $aVariantGenomic['position_start'] .
+                    ($aVariantGenomic['position_start'] == $aVariantGenomic['position_end']? '' : '_' . $aVariantGenomic['position_end']);
             } else {
-                $sDNAEnd = lovd_convertDNAPositionToHR($nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $zData['position_c_end'], $zData['position_c_end_intron']);
+                $zData['position_genomic'] = 'chr' . $sChromosome . ':?';
             }
-            $sPosition_mRNA    = $sRefSeq . ':c.' . $sDNAStart . ($zData['position_c_end'] == $zData['position_c_start']? '' : '_' . $sDNAEnd);
-            $sPosition_genomic = 'chr' . $sChromosome . ':' . $zData['position_g_start'] . ($zData['position_g_end'] == $zData['position_g_start']? '' : '_' . $zData['position_g_end']);
-        } else {
-            $sPosition_mRNA    = lovd_variantToPosition($zData['VariantOnTranscript/DNA']);
-            $sPosition_genomic = 'chr' . $sChromosome . ':?';
         }
 
         $aReturn = array(
             'symbol' => $sSymbol,
             'id' => $zData['id'],
-            'position_mRNA' => $sPosition_mRNA,
-            'position_genomic' => $sPosition_genomic,
+            'position_mRNA' => explode(';', $zData['_position_mRNA']),
+            'position_genomic' => $zData['position_genomic'],
             'Variant/DNA' => $zData['VariantOnTranscript/DNA'],
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
@@ -504,6 +546,7 @@ if ($sDataType == 'variants') {
         }
 
         $sContent = '';
+        $zData['position_mRNA'] = $zData['position_mRNA'][0];
         $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA']);
         if (!empty($_GET['show_variant_effect'])) {
             // Optionally, add the variant effect to the output.
