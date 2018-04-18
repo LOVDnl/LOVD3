@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2018-04-17
+ * Modified    : 2018-04-18
  * For LOVD    : 3.0-22
  *
  * Supported URIs:
@@ -475,6 +475,9 @@ if ($sDataType == 'variants') {
 
     if (FORMAT == 'application/json') {
         // Dump JSON and die.
+        if ($sFeedType == 'entry') {
+            $aData = $aData[0];
+        }
         die(json_encode($aData));
     }
 
@@ -561,6 +564,9 @@ if ($sDataType == 'variants') {
 
     if (FORMAT == 'application/json') {
         // Dump JSON and die.
+        if ($sFeedType == 'entry') {
+            $aData = $aData[0];
+        }
         die(json_encode($aData));
     }
 
