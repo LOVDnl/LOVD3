@@ -448,8 +448,8 @@ if ($sDataType == 'variants') {
             'Times_reported' => $zData['Times'],
             'owned_by' => explode(';', $zData['_owned_by']),
             'created_by' => explode(';', $zData['_created_by']),
-            'created_date' => $zData['created_date'],
-            'edited_date' => $zData['edited_date'],
+            'created_date' => date('c', strtotime($zData['created_date'])),
+            'edited_date' => date('c', strtotime($zData['edited_date'])),
         );
 
         if ($bUnique && FORMAT == 'application/json') {
@@ -554,9 +554,9 @@ if ($sDataType == 'variants') {
             'refseq_mrna' => explode(';', $zData['id_ncbi']),
             'refseq_build' => $_CONF['refseq_build'],
             'created_by' => $zData['created_by'],
-            'created_date' => $zData['created_date'],
+            'created_date' => date('c', strtotime($zData['created_date'])),
             'curators' => explode(';', $zData['curators']),
-            'updated_date' => $zData['updated_date'],
+            'updated_date' => date('c', strtotime($zData['updated_date'])),
         );
 
         return $aReturn;
