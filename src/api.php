@@ -28,7 +28,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
- *  3.0-22       /api/rest.php/*****?format=text/json   (JSON output for whole LOVD2-style API)
+ *  3.0-22       /api/rest.php/*****?format=application/json   (JSON output for whole LOVD2-style API)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
