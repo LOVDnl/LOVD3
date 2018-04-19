@@ -5,7 +5,7 @@
 % To convert the manual to an html file use: pdf2htmlEX --zoom 1.3 --embed-css 2 manual.pdf
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-21}
+\setLOVDversion{3.0-22}
 \title{LOVD 3.0 user manual \\\vskip 0.2cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \setpointercolor{red}
@@ -427,15 +427,12 @@ When a gene is selected (shown in the page header),
 When no gene is selected, the default page of the screenings tab shows all screenings.
 When a gene is selected (shown in the page header),
  the default page of the screenings tab shows all screenings that screened for variants in the selected gene.
+\clearpage
 
 \begin{description}
   \item [View all screenings] \hfill \\
   This view shows all the screenings in the database.
   You can click on a screening to view its details.
-\end{description}
-
-% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
-\begin{description}
   \item [View all screenings for a gene] \hfill \\
   This view displays all screenings that screened for variants in the currently selected gene.
   You can click on a screening to view its details.
@@ -1208,13 +1205,6 @@ Curators do not require a separate submitter account; they can use their curator
 
 \hypertarget{sec:submitter_register}{}
 \section{Registering a new account}
-\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
-  \vspace{-25pt}
-  \begin{leftbar}
-    Required level: None (public)\\
-    Available from: LOVD 3.0 Build 01
-  \end{leftbar}
-\end{wrapfigure}
 \begin{warntable}
 Please note that you do \textbf{NOT} need to register to view the data available in the database.
 You only need an account for submitting new variant data.
@@ -1227,6 +1217,13 @@ The major difference between registration and direct creation of a new account b
 The registration form is protected using a \emph{reCAPTCHA} module, which makes sure the form can only be used by humans, and not by spam bots.
 \vskip \baselineskip
 
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: None (public)\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
 To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
 First, you are asked to provide an ORCID ID, if you have one.
 \href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and,
@@ -3193,7 +3190,8 @@ When this line is not included in the file that is imported, LOVD cannot process
   Please NOTE that spreadsheets are well known for introducing errors in importing/exporting
    text files, due to automatic interpretation of the values.
   When using a spreadsheet program to edit a downloaded file,
-   format all cells to "Text" \textbf{before} importing/pasting the downloaded data.\\
+   format all cells to "Text" \textbf{before} importing/pasting the downloaded data.
+  \vskip \baselineskip
 
   Also some cases have been reported where MS Excel removed contents of large text fields (> 255 characters).
 \end{warntable}
@@ -3995,6 +3993,14 @@ LOVD3 contains an LOVD2-style data retrieval API, useful for simple queries and 
 
 
 \section{Data retrieval API}
+\begin{wrapfigure}[4]{r}{8cm}
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: None\\
+    Available from: LOVD 3.0 Build 01\\
+    JSON support: LOVD 3.0 Build 22
+  \end{leftbar}
+\end{wrapfigure}
 Just like LOVD2 (from version 2.0-22, released October 5th 2009), LOVD3 includes a simple
  webservice enabling simple queries or listing of variant data (not patient data).
 This API only shows very basic information and can therefore not be disabled.
@@ -4005,7 +4011,8 @@ Examples of possibilities are searching on a gene symbol, getting the list of av
  or on a per-gene basis, list all variants or search for a certain variant or DNA location.
 Even though LOVD3 is not gene-based like LOVD2 was, we have decided to keep the same
  gene-centered design of the API to make sure LOVD2 and LOVD3 can be queried alike.
-The output it creates is an Atom 1.0 feed with the LOVD information in plain text.
+The output it creates is either an Atom 1.0 feed with the LOVD information in plain text, or a
+ \href{http://www.json.org/}{JSON} file.
 
 A more advanced API will be included in LOVD3 later, allowing the querying of variants genome-wide
  and getting more detailed information out of LOVD, such as patient and phenotype data.
@@ -4018,7 +4025,7 @@ This API will be configurable, so submitters decide for themselves under
 \begin{warntable}
   These terms of service and fair use policy are applicable to \emph{all} APIs present on the LOVD site
    and any LOVD installations hosted by the Leiden University Medical Center, recognizable by domain names ending
-   by .lovd.nl, .lumc.nl or .liacs.nl.
+   by .lovd.nl or .lumc.nl.
   Other servers hosting LOVDs may also have terms of service in place.
   If in doubt, try to contact the party hosting the LOVD installation.
 \end{warntable}
@@ -4037,6 +4044,8 @@ This API will be configurable, so submitters decide for themselves under
 
 
 \subsection{Format}
+Since 3.0-22, the LOVD2-style API allows for JSON data to be returned.
+The original format, also still available in 3.0-22, is an Atom feed, and is still the standard.
 When searching for genes, an Atom feed is returned with zero or more entries.
 When requesting a specific entry, just the Atom entry is returned.
 The Atom format is described in detail on \href{http://en.wikipedia.org/wiki/Atom_(standard)}{Wikipedia}.
@@ -4046,7 +4055,7 @@ Other formats as a `payload' of the Atom entries are not available.
 
 The new LOVD3 API (release date unavailable) will probably support multiple formats, such as
  \href{http://www.varioml.org/}{VarioML} and \href{http://www.json.org/}{JSON},
- most likely not wrapped in Atom feeds, since this API serves a different purpose.
+ and will not support Atom feeds, since this API serves a different purpose.
 
 \subsubsection{Genes}
 \begin{figure}[ht]
@@ -4060,9 +4069,9 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
   </title>
   <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
   <link rel="self" type="application/atom+xml" href="http://databases.lovd.nl/shared/api/rest/genes"/>
-  <updated>2014-01-14T12:20:24+01:00</updated>
+  <updated>2018-04-17T20:15:10+02:00</updated>
   <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
-  <generator uri="http://www.LOVD.nl/" version="3.0-09">
+  <generator uri="http://www.LOVD.nl/" version="3.0-21">
     Leiden Open Variation Database
   </generator>
   <rights>Copyright (c), the curators of this database</rights>
@@ -4072,13 +4081,13 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
     <link rel="self" type="application/atom+xml" href="http://d...lovd.nl/shared/api/rest/genes/IVD"/>
     <id>tag:databases.lovd.nl,2011-04-05:IVD</id>
     <author>
-      <name>Gerard Schaafsma</name>
+      <name>Gerard C.P. Schaafsma</name>
     </author>
     <contributor>
       <name>Ivo F.A.C. Fokkema</name>
     </contributor>
     <published>2011-04-05T16:04:49+02:00</published>
-    <updated>2013-03-11T15:30:41+01:00</updated>
+    <updated>2017-08-07T13:40:16+02:00</updated>
     <content type="text">
       id:IVD
       entrez_id:3712
@@ -4095,10 +4104,48 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
 </feed>
     \end{verbatim}
   \caption{%
-    Example LOVD API output format.
-    The two longest lines have been shortened to fit this page.
+    Example LOVD API output, in the default Atom format.
+    The longest line has been shortened to fit this page.
     This example output of a search on gene symbol returns the IVD gene and its basic information.
     Source: \href{http://databases.lovd.nl/shared/api/rest/genes?search_symbol=IVD}
+     {LOVD3 shared installation}.}
+  \end{shaded}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{shaded}
+    \scriptsize
+    \begin{verbatim}
+[
+  {
+    "id":"IVD",
+    "entrez_id":"3712",
+    "symbol":"IVD",
+    "name":"isovaleryl-CoA dehydrogenase",
+    "chromosome":"15",
+    "chromosome_location":"15q14-q15",
+    "position_start":"chr15:40697686",
+    "position_end":"chr15:40713512",
+    "refseq_genomic":"NG_011986.1",
+    "refseq_mrna":[
+      "NM_001159508.1",
+      "NM_002225.3"
+    ],
+    "refseq_build":"hg19",
+    "created_by":"Gerard C.P. Schaafsma",
+    "created_date":"2011-04-05T16:04:49+02:00",
+    "curators":[
+      "Ivo F.A.C. Fokkema"
+    ],
+    "updated_date":"2017-08-07T13:40:16+02:00"
+  }
+]
+    \end{verbatim}
+  \caption{%
+    Example LOVD API output, in the JSON format, of the same API search result as the previous figure.
+    Note the slight differences in the data returned; the JSON format adds the chromosome field,
+     returns all transcripts associated with the gene in question, and stores the curator information in an array.
+    Source: \href{https://databases.lovd.nl/shared/api/rest/genes?search_symbol=IVD&format=application/json}
      {LOVD3 shared installation}.}
   \end{shaded}
 \end{figure}
@@ -4107,17 +4154,21 @@ The gene information shared through the API consists of the official gene symbol
  the gene's Entrez ID (\textbf{entrez\_id}), the gene's official name (\textbf{name}), the chromosome band
  (\textbf{chromosome\_location}) and exact locations (\textbf{position\_start}, \textbf{position\_end},
  not always available), its genomic reference sequence (\textbf{refseq\_genomic}), first transcript added
- (\textbf{refseq\_mrna}) and the code of the reference sequence build that the genomic positions are based on
- (\textbf{refseq\_build}).
+ (\textbf{refseq\_mrna}, all transcripts when using JSON) and the code of the
+ reference sequence build that the genomic positions are based on (\textbf{refseq\_build}).
+The JSON data has slightly more fields (\textbf{created\_by}, \textbf{created\_date}, \textbf{curators},
+ \textbf{updated\_date}), which are also available in the Atom entry itself (not the plain text payload).
 \vskip \baselineskip
 
 The official gene symbol is mentioned twice, because in LOVD2 multiple databases could exist for the same gene by
  setting a suffix on the gene symbol; there the `id' field could have a different value than the `symbol' field.
 Having two fields for the gene symbol is retained in the API to keep the format between LOVD3 and LOVD2 consistent.
 
-Please note, also for consistency with the LOVD2 API, that the `refseq\_mrna' field can
+Please note, also for consistency with the LOVD2 API, that in the Atom entry, the `refseq\_mrna' field can
  contain only one value whilst in LOVD3 one gene can contain multiple transcripts.
-The LOVD API shows only the first transcript added to the gene.
+The Atom entry shows only the first transcript, sorted on their NCBI ID.
+The JSON data shows all transcripts.
+\clearpage
 
 \subsubsection{Variants}
 \begin{figure}[ht]
@@ -4131,9 +4182,9 @@ The LOVD API shows only the first transcript added to the gene.
   </title>
   <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
   <link rel="self" type="application/atom+xml" href="http://...lovd.nl/shared/api/rest/variants/IVD"/>
-  <updated>2013-03-11T15:30:41+01:00</updated>
+  <updated>2017-08-07T13:40:16+02:00</updated>
   <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
-  <generator uri="http://www.LOVD.nl/" version="3.0-09">
+  <generator uri="http://www.LOVD.nl/" version="3.0-21">
     Leiden Open Variation Database
   </generator>
   <rights>Copyright (c), the curators of this database</rights>
@@ -4141,15 +4192,15 @@ The LOVD API shows only the first transcript added to the gene.
     <title>IVD:c.860G&gt;A</title>
     <link rel="alternate" type="text/html" href="http://...?search_VariantOnGenome/DBID=IVD_000001"/>
     <link rel="self" type="application/atom+xml" href="http://.../api/rest/variants/IVD/0000000563"/>
-    <id>tag:databases.lovd.nl,1970-01-01:IVD/0000000563</id>
+    <id>tag:databases.lovd.nl,2011-04-06:IVD/0000000563</id>
     <author>
-      <name>Unknown</name>
+      <name>Gerard C.P. Schaafsma</name>
     </author>
     <contributor>
-      <name>Unknown</name>
+      <name>Ivo F.A.C. Fokkema</name>
     </contributor>
-    <published>1970-01-01T00:00:00+01:00</published>
-    <updated>1970-01-01T00:00:00+01:00</updated>
+    <published>2011-04-06T16:20:25+02:00</published>
+    <updated>2017-03-28T16:27:49+02:00</updated>
     <content type="text">
       symbol:IVD
       id:0000000563
@@ -4163,7 +4214,7 @@ The LOVD API shows only the first transcript added to the gene.
 </feed>
     \end{verbatim}
   \caption{%
-    Example LOVD API output format.
+    Example LOVD API output, in the default Atom format.
     The three longest lines have been shortened to fit this page.
     This example output of a search on DB ID returns one variant in the IVD gene and its basic information.
     Source: \href{http://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001}
@@ -4171,19 +4222,65 @@ The LOVD API shows only the first transcript added to the gene.
   \end{shaded}
 \end{figure}
 
+\begin{figure}[ht]
+  \begin{shaded}
+    \scriptsize
+    \begin{verbatim}
+[
+  {
+    "symbol":"IVD",
+    "id":"0000000563",
+    "position_mRNA":[
+      "NM_002225.3:c.860"
+    ],
+    "position_genomic":"chr15:g.40707154",
+    "Variant\/DNA":[
+      "NM_002225.3:c.860G>A"
+    ],
+    "Variant\/DBID":"IVD_000001",
+    "Times_reported":"1",
+    "owned_by":[
+      "Ivo F.A.C. Fokkema"
+    ],
+    "created_by":[
+      "Gerard C.P. Schaafsma"
+    ],
+    "created_date":"2011-04-06T16:20:25+02:00",
+    "edited_date":"2017-03-28T16:27:49+02:00"
+  }
+]
+    \end{verbatim}
+  \caption{%
+    Example LOVD API output, in the JSON format, of the same API search result as the previous figure.
+    Note the slight differences in the data returned; the JSON format adds the data owner(s), the data creator(s),
+     the dates the data was created and last updated and
+     returns all transcripts associated with the variant in question, storing the data in an array.
+     The genomic position is formatted slightly differently.
+    Source:
+     \href{http://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001&format=application/json}
+     {LOVD3 shared installation}.}
+  \end{shaded}
+\end{figure}
+
 The variant information shared through the API consists of the official gene symbol of the selected gene
  (\textbf{symbol}), the variant's internal ID (\textbf{id}), the variant's position relative to the transcript in
- HGVS-like format (\textbf{position\_mRNA}), the variant's genomic position (\textbf{position\_genomic}), the DNA
- field in HGVS format, HTML encoded to not break XML parsers (\textbf{Variant/DNA}), the variant's DBID value
- (\textbf{Variant/DBID}) and the panel size of the individual of the variant entry (\textbf{Times\_reported}).
+ HGVS-like format (\textbf{position\_mRNA}), the variant's genomic position in HGVS-like format
+ (\textbf{position\_genomic}), the DNA field in HGVS format, HTML encoded in the Atom format to not break XML parsers
+ (\textbf{Variant/DNA}), the variant's DBID value (\textbf{Variant/DBID}) and the panel size of the individual of the
+ variant entry (\textbf{Times\_reported}).
+The JSON data has slightly more fields (\textbf{owned\_by}, \textbf{created\_by}, \textbf{created\_date},
+ \textbf{edited\_date}), which are also available in the Atom entry itself (not the plain text payload).
+Also, the JSON data will list the variant's position and the variant's DNA change
+ on transcript level for all transcripts that the variant is mapped on.
 \vskip \baselineskip
 
-If the variant could not be interpreted by Mutalyzer, the position fields will contain a question mark.
+If the variant could not be interpreted, the position fields will contain a question mark.
 The difference between the `id' field and the `Variant/DBID' field is that the first is the ID of the variant
  observation, whilst the latter is the ID unique for this variant, but shared for each observation.
 It is used link back to LOVD from genome browsers, for instance.
 When variant observations are grouped together, the `Times\_reported' field
  will contain the sum of the values of all observations together.
+\clearpage
 
 
 
@@ -4193,6 +4290,7 @@ When variant observations are grouped together, the `Times\_reported' field
 A full list of options for this API is included below.
 Please note that although ``rest.php'' is included in all the URLs, simply ``rest'' will work also.
 However, for LOVD2 installations, this does not always work, and as such the extension is included.
+To obtain JSON output, add the `\texttt{format=application/json}' flag to all URLs.
 
 \subsubsection{Genes}
 \begin{description}
@@ -4542,9 +4640,10 @@ Depending on whether or not LOVD has found that there is an update available,\
 \begin{center}
 \begin{tabular}{ | p{0.8cm} p{10cm} | }
   \hline
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newer.png}} & There is an update available. \\
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newest.png}} & There is no update available. \\
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_error.png}} & There was an error while checking for updates. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_newer.png}} & There is an update available. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_newest.png}} & There is no update available. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_error.png}} &
+   There was an error while checking for updates. \\
   \hline
 \end{tabular}
 \end{center}
