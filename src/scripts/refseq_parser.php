@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2017-05-15
- * For LOVD    : 3.0-19
+ * Modified    : 2018-05-15
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -392,7 +392,7 @@ if ($_GET['step'] == 1) {
 
         } else {
             // Because in the current setup, $_POST['symbol'] is changed into something else, we need to change it back when there are errors.
-            $_POST['symbol'] = $_POST['transcript_id'];
+            $_GET['symbol'] = $_POST['symbol'] = $_POST['transcript_id'];
         }
 
     } else {
@@ -417,6 +417,12 @@ if ($_GET['step'] == 1) {
     if ($_AUTH['level'] == LEVEL_CURATOR) {
         $sQ .= ' INNER JOIN ' . TABLE_CURATES . ' AS g2u ON (g.id = g2u.geneid AND g2u.userid = ?)';
         $aArgs[] = $_AUTH['id'];
+    }
+    // If we have received a gene, only select that gene. Otherwise, the list can really be quite long.
+    // Some browsers cannot handle really long lists.
+    if (!empty($_GET['symbol'])) {
+        $sQ .= ' WHERE g.id = ?';
+        $aArgs[] = $_GET['symbol'];
     }
     $sQ .= ' ORDER BY g.id, t.id_ncbi';
     $aGenes = $_DB->query($sQ, $aArgs)->fetchAllCombine();
