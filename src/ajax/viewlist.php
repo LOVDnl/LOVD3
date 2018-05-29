@@ -85,6 +85,7 @@ if ($sObject == 'Custom_ViewList' && (!isset($sObjectID) || !in_array($sObjectID
                 'VariantOnTranscript,VariantOnGenome', // Gene-specific variant view.
                 'VariantOnTranscriptUnique,VariantOnGenome', // Gene-specific unique variant view.
                 'VariantOnTranscript,VariantOnGenome,Screening,Individual', // Gene-specific full data view.
+                'Transcript,VariantOnTranscript,VariantOnGenome,Screening,Individual',  // Full data view (LOVD_external viewFullData)
                 'Gene,Transcript,DistanceToVar')))) { // Map variant to transcript.
     die(AJAX_DATA_ERROR);
 }
