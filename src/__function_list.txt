@@ -185,11 +185,6 @@
 4.0.0 var_dump
 4.0.0 while
 4.0.2 wordwrap
-4.0.0 xml_get_error_code
-4.0.0 xml_parse_into_struct
-4.0.0 xml_parser_create
-4.0.0 xml_parser_free
-4.0.0 xml_parser_set_option
 
 5.0.0 file() with FILE_IGNORE_NEW_LINES.
 5.0.0 microtime() ondersteunt argument true.
