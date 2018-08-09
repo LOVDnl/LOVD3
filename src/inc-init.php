@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-12-04
- * For LOVD    : 3.0-21
+ * Modified    : 2018-08-09
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -137,7 +137,6 @@ $aRequired =
                 'PHP_functions' =>
                      array(
                             'mb_detect_encoding',
-                            'xml_parser_create', // We could also look for libxml constants?
                             'openssl_seal',      // We could also look for openssl constants?
                           ),
                 'PHP_classes' =>

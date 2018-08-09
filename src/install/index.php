@@ -140,7 +140,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     $bPHP = ($sPHPVers >= $aRequired['PHP']);
     $sPHP = '<IMG src="gfx/mark_' . (int) $bPHP . '.png" alt="" width="11" height="11">&nbsp;PHP : ' . $sPHPVers . ' (' . $aRequired['PHP'] . ' required)';
 
-    // 2012-02-01; 3.0-beta-02; Added check for xml_parser_create(), easily allowing other PHP functions to be checked also.
+    // Check for certain PHP functions from optional libraries, such as mbstring and SSL.
     $bPHPFunctions = true;
     $bPHPClasses = true;
     $sPHPRequirements = '';
