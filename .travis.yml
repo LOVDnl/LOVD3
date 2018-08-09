@@ -93,7 +93,6 @@ notifications:
   email:
    recipients:
       - I.F.A.C.Fokkema@lumc.nl
-      - M.Kroon@lumc.nl
    on_success: never
    ## [always|never|change] # default: change
    on_failure: always
