@@ -95,6 +95,8 @@ if ($sObject == 'Custom_ViewList' && (!isset($sObjectID) || !in_array($sObjectID
 if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AUTH['collaborates']))) {
     if ($sObject == 'Column') {
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+    } elseif ($sObject == 'Individual' && isset($_REQUEST['search_genes_searched']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_genes_searched'], $aRegs)) {
+        lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
     } elseif ($sObject == 'Transcript' && isset($_REQUEST['search_geneid']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_geneid'], $aRegs)) {
         lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
     } elseif ($sObject == 'Shared_Column' && isset($_REQUEST['object_id'])) {
