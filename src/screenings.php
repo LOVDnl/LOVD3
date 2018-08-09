@@ -560,14 +560,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
             }
         }
 
-        // Mandatory fields.
-        if (empty($_POST['password'])) {
-            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-            // User had to enter his/her password for authorization.
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-
         if (!lovd_error()) {
             $_DB->beginTransaction();
 
@@ -664,8 +656,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     // Array which will make up the form table.
     $aForm = array(
                     array('POST', '', '', '', '0%', '0', '100%'),
-                    array('', '', 'print', 'Enter your password for authorization'),
-                    array('', '', 'password', 'password', 20),
                     array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_confirmVariants\', function () { $(\'#confirmVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
