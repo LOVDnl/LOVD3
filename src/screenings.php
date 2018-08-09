@@ -648,6 +648,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     $_GET['search_screeningids'] .= ' !' . $nID;
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
+    $_DATA->setRowLink('Screenings_' . $nID . '_confirmVariants', 'javascript:$(\'#check_{{ID}}\').trigger(\'click\'); return false;');
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'chromosome'),
         'track_history' => false,
