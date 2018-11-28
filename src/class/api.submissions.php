@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2018-02-27
- * For LOVD    : 3.0-21
+ * Modified    : 2018-11-28
+ * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -107,7 +107,7 @@ class LOVD_API_Submissions {
         'Phenotypes' => array('id', 'diseaseid', 'individualid', 'owned_by', 'statusid', 'created_by', 'Phenotype/Additional'),
         'Screenings' => array('id', 'individualid', 'variants_found', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
         'Screenings_To_Genes' => array(),
-        'Variants_On_Genome' => array('id', 'allele', 'effectid', 'chromosome', 'position_g_start', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID'),
+        'Variants_On_Genome' => array('id', 'allele', 'effectid', 'chromosome', 'position_g_start', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID', 'VariantOnGenome/Reference'),
         'Variants_On_Transcripts' => array('id', 'transcriptid', 'effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
         'Screenings_To_Variants' => array('screeningid', 'variantid'),
     );
@@ -131,6 +131,41 @@ class LOVD_API_Submissions {
 
         $this->API = $oAPI;
         return true;
+    }
+
+
+
+
+
+    private function addColumn ($sColID)
+    {
+        // Adds requested column to $this->aObjects, if they're active in LOVD, so that the API can populate the column.
+        global $_DB;
+
+        // Don't repeat yourself.
+        static $aColumns = array();
+        if (isset($aColumns[$sColID])) {
+            // We ran before.
+            return $aColumns[$sColID];
+        }
+
+        // Find column in the database.
+        $sSQL = 'SELECT SUBSTRING_INDEX(ac.colid, "/", 1) AS category, ac.colid
+                 FROM ' . TABLE_ACTIVE_COLS . ' AS ac
+                 WHERE ac.colid = ?';
+        if ($zColumn = $_DB->query($sSQL, array($sColID))->fetchAssoc()) {
+            // Translate the category to that used in the file.
+            // FIXME: Why is there no function for this?
+            $sCategory = str_replace('Genomes', 'Genome', str_replace('On', 's_On_', $zColumn['category'] . 's'));
+
+            // Store column in the objects array, so it will defined in the file and entry.
+            $this->aObjects[$sCategory][] = $zColumn['colid'];
+            $aColumns[$sColID] = true;
+        } else {
+            $aColumns[$sColID] = false;
+        }
+
+        return $aColumns[$sColID];
     }
 
 
@@ -421,6 +456,28 @@ class LOVD_API_Submissions {
                 }
                 $aVOG['position_g_start'] = $aVariantInfo['position_start'];
                 $aVOG['position_g_end'] = $aVariantInfo['position_end'];
+
+                // Check for db_xrefs.
+                if (isset($aVariant['db_xref'])) {
+                    foreach ($aVariant['db_xref'] as $aID) {
+                        if (strtolower($aID['@source']) == 'dbsnp') {
+                            // Try to link the dbSNP column, if active.
+                            if (!isset($aVOG['VariantOnGenome/dbSNP']) && $this->addColumn('VariantOnGenome/dbSNP')) {
+                                $aVOG['VariantOnGenome/dbSNP'] = '';
+                            }
+
+                            // Use the dbSNP column, but don't overwrite an existing value.
+                            if (isset($aVOG['VariantOnGenome/dbSNP']) && (!$aVOG['VariantOnGenome/dbSNP'] || $aVOG['VariantOnGenome/dbSNP'] == $aID['@accession'])) {
+                                $aVOG['VariantOnGenome/dbSNP'] = $aID['@accession'];
+                            } else {
+                                // Use the VariantOnGenome/Reference column, that is HGVS standard
+                                //  and therefore should always be active.
+                                $aVOG['VariantOnGenome/Reference'] .= (!$aVOG['VariantOnGenome/Reference']? '' : '; ') .
+                                    '{dbSNP:' . $aID['@accession'] . '}';
+                            }
+                        }
+                    }
+                }
 
                 // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
                 $aTemplates = array();
@@ -964,6 +1021,24 @@ class LOVD_API_Submissions {
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity term \'' . $aPathogenicity['@term'] . '\' not recognized. ' .
                                         'Options: ' . implode(', ', array_keys($this->aValueMappings['@term'])) . '.';
                                 }
+                            }
+                        }
+                    }
+
+                    // Check db_xref, if present.
+                    if (isset($aVariant['db_xref'])) {
+                        foreach ($aVariant['db_xref'] as $iDBXRef => $aID) {
+                            $nDBXRef = $iDBXRef + 1; // We start counting at 1, like most humans do.
+                            if (!isset($aID['@source'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Missing required @source element.';
+                            } elseif (!isset($aID['@accession'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Missing required @accession element.';
+                            } elseif (!in_array(strtolower($aID['@source']), array('dbsnp'))) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Source not understood. ' .
+                                    'Currently supported: dbsnp.';
+                            } elseif (strtolower($aID['@source']) == 'dbsnp' && !preg_match('/^rs\d+$/', $aID['@accession'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Accession not understood. ' .
+                                    'Expecting "rs", followed by one or more digits.';
                             }
                         }
                     }
