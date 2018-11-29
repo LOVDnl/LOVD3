@@ -58,9 +58,20 @@ class LOVD_API_Submissions {
             '1' => '0',
             '2' => '3',
         ),
-        // Let's hope this one doesn't clash, otherwise we need to rebuild this array.
-        // FIXME: This will clash if we want to support genetic_origin.
-        '@term' => array(
+        'genetic_origin' => array(
+            'inherited' => 'Germline',
+            'de novo' => 'De novo',
+            'somatic' => 'Somatic',
+        ),
+        'genetic_source' => array(
+            'paternal' => '10',
+            'maternal' => '20',
+        ),
+        'genetic_evidence' => array(
+            'inferred' => '0',
+            'confirmed' => '1',
+        ),
+        'pathogenicity' => array(
             'Non-pathogenic' => '10',
             'Probably Not Pathogenic' => '30',
             'Probably Pathogenic' => '70',
@@ -432,12 +443,26 @@ class LOVD_API_Submissions {
                 // Map the data.
                 $aVOG['id'] = $nVariantID;
                 $aVOG['allele'] = $this->aValueMappings['@copy_count'][$aVariant['@copy_count']];
-                $aVOG['effectid'] = $this->aValueMappings['@term'][$aVariant['pathogenicity'][0]['@term']];
+                $aVOG['effectid'] = $this->aValueMappings['pathogenicity'][$aVariant['pathogenicity'][0]['@term']];
                 $aVOG['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
                 $aVOG['owned_by'] = $this->zAuth['id'];
                 $aVOG['statusid'] = STATUS_PENDING;
                 $aVOG['created_by'] = $this->zAuth['id'];
                 $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
+
+                // Add genetic_origin, if present. This may also affect the 'allele' field.
+                if (isset($aVariant['genetic_origin'])) {
+                    $aVOG['VariantOnGenome/Genetic_origin'] = $this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']];
+
+                    // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
+                    // Source will be ignored if @copy_count = 2.
+                    if (isset($aVariant['genetic_origin']['source']) && $aVariant['@copy_count'] == '1') {
+                        $aVOG['allele'] = $this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']];
+                        if (isset($aVariant['genetic_origin']['evidence_code'])) {
+                            $aVOG['allele'] += $this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']];
+                        }
+                    }
+                }
 
                 // Fill in the positions. If this fails, this is reason to reject the variant.
                 $aVariantInfo = lovd_getVariantInfo($aVariant['name']['#text']);
@@ -988,6 +1013,42 @@ class LOVD_API_Submissions {
                             'Options: ' . implode(', ', array_keys($this->aValueMappings['@copy_count'])) . '.';
                     }
 
+                    // Check genetic_origin, if present.
+                    if (isset($aVariant['genetic_origin'])) {
+                        if (empty($aVariant['genetic_origin']['@term'])) {
+                            // No term, no way.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Missing required @term element.';
+                        } elseif (!isset($this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']])) {
+                            // Value not recognized.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Term code \'' . $aVariant['genetic_origin']['@term'] . '\' not recognized. ' .
+                                'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_origin'])) . '.';
+                        }
+
+                        // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
+                        // FIXME: When @copy_count is 2, and the variant is homozygous, we ignore the source. Should we let the user know?
+                        if (isset($aVariant['genetic_origin']['source'])) {
+                            if (empty($aVariant['genetic_origin']['source']['@term'])) {
+                                // No term, no way.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Missing required @term element.';
+                            } elseif (!isset($this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']])) {
+                                // Value not recognized.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Term code \'' . $aVariant['genetic_origin']['source']['@term'] . '\' not recognized. ' .
+                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_source'])) . '.';
+                            }
+
+                            if (isset($aVariant['genetic_origin']['evidence_code'])) {
+                                if (empty($aVariant['genetic_origin']['evidence_code']['@term'])) {
+                                    // No term, no way.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Missing required @term element.';
+                                } elseif (!isset($this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']])) {
+                                    // Value not recognized.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Term code \'' . $aVariant['genetic_origin']['evidence_code']['@term'] . '\' not recognized. ' .
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_evidence'])) . '.';
+                                }
+                            }
+                        }
+                    }
+
                     // Check variant type, if present.
                     if (isset($aVariant['@type'])) {
                         // Check types.
@@ -1050,7 +1111,7 @@ class LOVD_API_Submissions {
                                 } else {
                                     $bPathogenicityIndividualScope = true;
                                 }
-                                if (!isset($this->aValueMappings['@term'][$aPathogenicity['@term']])) {
+                                if (!isset($this->aValueMappings['pathogenicity'][$aPathogenicity['@term']])) {
                                     // Value not recognized.
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity term \'' . $aPathogenicity['@term'] . '\' not recognized. ' .
                                         'Options: ' . implode(', ', array_keys($this->aValueMappings['@term'])) . '.';
@@ -1059,7 +1120,7 @@ class LOVD_API_Submissions {
                         }
                     }
 
-                    // (temporarely) allow for alternative PubMed info, map to db_xref.
+                    // (temporarily) allow for alternative PubMed info, map to db_xref.
                     // This is undocumented and may be removed later, when our users will adhere to the standards for
                     //  providing PubMed (literature) links.
                     if (isset($aVariant['literature'])) {
