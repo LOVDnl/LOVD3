@@ -72,11 +72,14 @@ class LOVD_API_Submissions {
             'confirmed' => '1',
         ),
         'pathogenicity' => array(
+            // 'Unclassified' => '00', // Not allowed for submission.
             'Non-pathogenic' => '10',
             'Probably Not Pathogenic' => '30',
             'Probably Pathogenic' => '70',
             'Pathogenic' => '90',
             'Not Known' => '50',
+            'Causative' => '60',
+            // 8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
         ),
         '@template' => array(
             'DNA' => 'DNA',
@@ -105,8 +108,6 @@ class LOVD_API_Submissions {
     );
 
     // The sections/objects and their columns that we'll use.
-    // FIXME: Support */Reference fields parsing <db_xref accession="12345" source="pubmed"/>?
-    // FIXME: Support VariantOnGenome/Genetic_origin (and allele) by parsing <genetic_origin term="inherited"><source term="paternal"/><evidence_code term="inferred"/></genetic_origin>
     private $aObjects = array(
         'Columns' => array(),
         'Genes' => array(),
@@ -913,6 +914,10 @@ class LOVD_API_Submissions {
             return false;
         }
 
+        // Debugging:
+        // $this->API->aResponse['data'] = $aData;
+        // return true;
+
         // Write the LOVD3 output file (and optionally, the JSON data).
         return $this->writeImportFile($aData, $sInputClean);
     }
@@ -1157,6 +1162,7 @@ class LOVD_API_Submissions {
                     }
 
                     // Check pathogenicity, if present.
+                    // FIXME: Currently ignoring "evidence_code", which seems to be able to contain "reported" and "concluded".
                     if (isset($aVariant['pathogenicity'])) {
                         // We don't want to find conflicting info. Mark if we found pathogenicity of individual level.
                         $bPathogenicityIndividualScope = false;
@@ -1167,7 +1173,7 @@ class LOVD_API_Submissions {
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Missing required Pathogenicity @scope or @term elements.';
                             } elseif ($aPathogenicity['@scope'] != 'individual') {
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity scope \'' . $aPathogenicity['@scope'] . '\' not understood. ' .
-                                    'LOVD only supports: individual.';
+                                    'LOVD only supports: individual.'; // VarioML: individual | family | population.
                             } else {
                                 if ($bPathogenicityIndividualScope) {
                                     // We already saw this scope, that's not possible.
@@ -1178,7 +1184,7 @@ class LOVD_API_Submissions {
                                 if (!isset($this->aValueMappings['pathogenicity'][$aPathogenicity['@term']])) {
                                     // Value not recognized.
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity term \'' . $aPathogenicity['@term'] . '\' not recognized. ' .
-                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['@term'])) . '.';
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['pathogenicity'])) . '.';
                                 }
                             }
                         }
