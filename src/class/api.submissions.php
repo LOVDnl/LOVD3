@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2018-11-28
+ * Modified    : 2018-11-29
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -474,6 +474,40 @@ class LOVD_API_Submissions {
                                 //  and therefore should always be active.
                                 $aVOG['VariantOnGenome/Reference'] .= (!$aVOG['VariantOnGenome/Reference']? '' : '; ') .
                                     '{dbSNP:' . $aID['@accession'] . '}';
+                            }
+
+                        } elseif (strtolower($aID['@source']) == 'pubmed') {
+                            // @name can hold text, optional. accession can also be empty (Germany needs that).
+
+                            if (!empty($aID['@accession'])) {
+                                $sName = '';
+                                if (empty($aID['@name'])) {
+                                    // We don't have text to go with our PMID. Fetching that info should be fast.
+                                    $sResponse = @join('', lovd_php_file('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aID['@accession']));
+                                    if ($sResponse) {
+                                        $aPubMedData = json_decode($sResponse, true);
+                                        if (isset($aPubMedData['result'][$aID['@accession']]) && isset($aPubMedData['result'][$aID['@accession']]['authors'])) {
+                                            $sName = preg_replace('/ [A-Z]+$/', '', $aPubMedData['result'][$aID['@accession']]['sortfirstauthor']) . ' et al (' .
+                                                substr($aPubMedData['result'][$aID['@accession']]['pubdate'], 0, strpos($aPubMedData['result'][$aID['@accession']]['pubdate'] . ' ', ' ')) . ')';
+                                        }
+                                    }
+                                    if (!$sName) {
+                                        // It somehow failed. Default to name = "Pubmed".
+                                        $sName = 'PubMed';
+                                    }
+                                } else {
+                                    // Accession and name given.
+                                    $sName = str_replace(':', ';', $aID['@name']);
+                                }
+                                $aVOG['VariantOnGenome/Reference'] .= (!$aVOG['VariantOnGenome/Reference']? '' : '; ') .
+                                    '{PMID:' . $sName . ':' . $aID['@accession'] . '}';
+                            } else {
+                                // We don't have an ID...
+                                if (!empty($aID['@name'])) {
+                                    // We'll use this, then.
+                                    $aVOG['VariantOnGenome/Reference'] .= (!$aVOG['VariantOnGenome/Reference']? '' : '; ') .
+                                        $aID['@name'];
+                                }
                             }
                         }
                     }
@@ -1025,20 +1059,54 @@ class LOVD_API_Submissions {
                         }
                     }
 
+                    // (temporarely) allow for alternative PubMed info, map to db_xref.
+                    // This is undocumented and may be removed later, when our users will adhere to the standards for
+                    //  providing PubMed (literature) links.
+                    if (isset($aVariant['literature'])) {
+                        foreach ($aVariant['literature'] as $aEntries) {
+                            if (!is_array($aEntries)) {
+                                $aEntries = array($aEntries);
+                            }
+                            foreach ($aEntries as $aEntry) {
+                                if (!is_array($aEntry)) {
+                                    $aEntry = array($aEntry);
+                                }
+                                foreach ($aEntry as $sEntry) {
+                                    if (!isset($aVariant['db_xref'])) {
+                                        $aVariant['db_xref'] = array();
+                                    }
+                                    $aVariant['db_xref'][] = array(
+                                        '@source' => 'pubmed',
+                                        '@name' => $sEntry,
+                                    );
+                                }
+                            }
+                        }
+                        if (isset($aVariant['db_xref'])) {
+                            // We don't measure if it's changed or not, we'll just overwrite.
+                            $aInput['lsdb']['individual'][$iIndividual]['variant'][$iVariant]['db_xref'] = $aVariant['db_xref'];
+                        }
+                        unset($aVariant['literature'], $aInput['lsdb']['individual'][$iIndividual]['variant'][$iVariant]['literature']);
+                    }
+
                     // Check db_xref, if present.
                     if (isset($aVariant['db_xref'])) {
                         foreach ($aVariant['db_xref'] as $iDBXRef => $aID) {
                             $nDBXRef = $iDBXRef + 1; // We start counting at 1, like most humans do.
                             if (!isset($aID['@source'])) {
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Missing required @source element.';
-                            } elseif (!isset($aID['@accession'])) {
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Missing required @accession element.';
-                            } elseif (!in_array(strtolower($aID['@source']), array('dbsnp'))) {
+                            } elseif (!in_array(strtolower($aID['@source']), array('dbsnp', 'pubmed'))) {
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Source not understood. ' .
-                                    'Currently supported: dbsnp.';
+                                    'Currently supported: dbsnp, pubmed.';
+                            } elseif (strtolower($aID['@source']) != 'pubmed' && !isset($aID['@accession'])) {
+                                // PubMed is allowed to leave the accession out, as a common reference.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Missing required @accession element.';
                             } elseif (strtolower($aID['@source']) == 'dbsnp' && !preg_match('/^rs\d+$/', $aID['@accession'])) {
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Accession not understood. ' .
                                     'Expecting "rs", followed by one or more digits.';
+                            } elseif (strtolower($aID['@source']) == 'pubmed' && !empty($aID['@accession']) && !ctype_digit($aID['@accession'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Accession not understood. ' .
+                                    'Expecting one or more digits.';
                             }
                         }
                     }
@@ -1377,6 +1445,10 @@ class LOVD_API_Submissions {
                 // Quote data.
                 $z = array_map('addslashes', $z);
                 foreach ($aColumns as $nKey => $sCol) {
+                    // Prevent notices here, when the columns are added later in the file.
+                    if (!isset($z[$sCol])) {
+                        $z[$sCol] = '';
+                    }
                     // Replace line endings and tabs (they should not be there but oh well), so they don't cause problems with importing.
                     fputs($f, ($nKey? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n", "\t"), array('\r\n', '\r', '\n', '\t'), $z[$sCol]) . '"');
                 }
