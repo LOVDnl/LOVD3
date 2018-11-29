@@ -570,6 +570,38 @@ class LOVD_API_Submissions {
                     }
                 }
 
+                // Check for comments to process.
+                if (isset($aVariant['comment'])) {
+                    foreach ($aVariant['comment'] as $aEntries) {
+                        if (!is_array($aEntries)) {
+                            $aEntries = array($aEntries);
+                        }
+                        foreach ($aEntries as $aEntry) {
+                            if (!is_array($aEntry)) {
+                                $aEntry = array($aEntry);
+                            }
+                            foreach ($aEntry as $sEntry) {
+                                // Try to link the Remarks column, if active.
+                                if (!isset($aVOG['VariantOnGenome/Remarks']) && $this->addColumn('VariantOnGenome/Remarks')) {
+                                    $aVOG['VariantOnGenome/Remarks'] = '';
+                                }
+
+                                // Use the Remarks column, but don't overwrite an existing value.
+                                if (isset($aVOG['VariantOnGenome/Remarks'])) {
+                                    $aVOG['VariantOnGenome/Remarks'] .= (!$aVOG['VariantOnGenome/Remarks']? '' : '\r\n') . $sEntry;
+                                } else {
+                                    // There is no fallback. I don't like throwing an error,
+                                    //  but I have to if I don't want data to be lost.
+                                    $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Comment(s) found, but this LOVD doesn\'t have the Remarks column activated. ' .
+                                        'Remove your comment or ask the admin to enable the variant\'s Remarks column: ' . $_SETT['admin']['address_formatted'] . '.';
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
                 $aTemplates = array();
                 $aTechniques = array();
