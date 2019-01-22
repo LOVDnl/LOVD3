@@ -99,7 +99,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
                     if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
                         // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
                         $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
-                        return lovd_getGeneInfoFromHGNC ($nHGNCID, $bRecursion);
+                        return lovd_getGeneInfoFromHGNC($nHGNCID, $bRecursion);
                     } elseif (function_exists('lovd_errorAdd')) {
                         $sSymbols = '';
                         for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
@@ -117,7 +117,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
                             if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
                                 // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
                                 $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
-                                return lovd_getGeneInfoFromHGNC ($nHGNCID, $bRecursion);
+                                return lovd_getGeneInfoFromHGNC($nHGNCID, $bRecursion);
                             } elseif (function_exists('lovd_errorAdd')) {
                                 $sSymbols = '';
                                 for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
