@@ -483,7 +483,7 @@ if (!class_exists('PDO')) {
 } else {
     // PDO available, check if we have the requested database driver.
     if (!in_array($_INI['database']['driver'], PDO::getAvailableDrivers())) {
-        $sDriverName = $aConfigValues['database']['driver']['values'][$_INI['database']['driver']];
+        $sDriverName = $_INI['database']['driver']; // We used to be able to get to the formatted name, but no more.
         lovd_displayError('Init', 'This PHP installation does not have ' . $sDriverName . ' support for PDO installed. Without it, LOVD will not function. Please install ' . $sDriverName . ' support for PHP PDO.');
     }
 }
