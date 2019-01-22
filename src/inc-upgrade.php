@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-12-04
- * For LOVD    : 3.0-20
+ * Modified    : 2019-01-22
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -628,6 +628,9 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      // Weird, but much simpler... so, oh well. All chromosomes got updated one version, except M.
                      'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = CONCAT(LEFT(hg19_id_ncbi, 10), (TRIM(LEADING "." FROM RIGHT(hg19_id_ncbi, 2))+1)) WHERE name != "M"',
                      'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = hg19_id_ncbi WHERE name = "M"',
+                 ),
+                 '3.0-21b' => array(
+                     'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:{{ ID }}" WHERE id = "hgnc"',
                  ),
              );
 

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2017-07-24
- * For LOVD    : 3.0-20
+ * Modified    : 2019-01-22
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -37,7 +37,7 @@ $aSourceSQL =
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("genecards",    "http://www.genecards.org/cgi-bin/carddisp.pl?gene={{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("genetests",    "https://www.ncbi.nlm.nih.gov/gtr/genes/{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgmd",         "http://www.hgmd.cf.ac.uk/ac/gene.php?gene={{ ID }}")',
-                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgnc",         "http://www.genenames.org/data/hgnc_data.php?hgnc_id={{ ID }}")',
+                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgnc",         "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hpo_disease",  "http://compbio.charite.de/hpoweb/showterm?disease=OMIM:{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("omim",         "http://www.omim.org/entry/{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_gene"  ,  "https://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}")',
