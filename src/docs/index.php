@@ -46,7 +46,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     print('      The LOVD 3.0 documentation is continuously being updated.<BR>Currently available is the LOVD 3.0 user manual, in PDF and HTML formats.<BR>' .
           '      <UL>' . "\n" .
-          '        <LI>LOVD manual 3.0-17 (<A href="docs/LOVD_manual_3.0.pdf" target="_blank"><B>PDF</B>, 82 pages, 1.4Mb</A>) (<A href="docs/manual.html" target="_blank"><B>HTML</B>, single file, 4.5Mb</A>) - last updated August 31st 2016</LI></UL>' . "\n\n");
+          '        <LI>LOVD manual 3.0-21 (<A href="docs/LOVD_manual_3.0.pdf" target="_blank"><B>PDF</B>, 85 pages, 1.5Mb</A>) (<A href="docs/manual.html" target="_blank"><B>HTML</B>, single file, 4.5Mb</A>) - last updated February 27th 2018</LI></UL>' . "\n\n");
 
     $_T->printFooter();
     exit;
