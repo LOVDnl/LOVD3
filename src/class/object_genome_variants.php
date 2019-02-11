@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-04-13
+ * Modified    : 2019-02-08
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -258,7 +258,11 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         }
 
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.
-        if (!empty($aData['VariantOnGenome/DNA']) && isset($this->aColumns['VariantOnGenome/DBID']) && ($this->aColumns['VariantOnGenome/DBID']['public_add'] || $_AUTH['level'] >= LEVEL_CURATOR)) {
+        if (!empty($aData['VariantOnGenome/DNA']) // DNA filled in.
+            && isset($this->aColumns['VariantOnGenome/DBID']) // DBID column active.
+            && ($this->aColumns['VariantOnGenome/DBID']['public_add'] || $_AUTH['level'] >= LEVEL_CURATOR) // Submitters are allowed to fill it in, or you're curator or up.
+            && !(lovd_getProjectFile() == '/import.php' && isset($zData['VariantOnGenome/DBID']) && $aData['VariantOnGenome/DBID'] == $zData['VariantOnGenome/DBID']) // And we're not updating without touching the DBID.
+            ) {
             // VOGs with at least one VOT, which still have a chr* DBID, will get an error. So we'll empty the DBID field, allowing the new VOT value to be autofilled in.
             if (!empty($aData['aTranscripts']) && !empty($aData['VariantOnGenome/DBID']) && strpos($aData['VariantOnGenome/DBID'], 'chr' . $aData['chromosome'] . '_') !== false) {
                 $aData['VariantOnGenome/DBID'] = '';

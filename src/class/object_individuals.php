@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2018-01-25
- * For LOVD    : 3.0-21
+ * Modified    : 2019-02-08
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -120,6 +120,15 @@ class LOVD_Individual extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (i.statusid = ds.id)';
+        // Conditional inclusion of a JOIN that is only needed to search. This prevents long delays when using HAVING on
+        //  the Individual's Disease column. We can't just use a WHERE on the same JOIN, as it will limit the results,
+        //  meaning no diseases other than the one searched for will be shown. This extra join should fix that.
+        // If we need this more often, we should handle it more gracefully.
+        if (!empty($_GET['search_diseaseids_searched'])) {
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d_s ON (i.id = i2d_s.individualid)';
+            // The search field will be defined below.
+        }
+
         $this->aSQLViewList['GROUP_BY'] = 'i.id';
 
         // Run parent constructor to find out about the custom columns.
@@ -159,6 +168,9 @@ class LOVD_Individual extends LOVD_Custom {
                         'diseaseids' => array(
                                     'view' => array('Disease ID', 0),
                                     'db'   => array('diseaseids', false, true)),
+                        'diseaseids_searched' => array( // Special, optionally included joined table.
+                                    'view' => false,
+                                    'db'   => array('i2d_s.diseaseid', false, 'INT_UNSIGNED')),
                         'diseases_' => array(
                                     'view' => array('Disease', 175),
                                     'db'   => array('diseases_', 'ASC', true)),
