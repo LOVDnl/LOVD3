@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2018-08-09
+ * Modified    : 2019-02-12
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -1088,29 +1088,43 @@ class LOVD_Object {
         // Tables *always* use aliases so we'll just search for those.
         // While matching, we add a space before the FROM so that we can match the first table as well, but it won't have a JOIN statement captured.
         $aTablesUsed = array();
-        if (preg_match_all('/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9]+)\s/', ' ' . $aSQL['FROM'], $aRegs)) {
+        if (preg_match_all('/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9_]+)\s+(ON\s+\((?:([a-z0-9_]+)\.[^)]+\b([a-z0-9_]+)\.[^)]+)\)\)?)?/', ' ' . $aSQL['FROM'], $aRegs)) {
             for ($i = 0; $i < count($aRegs[0]); $i ++) {
+                // 0: table's full SQL syntax;
                 // 1: JOIN syntax;
                 // 2: full table name;
-                // 3: table alias.
+                // 3: table alias;
+                // 4: full JOIN's ON clause;
+                // 5: first table's alias; (we can't rely on the order in which the query specifies the JOIN dependency)
+                // 6: second table's alias.
                 $aTablesUsed[$aRegs[3][$i]] = array(
                     'name' => $aRegs[2][$i], // We don't actually use the name, but well...
                     'join' => $aRegs[1][$i],
+                    'join_dependencies' => array_filter(array($aRegs[5][$i], $aRegs[6][$i]), function ($s) { if ($s !== '') { return true; }}),
+                    'SQL' => trim($aRegs[0][$i]),
                 );
+                // Remove the same table from the dependency list.
+                $j = array_search($aRegs[3][$i], $aTablesUsed[$aRegs[3][$i]]['join_dependencies']);
+                if ($j !== false) {
+                    unset($aTablesUsed[$aRegs[3][$i]]['join_dependencies'][$j]);
+                }
             }
         }
 
         // Loop these tables in reverse, and remove JOINs as much as possible!
         foreach (array_reverse(array_keys($aTablesUsed)) as $sTableAlias) {
-            if (!$aTablesUsed[$sTableAlias]['join'] || in_array($sTableAlias, $aTablesNeeded)) {
-                // We've reached a table that we need, abort now.
+            if (!$aTablesUsed[$sTableAlias]['join']) {
+                // We've reached the first table, abort now.
                 break;
-                // FIXME: Actually, it's possible that more tables can be left out, although in most cases we're really done now.
-                //   To find out, we'd actually need to analyze which tables we're joining together.
-            }
-            // OK, this table is not needed. Get rid of it.
-            if ($aTablesUsed[$sTableAlias]['join'] != 'INNER JOIN' && ($nPosition = strrpos($aSQL['FROM'], $aTablesUsed[$sTableAlias]['join'])) !== false) {
-                $aSQL['FROM'] = rtrim(substr($aSQL['FROM'], 0, $nPosition));
+            } elseif (in_array($sTableAlias, $aTablesNeeded)) {
+                // This is a table that we need. Collect its dependencies and continue.
+                foreach ($aTablesUsed[$sTableAlias]['join_dependencies'] as $sTable) {
+                    $aTablesNeeded[] = $sTable;
+                }
+                continue;
+            } elseif ($aTablesUsed[$sTableAlias]['join'] != 'INNER JOIN') {
+                // OK, this table is not needed. Get rid of it.
+                $aSQL['FROM'] = rtrim(str_replace($aTablesUsed[$sTableAlias]['SQL'] . ' ', '', $aSQL['FROM'] . ' '));
                 unset($aTablesUsed[$sTableAlias]);
             }
         }
