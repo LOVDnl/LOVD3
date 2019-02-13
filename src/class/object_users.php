@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-10-26
- * For LOVD    : 3.0-21
+ * Modified    : 2019-02-13
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -240,8 +240,8 @@ class LOVD_User extends LOVD_Object {
 
         if (lovd_getProjectFile() == '/install/index.php' || ACTION == 'create') {
             // Check username format.
-            if ($aData['username'] && !lovd_matchUsername($aData['username'])) {
-                lovd_errorAdd('username', 'Please fill in a correct username; 4 to 20 characters and starting with a letter followed by letters, numbers, dots, underscores and dashes only.');
+            if ($aData['username'] && !lovd_matchUsername($aData['username']) && !lovd_matchEmail($aData['username'])) {
+                lovd_errorAdd('username', 'Please fill in a correct username; 4 to 20 characters and starting with a letter followed by letters, numbers, dots, underscores and dashes only. An email address is also allowed.');
             }
         }
 
