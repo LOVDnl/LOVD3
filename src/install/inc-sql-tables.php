@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2017-12-01
- * For LOVD    : 3.0-21
+ * Modified    : 2019-02-13
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -75,7 +75,7 @@ $aTableSQL =
     email TEXT NOT NULL,
     email_confirmed BOOLEAN NOT NULL DEFAULT 0,
     reference VARCHAR(50) NOT NULL DEFAULT "",
-    username VARCHAR(20) NOT NULL,
+    username VARCHAR(50) NOT NULL,
     password CHAR(50) NOT NULL,
     password_autogen CHAR(50),
     password_force_change BOOLEAN NOT NULL DEFAULT 0,
