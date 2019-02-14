@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2018-11-27
+ * Modified    : 2019-02-14
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -447,7 +447,10 @@ class LOVD_Custom extends LOVD_Object {
         if ($this->aColumns[$sColClean]['form_type'][2] == 'select' && $this->aColumns[$sColClean]['form_type'][3] >= 1) {
             if (!empty($Val)) {
                 $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sColClean]['select_options']); // Trim whitespace from the options.
-                if (lovd_getProjectFile() == '/import.php') {
+                // Not a great way to check if we need to explode the values, but it works.
+                // It would be better however, if we would pass on the settings like objects::checkFields() does.
+                if (in_array(lovd_getProjectFile(), array('/import.php', '/ajax/viewlist.php'))) {
+                    // Importing, or running F&R!
                     $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
                 } elseif (!is_array($Val)) {
                     $Val = array($Val);
@@ -463,7 +466,8 @@ class LOVD_Custom extends LOVD_Object {
                 foreach ($Val as $sValue) {
                     $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                     if (!in_array($sValue, $aOptions)) {
-                        if (lovd_getProjectFile() == '/import.php') {
+                        if (in_array(lovd_getProjectFile(), array('/import.php', '/ajax/viewlist.php'))) {
+                            // Importing, or running F&R!
                             lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $sColClean . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aOptions) . '\'.');
                         } else {
                             lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');
