@@ -1088,26 +1088,36 @@ class LOVD_Object {
         // Tables *always* use aliases so we'll just search for those.
         // While matching, we add a space before the FROM so that we can match the first table as well, but it won't have a JOIN statement captured.
         $aTablesUsed = array();
-        if (preg_match_all('/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9_]+)\s+(?:FORCE INDEX FOR JOIN \([^)]+\)\s+)?(ON\s+\((?:([a-z0-9_]+)\.[^)]+\b([a-z0-9_]+)\.[^)]+)\)\)?)?/', ' ' . $aSQL['FROM'], $aRegs)) {
+        // This regexp is incredibly complex. Perhaps rewrite it using simpler code using multiple preg_match() calls?
+        // Splitting on "JOIN" might already help a lot.
+        if (preg_match_all(
+            '/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s' . // The JOIN syntax.
+            '(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9_]+)\s+' . // The table and its alias.
+            '(?:FORCE INDEX FOR JOIN \([^)]+\)\s+)?' . // The optional FORCE INDEX syntax as in use by the custom VL.
+            '(ON\s+\((?:(\()?[^()]+(\()?[^()]+(\()?[^()]+(?(5)\))(?(6)\))(?(7)\)))+\))?' . // The ON clause. Optional, because we ignore the USING clause (we need table aliases).
+            '/', ' ' . $aSQL['FROM'], $aRegs)) {
             for ($i = 0; $i < count($aRegs[0]); $i ++) {
                 // 0: table's full SQL syntax;
                 // 1: JOIN syntax;
                 // 2: full table name;
                 // 3: table alias;
-                // 4: full JOIN's ON clause;
-                // 5: first table's alias; (we can't rely on the order in which the query specifies the JOIN dependency)
-                // 6: second table's alias.
+                // 4: full JOIN's ON clause.
                 $aTablesUsed[$aRegs[3][$i]] = array(
                     'name' => $aRegs[2][$i], // We don't actually use the name, but well...
                     'join' => $aRegs[1][$i],
-                    'join_dependencies' => array_filter(array($aRegs[5][$i], $aRegs[6][$i]), function ($s) { if ($s !== '') { return true; }}),
+                    'join_dependencies' => array(),
                     'SQL' => trim($aRegs[0][$i]),
                 );
-                // Remove the same table from the dependency list.
-                $j = array_search($aRegs[3][$i], $aTablesUsed[$aRegs[3][$i]]['join_dependencies']);
-                if ($j !== false) {
-                    unset($aTablesUsed[$aRegs[3][$i]]['join_dependencies'][$j]);
+                // Now, gather the JOIN's dependencies. Doing this separately, an ON clause can be very complex.
+                foreach (explode(' ', $aRegs[4][$i]) as $sWord) {
+                    if (preg_match('/^([a-z0-9_]+)\./', ltrim($sWord, '('), $aRegs2)) {
+                        // Exclude this table's own alias.
+                        if ($aRegs2[1] != $aRegs[3][$i]) {
+                            $aTablesUsed[$aRegs[3][$i]]['join_dependencies'][] = $aRegs2[1];
+                        }
+                    }
                 }
+                $aTablesUsed[$aRegs[3][$i]]['join_dependencies'] = array_unique($aTablesUsed[$aRegs[3][$i]]['join_dependencies']);
             }
         }
 
