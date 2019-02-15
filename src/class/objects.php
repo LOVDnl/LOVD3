@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-02-12
+ * Modified    : 2019-02-15
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1088,7 +1088,7 @@ class LOVD_Object {
         // Tables *always* use aliases so we'll just search for those.
         // While matching, we add a space before the FROM so that we can match the first table as well, but it won't have a JOIN statement captured.
         $aTablesUsed = array();
-        if (preg_match_all('/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9_]+)\s+(ON\s+\((?:([a-z0-9_]+)\.[^)]+\b([a-z0-9_]+)\.[^)]+)\)\)?)?/', ' ' . $aSQL['FROM'], $aRegs)) {
+        if (preg_match_all('/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9_]+)\s+(?:FORCE INDEX FOR JOIN \([^)]+\)\s+)?(ON\s+\((?:([a-z0-9_]+)\.[^)]+\b([a-z0-9_]+)\.[^)]+)\)\)?)?/', ' ' . $aSQL['FROM'], $aRegs)) {
             for ($i = 0; $i < count($aRegs[0]); $i ++) {
                 // 0: table's full SQL syntax;
                 // 1: JOIN syntax;
