@@ -938,6 +938,9 @@ class LOVD_Object {
         // The $bDebug argument lets this function just return the SQL that is produced.
         global $_DB, $_INI;
 
+        // We never need an ORDER BY to get the number of results, so... (ORDER BY code removed 2019-02-18)
+        $aSQL['ORDER_BY'] = '';
+
         // If we don't have a HAVING clause, we can simply drop the SELECT information.
         $aColumnsNeeded = array();
         $aTablesNeeded = array();
@@ -982,8 +985,6 @@ class LOVD_Object {
                     }
                 }
             }
-            // We never need an ORDER BY to get the number of results, so... (ORDER BY code removed 2019-02-18)
-            $aSQL['ORDER_BY'] = '';
         }
         $aColumnsNeeded = array_unique($aColumnsNeeded);
         if (!$aColumnsNeeded) {
