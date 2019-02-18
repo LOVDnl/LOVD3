@@ -941,7 +941,7 @@ class LOVD_Object {
         // If we don't have a HAVING clause, we can simply drop the SELECT information.
         $aColumnsNeeded = array();
         $aTablesNeeded = array();
-        if (!$aSQL['GROUP_BY'] && !$aSQL['HAVING'] && !$aSQL['ORDER_BY']) {
+        if (!$aSQL['GROUP_BY'] && !$aSQL['HAVING']) {
             $aSQL['SELECT'] = '';
         } else {
             if ($aSQL['GROUP_BY']) {
@@ -949,7 +949,6 @@ class LOVD_Object {
                 // but non-alias columns that are used for grouping must also be kept in the JOIN!
                 // Parse GROUP BY! Can be a mix of real columns and aliases.
                 if (preg_match_all('/\b(?:(\w+)\.)?(\w+)\b/', $aSQL['GROUP_BY'], $aRegs)) {
-                    // This code is the same as for the ORDER BY parsing.
                     for ($i = 0; $i < count($aRegs[0]); $i ++) {
                         // 1: table referred to (real columns without alias only);
                         // 2: alias, or column name in given table.
@@ -983,29 +982,8 @@ class LOVD_Object {
                     }
                 }
             }
-            if ($aSQL['ORDER_BY']) {
-                // We do have ORDER BY... We'll need to keep only the columns in the SELECT that are aliases,
-                // but non-alias columns that are used for sorting must also be kept in the JOIN!
-                // Parse ORDER BY! Can be a mix of real columns and aliases.
-                // Adding a comma in the end, so we can use a simpler pattern that always ends with one.
-                // FIXME: Wait, why are we parsing the ORDER_BY??? We can just drop it... and drop the cols which it uses... right?
-                if (false && preg_match_all('/\b(?:(\w+)\.)?(\w+)(?:\s(?:ASC|DESC))?,/', $aSQL['ORDER_BY'] . ',', $aRegs)) {
-                    // This code is the same as for the GROUP BY parsing.
-                    for ($i = 0; $i < count($aRegs[0]); $i ++) {
-                        // 1: table referred to (real columns without alias only);
-                        // 2: alias, or column name in given table.
-                        if ($aRegs[1][$i]) {
-                            // Real table. We don't need this in the SELECT unless it's also in the HAVING, but we definitely need this in the JOIN.
-                            $aTablesNeeded[] = $aRegs[1][$i];
-                        } elseif ($aRegs[2][$i]) {
-                            // Alias only. Keep this column for the SELECT. When parsing the SELECT, we'll find out from which table it is.
-                            $aColumnsNeeded[] = $aRegs[2][$i];
-                        }
-                    }
-                }
-                // We never need an ORDER BY to get the number of results, so...
-                $aSQL['ORDER_BY'] = '';
-            }
+            // We never need an ORDER BY to get the number of results, so... (ORDER BY code removed 2019-02-18)
+            $aSQL['ORDER_BY'] = '';
         }
         $aColumnsNeeded = array_unique($aColumnsNeeded);
         if (!$aColumnsNeeded) {
