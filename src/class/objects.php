@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-02-15
+ * Modified    : 2019-02-18
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -965,10 +965,22 @@ class LOVD_Object {
             }
             if ($aSQL['HAVING']) {
                 // We do have HAVING, so now we'll have to see what we need to keep, the rest we toss out.
-                // Parse HAVING! These are no fields directly from tables, but all aliases, so this parsing is different from parsing WHERE.
+                // Parse HAVING! These are *mostly* no fields directly from tables, but all aliases, so this parsing is different from parsing WHERE.
                 // We don't care about AND/OR or anything... we just want the aliases.
                 if (preg_match_all('/\b(\w+)\s(?:[!><=]+|IS (?:NOT )?NULL|LIKE )/', $aSQL['HAVING'], $aRegs)) {
                     $aColumnsNeeded = array_merge($aColumnsNeeded, $aRegs[1]);
+                } elseif (preg_match_all('/\b(?:(\w+)\.)?(`\w+\/[A-Za-z0-9_\/]+`)/', $aSQL['HAVING'], $aRegs)) {
+                    // However, for the multi value filter, we do have a full column here.
+                    // If we have a table name, we can just add that to the $aTablesNeeded array and be done.
+                    // Otherwise, add the column to the list of needed columns and hope we find it in the SELECT.
+                    for ($i = 0; $i < count($aRegs[0]); $i ++) {
+                        if ($aRegs[1][$i]) {
+                            // Table alias given.
+                            $aTablesNeeded[] = $aRegs[1][$i];
+                        } else {
+                            $aColumnsNeeded[] = $aRegs[2][$i];
+                        }
+                    }
                 }
             }
             if ($aSQL['ORDER_BY']) {
