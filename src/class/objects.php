@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-02-12
+ * Modified    : 2019-02-18
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -938,10 +938,13 @@ class LOVD_Object {
         // The $bDebug argument lets this function just return the SQL that is produced.
         global $_DB, $_INI;
 
+        // We never need an ORDER BY to get the number of results, so... (ORDER BY code removed 2019-02-18)
+        $aSQL['ORDER_BY'] = '';
+
         // If we don't have a HAVING clause, we can simply drop the SELECT information.
         $aColumnsNeeded = array();
         $aTablesNeeded = array();
-        if (!$aSQL['GROUP_BY'] && !$aSQL['HAVING'] && !$aSQL['ORDER_BY']) {
+        if (!$aSQL['GROUP_BY'] && !$aSQL['HAVING']) {
             $aSQL['SELECT'] = '';
         } else {
             if ($aSQL['GROUP_BY']) {
@@ -949,7 +952,6 @@ class LOVD_Object {
                 // but non-alias columns that are used for grouping must also be kept in the JOIN!
                 // Parse GROUP BY! Can be a mix of real columns and aliases.
                 if (preg_match_all('/\b(?:(\w+)\.)?(\w+)\b/', $aSQL['GROUP_BY'], $aRegs)) {
-                    // This code is the same as for the ORDER BY parsing.
                     for ($i = 0; $i < count($aRegs[0]); $i ++) {
                         // 1: table referred to (real columns without alias only);
                         // 2: alias, or column name in given table.
@@ -965,34 +967,23 @@ class LOVD_Object {
             }
             if ($aSQL['HAVING']) {
                 // We do have HAVING, so now we'll have to see what we need to keep, the rest we toss out.
-                // Parse HAVING! These are no fields directly from tables, but all aliases, so this parsing is different from parsing WHERE.
+                // Parse HAVING! These are *mostly* no fields directly from tables, but all aliases, so this parsing is different from parsing WHERE.
                 // We don't care about AND/OR or anything... we just want the aliases.
                 if (preg_match_all('/\b(\w+)\s(?:[!><=]+|IS (?:NOT )?NULL|LIKE )/', $aSQL['HAVING'], $aRegs)) {
                     $aColumnsNeeded = array_merge($aColumnsNeeded, $aRegs[1]);
-                }
-            }
-            if ($aSQL['ORDER_BY']) {
-                // We do have ORDER BY... We'll need to keep only the columns in the SELECT that are aliases,
-                // but non-alias columns that are used for sorting must also be kept in the JOIN!
-                // Parse ORDER BY! Can be a mix of real columns and aliases.
-                // Adding a comma in the end, so we can use a simpler pattern that always ends with one.
-                // FIXME: Wait, why are we parsing the ORDER_BY??? We can just drop it... and drop the cols which it uses... right?
-                if (false && preg_match_all('/\b(?:(\w+)\.)?(\w+)(?:\s(?:ASC|DESC))?,/', $aSQL['ORDER_BY'] . ',', $aRegs)) {
-                    // This code is the same as for the GROUP BY parsing.
+                } elseif (preg_match_all('/\b(?:(\w+)\.)?(`\w+\/[A-Za-z0-9_\/]+`)/', $aSQL['HAVING'], $aRegs)) {
+                    // However, for the multi value filter, we do have a full column here.
+                    // If we have a table name, we can just add that to the $aTablesNeeded array and be done.
+                    // Otherwise, add the column to the list of needed columns and hope we find it in the SELECT.
                     for ($i = 0; $i < count($aRegs[0]); $i ++) {
-                        // 1: table referred to (real columns without alias only);
-                        // 2: alias, or column name in given table.
                         if ($aRegs[1][$i]) {
-                            // Real table. We don't need this in the SELECT unless it's also in the HAVING, but we definitely need this in the JOIN.
+                            // Table alias given.
                             $aTablesNeeded[] = $aRegs[1][$i];
-                        } elseif ($aRegs[2][$i]) {
-                            // Alias only. Keep this column for the SELECT. When parsing the SELECT, we'll find out from which table it is.
+                        } else {
                             $aColumnsNeeded[] = $aRegs[2][$i];
                         }
                     }
                 }
-                // We never need an ORDER BY to get the number of results, so...
-                $aSQL['ORDER_BY'] = '';
             }
         }
         $aColumnsNeeded = array_unique($aColumnsNeeded);
@@ -1088,26 +1079,36 @@ class LOVD_Object {
         // Tables *always* use aliases so we'll just search for those.
         // While matching, we add a space before the FROM so that we can match the first table as well, but it won't have a JOIN statement captured.
         $aTablesUsed = array();
-        if (preg_match_all('/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9_]+)\s+(ON\s+\((?:([a-z0-9_]+)\.[^)]+\b([a-z0-9_]+)\.[^)]+)\)\)?)?/', ' ' . $aSQL['FROM'], $aRegs)) {
+        // This regexp is incredibly complex. Perhaps rewrite it using simpler code using multiple preg_match() calls?
+        // Splitting on "JOIN" might already help a lot.
+        if (preg_match_all(
+            '/\s?((?:LEFT(?: OUTER)?|INNER) JOIN)?\s' . // The JOIN syntax.
+            '(' . preg_quote(TABLEPREFIX, '/') . '_[a-z0-9_]+) AS ([a-z0-9_]+)\s+' . // The table and its alias.
+            '(?:FORCE INDEX FOR JOIN \([^)]+\)\s+)?' . // The optional FORCE INDEX syntax as in use by the custom VL.
+            '(ON\s+\((?:(\()?[^()]+(\()?[^()]+(\()?[^()]+(?(5)\))(?(6)\))(?(7)\)))+\))?' . // The ON clause. Optional, because we ignore the USING clause (we need table aliases).
+            '/', ' ' . $aSQL['FROM'], $aRegs)) {
             for ($i = 0; $i < count($aRegs[0]); $i ++) {
                 // 0: table's full SQL syntax;
                 // 1: JOIN syntax;
                 // 2: full table name;
                 // 3: table alias;
-                // 4: full JOIN's ON clause;
-                // 5: first table's alias; (we can't rely on the order in which the query specifies the JOIN dependency)
-                // 6: second table's alias.
+                // 4: full JOIN's ON clause.
                 $aTablesUsed[$aRegs[3][$i]] = array(
                     'name' => $aRegs[2][$i], // We don't actually use the name, but well...
                     'join' => $aRegs[1][$i],
-                    'join_dependencies' => array_filter(array($aRegs[5][$i], $aRegs[6][$i]), function ($s) { if ($s !== '') { return true; }}),
+                    'join_dependencies' => array(),
                     'SQL' => trim($aRegs[0][$i]),
                 );
-                // Remove the same table from the dependency list.
-                $j = array_search($aRegs[3][$i], $aTablesUsed[$aRegs[3][$i]]['join_dependencies']);
-                if ($j !== false) {
-                    unset($aTablesUsed[$aRegs[3][$i]]['join_dependencies'][$j]);
+                // Now, gather the JOIN's dependencies. Doing this separately, an ON clause can be very complex.
+                foreach (explode(' ', $aRegs[4][$i]) as $sWord) {
+                    if (preg_match('/^([a-z0-9_]+)\./', ltrim($sWord, '('), $aRegs2)) {
+                        // Exclude this table's own alias.
+                        if ($aRegs2[1] != $aRegs[3][$i]) {
+                            $aTablesUsed[$aRegs[3][$i]]['join_dependencies'][] = $aRegs2[1];
+                        }
+                    }
                 }
+                $aTablesUsed[$aRegs[3][$i]]['join_dependencies'] = array_unique($aTablesUsed[$aRegs[3][$i]]['join_dependencies']);
             }
         }
 
