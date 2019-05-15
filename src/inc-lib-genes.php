@@ -388,9 +388,45 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
 }
 
 
+function lovd_getUDForGene ($sBuild, $sGene)
+{
+    // Retrieves an UD for any given gene and genome build.
+    // In principle, any build is supported, but we'll check against the available builds supported in LOVD.
+    global $_CONF, $_SETT;
 
+    if (!$sBuild || !is_string($sBuild) || !isset($_SETT['human_builds'][$sBuild])) {
+        return false;
+    }
 
+    if (!$sGene || !is_string($sGene)) {
+        return false;
+    }
 
+    $sUD = '';
+    //Here the variable dog is made as sliceChromosomeByGene needs organism dog.
+    $sOrganism = 'dog';
+    // Let's get the mapping information.
+    $sJSONResponse = implode('', file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism=' . $sOrganism . '&upStream=' . 5000 . '&downStream=' . 2000));
+    //$sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . 'sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sBuild . '&upStream=' . 5000 . '$downStream=' . 2000));
+    
+    //If curl is installed on the computer and json is nog working, activate this part below.
+    //$sUpstream = 5000;
+    //$sDownstream = 2000;
+    //$ch=curl_init('https://mutalyzer.nl/json/sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sOrganism . '&upStream=' . $sUpstream . '&downStream=' . $sDownstream);
+    //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //$sJSONResponse=curl_exec($ch);
+    
+
+    // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but file_get_contents() just returns false.
+    if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
+        $sResponse = (!is_array($aResponse)? $aResponse : implode("", $aResponse));
+        $sUD = $sResponse;
+    }
+
+    return $sUD;
+}
+
+/*
 function lovd_getUDForGene ($sBuild, $sGene)
 {
     // Retrieves an UD for any given gene and genome build.
@@ -408,19 +444,27 @@ function lovd_getUDForGene ($sBuild, $sGene)
     $sUD = '';
 
     // Let's get the mapping information.
-    $sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene));
+    //$sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene));
+    //$ch=curl_init('https://mutalyzer.nl/json/getGeneLocation?build=' . $sBuild . '&gene='. $sGene);
+    //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //$sJSONResponse=curl_exec($ch);
+    
     // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but file_get_contents() just returns false.
+    //$sJSONResponse = @implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . 'sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sBuild . '&upStream' . 5000 . '$downStream' . 2000));
+    //$sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
+    $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
+    $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
+    $sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . 'sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sBuild . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2)));
+        
+        //$ch=curl_init('https://mutalyzer.nl/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start='. $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2));
+        //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        //$sJSONResponse=curl_exec($ch);
+        
     if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
-        $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
-        $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
-        $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
-        $sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2)));
-        if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
-            $sResponse = (!is_array($aResponse)? $aResponse : implode('', $aResponse));
-            $sUD = $sResponse;
-        }
+        $sResponse = (!is_array($aResponse)? $aResponse : implode('', $aResponse));
+        $sUD = $sResponse;
     }
 
     return $sUD;
-}
+}*/
 ?>
