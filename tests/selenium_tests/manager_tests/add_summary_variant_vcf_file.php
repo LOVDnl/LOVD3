@@ -38,7 +38,7 @@ class AddSummaryVariantVCFFileTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testAddSummaryVariantVCFFile()
     {
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
         $element->click();

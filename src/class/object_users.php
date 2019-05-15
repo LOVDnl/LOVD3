@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-07-20
- * For LOVD    : 3.0-17
+ * Modified    : 2019-02-13
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -120,10 +120,13 @@ class LOVD_User extends LOVD_Object {
                         'username' => array('Username', LEVEL_MANAGER),
                         'password_force_change_' => array('Force change password', LEVEL_MANAGER),
                         'phpsessid' => array('Session ID', LEVEL_MANAGER),
+                        'auth_token_' => array('API token', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'auth_token_expires_' => array('API token expiration', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
                         'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
-                        'ownes_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'entries_owned_by_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'entries_created_by_' => 'Has created', // Will be unset if not viewing himself or manager or up.
                         'colleagues_' => '', // Other users that may access this user's data.
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
@@ -201,7 +204,7 @@ class LOVD_User extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_AUTH, $_DB, $_PE, $_SETT;
@@ -223,7 +226,7 @@ class LOVD_User extends LOVD_Object {
             $this->aCheckMandatory[] = 'password_1';
             $this->aCheckMandatory[] = 'password_2';
         }
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // Email address.
         if (!empty($aData['email'])) {
@@ -237,8 +240,8 @@ class LOVD_User extends LOVD_Object {
 
         if (lovd_getProjectFile() == '/install/index.php' || ACTION == 'create') {
             // Check username format.
-            if ($aData['username'] && !lovd_matchUsername($aData['username'])) {
-                lovd_errorAdd('username', 'Please fill in a correct username; 4 to 20 characters and starting with a letter followed by letters, numbers, dots, underscores and dashes only.');
+            if ($aData['username'] && !lovd_matchUsername($aData['username']) && !lovd_matchEmail($aData['username'])) {
+                lovd_errorAdd('username', 'Please fill in a correct username; 4 to 20 characters and starting with a letter followed by letters, numbers, dots, underscores and dashes only. An email address is also allowed.');
             }
         }
 
@@ -412,10 +415,18 @@ class LOVD_User extends LOVD_Object {
                         'skip',
       'change_other' => array('Enter your password for authorization', '', 'password', 'password', 20));
             if ($_PE[1] == $_AUTH['id']) {
+                // User is resetting password for him/herself.
                 unset($this->aFormData['change_other']);
+                // If user just logged in with an unlocking code, we will rename the "Current password" field.
+                if ($_AUTH['password'] == $_AUTH['password_autogen']) {
+                    $this->aFormData['change_self'][0] = 'Unlocking code';
+                }
             } else {
                 unset($this->aFormData['change_self']);
             }
+        }
+        if (LOVD_plus && isset($this->aFormData['level'])) {
+            $this->aFormData['level'][1] = ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Analyzers</B> can analyze individuals that are not analyzed yet by somebody else, but can not send variants for confirmation.<BR><B>Read-only</B> users can only see existing data in LOVD+, but can not start or edit any analyses or data.';
         }
         return parent::getForm();
     }
@@ -480,23 +491,45 @@ class LOVD_User extends LOVD_Object {
             // Submissions...
             if (lovd_isAuthorized('user', $zData['id']) === false) {
                 // Not authorized to view hidden data for this user; so we're not manager and we're not viewing ourselves. Nevermind then.
-                unset($this->aColumnsViewEntry['ownes_']);
+                unset($this->aColumnsViewEntry['entries_owned_by_'],
+                      $this->aColumnsViewEntry['entries_created_by_'],
+                      $this->aColumnsViewEntry['auth_token_'],
+                      $this->aColumnsViewEntry['auth_token_expires_']);
             } else {
-                // Either we're viewing ourselves, or we're manager or up. Like this is easy, because now we don't need to check for the data status of the data.
-                $nOwnes = 0;
-                $sOwnes = '';
+                // Either we're viewing ourselves, or we're manager or up.
 
-                // FIXME: Phenotypes is not included, because we don't have a phenotypes overview to link to (must be disease-specific).
-                foreach (array('individuals', 'screenings', 'variants') as $sDataType) {
-                    $n = $_DB->query('SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sDataType)) . ' WHERE owned_by = ?', array($zData['id']))->fetchColumn();
-                    if ($n) {
-                        $nOwnes += $n;
-                        $sOwnes .= (!$sOwnes? '' : ', ') . '<A href="' . $sDataType . '?search_owned_by_=%3D%22' . rawurlencode(html_entity_decode($zData['name'])) . '%22">' . $n . ' ' . ($n == 1? substr($sDataType, 0, -1) : $sDataType) . '</A>';
-                    }
+                // Auth token links. We don't show the token by default.
+                $zData['auth_token_'] = '(<A href="#" onclick="$.get(\'ajax/auth_token.php/' . $zData['id'] . '?view\').fail(function(){alert(\'Error viewing token, please try again later.\');}); return false;">Show / More information</A>)';
+                if ($zData['auth_token_expires']) {
+                    $tDiff = strtotime($zData['auth_token_expires']) - time();
+                    $sDiff = lovd_convertSecondsToTime(abs($tDiff));
+                    $zData['auth_token_expires_'] = '<SPAN title="' . $zData['auth_token_expires'] . '">' . ($tDiff > 0? 'In ' . $sDiff : 'Expired ' . $sDiff . ' ago') . '</SPAN>';
+                } else {
+                    $zData['auth_token_expires_'] = (!$zData['auth_token']? '' : '- (Never)');
                 }
 
-                $this->aColumnsViewEntry['ownes_'] .= ' ' . $nOwnes . ' data entr' . ($nOwnes == 1? 'y' : 'ies');
-                $zData['ownes_'] = $sOwnes;
+                // Since we're manager or viewing ourselves, we don't need to check for the data status of the data.
+                foreach (array('owned_by', 'created_by') as $sField) {
+                    $aStats = array(0, '');
+                    foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
+                        $nCount = $_DB->query('SELECT COUNT(*) FROM ' .
+                            constant('TABLE_' . strtoupper($sDataType)) . ' WHERE ' . $sField .
+                            ' = ?', array($zData['id']))->fetchColumn();
+                        $sTitle = $nCount . ' ' . ($nCount == 1? substr($sDataType, 0, -1) :
+                            $sDataType);
+                        $sStat = ($sDataType == 'phenotypes'? $sTitle : '<A href="' . $sDataType .
+                            '?search_' . $sField . ($sField == 'owned_by'? '_=%3D%22' .
+                            rawurlencode(html_entity_decode($zData['name'])) . '%22' : '=' .
+                            $zData['id']) . '">' . $sTitle . '</A>');
+
+                        $aStats[0] += $nCount;
+                        $aStats[1] .= (!$aStats[1]? '' : ', ') . $sStat;
+                    }
+
+                    $this->aColumnsViewEntry['entries_' . $sField . '_'] .= ' ' . $aStats[0] . ' data entr' .
+                        ($aStats[0] == 1? 'y' : 'ies');
+                    $zData['entries_' . $sField . '_'] = $aStats[1];
+                }
             }
 
             $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
@@ -517,6 +550,7 @@ class LOVD_User extends LOVD_Object {
     function setDefaultValues ()
     {
         // Sets default values of fields in $_POST.
+        $_POST['level'] = LEVEL_SUBMITTER;
         $_POST['allowed_ip'] = '*';
         $_POST['send_email'] = 1;
         return true;

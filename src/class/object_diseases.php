@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2016-09-09
- * For LOVD    : 3.0-17
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -186,6 +186,7 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol' => 'Official abbreviation',
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
+                        'link_HPO_' => 'Human Phenotype Ontology Project (HPO)',
                         'individuals' => 'Individuals reported having this disease',
                         'phenotypes_' => 'Phenotype entries for this disease',
                         'genes_' => 'Associated with',
@@ -241,7 +242,7 @@ class LOVD_Disease extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_AUTH, $_DB;
@@ -255,7 +256,7 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol',
                         'name',
                       );
-        $aData = parent::checkFields($aData);
+        $aData = parent::checkFields($aData, $zData, $aOptions);
 
         if (!empty($aData['id_omim']) && !preg_match('/^[1-9]\d{5}$/', $aData['id_omim'])) {
             lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');
@@ -351,10 +352,10 @@ class LOVD_Disease extends LOVD_Object {
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
                         array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
-                        array('Associated tissues', '', 'select', 'tissues', 10, $_SETT['disease_tissues'],
+                        array('Associated tissues (optional)', '', 'select', 'tissues', 10, $_SETT['disease_tissues'],
                               false, true, false),
-                        array('Disease features', '', 'textarea', 'features', 50, 5),
-                        array('Remarks', '', 'textarea', 'remarks', 50, 5),
+                        array('Disease features (optional)', '', 'textarea', 'features', 50, 5),
+                        array('Remarks (optional)', '', 'textarea', 'remarks', 50, 5),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to genes (optional)</B>'),
@@ -402,7 +403,12 @@ class LOVD_Disease extends LOVD_Object {
             }
         } else {
             if (!empty($zData['id_omim'])) {
+                $zData['link_HPO_'] = '<A href="' . lovd_getExternalSource('hpo_disease',
+                        $zData['id_omim'], true) . '" target="_blank">HPO</A>';
                 $zData['id_omim'] = '<A href="' . lovd_getExternalSource('omim', $zData['id_omim'], true) . '" target="_blank">' . $zData['id_omim'] . '</A>';
+            } else {
+                // Cannot link to HPO without OMIM ID, hide this row.
+                unset($this->aColumnsViewEntry['link_HPO_']);
             }
             $zData['phenotypes_'] = $zData['phenotypes'];
             if ($zData['phenotypes']) {

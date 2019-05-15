@@ -10,7 +10,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
     {
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View individual"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Individual"));
 
         // Mouse hover over Submit tab, to make 'submit new data' link visible.
         $tabElement = $this->driver->findElement(WebDriverBy::xpath("//img[@id='tab_submit']"));
@@ -93,12 +93,8 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $this->assertEquals("g.2843789A>G", $GenomicDNAChange->getAttribute('value'));
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");
+        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "55/18000");
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Affects function"]'));
-        $option->click();
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_concluded"]/option[text()="Affects function"]'));
-        $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
@@ -110,7 +106,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $this->assertContains("Successfully processed your submission and sent an email notification to the relevant curator", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
 
         // wait for page redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertRegExp("/src\/variants\/\d{10}/", $this->driver->getCurrentURL());
     }

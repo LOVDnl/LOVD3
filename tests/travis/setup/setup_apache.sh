@@ -35,6 +35,10 @@ sudo sed -i -e "s,/var/www/html,/home/travis/build/${GITHUBACCOUNT},g" /etc/apac
 sudo sed -i -e "s,/var/www,/home/travis/build/${GITHUBACCOUNT},g" /etc/apache2/apache2.conf
 sudo sed -i -e "s,AllowOverride[ ]None,AllowOverride All,g" /etc/apache2/apache2.conf
 
+# Set server administrator directive (used for installation signature that is
+# sent to lovd.nl for identification).
+sudo sed -i -e "s,ServerAdmin webmaster@localhost,ServerAdmin travis-ci@localhost,g" /etc/apache2/sites-available/000-default.conf
+
 # Make all source files readable and all source dirs executable.
 # (requirement of Apache)
 sudo chmod -R +r /home/travis

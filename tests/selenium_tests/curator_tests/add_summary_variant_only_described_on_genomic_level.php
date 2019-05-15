@@ -9,7 +9,7 @@ class AddSummaryVariantOnlyDescribedOnGenomicLevelTest extends LOVDSeleniumWebdr
     public function testAddSummaryVariantOnlyDescribedOnGenomicLevel()
     {
         // Wait for redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000003$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
@@ -36,7 +36,7 @@ class AddSummaryVariantOnlyDescribedOnGenomicLevelTest extends LOVDSeleniumWebdr
         // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
         $this->driver->getMouse()->mouseMove(null, 200, 200);
 
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[21520333]}");
+        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "11/10000");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();

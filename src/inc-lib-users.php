@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-06-23
- * For LOVD    : 3.0-16
+ * Modified    : 2017-09-08
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2014-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -312,7 +312,9 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
         $aData = array(); // Arguments for query.
         foreach ($aColleagues as $aColleague) {
             $aColleagueIDs[] = $aColleague['id'];
-            array_push($aData, $sUserID, $aColleague['id'], $aColleague['allow_edit']);
+            // Make sure you turn "allow_edit" into an integer, as false will be an
+            //  empty string and strict MySQL doesn't like that for an integer column.
+            array_push($aData, $sUserID, $aColleague['id'], (int) $aColleague['allow_edit']);
         }
 
         $_DB->query('INSERT INTO ' . TABLE_COLLEAGUES .

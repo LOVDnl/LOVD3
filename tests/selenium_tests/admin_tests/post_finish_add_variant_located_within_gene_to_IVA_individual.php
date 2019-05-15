@@ -20,7 +20,7 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
         $element = $this->driver->findElement(WebDriverBy::linkText("Add variant to screening"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000002$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::xpath("//table[2]/tbody/tr[1]/td[2]/b"));
+        $element = $this->driver->findElement(WebDriverBy::xpath('//b[contains(., "A variant that is located within a gene")]'));
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));
         $element->click();
@@ -61,12 +61,8 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");
+        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "0.05");
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));
-        $option->click();
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_concluded"]/option[text()="Effect unknown"]'));
-        $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
@@ -76,7 +72,7 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View genomic variant"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertContains("/src/variants/0000000334", $this->driver->getCurrentURL());
     }

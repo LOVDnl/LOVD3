@@ -32,7 +32,7 @@ class PostFinishAddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumWebdrive
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("View phenotype"));
+        $this->waitUntil(WebDriverExpectedCondition::titleContains("Phenotype"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000003$/', $this->driver->getCurrentURL()));
     }

@@ -409,7 +409,7 @@ function lovd_getUDForGene ($sBuild, $sGene)
     $sJSONResponse = implode('', file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism=' . $sOrganism . '&upStream=' . 5000 . '&downStream=' . 2000));
     //$sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . 'sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sBuild . '&upStream=' . 5000 . '$downStream=' . 2000));
     
-    //If curl is installed on the computer and json is nog working, activate this part below.
+    //If curl is installed on the computer and json is not working, activate this part below.
     //$sUpstream = 5000;
     //$sDownstream = 2000;
     //$ch=curl_init('https://mutalyzer.nl/json/sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sOrganism . '&upStream=' . $sUpstream . '&downStream=' . $sDownstream);

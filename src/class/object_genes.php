@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2016-07-20
- * For LOVD    : 3.0-17
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -64,10 +64,10 @@ class LOVD_Gene extends LOVD_Object {
                                'GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, ' .
+        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
-                                           '(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, ' .
+                                           '(MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, ' .
                                            'LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, ' .
                                            'GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, ' .
                                            'GROUP_CONCAT(DISTINCT u2g.userid, ";", ua.name, ";", u2g.allow_edit, ";", show_order ORDER BY (u2g.show_order > 0) DESC, u2g.show_order SEPARATOR ";;") AS __curators, ' .
@@ -94,14 +94,20 @@ class LOVD_Gene extends LOVD_Object {
                                           'g.id AS geneid, ' .
                                           // FIXME; Can we get this order correct, such that diseases without abbreviation nicely mix with those with? Right now, the diseases without symbols are in the back.
                                           'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
-                                          'COUNT(DISTINCT t.id) AS transcripts, ' .
+                                          'COUNT(DISTINCT t.id) AS transcripts';
+        if (!LOVD_plus) {
+            // Speed optimization by skipping variant counts.
+            $this->aSQLViewList['SELECT'] .= ', ' .
                                           'COUNT(DISTINCT vog.id) AS variants, ' .
                                           'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants';
+        }
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ' .
+                                          (LOVD_plus? '' :
+                                             // Speed optimization by skipping variant counts.
+                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
@@ -121,8 +127,6 @@ class LOVD_Gene extends LOVD_Object {
                         'exon_tables' => 'Exon/intron information',
                         'diseases_' => 'Associated with diseases',
                         'reference' => 'Citation reference(s)',
-                        'allow_download_' => array('Allow public to download all variant entries', LEVEL_COLLABORATOR),
-                        'allow_index_wiki_' => array('Allow data to be indexed by WikiProfessional', LEVEL_COLLABORATOR),
                         'refseq_url_' => 'Refseq URL',
                         'curators_' => 'Curators',
                         'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
@@ -130,6 +134,8 @@ class LOVD_Gene extends LOVD_Object {
                         'uniq_variants_' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
+                        'allow_download_' => array('Allow public to download linked information', LEVEL_COLLABORATOR),
+                        'download_' => 'Download all this gene\'s data',
                         'note_index' => 'Notes',
                         'created_by_' => array('Created by', LEVEL_COLLABORATOR),
                         'created_date_' => 'Date created',
@@ -143,6 +149,7 @@ class LOVD_Gene extends LOVD_Object {
                         'TableStart_Graphs' => '',
                         'TableHeader_Graphs' => 'Graphical displays and utilities',
                         'graphs' => 'Graphs',
+                        'rf_checker_' => 'Reading frame checker',
                         'ucsc' => 'UCSC Genome Browser',
                         'ensembl' => 'Ensembl Genome Browser',
                         'ncbi' => 'NCBI Sequence Viewer',
@@ -161,6 +168,10 @@ class LOVD_Gene extends LOVD_Object {
                         'show_genecards_' => 'GeneCards',
                         'show_genetests_' => 'GeneTests',
                       );
+        if (LOVD_plus) {
+            unset($this->aColumnsViewEntry['updated_by_']);
+            unset($this->aColumnsViewEntry['updated_date_']);
+        }
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
@@ -196,6 +207,18 @@ class LOVD_Gene extends LOVD_Object {
                     'view' => array('Associated with diseases', 200),
                     'db'   => array('diseases_', false, 'TEXT')),
             );
+        if (LOVD_plus) {
+            // Diagnostics: Remove some columns, and add one.
+            unset($this->aColumnsViewList['variants']);
+            unset($this->aColumnsViewList['uniq_variants']);
+            unset($this->aColumnsViewList['updated_date_']);
+            // Add transcript information for the gene panel's "Manage genes" gene viewlist.
+            // Unfortunately, we can't limit this for the genes VL on the gene panel page,
+            //  because we also want it to work on the AJAX viewlist, so we can't use lovd_getProjectFile(),
+            //  but neither can we use the sViewListID, because we're in the constructor.
+            $this->aSQLViewList['SELECT'] .= ', IFNULL(CONCAT("<OPTION value=&quot;&quot;>-- select --</OPTION>", GROUP_CONCAT(CONCAT("<OPTION value=&quot;", t.id, "&quot;>", t.id_ncbi, "</OPTION>") ORDER BY t.id_ncbi SEPARATOR "")), "<OPTION value=&quot;&quot;>-- no transcripts available --</OPTION>") AS transcripts_HTML';
+        }
+
         $this->sSortDefault = 'id_';
 
         // Because the gene information is publicly available, remove some columns for the public.
@@ -208,7 +231,7 @@ class LOVD_Gene extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_DB;
@@ -219,7 +242,7 @@ class LOVD_Gene extends LOVD_Object {
             unset($aData['workID']);
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         if (ACTION == 'create') {
             if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->fetchColumn()) {
@@ -289,13 +312,13 @@ class LOVD_Gene extends LOVD_Object {
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             if (lovd_getProjectFile() == '/import.php') {
-                // During import the refseq_genomic is required, else the import 
+                // During import the refseq_genomic is required, else the import
                 // starts complaining that the selected refseq_genomic is not valid
-                // Therefore we set the refseq_genomic in the aFormData property 
+                // Therefore we set the refseq_genomic in the aFormData property
                 // before the getForm() is returned.
                 global $zData;
                 $aSelectRefseqGenomic = array_combine(array($zData['refseq_genomic']), array($zData['refseq_genomic']));
-         
+
                 $this->aFormData['refseq_genomic'] = array('Genomic reference sequence', '', 'select', 'refseq_genomic', 1, $aSelectRefseqGenomic, false, false, false);
             }
             return parent::getForm();
@@ -464,18 +487,23 @@ class LOVD_Gene extends LOVD_Object {
             $zData['imprinting_'] = $_SETT['gene_imprinting'][$zData['imprinting']];
 
             // FIXME; zou dit een external source moeten zijn?
-            $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'http://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
+            $zData['refseq_genomic_'] = '<A href="' . (substr($zData['refseq_genomic'], 0, 3) == 'LRG'? 'ftp://ftp.ebi.ac.uk/pub/databases/lrgex/' . $zData['refseq_genomic'] . '.xml' : 'https://www.ncbi.nlm.nih.gov/nuccore/' . $zData['refseq_genomic']) . '" target="_blank">' . $zData['refseq_genomic'] . '</A>';
             $zData['refseq_UD_'] = '<A href="' . str_replace('services', 'Reference/', $_CONF['mutalyzer_soap_url']) . $zData['refseq_UD'] . '.gb" target="_blank">' . $zData['refseq_UD'] . '</A>';
 
             // Transcript links and exon/intron info table. Check if files exist, and build link. Otherwise, remove field.
             $zData['refseq_transcript_'] = '';
             $zData['exon_tables'] = '';
+            $zData['rf_checker_'] = '';
             foreach ($zData['transcripts'] as $aTranscript) {
                 list($nTranscriptID, $sNCBI) = $aTranscript;
                 $zData['refseq_transcript_'] .= (!$zData['refseq_transcript_']? '' : ', ') . '<A href="transcripts/' . $nTranscriptID . '">' . $sNCBI . '</A>';
                 $sExonTableFile = ROOT_PATH . 'refseq/' . $zData['id'] . '_' . $sNCBI . '_table.html';
                 if (is_readable($sExonTableFile)) {
-                    $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">' . $sNCBI . '</A>';
+                    $zData['exon_tables'] .= (!$zData['exon_tables']? '' : ', ') . '<A href="' . $sExonTableFile . '" target="_blank">' . $sNCBI . ' exon/intron table</A>';
+
+                    // Assume presence of exon table file in *.txt format. Show link to reading
+                    // frame checker.
+                    $zData['rf_checker_'] .= (!$zData['rf_checker_']? '' : ', ') . '<A href="#" onclick="lovd_openWindow(\'scripts/readingFrameChecker.php?gene=' . $zData['id'] . '&transcript=' . $sNCBI . '\', \'readingframechecker\', 800, 500); return false;">' . $sNCBI . '</A>';
                 }
             }
             if (!$zData['refseq_transcript_']) {
@@ -483,6 +511,9 @@ class LOVD_Gene extends LOVD_Object {
             }
             if (!$zData['exon_tables']) {
                 unset($this->aColumnsViewEntry['exon_tables']);
+            }
+            if ($zData['rf_checker_']) {
+                $zData['rf_checker_'] = 'The Reading-frame checker generates a prediction of the effect of whole-exon changes. Active for: ' . $zData['rf_checker_'] . '.';
             }
 
             // Associated with diseases...
@@ -499,8 +530,15 @@ class LOVD_Gene extends LOVD_Object {
             }
 
             if (isset($zData['reference'])) {
-                // FIXME; is 't niet beter de PubMed custom link data uit de database te halen? Als ie ooit wordt aangepast, gaat dit fout.
-                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="http://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+                // FIXME; Isn't it better to take the PubMed custom link from the database? If it ever gets edited, this one should be edited, too.
+                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="https://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+            }
+
+            if ($_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
+                $zData['download_'] = '<A href="download/all/gene/' . $zData['id'] . '">' .
+                    'Download all data</a>';
+            } else {
+                unset($this->aColumnsViewEntry['download_']);
             }
 
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
@@ -608,10 +646,21 @@ class LOVD_Gene extends LOVD_Object {
                 // The weird addition in the end is to fake a proper name in Ensembl.
                 $sURLEnsembl .= $sURLBedFile . rawurlencode('&name=/' . $zData['id'] . ' variants');
                 $zData['ensembl'] = 'Show variants in the Ensembl Genome Browser (<A href="' . $sURLEnsembl . '=labels" target="_blank">full view</A>, <A href="' . $sURLEnsembl . '=normal" target="_blank">compact view</A>)';
-                $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="http://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
+                $zData['ncbi'] = 'Show distribution histogram of variants in the <A href="https://www.ncbi.nlm.nih.gov/projects/sviewer/?id=' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']] . '&amp;v=' . ($zData['position_g_mrna_start'] - 100) . ':' . ($zData['position_g_mrna_end'] + 100) . '&amp;content=7&amp;url=' . $sURLBedFile . '" target="_blank">NCBI Sequence Viewer</A>';
 
             } else {
-                unset($this->aColumnsViewEntry['TableStart_Graphs'],$this->aColumnsViewEntry['TableHeader_Graphs'],$this->aColumnsViewEntry['graphs'],$this->aColumnsViewEntry['ucsc'],$this->aColumnsViewEntry['ensembl'],$this->aColumnsViewEntry['ncbi'],$this->aColumnsViewEntry['TableEnd_Graphs'],$this->aColumnsViewEntry['HR_2']);
+                if (!$zData['rf_checker_']) {
+                    // Remove the displays/utilities info table when there are also no reading
+                    // frame checker results.
+                    unset($this->aColumnsViewEntry['TableStart_Graphs'],
+                          $this->aColumnsViewEntry['TableHeader_Graphs'],
+                          $this->aColumnsViewEntry['TableEnd_Graphs'],
+                          $this->aColumnsViewEntry['HR_2']);
+                }
+                unset($this->aColumnsViewEntry['graphs'],
+                      $this->aColumnsViewEntry['ucsc'],
+                      $this->aColumnsViewEntry['ensembl'],
+                      $this->aColumnsViewEntry['ncbi']);
             }
 
             // URLs for "Links to other resources".
@@ -633,12 +682,16 @@ class LOVD_Gene extends LOVD_Object {
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID, 2);
                 if (!empty($zData[$sColID])) {
-                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                    // For IDs and the GeneTests link, use the IDs for the URL, otherwise use the gene symbol;
+                    //  for IDs, use the IDs in the visible part of the link, otherwise use the gene symbol.
+                    // FIXME: Note that id_pubmed_gene now uses the gene symbol in the visible part of the link (code below this block);
+                    //  it would be good if we'd standardize that.
+                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }
             }
-            // Link to PubMed articles now shows Entrez Gene ID, which might be misinterpreted as a number of articles. Replace by Gene Symbol.
+            // The link to PubMed articles showed the Entrez Gene ID, which might be misinterpreted as a number of articles. Replaced by Gene Symbol.
             $zData['id_pubmed_gene_'] = str_replace($zData['id_entrez'] . '</A>', $zData['id'] . '</A>', $zData['id_pubmed_gene_']);
 
             // Disclaimer.
@@ -650,7 +703,7 @@ class LOVD_Gene extends LOVD_Object {
                 'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
 
             // Unset fields that will not be shown if they're empty.
-            foreach (array('note_index', 'refseq_url_', 'url_homepage_', 'url_external_' , 'id_entrez_', 'id_pubmed_gene_', 'id_omim_', 'disease_omim_', 'show_hgmd_', 'show_genecards_', 'show_genetests_') as $key) {
+            foreach (array('note_index', 'refseq_url_', 'url_homepage_', 'url_external_' , 'id_entrez_', 'id_pubmed_gene_', 'id_omim_', 'disease_omim_', 'show_hgmd_', 'show_genecards_', 'show_genetests_', 'rf_checker_') as $key) {
                 if (empty($zData[$key])) {
                     unset($this->aColumnsViewEntry[$key]);
                 }

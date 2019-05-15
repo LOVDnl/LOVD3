@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2014-07-25
- * For LOVD    : 3.0-11
+ * Modified    : 2018-01-19
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -34,7 +34,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Expires: ' . date('r', time()+(24*60*60))); // HGVS syntax check result expires in a day.
 session_write_close();
 
-if (empty($_GET['variant']) || !preg_match('/^(c:[c|n]|g:g)\..+$/', $_GET['variant'])) {
+if (empty($_GET['variant']) || !preg_match('/^(c:[cn]|g:[mg])\..+$/', $_GET['variant'])) {
     die(AJAX_DATA_ERROR);
 }
 
@@ -47,15 +47,12 @@ if (!$_AUTH) {
     die(AJAX_NO_AUTH);
 }
 
-require ROOT_PATH . 'class/soap_client.php';
-$_Mutalyzer = new LOVD_SoapClient();
-try {
-    $aOutput = $_Mutalyzer->checkSyntax(array('variant' => $_GET['variant']))->checkSyntaxResult;
-} catch (SoapFault $e) {
+$aResponse = lovd_callMutalyzer('checkSyntax', array('variant' => $_GET['variant']));
+if ($aResponse === false) {
     die(AJAX_UNKNOWN_RESPONSE);
 }
 
-if (isset($aOutput->valid) && $aOutput->valid) {
+if (!empty($aResponse['valid'])) {
     die(AJAX_TRUE);
 } else {
     die(AJAX_FALSE);

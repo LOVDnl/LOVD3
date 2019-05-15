@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2015-12-01
- * For LOVD    : 3.0-15
+ * Modified    : 2018-01-26
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -72,8 +73,6 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
     // URL: /references/PMID:...../image
     // View specific DOI or PMID.
 
-    require ROOT_PATH . 'inc-lib-columns.php';
-
     if (substr($aPathElements[1], 0, 4) == 'DOI:') {
         $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '}%';
         $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4) . '}';
@@ -115,7 +114,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
         exit;
     }
 
-    define('PAGE_TITLE', 'View data for reference: ' . $aPathElements[1]);
+    define('PAGE_TITLE', 'Data for reference: ' . $aPathElements[1]);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -160,12 +159,22 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
           '       </UL>' . "\n" .
           '       <DIV id="tabs-variants">' . "\n");
     if (!empty($_DATAvariants)){
-        $_DATAvariants->viewList('Variants_per_reference', $aColsToHide['VariantOnGenome'], true, true);
+        $aVLOptions = array(
+            'cols_to_skip' => $aColsToHide['VariantOnGenome'],
+            'track_history' => false,
+            'show_navigation' => false,
+        );
+        $_DATAvariants->viewList('Variants_per_reference', $aVLOptions);
     }
     print('       </DIV>' . "\n" .
           '       <DIV id="tabs-individuals">' . "\n");
     if (!empty($_DATAindividuals)){
-        $_DATAindividuals->viewList('Individuals_per_reference', $aColsToHide['Individual'], true, true);
+        $aVLOptions = array(
+            'cols_to_skip' => $aColsToHide['Individual'],
+            'track_history' => false,
+            'show_navigation' => false,
+        );
+        $_DATAindividuals->viewList('Individuals_per_reference', $aVLOptions);
     }
     print('       </DIV>' . "\n" .
           '   </DIV>');
@@ -180,7 +189,7 @@ if ($bImage) {
     exit;
 }
 
-define('PAGE_TITLE', 'View data for reference: ' . $aPathElements[1]);
+define('PAGE_TITLE', 'Data for reference: ' . $aPathElements[1]);
 $_T->printHeader();
 $_T->printTitle();
 

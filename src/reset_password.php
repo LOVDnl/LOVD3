@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2016-06-17
- * For LOVD    : 3.0-16
+ * Modified    : 2018-01-19
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -58,7 +58,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             // If username does not exist, we don't want to let the user know. So this message in entire incorrect.
             $_T->printHeader();
             $_T->printTitle();
-            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for non-existent account ' . $_POST['username']);
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for non-existent account ' . $_POST['username']);
             print('      If you entered the username correctly, we have successfully reset your password.<BR>' . "\n" .
                   '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
                   '      If you don\'t receive this email, it is possible that the username you entered is not correct. Please double-check it.<BR><BR>' . "\n\n");
@@ -86,7 +86,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             // Update database.
             $_DB->query('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']));
 
-            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
 
             // Send email confirmation.
 
@@ -101,7 +101,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $sMessage = 'Dear ' . $zData['name'] . ',' . "\n\n" .
                         'Your password from your LOVD account has been reset, as requested. Your new, randomly generated, password can be found below. Please log in to LOVD and choose a new password.' . "\n\n" .
                         'Below is a copy of your updated account information.' . "\n\n" .
-                        'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the Database administrator ' . $_SETT['admin']['name'] . ', email: ' . $_SETT['admin']['email'] . ', who can investigate possible misuse of the system.' . "\n\n";
+                        'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the Database administrator ' . $_SETT['admin']['name'] . ', email: ' . str_replace(array("\r\n", "\r", "\n"), ' or ', trim($_SETT['admin']['email'])) . ', who can investigate possible misuse of the system.' . "\n\n";
 
             // Add the location of the database, so that the user can just click the link.
             if ($_CONF['location_url']) {
@@ -146,7 +146,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
         } else {
             unset($_POST['username']);
-            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for denied account ' . $_POST['username']);
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for denied account ' . $_POST['username']);
         }
     }
 

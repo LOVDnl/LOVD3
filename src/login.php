@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2018-01-19
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -62,7 +62,7 @@ if (!empty($_POST)) {
 
                 // Instead of having inc-auth.php stop the user when his IP is not allowed to log in, it's better to do that here.
                 if ($zUser['allowed_ip'] && !lovd_validateIP($zUser['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
-                    lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
+                    lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
 
                     // Provide manager information, so that the user knows where to go for help.
                     $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? ORDER BY name', array(LEVEL_MANAGER))->fetchAllAssoc();
@@ -85,7 +85,7 @@ if (!empty($_POST)) {
                     $_SESSION['auth'] = $zUser;
                     $_AUTH = & $_SESSION['auth'];
 
-                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/unlocking code');
+                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/unlocking code');
                     $_SESSION['last_login'] = $_AUTH['last_login'];
                     // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
                     if (!(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
@@ -93,12 +93,10 @@ if (!empty($_POST)) {
                         // Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
                         setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
                     }
-                    // Also update the password field, it needs to be used by the update password form.
+                    // Also update the password field, it needs to be used by the update password form, and force the change of password.
                     $_AUTH['password'] = $zUser['password_autogen'];
-                    $_DB->query('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
-
-                    // Since this is the unlocking code, the user should be forced to change his/her password.
-                    $_SESSION['password_force_change'] = true;
+                    $_AUTH['password_force_change'] = 1;
+                    $_DB->query('UPDATE ' . TABLE_USERS . ' SET password = ?, phpsessid = ?, last_login = NOW(), login_attempts = 0, password_force_change = 1 WHERE id = ?', array($_AUTH['password'], session_id(), $_AUTH['id']));
 
                     header('Location: ' . lovd_getInstallURL() . 'users/' . $_AUTH['id'] . '?change_password');
                     exit;
@@ -132,7 +130,7 @@ if (!empty($_POST)) {
 
 
 
-                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
+                    lovd_writeLog('Auth', 'AuthLogin', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully logged in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
                     $_SESSION['last_login'] = $_AUTH['last_login'];
                     // Protect against Session Fixation by regenarating the ID (available since 4.3.2), but only after 4.3.10 as it gives problems before that...
                     if (!(substr(phpversion(), 0, 4) == '4.3.' && substr(phpversion(), 4) < 10)) {
@@ -150,11 +148,6 @@ if (!empty($_POST)) {
                     } else {
                         // FIXME; if this block is removed, keep this query.
                         $_DB->query('UPDATE ' . TABLE_USERS . ' SET password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array(session_id(), $_AUTH['id']));
-                    }
-
-                    // Check if the user should be forced to change his/her password.
-                    if (!empty($_AUTH['password_force_change'])) {
-                        $_SESSION['password_force_change'] = true;
                     }
 
                     // Check if referer is given, check it, then forward the user.
@@ -175,7 +168,7 @@ if (!empty($_POST)) {
 
             // The bad logins end up here!
             if (!$zUser || (!lovd_error() && !lovd_verifyPassword($_POST['password'], $zUser['password']))) {
-                lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
+                lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
                 lovd_errorAdd('', 'Invalid Username/Password combination.');
 
                 // This may not actually update (user misspelled his username) but we can call the query anyway.

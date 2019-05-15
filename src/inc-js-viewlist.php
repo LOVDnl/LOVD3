@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2016-09-08
- * For LOVD    : 3.0-17
+ * Modified    : 2017-11-15
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -79,9 +79,11 @@ function lovd_AJAX_processViewListHash ()
         }
 
         // Values which are NO LONGER in the Hash (added search term, then back button) need to be removed!!!
-        $(oForm).find('input[name^="search_"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+        // Only for visible search fields (hidden search inputs are set by server).
+        $(oForm).find('input[name^="search_"][type!="hidden"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name^="page"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
         $(oForm).find('input[name="order"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
+        $(oForm).find('input[name="MVSCols"]').each(function (i, o) { if (o.value && !Hash[o.name]) { o.value = ""; }});
 
         if (!window.location.hash) {
             // We don't have a hash anymore. This means we went back to the original viewlist. We must reload it, WITHOUT
@@ -302,8 +304,10 @@ if (!isset($_GET['nohistory'])) {
                         if (prevHash != 'no_rehash') {
                             // The following adds the page to the history in Firefox, such that the user *can* push the back button.
                             // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
-                            $(oForm).find('input').each(function(){
-                                if (!this.disabled && this.value && this.name != 'viewlistid' && this.name != 'object' && this.name.substring(0,6) != 'check_') {
+                            $(oForm).find('input[type!="button"]').each(function(){
+                                if (!this.disabled && this.value && this.name != 'viewlistid' &&
+                                    this.name != 'object' && this.name.substring(0,6) != 'check_' &&
+                                    this.name.substring(0,2) != 'FR') {
                                     sHash += (sHash? '&' : '') + this.name + '=' + encodeURIComponent(this.value);
                                 }
                             });
@@ -467,7 +471,7 @@ function lovd_activateMenu (sViewListID)
                 event: "click",
                 openBelowContext: true,
                 autoHide: true,
-                delay: 1000,
+                delay: 100,
                 onSelect: function(e, context) {
                     // e.stopPropagation(); // Doesn't do anything... :(
                     if ($(this).hasClass("disabled")) {
@@ -496,25 +500,21 @@ function lovd_activateMenu (sViewListID)
 
 
 
-function onNextDocumentClick (callback)
+function onNextDocumentClick (callback, eventName)
 {
-    // Call callback function on next click anywhere on the page.
+    if (typeof eventName == 'undefined') {
+        // Create a random name if none is specified.
+        eventName = 'click.' + Math.random().toString(36).substr(2, 5);
+    }
 
-    $(document).on('click.onNextDocumentClick', function() {
+    // Call callback function on next click anywhere on the page.
+    $(document).on(eventName, function() {
         // Remove event binding.
-        $(document).off('click.onNextDocumentClick');
+        $(document).off(eventName);
         callback();
     });
 }
 
-
-
-
-function closeAllTooltips ()
-{
-    // Remove tooltip elements from DOM.
-    $('div[role="tooltip"]').remove();
-}
 
 
 
@@ -574,8 +574,8 @@ function lovd_getFROptionsElement (sViewListID)
 
 
 
-function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeight,
-                                   sViewListID, sViewListDivSelector)
+function lovd_ShowOverlayColumn (index, bSelectable, targetTH, sOverlayClassname, tableHeight,
+                                   sViewListID, sViewListDivSelector, sTooltip, callback)
 {
     // Show an overlay element for the viewlist column denoted by targetTH.
     // The overlay element is given class sOverlayClassname and has a height
@@ -585,11 +585,11 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
     // Place DIVs overlaying table columns to get column selection.
     var overlayDiv = $().add('<DIV class="' + sOverlayClassname + '"></DIV>');
     var ePos = $(targetTH).offset();
-    var bAllowFindAndReplace = $(targetTH).data('allowfnr') == '1';
+    // var bAllowFindAndReplace = $(targetTH).data('allow_find_replace') == '1';
 
     // Show 'not-allowed' cursor type for non-custom columns.
     var overlayCursor = 'not-allowed';
-    if (bAllowFindAndReplace) {
+    if (bSelectable) {
         overlayCursor = 'pointer';
     }
 
@@ -604,7 +604,7 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
     });
 
     // Only make custom columns selectable.
-    if (bAllowFindAndReplace) {
+    if (bSelectable) {
         var oCurrentOptions = {
             sFieldname: $(targetTH).data('fieldname'),
             sDisplayname: $(targetTH).text().trim(),
@@ -612,13 +612,21 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
             bShowPreview: true,
             bShowSubmit: false
         };
-        overlayDiv.on('click', function () {
+        overlayDiv.on('click', function (clickEvent) {
+            // Make sure the click event is propagated now and not after this
+            // function is finished.
+            clickEvent.stopPropagation();
+            $(this).parent().click();
             $('.' + sOverlayClassname).remove();
-            lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
+
+            // Open F&R options menu (including tooltip, which closes on next
+            // click event).
+            // lovd_FRShowOptionsMenu(sViewListID, oCurrentOptions);
+            callback(sViewListID, oCurrentOptions);
         });
     } else {
         overlayDiv.on('click', function () {
-            alert('This column is not available for Find & Replace.');
+            alert('This column is not available.');
         });
     }
 
@@ -626,12 +634,13 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
 
     if (index == 0) {
         // Show tooltip near first column.
-        overlayDiv.tooltip({
-            items: '.' + sOverlayClassname,
-            content: 'Select a column to use for Find & Replace',
+        $(targetTH).tooltip({
+            items: targetTH,
+            content: sTooltip,
+            disabled: true, // don't show tooltip on mouseover
             position: {
                 my: 'left bottom',
-                at: 'right top',
+                at: 'right top-20',
                 using: function(position, feedback) {
                     $(this).css(position);
                     $('<DIV>')
@@ -640,19 +649,29 @@ function lovd_FRShowOverlayColumn (index, targetTH, sOverlayClassname, tableHeig
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
-                    onNextDocumentClick(closeAllTooltips);
                 }
             }
         }).tooltip('open');
+        onNextDocumentClick(function() {
+            $(targetTH).tooltip('close');
+        });
     }
 }
 
 
 
 
-function lovd_FRColumnSelector (sViewListID)
+function lovd_columnSelector (sViewListID, colClickCallback, sTooltip, sDataAttribute)
 {
     // Show a find & replace column selector for the given viewlist.
+    // Params:
+    // sDataAttribute   Determine whether column is selectable based on "data-"
+    //                  atribute in column heading (TH element). If undefined
+    //                  empty string, all columns are selectable.
+
+    if (typeof sDataAttribute == "undefined") {
+        sDataAttribute = '';
+    }
 
     if (!FRState.hasOwnProperty(sViewListID)) {
         FRState[sViewListID] = {};
@@ -673,20 +692,18 @@ function lovd_FRColumnSelector (sViewListID)
     // it.
     var sOverlayClassname = 'vl_overlay';
     $(sVLTableSelector).find('th').each(function (index) {
-        lovd_FRShowOverlayColumn(index, this, sOverlayClassname, tableHeight,
-                                 sViewListID, sViewListDivSelector);
+        // Decide whether current column is selectable based on presence of
+        // certain data attribute.
+        bSelectable = $(this).is('[data-fieldname]'); // Disable non-content cols like checkbox
+        bSelectable &= (sDataAttribute == '' || $(this).data(sDataAttribute) == '1');
+        lovd_ShowOverlayColumn(index, bSelectable, this, sOverlayClassname, tableHeight,
+                               sViewListID, sViewListDivSelector, sTooltip, colClickCallback);
     });
 
     // Capture clicks outside the column overlays to cancel the F&R action.
-    $(document).on('click.columnSelector', function(event) {
-        if (!$(event.target).closest('.' + sOverlayClassname).length) {
-            // Remove viewlist column overlays.
-            $('.' + sOverlayClassname).remove();
-
-            // Remove page-wide click event capture.
-            $(document).off('click.columnSelector');
-        }
-    })
+    onNextDocumentClick(function () {
+        $('.' + sOverlayClassname).remove();
+    });
 }
 
 
@@ -702,32 +719,46 @@ function lovd_FRShowOptionsMenu (sViewListID, oNewOptions)
         $.extend(FRState[sViewListID], oNewOptions);
     }
 
+    if (FRState[sViewListID]['phase'] == 'preview' && FRState[sViewListID]['bShowSubmit']) {
+        // When previewing changes, only show submit button when there are no
+        // errors displayed.
+        FRState[sViewListID]['bShowSubmit'] = $('div.err').length == 0;
+    }
+
     if (FRState[sViewListID]['phase'] == 'input' || FRState[sViewListID]['phase'] == 'preview') {
         var FROptions = lovd_getFROptionsElement(sViewListID);
         FROptions.show();
-    }
 
-    if (FRState[sViewListID]['phase'] == 'input') {
-        // Display a tooltip for the options menu.
-        var displayNameElement = $('#viewlistFRColDisplay_' + sViewListID);
-        displayNameElement.tooltip({
-            items: '#viewlistFRColDisplay_' + sViewListID,
-            content: 'Specify find & replace options',
-            position: {
-                my: 'left bottom',
-                at: 'left-40 top-15',
-                using: function (position, feedback) {
-                    $(this).css(position);
-                    $('<DIV>')
-                        .addClass('arrow')
-                        .addClass(feedback.vertical)
-                        .addClass(feedback.horizontal)
-                        .appendTo(this);
-                    $(this).removeClass('ui-widget-content');
-                    onNextDocumentClick(closeAllTooltips);
-                }
-            }
-        }).tooltip('open');
+        // Jquery-ui tooltip keeps jumping just after it is displayed. Attempts to
+        // avoid this (show: false, hide:false, collision: 'none') have failed. As
+        // it is quite annoying, I have disabled it for now.
+//        if (FRState[sViewListID]['phase'] == 'input') {
+//            // Display a tooltip for the options menu.
+//            FROptions.tooltip({
+//                items: FROptions,
+//                content: 'Specify find & replace options',
+//                disabled: true, // Do not show tooltip on mouseover.
+//                show: false,
+//                hide: false,
+//                position: {
+//                    my: 'left bottom',
+//                    at: 'left top+40',
+//                    collision: 'none',
+//                    using: function (position, feedback) {
+//                        $(this).css(position);
+//                        $('<DIV>')
+//                            .addClass('arrow')
+//                            .addClass(feedback.vertical)
+//                            .addClass(feedback.horizontal)
+//                            .appendTo(this);
+//                        $(this).removeClass('ui-widget-content');
+//                    }
+//                }
+//            }).tooltip('open');
+//            onNextDocumentClick(function() {
+//                FROptions.tooltip('close');
+//            });
+//        }
     }
 }
 
@@ -754,6 +785,7 @@ function lovd_FRPreview (sViewListID)
         FRPreviewHeader.tooltip({
             items: 'th',
             content: 'Preview changes (' + sFRRowsAffected + ' rows affected)',
+            disabled: true, // Don't show tooltip on mouseover.
             position: {
                 my: 'center bottom',
                 at: 'center top-15',
@@ -765,10 +797,15 @@ function lovd_FRPreview (sViewListID)
                         .addClass(feedback.horizontal)
                         .appendTo(this);
                     $(this).removeClass('ui-widget-content');
-                    onNextDocumentClick(closeAllTooltips);
                 }
             }
         }).tooltip('open');
+        onNextDocumentClick(function() {
+            FRPreviewHeader.tooltip('close');
+            // Calling 'close' in this case does not remove tooltip from page,
+            // therefore we destroy the tooltip too, removing it from the DOM.
+            FRPreviewHeader.tooltip('destroy');
+        });
     });
 }
 
@@ -821,7 +858,7 @@ function lovd_FRCleanup (sViewListID, bSubmitVL, afterSubmitCallback)
     }
 
     // Hide all tooltips.
-    closeAllTooltips();
+    $('div[role="tooltip"]').remove();
 }
 
 
@@ -923,3 +960,40 @@ function lovd_passAndRemoveViewListRow (sViewListID, sRowID, aRowData, callback)
 
 
 
+
+
+function lovd_toggleMVSCol (sViewListID, oColumn)
+{
+    // Add or remove (depending on its presence) multivalued search argument
+    // oColumn to a semicolon-separated list stored in form field.
+    var sMVSCol = oColumn.sFieldname;
+    var oMVSInput = $('#viewlistForm_' + sViewListID + ' input[name="MVSCols"]');
+    var aCurrentCols = [];
+    if (oMVSInput.val().length > 0) {
+        aCurrentCols = oMVSInput.val().split(';');
+    }
+
+    if ($.inArray(sMVSCol, aCurrentCols) >= 0) {
+        aCurrentCols.splice(aCurrentCols.indexOf(sMVSCol), 1);
+    } else {
+        aCurrentCols.push(sMVSCol);
+    }
+    oMVSInput.val(aCurrentCols.join(';'));
+    lovd_AJAX_viewListSubmit(sViewListID);
+}
+
+
+
+
+
+$(document).ready(function() {
+    // Bind mouse clicking events to viewlist rows to let clicking of middle-
+    // mousebutton open URLs in new tab/window. Open urls specified in a
+    // 'data-url' attribute if it's available.
+    $('table .data').on('mouseup', 'tr', function(e) {
+        if ($(this).data('href') && e.which == 2) {
+            // Middle mouse button clicked, open url in new window.
+            window.open($(this).data('href'), '_blank');
+        }
+    });
+});

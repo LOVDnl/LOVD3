@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2016-07-18
- * For LOVD    : 3.0-17
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -55,7 +55,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldec
         $_GET['search_geneid'] = '="' . $sGene . '"';
         lovd_isAuthorized('gene', $sGene);
     }
-    define('PAGE_TITLE', 'View all transcripts' . ($sGene? ' of gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'All transcripts' . ($sGene? ' of gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
     if ($sGene) {
@@ -65,7 +65,11 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldec
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
     $_DATA->sSortDefault = ($sGene? 'variants' : 'geneid');
-    $_DATA->viewList('Transcripts', ($sGene? 'geneid' : ''), false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
+    $aVLOptions = array(
+        'cols_to_skip' => ($sGene? array('geneid') : array()),
+        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+    );
+    $_DATA->viewList('Transcripts', $aVLOptions);
 
     if ($sGene) {
         lovd_printGeneFooter();
@@ -83,7 +87,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'View transcript #' . $nID);
+    define('PAGE_TITLE', 'Transcript #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -108,7 +112,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
     $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
     $_DATA->setRowLink('VOT_for_T_VE', 'javascript:window.location.href=\'' . lovd_getInstallURL() . 'variants/{{ID}}#{{transcriptid}}\'; return false');
-    $_DATA->viewList('VOT_for_T_VE', array('geneid', 'transcriptid', 'id_ncbi', 'id_'));
+    $aVLOptions = array(
+        'cols_to_skip' => array('geneid', 'transcriptid', 'id_ncbi', 'id_'),
+    );
+    $_DATA->viewList('VOT_for_T_VE', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -127,7 +134,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     if ($nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchColumn()) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
     } else {
-        define('PAGE_TITLE', 'View transcript');
+        define('PAGE_TITLE', 'Transcript');
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
@@ -253,8 +260,6 @@ if (ACTION == 'create') {
         // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
         flush();
 
-        require ROOT_PATH . 'class/soap_client.php';
-        $_Mutalyzer = new LOVD_SoapClient();
         $_BAR->setMessage('Collecting all available transcripts...');
         $_BAR->setProgress(0);
 
@@ -331,6 +336,7 @@ if (ACTION == 'create') {
                             'id_protein_ncbi' => $zData['transcriptsProtein'][$sTranscript],
                             'id_protein_ensembl' => '',
                             'id_protein_uniprot' => '',
+                            'remarks' => '',
                             'position_c_mrna_start' => $zData['transcriptPositions'][$sTranscript]['cTransStart'],
                             'position_c_mrna_end' => $zData['transcriptPositions'][$sTranscript]['cTransEnd'], // Is actually sortableTransEnd.
                             'position_c_cds_end' => $zData['transcriptPositions'][$sTranscript]['cCDSStop'],
@@ -357,9 +363,9 @@ if (ACTION == 'create') {
                         $sTranscriptName = $zData['transcriptNames'][$sTranscript];
 
                         $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
-                        $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
-                                         'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
-                                         array($zData['gene']['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
+                        $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, remarks, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
+                                         'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
+                                         array($zData['gene']['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - could not be added to gene ' . $zData['gene']['id']);
@@ -367,15 +373,7 @@ if (ACTION == 'create') {
                             $aSuccessTranscripts[] = $sTranscript;
 
                             // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
-                            $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_DONE . ' WHERE chromosome = ? AND (' .
-                                             '(position_g_start BETWEEN ? AND ?) OR ' .
-                                             '(position_g_end   BETWEEN ? AND ?) OR ' .
-                                             '(position_g_start < ? AND position_g_end > ?))',
-                                             array($zData['gene']['chromosome'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd']));
-                            if ($q->rowCount()) {
-                                // If we have changed variants, turn on mapping immediately.
-                                $_SESSION['mapping']['time_complete'] = 0;
-                            }
+                            $_DATA->turnOffMappingDone($zData['gene']['chromosome'], $aTranscriptPositions);
                         }
                     }
                 }

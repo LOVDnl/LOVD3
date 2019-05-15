@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2017-04-24
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -71,11 +71,8 @@ function lovd_checkDBID ($aData)
     $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
     if ($nHasDBID && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
         // This is the standard query that will be used to determine if the DBID given is correct.
-        $sSQL = 'SELECT DISTINCT t.geneid, ' .
-                'CONCAT(IFNULL(vog.`VariantOnGenome/DNA`, ""), ";", IFNULL(GROUP_CONCAT(vot.`VariantOnTranscript/DNA` SEPARATOR ";"), "")) as variants, ' .
-                'vog.`VariantOnGenome/DBID` ' .
+        $sSQL = 'SELECT COUNT(*) ' .
                 'FROM ' . TABLE_VARIANTS . ' AS vog LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
-                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
                 'WHERE (';
         $aArgs = array();
         $sWhere = '';
@@ -99,9 +96,8 @@ function lovd_checkDBID ($aData)
             $sWhere .= 'AND vog.id != ? ';
             $aArgs[] = sprintf('%010d', $nIDtoIgnore);
         }
-        $sSQL .= $sWhere . 'GROUP BY vog.id';
-        $aOutput = $_DB->query($sSQL, $aArgs)->fetchAllRow();
-        $nOptions = count($aOutput);
+        $sSQL .= $sWhere;
+        $nOptions = $_DB->query($sSQL, $aArgs)->fetchColumn();
 
         if (!$nOptions) {
             return false;
@@ -278,8 +274,12 @@ function lovd_errorPrint ()
 
     if (count($_ERROR['messages']) > 1) {
         unset($_ERROR['messages'][0]);
-        print('      <DIV class="err">' . "\n" .
-              '        ' . implode('<BR>' . "\n" . '        ', $_ERROR['messages']) . '</DIV><BR>' . "\n\n");
+        if (FORMAT == 'text/html') {
+            print('      <DIV class="err">' . "\n" .
+                  '        ' . implode('<BR>' . "\n" . '        ', $_ERROR['messages']) . '</DIV><BR>' . "\n\n");
+        } elseif (FORMAT == 'text/plain') {
+            print(':' . implode("\n" . ':', array_map('strip_tags', $_ERROR['messages'])) . "\n\n");
+        }
     }
 }
 
@@ -391,11 +391,11 @@ function lovd_fetchDBID ($aData)
                 $sSQL .= ' AND vog.position_g_start = ?';
                 $aArgs[] = $aData['position_g_start'];
             }
-            if (!empty($aTranscriptVariants)) {
+        }
+        if (!LOVD_plus && !empty($aTranscriptVariants)) {
+            if (!empty($sGenomeVariant)) {
                 $sSQL .= ' UNION ';
             }
-        }
-        if (!empty($aTranscriptVariants)) {
             // 2013-03-01; 3.0-03; To speed up this query in large databases, it has been optimized and rewritten using INNER JOIN instead of LEFT OUTER JOIN, requiring a UNION.
             $sSQL .= 'SELECT DISTINCT vog.`VariantOnGenome/DBID` ' .
                      'FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' .
@@ -426,7 +426,7 @@ function lovd_fetchDBID ($aData)
                 // Check this option, if it doesn't pass we'll skip it now.
                 $aDataCopy = $aData;
                 $aDataCopy['VariantOnGenome/DBID'] = $sDBIDoption;
-                if (!lovd_checkDBID($aDataCopy)) {
+                if (!LOVD_plus && !lovd_checkDBID($aDataCopy)) {
                     continue;
                 }
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
@@ -594,6 +594,30 @@ function lovd_matchUsername ($s)
 
 
 
+function lovd_recaptchaV2_verify ($sUserResponse)
+{
+    // Function to verify the "response" from the user with Google.
+
+    try {
+        // Verify reCaptcha V2 user response with Google.
+        $aPostVars = array('secret' => '6Lf_XBsUAAAAAIjtOpBdpVyzwsWYO4AtgmgjxDcb',
+            'response' => $sUserResponse);
+        $aResponseRaw = lovd_php_file('https://www.google.com/recaptcha/api/siteverify', false,
+            http_build_query($aPostVars), 'Accept: application/json');
+        // Note: "error-codes" in the response object is optional, even when
+        // verification fails.
+        $aResponse = json_decode(join('', $aResponseRaw), true);
+        return $aResponse['success'];
+    } catch (Exception $e) {
+        // FIXME: Consider logging debug information here.
+    }
+    return false;
+}
+
+
+
+
+
 function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwdAdmin = true, $aCc = array(), $aBcc = array())
 {
     // Format:
@@ -622,6 +646,13 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwd
         $sBody);
 
     $sHeaders = $sHeaders . (!empty($sCc)? PHP_EOL . 'Cc: ' . $sCc : '') . (!empty($sBcc)? PHP_EOL . 'Bcc: ' . $sBcc : '');
+
+    // Submission emails should have the Reply-To set to the curator
+    //  and the submitter, so both benefit from it.
+    if (strpos($sSubject, 'LOVD submission') === 0) {
+        // Reply-to should be original addressees.
+        $sHeaders .= PHP_EOL . 'Reply-To: ' . $sTo . ', ' . $sCc;
+    }
 
     // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
     $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
@@ -719,6 +750,11 @@ function lovd_setUpdatedDate ($aGenes)
     // Updates the updated_date field of the indicated gene.
     global $_AUTH, $_DB;
 
+    if (LOVD_plus) {
+        // LOVD+ does not use these timestamps.
+        return count($aGenes);
+    }
+
     if (!$aGenes) {
         return false;
     } elseif (!is_array($aGenes)) {
@@ -739,6 +775,22 @@ function lovd_setUpdatedDate ($aGenes)
     // Just update the database and we'll see what happens.
     $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = ?, updated_date = NOW() WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')', array_merge(array($_AUTH['id']), $aGenes), false);
     return ($q->rowCount());
+}
+
+
+
+
+
+function lovd_trimField ($sVal)
+{
+    // Trims data fields in an intelligent way. We don't just strip the quotes off, as this may effect quotes in the fields.
+    // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
+
+    $sVal = trim($sVal);
+    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
+        $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
+    }
+    return trim($sVal);
 }
 
 
@@ -894,7 +946,7 @@ function lovd_viewForm ($a,
                     $GLOBALS['_' . $sMethod][$sName] = '';
                 }
 
-                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName) ? '' : ' class="err"') . '>' . $sDataSuffix);
+                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName)? '' : ' class="err"') . '>' . $sDataSuffix);
                 continue;
 
 
@@ -916,12 +968,12 @@ function lovd_viewForm ($a,
 
                 // Output a hidden text field before password field, to catch a possible
                 // mistaken automatic fill of a username.
-                print('<INPUT type="text" style="display:none" />' . PHP_EOL);
+                print('<INPUT type="text" name="fake_username" style="width:0; margin:-3px; padding:0; visibility: hidden" />' . PHP_EOL);
                 // Print indentation for new line.
                 print($sNewLine);
 
                 print('<INPUT' . $sFieldAtts . ' value="' . htmlspecialchars(
-                        $GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName) ?
+                        $GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName)?
                         '' : ' class="err"') . '>' . $sDataSuffix);
                 continue;
 
@@ -959,12 +1011,12 @@ function lovd_viewForm ($a,
 
                             // If we are in an option group then we need to close it before we start a new option group.
                             print(($bInOptGroup? '' : "\n" . $sNewLine . '</OPTGROUP>') . "\n" .
-                                $sNewLine . '  <OPTGROUP label="' . htmlspecialchars($val) . '">');
+                                  $sNewLine . '  <OPTGROUP label="' . htmlspecialchars($val) . '">');
                             $bInOptGroup = true;
                         } else {
                             // We have to cast the $key to string because PHP made integers of them, if they were integer strings.
-                            $bSelected = ((!$bMultiple && (string)$GLOBALS['_' . $sMethod][$sName] === (string)$key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string)$key, $GLOBALS['_' . $sMethod][$sName], true)));
-                            print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected ? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
+                            $bSelected = ((!$bMultiple && (string) $GLOBALS['_' . $sMethod][$sName] === (string) $key) || ($bMultiple && is_array($GLOBALS['_' . $sMethod][$sName]) && in_array((string) $key, $GLOBALS['_' . $sMethod][$sName], true)));
+                            print("\n" . $sNewLine . '  <OPTION value="' . htmlspecialchars($key) . '"' . ($bSelected? ' selected' : '') . '>' . htmlspecialchars($val) . '</OPTION>');
                         }
                     }
                     // If we are still in an option group then lets close it.
@@ -1077,4 +1129,23 @@ function lovd_wrapText ($s, $l = 70, $sCut = ' ')
 
     return $s;
 }
+
+
+
+
+
+function utf8_encode_array ($Data)
+{
+    // Recursively loop array to encode values.
+
+    if (!is_array($Data)) {
+        return utf8_encode($Data);
+    } else {
+        foreach ($Data as $key => $val) {
+            $Data[$key] = utf8_encode_array($val);
+        }
+        return $Data;
+    }
+}
+
 ?>

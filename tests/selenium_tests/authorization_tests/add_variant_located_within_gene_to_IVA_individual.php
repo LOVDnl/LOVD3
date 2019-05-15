@@ -45,12 +45,8 @@ class AddVariantLocatedWithinGeneToIVAIndividualTest extends LOVDSeleniumWebdriv
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
         $element->click();
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:[2011]:[2150333]}");
+        $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "0.05");
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));
-        $option->click();
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_concluded"]/option[text()="Effect unknown"]'));
-        $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="Test Owner (#00006)"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));

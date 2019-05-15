@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-09-15
- * For LOVD    : 3.0-17
+ * Modified    : 2018-01-26
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -173,7 +173,7 @@ class LOVD_Column extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_DB;
@@ -197,7 +197,7 @@ class LOVD_Column extends LOVD_Object {
             lovd_errorAdd('active_links', 'Only VARCHAR or TEXT columns can have custom links activated for it!');
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // Category; not chosen on this form, but we want to make sure it's correct anyways.
         if (!empty($aData['category']) && !in_array($aData['category'], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
@@ -383,7 +383,7 @@ class LOVD_Column extends LOVD_Object {
             $zData['row_id']      = $zData['id'];
             $zData['row_link']    = 'columns/' . $zData['id']; // Note: I chose not to use rawurlencode() here!
             $zData['colid_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['colid'] . '</A>';
-            $zData['form_type_']  = lovd_describeFormType($zData);
+            $zData['form_type_']  = $this->describeFormType($zData);
         } else {
             // Remove unnecessary columns.
             if ($zData['edited_by'] == NULL) {
@@ -402,10 +402,9 @@ class LOVD_Column extends LOVD_Object {
             $zData['mandatory_']       = '<IMG src="gfx/mark_' . $zData['mandatory'] . '.png" alt="" width="11" height="11">';
             $zData['description_legend_short'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_short']));
             $zData['description_legend_full'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_full']));
-            $zData['form_type_']       = lovd_describeFormType($zData) . '<BR>' . $zData['form_type'];
+            $zData['form_type_']       = $this->describeFormType($zData) . '<BR>' . $zData['form_type'];
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';
-
 
             if ($zData['category'] == 'VariantOnTranscript') {
                 // Show genes for which this column is activated.
@@ -419,7 +418,6 @@ class LOVD_Column extends LOVD_Object {
             } else {
                 unset($this->aColumnsViewEntry['parent_objects']);
             }
-
         }
         // FIXME; for titles use tooltips?
         $zData['active_']      = '<IMG src="gfx/mark_' . (int) $zData['active'] . '.png" alt="" width="11" height="11">';

@@ -13,20 +13,41 @@ Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /antwerpen/ heeft aangepaste .htaccess.
 /DNA_profiles/ heeft aangepaste index.php.
-/my_genome/ heeft een aangepaste ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, class/template.php, individuals.php, screenings.php, submit.php, variants.php. Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste class/graphs.php, class/template.php en import.php.
-/VKGL/ heeft aangepaste .htaccess.
-/whole_genome/ heeft aangepaste files (class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, users.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
-/whole_genome_mirror/ heeft aangepaste files (zie hierboven), NOOIT ZOMAAR OVERSCHRIJVEN!!! (MAG WEL VAN WHOLE_GENOME, excl. de config.ini)
+/my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
+/shared/ heeft een aangepaste ajax/viewlist.php, class/template.php, import.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
+/whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 After updating all installations, send email to team with all improvements summarized.
 
 To debug: XDEBUG_PROFILE=1
 
 Prioritize:
 ===========
+In form fields (SELECTs?) set style="max-width:400px" or so?
+
+Columns we no longer use that can be removed:
+- TABLE_GENES/allow_index_wiki
+- TABLE_TRANSCRIPTS/id_mutalyzer
+- TABLE_USERS/reference
+
+\item[$\circ$] LSDB list: Adding data from dead LSDBs: Brenda?
+
 Website:
 - Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
 
+- Access sharing: Users zouden moeten worden gesorteerd op naam.
+- Gerard: Als ik bij (bijv.) Age examined (Phenotype) '<00y' invul, dus onderzoek aan een ongeboren kind, komt er '<00y (before )' te staan, zou dit '<00y (before birth)' moeten zijn?
+
+Import phenotype data in disease 0 in shared:
+Error (Phenotypes, line 244): Please fill in the 'Phenotype/TSC' field.
+Error (Phenotypes, line 244): Please fill in the 'Phenotype/Colorectal' field.
+Cols staan niet eens aan. Maar is default op mandatory gezet.
+
+Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat in de database.
+
+- Submission API: Implement JSON schema? Earlier version is here:
+  https://github.com/VarioML/VarioML/blob/master/json/examples/vreport.json-schema
+  (Student project?)
+- Can pagination be doubled, that for wide VLs, it gets repeated on the right side?
 - Internationalization (student project?):
   - Create internationalized LOVD instance, put all text in a translation (.po?) file, starting with template.php (menus), objects.php, etc.
   - Later page headers, custom columns, statuses, page's texts, etc.
@@ -56,7 +77,6 @@ Website:
 - Find a better way to select diseases on the Individual data entry form.
   - Also fix, that changes in this field (and other linking tables?) are not displayed in the submission emails?
   - Use code used to select users to become curators? In a pop over, using JS to read out currently selected options, and enable them on the pop over. When submitting, the form's selection needs to be adapted.
-- mappingInfo sort problem, fix in all spots in variants.php?
 - Indicate the parents using the data entry form, not just the import. Also check the given IDs for the correct (at least not conflicting) gender value, and make sure that during import, the ID is first matched to the file (ignoring own line), and then to the database.
   - Also implement check if given parent is used as both mother and father? Or add check when filling in gender, if it conflicts with used as fatherid/motherid?
   - Check if motherid and fatherid are the same individual?
@@ -79,7 +99,6 @@ Website:
 - NRs en NXs horen geen protein description te hebben.
 - Als we voor een bepaalde patient slechts 100 varianten hebben o.i.d., check met een query welke cols uit moeten staan omdat de geselecteerde genen ze niet hebben, en verberg die cols.
 - !!! Nieuw overzicht: individual met alle phenotype kolommen
-- Position_c_start & position_c_end staan in de volgorde op 't genoom; dus voor antisense genen in de niet-oplopende volgorde, dus niet correct vergeleken met de c. nomenclatuur. Willen we dat?!!??
 - in_gene combineren met scr2var, screenings, individuals en ind2dis net zoals de full data view?
 - c.100+?_101-?del wordt verkeerd vertaald naar c.100_101del als je op het formulier op Map variant klikt!!! dit, terwijl mutalyzer hier goed mee om lijkt te gaan...
 - Variant overzicht mag dan wel meevallen, maar variant overzicht op individual pagina of onder screening pagina is absurd traag.
@@ -94,7 +113,6 @@ Website:
     "0	99	There are no variants to map in the database"
     Correct zou zijn:
     "1	00	Mapped 0% of 1982330 variants"
-- Optimalisatie in VL: als een view traag WORDT (dus niet was!), hoe vangen we dat dan op? En andersom? Maak settings instelbaar!
 - Merge code from Peikuan?
 - Kaart maken met LOVD gebruikers voor op de site? We hebben dan "stad, land" nodig per curator en/of submitter (submitter = ander kleurtje), en deze moeten gemapped worden op een geographische lokatie.
   Daarvoor kun je gebruiken: https://developers.google.com/maps/documentation/geocoding/index?hl=nl
@@ -110,11 +128,11 @@ Website:
 - Import: Als db admin moet ik toch wel iets kunnen importeren en zeggen dat LOVD de owner is? Kan nu niet, want LOVD staat niet in de owner selection list.
 - Submission emails don't show diseases connected to individual, or genes connected to screening.
 - Submissions emails easily get sent twice when you reload the URL (no POST data!). Bad, bad. Empty session var?
-- LOVD3 site: how to go back to LOVD2 easily?
 - Work on the manual!
 - Update icon should be very very attention attracting when the update is very important! (new PNG)
 - Implement an HGNC mirror (student project?)
   + REST API can still be used I guess, but a raw download would be useful for at least variants.php, which downloads a full copy.
+- Fix broken LSDB mirrors? (student project?)
 - RNA predictie gaat fout als p.(=) wordt teruggegeven bij een substitutie van de derde nucleotide van een codon.
   + Als hele codon wordt vervangen, kan p.(=) ook gebeuren, zonder dat de RNA r.(=) kan zijn.
   + Alleen als in intron en p.(=), r.(=) geven. Anders altijd r.(?) ?
@@ -171,7 +189,6 @@ Website:
 - BUGS:
   + Column create or import: VARCHAR(999) wordt niet afgevangen door de MySQL type check.
   + Submitter mag wel zien dat variant 7 aan individu 1 zit, maar hij mag individu 1 niet zien. Beter niet laten zien dat hij er aan vast zit...
-  + Als je een VL opent, daarna zoekt, dan terug, dan blijven de search terms staan. Kan de hash parser niet alle search terms laten vervallen op het moment dat er geen hash is?
   + http://grenada.lumc.nl/LOVD2/mendelian_genes/refseq/CYP2C19_codingDNA.html  (NM_000769.1)
     Gen waar de ATG meteen het start van het transcript is. g. nummering gaat helemaal fout op de cDNA pagina.
     The RefSeq parser doesn't annotate the intron files correctly, if the introns are 3' UTR.
@@ -188,12 +205,6 @@ Website:
       dat moet dan maar op basis van de geselecteerde IDs die in SESSION worden opgeslagen. Ik wil niet code voor
       het parsen van zoektermen moeten kopieëren naar download oid.
     * Full download zou wellicht ook de active_cols en shared_cols moeten hebben? Wel nodig voor LOVD2->LOVD3 export script.
-  + How does the public make downloads?
-    * Beveiliging!!! Alle niet-publieke entries & kolommen zullen moeten worden verwijderd.
-    * Link from the gene homepage?
-    * Link from the viewList, after applying search terms, just like in LOVD2?
-      - But then, you need to control the viewList from that button, such that the search terms are correct, OR the button is provided by the viewList.
-    * Instelling staat per gen, en de intergene varianten dan?
   + DATA IMPORT
     * Ook voor curatoren, check alles goed na het parsen van de file!
     * Discuss if OK that created_by and created_date are set by users through import to values other than themselves or today.
@@ -237,9 +248,6 @@ Website:
 - 5.3.0 required, use bcrypt! Set dan wel maximale ww lengte die verwerkt wordt, om DOS aanval te voorkomen.
 - Diseases hebben alias field nodig (lange tekst), maar nog geen speciale handelingen nodig op het moment.
 - MariaDB noemen als alternatief, en uitleggen dat ze dan vooralsnog 'mysql' als driver moeten kiezen. Config.ini, handleiding, en website. Maar hoe zit dat dan met InnoDB?
-- VOG kolommen toch per gen kunnen verbergen? Johan wil écht die dbSNP kolom niet zien.
-  + Op zich is het verbergen van VOG kolommen gelijk aan de huidige VOT implementatie.
-    * Maar hoe dit op te slaan?
 - Screening kunnen kopieren, zodat je t niet steeds hoeft te herhalen voor een andere patient in dezelfde groep?
   + Screening zegt dat gen X is gescreened, maar er is geen variant aan gekoppeld, dus LOVD kan dan toch zelf c.= toevoegen?
 - Auto generate links to dbSNP?
@@ -421,7 +429,6 @@ Website:
   * Bij gebruik LRG webservice: Pontus: "Should a key be leaked or stolen in a way so that it is misused, we may need to reserve the right to ban that key. In that case, you would perhaps want to implement some way of redistributing new keys to the LOVD installations..."
     Me: "I see - in that case I can't hard-code it in, but need to store it in the database somewhere. However, anyone wanting to abuse the system could easily find out the new key. So if somebody really does want to do harm, it's quite impossible to lock them out *without* locking LOVDs out, unless you would introduce per-LOVD keys and match each key with a certain IP address..."
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
-- Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
   + Als we pathogenicity gaan delen, dan misschien om alles te verduidelijken, ook aantallen andere vars of andere path vars noemen?
 - How to store functional assays? Functional effect screenings? Separate table, with DBID or something to link to variant in general? Chr,g_pos?
@@ -447,9 +454,6 @@ Website:
 - De afhandeling van text/plain voor de verschillende levels voelt nogal fragiel aan, en is behoorlijk irrirant om door te hebben.
 - Default values bij alle edits, waar de $zData gegevens in $_POST geladen worden, kan met 1 array_merge(), zodat je niet hoeft te loopen. /genes/GENE/columns/DNA?edit doet het goed.
 - Find & Replace:
-  + Een viewList, met daarboven heel compact het formulier voor de Find & Replace
-  + De voorgestelde verandering is direct zichtbaar gemarkeerd in de viewList (wordt gedaan in PHP/Prepare data), die ze kunnen sorteren, navigeren, etc.
-    * Wellicht niet extra doorzoeken, want dan krijg je verschil DB inhoud/wat je op het scherm ziet.
   + Allowing full regexp mode where you can build your own regular expression; submitting the form will first return
     * all changes that will be made to the database, agreeing will actually perform the find & replace.
     * This is related to the "asterisk wildcard" question of Raymond Dalgleish, April 2010.
@@ -460,17 +464,8 @@ From LOVD 2.0:
   + The error message that is shown if a gene symbol is passed to LOVD that does not exist in the database, now suggests an URL where the gene database might be found.
 - Cancel knop op submissie formulieren is altijd hetzelfde; aparte opdracht voor lovd_viewForm() voor submit + cancel knop met URL als argument?
 - Screening verwijderd, doorverwezen naar /screenings. Is dat handig?
-- Er is nu niet goed met MT genen te werken; NCBI kent geen transcripten. Mutalyzer heeft wel info, maar nu mist daar het een en ander, juist omdat er geen NMs zijn:
-  + LOVD maakt dan geen UD aan, maar gebruikt de NC direct.
-  + http://localhost/svn/LOVD3/trunk/src/ajax/mutalyzer?getTranscriptsAndInfo&genomicReference=NC_012920.1&geneName=ND1
-  + Ik krijg inderdaad transcript informatie binnen als ik de NC icm het aangepaste gensymbool gebruik, bedankt voor de tip. Ik mis alleen nu, even snel kijkend naar de code, de volgende gegevens die LOVD nodig heeft:
-    * id
-    * chromTransStart
-    * chromTransEnd
-  + position converter werkt ook niet, data is wel uit namechecker te halen, maar dat vereist enorm veel aanpassingen overal in LOVD.
 - DB admin moet kiezen om wel forwards te krijgen van registraties, maar niet van submissies of edits.
   + Managers ook deze keuze geven? Koppelen aan TABLE_USERS ipv system settings?
-- LOVD.nl/GENE_000001 link werkend krijgen voor LOVD3s?
 - Tijdens het mappen meer info invullen? Exon?
 - Submitter er aan herinneren, dat zij consent moeten hebben voor het opslaan van deze data, tenzij de data publiek is (papers)?
 - Christophe Beroud: UMD predictor doet het beter dan SIFT, Polyphen en Mutation Taster.
@@ -695,7 +690,7 @@ Not sure yet how to...
 - Aanmaken disease - voorstellen cols dmv OMIM ID en ontology lookup?
 - Bij het editen insluiten de modified_date van de entry. Als die, bij het editen van de data ineens anders is, moet je een foutmelding geven. Twee mensen hebben tegelijkertijd er aan gewerkt!
     Wellicht direct in de update query?
-- Genen als HOXA@ en UGT1A zijn officieel een erkend gensymbool maar zijn families van genen; ze hebben een NG per groep genen, maar een NM per gen, en de Mutalyzer SOAP call flipt omdat die geen NC slice kan maken.
+- Genen als HOXA@ en UGT1A zijn officieel een erkend gensymbool maar zijn families van genen; ze hebben een NG per groep genen, maar een NM per gen, en de Mutalyzer call flipt omdat die geen NC slice kan maken.
 
 
 HANDLEIDING

@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-04-13
- * Modified    : 2014-06-16
- * For LOVD    : 3.0-11
+ * Modified    : 2017-09-20
+ * For LOVD    : 3.0-20
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -29,43 +30,39 @@
  *
  *************/
 
+// List symbols denoting variant effect values as listed in $_SETT['var_effect'].
+// Fixme: consider joining info in array below with $_SETT['var_effect'].
+$aEffectSymbols = array(
+    0 => '.',   // Not classified
+    1 => '-',   // Does not affect function
+    3 => '-?',  // Probably does not affect function
+    5 => '?',   // Effect unknown
+    6 => '#',   // Variant affects function but was not associated with any known disease phenotype
+    7 => '+?',  // Probably affects function
+    8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
+    9 => '+',   // Affects function
+);
+
+// Create symbols for binary combinations of variant effect symbols (i.e.
+// reported effect and concluded effect).
+$aEffectNames = array();
+foreach ($aEffectSymbols as $k1 => $v1) {
+    foreach ($aEffectSymbols as $k2 => $v2) {
+        $aEffectNames[(string) $k1 . (string) $k2] = $v1 . '/' . $v2;
+    }
+}
+
+// Generate string of variant effect symbols to be used as part of SQL insert
+// statement.
+$sEffectValuesSQL = join(', ', array_map(
+    function ($sID, $sName) {
+        return '("' . $sID . '", "' . $sName . '")';
+    },
+    array_keys($aEffectNames), $aEffectNames)
+);
+
 $aVariantEffectSQL =
          array(
-                'INSERT INTO ' . TABLE_EFFECT . ' VALUES("00", "./."),
-                                                        ("01", "./-"),
-                                                        ("03", "./-?"),
-                                                        ("05", "./?"),
-                                                        ("07", "./+?"),
-                                                        ("09", "./+"),
-                                                        ("10", "-/."),
-                                                        ("11", "-/-"),
-                                                        ("13", "-/-?"),
-                                                        ("15", "-/?"),
-                                                        ("17", "-/+?"),
-                                                        ("19", "-/+"),
-                                                        ("30", "-?/."),
-                                                        ("31", "-?/-"),
-                                                        ("33", "-?/-?"),
-                                                        ("35", "-?/?"),
-                                                        ("37", "-?/+?"),
-                                                        ("39", "-?/+"),
-                                                        ("50", "?/."),
-                                                        ("51", "?/-"),
-                                                        ("53", "?/-?"),
-                                                        ("55", "?/?"),
-                                                        ("57", "?/+?"),
-                                                        ("59", "?/+"),
-                                                        ("70", "+?/."),
-                                                        ("71", "+?/-"),
-                                                        ("73", "+?/-?"),
-                                                        ("75", "+?/?"),
-                                                        ("77", "+?/+?"),
-                                                        ("79", "+?/+"),
-                                                        ("90", "+/."),
-                                                        ("91", "+/-"),
-                                                        ("93", "+/-?"),
-                                                        ("95", "+/?"),
-                                                        ("97", "+/+?"),
-                                                        ("99", "+/+")',
+                'INSERT INTO ' . TABLE_EFFECT . ' VALUES ' . $sEffectValuesSQL,
               );
 ?>

@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-07-25
- * For LOVD    : 3.0-17
+ * Modified    : 2018-01-26
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -53,8 +53,6 @@ if (PATH_COUNT < 3 && !ACTION) {
             // Category given.
             $_GET['search_category'] = $_PE[1];
             define('PAGE_TITLE', 'Browse ' . $_PE[1] . ' custom data columns');
-
-            require ROOT_PATH . 'inc-lib-columns.php';
             $aTableInfo = lovd_getTableInfoByCategory($_PE[1]);
         } else {
             header('Location:' . lovd_getInstallURL() . $_PE[0] . '?search_category=' . $_PE[1]);
@@ -96,7 +94,11 @@ if (PATH_COUNT < 3 && !ACTION) {
     }
     print('        <LI class="icon"><A click="lovd_openWindow(\'' . lovd_getInstallURL() . 'download/columns' . (empty($_PE[1])? '' : '/' . $_PE[1]) . '\', \'ColumnDownload\', 800, 500);"><SPAN class="icon" style="background-image: url(gfx/menu_save.png);"></SPAN>Download all entries (full data)</A></LI>' . "\n" .
           '      </UL>' . "\n\n");
-    $_DATA->viewList('Columns', $aSkip, false, false, (bool) ($_AUTH['level'] >= LEVEL_CURATOR));
+    $aVLOptions = array(
+        'cols_to_skip' => $aSkip,
+        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+    );
+    $_DATA->viewList('Columns', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -115,14 +117,13 @@ if (PATH_COUNT > 2 && !ACTION) {
     unset($aCol[0]); // 'columns';
     $sColumnID = implode('/', $aCol);
 
-    define('PAGE_TITLE', 'View custom data column ' . $sColumnID);
+    define('PAGE_TITLE', 'Custom data column ' . $sColumnID);
     $_T->printHeader();
     $_T->printTitle();
 
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
 
-    require ROOT_PATH . 'inc-lib-columns.php';
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
     $zData = $_DATA->viewEntry($sColumnID);
@@ -156,7 +157,6 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
 
     $sCategory = $_PE[1];
 
-    require ROOT_PATH . 'inc-lib-columns.php';
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if (!$aTableInfo) {
         $_T->printHeader();
@@ -429,7 +429,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
             }
 
             // MySQL and Form type.
-            // FIXME; put this in a function in inc-lib-columns when it's used more than once in the code.
+            // FIXME; put this in a function somewhere when it's used more than once in the code.
             $sFormType = $_POST['name'] . '|' . $_POST['help_text'];
             switch ($_POST['form_type']) {
                 case 'text':
@@ -849,7 +849,6 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 
     // Require form functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require ROOT_PATH . 'inc-lib-columns.php';
 
     // Generate a unique workID, that is sortable.
     if (!isset($_POST['workID'])) {
@@ -888,7 +887,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
             $_POST['edited_by'] = $_AUTH['id'];
             $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-            $sMessage = 'Editing columns MySQL type' . ($tAlter < 4? '' : '(this make take some time)') . '...';
+            $sMessage = 'Editing columns MySQL type ' . ($tAlter < 4? '' : '(this may take some time)') . '...';
 
             // If ALTER time is large enough, mention something about it.
             if ($tAlter > $tAlterMax) {
@@ -1360,7 +1359,6 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require ROOT_PATH . 'inc-lib-columns.php';
 
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
@@ -1410,7 +1408,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $nPossibleTargets = count($aPossibleTargets);
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases which do NOT have this column yet.
-            $sSQL = 'SELECT DISTINCT d.id, IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.symbol, " (", d.name, ")")) FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+            $sSQL = 'SELECT DISTINCT d.id, IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.symbol, " (", d.name, ")")), d.symbol, d.name FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Maybe a JOIN would be simpler?
@@ -1498,7 +1496,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             }
 
             if (!$zData['active_checked']) {
-                $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
+                $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this may take some time)') . '...';
             } else {
                 $sMessage = 'Enabling column...';
             }
@@ -1711,7 +1709,6 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require ROOT_PATH . 'inc-lib-columns.php';
 
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
@@ -1750,7 +1747,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") AS symbol_name FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
                 // FIXME: Before today (2013-06-24), this code contained a check if the column had values or not. Removal was then disallowed. Perhaps we should be checking here if there are values in
@@ -1758,7 +1755,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                 $sSQL .= ' LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ') OR d.id = 0 GROUP BY d.id';
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
-            $sSQL .= ' ORDER BY d.symbol';
+            $sSQL .= ' ORDER BY symbol_name';
             $aPossibleTargets = array_map(
                 function ($sInput) {
                     return lovd_shortenString($sInput, 75);
@@ -1770,7 +1767,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             // Column has already been removed from everything it can be removed from.
             $_T->printHeader();
             $_T->printTitle();
-            lovd_showInfoTable('This column has already been removed from all ' . $aTableInfo['unit'] . 's.', 'stop');
+            lovd_showInfoTable('This column has already been removed from all ' .
+                $aTableInfo['unit'] . 's' . (($_AUTH['level'] >= LEVEL_MANAGER)? '' :
+                ' which you are authorized to modify') . '.', 'stop');
             $_T->printFooter();
             exit;
         }
@@ -1825,7 +1824,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $_T->printHeader();
             $_T->printTitle();
 
-            $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this make take some time)') . '...';
+            $sMessage = 'Removing column from data table ' . ($tAlter < 4? '' : '(this may take some time)') . '...';
 
             // If ALTER time is large enough, mention something about it.
             // ... but only if we're running it...

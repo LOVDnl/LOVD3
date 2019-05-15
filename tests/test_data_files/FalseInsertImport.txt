@@ -40,18 +40,18 @@
 ## Individuals ## Do not remove or alter this header ##
 ## Count = 4
 "{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"	"{{Individual/Gender}}"
-"00000001"	""	""	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:26"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	""
-"00000002"	""	""	""	"10"	"00001"	"9"	"00001"	"2015-06-03 11:30:33"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	""
-"00000003"	""	""	"00000022"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
-"00000004"	""	""	"00000004"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
-"00000005"	""	""	"00000001"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
-"00000006"	""	""	"00000002"	"11"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
-"00000007"	"00000022"	"00000022"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"M"
-"00000008"	"00000008"	"00000008"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"M"
-"00000009"	"00000002"	"00000002"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"M"
-"00000010"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"M"
-"00000011"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
-"00000012"	"00000011"	"00000010"	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:[2011]:[21520333]}"	"No Remarks"	"Still no remarks"	"F"
+"00000001"	""	""	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:26"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	""
+"00000002"	""	""	""	"10"	"00001"	"9"	"00001"	"2015-06-03 11:30:33"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	""
+"00000003"	""	""	"00000022"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
+"00000004"	""	""	"00000004"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
+"00000005"	""	""	"00000001"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
+"00000006"	""	""	"00000002"	"11"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
+"00000007"	"00000022"	"00000022"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"M"
+"00000008"	"00000008"	"00000008"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"M"
+"00000009"	"00000002"	"00000002"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"M"
+"00000010"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"M"
+"00000011"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
+"00000012"	"00000011"	"00000010"	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
 
 ## Individuals_To_Diseases ## Do not remove or alter this header ##
 ## Count = 1
@@ -86,8 +86,8 @@
 ## Variants_On_Genome ## Do not remove or alter this header ##
 ## Count = 1
 "{{id}}"	"{{allele}}"	"{{effectid}}"	"{{chromosome}}"	"{{position_g_start}}"	"{{position_g_end}}"	"{{type}}"	"{{mapping_flags}}"	"{{average_frequency}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Frequency}}"	"{{VariantOnGenome/Reference}}"
-"0000000001"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-02 15:42:48"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:[2011]:[2150333]}"
-"0000000002"	"11"	"55"	"15"	"abc"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-02 15:42:48"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:[2011]:[2150333]}"
+"0000000001"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-02 15:42:48"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:Fokkema et al (2011):21520333}"
+"0000000002"	"11"	"55"	"15"	"abc"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"2015-06-02 15:42:48"	""	""	"IVD_000001"	"g.40702876G>T"	"0.05"	"{PMID:Fokkema et al (2011):21520333}"
 
 ## Variants_On_Transcripts ## Do not remove or alter this header ##
 ## Count = 1

@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2016-09-20
- * For LOVD    : 3.0-17
+ * Modified    : 2017-11-20
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -48,7 +48,11 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     // URL: /view/DMD/NM_004006.2
     // View all entries in a specific gene, affecting a specific trancript, with all joinable data.
 
-    $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
+    $qGene = $_DB->query('SELECT g.id, count(t.id) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' .
+                         TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid WHERE g.id = ?',
+                         array(rawurldecode($_PE[1])));
+    list($sGene, $nTranscripts) = $qGene->fetchRow();
+
     if ($sGene) {
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
@@ -58,19 +62,23 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         }
 
         // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
-        $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE t.geneid = ? AND vot.id IS NOT NULL', array($sGene))->fetchAllCombine();
-        $nTranscripts = count($aTranscripts);
+        $aTranscriptsWithVariants = $_DB->query(
+            'SELECT t.id, t.id_ncbi
+             FROM ' . TABLE_TRANSCRIPTS . ' AS t
+               INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+             WHERE t.geneid = ?', array($sGene))->fetchAllCombine();
+        $nTranscriptsWithVariants = count($aTranscriptsWithVariants);
 
-        // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscripts.
+        // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscriptsWithVariants.
         if (!empty($_PE[2])) {
-            $nTranscript = array_search($_PE[2], $aTranscripts);
+            $nTranscript = array_search($_PE[2], $aTranscriptsWithVariants);
             if ($nTranscript === false) {
-                // NM does not exist. Throw error or just simply redirect?
+                // NM does not exist, or has no variants. Throw error or just simply redirect?
                 header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1]);
                 exit;
             } else {
-                $aTranscripts = array($nTranscript => $aTranscripts[$nTranscript]);
-                $nTranscripts = 1;
+                $aTranscriptsWithVariants = array($nTranscript => $aTranscriptsWithVariants[$nTranscript]);
+                $nTranscriptsWithVariants = 1;
             }
         }
     } else {
@@ -90,34 +98,40 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     $sViewListID = 'CustomVL_VIEW_' . $sGene;
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
-    list($nTranscriptID, $sTranscript) = each($aTranscripts);
+    list($nTranscriptID, $sTranscript) = each($aTranscriptsWithVariants);
     if (!$nTranscripts) {
-        $sMessage = 'No transcripts or variants found for this gene.';
-    } elseif ($nTranscripts == 1) {
+        $sMessage = 'No transcripts found for this gene.';
+    } elseif (!$nTranscriptsWithVariants) {
+        $sMessage = 'No variants found for this gene.';
+    } elseif ($nTranscriptsWithVariants == 1) {
         $_GET['search_transcriptid'] = $nTranscriptID;
         $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
     } else {
         // Create select box.
-        // We would like to be able to link to this list, focussing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
-        if (!isset($_GET['search_transcriptid']) || !isset($aTranscripts[$_GET['search_transcriptid']])) {
+        // We would like to be able to link to this list, focusing on a certain transcript but without restricting the viewer, by sending a (numeric) get_transcriptid search term.
+        if (!isset($_GET['search_transcriptid']) || !isset($aTranscriptsWithVariants[$_GET['search_transcriptid']])) {
             $_GET['search_transcriptid'] = $nTranscriptID;
         }
         $sSelect = '<SELECT id="change_transcript" onchange="$(\'input[name=\\\'search_transcriptid\\\']\').val($(this).val()); lovd_AJAX_viewListSubmit(\'' . $sViewListID . '\');">';
-        foreach ($aTranscripts as $nTranscriptID => $sTranscript) {
+        foreach ($aTranscriptsWithVariants as $nTranscriptID => $sTranscript) {
             $sSelect .= '<OPTION value="' . $nTranscriptID . '"' . ($_GET['search_transcriptid'] != $nTranscriptID? '' : ' selected') . '>' . $sTranscript . '</OPTION>';
         }
-        $sTranscript = $sSelect . '</SELECT>';
-        $sMessage = 'The variants shown are described using the ' . $sTranscript . ' transcript reference sequence.';
+        $sSelect .= '</SELECT>';
+        $sMessage = 'The variants shown are described using the ' . $sSelect . ' transcript reference sequence.';
     }
     if (FORMAT == 'text/html') {
         lovd_showInfoTable($sMessage);
     }
 
-    if ($nTranscripts > 0) {
+    if ($nTranscriptsWithVariants > 0) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         $_DATA = new LOVD_CustomViewList(array('VariantOnTranscript', 'VariantOnGenome', 'Screening', 'Individual'), $sGene);
-        $_DATA->viewList($sViewListID, array('chromosome'), false, false,
-                         ($_AUTH['level'] >= LEVEL_CURATOR), false, true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('chromosome'),
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
 
         // Notes for the variant listings...
         if (!empty($_SETT['currdb']['note_listing'])) {

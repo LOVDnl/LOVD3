@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2016-09-05
- * For LOVD    : 3.0-17
+ * Modified    : 2018-08-09
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -51,14 +51,20 @@ $aNeededLevel =
          array(
                 'Column' => LEVEL_CURATOR,
                 'Custom_ViewList' => 0,
+                'Custom_ViewListMOD' => 0, // LOVD+
                 'Disease' => 0,
                 'Gene' => 0,
+                'Gene_Panel' => LEVEL_SUBMITTER, // LOVD+
+                'Gene_Panel_Gene_REV' => LEVEL_SUBMITTER, // LOVD+
+                'Gene_Statistic' => LEVEL_SUBMITTER, // LOVD+
                 'Genome_Variant' => 0,
                 'Individual' => 0,
+                'IndividualMOD' => 0, // LOVD+
                 'Link' => LEVEL_MANAGER,
-                'Log' => LEVEL_MANAGER,
+                'Log' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_MANAGER),
                 'Phenotype' => 0,
                 'Screening' => 0,
+                'ScreeningMOD' => 0, // LOVD+
                 'Shared_Column' => LEVEL_CURATOR,
                 'Transcript' => 0,
                 'Transcript_Variant' => 0,
@@ -76,6 +82,7 @@ if ($sObject == 'Custom_ViewList' && (!isset($sObjectID) || !in_array($sObjectID
             array(
                 'VariantOnGenome,Scr2Var,VariantOnTranscript', // Variants on I and S VEs.
                 'Transcript,VariantOnTranscript,VariantOnGenome', // IN_GENE.
+                'Transcript,VariantOnTranscript,VariantOnGenome,Screening,Individual', // LOVD-wide full data view (external viewer).
                 'VariantOnTranscript,VariantOnGenome', // Gene-specific variant view.
                 'VariantOnTranscriptUnique,VariantOnGenome', // Gene-specific unique variant view.
                 'VariantOnTranscript,VariantOnGenome,Screening,Individual', // Gene-specific full data view.
@@ -88,6 +95,8 @@ if ($sObject == 'Custom_ViewList' && (!isset($sObjectID) || !in_array($sObjectID
 if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AUTH['collaborates']))) {
     if ($sObject == 'Column') {
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+    } elseif ($sObject == 'Individual' && isset($_REQUEST['search_genes_searched']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_genes_searched'], $aRegs)) {
+        lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
     } elseif ($sObject == 'Transcript' && isset($_REQUEST['search_geneid']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_geneid'], $aRegs)) {
         lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
     } elseif ($sObject == 'Shared_Column' && isset($_REQUEST['object_id'])) {
@@ -100,25 +109,29 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
 
         // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
         // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
-        if (in_array($sObjectID, array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscriptUnique,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_GET['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_GET['search_transcriptid'], $_GET['id']))->fetchColumn())) {
+        if (in_array($sObjectID, array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscriptUnique,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_REQUEST['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
             die(AJAX_NO_AUTH);
         }
         lovd_isAuthorized('gene', $nID); // Authorize for the gene currently loaded.
     }
 }
 
-// 2016-07-14; 3.0-17; Submitters should not be allowed to retrieve more
-// information about users than the info the access sharing page gives them.
-$aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
-if ($sObject == 'User' && $_AUTH['level'] == LEVEL_SUBMITTER) {
-    // Force removal of certain columns, regardless of this has been requested or not.
-    $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
-}
+
 
 // Require special clearance?
 if ($nNeededLevel && (!$_AUTH || $_AUTH['level'] < $nNeededLevel)) {
     // If not authorized, die with error message.
     die(AJAX_NO_AUTH);
+}
+
+// Load the columns to skip from the request. The external viewer uses this.
+$aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
+
+// Submitters should not be allowed to retrieve more information
+//  about users than the info the access sharing page gives them.
+if ($sObject == 'User' && $_AUTH['level'] < LEVEL_MANAGER) {
+    // Force removal of certain columns, regardless of this has been requested or not.
+    $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
 }
 
 // Managers, and sometimes curators, are allowed to download lists...
@@ -134,6 +147,12 @@ if (FORMAT == 'text/plain' && !defined('FORMAT_ALLOW_TEXTPLAIN')) {
 }
 
 $sFile = ROOT_PATH . 'class/object_' . strtolower($sObject) . 's.php';
+// For revision tables.
+$sFile = str_replace('_revs.php', 's.rev.php', $sFile);
+// Exception for LOVD+.
+if (LOVD_plus && substr($_GET['object'], -3) == 'MOD') {
+    $sFile = str_replace('mods.', 's.mod.', $sFile);
+}
 
 if (!file_exists($sFile)) {
     header('HTTP/1.0 404 Not Found');
@@ -188,6 +207,11 @@ if (POST && ACTION == 'applyFR') {
     die(AJAX_DATA_ERROR);
 }
 
-// Set $bHideNav to false always, since this ajax request could only have been sent if there were navigation buttons.
-$_DATA->viewList($_GET['viewlistid'], $aColsToSkip, (!empty($_GET['nohistory'])? true : false), (!empty($_GET['hidenav'])? true : false), (!empty($_GET['options'])? true : false), (!empty($_GET['only_rows'])? true : false));
+// Show the viewlist.
+// Parameters are assumed to be in $_SESSION, only cols_to_skip can be overridden. This is for the external viewer.
+$aOptions = array();
+if ($aColsToSkip) {
+    $aOptions['cols_to_skip'] = $aColsToSkip;
+}
+$_DATA->viewList($_GET['viewlistid'], $aOptions);
 ?>

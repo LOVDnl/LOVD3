@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-09-08
- * For LOVD    : 3.0-17
+ * Modified    : 2018-03-09
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -29,8 +29,6 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
-
-
 
 function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
 {
@@ -109,6 +107,68 @@ function lovd_calculateVersion ($sVersion)
     } else {
         return false;
     }
+}
+
+
+
+
+
+function lovd_callMutalyzer ($sMethod, $aArgs = array())
+{
+    // Wrapper function to call Mutalyzer's REST+JSON webservice.
+    // Because we have a wrapper, we can implement CURL, which is much faster on repeated calls.
+    global $_CONF;
+
+    // Build URL, regardless of how we'll connect to it.
+    $sURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/' . $sMethod;
+    if ($aArgs) {
+        $i = 0;
+        foreach ($aArgs as $sVariable => $sValue) {
+            $sURL .= ($i? '&' : '?');
+            $i++;
+            $sURL .= $sVariable . '=' . rawurlencode($sValue);
+        }
+    }
+    $sJSONResponse = '';
+
+    if (function_exists('curl_init')) {
+        // Initialize curl connection.
+        static $hCurl;
+
+        if (!$hCurl) {
+            $hCurl = curl_init();
+            curl_setopt($hCurl, CURLOPT_RETURNTRANSFER, true); // Return the result as a string.
+
+            // Set proxy.
+            if ($_CONF['proxy_host']) {
+                curl_setopt($hCurl, CURLOPT_PROXY, $_CONF['proxy_host'] . ':' . $_CONF['proxy_port']);
+                if (!empty($_CONF['proxy_username']) || !empty($_CONF['proxy_password'])) {
+                    curl_setopt($hCurl, CURLOPT_PROXYUSERPWD, $_CONF['proxy_username'] . ':' . $_CONF['proxy_password']);
+                }
+            }
+        }
+
+        curl_setopt($hCurl, CURLOPT_URL, $sURL);
+        $sJSONResponse = curl_exec($hCurl);
+
+    } else {
+        // Backup method, no curl installed. Too bad, we'll do it the "slow" way.
+        $aJSONResponse = lovd_php_file($sURL);
+        if ($aJSONResponse !== false) {
+            $sJSONResponse = implode("\n", $aJSONResponse);
+        }
+    }
+
+
+
+    if ($sJSONResponse) {
+        $aJSONResponse = json_decode($sJSONResponse, true);
+        if ($aJSONResponse !== false) {
+            return $aJSONResponse;
+        }
+    }
+    // Something went wrong...
+    return false;
 }
 
 
@@ -486,6 +546,281 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
+function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
+{
+    // Parses the variant, and returns position fields (2 for genomic variants,
+    //  4 for cDNA variants) and variant type.
+    // This function is basically a local method that's trying to replace the
+    //  MappingInfo feature of Mutalyzer.
+    // $sVariant contains the HGVS nomenclature of the variant.
+    // $sTranscriptID contains the internal ID or NCBI ID of the transcript that
+    //  this variant is on, and is only needed for processing 3' UTR variants,
+    //  like c.*10del, since we'll need to have the CDS stop value for that.
+    global $_DB;
+
+    static $aTranscriptOffsets = array();
+    $aResponse = array(
+        'position_start' => 0,
+        'position_end' => 0,
+        'type' => '',
+    );
+
+    // If given, check if we already know this transcript.
+    if ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
+        $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
+            array($sTranscriptID, $sTranscriptID))->fetchColumn();
+        if (!$aTranscriptOffsets[$sTranscriptID]) {
+            // Transcript not configured correctly.
+            return false;
+        }
+    }
+
+    // Isolate the position(s) from the variant. We don't support combined variants.
+    // We're not super picky, and would therefore approve of c.1_2A>C; we also
+    //  don't check for the end of the variant, it may contain bases, or not.
+    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+        //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
+        //                       2 = Start position, might be negative or in the 3' UTR.
+        //                                   3 = Start position intronic offset, if available.
+        //                                                        4 = End position, might be negative or in the 3' UTR.
+        //                                                                    5 = End position intronic offset, if available.
+        //                                                                                       6 = The variant, which we'll use to determine the type.
+
+        list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant) = $aRegs;
+        if ($sPrefix != 'c' && $sPrefix != 'n') {
+            if ($sStartPositionIntron || $sEndPositionIntron) {
+                // Anything not c. or n. is regarded genomic, having a max of 2 positions.
+                // Found more positions? Return false.
+                return false;
+            } elseif (!ctype_digit($sStartPosition) || ($sEndPosition && !ctype_digit($sEndPosition))) {
+                // Non-numeric first character of the main positions is also impossible for genomic variants.
+                return false;
+            }
+        }
+
+        // Convert 3' UTR notations into normal notations.
+        if ($sStartPosition{0} == '*' || ($sEndPosition && $sEndPosition{0} == '*')) {
+            // Check if a transcript ID has been provided.
+            if (!$sTranscriptID) {
+                // No, but we'll need it.
+                return false;
+            }
+
+            // Translate positions.
+            if ($sStartPosition{0} == '*') {
+                $sStartPosition = substr($sStartPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+            }
+            if ($sEndPosition && $sEndPosition{0} == '*') {
+                $sEndPosition = substr($sEndPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+            }
+        }
+
+        // Store positions.
+        $aResponse['position_start'] = $sStartPosition;
+        $aResponse['position_end'] = ($sEndPosition? $sEndPosition : $sStartPosition);
+
+        // And intronic, if needed.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            // Interpret ? positions as intronic position 1, which is more correct than 0,
+            // which makes them look like exonic variants and may also result in different variants.
+            // Simplest to just do a str_replace().
+            $sStartPositionIntron = str_replace('?', '1', $sStartPositionIntron);
+            $sEndPositionIntron = str_replace('?', '1', $sEndPositionIntron);
+
+            // (int) to get rid of the '+' if it's there.
+            $aResponse['position_start_intron'] = (int) $sStartPositionIntron;
+            $aResponse['position_end_intron'] = (int) ($sEndPosition? $sEndPositionIntron : $sStartPositionIntron);
+        }
+
+
+
+    // If that didn't work, try matching variants with uncertain positions.
+    // We're not super picky, and don't check the end of the variant.
+    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(d(el|up)|(inv|ins))/', $sVariant, $aRegs)) {
+        //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
+        //                               2 = Earliest start position, might be a question mark.
+        //                                              3 = Earlier start position intronic offset, if available.
+        //                                                                4 = Latest start position, might be a question mark.
+        //                                                                               5 = Latest start position intronic offset, if available.
+        //                                                                                                     6 = Earliest end position, might be a question mark.
+        //                                                                                                                    7 = Earliest end position intronic offset, if available.
+        //                                                                                                                                      8 = Latest end position, might be a question mark.
+        //                                                                                                                                                     9 = Latest end position intronic offset, if available.
+        //                                                                                                                                                                        10 = The variant, which we'll use to determine the type.
+
+        list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
+
+        // Always at least create the intron fields for c. and n. variants.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            $aResponse['position_start_intron'] = $aResponse['position_end_intron'] = 0;
+        } else {
+            // Genomic coordinates.
+            if ($sStartPositionEarlyIntron || $sStartPositionLateIntron || $sEndPositionEarlyIntron || $sEndPositionLateIntron) {
+                // Anything not c. or n. is regarded genomic, having a max of 2 positions.
+                // Found more positions? Return false.
+                return false;
+            } elseif (
+                (!ctype_digit($sStartPositionEarly) && $sStartPositionEarly != '?' ) ||
+                (!ctype_digit($sStartPositionLate) && $sStartPositionLate != '?') ||
+                (!ctype_digit($sEndPositionEarly) && $sEndPositionEarly != '?') ||
+                (!ctype_digit($sEndPositionLate) && $sEndPositionLate != '?')) {
+                // Non-numeric first character of the positions (- or *) is also impossible for genomic variants.
+                return false;
+            }
+        }
+
+        // Convert 3' UTR notations into normal notations.
+        if ($sStartPositionEarly{0} == '*' || $sStartPositionLate{0} == '*' || $sEndPositionEarly{0} == '*' || $sEndPositionLate{0} == '*') {
+            // Check if a transcript ID has been provided.
+            if (!$sTranscriptID) {
+                // No, but we'll need it.
+                return false;
+            }
+
+            // Translate positions.
+            foreach (array('sStartPositionEarly', 'sStartPositionLate', 'sEndPositionEarly', 'sEndPositionLate') as $sPosition) {
+                if (substr($$sPosition, 0, 1) == '*') {
+                    $$sPosition = substr($$sPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+                }
+            }
+        }
+
+        // Store positions.
+        // FIXME: The handling of the start and end positions are so similar,
+        //  we can group the code with a loop, if we rewrite all variable names.
+        // If each position (start, end) has two numeric positions, we choose the
+        //  average of the two positions. Otherwise, we pick the numeric one.
+        // We do require at least one numeric start position and one numeric end position.
+        if (is_numeric($sStartPositionEarly) && is_numeric($sStartPositionLate)) {
+            // Calculate the average...
+            if ($sStartPositionEarly == $sStartPositionLate) {
+                // Positions are equal, so average the intronic positions if they're there.
+                $aResponse['position_start'] = $sStartPositionEarly;
+                if ($sStartPositionEarlyIntron || $sStartPositionLateIntron) {
+                    $aResponse['position_start_intron'] = (string) round(($sStartPositionEarlyIntron + $sStartPositionLateIntron) / 2);
+                }
+            } else {
+                $aResponse['position_start'] = (string) round(($sStartPositionEarly + $sStartPositionLate) / 2);
+                // In the unlikely case the average would be 0, pick 1.
+                if (!$aResponse['position_start']) {
+                    $aResponse['position_start'] = '1';
+                }
+            }
+        } elseif (is_numeric($sStartPositionEarly)) {
+            $aResponse['position_start'] = $sStartPositionEarly;
+            if ($sStartPositionEarlyIntron) {
+                $aResponse['position_start_intron'] = $sStartPositionEarlyIntron;
+            }
+        } elseif (is_numeric($sStartPositionLate)) {
+            $aResponse['position_start'] = $sStartPositionLate;
+            if ($sStartPositionLateIntron) {
+                $aResponse['position_start_intron'] = $sStartPositionLateIntron;
+            }
+        } else {
+            // Two non-numeric positions. Reject this variant.
+            return false;
+        }
+        if (is_numeric($sEndPositionEarly) && is_numeric($sEndPositionLate)) {
+            // Calculate the average...
+            if ($sEndPositionEarly == $sEndPositionLate) {
+                // Positions are equal, so average the intronic positions if they're there.
+                $aResponse['position_end'] = $sEndPositionEarly;
+                if ($sEndPositionEarlyIntron || $sEndPositionLateIntron) {
+                    $aResponse['position_end_intron'] = (string) round(($sEndPositionEarlyIntron + $sEndPositionLateIntron) / 2);
+                }
+            } else {
+                $aResponse['position_end'] = (string) round(($sEndPositionEarly + $sEndPositionLate) / 2);
+                // In the unlikely case the average would be 0, pick 1.
+                if (!$aResponse['position_end']) {
+                    $aResponse['position_end'] = '1';
+                }
+            }
+        } elseif (is_numeric($sEndPositionEarly)) {
+            $aResponse['position_end'] = $sEndPositionEarly;
+            if ($sEndPositionEarlyIntron) {
+                $aResponse['position_end_intron'] = $sEndPositionEarlyIntron;
+            }
+        } elseif (is_numeric($sEndPositionLate)) {
+            $aResponse['position_end'] = $sEndPositionLate;
+            if ($sEndPositionLateIntron) {
+                $aResponse['position_end_intron'] = $sEndPositionLateIntron;
+            }
+        } else {
+            // Two non-numeric positions. Reject this variant.
+            return false;
+        }
+
+    } else {
+        return false;
+    }
+
+
+
+    // If a variant is described poorly with a start > end, then we'll swap the positions so we will store them correctly.
+    if ($aResponse['position_start'] > $aResponse['position_end']) {
+        // There's many ways of doing this, but this method is the simplest to read.
+        $nTmp = $aResponse['position_start'];
+        $aResponse['position_start'] = $aResponse['position_end'];
+        $aResponse['position_end'] = $nTmp;
+
+        // And intronic, if needed.
+        if ($sPrefix == 'c' || $sPrefix == 'n') {
+            $nTmp = $aResponse['position_start_intron'];
+            $aResponse['position_start_intron'] = $aResponse['position_end_intron'];
+            $aResponse['position_end_intron'] = $nTmp;
+        }
+    }
+
+    // Variant type.
+    if (preg_match('/^[ACGT]>[ACGT]$/', $sVariant)) {
+        $aResponse['type'] = 'subst';
+    } else {
+        $aResponse['type'] = $sVariant;
+    }
+
+    // When strict SQL mode is enabled, we'll get errors when we'll try and
+    //  insert large numbers in the position fields.
+    // Check the positions we extracted; the variant could be described badly,
+    //  and this could cause a query error.
+    // Rather, fix the position fields to their respective maximum values.
+    static $aMinMaxValues = array(
+        'g' => array(
+            'position_start' => array(1, 4294967295),
+            'position_end' => array(1, 4294967295),
+        ),
+        'm' => array(
+            'position_start' => array(1, 4294967295),
+            'position_end' => array(1, 4294967295),
+        ),
+        'c' => array(
+            'position_start' => array(-8388608, 8388607),
+            'position_start_intron' => array(-2147483648, 2147483647),
+            'position_end' => array(-8388608, 8388607),
+            'position_end_intron' => array(-2147483648, 2147483647),
+        ),
+        'n' => array(
+            'position_start' => array(1, 8388607),
+            'position_start_intron' => array(-2147483648, 2147483647),
+            'position_end' => array(1, 8388607),
+            'position_end_intron' => array(-2147483648, 2147483647),
+        ),
+    );
+
+    if (isset($aMinMaxValues[$sPrefix])) {
+        // If the min and max values are defined for this prefix, check the fields.
+        foreach ($aMinMaxValues[$sPrefix] as $sField => $aMinMaxValue) {
+            $aResponse[$sField] = max($aResponse[$sField], $aMinMaxValue[0]);
+            $aResponse[$sField] = min($aResponse[$sField], $aMinMaxValue[1]);
+        }
+    }
+
+    return $aResponse;
+}
+
+
+
+
+
 function lovd_getProjectFile ()
 {
     // Gets project file name (file name including possible project subdirectory).
@@ -501,6 +836,64 @@ function lovd_getProjectFile ()
     // You need to use SCRIPT_FILENAME here, because SCRIPT_NAME can lose the .php extension.
     $sProjectFile = $sDir . basename($_SERVER['SCRIPT_FILENAME']); // /install/index.php  or /variants.php
     return $sProjectFile;
+}
+
+
+
+
+
+function lovd_getTableInfoByCategory ($sCategory)
+{
+    // Returns information on the LOVD table that holds the data for this given
+    // custom column category.
+
+    $aTables =
+        array(
+            'Individual' =>
+                array(
+                    'table_sql' => TABLE_INDIVIDUALS,
+                    'table_name' => 'Individual',
+                    'table_alias' => 'i',
+                    'shared' => false,
+                    'unit' => '',
+                ),
+            'Phenotype' =>
+                array(
+                    'table_sql' => TABLE_PHENOTYPES,
+                    'table_name' => 'Phenotype',
+                    'table_alias' => 'p',
+                    'shared' => true,
+                    'unit' => 'disease', // Is also used to determine the key (diseaseid).
+                ),
+            'Screening' =>
+                array(
+                    'table_sql' => TABLE_SCREENINGS,
+                    'table_name' => 'Screening',
+                    'table_alias' => 's',
+                    'shared' => false,
+                    'unit' => '',
+                ),
+            'VariantOnGenome' =>
+                array(
+                    'table_sql' => TABLE_VARIANTS,
+                    'table_name' => 'Genomic Variant',
+                    'table_alias' => 'vog',
+                    'shared' => false,
+                    'unit' => '',
+                ),
+            'VariantOnTranscript' =>
+                array(
+                    'table_sql' => TABLE_VARIANTS_ON_TRANSCRIPTS,
+                    'table_name' => 'Transcript Variant',
+                    'table_alias' => 'vot',
+                    'shared' => true,
+                    'unit' => 'gene', // Is also used to determine the key (geneid).
+                ),
+        );
+    if (!array_key_exists($sCategory, $aTables)) {
+        return false;
+    }
+    return $aTables[$sCategory];
 }
 
 
@@ -559,7 +952,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     // Check data type.
     if (!$Data) {
         return false;
-    } elseif (!in_array($sType, array('user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening'))) {
+    } elseif (!in_array($sType, array('analysisrun', 'user', 'gene', 'disease', 'transcript', 'variant', 'individual', 'phenotype', 'screening', 'screening_analysis'))) {
         lovd_writeLog('Error', 'LOVD-Lib', 'lovd_isAuthorized() - Function didn\'t receive a valid datatype (' . $sType . ').');
         return false;
     }
@@ -572,7 +965,10 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         } else {
             // If viewing himself, always get authorization.
             if ($Data == $_AUTH['id']) {
-                return 1; // FIXME: We're not supporting $bSetUserLevel at the moment (not required right now, either).
+                if ($bSetUserLevel && $_AUTH['level'] < LEVEL_OWNER) {
+                    $_AUTH['level'] = LEVEL_OWNER;
+                }
+                return 1;
             } elseif ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Lower than managers never get access to hidden data of other users.
                 return false;
@@ -607,6 +1003,44 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             }
             return $Auth;
         }
+    }
+
+    if (LOVD_plus && $sType == 'analysisrun') {
+        // Authorization based on person who started the analysis run (note, not necessarily the whole analysis).
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            $nCreatorID = $_DB->query('SELECT created_by FROM ' . TABLE_ANALYSES_RUN . ' WHERE id = ?', array($Data))->fetchColumn();
+            if ($_AUTH['level'] >= LEVEL_ANALYZER && $nCreatorID == $_AUTH['id']) {
+                // At least Analyzer (Managers don't get to this point).
+                if ($bSetUserLevel) {
+                    $_AUTH['level'] = LEVEL_OWNER;
+                }
+                return 1;
+            }
+        }
+        return false;
+
+    } elseif (LOVD_plus && $sType == 'screening_analysis') {
+        // Authorization based on not being analyzed, or analysis being started by $_AUTH['id'].
+        if (is_array($Data)) {
+            // Not supported on this data type.
+            return false;
+        } else {
+            $z = $_DB->query('SELECT analysis_statusid, analysis_by FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($Data))->fetchAssoc();
+            if ($_AUTH['level'] >= LEVEL_ANALYZER) {
+                // At least Analyzer (Managers don't get to this point).
+                if ($z['analysis_by'] == $_AUTH['id'] ||
+                    ($z['analysis_by'] === NULL && $z['analysis_statusid'] == ANALYSIS_STATUS_READY)) {
+                    if ($bSetUserLevel) {
+                        $_AUTH['level'] = LEVEL_OWNER;
+                    }
+                    return 1;
+                }
+            }
+        }
+        return false;
     }
 
     // Makes it easier to check the data.
@@ -645,7 +1079,14 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
         return 1;
     }
 
-    $bOwner = lovd_isOwner($sType, $Data);
+    if (LOVD_plus && $sType == 'variant') {
+        // LOVD+ allows LEVEL_OWNER authorization based on ownership of the screening analysis.
+        // We dump in multiple variants, but we should really only get one Screening back.
+        $aScreeningIDs = $_DB->query('SELECT DISTINCT screeningid FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($Data) - 1) . ')', $Data)->fetchAllColumn();
+        $bOwner = lovd_isAuthorized('screening_analysis', $aScreeningIDs[0], false);
+    } else {
+        $bOwner = lovd_isOwner($sType, $Data);
+    }
     if (($bOwner || lovd_isColleagueOfOwner($sType, $Data, true)) && $_CONF['allow_submitter_mods']) {
         if ($bSetUserLevel) {
             $_AUTH['level'] = LEVEL_OWNER;
@@ -792,8 +1233,30 @@ function lovd_magicUnquoteAll ()
 
 
 
+function lovd_mapCodeToDescription ($aCodes, $aMaps)
+{
+    // Takes an array $aCodes and maps all values using the $aMaps array.
+    // Values not found in $aMaps are not changed in $aCodes.
+
+    if (is_array($aCodes) && !empty($aCodes)) {
+        foreach ($aCodes as $nKey => $sCode) {
+            if (isset($aMaps[$sCode])) {
+                $aCodes[$nKey] = $aMaps[$sCode];
+            }
+        }
+    }
+
+    return $aCodes;
+}
+
+
+
+
+
 function lovd_parseConfigFile($sConfigFile)
 {
+    // Parses the given config file, checks all values, and returns array with parsed settings.
+
     // Config file exists?
     if (!file_exists($sConfigFile)) {
         lovd_displayError('Init', 'Can\'t find config.ini.php');
@@ -808,6 +1271,7 @@ function lovd_parseConfigFile($sConfigFile)
     if (!$aConfig = file($sConfigFile)) {
         lovd_displayError('Init', 'Can\'t open config.ini.php');
     }
+
 
 
     // Parse config file.
@@ -892,7 +1356,61 @@ function lovd_parseConfigFile($sConfigFile)
                             'pattern'  => '/^[A-Z0-9_]+$/i',
                         ),
                 ),
+            'paths' =>
+                array(
+                    'data_files' =>
+                        array(
+                            'required' => LOVD_plus,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
+                        ),
+                    'data_files_archive' =>
+                        array(
+                            'required' => false,
+                            'path_is_readable' => true,
+                            'path_is_writable' => true,
+                        ),
+                ),
         );
+
+    if (LOVD_plus) {
+        // Configure data file paths.
+        $aConfigValues['paths'] = array(
+            'data_files' =>
+                array(
+                    'required' => true,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+            'data_files_archive' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+            'alternative_ids' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => false,
+                ),
+            'confirm_variants' =>
+                array(
+                    'required' => false,
+                    'path_is_readable' => true,
+                    'path_is_writable' => true,
+                ),
+        );
+
+        // Configure instance details.
+        $aConfigValues['instance'] = array(
+            'name' =>
+                array(
+                    'required' => false,
+                    'default'  => '',
+                ),
+        );
+    }
 
     // SQLite doesn't need an username and password...
     if (isset($_INI['database']['driver']) && $_INI['database']['driver'] == 'sqlite') {
@@ -911,6 +1429,9 @@ function lovd_parseConfigFile($sConfigFile)
                 } elseif (isset($aVar['required']) && $aVar['required']) {
                     // No default value, required setting not filled in.
                     lovd_displayError('Init', 'Error parsing config file: missing required value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
+                } elseif (!isset($_INI[$sSection][$sVar])){
+                    // Add the setting to the $_INI array to avoid notices.
+                    $_INI[$sSection][$sVar] = false;
                 }
 
             } else {
@@ -926,6 +1447,16 @@ function lovd_parseConfigFile($sConfigFile)
                         // Error: a value list is available, but it doesn't match the input!
                         lovd_displayError('Init', 'Error parsing config file: incorrect value for setting \'' . $sVar . '\' in section [' . $sSection . ']');
                     }
+                }
+
+                // For paths, check readability or writability.
+                if (!empty($aVar['path_is_readable']) && !is_readable($_INI[$sSection][$sVar])) {
+                    // Error: The path should be readable, but it's not!
+                    lovd_displayError('Init', 'Error parsing config file: path for \'' . $sVar . '\' in section [' . $sSection . '] is not readable.');
+                }
+                if (!empty($aVar['path_is_writable']) && !is_writable($_INI[$sSection][$sVar])) {
+                    // Error: The path should be writable, but it's not!
+                    lovd_displayError('Init', 'Error parsing config file: path for \'' . $sVar . '\' in section [' . $sSection . '] is not writable.');
                 }
             }
         }
@@ -958,8 +1489,8 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
     // Use the simple file() method, only if:
     // - We're working with local files, OR:
     // - We're using HTTPS (because our fsockopen() currently doesn't support that, let's hope allow_url_fopen is on), OR:
-    // - Fopen wrappers are on AND we're NOT using POST (because POST doesn't work for now).
-    if (substr($sURL, 0, 4) != 'http' || substr($sURL, 0, 5) == 'https' || (ini_get('allow_url_fopen') && !$sPOST)) {
+    // - Fopen wrappers are on.
+    if (substr($sURL, 0, 4) != 'http' || substr($sURL, 0, 5) == 'https' || ini_get('allow_url_fopen')) {
         // Normal file() is fine.
         $aOptions = array(
             'http' => array(
@@ -968,6 +1499,13 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
                 'user_agent' => 'LOVDv.' . $_SETT['system']['version'],
             ),
         );
+
+        if ($sPOST) {
+            // Add POST content to HTTP options and headers.
+            $aOptions['http']['content'] = $sPOST;
+            array_unshift($aOptions['http']['header'], 'Content-Type: application/x-www-form-urlencoded');
+        }
+
         // If we're connecting through a proxy, we need to set some additional information.
         if ($_CONF['proxy_host']) {
             $aOptions['http']['proxy'] = 'tcp://' . $_CONF['proxy_host'] . ':' . $_CONF['proxy_port'];
@@ -1035,6 +1573,22 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
     } else {
         return(array($aHeaders, $aOutput));
     }
+}
+
+
+
+
+
+function lovd_php_gethostbyaddr ($sIP)
+{
+    // LOVD's gethostbyaddr implementation, that easily turns off all DNS lookups if offline.
+    if (!defined('OFFLINE_MODE') && OFFLINE_MODE) {
+        // We're offline. Don't do lookups.
+        return $sIP;
+    }
+
+    // Else, do a lookup.
+    return gethostbyaddr($sIP);
 }
 
 
@@ -1257,10 +1811,25 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
         $sWidth = '100%';
     }
 
-    print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
-          '        <TR>' . "\n" .
-          '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
-          '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE>' . (!$bBR? '' : '<BR>') . "\n\n");
+    switch (FORMAT) {
+        case 'text/plain':
+            // We're ignoring the $sWidth here.
+            $nWidth = 100;
+            $sSeparatorLine = '+' . str_repeat('-', $nWidth - 2) . '+';
+            $aMessage = explode("\n", wordwrap($sMessage, $nWidth - 4));
+            $aMessage = array_map('str_pad', $aMessage, array_fill(0, count($aMessage), $nWidth - 4));
+            print($sSeparatorLine . "\n" .
+                  '| ' . str_pad($aTypes[$sType], $nWidth - 4, ' ') . ' |' . "\n" .
+                  $sSeparatorLine . "\n" .
+                  '| ' . implode(" |\n| ", $aMessage) . ' |' . "\n" .
+                  $sSeparatorLine . (!$bBR? '' : "\n") . "\n");
+            break;
+        default:
+            print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
+                  '        <TR>' . "\n" .
+                  '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
+                  '          <TD valign="middle">' . $sMessage . '</TD></TR></TABLE>' . (!$bBR? '' : '<BR>') . "\n\n");
+    }
 }
 
 
@@ -1282,11 +1851,23 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '<UL id="viewentryMenu_' . $sID . '" class="jeegoocontext jeegooviewlist">' . "\n");
     foreach ($aOptions as $sURL => $aLink) {
         list($sIMG, $sName, $bShown) = $aLink;
+        $sSubMenu = '';
+        if (!empty($aLink['sub_menu'])) {
+            // Allow for one level of sub menus.
+            $sSubMenu = "\n" . $sPrefix . '    <UL>' . "\n";
+            foreach ($aLink['sub_menu'] as $sSubURL => $aSubMenu) {
+                list($sSubIMG, $sSubName) = $aSubMenu;
+                $sSubMenu .= $sPrefix . '      <LI' . (!$sSubIMG? '' : ' class="icon"') . '><A ' . (substr($sSubURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . lovd_getInstallURL(false)) . ltrim($sSubURL, '/') . '">' .
+                    (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sSubIMG . ');"></SPAN>') . $sSubName .
+                    '</A></LI>' . "\n";
+            }
+            $sSubMenu .= $sPrefix . '    </UL>' . "\n  " . $sPrefix;
+        }
         if ($bShown) {
             // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
-            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . lovd_getInstallURL(false)) . ltrim($sURL, '/') . '">' .
+            print($sPrefix . '  <LI' . (!$sIMG? '' : ' class="icon"') . '><A ' . (substr($sURL, 0, 11) == 'javascript:'? 'click="' : 'href="' . ($sSubMenu? '' : lovd_getInstallURL(false))) . ($sSubMenu? '' : ltrim($sURL, '/')) . '">' .
                                 (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . $sIMG . ');"></SPAN>') . $sName .
-                                '</A></LI>' . "\n");
+                                '</A>' . $sSubMenu . '</LI>' . "\n");
         } else {
             print($sPrefix . '  <LI class="disabled' . (!$sIMG? '' : ' icon') . '">' . (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . preg_replace('/(\.[a-z]+)$/', '_disabled' . "$1", $sIMG) . ');"></SPAN>') . $sName . '</LI>' . "\n");
         }
@@ -1298,7 +1879,7 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '      event: "click",' . "\n" .
           $sPrefix . '      openBelowContext: true,' . "\n" .
           $sPrefix . '      autoHide: true,' . "\n" .
-          $sPrefix . '      delay: 1000,' . "\n" .
+          $sPrefix . '      delay: 100,' . "\n" .
           $sPrefix . '      onSelect: function(e, context) {' . "\n" .
           $sPrefix . '        if ($(this).hasClass("disabled")) {' . "\n" .
           $sPrefix . '          return false;' . "\n" .
@@ -1317,50 +1898,6 @@ function lovd_showJGNavigation ($aOptions, $sID, $nPrefix = 3)
           $sPrefix . '    $(\'#viewentryOptionsButton_' . $sID . '\').jeegoocontext(\'viewentryMenu_' . $sID . '\', aMenuOptions);' . "\n" .
           $sPrefix . '  });' . "\n" .
           $sPrefix . '</SCRIPT>' . "\n\n");
-}
-
-
-
-
-
-function lovd_soapError ($e, $bHalt = true)
-{
-    // Formats SOAP errors for the error log, and optionally halts the system.
-
-    if (!is_object($e)) {
-        return false;
-    }
-
-    // Try to detect if arguments have been passed, and isolate them from the stacktrace.
-    $sMethod = '';
-    $sArgs = '';
-    foreach ($e->getTrace() as $aTrace) {
-        if (isset($aTrace['function']) && $aTrace['function'] == '__call') {
-            // This is the low level SOAP call. Isolate used method and arguments from here.
-            list($sMethod, $aArgs) = $aTrace['args'];
-            if ($aArgs && is_array($aArgs) && isset($aArgs[0])) {
-                $aArgs = $aArgs[0]; // Not sure why the call's argument are in a sub array, but oh, well.
-                foreach ($aArgs as $sArg => $sValue) {
-                    $sArgs .= (!$sArgs? '' : "\n") . "\t\t" . $sArg . ':' . $sValue;
-                }
-            }
-            break;
-        }
-    }
-
-    // Format the error message.
-    $sError = preg_replace('/^' . preg_quote(rtrim(lovd_getInstallURL(false), '/'), '/') . '/', '', $_SERVER['REQUEST_URI']) . ' returned error in module \'' . $sMethod . '\'.' . "\n" .
-        (!$sArgs? '' : 'Arguments:' . "\n" . $sArgs . "\n") .
-        'Error message:' . "\n" .
-        str_replace("\n", "\n\t\t", $e->__toString());
-
-    // If the system needs to be halted, send it through to lovd_displayError() who will print it on the screen,
-    // write it to the system log, and halt the system. Otherwise, just log it to the database.
-    if ($bHalt) {
-        return lovd_displayError('SOAP', $sError);
-    } else {
-        return lovd_writeLog('Error', 'SOAP', $sError);
-    }
 }
 
 
@@ -1410,31 +1947,6 @@ function lovd_validateIP ($sRange, $sIP)
 
 
 
-/*
-DMD_SPECIFIC
-function lovd_variantToPosition ($sVariant)
-{
-    // 2009-09-28; 2.0-22; Added function for API.
-    // Calculates the variant's position based on the variant description.
-    // Outputs c. positions with c. variants and g. positions with g.variants.
-
-    // Remove first character(s) after c./g. which are: [(?
-    $sPosition = preg_replace('/^(c\.|g\.)([[(?]*)/', "$1", $sVariant);
-    $sPosition = preg_replace('/^((c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?).*//*', "$1", $sPosition); ///////// CHANGED TEMPORARILY ADDED /*
-
-    // Final check; does it conform to our output?
-    if (!preg_match('/^(c\.|g\.)(\*|\-)?[0-9]+([-+][0-9?]+)?(_(\*|\-)?[0-9]+([-+][0-9?]+)?)?$/', $sPosition)) {
-        $sPosition = '';
-    }
-
-    return $sPosition;
-}
-*/
-
-
-
-
-
 function lovd_verifyPassword ($sPassword, $sOriHash)
 {
     // Verifies a password given a certain hash. This hash is usually taken from
@@ -1458,7 +1970,7 @@ function lovd_verifyPassword ($sPassword, $sOriHash)
 
 
 
-function lovd_writeLog ($sLog, $sEvent, $sMessage)
+function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
 {
     // Based on a function provided by Ileos.nl in the interest of Open Source.
     // Writes timestamps and messages to given log in the database.
@@ -1474,7 +1986,8 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage)
     $sTime = substr($aTime[0], 2, -2);
 
     // Insert new line in logs table.
-    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)', array($sLog, $sTime, ($_AUTH['id']? $_AUTH['id'] : NULL), $sEvent, $sMessage), false);
+    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
+        array($sLog, $sTime, ($nAuthID? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 
@@ -1501,5 +2014,52 @@ function lovd_convertIniValueToBytes ($sValue)
     }
 
     return $nValue;
+}
+
+
+
+
+
+function lovd_convertSecondsToTime ($sValue, $nDecimals = 0, $bVerbose = false)
+{
+    // This function takes a number of seconds and converts it into whole
+    // minutes, hours, days, months or years.
+    // $nDecimals indicates the number of decimals to use in the returned value.
+    // $bVerbose defines whether to use short notation (s, m, h, d, y) or long notation
+    //   (seconds, minutes, hours, days, years).
+    // FIXME; Implement proper checks here? Regexp?
+
+    $nValue = (int) $sValue;
+    if (ctype_digit((string) $sValue)) {
+        $sValue .= 's';
+    }
+    $sLast = strtolower(substr($sValue, -1));
+    $nDecimals = (int) $nDecimals;
+
+    $aConversion =
+        array(
+            's' => array(60, 'm', 'second'),
+            'm' => array(60, 'h', 'minute'),
+            'h' => array(24, 'd', 'hour'),
+            'd' => array(265, 'y', 'day'),
+            'y' => array(100, 'c', 'year'),
+            'c' => array(100, '', 'century'), // Above is not supported.
+        );
+
+    foreach ($aConversion as $sUnit => $aConvert) {
+        list($nFactor, $sNextUnit) = $aConvert;
+        if ($sLast == $sUnit && $nValue > $nFactor) {
+            $nValue /= $nFactor;
+            $sLast = $sNextUnit;
+        }
+    }
+
+    $nValue = round($nValue, $nDecimals);
+    if ($bVerbose) {
+        // Make it "3 years" instead of "3y".
+        return $nValue . ' ' . $aConversion[$sLast][2] . ($nValue == 1? '' : 's');
+    } else {
+        return $nValue . $sLast;
+    }
 }
 ?>

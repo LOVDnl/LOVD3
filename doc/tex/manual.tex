@@ -5,7 +5,7 @@
 % To convert the manual to an html file use: pdf2htmlEX --zoom 1.3 --embed-css 2 manual.pdf
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-17}
+\setLOVDversion{3.0-22}
 \title{LOVD 3.0 user manual \\\vskip 0.2cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \setpointercolor{red}
@@ -61,7 +61,7 @@ With the official release of LOVD in 2004 the system had become much more dynami
 
 In 2004, LOVD became available under the open source license GPL and with the 1.1.0 release most of the text-files had been replaced by online forms
 so customizations can be performed through the web interface.
-Early in 2005 the \href{http://www.ncbi.nlm.nih.gov/pubmed/15977173}{first LOVD article} was published,
+Early in 2005 the \href{https://www.ncbi.nlm.nih.gov/pubmed/15977173}{first LOVD article} was published,
 and in 2005 the development of LOVD was more targeted at improving the ease of use of the system.
 \vskip \baselineskip
 
@@ -74,7 +74,7 @@ With more features being added and bugs fixed rapidly, LOVD 2.0 reached beta sta
 after which more and more users started to upgrade their 1.1.0 databases to 2.0.
 Finally, in October 2007 LOVD 2.0 reached the stable stage, after which LOVD 2.0 was continuously improved with monthly releases for two years,
 after which the releases became less frequent.
-LOVD 2.0 is described in the \href{http://www.ncbi.nlm.nih.gov/pubmed/21520333}{second LOVD paper}.
+LOVD 2.0 is described in the \href{https://www.ncbi.nlm.nih.gov/pubmed/21520333}{second LOVD paper}.
 \vskip \baselineskip
 
 By 2009 it had became clear that although LOVD 2.0 was a great step forward, there were still key improvements to be made.
@@ -195,7 +195,7 @@ Some more advanced examples:\\
   \begin{shaded}
     \frame{\includegraphics[width=0.95\linewidth]{gene_menu.png}}
     \centering
-  	\caption{Gene menu.}
+    \caption{Gene menu.}
   \end{shaded}
 \end{wrapfigure}
 When no gene is selected, the default page of the genes tab shows all genes.
@@ -204,11 +204,11 @@ When a gene is selected (shown in the page header), the default page of the gene
 
 \begin{description}
   \item[View all genes] \hfill \\
-  Here you can see all the genes for this installation. 
+  Here you can see all the genes for this installation.
   When you click on a gene entry, you're taken to the gene homepage.
   \item[View gene homepage] \hfill \\
   Here you can see the details of a gene.
-  For more information, see section ``\hyperlink{sec:gene_homepage}{\nameref{sec:gene_homepage}}''.
+  For more information, see section ``\nameref{sec:gene_homepage}''.
   This menu item is not available when no gene has been selected.
 \end{description}
 
@@ -219,7 +219,7 @@ When a gene is selected (shown in the page header), the default page of the gene
   This menu item is not available when no gene has been selected.
   \item[Create a new gene entry] \hfill \\
   This menu item is only available for Managers or higher.
-  See section ``\hyperlink{sec:gene_create}{\nameref{sec:gene_create}}'' on how to add a new gene.
+  See section ``\nameref{sec:gene_create}'' on how to add a new gene.
 \end{description}
 
 
@@ -250,8 +250,7 @@ When a gene is selected (shown in the page header),
   This menu item is not available when no gene has been selected.
   \item [Create a new transcript information entry] \hfill \\
   This menu item is only available for Curators or higher.
-  See section ``\hyperlink{sec:transcript_create}{\nameref{sec:transcript_create}}''
-   on how to add a new transcript to a gene.
+  See section ``\nameref{sec:transcript_create}'' on how to add a new transcript to a gene.
   \item [Transcript detailed view] \hfill \\
   When clicking a transcript from one of the transcript data listings, the transcript's details are shown.
   Below the transcript's details, a variant listing is shown of all variants found on this transcript.
@@ -309,14 +308,13 @@ When a gene is selected (shown in the page header),
   This menu item is not available when no gene has been selected.
   \item [Create a new data submission] \hfill \\
   This menu item is only available when logged in.
-  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  See chapter ``\nameref{chap:add_data}'' on how to create a new data submission.
   \item [View active genomic custom columns] \hfill \\
   This menu item is only available for Managers or higher.
-  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  See chapter ``\nameref{chap:custom_columns}'' for more information on custom columns.
   \item [Enable more genomic custom columns] \hfill \\
   This menu item is only available for Managers or higher.
-  See section ``\hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}}''
-   on how to enable custom columns.
+  See section ``\nameref{sec:enabling_custom_columns}'' on how to enable custom columns.
   \item [Variant detailed view] \hfill \\
   When clicking on a variant from one of the variant data listings, its details are shown.
   If the variant is affecting any transcripts, a listing is shown below the variant's genomic details.
@@ -357,14 +355,13 @@ When a gene is selected (shown in the page header),
 \begin{description}
   \item [Create a new data submission] \hfill \\
   This menu item is only available when logged in.
-  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  See chapter ``\nameref{chap:add_data}'' on how to create a new data submission.
   \item [View active custom columns] \hfill \\
   This menu item is only available for Managers or higher.
-  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  See chapter ``\nameref{chap:custom_columns}'' for more information on custom columns.
   \item [Enable more custom columns] \hfill \\
   This menu item is only available for Managers or higher.
-  See section ``\hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}}''
-   on how to enable custom columns.
+  See section ``\nameref{sec:enabling_custom_columns}'' on how to enable custom columns.
   \item [Individual detailed view] \hfill \\
   When clicking on an individual from one of the data listings, the individual's details are shown.
   Below the individual's details, the phenotype entries are shown if any are stored.
@@ -382,7 +379,7 @@ When a gene is selected (shown in the page header),
   \begin{shaded}
     \frame{\includegraphics[width=0.95\linewidth]{disease_menu.png}}
     \centering
-	\caption{Diseases menu.}
+    \caption{Diseases menu.}
   \end{shaded}
 \end{wrapfigure}
 When no gene is selected, the default page of the diseases tab shows all diseases.
@@ -405,10 +402,10 @@ When a gene is selected (shown in the page header),
 \begin{description}
   \item [Create a new data submission] \hfill \\
   This menu item is only available when logged in.
-  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  See chapter ``\nameref{chap:add_data}'' on how to create a new data submission.
   \item [View available phenotype columns] \hfill \\
   This menu item is only available for Curators or higher.
-  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  See chapter ``\nameref{chap:custom_columns}'' for more information on custom columns.
   \item [Disease detailed view] \hfill \\
   On the disease's detailed view, all individuals diagnosed with this disease are listed.
   From the table, a link is provided to view all phenotype entries for this disease.
@@ -430,29 +427,25 @@ When a gene is selected (shown in the page header),
 When no gene is selected, the default page of the screenings tab shows all screenings.
 When a gene is selected (shown in the page header),
  the default page of the screenings tab shows all screenings that screened for variants in the selected gene.
+\clearpage
 
 \begin{description}
   \item [View all screenings] \hfill \\
   This view shows all the screenings in the database.
   You can click on a screening to view its details.
-\end{description}
-
-% We'll have to separate the description lists, because somehow it keeps wrapping around the figure otherwise.
-\begin{description}
   \item [View all screenings for a gene] \hfill \\
   This view displays all screenings that screened for variants in the currently selected gene.
   You can click on a screening to view its details.
   This menu item is not available when no gene has been selected.
   \item [Create a new data submission] \hfill \\
   This menu item is only available when logged in.
-  See chapter ``\hyperlink{chap:add_data}{\nameref{chap:add_data}}'' on how to create a new data submission.
+  See chapter ``\nameref{chap:add_data}'' on how to create a new data submission.
   \item [View active custom columns] \hfill \\
   This menu item is only available for Managers or higher.
-  See chapter ``\hyperlink{chap:custom_columns}{\nameref{chap:custom_columns}}'' for more information on custom columns.
+  See chapter ``\nameref{chap:custom_columns}'' for more information on custom columns.
   \item [Enable more custom columns] \hfill \\
   This menu item is only available for Managers or higher.
-  See section ``\hyperlink{sec:enabling_custom_columns}{\nameref{sec:enabling_custom_columns}}''
-   on how to enable custom columns.
+  See section ``\nameref{sec:enabling_custom_columns}'' on how to enable custom columns.
   \item [Screening detailed view] \hfill \\
   On the screening's detailed view, all genes screened for variants are listed, as well as any variants found.
 \end{description}
@@ -828,8 +821,8 @@ We use this information to see how many LOVDs there are worldwide, which version
    genes, individuals, variants and unique variants in your system.
   No specific information is sent, just the numbers.
   \hypertarget{item:include_in_listing}{}
-  \item[Include in the global LOVD listing] \hfill \\ %% FIXME; When LOVD 3.0 site has such a list, use that URL here.
-  On our website, we keep a \href{http://www.lovd.nl/2.0/index_list.php}{list of public LOVD installations}.
+  \item[Include in the global LOVD listing] \hfill \\
+  On our website, we keep a \href{http://www.lovd.nl/3.0/public_list}{list of public LOVD installations}.
   This list is also feeding our \href{http://www.lovd.nl/LSDBs}{worldwide LSDB list},
    through which submitters can locate databases for a specific gene to submit data to.
   If you enable the ``Include in the global LOVD listing'' setting,
@@ -1060,7 +1053,7 @@ On the detailed view, open the ``Options'' menu, and click ``Edit announcement''
 Complete the form to update the announcement.
 If you wish to disable to announcement, edit the ``Start date'' field to be a date in the future,
  or edit the ``End date'' field to be a date in the past.
-For details on all fields, see section ``\hyperlink{ssec:announcements_create}{\nameref{ssec:announcements_create}}''.
+For details on all fields, see section ``\nameref{ssec:announcements_create}''.
 
 
 
@@ -1212,13 +1205,6 @@ Curators do not require a separate submitter account; they can use their curator
 
 \hypertarget{sec:submitter_register}{}
 \section{Registering a new account}
-\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
-  \vspace{-25pt}
-  \begin{leftbar}
-    Required level: None (public)\\
-    Available from: LOVD 3.0 Build 01
-  \end{leftbar}
-\end{wrapfigure}
 \begin{warntable}
 Please note that you do \textbf{NOT} need to register to view the data available in the database.
 You only need an account for submitting new variant data.
@@ -1231,6 +1217,13 @@ The major difference between registration and direct creation of a new account b
 The registration form is protected using a \emph{reCAPTCHA} module, which makes sure the form can only be used by humans, and not by spam bots.
 \vskip \baselineskip
 
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: None (public)\\
+    Available from: LOVD 3.0 Build 01
+  \end{leftbar}
+\end{wrapfigure}
 To register a new submitter account, click the ``Register as submitter'' link on the top right corner of the screen, next to the ``Log in'' link.
 First, you are asked to provide an ORCID ID, if you have one.
 \href{http://about.orcid.org/}{ORCID} provides a persistent digital identifier that distinguishes you from every other researcher and,
@@ -1588,7 +1581,6 @@ Therefore, most of the information in this section has been filled in for you, a
 
 
 
-\hypertarget{ssec:relation_to_disease}{}
 \subsection{Relation to diseases}
 \label{ssec:relation_to_disease}
 \begin{description}
@@ -1957,13 +1949,12 @@ Using the longest transcript has the advantage of being able to annotate all exo
 As said, LOVD3 allows you to use more than one transcript per gene.
 Good examples that justify using multiple transcripts in LOVD, is when different transcripts are expressed in different tissues,
  when changes in different transcripts cause different phenotypes, or when different research groups focus on different transcripts
- (for example, when no transcript is availabile that contains all exons).
+ (for example, when no transcript is available that contains all exons).
 
 
 
 
 
-\hypertarget{sec:transcript_create}{}
 \section{Creating new transcripts}
 \label{sec:transcript_create}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -2050,7 +2041,6 @@ On the next page, confirm by typing your password in the input box and submit th
 
 
 
-\hypertarget{chap:custom_columns}{}
 \chapter{Custom columns}
 \label{chap:custom_columns}
 To make sure LOVD can be used by a great variety of users who all focus on storing different data,
@@ -2250,7 +2240,7 @@ Click the ``Finish'' button to have the data type wizard fill in the ``MySQL dat
 
 \subsection{Column settings}
 Here you can change some of the column's settings.
-For shared columns (see section ``\hyperlink{sec:custom_column_categories}{\nameref{sec:custom_column_categories}}''),
+For shared columns (see section ``\nameref{sec:custom_column_categories}''),
  most of these settings can also be changed per parent object where this column has been added to.
 \begin{description}
   \item[Include this column for newly configured genes/diseases] (shared columns only)\hfill \\
@@ -2299,7 +2289,6 @@ Also, you might want to check the \hyperlink{sec:columns_order}{column order}, s
 
 
 
-\hypertarget{sec:enabling_custom_columns}{}
 \section{Enabling custom columns}
 \label{sec:enabling_custom_columns}
 Directly after creating a new custom column, or at any later time, you can enable a custom column.
@@ -2431,8 +2420,7 @@ The form to edit the system-wide settings is equal to the form used to create a 
 The ``Column ID'' field is not present here, since you can not change a column's ID once you created it.
 Also, for shared columns, at the bottom of the form a checkbox is present labeled ``Apply changes to all genes/diseases where this column is active''.
 Checking this checkbox effectively resets all enabled instances of the column and applies all changes you make on this form to them, overwriting possible modifications of object-specific settings.
-All other fields on this form are explained in the section ``\hyperlink{sec:custom_column_create}
- {\nameref{sec:custom_column_create}}''.
+All other fields on this form are explained in the section ``\nameref{sec:custom_column_create}''.
 
 
 
@@ -2444,8 +2432,8 @@ All other fields on this form are explained in the section ``\hyperlink{sec:cust
     Available from: LOVD 3.0 Build 01
   \end{leftbar}
 \end{wrapfigure}
-The object-specific settings, editable per gene or disease, are (also see section ``\hyperlink{sec:custom_column_create}
- {\nameref{sec:custom_column_create}}''):
+The object-specific settings, editable per gene or disease, are (also see section
+ ``\nameref{sec:custom_column_create}''):
 \tightlists
 \begin{itemize}
   \item Description on short legend
@@ -2468,8 +2456,7 @@ Then, select the parent object you would like to change the object-specific sett
 From the parent object's detailed view, open the ``Options'' menu and click the ``View enabled phenotype columns'' or ``View enabled variant columns'' link.
 From the list of enabled columns, click the one you wish to edit the settings for.
 Open up the ``Options'' menu and then click ``Edit settings for this disease only'' for Phenotype columns, or ``Edit settings for this gene only'' for Variant On Transcript columns.
-For explaination of the available fields, please see the section ``\hyperlink{sec:custom_column_create}
- {\nameref{sec:custom_column_create}}''.
+For explaination of the available fields, please see the section ``\nameref{sec:custom_column_create}''.
 After submitting the form, the changes are effective immediately, but applied to the chosen parent object only.
 
 
@@ -2722,8 +2709,7 @@ To download all custom column specifications, click the ``Download all LOVD cust
 We do not recommend you to edit this file.
 \vskip \baselineskip
 
-For more information on the format, please see section ``\hyperlink{sec:download_import_format}
- {\nameref{sec:download_import_format}}''.
+For more information on the format, please see section ``\nameref{sec:download_import_format}''.
 
 
 
@@ -2755,7 +2741,6 @@ Please see section ``\hyperlink{ssec:importing_data}{Importing data into LOVD}''
 
 
 
-\hypertarget{chap:add_data}{}
 \chapter{Adding data to LOVD}
 \label{chap:add_data}
 All registered users can submit or add data to LOVD.
@@ -2766,8 +2751,13 @@ You can add more information to your submission at any later time, like new vari
 If you are a submitter level user, all new data submissions have to be published by a curator
  before the data is visible to the public.
 When finishing a submission, the curator will receive an email notification, inviting him to publish the data.
+\vskip \baselineskip
 
-
+This chapter describes adding data to LOVD using the web forms.
+If you are a curator or up and you wish to add data to LOVD using a tab-delimited file upload,
+ please see chapter ``\nameref{chap:download_n_import}''.
+If you're a programmer and you would like to submit data in JSON format directly from your application
+ using the LOVD3 submission API, please see chapter ``\nameref{chap:api}''.
 
 
 
@@ -2788,8 +2778,7 @@ As an submitter level user, your submission always starts directly with creating
 If you are registered as a curator or higher, choose ``I want to submit information on
  individuals'' to enter individual information.
 As a curator or higher, you can also choose to submit only summary variant data, although we do not recommend this.
-Please see section ``\hyperlink{sec:submit_summary_variant_data}{\nameref{submit_summary_variant_data}}'' for
- details.
+Please see section ``\nameref{sec:submit_summary_variant_data}'' for details.
 \vskip \baselineskip
 
 In the data entry form for data on the individual, most fields are optional in a standard LOVD installation.
@@ -2798,9 +2787,12 @@ You can check the help icon next to the form fields to see details
 After completing the form, click ``Create individual information entry''.
 When successful, a message is displayed several seconds: ``Successfully created the individual information entry!''.
 Hereafter, you are redirected to the menu as displayed in figure \ref{fig:submission_of_individual}, where you can
- choose how to proceed:
+ choose how to proceed.
+\clearpage
+
 \begin{figure}[ht]
   \begin{shaded}
+  \hypertarget{fig:submission_of_individual}{}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_menu_add_information_to_individual.png}}%
   \caption{%
     After completing the data entry form, you can choose to add phenotype information
@@ -2812,7 +2804,6 @@ Hereafter, you are redirected to the menu as displayed in figure \ref{fig:submis
 
 
 
-\clearpage
 \hypertarget{ssec:add_phenotype_information_to_an_individual}{}
 \subsection{Adding phenotype information to the individual}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -2825,18 +2816,16 @@ Hereafter, you are redirected to the menu as displayed in figure \ref{fig:submis
 When you created an individual, and this individual has been diagnosed with one or more diseases,
  or when this individual is marked as healthy/control, it is possible to add extra phenotype details to
  this individual.
-Select ``I want to add phenotype information to this individual'' (figure
- \hyperlink{fig:submission_of_individual}{\ref{fig:submission_of_individual}}), fill all required fields and click
- ``Create phenotype information entry''.
+Select ``I want to add phenotype information to this individual'' (figure \ref{fig:submission_of_individual}),
+ fill all required fields and click ``Create phenotype information entry''.
 
 The option ``I want to add phenotype information to this individual'' is disabled when no relation to
  diseases has been selected during the creation of this individual.
 If you wish to add phenotype information while this option is disabled, you have to edit the individual, see
- section ``\hyperlink{ssec:add_phenotype}{\nameref{ssec:add_phenotype}}'' on how to proceed.
+ section ``\nameref{ssec:add_phenotype}'' on how to proceed.
 
 
 
-\hypertarget{ssec:add_variant_screening_to_an_individual}{}
 \subsection{Adding a variant screening to the individual}
 \label{ssec:add_variant_screening_to_an_individual}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -2851,7 +2840,9 @@ For ``Detection template'', ``Technique(s) used'' and ``Genes screened'', more t
 Complete the form, and when ready click ``Create screening information entry''.
 When the entry is successful, a message is displayed for several seconds:
  ``Successfully created the screening entry!''.
-Hereafter you are redirected to a menu where you can choose how to proceed:
+Hereafter you are redirected to a menu as displayed in figure \ref{fig:submission_of_screening},
+ where you can choose how to proceed.
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_menu_add_variant_to_screening.png}}%
@@ -2859,12 +2850,12 @@ Hereafter you are redirected to a menu where you can choose how to proceed:
     After adding a screening, you can add a variant to this screening.
     ``Back to the individual'' will leave this screening unfinished, and will return
      you to the choice to add phenotype information or another screening.}
+  \label{fig:submission_of_screening}
   \end{shaded}
 \end{figure}
 
 
 
-\hypertarget{ssec:add_variant_to_a_screening}{}
 \subsection{Adding a variant to a screening}
 \label{ssec:add_variant_to_a_screening}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -2893,9 +2884,10 @@ Multiple screenings can be linked to the same variant, or have their own sets of
 The option to confirm variants using a screening is only available when at least two
  screenings are added to the individual and variants have already been submitted.
 After choosing this option, you are shown a list of variants already linked to other screenings
- of the individual, but not to the currently selected screening.
+ of the individual, but not to the currently selected screening (see figure \ref{fig:confirm_variants}).
 Click the checkmarks left of the variants that you would like to mark as confirmed, and click ``Save variant
  list''.
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_confirm_variant_using_screening.png}}%
@@ -2903,11 +2895,12 @@ Click the checkmarks left of the variants that you would like to mark as confirm
     Select a variant to confirm.
     Shown are the variants already linked to other screenings of the individual,
      but not to the currently selected screening.}
+    \label{fig:confirm_variants}
   \end{shaded}
 \end{figure}
 
 \subsubsection{Adding a variant located within a gene}
-After choosing this option, you are shown a list of genes.
+After choosing this option, you are shown a list of genes (see figure \ref{fig:select_gene_for_variant_submission}).
 If certain genes have been selected while creating the screening, these are pre-selected.
 You can remove or edit the pre-selection by removing or editing the configured filter in the ``Symbol'' column.
 Then click the gene for which you want add a variant to proceed to the variant entry form.
@@ -2915,11 +2908,13 @@ You can check the help icon next to the form fields to see details
  about the fields and suggestions on how to use the fields.
 Complete the form, and when ready, click the ``Create variant entry'' button.
 If successful, you are redirected to the options to submit more variants, or return to the individual.
+
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c08s01_screenshot_add_variant_located_within_gene.png}}%
   \caption{%
     Click the gene for which you want to submit a variant.}
+    \label{fig:select_gene_for_variant_submission}
   \end{shaded}
 \end{figure}
 
@@ -2958,8 +2953,7 @@ When you want to add a variant to the individual, using a screening you previous
  you have to select the appropriate screening.
 Click the ``Add a variant to this individual'' option, then click the screening you wish to add another variant to,
  and you will be redirected to the menu where you can submit a new variant.
-See section ``\hyperlink{ssec:add_variant_to_a_screening}{\nameref{ssec:add_variant_to_a_screening}}''.
-\clearpage
+See section ``\nameref{ssec:add_variant_to_a_screening}''.
 
 
 
@@ -3008,9 +3002,8 @@ The normal submission process will continue where it was left, for instructions
 
 
 
-\hypertarget{sec:submit_summary_variant_data}{}
 \section{Submitting summary variant data}
-\label{submit_summary_variant_data}
+\label{sec:submit_summary_variant_data}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
   \vspace{-25pt}
   \begin{leftbar}
@@ -3056,8 +3049,7 @@ Click on the ``Options'' menu button to open up the screening entry's menu.
 If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this
  screening.
 In the opened menu, click ``Add variant to screening''.
-From here you can follow the steps described in the section
- ``\hyperlink{ssec:add_variant_to_a_screening}{\nameref{ssec:add_variant_to_a_screening}}''.
+From here you can follow the steps described in the section ``\nameref{ssec:add_variant_to_a_screening}''.
 After you submitted the variant data, LOVD sends an email to the curator(s) and redirects you to the variant
  overview.
 
@@ -3077,8 +3069,7 @@ Click on the ``Options'' menu button to open up the individual entry's menu.
 If you do not see the ``Options'' menu button, you are not logged in or you do not have rights to edit this
  individual.
 In the opened menu, click ``Add screening to individual'' to open up the screening data entry form.
-You are now in the submission process described in section
- ``\hyperlink{ssec:add_variant_screening_to_an_individual}{\nameref{ssec:add_variant_screening_to_an_individual}}''.
+You are now in the submission process described in section ``\nameref{ssec:add_variant_screening_to_an_individual}''.
 The option ``Back to individual'' is not available when you submit a screening to an existing  individual.
 You can only finish this submission, if you also add at least one new variant to this new screening,
  or select at least one previously submitted variant as confirmed by this new screening.
@@ -3086,7 +3077,6 @@ After finishing the submission, LOVD sends an email to the curator(s) requesting
 
 
 
-\hypertarget{ssec:add_phenotype}{}
 \subsection{Adding phenotype information to an individual}
 \label{ssec:add_phenotype}
 \begin{wrapfigure}[4]{r}{5cm} % Only wrap for 4 lines
@@ -3119,8 +3109,8 @@ After you submitted the phenotype data, LOVD sends an email
 
 
 
-\hypertarget{chap:download_n_import}{}
 \chapter{Downloading \& importing data}
+\label{chap:download_n_import}
 \hypertarget{sec:download_import_format}{}
 \section{The LOVD3 import format}
 \label{sec:download_import_format}
@@ -3198,9 +3188,10 @@ When this line is not included in the file that is imported, LOVD cannot process
 
 \begin{warntable}
   Please NOTE that spreadsheets are well known for introducing errors in importing/exporting
-   text files, due to automatic interpretation of the values. 
-  When using a spreadsheet program to edit a downloaded file, 
-   format all cells to "Text" \textbf{before} importing/pasting the downloaded data.\\   
+   text files, due to automatic interpretation of the values.
+  When using a spreadsheet program to edit a downloaded file,
+   format all cells to "Text" \textbf{before} importing/pasting the downloaded data.
+  \vskip \baselineskip
 
   Also some cases have been reported where MS Excel removed contents of large text fields (> 255 characters).
 \end{warntable}
@@ -3266,7 +3257,7 @@ The following sections are currently recognized:
 \end{description}
 \noindent
 Categories indicated with an asterisk (*) are data types with custom columns
- (also see ``\hyperlink{sec:custom_column_categories}{\nameref{sec:custom_column_categories}}''),
+ (also see ``\nameref{sec:custom_column_categories}''),
  and the exact list of fields in this category depend on the LOVD settings.
 
 Lines in the import file starting with one hash character are settings.
@@ -3335,7 +3326,7 @@ Custom columns are not listed here, since every LOVD installation has different
       information\\ \hline
     21 & Maternal (confirmed) & Variant is on maternal allele, confirmed in mother\\ \hline
   \end{tabular}
-  
+
   If left empty during import, the default value is ``0''.
 %  \item[allow\_count\_all] (from section Columns)\hfill \\
   \item[chromosome] (from sections Genes and Variants\_On\_Genome)\hfill \\
@@ -3362,19 +3353,19 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[description\_form] (from section Columns)\hfill \\
   The column's notes on the data entry form.
   This text is shown on the data entry form, just below the data field, for instance as clarification.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[description\_legend\_short] (from section Columns)\hfill \\
   Description on short legend for this custom column.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[description\_legend\_full] (from section Columns)\hfill \\
   Description on full legend for this custom column.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[diseaseid] (from sections Phenotypes) \hfill \\
   ID referring to the ID in section Diseases.
   This field cannot be updated during an import.
   \item[effectid] (from sections Variants\_On\_Genome and Variants\_On\_Transcripts)\hfill \\
   The variant's effect on a protein's function.
-  The first digit indicates the reported variant's effect.
+  The first digit indicates the variant's effect as reported by the source.
   The second digit indicates the variant's effect as concluded by the curator.
   The possible values of each digit:\\
   \begin{tabular}{>{\bfseries}p{0.6cm} p{2.3cm} p{11.7cm}}
@@ -3386,7 +3377,7 @@ Custom columns are not listed here, since every LOVD installation has different
     9 & + & Affects function, strong proof\\ \hline
   \end{tabular}
 
-  A score of 97 means a variant is reported to effect the function of the protein having strong proof, but the curator
+  A score of 97 means a variant is reported to affect the function of the protein having strong proof, but the curator
    thinks more proof is needed, still accepting there is strong evidence for the variant's effect.
   All options are:
   \vskip \baselineskip
@@ -3451,10 +3442,10 @@ Custom columns are not listed here, since every LOVD installation has different
   The custom column's form type definition.
   When importing new custom columns, we recommend you use the Data type wizard available
    when creating a new custom column, and to use the form type definition generated by the wizard.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[head\_column] (from section Columns)\hfill \\
   The custom column's header, shown above the column in data views.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[hgvs] (from section Columns)\hfill \\
   If set to 1, this column is HGVS recommended.
   These columns can not be removed.
@@ -3480,7 +3471,7 @@ Custom columns are not listed here, since every LOVD installation has different
   \item[mandatory] (from section Columns)\hfill \\
   If set to 1, this column is mandatory.
   When entering new data, this custom column's field must be filled in.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   Default value is 0.
   \item[mapping\_flags] (from section Variants\_On\_Genome)\hfill \\
   Information about how LOVD handles the mapping of this variant.
@@ -3514,7 +3505,7 @@ Custom columns are not listed here, since every LOVD installation has different
   The custom column's MySQL data type.
   When importing new custom columns, we recommend you use the Data type wizard available
    when creating a new custom column, and to use the MySQL data type generated by the wizard.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[note\_index] (from section Genes)\hfill \\
   Notes that should appear on the gene home page.
   \item[note\_listing] (from section Genes)\hfill \\
@@ -3576,10 +3567,10 @@ Custom columns are not listed here, since every LOVD installation has different
   This field cannot be updated during an import.
   \item[preg\_pattern] (from section Columns)\hfill \\
   For text field custom columns, regular expression checks can be performed.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[public\_view] (from section Columns)\hfill \\
   If set to 1, this column's contents are visible to the public (only for public entries).
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   \item[public\_add] (from section Columns)\hfill \\
   If set to 1, submitters can fill in this field.
   Otherwise, only curators and higher level users can enter data in this field.
@@ -3590,14 +3581,14 @@ Custom columns are not listed here, since every LOVD installation has different
   This field cannot be updated during an import.
   \item[select\_options] (from section Columns)\hfill \\
   When the custom column is a selection field, the selection options are listed here.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}'' for the format.
+  See also section ``\nameref{sec:custom_column_create}'' for the format.
   Please remember that linebreaks in the LOVD import format are displayed
    as \texttt{\textbackslash{}r\textbackslash{}n}.
   \item[standard] (from section Columns)\hfill \\
   If set to 1, this column is enabled by default.
   When importing, this is only useful for shared custom columns.
   When set, the column will then be enabled by default for a new disease or gene, depending on the column category.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
   Default value is 0.
   \hypertarget{ssec:column_statusid}{}
   \item[statusid] (from section Individuals, Phenotypes and Variants\_On\_Genome)\hfill \\
@@ -3653,7 +3644,7 @@ Custom columns are not listed here, since every LOVD installation has different
   Please note that other values are not allowed.
   \item[width] (from section Columns)\hfill \\
   The displayed column width in pixels.
-  See also section ``\hyperlink{sec:custom_column_create}{\nameref{sec:custom_column_create}}''.
+  See also section ``\nameref{sec:custom_column_create}''.
 %  \item[] (from section Genes)\hfill \\
 %"{{refseq}}"	"{{refseq\_url}}"	"{{disclaimer}}"	"{{disclaimer\_text}}"	"{{header}}"	"{{header\_align}}"	"{{footer}}"	"{{footer\_align}}"	"{{updated\_by}}"	"{{updated\_date}}"
 \end{description}
@@ -3685,8 +3676,7 @@ However, it works perfectly as a backup for your variant and patient data, for i
 
 If you're planning large parallel changes to data entries in LOVD using spreadsheet software such as
  OpenOffice.org Calc or MS Excel, you could use the download files as a starting point.
-In that case, read the instructions at ``\hyperlink{sec:download_import_full_data}
- {\nameref{sec:download_import_full_data}}'' before you begin.
+In that case, read the instructions at ``\nameref{sec:download_import_full_data}'' before you begin.
 
 % Subsection here about the downloading of all overviews. Quick download, not usable for import.
 \begin{comment}
@@ -3707,8 +3697,7 @@ Also the order in the downloaded file is equal to the order of the entries on th
 \end{wrapfigure}
 For managers it is possible to import data directly into LOVD, using the LOVD3 import format.
 For curators, only simulation is available (see below), starting from LOVD 3.0-14.
-See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}'' for more details about the
- file format.
+See section ``\nameref{sec:download_import_format}'' for more details about the file format.
 Files created or modified using spreadsheet software such as OpenOffice.org Calc or MS Excel must be saved as
  a text file.
 The file must be tab delimited, otherwise LOVD will produce an error.
@@ -3742,8 +3731,7 @@ The two options available are ``Update existing data'' (see section ``{\nameref{
 \end{wrapfigure}
 The option ``add only'' on the import page will insert all data in the import file as new,
  also if the identifiers used are already present in the database.
-See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''
- for more details about the file format.
+See section ``\nameref{sec:download_import_format}'' for more details about the file format.
 
 
 
@@ -3765,7 +3753,7 @@ Furthermore, to prevent unintended edits, you can currently only modify one fiel
 You cannot modify the created\_by, created\_date, edited\_by, edited\_date fields
  (from sections Columns, Genes, Transcripts, Diseases, Individuals, Phenotypes, Screenings and Variants\_On\_Genome).
 These fields are set by LOVD and changes in these fields are ignored.
-See the section {\nameref{ssec:fields_explained}} to check which fields you are not allowed to update.
+See the section ``\nameref{ssec:fields_explained}'' to check which fields you are not allowed to update.
 
 The IDs in the import file are used to identify the records in the LOVD database.
 Therefore, you cannot modify the ID fields in your import file.
@@ -3782,7 +3770,6 @@ You can use the simulate option to check your file for errors first.
 
 
 
-\hypertarget{sec:download_import_full_data}{}
 \section{Downloading \& importing the complete data}
 \label{sec:download_import_full_data}
 
@@ -3818,7 +3805,6 @@ Depending on your browser, it will save the file to a default location on your h
 
 
 
-\hypertarget{ssec:importing_full_data}{}
 \subsection{Importing the complete data set into LOVD}
 \label{ssec:importing_full_data}
 \begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
@@ -3832,8 +3818,7 @@ A complete data set downloaded from the LOVD can be imported into a LOVD.
 This can only be done by the manager.
 Not all data can and will be imported and some data needs to be modified to be able to import in LOVD.
 Genes and transcripts can currently not be imported directly.
-See section ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''
- for details on each section.
+See section ``\nameref{sec:download_import_format}'' for details on each section.
 
 
 
@@ -3930,11 +3915,10 @@ But as with all import files, only a manager can import the data file.
 If the diseases in the import file do not exist in LOVD, these diseases will be added during the import.
 Downloads in this format do not contain any links between genes and diseases.
 To create this link, you will have to add records to the ``Genes\_To\_Diseases'' section, or manually create the links.
-See ``\hyperlink{ssec:relation_to_disease}{\nameref{ssec:relation_to_disease}}''
- for how to create a link between a gene and a disease.
+See ``\nameref{ssec:relation_to_disease}'' for how to create a link between a gene and a disease.
 
 For more details on each section of the import file, see section
- ``\hyperlink{sec:download_import_format}{\nameref{sec:download_import_format}}''.
+ ``\nameref{sec:download_import_format}''.
 \clearpage
 
 
@@ -3987,8 +3971,7 @@ The gene data set downloaded can be uploaded without modifications into the same
 However, the gene and its transcript(s) must exist in the database in which the file is imported.
 The column section is missing in this download file, but apart from that, this is the same import file as the
  complete data set.
-See section ``\hyperlink{ssec:importing_full_data}{\nameref{ssec:importing_full_data}}'' on details about
- importing a gene's data set.
+See section ``\nameref{ssec:importing_full_data}'' on details about importing a gene's data set.
 
 
 
@@ -3999,7 +3982,25 @@ See section ``\hyperlink{ssec:importing_full_data}{\nameref{ssec:importing_full_
 
 
 
-\chapter{The LOVD API}
+\chapter{The LOVD APIs}
+\label{chap:api}
+LOVD3 contains an LOVD2-style data retrieval API, useful for simple queries and retrieval of basic
+ gene and variant information, and a new data submission API, introduced in LOVD 3.0-21, useful for submitting data
+ from other software tools without the need of using the web forms.
+
+
+
+
+
+\section{Data retrieval API}
+\begin{wrapfigure}[4]{r}{8cm}
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: None\\
+    Available from: LOVD 3.0 Build 01\\
+    JSON support: LOVD 3.0 Build 22
+  \end{leftbar}
+\end{wrapfigure}
 Just like LOVD2 (from version 2.0-22, released October 5th 2009), LOVD3 includes a simple
  webservice enabling simple queries or listing of variant data (not patient data).
 This API only shows very basic information and can therefore not be disabled.
@@ -4010,7 +4011,8 @@ Examples of possibilities are searching on a gene symbol, getting the list of av
  or on a per-gene basis, list all variants or search for a certain variant or DNA location.
 Even though LOVD3 is not gene-based like LOVD2 was, we have decided to keep the same
  gene-centered design of the API to make sure LOVD2 and LOVD3 can be queried alike.
-The output it creates is an Atom 1.0 feed with the LOVD information in plain text.
+The output it creates is either an Atom 1.0 feed with the LOVD information in plain text, or a
+ \href{http://www.json.org/}{JSON} file.
 
 A more advanced API will be included in LOVD3 later, allowing the querying of variants genome-wide
  and getting more detailed information out of LOVD, such as patient and phenotype data.
@@ -4019,19 +4021,17 @@ This API will be configurable, so submitters decide for themselves under
 
 
 
-
-
-\section{Terms of service and fair use policy}
+\subsection{Terms of service and fair use policy}
 \begin{warntable}
   These terms of service and fair use policy are applicable to \emph{all} APIs present on the LOVD site
    and any LOVD installations hosted by the Leiden University Medical Center, recognizable by domain names ending
-   by .lovd.nl, .lumc.nl or .liacs.nl.
+   by .lovd.nl or .lumc.nl.
   Other servers hosting LOVDs may also have terms of service in place.
   If in doubt, try to contact the party hosting the LOVD installation.
 \end{warntable}
 
 \begin{itemize}
-  \item Read the \hyperlink{sec:api_possibilities}{API possibilities} below carefully,
+  \item Read the \hyperlink{ssec:api_possibilities}{API possibilities} below carefully,
     and choose the most efficient method to query the API --- meaning,
     the least amount of requests to get the information you need.
   \item Limit your requests to a maximum of 5 per second per server/domain name.
@@ -4043,9 +4043,9 @@ This API will be configurable, so submitters decide for themselves under
 
 
 
-
-
-\section{Format}
+\subsection{Format}
+Since 3.0-22, the LOVD2-style API allows for JSON data to be returned.
+The original format, also still available in 3.0-22, is an Atom feed, and is still the standard.
 When searching for genes, an Atom feed is returned with zero or more entries.
 When requesting a specific entry, just the Atom entry is returned.
 The Atom format is described in detail on \href{http://en.wikipedia.org/wiki/Atom_(standard)}{Wikipedia}.
@@ -4055,12 +4055,9 @@ Other formats as a `payload' of the Atom entries are not available.
 
 The new LOVD3 API (release date unavailable) will probably support multiple formats, such as
  \href{http://www.varioml.org/}{VarioML} and \href{http://www.json.org/}{JSON},
- most likely not wrapped in Atom feeds, since this API serves a different purpose.
+ and will not support Atom feeds, since this API serves a different purpose.
 
-
-
-\clearpage
-\subsection{Genes}
+\subsubsection{Genes}
 \begin{figure}[ht]
   \begin{shaded}
     \scriptsize
@@ -4072,9 +4069,9 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
   </title>
   <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
   <link rel="self" type="application/atom+xml" href="http://databases.lovd.nl/shared/api/rest/genes"/>
-  <updated>2014-01-14T12:20:24+01:00</updated>
+  <updated>2018-04-17T20:15:10+02:00</updated>
   <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
-  <generator uri="http://www.LOVD.nl/" version="3.0-09">
+  <generator uri="http://www.LOVD.nl/" version="3.0-21">
     Leiden Open Variation Database
   </generator>
   <rights>Copyright (c), the curators of this database</rights>
@@ -4084,13 +4081,13 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
     <link rel="self" type="application/atom+xml" href="http://d...lovd.nl/shared/api/rest/genes/IVD"/>
     <id>tag:databases.lovd.nl,2011-04-05:IVD</id>
     <author>
-      <name>Gerard Schaafsma</name>
+      <name>Gerard C.P. Schaafsma</name>
     </author>
     <contributor>
       <name>Ivo F.A.C. Fokkema</name>
     </contributor>
     <published>2011-04-05T16:04:49+02:00</published>
-    <updated>2013-03-11T15:30:41+01:00</updated>
+    <updated>2017-08-07T13:40:16+02:00</updated>
     <content type="text">
       id:IVD
       entrez_id:3712
@@ -4107,10 +4104,48 @@ The new LOVD3 API (release date unavailable) will probably support multiple form
 </feed>
     \end{verbatim}
   \caption{%
-    Example LOVD API output format.
-    The two longest lines have been shortened to fit this page.
+    Example LOVD API output, in the default Atom format.
+    The longest line has been shortened to fit this page.
     This example output of a search on gene symbol returns the IVD gene and its basic information.
     Source: \href{http://databases.lovd.nl/shared/api/rest/genes?search_symbol=IVD}
+     {LOVD3 shared installation}.}
+  \end{shaded}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{shaded}
+    \scriptsize
+    \begin{verbatim}
+[
+  {
+    "id":"IVD",
+    "entrez_id":"3712",
+    "symbol":"IVD",
+    "name":"isovaleryl-CoA dehydrogenase",
+    "chromosome":"15",
+    "chromosome_location":"15q14-q15",
+    "position_start":"chr15:40697686",
+    "position_end":"chr15:40713512",
+    "refseq_genomic":"NG_011986.1",
+    "refseq_mrna":[
+      "NM_001159508.1",
+      "NM_002225.3"
+    ],
+    "refseq_build":"hg19",
+    "created_by":"Gerard C.P. Schaafsma",
+    "created_date":"2011-04-05T16:04:49+02:00",
+    "curators":[
+      "Ivo F.A.C. Fokkema"
+    ],
+    "updated_date":"2017-08-07T13:40:16+02:00"
+  }
+]
+    \end{verbatim}
+  \caption{%
+    Example LOVD API output, in the JSON format, of the same API search result as the previous figure.
+    Note the slight differences in the data returned; the JSON format adds the chromosome field,
+     returns all transcripts associated with the gene in question, and stores the curator information in an array.
+    Source: \href{https://databases.lovd.nl/shared/api/rest/genes?search_symbol=IVD&format=application/json}
      {LOVD3 shared installation}.}
   \end{shaded}
 \end{figure}
@@ -4119,21 +4154,23 @@ The gene information shared through the API consists of the official gene symbol
  the gene's Entrez ID (\textbf{entrez\_id}), the gene's official name (\textbf{name}), the chromosome band
  (\textbf{chromosome\_location}) and exact locations (\textbf{position\_start}, \textbf{position\_end},
  not always available), its genomic reference sequence (\textbf{refseq\_genomic}), first transcript added
- (\textbf{refseq\_mrna}) and the code of the reference sequence build that the genomic positions are based on
- (\textbf{refseq\_build}).
+ (\textbf{refseq\_mrna}, all transcripts when using JSON) and the code of the
+ reference sequence build that the genomic positions are based on (\textbf{refseq\_build}).
+The JSON data has slightly more fields (\textbf{created\_by}, \textbf{created\_date}, \textbf{curators},
+ \textbf{updated\_date}), which are also available in the Atom entry itself (not the plain text payload).
 \vskip \baselineskip
 
 The official gene symbol is mentioned twice, because in LOVD2 multiple databases could exist for the same gene by
  setting a suffix on the gene symbol; there the `id' field could have a different value than the `symbol' field.
 Having two fields for the gene symbol is retained in the API to keep the format between LOVD3 and LOVD2 consistent.
 
-Please note, also for consistency with the LOVD2 API, that the `refseq\_mrna' field can
+Please note, also for consistency with the LOVD2 API, that in the Atom entry, the `refseq\_mrna' field can
  contain only one value whilst in LOVD3 one gene can contain multiple transcripts.
-The LOVD API shows only the first transcript added to the gene.
+The Atom entry shows only the first transcript, sorted on their NCBI ID.
+The JSON data shows all transcripts.
+\clearpage
 
-
-
-\subsection{Variants}
+\subsubsection{Variants}
 \begin{figure}[ht]
   \begin{shaded}
     \scriptsize
@@ -4145,9 +4182,9 @@ The LOVD API shows only the first transcript added to the gene.
   </title>
   <link rel="alternate" type="text/html" href="http://databases.lovd.nl/shared/"/>
   <link rel="self" type="application/atom+xml" href="http://...lovd.nl/shared/api/rest/variants/IVD"/>
-  <updated>2013-03-11T15:30:41+01:00</updated>
+  <updated>2017-08-07T13:40:16+02:00</updated>
   <id>tag:databases.lovd.nl,2012-05-02:web01:shared/REST_api</id>
-  <generator uri="http://www.LOVD.nl/" version="3.0-09">
+  <generator uri="http://www.LOVD.nl/" version="3.0-21">
     Leiden Open Variation Database
   </generator>
   <rights>Copyright (c), the curators of this database</rights>
@@ -4155,15 +4192,15 @@ The LOVD API shows only the first transcript added to the gene.
     <title>IVD:c.860G&gt;A</title>
     <link rel="alternate" type="text/html" href="http://...?search_VariantOnGenome/DBID=IVD_000001"/>
     <link rel="self" type="application/atom+xml" href="http://.../api/rest/variants/IVD/0000000563"/>
-    <id>tag:databases.lovd.nl,1970-01-01:IVD/0000000563</id>
+    <id>tag:databases.lovd.nl,2011-04-06:IVD/0000000563</id>
     <author>
-      <name>Unknown</name>
+      <name>Gerard C.P. Schaafsma</name>
     </author>
     <contributor>
-      <name>Unknown</name>
+      <name>Ivo F.A.C. Fokkema</name>
     </contributor>
-    <published>1970-01-01T00:00:00+01:00</published>
-    <updated>1970-01-01T00:00:00+01:00</updated>
+    <published>2011-04-06T16:20:25+02:00</published>
+    <updated>2017-03-28T16:27:49+02:00</updated>
     <content type="text">
       symbol:IVD
       id:0000000563
@@ -4177,7 +4214,7 @@ The LOVD API shows only the first transcript added to the gene.
 </feed>
     \end{verbatim}
   \caption{%
-    Example LOVD API output format.
+    Example LOVD API output, in the default Atom format.
     The three longest lines have been shortened to fit this page.
     This example output of a search on DB ID returns one variant in the IVD gene and its basic information.
     Source: \href{http://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001}
@@ -4185,33 +4222,77 @@ The LOVD API shows only the first transcript added to the gene.
   \end{shaded}
 \end{figure}
 
+\begin{figure}[ht]
+  \begin{shaded}
+    \scriptsize
+    \begin{verbatim}
+[
+  {
+    "symbol":"IVD",
+    "id":"0000000563",
+    "position_mRNA":[
+      "NM_002225.3:c.860"
+    ],
+    "position_genomic":"chr15:g.40707154",
+    "Variant\/DNA":[
+      "NM_002225.3:c.860G>A"
+    ],
+    "Variant\/DBID":"IVD_000001",
+    "Times_reported":"1",
+    "owned_by":[
+      "Ivo F.A.C. Fokkema"
+    ],
+    "created_by":[
+      "Gerard C.P. Schaafsma"
+    ],
+    "created_date":"2011-04-06T16:20:25+02:00",
+    "edited_date":"2017-03-28T16:27:49+02:00"
+  }
+]
+    \end{verbatim}
+  \caption{%
+    Example LOVD API output, in the JSON format, of the same API search result as the previous figure.
+    Note the slight differences in the data returned; the JSON format adds the data owner(s), the data creator(s),
+     the dates the data was created and last updated and
+     returns all transcripts associated with the variant in question, storing the data in an array.
+     The genomic position is formatted slightly differently.
+    Source:
+     \href{http://databases.lovd.nl/shared/api/rest/variants/IVD?search_Variant/DBID=IVD_000001&format=application/json}
+     {LOVD3 shared installation}.}
+  \end{shaded}
+\end{figure}
+
 The variant information shared through the API consists of the official gene symbol of the selected gene
  (\textbf{symbol}), the variant's internal ID (\textbf{id}), the variant's position relative to the transcript in
- HGVS-like format (\textbf{position\_mRNA}), the variant's genomic position (\textbf{position\_genomic}), the DNA
- field in HGVS format, HTML encoded to not break XML parsers (\textbf{Variant/DNA}), the variant's DBID value
- (\textbf{Variant/DBID}) and the panel size of the individual of the variant entry (\textbf{Times\_reported}).
+ HGVS-like format (\textbf{position\_mRNA}), the variant's genomic position in HGVS-like format
+ (\textbf{position\_genomic}), the DNA field in HGVS format, HTML encoded in the Atom format to not break XML parsers
+ (\textbf{Variant/DNA}), the variant's DBID value (\textbf{Variant/DBID}) and the panel size of the individual of the
+ variant entry (\textbf{Times\_reported}).
+The JSON data has slightly more fields (\textbf{owned\_by}, \textbf{created\_by}, \textbf{created\_date},
+ \textbf{edited\_date}), which are also available in the Atom entry itself (not the plain text payload).
+Also, the JSON data will list the variant's position and the variant's DNA change
+ on transcript level for all transcripts that the variant is mapped on.
 \vskip \baselineskip
 
-If the variant could not be interpreted by Mutalyzer, the position fields will contain a question mark.
+If the variant could not be interpreted, the position fields will contain a question mark.
 The difference between the `id' field and the `Variant/DBID' field is that the first is the ID of the variant
  observation, whilst the latter is the ID unique for this variant, but shared for each observation.
 It is used link back to LOVD from genome browsers, for instance.
 When variant observations are grouped together, the `Times\_reported' field
  will contain the sum of the values of all observations together.
+\clearpage
 
 
 
-
-
-\hypertarget{sec:api_possibilities}{}
-\section{Possibilities}
+\hypertarget{ssec:api_possibilities}{}
+\subsection{Possibilities}
+\label{ssec:api_possibilities}
 A full list of options for this API is included below.
 Please note that although ``rest.php'' is included in all the URLs, simply ``rest'' will work also.
 However, for LOVD2 installations, this does not always work, and as such the extension is included.
+To obtain JSON output, add the `\texttt{format=application/json}' flag to all URLs.
 
-
-
-\subsection{Genes}
+\subsubsection{Genes}
 \begin{description}
   \item[Listing of all genes in the database]\hfill \\
   \href{http://databases.lovd.nl/shared/api/rest.php/genes}{http://databases.lovd.nl/shared/api/rest.php/genes}
@@ -4240,10 +4321,9 @@ However, for LOVD2 installations, this does not always work, and as such the ext
        {http://databases.lovd.nl/shared/api/rest.php/genes?\\
        \phantom{..........}search\_position=chr15:40657686\_40762512\&position\_match=partial}
 \end{description}
+\clearpage
 
-
-
-\subsection{Variants}
+\subsubsection{Variants}
 \begin{description}
   \item[Listing of all variant entries in a certain gene]\hfill \\
   \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD}
@@ -4267,7 +4347,6 @@ However, for LOVD2 installations, this does not always work, and as such the ext
   \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_position=g.40710300_40710410&position_match=partial}
        {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
        \phantom{..........}search\_position=g.40710300\_40710410\&position\_match=partial}
-  \clearpage
   \item[Searching on the DNA field]\hfill \\
   \href{http://databases.lovd.nl/shared/api/rest.php/variants/IVD?search_Variant/DNA=c.157C\%3ET}
        {http://databases.lovd.nl/shared/api/rest.php/variants/IVD?\\
@@ -4287,8 +4366,171 @@ However, for LOVD2 installations, this does not always work, and as such the ext
 \subsection{World-wide LOVD quering service}
 There is also a world-wide LOVD query API that allows you to query a genomic location to find out
  whether there is a variant reported in any public LOVD installation that has registered at
- \href{http://lovd.nl/2.0/index_list.php}{LOVD.nl}.
+ \href{http://lovd.nl/3.0/public_list}{LOVD.nl}.
 Please \href{http://www.lovd.nl/3.0/contact}{contact us directly} for more information on that API.
+\clearpage
+
+
+
+
+
+\section{Data submission API}
+\begin{wrapfigure}[3]{r}{8cm} % Only wrap for 3 lines
+  \vspace{-25pt}
+  \begin{leftbar}
+    Required level: Submitter\\
+    Available from: LOVD 3.0 Build 18/21
+  \end{leftbar}
+\end{wrapfigure}
+LOVD3 includes a data submission API, useful for submitting JSON data files directly into LOVD3
+ without the need of web forms.
+This is especially useful for diagnostic labs that wish to submit their found variants
+ to LOVD3 without the hassle of having to submit them manually or to construct LOVD3 import files.
+
+Note that this API was introduced in LOVD 3.0-18, but was only fully functional from LOVD 3.0-21.
+
+
+
+\subsection{The submission format}
+The format used by the submission API is a JSON implementation of the \href{http://varioml.org/}{VarioML format}.
+For an example file, please see \url{http://LOVD.nl/3.0/submission_api_format.json}.
+Since Vario\-ML is originally an XML format, all XML attributes have been prefixed by an `\texttt{@}' character,
+ and text nodes are stored in `\texttt{\#text}' elements.
+The JSON format allows for multiple individuals to be submitted at once;
+ the file is required to contain at least one individual with each at least one variant.
+The mandatory columns are the same as otherwise mandatory in LOVD3.
+For fields that require a fixed set of options, such as the individual's gender,
+ the possible options are mentioned in a comment next to the field.
+JSON officially can't contain comments so a JSON parser might fail on the example file, but LOVD3 is OK with them.
+
+Do note that not all fields that may be configured in LOVD3 will be representable (yet) in this format.
+All fields currently supported are present in the example file (see above).
+If you have more data that you'd like to submit using this format,
+ please \href{http://www.LOVD.nl/3.0/contact?question}{contact us}.
+We aim to map as many LOVD3 fields as possible to VarioML.
+
+
+
+\subsection{Mandatory fields to set before submission}
+Before you can submit your data using this example file, you'll have to change the values of some of the fields.
+The `\texttt{lsdb}' element has an `\texttt{@id}' and an `\texttt{@uri}' field that needs to be set.
+The `\texttt{@id}' is the LOVD's ID, which can be found by
+ the database administrator in the API authorization token dialog (see ``\nameref{ssec:getting_your_auth_token}''.
+If you do not know who the LOVD's administrator is, submit the file without a valid ID
+ (see ``\nameref{ssec:submitting_the_json_file}'') and LOVD will respond with the administrator's contact information.
+\vskip \baselineskip
+
+The `\texttt{source}' element under `\texttt{lsdb}' also requires a few fields to be filled in.
+For `\texttt{name}', fill in the name of the lab that is submitting the data.
+% Note that the above field is never used, but it is a requirement from VarioML.
+Under `\texttt{contact}', fill in your name under `\texttt{name}', and your email under `\texttt{email}'.
+The `\texttt{db\_xref}' fields are also required, and are explained below.
+
+
+
+\subsection{Getting your authorization token}
+\label{ssec:getting_your_auth_token}
+To submit data to LOVD3 using the submission API, you need to create an authorization token for your submitter account.
+To do so, log into LOVD3 and proceed to your account page
+ by clicking the ``Your account'' link in the top right side of the screen.
+In the ``API token'' field, click ``Show / More information''.
+In the new dialog, click the ``Create new token'' button to create a token.
+Select the desired validity and click ``Create new token''.
+If the token was created successfully, click ``Back'' and copy your token from the bottom of the information dialog
+ (see figure \ref{fig:auth_token_created}).
+In the JSON data, under `\texttt{lsdb}' / `\texttt{source}' / `\texttt{contact}' / `\texttt{db\_xref}',
+ fill in both `\texttt{@accession}' fields.
+Where `\texttt{@source}' is `\texttt{lovd}', fill in your numeric account ID (on the top of your account page).
+Where `\texttt{@source}' is `\texttt{lovd\_auth\_token}', fill in your created token.
+
+\begin{figure}[ht]
+  \begin{shaded}
+  \frame{\includegraphics[width=\linewidth]{screenshot_auth_token_created.png}}%
+  \caption{%
+    The authorization token dialog, showing your current token at the bottom
+     and including buttons to create a new token or just revoking the current one.
+    The database administrator also can find the LOVD's ID at the top of this dialog.}
+  \label{fig:auth_token_created}
+  \end{shaded}
+\end{figure}
+
+
+
+\subsection{Submitting the JSON file}
+\label{ssec:submitting_the_json_file}
+To submit your JSON file, \texttt{POST} it to \texttt{/api/submissions} for the intended LOVD instance.
+In case the intended LOVD is located at \url{https://databases.lovd.nl/shared/},
+ then \texttt{POST} your file to \url{https://databases.lovd.nl/shared/api/submissions}.
+Before submitting though, please read the information under ``\nameref{ssec:different_versions_of_submission_api}''.
+See figure \ref{fig:submission_api_curl_example} for an example on how to submit using \texttt{curl}.
+
+\begin{figure}[ht]
+  \begin{shaded}
+    \small
+    \begin{verbatim}
+curl --data @submission.json "https://databases.lovd.nl/shared/api/submissions"
+\end{verbatim}
+  \caption{%
+    Example of how to submit a VarioML JSON file to the submission API, using \texttt{curl}.
+    In this example, the JSON file is named \texttt{submission.json} and is located in the current working directory.}
+    \label{fig:submission_api_curl_example}
+  \end{shaded}
+\end{figure}
+
+The submission API will respond in JSON, sending its version, a messages array,
+ a warnings array, an errors array, and a data array (see figure \ref{fig:submission_api_output_error}).
+
+\begin{figure}[ht]
+  \begin{shaded}
+    \small
+    \begin{verbatim}
+{
+    "version": 1,
+    "messages": [],
+    "warnings": [],
+    "errors": [
+        "VarioML error: LSDB root element not found, or has no ID."
+    ],
+    "data": []
+}
+\end{verbatim}
+  \caption{%
+    Example submission API output, when sending ``\texttt{\{"lsdb":\{\}\}}''.
+    All arrays shown are always present, but can be empty.}
+    \label{fig:submission_api_output_error}
+  \end{shaded}
+\end{figure}
+
+The `\texttt{messages}' array is for information of successful submissions.
+The `\texttt{warnings}' array is for output of information you should review because it might be a potential problem,
+ although it will not prevent a successful submission.
+The `\texttt{errors}' array contain fatal errors.
+The `\texttt{data}' array is reserved for returning data and not used in \texttt{POST} requests.
+\vskip \baselineskip
+
+A successful submission results in an LOVD3 import file being created on the server.
+This file then needs to be imported into LOVD3.
+In LOVD 3.0-21, submissions done through the API are not yet scheduled for import automatically,
+ it requires manual intervention of a manager.
+See the \texttt{INSTALL.txt} file that is shipped with LOVD for more information.
+
+
+
+\subsection{Different versions of this API}
+\label{ssec:different_versions_of_submission_api}
+\begin{warntable}
+Before you submit, make sure you read this information, to prevent unexpected problems if we would update the API.
+\end{warntable}
+
+To allow easy further development of this API,
+ we might change the way the API works or change the way the API returns data.
+To make sure this doesn't harm your application, you can instruct LOVD to use a fixed version of the API.
+To do so, you must include the APIs version in the URL.
+For instance, to always use version 1 of the API, even when version 2 is already released, use
+ \texttt{/api/v1/submissions} instead of \texttt{/api/submissions}.
+\emph{When you're not supplying a version number in the URL you \texttt{POST} to,
+ LOVD will automatically use the latest version of the API.}
+Make a decision based on what works best for you in your situation.
 
 
 
@@ -4398,9 +4640,10 @@ Depending on whether or not LOVD has found that there is an update available,\
 \begin{center}
 \begin{tabular}{ | p{0.8cm} p{10cm} | }
   \hline
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newer.png}} & There is an update available. \\
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_newest.png}} & There is no update available. \\
-  \parbox[c]{1em}{\includegraphics[width=0.8cm]{lovd_update_error.png}} & There was an error while checking for updates. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_newer.png}} & There is an update available. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_newest.png}} & There is no update available. \\
+  \parbox[c]{1.9em}{\includegraphics[width=0.8cm]{lovd_update_error.png}} &
+   There was an error while checking for updates. \\
   \hline
 \end{tabular}
 \end{center}
@@ -4468,7 +4711,10 @@ If that doesn't resolve your problem or answer your question, please follow the 
 
 %            s (section) ss (subsection)
 \hypertarget{sec:name_of_label}{}
-\hyperlink{sec:name_of_label}{name of link||\nameref{sec:name_of_label}}
+\hyperlink{sec:name_of_label}{name of link}
+||
+\label{sec:name_of_label}
+\nameref{sec:name_of_label}
 
 
 \begin{infobox}

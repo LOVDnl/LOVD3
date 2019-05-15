@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2016-08-29
- * For LOVD    : 3.0-17
+ * Modified    : 2017-11-08
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -94,7 +94,7 @@ foreach ($aTotalVars as $nStatus => $nVars) {
 print('</TD></TR></TABLE><BR>' . "\n\n");
 
 // Mention that LOVD can be updated!
-if ($_STAT['update_level']) {
+if (!LOVD_plus && $_STAT['update_level']) { // Not for LOVD+, unless we build a separate list.
     $_STAT['update_level'] = 7;
     lovd_showInfoTable('LOVD update available:<BR><B>' . $_STAT['update_version'] . '</B><BR>' . ($_STAT['update_level'] >= 7? ' It is ' . strtolower($_SETT['update_levels'][$_STAT['update_level']]) . ' to upgrade!' : '') . '<BR><A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;">More information &raquo;</A>', ($_STAT['update_level'] >= 7? 'warning' : 'information'));
 }
@@ -120,7 +120,7 @@ $aItems =
                  array(
                         array('columns?create', 'lovd_columns_create.png', 'Create new custom data column', 'Create new custom data column.'),
                         array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available to enable or disable them, or view or edit their settings.'),
-                        array('download/columns', 'lovd_save.png', 'Download all LOVD custom columns', 'Download all LOVD custom columns in the LOVD import format.'),
+          'download' => array('download/columns', 'lovd_save.png', 'Download all LOVD custom columns', 'Download all LOVD custom columns in the LOVD import format.'),
 /*
       '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_import.php\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_import.png" alt="Import new LOVD custom columns" width="32" height="32"></TD>' . "\n" .
@@ -150,8 +150,9 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 */
             'Download & Import' =>
                  array(
-                        array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD import format (custom columns, genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
+          'download' => array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD import format (custom columns, genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
                         array('import', 'lovd_import.png', 'Import data', 'Import data using the LOVD import format (custom columns, diseases, individuals, phenotypes, screenings &amp; variants).'),
+          'schedule' => array('import?schedule', 'lovd_clock.png', 'Schedule data for import', 'Schedule data files to be imported into LOVD.'),
                       ),
             'System logs' =>
                  array(
@@ -161,6 +162,10 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 // Remove uninstall.
 if ($_CONF['lock_uninstall'] || $_AUTH['level'] < LEVEL_ADMIN) {
     unset($aItems['General LOVD Setup']['uninstall']);
+}
+if (LOVD_plus) {
+    unset($aItems['Custom data columns']['download']);
+    unset($aItems['Download & Import']['download']);
 }
 
 foreach ($aItems as $sTitle => $aLinks) {

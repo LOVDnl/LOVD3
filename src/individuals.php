@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2018-04-13
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -51,8 +51,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     if (!empty($_PE[1])) {
         $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
         if ($sGene) {
-            // We need the authorization call once we show the individuals with VARIANTS in gene X, not before!
-//            lovd_isAuthorized('gene', $sGene); // To show non public entries.
+            lovd_isAuthorized('gene', $sGene); // To show non public entries.
             $_GET['search_genes_searched'] = '="' . $sGene . '"';
         } else {
             // Command or gene not understood.
@@ -68,7 +67,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View all individuals' . (isset($sGene)? ' with variants in gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'All individuals' . (isset($sGene)? ' with variants in gene ' . $sGene : ''));
     $_T->printHeader();
     $_T->printTitle();
 
@@ -80,8 +79,12 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
-    $_DATA->viewList('Individuals', $aColsToHide, false, false,
-                     (bool) ($_AUTH['level'] >= LEVEL_MANAGER), false, true);
+    $aVLOptions = array(
+        'cols_to_skip' => $aColsToHide,
+        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'find_and_replace' => true,
+    );
+    $_DATA->viewList('Individuals', $aVLOptions);
 
     $_T->printFooter();
     exit;
@@ -96,7 +99,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'View individual #' . $nID);
+    define('PAGE_TITLE', 'Individual #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -140,7 +143,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
                 $_GET['search_diseaseid'] = $nDiseaseID;
                 $_DATA = new LOVD_Phenotype($nDiseaseID);
                 print('<B>' . $sName . ' (<A href="diseases/' . $nDiseaseID . '">' . $sSymbol . '</A>)</B>&nbsp;&nbsp;<A href="phenotypes?create&amp;target=' . $nID . '&amp;diseaseid=' . $nDiseaseID . '"><IMG src="gfx/plus.png"></A> Add phenotype for this disease');
-                $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, array('phenotypeid', 'individualid', 'diseaseid'), true, true);
+                $aVLOptions = array(
+                    'cols_to_skip' => array('phenotypeid', 'individualid', 'diseaseid'),
+                    'track_history' => false,
+                    'show_navigation' => false,
+                );
+                $_DATA->viewList('Phenotypes_for_I_VE_' . $nDiseaseID, $aVLOptions);
             }
         }
         unset($_GET['search_individualid']);
@@ -156,7 +164,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_screenings.php';
         $_DATA = new LOVD_Screening();
         $_DATA->setSortDefault('id');
-        $_DATA->viewList('Screenings_for_I_VE', array('screeningid', 'individualid', 'created_date', 'edited_date'), true, true);
+        $aScreeningVLOptions = array(
+            'cols_to_skip' => array('screeningid', 'individualid', 'created_date', 'edited_date'),
+            'track_history' => false,
+            'show_navigation' => false,
+        );
+        $_DATA->viewList('Screenings_for_I_VE', $aScreeningVLOptions);
         unset($_GET['search_individualid']);
 
         $_GET['search_screeningid'] = implode('|', $zData['screeningids']);
@@ -166,7 +179,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         require ROOT_PATH . 'class/object_custom_viewlists.php';
         // VOG needs to be first, so it groups by the VOG ID.
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
-        $_DATA->viewList('CustomVL_VOT_for_I_VE', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+        $aVariantVLOptions = array(
+            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        );
+        $_DATA->viewList('CustomVL_VOT_for_I_VE', $aVariantVLOptions);
     }
 
     $_T->printFooter();
@@ -185,7 +201,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('LOG_EVENT', 'IndividualCreate');
 
     lovd_isAuthorized('gene', $_AUTH['curates']);
-    lovd_requireAUTH(LEVEL_SUBMITTER);
+    lovd_requireAUTH($_SETT['user_level_settings']['submit_new_data']);
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();
@@ -228,6 +244,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         }
                     }
                 }
+            }
+
+            if (count($aSuccessDiseases)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Disease entr' . (count($aSuccessDiseases) > 1? 'ies' : 'y') . ' successfully added to individual ' . $nID);
             }
 
             $_AUTH['saved_work']['submissions']['individual'][$nID] = array('id' => $nID, 'panel_size' => $_POST['panel_size']);
@@ -326,7 +346,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     if (POST || ACTION == 'publish') {
         lovd_errorClean();
 
-        $_DATA->checkFields($_POST);
+        $_DATA->checkFields($_POST, $zData);
 
         if (!lovd_error()) {
             // Fields to be used.
@@ -393,6 +413,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from individual ' . $nID);
+                } else {
+                    lovd_writeLog('Event', LOG_EVENT, 'Disease entr' . (count($aToRemove) > 1? 'ies' : 'y') . ' successfully removed from individual ' . $nID);
                 }
             }
 
@@ -413,6 +435,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             if ($aFailed) {
                 // Silent error.
                 lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aFailed) == 1? 'y' : 'ies') . ' ' . implode(', ', $aFailed) . ' could not be added to individual ' . $nID);
+            }
+            if (count($aSuccess)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Disease entr' . (count($aSuccess) > 1? 'ies' : 'y') . ' successfully added to individual ' . $nID);
             }
 
             // Thank the user...

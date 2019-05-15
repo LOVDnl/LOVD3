@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2016-07-20
- * For LOVD    : 3.0-17
+ * Modified    : 2019-02-08
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -54,7 +54,11 @@ class LOVD_Individual extends LOVD_Custom {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH;
+        global $_AUTH, $_DB, $_SETT;
+
+        // SQL code for preparing load entry query.
+        // Increase DB limits to allow concatenation of large number of disease IDs.
+        $this->sSQLPreLoadEntry = 'SET group_concat_max_len = 200000';
 
         // SQL code for loading an entry for an edit form.
         // FIXME; change owner to owned_by_ in the load entry query below.
@@ -98,8 +102,6 @@ class LOVD_Individual extends LOVD_Custom {
                                           'COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ') AS variants_, ' . // Counting s2v.variantid will not include the limit opposed to vog in the join's ON() clause.
                                           'uo.name AS owned_by_, ' .
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
-                                          ($_AUTH['level'] < LEVEL_COLLABORATOR? '' :
-                                              'CASE ds.id WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,') .
                                           'ds.name AS status';
 
         // Construct list of user IDs for current user and users who share access with him.
@@ -118,6 +120,15 @@ class LOVD_Individual extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (i.statusid = ds.id)';
+        // Conditional inclusion of a JOIN that is only needed to search. This prevents long delays when using HAVING on
+        //  the Individual's Disease column. We can't just use a WHERE on the same JOIN, as it will limit the results,
+        //  meaning no diseases other than the one searched for will be shown. This extra join should fix that.
+        // If we need this more often, we should handle it more gracefully.
+        if (!empty($_GET['search_diseaseids_searched'])) {
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d_s ON (i.id = i2d_s.individualid)';
+            // The search field will be defined below.
+        }
+
         $this->aSQLViewList['GROUP_BY'] = 'i.id';
 
         // Run parent constructor to find out about the custom columns.
@@ -157,9 +168,14 @@ class LOVD_Individual extends LOVD_Custom {
                         'diseaseids' => array(
                                     'view' => array('Disease ID', 0),
                                     'db'   => array('diseaseids', false, true)),
+                        'diseaseids_searched' => array( // Special, optionally included joined table.
+                                    'view' => false,
+                                    'db'   => array('i2d_s.diseaseid', false, 'INT_UNSIGNED')),
                         'diseases_' => array(
                                     'view' => array('Disease', 175),
                                     'db'   => array('diseases_', 'ASC', true)),
+                        'phenotypes_' => array(
+                                    'view' => false), // Placeholder for Phenotype/Additional.
                         'genes_searched' => array(
                                     'view' => false,
                                     'db'   => array('t.geneid', false, true)),
@@ -176,7 +192,9 @@ class LOVD_Individual extends LOVD_Custom {
                         'panel_size' => array(
                                     'view' => array('Panel size', 70, 'style="text-align : right;"'),
                                     'db'   => array('i.panel_size', 'DESC', true),
-                                    'legend' => array('How many individuals does this entry represent?')),
+                                    'legend' => array('Number of individuals this entry ' .
+                                        'represents; e.g. 1 for an individual, 5 for a family ' .
+                                        'with 5 affected members.')),
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
@@ -187,8 +205,32 @@ class LOVD_Individual extends LOVD_Custom {
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true),
                                     'auth' => LEVEL_COLLABORATOR),
+                        'created_by' => array(
+                                    'view' => false,
+                                    'db'   => array('i.created_by', false, true)),
                       ));
         $this->sSortDefault = 'id';
+
+        // For installations with Phenotype/Additional enabled, link to that column as well and show it,
+        //  so users can quickly identify individuals with certain features.
+        // Simplest is to check for ourselves, so we don't need to initiate any object.
+        // FIXME: Should this be replaced by a CustomVL, with Ind joined to Phenotypes to create this?
+        // FIXME: This Ind VL has more than that Ind VL, though.
+        if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?', array('Phenotype/Additional'))->fetchColumn()) {
+            // Column is active, include in SELECT, JOIN and the column list.
+            $this->aSQLViewList['SELECT'] .= ', GROUP_CONCAT(DISTINCT p.`Phenotype/Additional` ORDER BY p.`Phenotype/Additional` SEPARATOR ", ") AS phenotypes_';
+
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid';
+            if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+                $this->aSQLViewList['FROM'] .= ' AND (p.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (p.created_by = "' . $_AUTH['id'] . '" OR p.owned_by IN (' . join(', ', array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL))) . '))') . ')';
+            }
+            $this->aSQLViewList['FROM'] .= ')';
+
+            $this->aColumnsViewList['phenotypes_'] = array(
+                'view' => array('Phenotype details', 200),
+                'db' => array('p.`Phenotype/Additional`', 'ASC', true),
+            );
+        }
 
         // Because the information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
@@ -198,7 +240,7 @@ class LOVD_Individual extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_DB;
 
@@ -214,7 +256,7 @@ class LOVD_Individual extends LOVD_Custom {
                       );
 
         // Checks fields before submission of data.
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         foreach (array('fatherid', 'motherid') as $sParentalField) {
             // This is not yet implemented correctly. These checks are implemented correctly in import.php in section "Individuals".
@@ -259,6 +301,18 @@ class LOVD_Individual extends LOVD_Custom {
                         lovd_errorAdd('active_diseases', htmlspecialchars($nDisease) . ' is not a valid disease.');
                     }
                 }
+            }
+        }
+
+        // Diagnostics: Don't allow individuals with an identical Lab-ID.
+        // Can't enforce this in the table, because it's a custom column that's not active during installation, so I'll just do it like this.
+        if (LOVD_plus && !empty($aData['Individual/Lab_ID'])) {
+            if ($zData && isset($zData['id']) && isset($zData['Individual/Lab_ID'])) {
+                if ($_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Lab_ID` = ? AND id != ?', array($aData['Individual/Lab_ID'], $zData['id']))->fetchColumn()) {
+                    lovd_errorAdd('Individual/Lab_ID', 'Another individual with this Lab ID already exists in the database.');
+                }
+            } elseif ($_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Lab_ID` = ?', array($aData['Individual/Lab_ID']))->fetchColumn()) {
+                lovd_errorAdd('Individual/Lab_ID', 'Another individual with this Lab ID already exists in the database.');
             }
         }
 
@@ -321,8 +375,11 @@ class LOVD_Individual extends LOVD_Custom {
                  $this->buildForm(),
                  array(
                         array('Panel size', '', 'text', 'panel_size', 10),
-                        array('', '', 'note', 'Fill in how many individuals this entry represents (default: 1).'),
-                        array('ID of panel this entry belongs to (optional)', 'Fill in LOVD\'s individual ID of the group to which this individual or group of individuals belong to (Optional).', 'text', 'panelid', 10),
+                        array('', '', 'note', 'The number of individuals this entry represents; e.g.' .
+                            ' 1 for an individual, 5 for a family with 5 affected members. To ' .
+                            'report different Individuals from one family, link them using the ' .
+                            '"ID of panel this entry belongs to" field.'),
+           'panelid' => array('ID of panel this entry belongs to (optional)', 'Different individuals can be linked together. To link, specify here the ID of a previously submitted panel, i.e. an individual with a panel size larger than 1, that this individual belongs to (Optional).', 'text', 'panelid', 10),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Relation to diseases</B>'),
@@ -351,6 +408,9 @@ class LOVD_Individual extends LOVD_Custom {
             unset($this->aFormData['diseases_create']);
         } else {
             unset($this->aFormData['diseases_info']);
+        }
+        if (LOVD_plus) {
+            unset($this->aFormData['panelid']);
         }
 
         return parent::getForm();

@@ -52,20 +52,8 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         list($sSubName1, $sSubEmail1, $sSubUsername1, $sSubPass1) = $aUserRecords[0];
         list($sSubName2, $sSubEmail2, $sSubUsername2, $sSubPass2) = $aUserRecords[1];
 
-        $this->driver->get(ROOT_URL . "/src/logout");
-
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-        $this->driver->get(ROOT_URL . "/src/login");
-
-        // Login as first submitter.
-        $this->enterValue(WebDriverBy::name("username"), $sSubUsername1);
-        $this->enterValue(WebDriverBy::name("password"), $sSubPass1);
-        $loginButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $loginButton->click();
+        $this->logout();
+        $this->login($sSubUsername1, $sSubPass1);
 
         // Create individual as first submitter.
         $this->driver->get(ROOT_URL . "/src/individuals?create");
@@ -77,41 +65,16 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         $header = $this->driver->findElement(WebDriverBy::xpath('//h2[@class="LOVD"]'));
         $sIndividualID = substr($header->getText(), -8);
 
-
-        $this->driver->get(ROOT_URL . "/src/logout");
-
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-        $this->driver->get(ROOT_URL . "/src/login");
-
-        // Login as second submitter.
-        $this->enterValue(WebDriverBy::name("username"), $sSubUsername2);
-        $this->enterValue(WebDriverBy::name("password"), $sSubPass2);
-        $loginButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $loginButton->click();
+        $this->logout();
+        $this->login($sSubUsername2, $sSubPass2);
 
         // Try (unsuccessfully) to access individual.
         $this->driver->get(ROOT_URL . '/src/individuals/' . $sIndividualID);
         $infoBox = $this->driver->findElement(WebDriverBy::xpath('//table[@class="info"]/tbody/tr/td[@valign="middle"]'));
         $this->assertEquals($infoBox->getText(), 'No such ID!');
 
-        $this->driver->get(ROOT_URL . "/src/logout");
-
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-        $this->driver->get(ROOT_URL . "/src/login");
-
-        // Login as first submitter.
-        $this->enterValue(WebDriverBy::name("username"), $sSubUsername1);
-        $this->enterValue(WebDriverBy::name("password"), $sSubPass1);
-        $loginButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $loginButton->click();
+        $this->logout();
+        $this->login($sSubUsername1, $sSubPass1);
 
         // Open access sharing page
         $yourAccountLink = $this->driver->findElement(WebDriverBy::xpath('//a/b[text()="Your account"]'));
@@ -135,26 +98,13 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         $saveButton = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Save access permissions"]'));
         $saveButton->click();
 
-
-        $this->driver->get(ROOT_URL . "/src/logout");
-
-        // Wait for logout to complete. Unfortunately we don't know where
-        // logout will redirect us to, so we cannot explicitly wait until
-        // an element is present on the page. Therefore we resort to sleeping
-        // for a while.
-        sleep(SELENIUM_TEST_SLEEP);
-        $this->driver->get(ROOT_URL . "/src/login");
-
-        // Login as second submitter.
-        $this->enterValue(WebDriverBy::name("username"), $sSubUsername2);
-        $this->enterValue(WebDriverBy::name("password"), $sSubPass2);
-        $loginButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Log in']"));
-        $loginButton->click();
+        $this->logout();
+        $this->login($sSubUsername2, $sSubPass2);
 
         // Try (successfully) to access individual.
         $this->driver->get(ROOT_URL . '/src/individuals/' . $sIndividualID);
         $header = $this->driver->findElement(WebDriverBy::xpath('//h2[@class="LOVD"]'));
-        $this->assertEquals($header->getText(), 'View individual #' . $sIndividualID);
+        $this->assertEquals($header->getText(), 'Individual #' . $sIndividualID);
         $nonpubFieldHead = $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr[4]/th'));
         $this->assertEquals($nonpubFieldHead->getText(), 'Remarks (non public)');
     }

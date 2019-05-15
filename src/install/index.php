@@ -1,17 +1,17 @@
 <?php
-// DMD_SPECIFIC: changes to this file? TEST it!!!
 /*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2017-02-20
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -140,7 +140,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     $bPHP = ($sPHPVers >= $aRequired['PHP']);
     $sPHP = '<IMG src="gfx/mark_' . (int) $bPHP . '.png" alt="" width="11" height="11">&nbsp;PHP : ' . $sPHPVers . ' (' . $aRequired['PHP'] . ' required)';
 
-    // 2012-02-01; 3.0-beta-02; Added check for xml_parser_create(), easily allowing other PHP functions to be checked also.
+    // Check for certain PHP functions from optional libraries, such as mbstring and SSL.
     $bPHPFunctions = true;
     $bPHPClasses = true;
     $sPHPRequirements = '';
@@ -151,7 +151,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
         }
         $sPHPRequirements .= '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bFunction . '.png" alt="" width="11" height="11">&nbsp;PHP function : ' . $sFunction . '()<BR>';
     }
-    // 2014-05-26; 3.0-11; Switching to PHP's SoapClient class to communicate with Mutalyzer's SOAP service, as their REST/JSON service is subject to change.
+    // Check for required PHP classes (PDO is checked separately).
     foreach ($aRequired['PHP_classes'] as $sClass) {
         $bClass = class_exists($sClass);
         if (!$bClass) {
@@ -335,14 +335,17 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Restart session, now with correct session name.
     session_destroy();
     $sSignature = md5($_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . time());
-// DMD_SPECIFIC
-if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
-    $sSignature = 'ifokkema_local_3.0';
-} elseif ($_SERVER['SERVER_ADMIN'] == 'd.asscheman@lumc.nl' && $_SERVER['HTTP_HOST'] == 'localhost') {
-    $sSignature = 'dasscheman_local_3.0';
-} elseif (isset($_SERVER['USER']) && $_SERVER['USER'] === 'travis') {
-    $sSignature = 'travis_CI_3.0';
-}
+
+    // DMD_SPECIFIC
+    // Set alternative signature for development/test installations.
+    $aFilterAdmins = array(
+        'i.f.a.c.fokkema@lumc.nl' => 'ifokkema_local_3.0',
+        'm.kroon@lumc.nl' => 'mkroon_local_3.0',
+        'travis-ci@localhost' => 'travis_CI_3.0');
+    if (isset($aFilterAdmins[$_SERVER['SERVER_ADMIN']]) && $_SERVER['HTTP_HOST'] == 'localhost') {
+        $sSignature = $aFilterAdmins[$_SERVER['SERVER_ADMIN']];
+    }
+
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
     $_SETT['cookie_id'] = md5($sSignature);
     session_name('PHPSESSID_' . $_SETT['cookie_id']);
@@ -462,6 +465,32 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
     $nInstallSQL += $nStatuses;
 
 
+    if (LOVD_plus) {
+        // (5b) Registering LOVD analysis statuses.
+        $nStatuses = count($_SETT['analysis_status']);
+        foreach ($_SETT['analysis_status'] as $nStatus => $sStatus) {
+            $aInstallSQL['Registering LOVD analysis statuses...'][] = 'INSERT INTO ' . TABLE_ANALYSIS_STATUS . ' VALUES (' . $nStatus . ', "' . $sStatus . '")';
+        }
+        $nInstallSQL += $nStatuses;
+
+
+        // (5c) Registering LOVD curation statuses.
+        $nStatuses = count($_SETT['curation_status']);
+        foreach ($_SETT['curation_status'] as $nStatus => $sStatus) {
+            $aInstallSQL['Registering LOVD curation statuses...'][] = 'INSERT INTO ' . TABLE_CURATION_STATUS . ' VALUES (' . $nStatus . ', "' . $sStatus . '")';
+        }
+        $nInstallSQL += $nStatuses;
+
+
+        // (5d) Registering LOVD confirmation statuses.
+        $nStatuses = count($_SETT['confirmation_status']);
+        foreach ($_SETT['confirmation_status'] as $nStatus => $sStatus) {
+            $aInstallSQL['Registering LOVD confirmation statuses...'][] = 'INSERT INTO ' . TABLE_CONFIRMATION_STATUS . ' VALUES (' . $nStatus . ', "' . $sStatus . '")';
+        }
+        $nInstallSQL += $nStatuses;
+    }
+
+
     // (6) Registering LOVD allele values.
     require ROOT_PATH . 'install/inc-sql-alleles.php';
     $aInstallSQL['Registering LOVD allele values...'][] = $aAlleleSQL[0];
@@ -500,6 +529,10 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
 
             $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
             $aInstallSQL['Activating LOVD standard custom columns...'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("' . $aCol[0] . '", "00000", NOW())';
+            if (LOVD_plus && $aCol[0] == 'VariantOnGenome/DBID') {
+                // Make sure the DBID column is indexed.
+                $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD INDEX(`' . $aCol[0] . '`)';
+            }
         }
     }
 
@@ -507,7 +540,7 @@ if ($_SERVER['SERVER_ADMIN'] == 'i.f.a.c.fokkema@lumc.nl' && $_SERVER['HTTP_HOST
     // (10) Creating the "Healthy / Control" disease. Maybe later enable some more default columns? (IQ, ...)
     $aInstallSQL['Registering phenotype columns for healthy controls...'] =
         array(
-            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, created_by, created_date) VALUES ("Healthy/Control", "Healthy individual / control", 0, NOW())',
+            'INSERT INTO ' . TABLE_DISEASES . ' (symbol, name, tissues, features, remarks, created_by, created_date) VALUES ("Healthy/Control", "Healthy individual / control", "", "", "", 0, NOW())',
             'UPDATE ' . TABLE_DISEASES . ' SET id = 0',
             'ALTER TABLE ' . TABLE_DISEASES . ' auto_increment = 1',
             // FIXME: Rather parse inc-sql-columns then to do this manually.

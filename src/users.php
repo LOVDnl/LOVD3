@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2018-03-09
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -53,7 +53,7 @@ if (PATH_COUNT == 1 && !ACTION) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'View user accounts');
+    define('PAGE_TITLE', 'User accounts');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -63,7 +63,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
-    $_DATA->viewList('Users', array(), false, false, (bool) ($_AUTH['level'] >= LEVEL_MANAGER));
+    $_DATA->viewList('Users', array('show_options' => ($_AUTH['level'] >= LEVEL_MANAGER)));
 
     $_T->printFooter();
     exit;
@@ -78,7 +78,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'View user account #' . $nID);
+    define('PAGE_TITLE', 'User account #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -86,7 +86,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // If not viewing himself, the user may see very little information (low level) or all data (high level).
     lovd_requireAUTH();
 
-    lovd_isAuthorized('gene', $_AUTH['curates']); // Enables LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
+    // Enable LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
+    // Those levels will see more fields of the given user.
+    lovd_isAuthorized('gene', $_AUTH['curates']);
 
     if ($nID == '00000') {
         $nID = -1;
@@ -104,11 +106,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
 
+    print('      <DIV id="viewentryDiv">' . "\n");
     $zData = $_DATA->viewEntry($nID);
+    print('      </DIV>' . "\n\n");
 
     $aNavigation = array();
     // Since we're faking the user's level to show some more columns when the user is viewing himself, we must put the check on the ID here.
-    if ($_AUTH['id'] != $nID && $_AUTH['level'] > $zData['level']) {
+    if ($_AUTH['id'] != $nID && $_AUTH['level'] >= LEVEL_MANAGER && $_AUTH['level'] > $zData['level']) {
         // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Edit user', 1);
         if ($zData['active']) {
@@ -130,7 +134,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     }
 
-    if ($_AUTH['id'] == $nID || $_AUTH['level'] > $zData['level']) {
+    if ($_AUTH['id'] == $nID || ($_AUTH['level'] >= LEVEL_MANAGER && $_AUTH['level'] > $zData['level'])) {
         $aNavigation[CURRENT_PATH . '?share_access'] = array('', 'Share access to ' . ($_AUTH['id'] == $nID? 'your' : 'user\'s') . ' entries with other users', 1);
     }
 
@@ -146,7 +150,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_Log();
         $_GET['page_size'] = 10;
         $_GET['search_userid'] = $nID;
-        $_DATA->viewList('Logs_for_Users_VE', array('user_', 'del'), true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('user_', 'del'),
+            'track_history' => false,
+        );
+        $_DATA->viewList('Logs_for_Users_VE', $aVLOptions);
     }
 
     $_T->printFooter();
@@ -172,12 +180,15 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     } else {
         define('PAGE_TITLE', 'Register as new submitter');
 
-        if ($_AUTH || !$_CONF['allow_submitter_registration']) {
+        if (LOVD_plus || $_AUTH || !$_CONF['allow_submitter_registration']) {
             $_T->printHeader();
             $_T->printTitle();
             if (!$_CONF['allow_submitter_registration']) {
                 $sGeneSymbol = ($_SESSION['currdb']? $_SESSION['currdb'] : 'DMD'); // Used as an example gene symbol, use the current gene symbol if possible.
                 $sMessage = 'Submitter registration is not active in this LOVD installation. If you wish to submit data, please check the list of gene variant databases in our <A href="http://www.LOVD.nl/LSDBs" target="_blank">list of LSDBs</A>.<BR>Our LSDB list can also be reached by typing <I>GENESYMBOL.lovd.nl</I> in your browser address bar, like <I><A href="http://' . $sGeneSymbol . '.lovd.nl" target="_blank">' . $sGeneSymbol . '.lovd.nl</A></I>.';
+            } elseif (LOVD_plus) {
+                // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
+                $sMessage = 'You can not register as a submitter at this LOVD+ installation. Ask the Manager or Administrator for an account.';
             } else {
                 $sMessage = 'You are already a registered user.';
             }
@@ -211,49 +222,100 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                     lovd_errorAdd('orcid', 'There is already an account registered with this ORCID ID.' . (!$_CONF['allow_unlock_accounts']? '' : ' Did you <A href="reset_password">forget your password</A>?'));
                 } else {
                     // Contact ORCID to retrieve public info.
-                    // 2014-05-09; 3.0-11; ORCID changed their API... but at least they understood including a version might help. Not changing to the new one.
-                    $aOutput = lovd_php_file('http://pub.orcid.org/v1.2/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
+                    // Fix ORCID API to a certain version, but note that ORCID's API can drop the version if they feel like it.
+                    $aOutput = lovd_php_file('https://pub.orcid.org/v2.1/' . $_POST['orcid'], false, '', 'Accept: application/orcid+json');
                     if (!$aOutput) {
                         lovd_errorAdd('orcid', 'The given ORCID ID can not be found at ORCID.org.');
                     } else {
                         $aORCID = array(
                             'orcid-identifier' => array('path' => ''),
-                            'orcid-bio' => array(
-                                'personal-details' => array(
+                            'person' => array(
+                                'name' => array(
                                     'family-name' => array('value' => ''),
                                     'given-names' => array('value' => ''),
                                     'credit-name' => array('value' => ''),
                                 ),
-                                'contact-details' => array(
-                                    'email' => array('value' => ''),
+                                'emails' => array(
+                                    'email' => array(
+                                        0 => array('email' => ''),
+                                    ),
+                                ),
+                                'addresses' => array(
                                     'address' => array(
-                                        'country' => array('value' => ''),
+                                        0 => array(
+                                            'country' => array('value' => ''),
+                                        ),
                                     ),
                                 ),
                             ),
-                            'orcid-history' => array(
-                                'verified-email' => array('value' => ''),
+                            'activities-summary' => array(
+                                'employments' => array(
+                                    'employment-summary' => array(
+                                        0 => array(
+                                            'department-name' => '',
+                                            'role-title' => '',
+                                            'start-date' => array(
+                                                'year' => array('value' => ''),
+                                                'month' => array('value' => ''),
+                                                'day' => array('value' => ''),
+                                            ),
+                                            'end-date' => null,
+                                            'organization' => array(
+                                                'name' => '',
+                                                'address' => array(
+                                                    'city' => '',
+                                                    'country' => '',
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                            'history' => array(
+                                'verified-email' => false,
+                                'verified-primary-email' => false,
                             ),
                         );
 
                         $aOutput = json_decode(implode('', $aOutput), true);
-                        $aORCID = array_replace_recursive($aORCID, $aOutput['orcid-profile']);
+                        $aORCID = array_replace_recursive($aORCID, $aOutput);
                         $nID = $aORCID['orcid-identifier']['path'];
-                        $sNameComposed = $aORCID['orcid-bio']['personal-details']['family-name']['value'] . ', ' . $aORCID['orcid-bio']['personal-details']['given-names']['value'];
-                        $sNameDisplay = $aORCID['orcid-bio']['personal-details']['credit-name']['value'];
+                        $sNameComposed = $aORCID['person']['name']['family-name']['value'] . ', ' . $aORCID['person']['name']['given-names']['value'];
+                        $sNameDisplay = $aORCID['person']['name']['credit-name']['value'];
                         if (!$sNameDisplay) {
-                            $sNameDisplay = $aORCID['orcid-bio']['personal-details']['given-names']['value'] . ' ' . $aORCID['orcid-bio']['personal-details']['family-name']['value'];
+                            $sNameDisplay = $aORCID['person']['name']['given-names']['value'] . ' ' . $aORCID['person']['name']['family-name']['value'];
                         }
-                        $sEmail = $aORCID['orcid-bio']['contact-details']['email']['value'];
-                        $bEmailVerified = $aORCID['orcid-history']['verified-email']['value'];
-                        $sCountryCode = $aORCID['orcid-bio']['contact-details']['address']['country']['value'];
+                        $sInstitute = '';
+                        $sDepartment = '';
+                        $sCountryCode = '';
+                        // Just loop all employments, and choose the first without end date.
+                        foreach ($aORCID['activities-summary']['employments']['employment-summary'] as $aEmployment) {
+                            if (empty($aEmployment['end-date'])) {
+                                $sInstitute = $aEmployment['organization']['name'];
+                                $sDepartment = $aEmployment['department-name'];
+                                $sCountryCode = $aEmployment['organization']['address']['country'];
+                                break;
+                            }
+                        }
+                        $aEmails = array();
+                        foreach ($aORCID['person']['emails']['email'] as $aEmail) {
+                            $aEmails[] = $aEmail['email'];
+                        }
+                        $sEmailDisplay = implode(', ', $aEmails);
+                        // FIXME: We can also receive this from the email settings itself, if public.
+                        $bEmailVerified = ($aORCID['history']['verified-email'] || $aORCID['history']['verified-primary-email']);
+                        // If we didn't get a country from the affiliation, take it from the addresses.
+                        // FIXME: Do we need to loop through the addresses?
+                        $sCountryCode = ($sCountryCode?: $aORCID['person']['addresses']['address'][0]['country']['value']);
                         if ($sCountryCode) {
                             $sCountry = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($sCountryCode))->fetchColumn();
                         } else {
                             $sCountry = '';
                         }
                         $_SESSION['orcid_data']['name'] = $sNameDisplay;
-                        $_SESSION['orcid_data']['email'] = $sEmail;
+                        $_SESSION['orcid_data']['institute'] = $sInstitute;
+                        $_SESSION['orcid_data']['department'] = $sDepartment;
+                        $_SESSION['orcid_data']['email'] = $aEmails;
                         $_SESSION['orcid_data']['countryid'] = $sCountryCode;
 
                         // Report found ID, and have user confirm or deny.
@@ -263,8 +325,9 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         $sMessage = 'We have retrieved the following information from ORCID. Please verify if this information is correct:<BR>' .
                             '<B>' . $nID . '</B><BR>' .
                             $sNameComposed . ' (' . $sNameDisplay . ')<BR>' .
+                            (!$sInstitute? '' : $sInstitute . (!$sDepartment? '' : ' (' . $sDepartment . ')') . '<BR>') .
                             $sCountry . '<BR>' .
-                            $sEmail;
+                            $sEmailDisplay;
                         lovd_showInfoTable($sMessage, 'question');
 
                         print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n" .
@@ -309,7 +372,6 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
     if (ACTION == 'register') {
-        require ROOT_PATH . 'lib/reCAPTCHA/inc-lib-recaptcha.php';
         $sCAPTCHAerror = '';
     }
 
@@ -321,14 +383,12 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
         if (ACTION == 'register') {
             // Checking the CAPTCHA response...
             // If no response has been filled in, we need to complain. Otherwise, we should check the answer.
-            if (empty($_POST['recaptcha_response_field'])) {
-                lovd_errorAdd('', 'Please fill in the two words that you see in the image at the bottom of the form.');
+            if (empty($_POST['g-recaptcha-response'])) {
+                lovd_errorAdd('', 'Please check the checkmark and follow the instructions at "Please verify that you are not a robot".');
             } else {
                 // Check answer!
-                $response = recaptcha_check_answer('6Le0JQQAAAAAAB-iLSVi81tR5s8zTajluFFxkTPL', $_SERVER['REMOTE_ADDR'], $_POST['recaptcha_challenge_field'], $_POST['recaptcha_response_field']);
-                if (!($response->is_valid)) {
-                    lovd_errorAdd('', 'Registration authentication failed. Please try again by filling in the two words that you see in the image at the bottom of the form.');
-                    $sCAPTCHAerror = $response->error;
+                if (!lovd_recaptchaV2_verify($_POST['g-recaptcha-response'])) {
+                    lovd_errorAdd('', 'Registration authentication failed. Please try again by checking the checkmark and following the instructions at "Please verify that you are not a robot" at the bottom of the form.');
                 }
             }
 
@@ -432,7 +492,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                 $_AUTH['collaborates'] = array();
 
                 // Write to log...
-                lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
+                lovd_writeLog('Event', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully created own submitter account with ID ' . $nID);
 
             } else {
                 // Write to log...
@@ -540,7 +600,9 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
         // ORCID DATA?
         if ($_POST['orcid_id'] != 'none') {
             $_POST['name'] = $_SESSION['orcid_data']['name'];
-            $_POST['email'] = $_SESSION['orcid_data']['email'];
+            $_POST['institute'] = $_SESSION['orcid_data']['institute'];
+            $_POST['department'] = $_SESSION['orcid_data']['department'];
+            $_POST['email'] = implode("\r\n", $_SESSION['orcid_data']['email']);
             $_POST['countryid'] = $_SESSION['orcid_data']['countryid'];
         }
     }
@@ -565,6 +627,10 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     // Check form (IP address allow list).
     lovd_includeJS('inc-js-submit-userform.php');
 
+    if (ACTION == 'register') {
+        lovd_includeJS('https://www.google.com/recaptcha/api.js');
+    }
+
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
           '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
 
@@ -576,9 +642,8 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     } else {
         $aFormBottom = array(
             'skip',
-            array('', '', 'print', '<B>Registration authentication</B>'),
-            'hr',
-            array('Please fill in the word, words, or numbers that you see in the image', '', 'print', recaptcha_get_html('6Le0JQQAAAAAAPQ55JT0m0_AVX5RqgSnHBplWHxZ', $sCAPTCHAerror, SSL)),
+            array('Please verify that you are not a robot', '',
+                  'print', '<DIV class="g-recaptcha" data-sitekey="6Lf_XBsUAAAAAC4J4fMs3GP_se-qNk8REDYX40P5"></DIV>'),
             'hr',
             'skip',
             array('', '', 'submit', 'Register'),
@@ -1114,7 +1179,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'individuals/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Individuals_submissions', array('individualid', 'diseaseids', 'owned_by_', 'status'), false, false, true, false, true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('individualid', 'diseaseids', 'owned_by_', 'status'),
+            'show_options' => true,
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList('Individuals_submissions', $aVLOptions);
         unset($_GET['search_individualid']);
     } else {
         lovd_showInfoTable('No submissions of individuals found!', 'stop');
@@ -1132,7 +1202,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         } else {
             $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
         }
-        $_DATA->viewList('Screenings_submissions', array('owned_by_', 'created_date', 'edited_date'), false, false, true, false, true);
+        $aVLOptions = array(
+            'cols_to_skip' => array('owned_by_', 'created_date', 'edited_date'),
+            'show_options' => true,
+            'find_and_replace' => true,
+        );
+        $_DATA->viewList('Screenings_submissions', $aVLOptions);
     } else {
         lovd_showInfoTable('No submissions of variant screenings found!', 'stop');
     }
@@ -1140,6 +1215,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     $_T->printFooter();
     exit;
 }
+
 
 
 
@@ -1259,7 +1335,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_DATA->setRowLink('users_share_access',
         'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}"}, lovd_addUserShareAccess); return false;');
     // The columns hidden here are also specified (enforced) in ajax/viewlist.php to make sure Submitters can't hack their way into the users table.
-    $_DATA->viewList($sUserListID, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'), true);
+    $aVLOptions = array(
+        'cols_to_skip' => array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'),
+        'track_history' => false,
+    );
+    $_DATA->viewList($sUserListID, $aVLOptions);
 
     lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $nID . ')</B> shares access to all
                        data owned by him with the users listed below.', 'information');
@@ -1279,5 +1359,4 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_T->printFooter();
     exit;
 }
-
 ?>

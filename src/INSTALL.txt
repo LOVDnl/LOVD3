@@ -4,7 +4,7 @@ LOVD v.3.0 INSTALLATION GUIDE
 REQUIREMENTS
 ============
 LOVD 3.0 requires a webserver (preferably Apache), PHP >= 5.3.0 with mbstring
-and SOAP support enabled and libxml and openssl installed, and MySQL >= 4.1.2.
+enabled and libxml and openssl installed, and MySQL >= 4.1.2.
 
 
 PREPARATIONS
@@ -58,6 +58,37 @@ computer, you do not need to follow this step.
 Next, point your browser to the install directory of the LOVD package.
 Installation of LOVD takes just a couple of minutes. The forms should explain
 itself. For more information, see the LOVD manual.
+
+
+SUBMISSION API AND AUTOMATIC FILE IMPORT
+========================================
+In order to use the submission API and the automatic import feature, make sure
+you have configured all the necessary paths in the config.ini.php file,
+specifically set data_files to the folder where the data files (JSON data and
+LOVD data file) will be stored, and set data_files_archive to the folder where
+the data files will be moved to after a successful import.
+
+Submitted files can be scheduled for automatic import by the scheduling feature
+available from the Setup area. Make sure you watch the contents of this folder
+with a cronjob, or keep an eye on the scheduling page to make sure you don't
+miss any submissions.
+To check every 4 hours for submissions and send an email when files are found,
+insert the following cronjob, for a user who has access to the file path:
+
+0 */4 * * * [ "$(ls -1A /path/to/files | grep 'lovd$')" ] && ls -1 /path/to/files | grep 'lovd$' | mail -s "Files ready to import" "your_email@address.org"
+
+To facilitate automatic import of the scheduled import files, insert the
+following cronjob, for a user of your choice:
+
+*/15 0-5,19-23 * * * GET "http://URL_to_LOVD/import?autoupload_scheduled_file" -t 2h
+
+Make sure GET is installed (libwww-perl) and its directory is in the PATH
+environment variable. Using wget or curl is also possible, just make sure the
+output is sent to STDOUT. Feel free to change the time settings.
+
+The duration of an import depends completely on the size of the file. For very
+large data files, make sure that the caller script (here, we use GET) doesn't
+time out if the process doesn't return output for a while.
 
 
 QUESTIONS?

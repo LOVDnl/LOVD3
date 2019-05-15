@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2016-09-21
- * For LOVD    : 3.0-17
+ * Modified    : 2019-02-13
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -63,18 +63,25 @@ if ($_SERVER['HTTP_HOST'] == 'localhost') {
 if ((!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || !empty($_SERVER['SSL_PROTOCOL'])) {
     // We're using SSL!
     define('SSL', true);
-    define('SSL_PROTOCOL', $_SERVER['SSL_PROTOCOL']);
     define('PROTOCOL', 'https://');
 } else {
     define('SSL', false);
-    define('SSL_PROTOCOL', '');
     define('PROTOCOL', 'http://');
 }
+
+// Prevent some troubles with the menu or lovd_getProjectFile() when the URL contains double slashes or backslashes.
+$_SERVER['SCRIPT_NAME'] = lovd_cleanDirName(str_replace('\\', '/', $_SERVER['SCRIPT_NAME']));
 
 // Our output formats: text/html by default.
 $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
 if (lovd_getProjectFile() == '/api.php') {
+    $aFormats[] = 'application/json';
     $aFormats[] = 'text/bed';
+} elseif (lovd_getProjectFile() == '/import.php' && substr($_SERVER['QUERY_STRING'], 0, 25) == 'autoupload_scheduled_file') {
+    // Set format to text/plain only when none is requested.
+    if (empty($_GET['format']) || !in_array($_GET['format'], $aFormats)) {
+        $_GET['format'] = 'text/plain';
+    }
 }
 if (!empty($_GET['format']) && in_array($_GET['format'], $aFormats)) {
     define('FORMAT', $_GET['format']);
@@ -89,6 +96,7 @@ define('COLLEAGUE_CANNOT_EDIT', 2); // Colleagues that have no edit permissions.
 define('COLLEAGUE_ALL', 3);         // All colleagues.
 
 define('LEVEL_SUBMITTER', 1);    // Also includes collaborators and curators. Authorization is depending on assignments, not user levels anymore.
+define('LEVEL_ANALYZER', 2);     // Diagnostics: LOVD+ introduced this user level.
 define('LEVEL_COLLABORATOR', 3); // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
 define('LEVEL_OWNER', 4);        // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
 define('LEVEL_CURATOR', 5);      // THIS IS NOT A VALID USER LEVEL. Just indicates level of authorization. You can change these numbers, but keep the order!
@@ -118,6 +126,10 @@ define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which
 // Define constant to quickly check if we're on Windows, since sending emails on Windows requires different settings.
 define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 
+// Diagnostics: To make it easier to share certain code between
+// LOVD and LOVD+, simply define if we're active or not.
+@define('LOVD_plus', false);
+
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
@@ -125,12 +137,10 @@ $aRequired =
                 'PHP_functions' =>
                      array(
                             'mb_detect_encoding',
-                            'xml_parser_create', // We could also look for libxml constants?
                             'openssl_seal',      // We could also look for openssl constants?
                           ),
                 'PHP_classes' =>
                      array(
-                            'SoapClient',
                           ),
                 'MySQL' => '4.1.2',
               );
@@ -139,7 +149,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-17',
+                            'version' => '3.0-21c',
                           ),
                 'user_levels' =>
                      array(
@@ -150,6 +160,13 @@ $_SETT = array(
                             LEVEL_COLLABORATOR => 'Collaborator',
                             LEVEL_SUBMITTER    => 'Submitter',
                           ),
+                'user_level_settings' =>
+                array(
+                    // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
+                    // has already been called for gene-specific overviews.
+                    'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
+                ),
                 'gene_imprinting' =>
                      array(
                             'unknown'  => 'Unknown',
@@ -160,11 +177,25 @@ $_SETT = array(
                 'var_effect' =>
                      array(
                             0 => 'Not classified', // Submitter cannot select this.
-                            5 => 'Effect unknown',
                             9 => 'Affects function',
+                            8 => 'Affects function, not associated with individual\'s disease phenotype',
+                            6 => 'Affects function, not associated with any known disease phenotype',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
+                            5 => 'Effect unknown',
+                          ),
+                'var_effect_api' =>
+                     array(
+                            // The API requires different, concise but clear, values.
+                            0 => 'notClassified',
+                            9 => 'functionAffected',
+                            8 => 'notThisDisease',
+                            6 => 'notAnyDisease',
+                            7 => 'functionProbablyAffected',
+                            3 => 'functionProbablyNotAffected',
+                            1 => 'functionNotAffected',
+                            5 => 'unknown',
                           ),
                 'var_effect_default' => '00',
                 'data_status' =>
@@ -175,6 +206,12 @@ $_SETT = array(
                             STATUS_MARKED => 'Marked',
                             STATUS_OK => 'Public',
                           ),
+                'import_priorities' =>
+                    array(
+                        0 => 'Default',
+                        4 => 'Medium priority',
+                        9 => 'High priority',
+                    ),
                 'update_levels' =>
                      array(
                             1 => 'Optional',
@@ -229,6 +266,8 @@ $_SETT = array(
                             'hg18' =>
                                      array(
                                             'ncbi_name'      => 'Build 36.1',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.9',
@@ -261,6 +300,8 @@ $_SETT = array(
                             'hg19' =>
                                      array(
                                             'ncbi_name'      => 'GRCh37',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.10',
@@ -294,6 +335,8 @@ $_SETT = array(
                             'hg38' =>
                                      array(
                                             'ncbi_name'      => 'GRCh38',
+                                         // FIXME: This information is also stored in the chromosomes table.
+                                         // Remove it from here?
                                             'ncbi_sequences' =>
                                                      array(
                                                             '1'  => 'NC_000001.11',
@@ -423,6 +466,10 @@ $_INI = lovd_parseConfigFile(CONFIG_URI);
 
 
 // Define table names (system-wide).
+// WARNING: The order of tables *MUST* be the same as the order in which the
+// tables are defined in the installer (meaning, respecting foreign keys),
+// because uninstalling LOVD will use this table, reverse it, and try to remove
+// the tables in the right order.
 // FIXME: TABLE_SCR2GENE => TABLE_SCRS2GENES etc. etc.?
 define('TABLEPREFIX', $_INI['database']['table_prefix']);
 $_TABLES =
@@ -440,11 +487,16 @@ $_TABLES =
                 'TABLE_ALLELES' => TABLEPREFIX . '_alleles',
                 'TABLE_EFFECT' => TABLEPREFIX . '_variant_effect',
                 'TABLE_INDIVIDUALS' => TABLEPREFIX . '_individuals',
+                //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',
                 'TABLE_IND2DIS' => TABLEPREFIX . '_individuals2diseases',
                 'TABLE_VARIANTS' => TABLEPREFIX . '_variants',
+                //'TABLE_VARIANTS_REV' => TABLEPREFIX . '_variants_revisions',
                 'TABLE_VARIANTS_ON_TRANSCRIPTS' => TABLEPREFIX . '_variants_on_transcripts',
+                //'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' => TABLEPREFIX . '_variants_on_transcripts_revisions',
                 'TABLE_PHENOTYPES' => TABLEPREFIX . '_phenotypes',
+                //'TABLE_PHENOTYPES_REV' => TABLEPREFIX . '_phenotypes_revisions',
                 'TABLE_SCREENINGS' => TABLEPREFIX . '_screenings',
+                //'TABLE_SCREENINGS_REV' => TABLEPREFIX . '_screenings_revisions',
                 'TABLE_SCR2GENE' => TABLEPREFIX . '_screenings2genes',
                 'TABLE_SCR2VAR' => TABLEPREFIX . '_screenings2variants',
                 'TABLE_COLS' => TABLEPREFIX . '_columns',
@@ -458,21 +510,7 @@ $_TABLES =
                 'TABLE_SOURCES' => TABLEPREFIX . '_external_sources',
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
-
-                // VERSIONING TABLES
-                //'TABLE_INDIVIDUALS_REV' => TABLEPREFIX . '_individuals_revisions',
-                //'TABLE_VARIANTS_REV' => TABLEPREFIX . '_variants_revisions',
-                //'TABLE_VARIANTS_ON_TRANSCRIPTS_REV' => TABLEPREFIX . '_variants_on_transcripts_revisions',
-                //'TABLE_PHENOTYPES_REV' => TABLEPREFIX . '_phenotypes_revisions',
-                //'TABLE_SCREENINGS_REV' => TABLEPREFIX . '_screenings_revisions',
-
-                // REMOVED in 3.0-alpha-07; delete only if sure that there are no legacy versions still out there!
-                // SEE ALSO uninstall.php !!!
-                // SEE ALSO line 559 !!!
-                'TABLE_PATHOGENIC' => TABLEPREFIX . '_variant_pathogenicity',
-                // REMOVED IN 3.0-05; delete only if sure that there are no legacy versions still out there!
-                'TABLE_HITS' => TABLEPREFIX . '_hits',
-                // They can also be removed, if they are completely removed from the code (also inc-upgrade.php), and only the DROP code is kept with the name hard coded.
+                'TABLE_SCHEDULED_IMPORTS' => TABLEPREFIX . '_scheduled_imports',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {
@@ -492,7 +530,7 @@ if (!class_exists('PDO')) {
 } else {
     // PDO available, check if we have the requested database driver.
     if (!in_array($_INI['database']['driver'], PDO::getAvailableDrivers())) {
-        $sDriverName = $aConfigValues['database']['driver']['values'][$_INI['database']['driver']];
+        $sDriverName = $_INI['database']['driver']; // We used to be able to get to the formatted name, but no more.
         lovd_displayError('Init', 'This PHP installation does not have ' . $sDriverName . ' support for PDO installed. Without it, LOVD will not function. Please install ' . $sDriverName . ' support for PHP PDO.');
     }
 }
@@ -514,9 +552,11 @@ if ($_INI['database']['driver'] == 'mysql') {
 
 
 ini_set('default_charset','UTF-8');
-mb_internal_encoding('UTF-8');
+if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding('UTF-8');
+}
 
-// Help prevent cookie theft trough JavaScript; XSS defensive line.
+// Help prevent cookie theft through JavaScript; XSS defensive line.
 // See: http://nl.php.net/manual/en/session.configuration.php#ini.session.cookie-httponly
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
@@ -537,7 +577,7 @@ if (!$_CONF) {
     $_CONF =
          array(
                 'system_title' => 'LOVD 3.0 - Leiden Open Variation Database',
-                'logo_uri' => 'gfx/LOVD3_logo145x50.jpg',
+                'logo_uri' => 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg',
                 'lovd_read_only' => false,
               );
 }
@@ -575,7 +615,7 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
             $aTables[] = $sCol;
         }
     }
-    if (count($aTables) < (count($_TABLES) - 2)) {
+    if (count($aTables) < (count($_TABLES))) {
         // We're not completely installed.
         define('NOT_INSTALLED', true);
     }
@@ -602,9 +642,6 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
     // Store additional version information.
     list(, $_STAT['tree'],, $_STAT['build']) = $aRegsVersion;
 }
-
-// Prevent some troubles with the menu when the URL contains double slashes.
-$_SERVER['SCRIPT_NAME'] = lovd_cleanDirName($_SERVER['SCRIPT_NAME']);
 
 
 
@@ -712,7 +749,9 @@ if (!defined('NOT_INSTALLED')) {
             $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ?', array(LEVEL_ADMIN))->fetchRow();
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
+            // Add a cleaned email address, because perhaps the admin has multiple addresses.
+            $_SETT['admin']['address_formatted'] = $_SETT['admin']['name'] . ' <' . str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>';
         }
 
         // Switch gene.

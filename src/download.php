@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2016-04-08
- * For LOVD    : 3.0-15
+ * Modified    : 2017-06-15
+ * For LOVD    : 3.0-19
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -32,9 +33,59 @@ $_GET['format'] = 'text/plain'; // To make sure all possible error functions out
 define('FORMAT_ALLOW_TEXTPLAIN', true);
 define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
+set_time_limit(60*5); // Very large, but not infinite.
 
 //header('Content-type: text/plain; charset=UTF-8');
 
+
+
+function getWhereClauseForFilters ($aFilters, $sTableAlias)
+{
+    // Create a SQL WHERE clause for a given filter. Returns two values, first
+    //  is a string containing the SQL clause, second is an array of arguments
+    //  to be added when executing a query with the clause through PDO.
+    // Optionally, all references to columns can be prefixed by a table alias.
+
+    $sWHERE = '';
+    $aArgs = array();
+    if ($aFilters) {
+        // The fact that we have a filter, may affect other data types.
+        $i = 0;
+        foreach ($aFilters as $sFilter => $Value) {
+            $sWHERE .= (!$i++ ? '' : ' AND ');
+            switch ($sFilter) {
+                case 'category':
+                    // Custom column category must be taken from the start of the column id.
+                    $sWHERE .= $sTableAlias . '.id LIKE ?';
+                    $aArgs[] = $Value . '/%';
+                    break;
+                case 'owner':
+                    // Data ownership is defined by the created_by and owned_by fields.
+                    $sWHERE .= '(' . $sTableAlias . '.created_by = ? OR ' . $sTableAlias . '.owned_by = ?)';
+                    $aArgs[] = $Value;
+                    $aArgs[] = $Value;
+                    break;
+                default:
+                    // By default, we'll assume that this filter is a certain column.
+                    // However, if an empty array of possible values was given to filter on, we must simply return no results.
+                    if (is_array($Value) && !count($Value)) {
+                        // No hits, filter all out.
+                        $sWHERE .= '0=1';
+                    } else {
+                        $sWHERE .= $sTableAlias . '.`' . $sFilter . '` ';
+                        if (is_array($Value)) {
+                            $sWHERE .= 'IN (?' . str_repeat(', ?', count($Value) - 1) . ')';
+                            $aArgs = array_merge($aArgs, $Value);
+                        } else {
+                            $sWHERE .= '= ?';
+                            $aArgs[] = $Value;
+                        }
+                    }
+            }
+        }
+    }
+    return array($sWHERE, $aArgs);
+}
 
 
 
@@ -50,22 +101,35 @@ if (ACTION || PATH_COUNT < 2) {
 
 if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'user')))) ||
     ($_PE[1] == 'columns' && PATH_COUNT <= 3) ||
-    ($_PE[1] == 'genes' && PATH_COUNT == 2)) {
+    ($_PE[1] == 'diseases' && PATH_COUNT == 2) ||
+    ($_PE[1] == 'genes' && PATH_COUNT == 2) ||
+    ($_PE[1] == 'gene_panels' && PATH_COUNT == 3 && ctype_digit($_PE[2]))) {
     // URL: /download/all
     // URL: /download/all/gene/IVD
     // URL: /download/all/mine
     // URL: /download/all/user/00001
     // URL: /download/columns
     // URL: /download/columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
+    // URL: /download/diseases
     // URL: /download/genes
+    // URL: /download/gene_panels/00001
     // Download data from the database, so that we can import it elsewhere.
+
+    if (LOVD_plus && $_PE[1] != 'gene_panels') {
+        // For LOVD+, in general downloads are closed.
+        // We have an exception for gene panels.
+        $_T->printHeader();
+        lovd_showInfoTable('Disabled on request.', 'information');
+        $_T->printFooter();
+        exit;
+    }
 
     $sFileName = ''; // What name to give the file that is provided?
     $sHeader = '';   // What header to put in the file? "<header> download".
     $sFilter = '';   // Do you want to filter the data? If so, put some string here, that marks this type of filter.
     $ID = '';
     if ($_PE[1] == 'all' && empty($_PE[2])) {
-        // Download all.
+        // Download all data.
         $sFileName = 'full_download';
         $sHeader = 'Full data';
         lovd_requireAuth(LEVEL_MANAGER);
@@ -73,10 +137,20 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         // Gene database contents.
         $sFileName = 'full_download_' . $_PE[3];
         $sHeader = 'Full data';
-        $sFilter = 'gene';
         $ID = $_PE[3];
         lovd_isAuthorized('gene', $_PE[3]);
-        lovd_requireAuth(LEVEL_CURATOR);
+
+        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            $sFilter = 'gene';
+        } else {
+            $bAllowDownload = $_DB->query('SELECT allow_download FROM ' . TABLE_GENES . ' WHERE id = ?', array($ID))->fetchColumn();
+            if ($bAllowDownload) {
+                $sFilter = 'gene_public';
+            } else {
+                die('Error: Data for gene (' . htmlspecialchars($ID) . ') is not public and you don\'t have permission '.
+                    'to see non-public data.' . "\r\n");
+            }
+        }
     } elseif ($_PE[1] == 'all' && $_PE[2] == 'mine' && PATH_COUNT == 3) {
         // Own data.
         $sFileName = 'owned_data';
@@ -93,7 +167,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         lovd_requireAuth(LEVEL_MANAGER);
 
     } elseif ($_PE[1] == 'columns' && empty($_PE[2])) {
-        // Download all.
+        // Download all custom columns.
         $sFileName = 'custom_columns';
         $sHeader = 'Custom column';
         lovd_requireAuth(LEVEL_MANAGER);
@@ -106,10 +180,24 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $ID = $_PE[2];
         lovd_requireAuth(LEVEL_MANAGER);
 
+    } elseif ($_PE[1] == 'diseases' && empty($_PE[2])) {
+        // Download all diseases.
+        $sFileName = 'diseases';
+        $sHeader = 'Disease data';
+        lovd_requireAuth(LEVEL_MANAGER);
+
     } elseif ($_PE[1] == 'genes' && empty($_PE[2])) {
         // Download all genes.
         $sFileName = 'genes';
         $sHeader = 'Gene data';
+        lovd_requireAuth(LEVEL_MANAGER);
+
+    } elseif (LOVD_plus && $_PE[1] == 'gene_panels' && PATH_COUNT == 3 && ctype_digit($_PE[2])) {
+        // Download a single gene panel.
+        $sFileName = 'gene_panel_' . $_PE[2];
+        $sHeader = 'Gene panel';
+        $sFilter = 'genepanel';
+        $ID = $_PE[2];
         lovd_requireAuth(LEVEL_MANAGER);
     } else {
         exit;
@@ -121,10 +209,8 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sHeader . ' download ### To import, do not remove or alter this header ###' . "\r\n");
     if ($sFilter == 'owner') {
         print('## Filter: (created_by = ' . $ID . ' || owned_by = ' . $ID . ')' . "\r\n");
-    } elseif ($sFilter == 'gene') {
-        print('## Filter: (gene = ' . $ID . ')' . "\r\n");
-    } elseif ($sFilter == 'category') {
-        print('## Filter: (category = ' . $ID . ')' . "\r\n");
+    } elseif (in_array($sFilter, array('category', 'gene', 'genepanel', 'gene_public'))) {
+        print('## Filter: (' . $sFilter . ' = ' . $ID . ')' . "\r\n");
     }
     print('# charset = UTF-8' . "\r\n\r\n");
 
@@ -225,8 +311,8 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'edited_by', 'edited_date', 'updated_by', 'updated_date',
                 );
 
-        } elseif ($sFilter == 'gene') {
-            // Gene-specific download. Can be downloaded by Curator.
+        } elseif ($sFilter == 'gene' || $sFilter == 'gene_public') {
+            // Gene-specific download. Can be downloaded by Curator or by public when settings allow.
             // Change the order of filtering just a bit, so we can filter the VOGs based on the VOTs, the screenings based on the VOGs and the Individuals based on their Screenings.
             $aObjectsToBeFiltered =
                 array(
@@ -267,11 +353,49 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             // Screenings have to be prefetched, because the Individuals, Ind2Dis' and Phenotypes need to be filtered on the Individual IDs.
             $aObjects['Screenings']['prefetch'] = true;
             $aObjects['Screenings']['filter_other']['Individuals']['id'] = 'individualid';
-            $aObjects['Screenings']['filter_other']['Ind2Dis']['individualid'] = 'individualid';
-            $aObjects['Screenings']['filter_other']['Phenotypes']['individualid'] = 'individualid';
+
+            if ($sFilter == 'gene') {
+                // Normally, we only filter the individuals based on
+                //  the screenings that are connected to the variants.
+                $aObjects['Screenings']['filter_other']['Ind2Dis']['individualid'] = 'individualid';
+                $aObjects['Screenings']['filter_other']['Phenotypes']['individualid'] = 'individualid';
+
+            } else {
+                // Public data filter. Individuals get filtered on status as well, and therefore filter others.
+                // Prefetch individuals and filter Screenings, Ind2Dis, and Phenotypes.
+                $aObjects['Individuals']['prefetch'] = true;
+                $aObjects['Individuals']['filter_other']['Screenings']['individualid'] = 'id';
+                $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
+                $aObjects['Individuals']['filter_other']['Phenotypes']['individualid'] = 'id';
+
+                $aObjects['Scr2Gene']['prefetch'] = true;
+            }
+
             // Ind2Dis' have to be prefetched, because the Diseases need to be filtered on their IDs.
             $aObjects['Ind2Dis']['prefetch'] = true;
             $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid'; // More values were already in, from Gen2Dis!
+
+            if ($sFilter == 'gene_public') {
+                // When downloading only the public gene data, filter data on status.
+                $aObjects['Variants']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
+                $aObjects['Individuals']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
+                $aObjects['Phenotypes']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
+
+                // Hide non-public columns.
+                $aObjectTranslations = array(
+                    'VariantOnTranscript' => 'Variants_On_Transcripts',
+                    'VariantOnGenome' => 'Variants',
+                    'Individual' => 'Individuals',
+                    'Phenotype' => 'Phenotypes',
+                    'Screening' => 'Screenings');
+                $qHiddenCols = 'SELECT id, SUBSTRING_INDEX(id, "/", 1) AS category FROM ' .
+                               TABLE_COLS . ' WHERE public_view = ?';
+                $aHiddenCols = $_DB->query($qHiddenCols, array('0'))->fetchAllAssoc();
+                foreach($aHiddenCols as $aHiddenCol) {
+                    $sObject = $aObjectTranslations[$aHiddenCol['category']];
+                    $aObjects[$sObject]['hide_columns'][] = $aHiddenCol['id'];
+                }
+            }
         }
 
     } elseif ($_PE[1] == 'columns') {
@@ -285,12 +409,32 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             $aObjects['Columns']['filters']['category'] = $ID;
         }
 
+    } elseif ($_PE[1] == 'diseases') {
+        $aObjects =
+            array(
+                'Diseases' => $aDataTypeSettings,
+                'Gen2Dis' => array_merge($aDataTypeSettings, array('label' => 'Genes_To_Diseases', 'order_by' => 'geneid, diseaseid')),
+            );
+
     } elseif ($_PE[1] == 'genes') {
         $aObjects =
             array(
                 'Genes' => $aDataTypeSettings,
                 'Transcripts' => $aDataTypeSettings,
             );
+
+    } elseif (LOVD_plus && $_PE[1] == 'gene_panels') {
+        $aObjects =
+            array(
+                'Gene_Panels' => $aDataTypeSettings,
+                'GP2Gene' => array_merge($aDataTypeSettings, array('label' => 'Gene_Panels_To_Genes', 'order_by' => 'genepanelid, geneid')),
+            );
+
+        // Apply filters and filter order, for user-specific download.
+        if ($sFilter == 'genepanel') {
+            $aObjects['Gene_Panels']['filters']['id'] = $ID;
+            $aObjects['GP2Gene']['filters']['genepanelid'] = $ID;
+        }
     }
 }
 
@@ -314,51 +458,21 @@ if (empty($aObjectsToBeFiltered) || count($aObjectsToBeFiltered) != count($aObje
 }
 foreach ($aObjectsToBeFiltered as $sObject) {
     $aSettings = $aObjects[$sObject];
-    $sWHERE = '';
-    $aArgs = array();
-    if ($aSettings['filters']) {
-        // The fact that we have a filter, may affect other data types.
-        $i = 0;
-        foreach ($aSettings['filters'] as $sFilter => $Value) {
-            $sWHERE .= (!$i++? '' : ' AND ');
-            switch ($sFilter) {
-                case 'category':
-                    // Custom column category must be taken from the start of the column id.
-                    $sWHERE .= 'id LIKE ?';
-                    $aArgs[] = $Value . '/%';
-                    break;
-                case 'owner':
-                    // Data ownership is defined by the created_by and owned_by fields.
-                    $sWHERE .= '(created_by = ? OR owned_by = ?)';
-                    $aArgs[] = $Value;
-                    $aArgs[] = $Value;
-                    break;
-                default:
-                    // By default, we'll assume that this filter is a certain column.
-                    // However, if an empty array of possible values was given to filter on, we must simply return no results.
-                    if (is_array($Value) && !count($Value)) {
-                        // No hits, filter all out.
-                        $sWHERE .= '0=1';
-                    } else {
-                        $sWHERE .= '`' . $sFilter . '` ';
-                        if (is_array($Value)) {
-                            $sWHERE .= 'IN (?' . str_repeat(', ?', count($Value) - 1) . ')';
-                            $aArgs = array_merge($aArgs, $Value);
-                        } else {
-                            $sWHERE .= '= ?';
-                            $aArgs[] = $Value;
-                        }
-                    }
-            }
-        }
-    }
+    list($sWHERE, $aArgs) = getWhereClauseForFilters($aSettings['filters'], 't');
 
     // Build the query.
     // Ugly hack: we will change $sTable for the VOT to a string that joins VOG such that we can apply filters.
     // We'll add table alias 't' everywhere to make sure the SELECT * doesn't take data from both tables, if we're using two tables here.
     //   VOG values can overwrite VOT values (effectid).
     if ($sObject == 'Variants_On_Transcripts') {
-        $sTable = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS . ' USING (id)';
+        $sTable = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS . ' AS g USING (id)';
+
+        // Apply VOG filters as well.
+        if (isset($aObjects['Variants']) && !empty($aObjects['Variants']['filters'])) {
+            list($sVOGWhere, $aVOGArgs) = getWhereClauseForFilters($aObjects['Variants']['filters'], 'g');
+            $sWHERE .= (!$sWHERE? '' : ' AND ') . $sVOGWhere;
+            $aArgs = array_merge($aArgs, $aVOGArgs);
+        }
     } elseif ($sObject == 'Columns') {
         $sTable = TABLE_COLS . ' AS t';
     } else {
@@ -368,7 +482,7 @@ foreach ($aObjectsToBeFiltered as $sObject) {
         }
     }
     // Store in data array.
-    $aObjects[$sObject]['query'] = 'SELECT t.* FROM ' . $sTable . (!$sWHERE? '' : ' WHERE ' . $sWHERE) . ' ORDER BY ' . (empty($aSettings['order_by'])? 'id' : $aSettings['order_by']);
+    $aObjects[$sObject]['query'] = 'SELECT t.* FROM ' . $sTable . (!$sWHERE? '' : ' WHERE ' . $sWHERE) . ' ORDER BY t.' . (empty($aSettings['order_by'])? 'id' : $aSettings['order_by']);
     $aObjects[$sObject]['args']  = $aArgs;
 
     // If prefetch is requested, request data right here. We will then loop through the results to create the filters for the other objects.
@@ -398,6 +512,43 @@ foreach ($aObjectsToBeFiltered as $sObject) {
                     $aObjects[$sObjectToFilter]['filters'][$sColumnToFilter] = array_unique(array_merge($aObjects[$sObjectToFilter]['filters'][$sColumnToFilter], $aValuesToFilter));
                 }
             }
+        }
+    }
+}
+
+
+
+if (isset($sFilter) && $sFilter == 'gene_public') {
+    // Ugly hack to run otherwise ignored filter of individualid on screenings.
+    // FIXME: make sure this filter is part of the query to get screenings from DB.
+
+    if (isset($aObjects['Screenings']['filters']['individualid']) &&
+        is_array($aObjects['Screenings']['filters']['individualid'])) {
+
+        // Get allowed values as keys, for quick lookups.
+        $aIndIDsAsKeys = array_flip($aObjects['Screenings']['filters']['individualid']);
+
+        // Filter out non-allowed values for individualid.
+        $aScreeningIDs = array();
+        foreach ($aObjects['Screenings']['data'] as $nKey => $zData) {
+            if (!isset($aIndIDsAsKeys[$zData['individualid']])) {
+                unset($aObjects['Screenings']['data'][$nKey]);
+            } else {
+                $aScreeningIDs[] = $zData['id'];
+            }
+        }
+        // Because we need the data to surely have a key [0].
+        $aObjects['Screenings']['data'] = array_values($aObjects['Screenings']['data']);
+
+        $aScreeningIDsAsKeys = array_flip($aScreeningIDs);
+        foreach (array('Scr2Var', 'Scr2Gene') as $sObject) {
+            foreach ($aObjects[$sObject]['data'] as $nKey => $zData) {
+                if (!isset($aScreeningIDsAsKeys[$zData['screeningid']])) {
+                    unset($aObjects[$sObject]['data'][$nKey]);
+                }
+            }
+            // Because we need the data to surely have a key [0].
+            $aObjects[$sObject]['data'] = array_values($aObjects[$sObject]['data']);
         }
     }
 }

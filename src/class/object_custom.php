@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2016-08-10
- * For LOVD    : 3.0-17
+ * Modified    : 2019-02-14
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -57,7 +57,7 @@ class LOVD_Custom extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH, $_DB;
+        global $_AUTH, $_DB, $_SETT;
 
         $aArgs = array();
 
@@ -140,7 +140,7 @@ class LOVD_Custom extends LOVD_Object {
             $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) WHERE c2l.colid LIKE ? GROUP BY l.id',
                 array($this->sCategory . '/%'))->fetchAllAssoc();
             foreach ($aLinks as $aLink) {
-                $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '(.*)', $aLink['pattern_text'])) . '/';
+                $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '([^:]*)', $aLink['pattern_text'])) . '/';
                 $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
                 $aCols = explode(';', $aLink['colids']);
                 foreach ($aCols as $sColID) {
@@ -155,7 +155,7 @@ class LOVD_Custom extends LOVD_Object {
         parent::__construct();
 
         // Hide entries that are not marked or public.
-        if ($_AUTH['level'] < LEVEL_COLLABORATOR) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+        if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
             if (in_array($this->sCategory, array('VariantOnGenome', 'VariantOnTranscript'))) {
                 $sAlias = 'vog';
             } else {
@@ -320,7 +320,7 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewEntry ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewEntry format
-        // Note: object_custom_viewlists.php implements their own version of this code
+        // Note: object_custom_viewlists.php implements their own version of this code.
         global $_AUTH;
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
@@ -339,7 +339,7 @@ class LOVD_Custom extends LOVD_Object {
     function buildViewList ()
     {
         // Gathers the columns which are active for the current data type and returns them in a viewList format
-        // Note: object_custom_viewlists.php implements their own version of this code
+        // Note: object_custom_viewlists.php implements their own version of this code.
         global $_AUTH;
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
@@ -353,7 +353,7 @@ class LOVD_Custom extends LOVD_Object {
                                     'view'   => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
                                     'db'     => array('`' . $aCol['colid'] . '`', 'ASC', lovd_getColumnType('', $aCol['mysql_type'])),
                                     'legend' => array($aCol['description_legend_short'], $aCol['description_legend_full']),
-                                    'allowfnr' => true, // All custom columns allow Find & Replace.
+                                    'allow_find_replace' => true, // All custom columns allow Find & Replace.
                                  );
         }
         return $aViewList;
@@ -363,7 +363,7 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_AUTH;
         // Checks fields before submission of data.
@@ -371,23 +371,29 @@ class LOVD_Custom extends LOVD_Object {
             if ($aCol['mandatory']) {
                 $this->aCheckMandatory[] = $sCol;
             }
-            // Make it easier for users to fill in the age fields. Change 5d into 00y00m05d, for instance.
-            if (preg_match('/\/Age(\/.+|_.+)?$/', $sCol) && $aData[$sCol] && preg_match('/^([<>])?(\d{1,2}y)?(\d{1,2}m)?(\d{1,2}d)?(\?)?$/', $aData[$sCol], $aRegs)) {
-                $aRegs = array_pad($aRegs, 6, '');
-                if ($aRegs[2] || $aRegs[3] || $aRegs[4]) {
-                    // At least some data needs to be filled in!
-                    // First, pad the numbers.
-                    foreach ($aRegs as $key => $val) {
-                        if (preg_match('/^\d{1}[ymd]$/', $val)) {
-                            $aRegs[$key] = '0' . $val;
+            if (!LOVD_plus) {
+                // Disabled for LOVD+, as it takes a lot of time, and we don't use it.
+                // Make it easier for users to fill in the age fields. Change 5d into 00y00m05d, for instance.
+                if (preg_match('/\/Age(\/.+|_.+)?$/', $sCol) && isset($aData[$sCol]) && preg_match('/^([<>])?(\d{1,2}y)?(\d{1,2}m)?(\d{1,2}d)?(\?)?$/', $aData[$sCol], $aRegs)) {
+                    $aRegs = array_pad($aRegs, 6, '');
+                    if ($aRegs[2] || $aRegs[3] || $aRegs[4]) {
+                        // At least some data needs to be filled in!
+                        // First, pad the numbers.
+                        foreach ($aRegs as $key => $val) {
+                            if (preg_match('/^\d{1}[ymd]$/', $val)) {
+                                $aRegs[$key] = '0' . $val;
+                            }
                         }
+                        // Then, glue everything together.
+                        $aData[$sCol] = $_POST[$sCol] = $aRegs[1] . (!$aRegs[2]? '00y' : $aRegs[2]) . (!$aRegs[3] && $aRegs[4]? '00m' : $aRegs[3]) . (!$aRegs[4]? '' : $aRegs[4]) . (!$aRegs[5]? '' : $aRegs[5]);
                     }
-                    // Then, glue everything together.
-                    $aData[$sCol] = $_POST[$sCol] = $aRegs[1] . (!$aRegs[2]? '00y' : $aRegs[2]) . (!$aRegs[3] && $aRegs[4]? '00m' : $aRegs[3]) . (!$aRegs[4]? '' : $aRegs[4]) . (!$aRegs[5]? '' : $aRegs[5]);
                 }
             }
             if (!empty($aData[$sCol])) {
-                $this->checkInputRegExp($sCol, $aData[$sCol]);
+                if (!LOVD_plus) {
+                    // Disabled for LOVD+, to speed up the import.
+                    $this->checkInputRegExp($sCol, $aData[$sCol]);
+                }
                 $this->checkSelectedInput($sCol, $aData[$sCol]);
             }
         }
@@ -408,7 +414,7 @@ class LOVD_Custom extends LOVD_Object {
             unset($this->aCheckMandatory[$nIndex]);
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
     }
 
 
@@ -441,7 +447,10 @@ class LOVD_Custom extends LOVD_Object {
         if ($this->aColumns[$sColClean]['form_type'][2] == 'select' && $this->aColumns[$sColClean]['form_type'][3] >= 1) {
             if (!empty($Val)) {
                 $aOptions = preg_replace('/ *(=.*)?$/', '', $this->aColumns[$sColClean]['select_options']); // Trim whitespace from the options.
-                if (lovd_getProjectFile() == '/import.php') {
+                // Not a great way to check if we need to explode the values, but it works.
+                // It would be better however, if we would pass on the settings like objects::checkFields() does.
+                if (in_array(lovd_getProjectFile(), array('/import.php', '/ajax/viewlist.php'))) {
+                    // Importing, or running F&R!
                     $Val = explode(';', $Val); // Normally the form sends an array, but from the import I need to create an array.
                 } elseif (!is_array($Val)) {
                     $Val = array($Val);
@@ -457,7 +466,8 @@ class LOVD_Custom extends LOVD_Object {
                 foreach ($Val as $sValue) {
                     $sValue = trim($sValue); // Trim whitespace from $sValue to ensure match independent of whitespace.
                     if (!in_array($sValue, $aOptions)) {
-                        if (lovd_getProjectFile() == '/import.php') {
+                        if (in_array(lovd_getProjectFile(), array('/import.php', '/ajax/viewlist.php'))) {
+                            // Importing, or running F&R!
                             lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $sColClean . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value. Please choose from these options: \'' . implode('\', \'', $aOptions) . '\'.');
                         } else {
                             lovd_errorAdd($sCol, 'Please select a valid entry from the \'' . $this->aColumns[$sColClean]['form_type'][0] . '\' selection box, \'' . strip_tags($sValue) . '\' is not a valid value.');

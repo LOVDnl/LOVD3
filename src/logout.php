@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-19
- * Modified    : 2012-04-19
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2016-09-23
+ * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -41,6 +41,7 @@ if (!$_AUTH) {
 $_DB->query('UPDATE ' . TABLE_USERS . ' SET phpsessid = "" WHERE id = ?', array($_AUTH['id']), false);
 $nSec = time() - strtotime($_AUTH['last_login']);
 $sCurrDB = $_SESSION['currdb']; // Temp storage.
+$aMapping = $_SESSION['mapping']; // Temp storage.
 $_SESSION = array(); // Delete variables both from $_SESSION and from session file.
 if (isset($_COOKIE[session_name()])) {
     setcookie(session_name(), '', time() - 172800); // 'Delete' the cookie.
@@ -48,10 +49,13 @@ if (isset($_COOKIE[session_name()])) {
 session_destroy();   // Destroy session, delete the session file.
 $_AUTH = false;
 
-// FIXME; Somehow this doesn't work...
-// Reinitiate... Otherwise the next line will do nothing.
+// Reinitiate... To store some information back into the array.
 @session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
+session_regenerate_id();
+// Fix weird behaviour of session_regenerate_id() - sometimes it is not sending a new cookie.
+setcookie(session_name(), session_id(), ini_get('session.cookie_lifetime'));
 $_SESSION['currdb'] = $sCurrDB; // Put it back.
+$_SESSION['mapping'] = $aMapping; // Put it back.
 header('Refresh: 5; url=' . lovd_getInstallURL());
 define('PAGE_TITLE', 'Log out');
 $_T->printHeader();

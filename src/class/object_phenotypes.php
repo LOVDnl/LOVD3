@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2016-07-20
- * For LOVD    : 3.0-17
+ * Modified    : 2017-11-30
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -81,9 +81,6 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         // SQL code for viewing the list of phenotypes
         $this->aSQLViewList['SELECT']   = 'p.*, ' .
-                                        ($_AUTH['level'] >= LEVEL_COLLABORATOR?
-                                          'CASE p.statusid WHEN ' . STATUS_MARKED . ' THEN "marked" WHEN ' . STATUS_HIDDEN .' THEN "del" WHEN ' . STATUS_PENDING .' THEN "del" END AS class_name,'
-                                        : '') .
                                           'ds.name AS status, ' .
                                           'uo.name AS owned_by_, ' .
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner';
@@ -150,7 +147,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -158,7 +155,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                         'owned_by',
                         'statusid',
                       );
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         lovd_checkXSS();
     }
