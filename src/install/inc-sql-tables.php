@@ -115,8 +115,9 @@ $aTableSQL =
    'CREATE TABLE ' . TABLE_CHROMOSOMES . ' (
     name VARCHAR(2) NOT NULL,
     sort_id TINYINT(3) UNSIGNED NOT NULL,
-    hg18_id_ncbi VARCHAR(20) NOT NULL,
-    hg19_id_ncbi VARCHAR(20) NOT NULL,
+    hg18_id_ncbi VARCHAR(20) NULL,
+    hg19_id_ncbi VARCHAR(20) NULL,
+    CanF_id_ncbi VARCHAR(20) NULL,
     PRIMARY KEY (name))
     ' . $sSettings
 
@@ -656,7 +657,7 @@ $aTableSQL =
     email_address VARCHAR(75) NOT NULL,
     send_admin_submissions BOOLEAN NOT NULL,
     api_feed_history TINYINT(2) UNSIGNED NOT NULL,
-    refseq_build VARCHAR(4) NOT NULL,
+    refseq_build VARCHAR(10) NOT NULL,
     proxy_host VARCHAR(255) NOT NULL,
     proxy_port SMALLINT(5) UNSIGNED,
     proxy_username VARCHAR(255) NOT NULL,
