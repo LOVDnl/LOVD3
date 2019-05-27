@@ -127,7 +127,7 @@ define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which
 define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 
 // Diagnostics: To make it easier to share certain code between
-// LOVD and LOVD+, simply define if we're active or not.
+// LOVD and LOVD+, simply define if we're active or not. 
 @define('LOVD_plus', false);
 
 // For the installation process (and possibly later somewhere else, too).
@@ -548,6 +548,10 @@ if ($_INI['database']['driver'] == 'mysql') {
     // Can't happen.
     exit;
 }
+//T.S: Added function lovd_initAdapter but not on lovd plus version
+if (!LOVD_plus) {
+    $_ADAPTER = lovd_initAdapter();
+}
 
 
 
@@ -709,7 +713,7 @@ if (!defined('NOT_INSTALLED')) {
     foreach ($_PE as $key => $val) {
         if ($val !== strip_tags($val)) {
             $_PE[$key] = '';
-        }
+       }
     }
     if (isset($_SETT['objectid_length'][$_PE[0]]) && isset($_PE[1]) && ctype_digit($_PE[1])) {
         $_PE[1] = sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
