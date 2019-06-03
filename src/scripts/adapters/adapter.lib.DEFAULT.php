@@ -347,7 +347,10 @@ class LOVD_DefaultDataConverter {
                 $aHeaders[$nKey] = str_replace($sSample . '.', $aSamples[$sSample], $sHeader);
             }
         }
-
+        //T.S: Check if GT is present in $aHeaders. If not, add GT.
+        if (!in_array( "GT" , $aHeaders)) {
+            array_push($aHeaders, "GT");          
+        }
         return $aHeaders;
     }
 
