@@ -649,12 +649,12 @@ foreach ($aFiles as $sFileID) {
         //  something non-false. For possible values, see the methods in the default adapter.
         // We will process "silent" and "log" here. There will be no record within LOVD of this variant being ignored.
         // Once we'll support "separate", we'll need to process that here, too.
-        //if (!empty($aVariant['lovd_ignore_variant'])) {
-        //    if ($aVariant['lovd_ignore_variant'] != 'silent') {
-        //        lovd_printIfVerbose(VERBOSITY_MEDIUM, 'Line ' . $nLine . ' is being ignored due to rules setup in the adapter library. This line will not be imported into LOVD.' . "\n");
-        //    }
-        //    continue;
-        //}
+        if (!empty($aVariant['lovd_ignore_variant'])) {
+            if ($aVariant['lovd_ignore_variant'] != 'silent') {
+                lovd_printIfVerbose(VERBOSITY_MEDIUM, 'Line ' . $nLine . ' is being ignored due to rules setup in the adapter library. This line will not be imported into LOVD.' . "\n");
+            }
+            continue;
+        }
 
         // VCF 4.2 can contain lines with an ALT allele of "*", indicating the allele is
         //  not WT at this position, but affected by an earlier mentioned variant instead.
