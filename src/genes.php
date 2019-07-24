@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2018-01-19
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-24
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -368,24 +368,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 }
                 $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
-                $_BAR->setMessage('Making a gene slice of the NC...');
-                $_BAR->setProgress($nProgress += 16);
-                // 2014-05-23; 3.0-11; Don't bother trying to get an UD for a mitochondrial gene, the NCBI uses different names and you will never get it...
-                if ($sChromosome == 'M') {
-                    // Instead of the UD, we just use the NC, it's small enough.
-                    $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
-                } else {
-                    // Get UD from mutalyzer.
-                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                    if (!$sRefseqUD) {
-                        // Function may return false or an empty string. For instance a type of gene we don't support.
-                        // To prevent further problems (getting transcripts), let's handle this nicely, shall we?
-                        $_BAR->setMessage('Failed to retrieve gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
-                        $_BAR->setMessageVisibility('done', true);
-                        die('</BODY>' . "\n" .
-                            '</HTML>' . "\n");
-                    }
-                }
+                // Instead of the UD, we now just use the NC, Mutalyzer got updated.
+                $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
                 // Get all transcripts and info.
                 // FIXME: When changing code here, check in transcripts?create if you need to make changes there, too.
@@ -724,7 +708,8 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                             );
 
             if (empty($zData['refseq_UD'])) {
-                $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
+                // Instead of the UD, we now just use the NC, Mutalyzer got updated.
+                $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
                 $_POST['refseq_UD'] = $sRefseqUD;
                 $aFields[] = 'refseq_UD';
             }

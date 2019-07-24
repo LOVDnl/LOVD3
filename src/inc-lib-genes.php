@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2019-01-22
+ * Modified    : 2019-07-24
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -402,6 +402,7 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
 
 function lovd_getUDForGene ($sBuild, $sGene)
 {
+    // FIXME: This function is no longer used, and can be removed. Wait until merging with LOVD+.
     // Retrieves an UD for any given gene and genome build.
     // In principle, any build is supported, but we'll check against the available builds supported in LOVD.
     global $_SETT;
@@ -419,7 +420,8 @@ function lovd_getUDForGene ($sBuild, $sGene)
     // Let's get the mapping information.
     $aResponse = lovd_callMutalyzer('getGeneLocation', array('build' => $sBuild, 'gene' => $sGene));
     // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but lovd_callMutalyzer() just returns false.
-    if ($aResponse) {
+    // Also check for $aResponse['chromosome_name'] because sometimes we get an array with just 'faultcode' and 'faultstring' set.
+    if ($aResponse && isset($aResponse['chromosome_name'])) {
         $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
         $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
         $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2018-03-09
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-24
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -483,15 +483,11 @@ if (!empty($aVariants)) {
                     }
                 }
 
-                // Get UD.
-                $sRef = $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                if (!is_string($sRefseqUD) || substr($sRefseqUD, 0, 3) != 'UD_') {
-                    $sRefseqUD = false;
-                    $sRef = $sRefseqGenomic;
-                }
+                // Instead of the UD, we now just use the NC, Mutalyzer got updated.
+                $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
                 // Get transcripts and info.
-                $aTranscriptsInUD = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $sRef, 'geneName' => $sSymbol));
+                $aTranscriptsInUD = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $sRefseqUD, 'geneName' => $sSymbol));
                 if (empty($aTranscriptsInUD)) {
                     // Mutalyzer has no transcripts for this gene. Try the next.
                     continue;
