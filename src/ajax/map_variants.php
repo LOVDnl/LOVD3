@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2018-03-09
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-25
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -156,7 +156,7 @@ function lovd_mapVariantToTranscripts (&$aVariant, $aTranscripts)
                          array(
                                 // NOTE that is this array is changed, and the order or the number of arguments changes, then also in other places the code needs to be modified, because this array is manipulated directly using its numeric keys.
                                 'INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, `VariantOnTranscript/DNA`, `VariantOnTranscript/RNA`, `VariantOnTranscript/Protein`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                                array($aVariant['id'], (isset($aTranscript['id'])? $aTranscript['id'] : NULL), $_SETT['var_effect_default'], $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], preg_replace('/^[A-Z]{2}_[0-9.]+:/', '', $sVariantOnTranscript), '', '')
+                                array($aVariant['id'], (isset($aTranscript['id'])? $aTranscript['id'] : NULL), $aVariant['effectid'], $aMappingInfo['startmain'], $aMappingInfo['startoffset'], $aMappingInfo['endmain'], $aMappingInfo['endoffset'], preg_replace('/^[A-Z]{2}_[0-9.]+:/', '', $sVariantOnTranscript), '', '')
                               );
                     continue 2;
                 }
@@ -249,7 +249,7 @@ if ($zTranscripts) {
 // Single variant mapping.
 if (!empty($_GET['variantid'])) {
     // Hook this one variant into $aVariants, which is normally used for a set of variants.
-    $aVariants = $_DB->query('SELECT id, chromosome, position_g_start, position_g_end, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
+    $aVariants = $_DB->query('SELECT id, chromosome, position_g_start, position_g_end, effectid, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
                              'FROM ' . TABLE_VARIANTS . ' WHERE id = ?', array($_GET['variantid']))->fetchAllAssoc();
 
     if (count($aVariants)) {
@@ -291,7 +291,7 @@ if (!empty($_GET['variantid'])) {
     }
     // Order by RAND() takes >1s with 1M variants, so no random pick when more than 10K variants.
     // Nonetheless, with 2M variants, this Q shows up in the slow log thousands of times.
-    $aVariants = $_DB->query('SELECT id, vog.chromosome, vog.position_g_start, position_g_end, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
+    $aVariants = $_DB->query('SELECT vog.id, vog.chromosome, vog.position_g_start, vog.position_g_end, vog.effectid, vog.statusid, vog.mapping_flags, vog.created_by, vog.`VariantOnGenome/DNA`, vog.`VariantOnGenome/DBID` ' .
                              'FROM ' . TABLE_VARIANTS . ' AS vog, (' .
                                  'SELECT chromosome, position_g_start ' .
                                  'FROM ' . TABLE_VARIANTS . ' ' .
@@ -301,8 +301,8 @@ if (!empty($_GET['variantid'])) {
                                  'LIMIT 1' .
                              ') AS first ' .
                              'WHERE vog.chromosome = first.chromosome AND vog.position_g_start BETWEEN first.position_g_start AND first.position_g_start + ' . $nRange . ' ' .
-                                 'AND mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' ' .
-                             'ORDER BY position_g_start ' .
+                                 'AND vog.mapping_flags & ' . MAPPING_ALLOW . ' AND NOT vog.mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE | MAPPING_IN_PROGRESS) . ' ' .
+                             'ORDER BY vog.position_g_start ' .
                              'LIMIT ' . $nMaxVariants,
                              $aArgs)->fetchAllAssoc();
 
