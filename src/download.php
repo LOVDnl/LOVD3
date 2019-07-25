@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-06-15
- * For LOVD    : 3.0-19
+ * Modified    : 2019-07-25
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -382,6 +382,27 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                 $aObjects['Phenotypes']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
 
                 // Hide non-public columns.
+                $aObjects['Individuals']['hide_columns'] = array_merge(
+                    $aObjects['Individuals']['hide_columns'],
+                    array(
+                        'statusid',
+                        'created_by',
+                        'created_date',
+                        'edited_by',
+                        'edited_date',
+                    )
+                );
+                $aObjects['Variants']['hide_columns'] = array_merge(
+                    $aObjects['Variants']['hide_columns'],
+                    array(
+                        'mapping_flags',
+                        'statusid',
+                        'created_by',
+                        'created_date',
+                        'edited_by',
+                        'edited_date',
+                    )
+                );
                 $aObjectTranslations = array(
                     'VariantOnTranscript' => 'Variants_On_Transcripts',
                     'VariantOnGenome' => 'Variants',
@@ -601,9 +622,12 @@ foreach ($aObjects as $sObject => $aSettings) {
         $aColumns = array_keys($aSettings['data'][0]);
     }
 
+    // in_array() is really quite slow, especially with large arrays. Flipping the array will speed things up.
+    $aSettings['hide_columns'] = array_flip($aSettings['hide_columns']);
+
     // Print headers.
     foreach ($aColumns as $key => $sCol) {
-        if (!in_array($sCol, $aSettings['hide_columns'])) {
+        if (!isset($aSettings['hide_columns'][$sCol])) {
             print((!$key? '' : "\t") . '"{{' . $sCol . '}}"');
         }
     }
@@ -615,7 +639,7 @@ foreach ($aObjects as $sObject => $aSettings) {
         $z = array_map('addslashes', $z);
 
         foreach ($aColumns as $key => $sCol) {
-            if (!in_array($sCol, $aSettings['hide_columns'])) {
+            if (!isset($aSettings['hide_columns'][$sCol])) {
                 // Replace line endings and tabs (they should not be there but oh well), so they don't cause problems with importing.
                 print(($key? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n", "\t"), array('\r\n', '\r', '\n', '\t'), $z[$sCol]) . '"');
             }
