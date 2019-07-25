@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-07-24
+ * Modified    : 2019-07-25
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2592,7 +2592,7 @@ class LOVD_Object {
         // FIXME; this is a temporary hack just to get the genes?authorize working when all users have been selected.
         //   There is no longer a viewList when all users have been selected, but we need one for the JS execution.
         //   Possibly, this code can be standardized a bit and, if necessary for other viewLists as well, can be kept here.
-        if (!$nTotal && !$bSearched && (($this->sObject == 'User' && !empty($_GET['search_id'])))) {
+        if (!$nTotal && !$bSearched && (($this->sObject == 'User' && !empty($_GET['search_userid'])))) {
             // FIXME; Maybe check for JS contents of the rowlink?
             // There has been searched, but apparently the ID column is forced hidden. This must be the authorize page.
             $bSearched = true; // This will trigger the creation of the viewList table.

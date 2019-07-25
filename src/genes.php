@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2018-01-19
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-25
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -1695,15 +1695,15 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
         lovd_showInfoTable('The following users are currently not a curator for this gene. Click on a user to select him/her as Curator or Collaborator.', 'information');
         if ($aCurators) {
             // Create search string that hides the users currently selected to be curator or collaborator.
-            $_GET['search_id'] = '!' . implode(' !', array_keys($aCurators));
+            $_GET['search_userid'] = '!' . implode(' !', array_keys($aCurators));
         } else {
             // We must have something non-empty here, otherwise the JS fails when selecting users.
-            $_GET['search_id'] = '!0';
+            $_GET['search_userid'] = '!0';
         }
         $_GET['page_size'] = 10;
         $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}", level: "{{zData_level}}"}, lovd_authorizeUser); return false;');
         $aVLOptions = array(
-            'cols_to_skip' => array('id', 'status_', 'last_login_', 'created_date_'),
+            'cols_to_skip' => array('orcid_id_', 'status_', 'last_login_', 'created_date_'),
             'track_history' => false,
         );
         $_DATA->viewList('Genes_AuthorizeUser', $aVLOptions); // Create known viewListID for lovd_unauthorizeUser().
@@ -1778,7 +1778,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
             objUsers = document.getElementById('curator_list');
             oLI = document.createElement('LI');
             oLI.id = 'li_' + aData.id;
-            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + aData.id + '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' + aData.name + '</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + aData.id + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + aData.level + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + aData.id + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'Genes_AuthorizeUser\', \'' + aData.id + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
+            oLI.innerHTML = '<INPUT type="hidden" name="curators[]" value="' + aData.id + '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' + aData.name + ' (#' + aData.id + ')</TD><TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' + aData.id + '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' + aData.level + ' >= <?php echo LEVEL_MANAGER; ?>) { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }" checked></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' + aData.id + '" checked></TD><TD width="30" align="right"><A href="#" onclick="lovd_unauthorizeUser(\'Genes_AuthorizeUser\', \'' + aData.id + '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A></TD></TR></TABLE>';
             objUsers.appendChild(oLI);
 
             return true;
@@ -1796,7 +1796,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
             // Reset the viewList.
             // Does an ltrim, too. But trim() doesn't work in IE < 9.
-            objViewListF.search_id.value = objViewListF.search_id.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
+            objViewListF.search_userid.value = objViewListF.search_userid.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
             lovd_AJAX_viewListSubmit(sViewListID);
 
             return true;
