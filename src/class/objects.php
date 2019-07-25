@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-02-18
+ * Modified    : 2019-07-24
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -660,6 +660,64 @@ class LOVD_Object {
         }
 
         return $sFormType;
+    }
+
+
+
+
+
+    function formatArrayToTable ($aData, $nNesting = 0)
+    {
+        // Formats an Array to an data table, used for JSON data to be formatted in an VE.
+
+        if (!is_array($aData) || !$aData) {
+            return '(no data)';
+        }
+
+        $s = '<TABLE class="S11" width="100%">';
+        foreach ($aData as $sKey => $Value) {
+            // We will handle simple values as if it's an array.
+            if (!is_array($Value)) {
+                $Value = array($Value);
+            }
+
+            if ($Value === array()) {
+                // We won't print a key with an empty array.
+                continue;
+            }
+
+            if (!$nNesting) {
+                $s .= '<TR><TH>' . $sKey . '</TH></TR><TR><TD>';
+            } elseif ($nNesting == 1) {
+                $s .= '<TR><TD><B>' . $sKey . '</B></TD></TR><TR><TD>';
+            } else {
+                $s .= '<TR><TD valign="top" style="border-top: 1px solid #AFC8FA;">' . $sKey .
+                      '</TD><TD style="border-top: 1px solid #AFC8FA;"><TABLE class="S11" cellpadding="0" cellspacing="0"><TR><TD>';
+            }
+
+            // Can be array of values, in which case they are printed, one value on each line.
+            // Can be an associative array; for nested arrays we print the key in an TR and loop through the values,
+            //  normal key => value pairs are printed in separate TDs.
+
+            // Measure keys.
+            $bList = (count(array_filter(array_keys($Value), 'is_int')) == count($Value));
+            $bContainsArrays = (count(array_filter($Value, 'is_array')) > 0);
+            if ($bList && !$bContainsArrays) {
+                // Simple list.
+                $s .= implode('</TD></TR><TR><TD style="border-top: 1px solid #AFC8FA;">', $Value);
+
+            } else {
+                $s .= $this->formatArrayToTable($Value, $nNesting + 1);
+            }
+
+            $s .= '</TD></TR>';
+            if ($nNesting > 1) {
+                $s .= '</TD></TR></TABLE>';
+            }
+        }
+        $s .= '</TABLE>';
+
+        return $s;
     }
 
 
@@ -1518,6 +1576,15 @@ class LOVD_Object {
                 $zData['class_name'] = 'del';
             }
 
+            // Handle JSON data (well, in a VL, we hide it).
+            foreach ($zData as $sKey => $Value) {
+                if (is_string($Value) && $Value && $Value{0} == '{'
+                    && is_array(json_decode(htmlspecialchars_decode($Value), true))) {
+                    // We don't show JSON data in the VLs.
+                    $zData[$sKey] = '<I>(data)</I>';
+                }
+            }
+
         } else {
             // Add links to users from *_by fields.
             $aUserColumns = array('owned_by', 'created_by', 'edited_by', 'updated_by', 'deleted_by', 'analysis_by', 'analysis_approved_by');
@@ -1526,6 +1593,15 @@ class LOVD_Object {
                     $zData[$sUserColumn . '_'] = 'N/A';
                 } elseif ($_AUTH && $zData[$sUserColumn] != '00000') {
                     $zData[$sUserColumn . '_'] = '<A href="users/' . $zData[$sUserColumn] . '">' . $zData[$sUserColumn . '_'] . '</A>';
+                }
+            }
+
+            // Handle JSON well.
+            foreach ($zData as $sKey => $Value) {
+                if (is_string($Value) && $Value && $Value{0} == '{'
+                    && is_array(json_decode(htmlspecialchars_decode($Value), true))) {
+                    // Restructure the JSON.
+                    $zData[$sKey] = $this->formatArrayToTable(json_decode(htmlspecialchars_decode($Value), true));
                 }
             }
         }
