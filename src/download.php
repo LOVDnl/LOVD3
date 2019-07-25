@@ -392,6 +392,16 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                         'edited_date',
                     )
                 );
+                $aObjects['Phenotypes']['hide_columns'] = array_merge(
+                    $aObjects['Phenotypes']['hide_columns'],
+                    array(
+                        'statusid',
+                        'created_by',
+                        'created_date',
+                        'edited_by',
+                        'edited_date',
+                    )
+                );
                 $aObjects['Variants']['hide_columns'] = array_merge(
                     $aObjects['Variants']['hide_columns'],
                     array(
