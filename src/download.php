@@ -578,12 +578,49 @@ if (isset($sFilter) && $sFilter == 'gene_public') {
 
 
 
+// Let Diseases further limit columns of Phenotypes; Let Genes further limit columns of VOTs.
+foreach (
+    array(
+        'Diseases' => 'Phenotypes',
+        'Genes' => 'Variants_On_Transcripts',
+    ) as $sObject => $sObjectToFilter) {
+    // Get IDs that we will show, and hide all active custom columns not assigned to these IDs.
+    if (!empty($aObjects[$sObject]['filters']['id'])) {
+        $aIDs = (!is_array($aObjects[$sObject]['filters']['id'])?
+            array($aObjects[$sObject]['filters']['id']) : array_values($aObjects[$sObject]['filters']['id']));
+        sort($aIDs); // Makes the reporting prettier.
+        $sObjectColumn = strtolower(preg_replace('/s$/', 'id', $sObject));
+        $aInactiveColumns = $_DB->query('
+            SELECT DISTINCT colid 
+            FROM ' . TABLE_SHARED_COLS . '
+            WHERE colid NOT IN (
+                SELECT DISTINCT colid
+                FROM ' . TABLE_SHARED_COLS . '
+                WHERE `' . $sObjectColumn . '` IN (?' . str_repeat(', ?', count($aIDs) - 1) . '))',
+            $aIDs)->fetchAllColumn();
+        $aObjects[$sObjectToFilter]['hide_columns'] = array_merge(
+            $aObjects[$sObjectToFilter]['hide_columns'],
+            $aInactiveColumns
+        );
+
+        // Add comment, warning about selecting columns.
+        // Since it's possible that phenotype entries are created for diseases not linked to the individuals,
+        //  it's possible that we're missing data there.
+        $aObjects[$sObjectToFilter]['comments'][] = 'Note: Only showing ' . rtrim($sObjectToFilter, 's') . ' columns active for ' . $sObject . ' ' . implode(', ', $aIDs);
+    }
+}
+
+
+
+
+
 // Now, query the database and print, or just print the data (if already prefetched).
 foreach ($aObjects as $sObject => $aSettings) {
     print('## ' . (empty($aSettings['label'])? $sObject : $aSettings['label']) . ' ## Do not remove or alter this header ##' . "\r\n");
 
     // If not prefetched, download the data here. If we do a fetchAll() we can easily get the count and we don't need to do a describe.
     // So saving two queries, and it's easier code, at the cost of additional memory usage.
+    // FIXME: Perhaps, if we have a 'hide_columns' setting, modify the query to not select these? May save a lot of memory.
     if (empty($aSettings['data'])) {
         $aSettings['data'] = $_DB->query($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
     }
