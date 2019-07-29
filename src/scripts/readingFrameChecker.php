@@ -4,16 +4,16 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-09-28 (based on Reading Frame Checker 1.9/2009-03-03)
- * Modified    : 2017-06-16
- * Version     : 1.3
- * For LOVD    : 3.0-19
+ * Modified    : 2019-07-25
+ * Version     : 1.4
+ * For LOVD    : 3.0-22
  *
  * Access      : Public
  * Purpose     : Provide information on effect of whole-exon changes of a gene,
  *               based on the gene structure table, created by the Reference
  *               Sequence Parser.
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -237,11 +237,25 @@ if (!empty($_GET['variant']) && !empty($_GET['exon_from']) && !empty($_GET['exon
     // Change ex01ex02del -> something more useful...
     if ($_GET['exon_from'] <= count($aStartLengthTable) && $_GET['exon_to'] <= count($aStartLengthTable)) {
         $aStartLengthTable = array($aStartLengthTable[intval($_GET['exon_from'])], $aStartLengthTable[intval($_GET['exon_to'])]);
-        // Using $nEnd and not $nStart + $nLength makes LOVD apply to the generated HGVS nomenclature a bit more (c.310-?_*544+?del).
-        $sVariantHGVS = 'c.' . $aStartLengthTable[0][0] . '-?_' . $aStartLengthTable[1][2] . '+?' . $_GET['variant'];
-        $sVariant = 'ex' . str_pad($aExonNames[$_GET['exon_from']], 2, '0', STR_PAD_LEFT) . ($_GET['exon_from'] == $_GET['exon_to']? '' : 'ex' . str_pad($aExonNames[$_GET['exon_to']], 2, '0', STR_PAD_LEFT)) . $_GET['variant'];
-        print('According to the ' . $sSymbol . ' reference sequence in the LOVD database, the HGVS notation of this ' . ($_GET['variant'] == 'del'? 'deletion' : 'duplication') . ' is:<BR>' . "\n");
-        print($sVariant . '&nbsp;-&gt;&nbsp;' . $sVariantHGVS . '<BR>' . "\n");
+        // Basic notation; ex02ex03del. Adapted it to optionally handle 3-digit exon numbers.
+        $lExons = max(2, strlen($_GET['exon_from']), strlen($_GET['exon_to']));
+        $sVariant = 'ex' . str_pad($aExonNames[$_GET['exon_from']], $lExons, '0', STR_PAD_LEFT) .
+            ($_GET['exon_from'] == $_GET['exon_to']? '' :
+                'ex' . str_pad($aExonNames[$_GET['exon_to']], $lExons, '0', STR_PAD_LEFT)) . $_GET['variant'];
+        // More correct notation, although no longer correct HGVS; c.154-?_295+?del.
+        // First exon doesn't get -?, last exon doesn't get +?.
+        $sVariantUnknowns = 'c.' . $aStartLengthTable[0][0] .
+            ($_GET['exon_from'] == 1? '' : '-?') . '_' . $aStartLengthTable[1][2] .
+            ($_GET['exon_to'] == $nExons? '' : '+?') . $_GET['variant'];
+        // HGVS notation, the new version.
+        $sVariantHGVS = 'c.(' .
+            ($_GET['exon_from'] == 1? '?' : ($aStartLengthTable[0][0] - 1) . '+1') . '_' . $aStartLengthTable[0][0] .
+            ($_GET['exon_from'] == 1? '' : '-1') . ')_(' . $aStartLengthTable[1][2] .
+            ($_GET['exon_to'] == $nExons? '' : '+1') . '_' . ($_GET['exon_to'] == $nExons? '?' : ($aStartLengthTable[1][2] + 1) . '-1') . ')' . $_GET['variant'];
+        print('According to the ' . $sSymbol . ' reference sequence in the LOVD database, the HGVS notation of this ' . ($_GET['variant'] == 'del'? 'deletion' : 'duplication') . ' is:<BR>' . "\n" .
+            $sVariant . '&nbsp;-&gt;&nbsp;' .
+            $sVariantUnknowns . '&nbsp;-&gt;&nbsp;' .
+            '<B>' . $sVariantHGVS . '</B><BR>' . "\n");
     }
 }
 
