@@ -658,6 +658,15 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnTranscript/DNA\"")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME = "VariantOnTranscript/Protein" AND CHARACTER_MAXIMUM_LENGTH < 255)',
+                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN `VariantOnTranscript/Protein` VARCHAR(255) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnTranscript/Protein\"")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
                  ),
              );
 
