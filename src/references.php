@@ -77,11 +77,12 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
         // By default, an DOI search is assumed to be the full DOI. But, if we don't find a dot in the suffix,
         //  then we assume we're looking for all publications of this journal.
         // Check: 10.1002/humu.21438 (paper) vs 10.1002/humu (journal).
-        if (strpos($_PE[2], '.') === false) {
-            // No full suffix given, just a paper. Match on part of the full DOI.
+        if (empty($_PE[2]) || strpos($_PE[2], '.') === false) {
+            // No full suffix given, just a publisher or a journal search. Match on part of the DOI.
             $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '%';
             $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4);
         } else {
+            // Assuming we're searching for a full DOI (a paper) here.
             $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '}%';
             $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4) . '}';
         }
