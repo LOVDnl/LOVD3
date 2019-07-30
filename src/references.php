@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2018-01-26
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-30
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -74,8 +74,17 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
     // View specific DOI or PMID.
 
     if (substr($aPathElements[1], 0, 4) == 'DOI:') {
-        $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '}%';
-        $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4) . '}';
+        // By default, an DOI search is assumed to be the full DOI. But, if we don't find a dot in the suffix,
+        //  then we assume we're looking for all publications of this journal.
+        // Check: 10.1002/humu.21438 (paper) vs 10.1002/humu (journal).
+        if (strpos($_PE[2], '.') === false) {
+            // No full suffix given, just a paper. Match on part of the full DOI.
+            $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '%';
+            $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4);
+        } else {
+            $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '}%';
+            $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4) . '}';
+        }
         $sType = 'DOI';
     } elseif (substr($aPathElements[1], 0, 5) == 'PMID:') {
         $sSearchPattern = '%{PMID:%' . substr($aPathElements[1], 5) . '}%';
