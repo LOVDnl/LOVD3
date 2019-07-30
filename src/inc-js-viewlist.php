@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2017-11-15
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-25
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -941,13 +941,15 @@ function lovd_passAndRemoveViewListRow (sViewListID, sRowID, aRowData, callback)
     // removed from the ViewList and the ViewList will be updated (extending the
     // view to the original number of rows and making sure the deleted item will
     // not re-occur).
+    // FIXME: This function is using search_id which is usually shown, so that's a pretty bad idea. It should have been
+    //  made configurable. Will not fix this now, will just override it to search_userid, as it's only used for users.
 
     var oViewListForm = $('#viewlistForm_' + sViewListID).get(0);
 
     // Change the search terms in the ViewList such that submitting it will not reshow this item.
-    oViewListForm.search_id.value += ' !' + sRowID;
+    oViewListForm.search_userid.value += ' !' + sRowID;
     // Does an ltrim, too. But trim() doesn't work in IE < 9.
-    oViewListForm.search_id.value = oViewListForm.search_id.value.replace(/^\s*/, '');
+    oViewListForm.search_userid.value = oViewListForm.search_userid.value.replace(/^\s*/, '');
 
     lovd_AJAX_viewListHideRow(sViewListID, sRowID);
     oViewListForm.total.value --;
