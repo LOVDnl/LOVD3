@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2019-02-13
+ * Modified    : 2019-07-30
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -636,6 +636,26 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_USERS . '" AND COLUMN_NAME = "username" AND CHARACTER_MAXIMUM_LENGTH < 50)',
                      'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
                             ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN username VARCHAR(50) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                 ),
+                 '3.0-21d' => array(
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS . '" AND COLUMN_NAME = "VariantOnGenome/DNA" AND CHARACTER_MAXIMUM_LENGTH < 255)',
+                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN `VariantOnGenome/DNA` VARCHAR(255) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnGenome/DNA\"")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME = "VariantOnTranscript/DNA" AND CHARACTER_MAXIMUM_LENGTH < 255)',
+                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN `VariantOnTranscript/DNA` VARCHAR(255) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnTranscript/DNA\"")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
                  ),
