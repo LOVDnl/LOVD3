@@ -220,11 +220,11 @@ class LOVD_CustomViewList extends LOVD_Object {
                             // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
                             $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
                         }
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)';
+                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)';
                     } else {
                         // 2016-07-20; 3.0-17; Added FORCE INDEX because MySQL optimized the Full data view
                         // differently, resulting in immense temporary tables filling up the disk.
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS . ' AS vog FORCE INDEX FOR JOIN (PRIMARY) ON (';
+                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog FORCE INDEX FOR JOIN (PRIMARY) ON (';
                         $nKeyVOT = array_search('VariantOnTranscript', $aObjects);
                         if ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.
@@ -258,6 +258,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                 case 'VariantOnTranscript':
                     $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid, MIN(vot.transcriptid) AS transcriptid, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MIN(et.name) as vot_effect';
                     $nKeyVOG = array_search('VariantOnGenome', $aObjects);
+                    $nKeyT   = array_search('Transcript', $aObjects);
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', vot.id AS row_id';
                         $bSetRowID = true;
@@ -285,26 +286,20 @@ class LOVD_CustomViewList extends LOVD_Object {
                         }
                         // Security checks in this file's prepareData() need geneid to see if the column in question is set to non-public for one of the genes.
                         $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS _geneid';
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (';
+                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (';
                         // Earlier, VOG was used, join to that.
                         $aSQL['FROM'] .= 'vog.id = vot.id)';
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)';
-                    } else {
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (';
-                        $nKeyT   = array_search('Transcript', $aObjects);
-                        if ($nKeyT !== false && $nKeyT < $nKey) {
-                            // Earlier, T was used, join to that.
-                            $aSQL['FROM'] .= 't.id = vot.transcriptid)';
-                            // Nice, but if we're showing transcripts and variants on transcripts in one viewList, we'd only want to see the transcripts that HAVE variants.
-                            $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vot.id IS NOT NULL';
-                            // Then also make sure we group on the VOT's ID, unless we're already grouping on something.
-                            if (!$aSQL['GROUP_BY']) {
-                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used just t.id).
-                                $aSQL['GROUP_BY'] = 't.geneid, t.id, vot.id';
-                            }
+                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)';
+                    } elseif ($nKeyT !== false && $nKeyT < $nKey) {
+                        // Earlier, T was used, join to that.
+                        // If we're showing transcripts and VOTs in one viewList, we'd only want to see the transcripts that HAVE variants.
+                        $aSQL['FROM'] .= ' INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)';
+                        // Then also make sure we group on the VOT's ID, unless we're already grouping on something.
+                        if (!$aSQL['GROUP_BY']) {
+                            $aSQL['GROUP_BY'] = 'vot.transcriptid, vot.id';
                         }
-                        // We have no fallback, so we'll easily detect an error if we messed up somewhere.
                     }
+                    // We have no fallback, so it won't join if we messed up somewhere!
 
                     // Add any missing custom columns.
                     if (($sCustomCols = $this->getCustomColQuery($sObject, $aSQL['SELECT'])) != '') {
@@ -379,13 +374,13 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $nKeyI   = array_search('Individual', $aObjects);
                         if ($nKeyVOG !== false && $nKeyVOG < $nKey) {
                             // Earlier, VOG was used, join to that.
-                            $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
+                            $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
                         } elseif ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.
-                            $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
+                            $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
                         } elseif ($nKeyI !== false && $nKeyI < $nKey) {
                             // Earlier, I was used, join to that.
-                            $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid)';
+                            $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid)';
                         }
                         // We have no fallback, so it won't join if we messed up somewhere!
                     }
@@ -402,14 +397,14 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $nKeyVOT = array_search('VariantOnTranscript', $aObjects);
                         if ($nKeyVOG !== false && $nKeyVOG < $nKey) {
                             // Earlier, VOG was used, join to that.
-                            $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)';
+                            $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)';
                             // This combination only happens when we're joining VOG to Scr2Var to VOT, to show variants in a screening or individual.
                             // Then grouping on the s2v's variant ID is faster, because we're searching on the s2v.screeningid and like this we keep
                             // the group by and the where in the same table, greatly increasing the speed of the query.
                             $aSQL['GROUP_BY'] = 's2v.variantid'; // Necessary for GROUP_CONCAT().
                         } elseif ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                             // Earlier, VOT was used, join to that.
-                            $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid)';
+                            $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid)';
                         }
                         // We have no fallback, so it won't join if we messed up somewhere!
                     }
@@ -444,14 +439,14 @@ class LOVD_CustomViewList extends LOVD_Object {
                             // S was not used yet, join to something else first!
                             if ($nKeyVOG !== false && $nKeyVOG < $nKey) {
                                 // Earlier, VOG was used, join to that.
-                                $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
+                                $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
                             } elseif ($nKeyVOT !== false && $nKeyVOT < $nKey) {
                                 // Earlier, VOT was used, join to that.
-                                $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
+                                $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)';
                             }
                             // We have no fallback, so it won't join if we messed up somewhere!
                         }
-                        $aSQL['FROM'] .= ' LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
+                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
                         // If user level not high enough, hide hidden individuals (from the join, don't hide the line)!
                         if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                             // Construct list of user IDs for current user and users who share access with him.
