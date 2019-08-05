@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2019-08-01
+ * Modified    : 2019-08-05
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -195,10 +195,15 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnGenome':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'MIN(vog.id) AS vogid, MIN(vog.chromosome) AS chromosome, MIN(a.name) AS allele_' . (!in_array('VariantOnTranscript', $aObjects)? ', MIN(eg.name) AS vog_effect' : '') .
-                                       (in_array('Individual', $aObjects) || in_array('VariantOnTranscriptUnique', $aObjects)? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
-                                       (in_array('VariantOnTranscriptUnique', $aObjects)? '' : ', dsg.id AS var_statusid, dsg.name AS var_status');
                     $nKeyVOTUnique = array_search('VariantOnTranscriptUnique', $aObjects);
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') .
+                                       ($nKeyVOTUnique !== false?
+                                           'MIN(vog.id) AS vogid, MIN(vog.chromosome) AS chromosome, MIN(a.name) AS allele_' :
+                                           'vog.id AS vogid, vog.chromosome, a.name AS allele_' .
+                                           (in_array('VariantOnTranscript', $aObjects)? '' :
+                                               ', eg.name AS vog_effect')) .
+                                       (in_array('Individual', $aObjects) || $nKeyVOTUnique !== false? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
+                                       ($nKeyVOTUnique !== false? '' : ', dsg.id AS var_statusid, dsg.name AS var_status');
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', vog.id AS row_id';
                         $bSetRowID = true;
@@ -256,9 +261,12 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscript':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid, MIN(vot.transcriptid) AS transcriptid, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MIN(et.name) as vot_effect';
                     $nKeyVOG = array_search('VariantOnGenome', $aObjects);
                     $nKeyT   = array_search('Transcript', $aObjects);
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid' .
+                        ($nKeyVOG !== false && $nKeyVOG < $nKey?
+                            ', MIN(vot.transcriptid) AS transcriptid, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MIN(et.name) as vot_effect' :
+                            ', vot.transcriptid, vot.position_c_start, vot.position_c_start_intron, vot.position_c_end, vot.position_c_end_intron, et.name as vot_effect');
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', vot.id AS row_id';
                         $bSetRowID = true;
