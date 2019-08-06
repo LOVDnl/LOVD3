@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2018-04-18
+ * Modified    : 2019-08-06
  * For LOVD    : 3.0-22
  *
  * Supported URIs:
@@ -32,8 +32,7 @@
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               M. Kroon <m.kroon@lumc.nl>
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -165,12 +164,16 @@ if ($sDataType == 'variants') {
                 }
             }
             $bQueryPMID = ($nPMID && count($aPMIDCols));
-            $sQ = 'SELECT LEAST(MAX(vog.position_g_start), MAX(vog.position_g_end)), GREATEST(MAX(vog.position_g_start), MAX(vog.position_g_end)), MIN(vog.type) AS type, MIN(vot.`VariantOnTranscript/DNA`) AS `VariantOnTranscript/DNA`
+            // We're not selecting any transcripts here, we want as much data as possible. That means we might be mixing
+            //  transcripts here. To try and get as much of the consistent variants here, and to try and guess which
+            //  transcript is better, order by transcript ID (oldest first) and grab the first vot.DNA that you find.
+            $sQ = 'SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type,
+                     SUBSTRING_INDEX(GROUP_CONCAT(DISTINCT vot.`VariantOnTranscript/DNA` ORDER BY vot.transcriptid SEPARATOR ";;"), ";;", 1) AS `VariantOnTranscript/DNA`
                    FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
                    (!$bJoinWithPatient? '' : ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ') . '
                    WHERE t.geneid = "' . $sSymbol . '" AND vog.statusid >= ' . STATUS_MARKED . ' AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
                    (!$bQueryPMID? '' : ' AND (`' . implode('` LIKE "%:' . $nPMID . '}%" OR `', $aPMIDCols) . '` LIKE "%:' . $nPMID . '}%") ') . '
-                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY MAX(vog.position_g_start), MAX(vog.position_g_end)';
+                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY vog.position_g_start, vog.position_g_end';
         } else {
             // Not mappable!
             header('HTTP/1.0 503 Service Unavailable');
@@ -222,18 +225,16 @@ if ($sDataType == 'variants') {
                    ORDER BY t.id_ncbi
                    SEPARATOR ";"
                  ) AS _position_mRNA,
-                 MAX(
-                   CONCAT("chr", vog.chromosome, ":' . (FORMAT == 'application/json'? 'g.' : '') . '", 
-                     IF(
-                       vog.position_g_start = vog.position_g_end,
-                       vog.position_g_start,
-                       CONCAT(vog.position_g_start, "_", vog.position_g_end)
-                     )
+                 CONCAT("chr", vog.chromosome, ":' . (FORMAT == 'application/json'? 'g.' : '') . '", 
+                   IF(
+                     vog.position_g_start = vog.position_g_end,
+                     vog.position_g_start,
+                     CONCAT(vog.position_g_start, "_", vog.position_g_end)
                    )
                  ) AS position_genomic,
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
-                 MAX(vog.`VariantOnGenome/DNA`) AS `VariantOnGenome/DNA`,
+                 vog.`VariantOnGenome/DNA`,
                  GROUP_CONCAT(' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'vot.`VariantOnTranscript/DNA`
                    ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
                  vog.`VariantOnGenome/DBID`,
@@ -315,7 +316,7 @@ if ($sDataType == 'variants') {
         } else {
             $sQ .= ' GROUP BY vog.id';
         }
-        $sQ .= ' ORDER BY MAX(vog.position_g_start), MAX(vog.position_g_end), MIN(`VariantOnGenome/DNA`)';
+        $sQ .= ' ORDER BY vog.position_g_start, vog.position_g_end, `VariantOnGenome/DNA`';
     }
 
 
@@ -326,7 +327,7 @@ if ($sDataType == 'variants') {
     // FIXME: All transcripts are listed here, ordered by the NCBI ID. However, the variant API chooses the first transcript based on its internal ID and shows only the variants on that one.
     // FIXME: This causes a bit of a problem since varcache stores the transcripts string with the gene and doesn't know what transcript the variants are on until it reads out the variant list.
     // FIXME: Decided to solve this for varcache by updating the NM in the database after the variants have been read. Leaving this here for now.
-    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, (MAX(t.position_g_mrna_start) < MAX(t.position_g_mrna_end)) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";") AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
+    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";") AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
            FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id) LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
            WHERE 1=1';
 
