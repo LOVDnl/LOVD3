@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-07
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -473,7 +473,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             $sURI = 'individuals/';
             $sTitle = 'an individual';
             $nID = sprintf('%08d', $_PE[3]);
-            $zData = $_DB->query('SELECT i.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT i2d.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.id = ? AND i.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY i.id ORDER BY MIN(t.geneid) ASC', array($nID, $_AUTH['id']))->fetchAssoc();
+            $zData = $_DB->query('SELECT i.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT i2d.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.id = ? AND i.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY i.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('individual', $nID);
             break;
         case 'confirmedVariants':
@@ -489,21 +489,21 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             $sURI = 'screenings/';
             $sTitle = 'a screening';
             $nID = sprintf('%010d', $_PE[3]);
-            $zData = $_DB->query('SELECT s.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.id = ? AND s.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY s.id ORDER BY MIN(t.geneid) ASC', array($nID, $_AUTH['id']))->fetchAssoc();
+            $zData = $_DB->query('SELECT s.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.id = ? AND s.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY s.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('screening', $nID);
             break;
         case 'variant':
             $sURI = 'variants/';
             $sTitle = 'a variant';
             $nID = sprintf('%010d', $_PE[3]);
-            $zData = $_DB->query('SELECT v.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE v.id = ? AND v.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY v.id ORDER BY MIN(t.geneid) ASC', array($nID, $_AUTH['id']))->fetchAssoc();
+            $zData = $_DB->query('SELECT v.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE v.id = ? AND v.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY v.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('variant', $nID);
             break;
         case 'phenotype':
             $sURI = 'phenotypes/';
             $sTitle = 'a phenotype';
             $nID = sprintf('%010d', $_PE[3]);
-            $zData = $_DB->query('SELECT p.id, GROUP_CONCAT(DISTINCT t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_PHENOTYPES . ' AS p LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s USING (individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE p.id = ? AND p.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY p.id ORDER BY MIN(t.geneid) ASC', array($nID, $_AUTH['id']))->fetchAssoc();
+            $zData = $_DB->query('SELECT p.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_PHENOTYPES . ' AS p LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s USING (individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE p.id = ? AND p.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY p.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('phenotype', $nID);
             break;
         case 'upload':
@@ -619,7 +619,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
             $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
         }
         // Select all curators that need to be mailed.
-        $aCurators = $_DB->query('SELECT name, email FROM (SELECT DISTINCT u.name, u.email, u.level FROM ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id ' . (count($aManagers)? 'AND u.level != ' . LEVEL_MANAGER . ' ' : '') . 'AND c.geneid IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') AND allow_edit = 1 ORDER BY u.level DESC, u.name) AS curators', $aGenes)->fetchAllRow();
+        $aCurators = $_DB->query('SELECT u.name, u.email, u.level FROM ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id ' . (count($aManagers)? 'AND u.level != ' . LEVEL_MANAGER . ' ' : '') . 'AND c.geneid IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') AND allow_edit = 1 GROUP BY u.id ORDER BY u.level DESC, u.name', $aGenes)->fetchAllRow();
     } else {
         // If there are no genes then we can only mail managers.
         $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
