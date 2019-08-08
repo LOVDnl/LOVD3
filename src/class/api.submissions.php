@@ -1367,10 +1367,18 @@ class LOVD_API_Submissions {
                                                 $aTranscripts[$iVariantLevel2] = $aVariantLevel2['ref_seq']['@accession'];
                                                 // We'll search flexibly, so get the transcript ID without the version.
                                                 $sTranscriptNoVersion = substr($aVariantLevel2['ref_seq']['@accession'], 0, strpos($aVariantLevel2['ref_seq']['@accession'] . '.', '.') + 1);
-                                                $sTranscriptAvailable = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
-                                                    array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchColumn();
+                                                list($sTranscriptAvailable, $sTranscriptGene) = $_DB->query('SELECT id_ncbi, geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
+                                                    array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchRow();
                                                 if ($sTranscriptAvailable) {
                                                     $aTranscriptsExisting[$iVariantLevel2] = $sTranscriptAvailable;
+
+                                                    // But also check gene. If we have a gene from the JSON file, and we have
+                                                    //  that in the database, then it must match this transcript.
+                                                    if (isset($aVariantLevel2['gene']['@accession'])
+                                                        && $aVariantLevel2['gene']['@accession'] != $sTranscriptGene) {
+                                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': ' .
+                                                            'Gene source (' . $aVariantLevel2['gene']['@accession'] . ') mismatches with gene (' . $sTranscriptGene . ') attached to given RefSeq accession (' . $aVariantLevel2['ref_seq']['@accession'] . ').';
+                                                    }
                                                 }
                                             }
                                         }
