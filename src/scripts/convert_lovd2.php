@@ -480,7 +480,17 @@ function lovd_getDiseaseID ($sDiseaseName)
     static $aKnownDiseases;
 
     $bNewDisease = false;
-    if (!isset($aKnownDiseases[$sDiseaseName])) {
+    // First try to match on the OMIM ID that is sometimes stored.
+    if (preg_match('/^\{OMIMphen(\d+)\}$/', trim($sDiseaseName), $aRegs)) {
+        $nDiseaseID = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?',
+            array($aRegs[1]))->fetchColumn();
+        if ($nDiseaseID) {
+            $aKnownDiseases[$sDiseaseName] = $nDiseaseID;
+        } else {
+            $aKnownDiseases[$sDiseaseName] = lovd_getInc('Diseases');
+            $bNewDisease = true;
+        }
+    } elseif (!isset($aKnownDiseases[$sDiseaseName])) {
         $qDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
             array($sDiseaseName, $sDiseaseName));
         $zDiseases = $qDiseases->fetchAllAssoc();
@@ -975,6 +985,19 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 // Geographic origin rewrites.
                 if (isset($aIndividual['Individual/Origin/Geographic']) && $aIndividual['Individual/Origin/Geographic'] == 'United Kingdom') {
                     $aIndividual['Individual/Origin/Geographic'] = 'United Kingdom (Great Britain)';
+                }
+
+                // Fam_Pat rewrites. It's not a standard column, but the whole mendelian genes installation is full with it.
+                if (isset($aIndividual['Individual/Fam_Pat'])
+                    && preg_match('/^(\d+)\s*\((\d+)\)$/', trim($aIndividual['Individual/Fam_Pat']), $aRegs)
+                    && $aIndividual['panel_size'] == 1) {
+                    $aIndividual['Individual/Fam_Pat'] = '';
+                    $aIndividual['panel_size'] = $aRegs[2];
+                    if ($aRegs[1] != 1) {
+                        // Number of families also mentioned.
+                        $aIndividual['Individual/Remarks'] .= (empty($aIndividual['Individual/Remarks'])? '' : ';\r\n') .
+                            $aRegs[1] . ' families (' . $aRegs[2] . ' patients)';
+                    }
                 }
 
                 $aIndividuals[$sLOVD2IndividualID] = $aIndividual;
