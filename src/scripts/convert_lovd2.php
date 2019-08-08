@@ -63,6 +63,7 @@ $aFieldLinks = array(
     'Variant/Frequency' =>              array('vog',        'VariantOnGenome/Frequency'),
     'Variant/Location' =>               array('vog',        'VariantOnTranscript/Domain'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
+    'Patient/Age_death' =>              array('individual', 'Individual/Age_of_death'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
     'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
     'Patient/Times_Reported' =>         array('individual', 'panel_size'),
@@ -73,7 +74,9 @@ $aFieldLinks = array(
     'Patient/Origin/Ethnic' =>          array('individual', 'Individual/Origin/Population'),
     'Patient/Age' =>                    array('phenotype',  'Phenotype/Age'),
     'Patient/Phenotype/Age_exam' =>     array('phenotype',  'Phenotype/Age'),
+    'Patient/Age_onset' =>              array('phenotype',  'Phenotype/Age/Onset'),
     'Patient/Phenotype/Age_onset' =>    array('phenotype',  'Phenotype/Age/Onset'),
+    'Patient/Age_diagnosis' =>          array('phenotype',  'Phenotype/Age/Diagnosis'),
     'ID_pathogenic_' =>                 array('vog',        'effectid'),
     'ID_status_' =>                     array('vog',        'statusid',                     'lovd_convertStatus'),
     'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertCuratorID'),
@@ -321,6 +324,8 @@ function lovd_convertGender ($sLOVD2Gender)
         return 'F';
     } elseif (strcasecmp($sLOVD2Gender, 'Male') === 0) {
         return 'M';
+    } elseif ($sLOVD2Gender == '? (unknown)') {
+        return '?';
     }
     // Don't lose data. If it's something we don't recognize, just return the
     //  original value.
@@ -350,8 +355,9 @@ function lovd_convertInheritance ($sLOVD2Occurrence)
 function lovd_convertOrigin ($sLOVD2MutationOrigin)
 {
     // Convert LOVD2's 'Patient/Mutation/Origin' to LOVD3's
-    // 'Individual/Genetic_origin'.
-    if (strcasecmp($sLOVD2MutationOrigin, 'Inherited') === 0) {
+    // 'VariantOnGenome/Genetic_origin'.
+    if (strcasecmp($sLOVD2MutationOrigin, 'Inherited') === 0
+        || strtolower($sLOVD2MutationOrigin) == 'germline (inherited)') {
         return 'Germline';
     }
     // Don't lose data. If it's something we don't recognize, just return the
@@ -402,6 +408,12 @@ function lovd_convertScrTech ($sLOVD2ScreeningTechniques)
     $aTechniques = array_map(function ($sTechnique) {
         if ($sTechnique == 'mPCR') {
             return 'PCRm';
+        } elseif ($sTechnique == 'MSP') {
+            return 'PCRms';
+        } elseif ($sTechnique == 'SSCP') {
+            return 'SSCA';
+        } elseif (strtolower($sTechnique) == 'unknown') {
+            return '?';
         }
         // Don't lose data. If it's something we don't recognize, just return the
         //  original value.
@@ -959,6 +971,12 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 if (($nStatusIdx = array_search('ID_status_', $aInputHeaders)) !== false) {
                     $aIndividual['statusid'] = $aRecord[$nStatusIdx];
                 }
+
+                // Geographic origin rewrites.
+                if (isset($aIndividual['Individual/Origin/Geographic']) && $aIndividual['Individual/Origin/Geographic'] == 'United Kingdom') {
+                    $aIndividual['Individual/Origin/Geographic'] = 'United Kingdom (Great Britain)';
+                }
+
                 $aIndividuals[$sLOVD2IndividualID] = $aIndividual;
 
                 // Create screening record.
@@ -967,6 +985,12 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 $nScreeningID = lovd_autoIncScreeningID();
                 $aScreening['id'] = $nScreeningID;
                 $aScreening['individualid'] = $aIndividual['id'];
+
+                // Rewrites.
+                if (isset($aScreening['Screening/Template']) && strtolower($aScreening['Screening/Template']) == 'unknown') {
+                    $aScreening['Screening/Template'] = '?';
+                }
+
                 $aScreening['owned_by'] = $aIndividual['owned_by'];
                 $aScreening['created_by'] = $aIndividual['created_by'];
                 $aScreening['created_date'] = $aIndividual['created_date'];
@@ -1031,6 +1055,11 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         }
         // Use the translated submitter ID as owner, fall back to value in created_by.
         $aVOGRecord['owned_by'] = $sSubmitterID != ''? $sSubmitterID : $aVOGRecord['created_by'];
+
+        // VariantOnGenome/Genetic_origin is mandatory.
+        if (isset($aVOGRecord['VariantOnGenome/Genetic_origin']) && !$aVOGRecord['VariantOnGenome/Genetic_origin']) {
+            $aVOGRecord['VariantOnGenome/Genetic_origin'] = 'Unknown';
+        }
 
         $aVOTRecord = lovd_getRecordForHeaders($aOutputHeaders['vot'], $aRecord,
             $aSections['vot']);
