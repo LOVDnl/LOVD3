@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2019-08-05
+ * Modified    : 2019-08-06
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -196,14 +196,14 @@ class LOVD_CustomViewList extends LOVD_Object {
 
                 case 'VariantOnGenome':
                     $nKeyVOTUnique = array_search('VariantOnTranscriptUnique', $aObjects);
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') .
-                                       ($nKeyVOTUnique !== false?
-                                           'MIN(vog.id) AS vogid, MIN(vog.chromosome) AS chromosome, MIN(a.name) AS allele_' :
-                                           'vog.id AS vogid, vog.chromosome, a.name AS allele_' .
-                                           (in_array('VariantOnTranscript', $aObjects)? '' :
-                                               ', eg.name AS vog_effect')) .
-                                       (in_array('Individual', $aObjects) || $nKeyVOTUnique !== false? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
-                                       ($nKeyVOTUnique !== false? '' : ', dsg.id AS var_statusid, dsg.name AS var_status');
+                    if ($nKeyVOTUnique === false) {
+                        // Not viewing the unique variants view.
+                        $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') .
+                            'vog.id AS vogid, vog.chromosome, a.name AS allele_' .
+                            ($nKey? '' : ', eg.name AS vog_effect') . // Show vog_effect when it's the first table in the list of objects.
+                            (in_array('Individual', $aObjects)? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
+                            ', dsg.id AS var_statusid, dsg.name AS var_status';
+                    }
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', vog.id AS row_id';
                         $bSetRowID = true;
@@ -243,7 +243,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                         $aSQL['SELECT'] .= ', ' . $sCustomCols;
                     }
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id)';
-                    if (!in_array('VariantOnTranscript', $aObjects)) {
+                    if (!$nKey) {
+                        // Show vog_effect only when it's the first table in the list of objects.
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS eg ON (vog.effectid = eg.id)';
                     }
                     if (!in_array('Individual', $aObjects)) {
@@ -263,10 +264,9 @@ class LOVD_CustomViewList extends LOVD_Object {
                 case 'VariantOnTranscript':
                     $nKeyVOG = array_search('VariantOnGenome', $aObjects);
                     $nKeyT   = array_search('Transcript', $aObjects);
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid' .
-                        ($nKeyVOG !== false && $nKeyVOG < $nKey?
-                            ', MIN(vot.transcriptid) AS transcriptid, MAX(vot.position_c_start) AS position_c_start, MAX(vot.position_c_start_intron) AS position_c_start_intron, MAX(vot.position_c_end) AS position_c_end, MAX(vot.position_c_end_intron) AS position_c_end_intron, MIN(et.name) as vot_effect' :
-                            ', vot.transcriptid, vot.position_c_start, vot.position_c_start_intron, vot.position_c_end, vot.position_c_end_intron, et.name as vot_effect');
+                    if ($nKeyVOG === false || $nKeyVOG > $nKey) {
+                        $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'vot.id AS votid, vot.transcriptid, vot.position_c_start, vot.position_c_start_intron, vot.position_c_end, vot.position_c_end_intron, et.name as vot_effect';
+                    }
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', vot.id AS row_id';
                         $bSetRowID = true;
@@ -317,7 +317,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                     break;
 
                 case 'VariantOnTranscriptUnique':
-                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'MIN(vot.id) AS votid, MIN(vot.transcriptid), ' . // To ensure other table's id columns don't interfere.
+                    $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 'MIN(vot.id) AS votid, vot.transcriptid, ' . // To ensure other table's id columns don't interfere.
                                       'vot.position_c_start, vot.position_c_start_intron, ' .
                                       'vot.position_c_end, vot.position_c_end_intron';
                     // To group variants together that belong together (regardless of minor textual differences, we replace parentheses, remove the "c.", and trim for question marks.
@@ -574,7 +574,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                                             str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
                                             str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
                               ));
-                    if (in_array('VariantOnTranscript', $aObjects) || in_array('VariantOnTranscriptUnique', $aObjects)) {
+                    if ($nKey) {
+                        // Show vog_effect only when it's the first table in the list of objects.
                         unset($this->aColumnsViewList['vog_effect']);
                     }
                     if (!$this->sSortDefault) {
@@ -619,6 +620,10 @@ class LOVD_CustomViewList extends LOVD_Object {
                     // FIXME: Perhaps it would be better to always show this column with VOT, but then hide it in all views that don't need it.
                     if (array_search('Scr2Var', $aObjects) === false) {
                         unset($this->aColumnsViewList['genes']);
+                    }
+                    if ($aObjects[0] == 'VariantOnGenome') {
+                        // Show vog_effect instead of vot_effect when VOG is the first table in the list of objects.
+                        unset($this->aColumnsViewList['vot_effect']);
                     }
                     if (!$this->sSortDefault) {
                         // First data table in view.
