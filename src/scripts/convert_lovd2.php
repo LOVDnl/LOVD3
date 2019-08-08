@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-08
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -233,14 +233,14 @@ function lovd_autoIncScreeningID ()
 
 
 
-function lovd_callJSONService ($sURL)
+function lovd_callJSONService ($sURL, $bArray = false)
 {
     // Call $sURL using lovd_php_file() and return the decoded JSON output.
     // FIXME: Can be replaced by lovd_callMutalyzer().
 
     $sResponse = @join('', lovd_php_file($sURL));
     if ($sResponse) {
-        return json_decode($sResponse);
+        return json_decode($sResponse, $bArray);
     }
     return false;
 }
@@ -363,11 +363,31 @@ function lovd_convertOrigin ($sLOVD2MutationOrigin)
 
 
 
-function lovd_convertReference ($LOVD2Reference)
+function lovd_convertReference ($sLOVD2Reference)
 {
     // Convert LOVD2-style reference to LOVD3-style. E.g.:
     // {PMID21228398:Bell 2011} => {PMID:Bell 2011:21228398}
-    return preg_replace('/{PMID(\d+):([^}]+)}/', '{PMID:\\2:\\1}', $LOVD2Reference);
+    static $aRefs = array();
+
+    $sLOVD2Reference = preg_replace('/{PMID(\d+):([^}]+)}/', '{PMID:\\2:\\1}', $sLOVD2Reference);
+    $sLOVD2Reference = preg_replace('/{DOI([^:}]+):([^}]+)}/', '{DOI:\\2:\\1}', $sLOVD2Reference);
+
+    if (preg_match('/{PMID:PubMed \d+ abstract:(\d+)}/', $sLOVD2Reference, $aRegs)) {
+        if (isset($aRefs[$aRegs[0]])) {
+            $sLOVD2Reference = str_replace($aRegs[0], $aRefs[$aRegs[0]], $sLOVD2Reference);
+        } else {
+            $aPubMedData = lovd_callJSONService('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aRegs[1], true);
+            if (isset($aPubMedData['result']['uids'])) {
+                $sRef = '{PMID:' . preg_replace('/ [A-Z]+$/', '', $aPubMedData['result'][$aRegs[1]]['sortfirstauthor']) . ' et al (' .
+                    substr($aPubMedData['result'][$aRegs[1]]['pubdate'], 0, strpos($aPubMedData['result'][$aRegs[1]]['pubdate'] . ' ', ' ')) .
+                    '):' . $aRegs[1] . '}';
+                $sLOVD2Reference = str_replace($aRegs[0], $sRef, $sLOVD2Reference);
+                $aRefs[$aRegs[0]] = $sRef;
+            }
+        }
+    }
+
+    return $sLOVD2Reference;
 }
 
 
