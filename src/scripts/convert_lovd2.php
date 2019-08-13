@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-08
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -63,6 +63,7 @@ $aFieldLinks = array(
     'Variant/Frequency' =>              array('vog',        'VariantOnGenome/Frequency'),
     'Variant/Location' =>               array('vog',        'VariantOnTranscript/Domain'),
     'Patient/Patient_ID' =>             array('individual', 'Individual/Lab_ID'),
+    'Patient/Age_death' =>              array('individual', 'Individual/Age_of_death'),
     'Patient/Reference' =>              array('individual', 'Individual/Reference',         'lovd_convertReference'),
     'Patient/Gender' =>                 array('individual', 'Individual/Gender',            'lovd_convertGender'),
     'Patient/Times_Reported' =>         array('individual', 'panel_size'),
@@ -73,7 +74,9 @@ $aFieldLinks = array(
     'Patient/Origin/Ethnic' =>          array('individual', 'Individual/Origin/Population'),
     'Patient/Age' =>                    array('phenotype',  'Phenotype/Age'),
     'Patient/Phenotype/Age_exam' =>     array('phenotype',  'Phenotype/Age'),
+    'Patient/Age_onset' =>              array('phenotype',  'Phenotype/Age/Onset'),
     'Patient/Phenotype/Age_onset' =>    array('phenotype',  'Phenotype/Age/Onset'),
+    'Patient/Age_diagnosis' =>          array('phenotype',  'Phenotype/Age/Diagnosis'),
     'ID_pathogenic_' =>                 array('vog',        'effectid'),
     'ID_status_' =>                     array('vog',        'statusid',                     'lovd_convertStatus'),
     'ID_variant_created_by_' =>         array('vog',        'created_by',                   'lovd_convertCuratorID'),
@@ -233,14 +236,14 @@ function lovd_autoIncScreeningID ()
 
 
 
-function lovd_callJSONService ($sURL)
+function lovd_callJSONService ($sURL, $bArray = false)
 {
     // Call $sURL using lovd_php_file() and return the decoded JSON output.
     // FIXME: Can be replaced by lovd_callMutalyzer().
 
     $sResponse = @join('', lovd_php_file($sURL));
     if ($sResponse) {
-        return json_decode($sResponse);
+        return json_decode($sResponse, $bArray);
     }
     return false;
 }
@@ -321,6 +324,8 @@ function lovd_convertGender ($sLOVD2Gender)
         return 'F';
     } elseif (strcasecmp($sLOVD2Gender, 'Male') === 0) {
         return 'M';
+    } elseif ($sLOVD2Gender == '? (unknown)') {
+        return '?';
     }
     // Don't lose data. If it's something we don't recognize, just return the
     //  original value.
@@ -350,8 +355,9 @@ function lovd_convertInheritance ($sLOVD2Occurrence)
 function lovd_convertOrigin ($sLOVD2MutationOrigin)
 {
     // Convert LOVD2's 'Patient/Mutation/Origin' to LOVD3's
-    // 'Individual/Genetic_origin'.
-    if (strcasecmp($sLOVD2MutationOrigin, 'Inherited') === 0) {
+    // 'VariantOnGenome/Genetic_origin'.
+    if (strcasecmp($sLOVD2MutationOrigin, 'Inherited') === 0
+        || strtolower($sLOVD2MutationOrigin) == 'germline (inherited)') {
         return 'Germline';
     }
     // Don't lose data. If it's something we don't recognize, just return the
@@ -363,11 +369,31 @@ function lovd_convertOrigin ($sLOVD2MutationOrigin)
 
 
 
-function lovd_convertReference ($LOVD2Reference)
+function lovd_convertReference ($sLOVD2Reference)
 {
     // Convert LOVD2-style reference to LOVD3-style. E.g.:
     // {PMID21228398:Bell 2011} => {PMID:Bell 2011:21228398}
-    return preg_replace('/{PMID(\d+):([^}]+)}/', '{PMID:\\2:\\1}', $LOVD2Reference);
+    static $aRefs = array();
+
+    $sLOVD2Reference = preg_replace('/{PMID(\d+):([^}]+)}/', '{PMID:\\2:\\1}', $sLOVD2Reference);
+    $sLOVD2Reference = preg_replace('/{DOI([^:}]+):([^}]+)}/', '{DOI:\\2:\\1}', $sLOVD2Reference);
+
+    if (preg_match('/{PMID:PubMed \d+ abstract:(\d+)}/', $sLOVD2Reference, $aRegs)) {
+        if (isset($aRefs[$aRegs[0]])) {
+            $sLOVD2Reference = str_replace($aRegs[0], $aRefs[$aRegs[0]], $sLOVD2Reference);
+        } else {
+            $aPubMedData = lovd_callJSONService('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aRegs[1], true);
+            if (isset($aPubMedData['result']['uids'])) {
+                $sRef = '{PMID:' . preg_replace('/ [A-Z]+$/', '', $aPubMedData['result'][$aRegs[1]]['sortfirstauthor']) . ' et al (' .
+                    substr($aPubMedData['result'][$aRegs[1]]['pubdate'], 0, strpos($aPubMedData['result'][$aRegs[1]]['pubdate'] . ' ', ' ')) .
+                    '):' . $aRegs[1] . '}';
+                $sLOVD2Reference = str_replace($aRegs[0], $sRef, $sLOVD2Reference);
+                $aRefs[$aRegs[0]] = $sRef;
+            }
+        }
+    }
+
+    return $sLOVD2Reference;
 }
 
 
@@ -382,6 +408,12 @@ function lovd_convertScrTech ($sLOVD2ScreeningTechniques)
     $aTechniques = array_map(function ($sTechnique) {
         if ($sTechnique == 'mPCR') {
             return 'PCRm';
+        } elseif ($sTechnique == 'MSP') {
+            return 'PCRms';
+        } elseif ($sTechnique == 'SSCP') {
+            return 'SSCA';
+        } elseif (strtolower($sTechnique) == 'unknown') {
+            return '?';
         }
         // Don't lose data. If it's something we don't recognize, just return the
         //  original value.
@@ -448,7 +480,17 @@ function lovd_getDiseaseID ($sDiseaseName)
     static $aKnownDiseases;
 
     $bNewDisease = false;
-    if (!isset($aKnownDiseases[$sDiseaseName])) {
+    // First try to match on the OMIM ID that is sometimes stored.
+    if (preg_match('/^\{OMIMphen(\d+)\}$/', trim($sDiseaseName), $aRegs)) {
+        $nDiseaseID = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?',
+            array($aRegs[1]))->fetchColumn();
+        if ($nDiseaseID) {
+            $aKnownDiseases[$sDiseaseName] = $nDiseaseID;
+        } else {
+            $aKnownDiseases[$sDiseaseName] = lovd_getInc('Diseases');
+            $bNewDisease = true;
+        }
+    } elseif (!isset($aKnownDiseases[$sDiseaseName])) {
         $qDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
             array($sDiseaseName, $sDiseaseName));
         $zDiseases = $qDiseases->fetchAllAssoc();
@@ -939,6 +981,25 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 if (($nStatusIdx = array_search('ID_status_', $aInputHeaders)) !== false) {
                     $aIndividual['statusid'] = $aRecord[$nStatusIdx];
                 }
+
+                // Geographic origin rewrites.
+                if (isset($aIndividual['Individual/Origin/Geographic']) && $aIndividual['Individual/Origin/Geographic'] == 'United Kingdom') {
+                    $aIndividual['Individual/Origin/Geographic'] = 'United Kingdom (Great Britain)';
+                }
+
+                // Fam_Pat rewrites. It's not a standard column, but the whole mendelian genes installation is full with it.
+                if (isset($aIndividual['Individual/Fam_Pat'])
+                    && preg_match('/^(\d+)\s*\((\d+)\)$/', trim($aIndividual['Individual/Fam_Pat']), $aRegs)
+                    && $aIndividual['panel_size'] == 1) {
+                    $aIndividual['Individual/Fam_Pat'] = '';
+                    $aIndividual['panel_size'] = $aRegs[2];
+                    if ($aRegs[1] != 1) {
+                        // Number of families also mentioned.
+                        $aIndividual['Individual/Remarks'] .= (empty($aIndividual['Individual/Remarks'])? '' : ';\r\n') .
+                            $aRegs[1] . ' families (' . $aRegs[2] . ' patients)';
+                    }
+                }
+
                 $aIndividuals[$sLOVD2IndividualID] = $aIndividual;
 
                 // Create screening record.
@@ -947,6 +1008,12 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 $nScreeningID = lovd_autoIncScreeningID();
                 $aScreening['id'] = $nScreeningID;
                 $aScreening['individualid'] = $aIndividual['id'];
+
+                // Rewrites.
+                if (isset($aScreening['Screening/Template']) && strtolower($aScreening['Screening/Template']) == 'unknown') {
+                    $aScreening['Screening/Template'] = '?';
+                }
+
                 $aScreening['owned_by'] = $aIndividual['owned_by'];
                 $aScreening['created_by'] = $aIndividual['created_by'];
                 $aScreening['created_date'] = $aIndividual['created_date'];
@@ -1011,6 +1078,11 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         }
         // Use the translated submitter ID as owner, fall back to value in created_by.
         $aVOGRecord['owned_by'] = $sSubmitterID != ''? $sSubmitterID : $aVOGRecord['created_by'];
+
+        // VariantOnGenome/Genetic_origin is mandatory.
+        if (isset($aVOGRecord['VariantOnGenome/Genetic_origin']) && !$aVOGRecord['VariantOnGenome/Genetic_origin']) {
+            $aVOGRecord['VariantOnGenome/Genetic_origin'] = 'Unknown';
+        }
 
         $aVOTRecord = lovd_getRecordForHeaders($aOutputHeaders['vot'], $aRecord,
             $aSections['vot']);
