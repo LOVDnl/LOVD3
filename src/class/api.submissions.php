@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2018-11-29
+ * Modified    : 2019-08-08
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -403,7 +403,7 @@ class LOVD_API_Submissions {
             if ($aPhenotypes['hpo']) {
                 $sPhenotype = '';
                 foreach ($aPhenotypes['hpo'] as $nAccession => $sTerm) {
-                    $sPhenotype .= (!$sPhenotype ? '' : '; ') . 'HP:' . $nAccession . ' (' . $sTerm . ')';
+                    $sPhenotype .= (!$sPhenotype ? '' : '; ') . $sTerm . ' (HP:' . $nAccession . ')';
                 }
                 // We're assuming here, that the Phenotype/Additional column is
                 //  active. It's an LOVD-standard custom column added to new
@@ -737,8 +737,19 @@ class LOVD_API_Submissions {
                         }
 
                         // Store RNA.
+                        // Has RNA been checked?
+                        $bRNAChecked = false;
+                        foreach ($aData['Screenings'] as $aScreening) {
+                            if (strpos($aScreening['Screening/Template'], 'RNA') !== false) {
+                                $bRNAChecked = true;
+                                break;
+                            }
+                        }
                         if (count($aRNAs) == 1) {
-                            $sRNA = $aRNAs[0];
+                            // When RNA has not been checked, the RNA field description requires parentheses.
+                            $sRNA = (!$bRNAChecked && preg_match('/^r.[^(]/', $aRNAs[0])?
+                                'r.(' . substr($aRNAs[0], 2) . ')' :
+                                $aRNAs[0]);
                         } elseif (!$aRNAs) {
                             // Default value.
                             $sRNA = 'r.(?)';
@@ -757,10 +768,17 @@ class LOVD_API_Submissions {
 
                         // Store Protein.
                         if (count($aProteins) == 1) {
-                            $sProtein = $aProteins[0];
+                            // When RNA has not been checked, the protein description requires parentheses.
+                            $sProtein = (!$bRNAChecked && preg_match('/^p.[^(]/', $aProteins[0])?
+                                'p.(' . substr($aProteins[0], 2) . ')' :
+                                $aProteins[0]);
                         } elseif (!$aProteins) {
-                            // Default value.
-                            $sProtein = '-';
+                            // Default value depends on transcript. '-' for non-coding transcripts, p.(?) otherwise.
+                            if (in_array(substr($aVariantLevel2['ref_seq']['@accession'], 0, 2), array('NR', 'XR'))) {
+                                $sProtein = '-';
+                            } else {
+                                $sProtein = 'p.(?)';
+                            }
                         } else {
                             // Multiple Protein changes...
                             $sProtein = 'p.[';
@@ -1349,10 +1367,18 @@ class LOVD_API_Submissions {
                                                 $aTranscripts[$iVariantLevel2] = $aVariantLevel2['ref_seq']['@accession'];
                                                 // We'll search flexibly, so get the transcript ID without the version.
                                                 $sTranscriptNoVersion = substr($aVariantLevel2['ref_seq']['@accession'], 0, strpos($aVariantLevel2['ref_seq']['@accession'] . '.', '.') + 1);
-                                                $sTranscriptAvailable = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
-                                                    array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchColumn();
+                                                list($sTranscriptAvailable, $sTranscriptGene) = $_DB->query('SELECT id_ncbi, geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
+                                                    array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchRow();
                                                 if ($sTranscriptAvailable) {
                                                     $aTranscriptsExisting[$iVariantLevel2] = $sTranscriptAvailable;
+
+                                                    // But also check gene. If we have a gene from the JSON file, and we have
+                                                    //  that in the database, then it must match this transcript.
+                                                    if (isset($aVariantLevel2['gene']['@accession'])
+                                                        && $aVariantLevel2['gene']['@accession'] != $sTranscriptGene) {
+                                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': ' .
+                                                            'Gene source (' . $aVariantLevel2['gene']['@accession'] . ') mismatches with gene (' . $sTranscriptGene . ') attached to given RefSeq accession (' . $aVariantLevel2['ref_seq']['@accession'] . ').';
+                                                    }
                                                 }
                                             }
                                         }
