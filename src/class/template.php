@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2019-02-07
+ * Modified    : 2019-08-21
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -360,21 +360,27 @@ class LOVD_Template {
             if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
                 // Check for updates!
                 $sImgURL = 'check_update?icon';
+                $sImgAlt = 'Checking for LOVD updates...';
             } else {
                 // No need to re-check, use saved info.
                 if ($_STAT['update_version'] == 'Error') {
                     $sType = 'error';
+                    $sImgAlt = 'An error occured while checking for updates.';
                 } elseif (lovd_calculateVersion($_STAT['update_version']) > lovd_calculateVersion($_SETT['system']['version'])) {
                     $sType = 'newer';
+                    $sImgAlt = 'There is an LOVD update available.';
                 } else {
                     $sType = 'newest';
+                    $sImgAlt = 'There are currently no updates.';
                 }
                 $sImgURL = 'gfx/lovd_update_' . $sType . '_blue.png';
             }
             if ($_AUTH && ($_AUTH['level'] >= LEVEL_MANAGER || count($_AUTH['curates']))) {
-                print('      <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;"><IMG src="' . $sImgURL . '" alt="" width="32" height="32" style="margin : 5px;"></A>' . "\n");
+                print('      <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;">
+        <IMG src="' . $sImgURL . '" alt="' . $sImgAlt . '" title="' . $sImgAlt . '" width="32" height="32" style="margin : 5px;">
+      </A>' . "\n");
             } else {
-                print('      <IMG src="' . $sImgURL . '" alt="" width="32" height="32" style="margin : 5px;">' . "\n");
+                print('      <IMG src="' . $sImgURL . '" alt="' . $sImgAlt . '" title="' . $sImgAlt . '" width="32" height="32" style="margin : 5px;">' . "\n");
             }
         }
 ?>
