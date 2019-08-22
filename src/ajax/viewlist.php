@@ -105,11 +105,15 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
         $_GET['search_geneid'] = $_REQUEST['search_geneid'];
     } elseif ($sObject == 'Shared_Column' && isset($_REQUEST['object_id'])) {
         lovd_isAuthorized('gene', $sObjectID); // Authorize for the gene currently loaded.
+    } elseif ($sObject == 'Screening' && $sViewListID == 'Screenings_for_I_VE' && isset($_REQUEST['search_individualid']) && ctype_digit($_REQUEST['search_individualid'])) {
+        // Screenings_for_I_VE has no ID but authorizes on search_individualid.
+        lovd_isAuthorized('individual', $_REQUEST['search_individualid']); // Authorize for the Screening(s) currently searched (it restricts the view).
+        // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+        $_GET['search_individualid'] = $_REQUEST['search_individualid'];
     } elseif ($sObject == 'Custom_ViewList') {
         // 2013-06-28; 3.0-06; We can't just authorize users based on the given ID without actually checking the shown objects and checking if the search results are actually limited or not.
         // CustomVL_IN_GENE has no ID and does not require authorization (only public VOGs loaded).
 
-var_dump($_REQUEST['id']);
         if (!empty($_REQUEST['id'])) {
             // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
             // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
