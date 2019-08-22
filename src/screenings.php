@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2019-08-07
+ * Modified    : 2019-08-22
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -144,7 +144,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVLOptions = array(
             'cols_to_skip' => array('transcriptid'),
-            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         );
         $_DATA->viewList('CustomVL_VOT_for_S_VE', $aVLOptions);
     }

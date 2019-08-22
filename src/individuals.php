@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2018-04-13
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-22
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -62,8 +62,8 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         }
     }
 
-    // Managers are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+    // Managers and authorized curators are allowed to download this list...
+    if ($_AUTH['level'] >= LEVEL_CURATOR) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -81,7 +81,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     $_DATA = new LOVD_Individual();
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         'find_and_replace' => true,
     );
     $_DATA->viewList('Individuals', $aVLOptions);
@@ -168,7 +168,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             'cols_to_skip' => array('screeningid', 'individualid', 'created_date', 'edited_date'),
             'track_history' => false,
             'show_navigation' => false,
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         );
+        // This ViewList ID is checked in ajax/viewlist.php. Don't just change it.
         $_DATA->viewList('Screenings_for_I_VE', $aScreeningVLOptions);
         unset($_GET['search_individualid']);
 
@@ -180,7 +182,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // VOG needs to be first, so it groups by the VOG ID.
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVariantVLOptions = array(
-            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         );
         $_DATA->viewList('CustomVL_VOT_for_I_VE', $aVariantVLOptions);
     }
