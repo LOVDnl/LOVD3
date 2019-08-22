@@ -141,7 +141,18 @@ $aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
 //  about users than the info the access sharing page gives them.
 if ($sObject == 'User' && $_AUTH['level'] < LEVEL_MANAGER) {
     // Force removal of certain columns, regardless of this has been requested or not.
-    $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
+    // We cannot trust this was set in $_SESSION already since the VL can be loaded independently.
+    $aColsToSkip = array_unique(
+        array_merge(
+            $aColsToSkip,
+            array(
+                'username',
+                'status_',
+                'last_login_',
+                'created_date_',
+                'curates',
+                'level_'
+            )));
 }
 
 // Managers, and sometimes curators, are allowed to download lists...
@@ -221,7 +232,12 @@ if (POST && ACTION == 'applyFR') {
 // Parameters are assumed to be in $_SESSION, only cols_to_skip can be overridden. This is for the external viewer.
 $aOptions = array();
 if ($aColsToSkip) {
-    $aOptions['cols_to_skip'] = $aColsToSkip;
+    // Don't let the requested list of columns overwrite the original one. Only additional columns may be hidden.
+    $aOptions['cols_to_skip'] = array_unique(array_merge(
+        (!isset($_SESSION['viewlists'][$_GET['viewlistid']]['options']['cols_to_skip'])? array()
+            : $_SESSION['viewlists'][$_GET['viewlistid']]['options']['cols_to_skip']),
+        $aColsToSkip
+    ));
 }
 $_DATA->viewList($_GET['viewlistid'], $aOptions);
 ?>
