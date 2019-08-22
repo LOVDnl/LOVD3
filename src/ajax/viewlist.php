@@ -105,24 +105,45 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
         $_GET['search_geneid'] = $_REQUEST['search_geneid'];
     } elseif ($sObject == 'Shared_Column' && isset($_REQUEST['object_id'])) {
         lovd_isAuthorized('gene', $sObjectID); // Authorize for the gene currently loaded.
-    } elseif ($sObject == 'Custom_ViewList' && isset($_REQUEST['id'])) {
+    } elseif ($sObject == 'Custom_ViewList') {
         // 2013-06-28; 3.0-06; We can't just authorize users based on the given ID without actually checking the shown objects and checking if the search results are actually limited or not.
-        // CustomVL_VOT_for_I_VE has no ID and does not require authorization (only public VOGs loaded).
-        // CustomVL_VOT_for_S_VE has no ID and does not require authorization (only public VOGs loaded).
         // CustomVL_IN_GENE has no ID and does not require authorization (only public VOGs loaded).
 
-        // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
-        // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
-        if (in_array($sObjectID,
-            array(
-                'VariantOnTranscript,VariantOnGenome',
-                'VariantOnTranscriptUnique,VariantOnGenome',
-                'VariantOnTranscript,VariantOnGenome,Screening,Individual'
-            )) && (!isset($_REQUEST['search_transcriptid'])
-                || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
-            die(AJAX_NO_AUTH);
+var_dump($_REQUEST['id']);
+        if (!empty($_REQUEST['id'])) {
+            // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+            // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+            if (in_array($sObjectID,
+                    array(
+                        'VariantOnTranscript,VariantOnGenome',
+                        'VariantOnTranscriptUnique,VariantOnGenome',
+                        'VariantOnTranscript,VariantOnGenome,Screening,Individual'
+                    )) && (!isset($_REQUEST['search_transcriptid'])
+                    || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
+                die(AJAX_NO_AUTH);
+            }
+            lovd_isAuthorized('gene', $nID); // Authorize for the gene currently loaded.
+
+        } elseif ($sObjectID == 'VariantOnGenome,Scr2Var,VariantOnTranscript' && isset($_REQUEST['search_screeningid'])) {
+            // CustomVL_VOT_for_I_VE has no ID but authorizes on search_screeningid (can contain multiple IDs).
+            // CustomVL_VOT_for_S_VE has no ID but authorizes on search_screeningid.
+
+            // When receiving multiple screenings, we intend of course to authorize on its individual.
+            // We should not allow to add an "OR screeningid = ?" clause including an owned Screening to force authorization.
+            // Check if we have multiple screening IDs. If so, make sure they belong together.
+            $aScreeningIDs = explode('|', $_REQUEST['search_screeningid']);
+            if (count($aScreeningIDs) > 1) {
+                $nIndividuals = $_DB->query('SELECT COUNT(DISTINCT individualid) FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($aScreeningIDs) - 1) . ')',
+                    $aScreeningIDs)->fetchColumn();
+                if ($nIndividuals > 1) {
+                    // This custom VL is only loaded for authorization on Screenings, and there's no reason to have multiple Individuals.
+                    die(AJAX_NO_AUTH);
+                }
+            }
+            lovd_isAuthorized('screening', $aScreeningIDs); // Authorize for the Screening(s) currently searched (it restricts the view).
+            // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+            $_GET['search_screeningid'] = $_REQUEST['search_screeningid'];
         }
-        lovd_isAuthorized('gene', $nID); // Authorize for the gene currently loaded.
     }
 }
 
