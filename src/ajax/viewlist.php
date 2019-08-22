@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2018-08-09
+ * Modified    : 2018-08-22
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -97,8 +97,12 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
     } elseif ($sObject == 'Individual' && isset($_REQUEST['search_genes_searched']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_genes_searched'], $aRegs)) {
         lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
+        // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+        $_GET['search_genes_searched'] = $_REQUEST['search_genes_searched'];
     } elseif ($sObject == 'Transcript' && isset($_REQUEST['search_geneid']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_geneid'], $aRegs)) {
         lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
+        // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+        $_GET['search_geneid'] = $_REQUEST['search_geneid'];
     } elseif ($sObject == 'Shared_Column' && isset($_REQUEST['object_id'])) {
         lovd_isAuthorized('gene', $sObjectID); // Authorize for the gene currently loaded.
     } elseif ($sObject == 'Custom_ViewList' && isset($_REQUEST['id'])) {
@@ -109,7 +113,13 @@ if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AU
 
         // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
         // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
-        if (in_array($sObjectID, array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscriptUnique,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_REQUEST['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
+        if (in_array($sObjectID,
+            array(
+                'VariantOnTranscript,VariantOnGenome',
+                'VariantOnTranscriptUnique,VariantOnGenome',
+                'VariantOnTranscript,VariantOnGenome,Screening,Individual'
+            )) && (!isset($_REQUEST['search_transcriptid'])
+                || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
             die(AJAX_NO_AUTH);
         }
         lovd_isAuthorized('gene', $nID); // Authorize for the gene currently loaded.
