@@ -169,7 +169,7 @@ if (!empty($_POST)) {
                   '      </PRE>' . "\n");
 
             if ($nGenes || $nIndividuals || $nVars) {
-                lovd_showInfoTable('FINAL WARNING! If you did not download the variation and individual data stored in the LOVD system, everything will be lost!', 'warning');
+                lovd_showInfoTable('FINAL WARNING! If you did not download the variant and individual data stored in the LOVD system, everything will be lost!', 'warning');
             }
 
             print('      Please confirm uninstalling LOVD using your password.<BR>' . "\n" .
