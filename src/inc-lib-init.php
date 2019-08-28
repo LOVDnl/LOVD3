@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-07-24
+ * Modified    : 2019-08-28
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -293,6 +293,83 @@ function lovd_generateRandomID ($l = 10)
     }
     $nStart = mt_rand(0, 32-$l);
     return substr(md5(microtime()), $nStart, $l);
+}
+
+
+
+
+
+function lovd_getActivateCustomColumnQuery ($aColumns = array(), $bActivate = true)
+{
+    // Create custom columns based on the columns listed in inc-sql-columns.php file.
+    global $_INI; // $_INI is needed for inc-sql-columns.php.
+
+    // This defines $aColSQL.
+    require_once ROOT_PATH . 'install/inc-sql-columns.php';
+
+    // Make sure the first argument, defining which columns to create, is an array.
+    // When empty, all columns are created.
+    if (!is_array($aColumns)) {
+        $aColumns = array($aColumns);
+    }
+
+    // Define how many columns we need to create.
+    $nColsLeft = (empty($aColumns)? count($aColSQL) : count($aColumns));
+
+    $aSQL = array();
+    foreach ($aColSQL as $sInsertSQL) {
+        // Find the beginning of field values of an SQL INSERT query
+        // INSERT INTO table_name VALUES(...)
+        $nIndex = strpos($sInsertSQL, '(');
+        if ($nIndex !== false) {
+            // Get the string inside brackets VALUES(...)
+            $sInsertFields = rtrim(substr($sInsertSQL, $nIndex+1), ')');
+
+            // Split the string into an array.
+            $aValues = str_getcsv($sInsertFields);
+
+            // If column is requested, process it. When no columns are specified, process all columns.
+            if (empty($aColumns) || in_array($aValues[0], $aColumns)) {
+                $aSQL[] = str_replace('INSERT INTO', 'INSERT IGNORE INTO', $sInsertSQL);
+
+                // Only activate column if they are an HGVS or standard column.
+                if ($bActivate && ($aValues[3] == '1' || $aValues[4] == '1')) {
+                    $sColID = $aValues[0];
+                    $sColType = $aValues[10];
+
+                    list($sCategory) = explode('/', $sColID);
+                    $aTableInfo = lovd_getTableInfoByCategory($sCategory);
+
+                    $sAlterTable = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' ADD COLUMN `' . $sColID . '` ' . $sColType;
+                    $aSQL = array_merge($aSQL, array(
+                        'INSERT IGNORE INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("' . $sColID . '", "00000", NOW())',
+                        'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $aTableInfo['table_sql'] . '" AND COLUMN_NAME = "' . $sColID . '")',
+                        'SET @sSQL := IF(@bExists > 0, \'SELECT "INFO: Column already exists."\', "' . $sAlterTable . '")',
+                        'PREPARE Statement FROM @sSQL',
+                        'EXECUTE Statement',
+                    ));
+
+                    if (!empty($aTableInfo['table_sql_rev'])) {
+                        $sAlterRevTable = 'ALTER TABLE ' . $aTableInfo['table_sql_rev'] . ' ADD COLUMN `' . $sColID . '` ' . $sColType;
+                        $aSQL = array_merge($aSQL, array(
+                            'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $aTableInfo['table_sql_rev'] . '" AND COLUMN_NAME = "' . $sColID . '")',
+                            'SET @sSQL := IF(@bExists > 0, \'SELECT "INFO: Column already exists."\', "' . $sAlterRevTable . '")',
+                            'PREPARE Statement FROM @sSQL',
+                            'EXECUTE Statement',
+                        ));
+                    }
+                }
+
+                $nColsLeft--;
+                // Make sure we stop looping once we have processed all columns listed in $aColumns.
+                if ($nColsLeft === 0) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return $aSQL;
 }
 
 
