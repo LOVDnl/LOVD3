@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2017-10-26
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -139,7 +139,7 @@ class LOVD_SystemSetting extends LOVD_Object {
             }
         } else {
             // FIXME; this is probably not the best way of doing this...
-            $_POST['logo_uri'] = 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg';
+            $_POST['logo_uri'] = 'gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg';
         }
 
         // FIXME; Like above, not the best solution, but gets the job done for now.
@@ -152,9 +152,18 @@ class LOVD_SystemSetting extends LOVD_Object {
             lovd_errorAdd('use_ssl', 'You\'ve selected to force the use of SSL, but SSL is not currently activated for this session. To force SSL, I must be sure it\'s possible to approach LOVD through an SSL connection (use <A href="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . ($_SERVER['QUERY_STRING']? '?' . str_replace('&sent=true', '', $_SERVER['QUERY_STRING']) : '') . '" target="_blank">https://</A> instead of http://).');
         }
 
+        // Prevent notices.
         $_POST['api_feed_history'] = 0;
         $_POST['allow_count_hidden_entries'] = 0;
         $_POST['use_versioning'] = 0;
+
+        if (LOVD_plus) {
+            $_POST['logo_uri'] = 'LOVD_plus_logo145x50';
+            $_POST['send_stats'] = 0;
+            $_POST['include_in_listing'] = 0;
+            $_POST['allow_submitter_registration'] = 0;
+            $_POST['allow_submitter_mods'] = 0;
+        }
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
@@ -197,7 +206,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions'),
       'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
                         //array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'select', 'api_feed_history', 1, $aFeedHistory, false, false, false),
-                        array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
+      'feed_history' => array('List database changes in feed for how long?', 'LOVD includes a "newsfeed" that allows users to get a list of changes recently made in the database. Select here how many months back you want changes to appear on this list. Set to "Not available" to disable the newsfeed.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         'hr',
                         'skip',
                         'skip',
@@ -214,7 +223,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'hr',
                         'skip',
                         'skip',
-                        array('', '', 'print', '<B>Customize LOVD</B>'),
+                        array('', '', 'print', '<B>Customize LOVD</B>'), // Don't edit, we're parsing for this.
                         array('', '', 'note', 'Here you can customize the way LOVD looks. We will add more options here later.'),
                         'hr',
                         array('System logo', 'If you wish to have your custom logo on the top left of every page instead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.', 'text', 'logo_uri', 40),
@@ -222,7 +231,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'hr',
                         'skip',
                         'skip',
-                        array('', '', 'print', '<B>Global LOVD statistics</B>'),
+                        array('', '', 'print', '<B>Global LOVD statistics</B>'), // Don't edit, we're parsing for this.
                         array('', '', 'note', 'The following settings apply to the kind of information your LOVD install sends to the development team to gather statistics about global LOVD usage.'),
                         'hr',
                         array('Send statistics?', 'This sends <I>anonymous</I> statistics about the number of submitters, genes, individuals and variants in your installation of LOVD.', 'checkbox', 'send_stats'),
@@ -238,10 +247,10 @@ class LOVD_SystemSetting extends LOVD_Object {
                         array('Allow (locked) users to retrieve a new password?', 'Do you want to enable an "I forgot my password" option that allows users who forgot their password to retrieve a new one?', 'checkbox', 'allow_unlock_accounts'),
                         array('Enable submitters to change data?', 'Enabling this setting allows submitters to make changes to data previously submitted by them or assigned to them.', 'checkbox', 'allow_submitter_mods'),
                         //array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'checkbox', 'allow_count_hidden_entries'),
-                        array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
+ 'count_hidden_data' => array('Enable getting counts of hidden entries?', 'Enabling this feature allows the public to find the number of entries in the database (including hidden entries) matching one or more search terms on a specified set of columns. This feature will only mention the number of variant entries matched, without showing them.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
                         array('Force SSL-only access to LOVD?', 'SSL is a secure protocol allowing for encryption of data sent between you and LOVD. When you will record sensitive individual information in LOVD, you <B>should</B> enable this setting, as the individual information can otherwise be \'sniffed\' off the network. If you do not record sensitive information, enabling SSL is <I>recommended</I>.', 'checkbox', 'use_ssl'),
                         //array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'checkbox', 'use_versioning'),
-                        array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
+    'use_versioning' => array('Use data versioning of biological data?', 'Versioning allows you to see all previous versions of a certain data entry (individuals, variants, phenotype information, etc) and allows you to return the entry to a previous state. Please note that this feature requires quite a lot of space in the database. Disabling this feature later will not free any space, just prevent more space from being used.', 'print', '&nbsp;<I style="color : #666666;">Not yet implemented</I>'),
          'uninstall' => array('Disable LOVD uninstall?', 'Select this to disable the "Uninstall LOVD" option in the Setup area. Please note that this uninstall lock can only be removed by directly accessing the MySQL database.', 'checkbox', 'lock_uninstall'),
       'uninstall_hr' => 'hr',
                       );
@@ -249,6 +258,32 @@ class LOVD_SystemSetting extends LOVD_Object {
             unset($this->aFormData['uninstall'], $this->aFormData['uninstall_hr']);
             global $_CONF;
             $this->aFormData['refseq_build'] = array('Human Build to map to (UCSC/NCBI)', '', 'print', '&nbsp;' . $_CONF['refseq_build']);
+        }
+
+        // Remove features that are anyway currently not developed yet. They can confuse users.
+        unset($this->aFormData['feed_history'], $this->aFormData['count_hidden_data'], $this->aFormData['use_versioning']);
+
+        // Remove features currently unavailable for LOVD+ (or that we choose not to support).
+        foreach ($this->aFormData as $nKey => $aFormEntry) {
+            // Unset whole ranges of options, easier to do like this than to name all of the options.
+            if (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
+                && strpos($aFormEntry[3], '<B>Customize LOVD</B>') !== false) {
+                unset($this->aFormData[$nKey], $this->aFormData[$nKey+1], $this->aFormData[$nKey+2],
+                    $this->aFormData[$nKey+3], $this->aFormData[$nKey+4], $this->aFormData[$nKey+5],
+                    $this->aFormData[$nKey+6], $this->aFormData[$nKey+7]);
+                continue;
+
+            } elseif (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
+                && strpos($aFormEntry[3], '<B>Global LOVD statistics</B>') !== false) {
+                unset($this->aFormData[$nKey], $this->aFormData[$nKey+1], $this->aFormData[$nKey+2],
+                    $this->aFormData[$nKey+3], $this->aFormData[$nKey+4], $this->aFormData[$nKey+5],
+                    $this->aFormData[$nKey+6], $this->aFormData[$nKey+7]);
+                continue;
+
+            } elseif (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
+                && in_array($aFormEntry[3], array('allow_submitter_registration', 'allow_submitter_mods'))) {
+                unset($this->aFormData[$nKey]);
+            }
         }
 
         return parent::getForm();
@@ -259,16 +294,16 @@ class LOVD_SystemSetting extends LOVD_Object {
     function setDefaultValues ()
     {
         // Sets default values of fields in $_POST.
-        $_POST['system_title'] = 'LOVD - Leiden Open Variation Database';
+        $_POST['system_title'] = (LOVD_plus? 'Leiden Open Variation Database for diagnostics' : 'LOVD - Leiden Open Variation Database');
         $_POST['location_url'] = ($_SERVER['HTTP_HOST'] == 'localhost' || lovd_matchIPRange($_SERVER['HTTP_HOST'])? '' : lovd_getInstallURL());
         $_POST['refseq_build'] = 'hg38';
         $_POST['api_feed_history'] = 3;
-        $_POST['logo_uri'] = 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg';
+        $_POST['logo_uri'] = 'gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg';
         $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
-        $_POST['send_stats'] = 1;
-        $_POST['include_in_listing'] = 1;
+        $_POST['send_stats'] = (int) (!LOVD_plus);
+        $_POST['include_in_listing'] = (int) (!LOVD_plus);
         $_POST['allow_submitter_registration'] = (int) (!LOVD_plus);
-        $_POST['allow_submitter_mods'] = 1;
+        $_POST['allow_submitter_mods'] = (int) (!LOVD_plus);
         if (!SSL) {
             $_POST['use_ssl'] = 0;
         } else {
