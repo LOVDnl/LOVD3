@@ -204,6 +204,109 @@ function lovd_cleanDirName ($s)
 
 
 
+function lovd_convertBytesToHRSize ($nValue)
+{
+    // This function takes integers and converts it to sizes like "128M".
+
+    if (!ctype_digit($nValue)) {
+        return false;
+    }
+
+    $aSizes = array(
+        ' bytes', 'K', 'M', 'G', 'T', 'P',
+    );
+    $nKey = 0; // bytes.
+
+    while ($nValue >= 1024 && $nKey < count($aSizes)) {
+        $nValue /= 1024;
+        $nKey ++;
+    }
+
+    // Precision makes no sense with three digits.
+    if ($nValue >= 100 || !$nKey) {
+        // Return an integer.
+        return round($nValue) . $aSizes[$nKey];
+    } else {
+        return number_format($nValue, 1) . $aSizes[$nKey];
+    }
+}
+
+
+
+
+
+function lovd_convertIniValueToBytes ($sValue)
+{
+    // This function takes output from PHP's ini_get() function like "128M" or
+    // "256k" and converts it to an integer, measured in bytes.
+    // Implementation taken from the example on php.net.
+    // FIXME; Implement proper checks here? Regexp?
+
+    $nValue = (int) $sValue;
+    $sLast = strtolower(substr($sValue, -1));
+    switch ($sLast) {
+        case 'g':
+            $nValue *= 1024;
+        case 'm':
+            $nValue *= 1024;
+        case 'k':
+            $nValue *= 1024;
+    }
+
+    return $nValue;
+}
+
+
+
+
+
+function lovd_convertSecondsToTime ($sValue, $nDecimals = 0, $bVerbose = false)
+{
+    // This function takes a number of seconds and converts it into whole
+    // minutes, hours, days, months or years.
+    // $nDecimals indicates the number of decimals to use in the returned value.
+    // $bVerbose defines whether to use short notation (s, m, h, d, y) or long notation
+    //   (seconds, minutes, hours, days, years).
+    // FIXME; Implement proper checks here? Regexp?
+
+    $nValue = (int) $sValue;
+    if (ctype_digit((string) $sValue)) {
+        $sValue .= 's';
+    }
+    $sLast = strtolower(substr($sValue, -1));
+    $nDecimals = (int) $nDecimals;
+
+    $aConversion =
+        array(
+            's' => array(60, 'm', 'second'),
+            'm' => array(60, 'h', 'minute'),
+            'h' => array(24, 'd', 'hour'),
+            'd' => array(265, 'y', 'day'),
+            'y' => array(100, 'c', 'year'),
+            'c' => array(100, '', 'century'), // Above is not supported.
+        );
+
+    foreach ($aConversion as $sUnit => $aConvert) {
+        list($nFactor, $sNextUnit) = $aConvert;
+        if ($sLast == $sUnit && $nValue > $nFactor) {
+            $nValue /= $nFactor;
+            $sLast = $sNextUnit;
+        }
+    }
+
+    $nValue = round($nValue, $nDecimals);
+    if ($bVerbose) {
+        // Make it "3 years" instead of "3y".
+        return $nValue . ' ' . $aConversion[$sLast][2] . ($nValue == 1? '' : 's');
+    } else {
+        return $nValue . $sLast;
+    }
+}
+
+
+
+
+
 function lovd_createPasswordHash ($sPassword, $sSalt = '')
 {
     // Creates a password hash like how it's stored in the database. If no salt
@@ -414,12 +517,12 @@ function lovd_getColumnData ($sTable)
     global $_DB, $_TABLES;
     static $aTableCols = array();
 
-    // Only for tables that actually exist.
-    if (!in_array($sTable, $_TABLES)) {
-        return false;
-    }
-
     if (empty($aTableCols[$sTable])) {
+        // Only for tables that actually exist.
+        if (!in_array($sTable, $_TABLES)) {
+            return false;
+        }
+
         $q = $_DB->query('SHOW COLUMNS FROM ' . $sTable, false, false); // Safe, since $sTable is already checked with $_TABLES.
         if (!$q) {
             // Can happen when table does not exist yet (i.e. during install).
@@ -596,6 +699,54 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
 
 
 
+function lovd_getFilesFromDir ($sPath = '', $sPrefix = '', $aSuffixes = array())
+{
+    // Reads out the given path (defaults to the root path), collects all files and sorts them by the prefix.
+    // Returns an array with prefixes and their suffixes in a sub array.
+    // $aFiles =
+    //     array(
+    //         prefix =>
+    //             array(
+    //                 suffix,
+    //                 suffix,
+    //             ),
+    //     );
+
+    $sPath = ($sPath?: ROOT_PATH);
+    $sPrefix = ($sPrefix?: '.+');
+    if (!is_array($aSuffixes) || !$aSuffixes) {
+        $aSuffixes = array('.+');
+    }
+
+    $aFiles = array();
+    // Loop through the files in the dir and try and find a meta and data file, that match but have no total data file.
+    $h = opendir($sPath);
+    if (!$h) {
+        return false;
+    }
+    while (($sFile = readdir($h)) !== false) {
+        if ($sFile{0} == '.') {
+            // Current dir, parent dir, and hidden files.
+            continue;
+        }
+        if (preg_match('/^(' . $sPrefix . ')\.(' . implode('|', array_values($aSuffixes)) . ')$/', $sFile, $aRegs)) {
+            //             1                                               2
+            // Files matching the pattern.
+            list(, $sFilePrefix, $sFileType) = $aRegs;
+            if (!isset($aFiles[$sFilePrefix])) {
+                $aFiles[$sFilePrefix] = array();
+            }
+            $aFiles[$sFilePrefix][] = $sFileType;
+        }
+    }
+
+    return $aFiles;
+}
+
+
+
+
+
 function lovd_getGeneList ()
 {
     // Gets the list of genes (ids only), to prevent repeated queries.
@@ -616,7 +767,9 @@ function lovd_getGeneList ()
 function lovd_getInstallURL ($bFull = true)
 {
     // Returns URL that can be used in URLs or redirects.
-    return (!$bFull? '' : PROTOCOL . $_SERVER['HTTP_HOST']) . lovd_cleanDirName(dirname($_SERVER['SCRIPT_NAME']) . '/' . ROOT_PATH);
+    // ROOT_PATH can be relative or absolute.
+    return (!$bFull? '' : PROTOCOL . $_SERVER['HTTP_HOST']) .
+        lovd_cleanDirName(substr(ROOT_PATH, 0, 1) == '/'? ROOT_PATH : dirname($_SERVER['SCRIPT_NAME']) . '/' . ROOT_PATH);
 }
 
 
@@ -1452,19 +1605,8 @@ function lovd_parseConfigFile($sConfigFile)
 
     if (LOVD_plus) {
         // Configure data file paths.
-        $aConfigValues['paths'] = array(
-            'data_files' =>
-                array(
-                    'required' => true,
-                    'path_is_readable' => true,
-                    'path_is_writable' => true,
-                ),
-            'data_files_archive' =>
-                array(
-                    'required' => false,
-                    'path_is_readable' => true,
-                    'path_is_writable' => true,
-                ),
+        $aConfigValues['paths'] = array_merge(
+            $aConfigValues['paths'], array(
             'alternative_ids' =>
                 array(
                     'required' => false,
@@ -1477,7 +1619,7 @@ function lovd_parseConfigFile($sConfigFile)
                     'path_is_readable' => true,
                     'path_is_writable' => true,
                 ),
-        );
+        ));
 
         // Configure instance details.
         $aConfigValues['instance'] = array(
@@ -2024,6 +2166,36 @@ function lovd_validateIP ($sRange, $sIP)
 
 
 
+function lovd_verifyInstance ($sName, $bExact = true)
+{
+    // Check if this instance belongs to $sName instance group (LOVD+ feature).
+    // If $bExact is set to true, it will match the exact instance name instead
+    //  of matching just the prefix.
+
+    global $_INI;
+
+    // Only LOVD+ can have the instance name in the config file.
+    if (!LOVD_plus || empty($_INI['instance']['name'])) {
+        return false;
+    }
+
+    if (strtolower($_INI['instance']['name']) == strtolower($sName)) {
+        return true;
+    }
+
+    if (!$bExact) {
+        if (strpos(strtolower($_INI['instance']['name']), strtolower($sName)) === 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+
+
+
 function lovd_verifyPassword ($sPassword, $sOriHash)
 {
     // Verifies a password given a certain hash. This hash is usually taken from
@@ -2066,77 +2238,5 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
     $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
         array($sLog, $sTime, ($nAuthID? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
-}
-
-
-
-
-
-function lovd_convertIniValueToBytes ($sValue)
-{
-    // This function takes output from PHP's ini_get() function like "128M" or
-    // "256k" and converts it to an integer, measured in bytes.
-    // Implementation taken from the example on php.net.
-    // FIXME; Implement proper checks here? Regexp?
-
-    $nValue = (int) $sValue;
-    $sLast = strtolower(substr($sValue, -1));
-    switch ($sLast) {
-        case 'g':
-            $nValue *= 1024;
-        case 'm':
-            $nValue *= 1024;
-        case 'k':
-            $nValue *= 1024;
-    }
-
-    return $nValue;
-}
-
-
-
-
-
-function lovd_convertSecondsToTime ($sValue, $nDecimals = 0, $bVerbose = false)
-{
-    // This function takes a number of seconds and converts it into whole
-    // minutes, hours, days, months or years.
-    // $nDecimals indicates the number of decimals to use in the returned value.
-    // $bVerbose defines whether to use short notation (s, m, h, d, y) or long notation
-    //   (seconds, minutes, hours, days, years).
-    // FIXME; Implement proper checks here? Regexp?
-
-    $nValue = (int) $sValue;
-    if (ctype_digit((string) $sValue)) {
-        $sValue .= 's';
-    }
-    $sLast = strtolower(substr($sValue, -1));
-    $nDecimals = (int) $nDecimals;
-
-    $aConversion =
-        array(
-            's' => array(60, 'm', 'second'),
-            'm' => array(60, 'h', 'minute'),
-            'h' => array(24, 'd', 'hour'),
-            'd' => array(265, 'y', 'day'),
-            'y' => array(100, 'c', 'year'),
-            'c' => array(100, '', 'century'), // Above is not supported.
-        );
-
-    foreach ($aConversion as $sUnit => $aConvert) {
-        list($nFactor, $sNextUnit) = $aConvert;
-        if ($sLast == $sUnit && $nValue > $nFactor) {
-            $nValue /= $nFactor;
-            $sLast = $sNextUnit;
-        }
-    }
-
-    $nValue = round($nValue, $nDecimals);
-    if ($bVerbose) {
-        // Make it "3 years" instead of "3y".
-        return $nValue . ' ' . $aConversion[$sLast][2] . ($nValue == 1? '' : 's');
-    } else {
-        return $nValue . $sLast;
-    }
 }
 ?>

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-07-25
+ * Modified    : 2019-08-28
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1569,11 +1569,12 @@ class LOVD_Object {
             }
 
             // Mark row according to the lowest status; Marked is red; lower will be gray.
-            $zData['class_name'] = '';
-            if ($nRowStatus == STATUS_MARKED) {
-                $zData['class_name'] = 'marked';
-            } elseif ($nRowStatus < STATUS_MARKED) {
-                $zData['class_name'] = 'del';
+            if (empty($zData['class_name'])) {
+                if ($nRowStatus == STATUS_MARKED) {
+                    $zData['class_name'] = 'marked';
+                } elseif ($nRowStatus < STATUS_MARKED) {
+                    $zData['class_name'] = 'del';
+                }
             }
 
             // Handle JSON data (well, in a VL, we hide it).
@@ -1737,7 +1738,12 @@ class LOVD_Object {
                 if ($sColType == 'DATETIME') {
                     $sSearch = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($aRequest['search_' . $sColumn]));
                 } else {
-                    $sSearch = preg_replace_callback('/("[^"]*")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($aRequest['search_' . $sColumn]));
+                    $sSearch = preg_replace_callback(
+                        '/("[^"]*")/',
+                        function ($aRegs)
+                        {
+                            return str_replace(' ', '{{SPACE}}', $aRegs[1]);
+                        }, trim($aRequest['search_' . $sColumn]));
                 }
                 $aWords = explode(' ', $sSearch);
                 foreach ($aWords as $sWord) {
@@ -2196,7 +2202,7 @@ class LOVD_Object {
         // bFindReplace     if true, find & replace option is shown in viewlist options menu.
 
         // Views list of entries in the database, allowing search.
-        global $_DB, $_INI, $_SETT;
+        global $_AUTH, $_DB, $_INI, $_SETT;
 
         if (empty($aOptions) || !is_array($aOptions)) {
             $aOptions = array();
@@ -2829,7 +2835,7 @@ FROptions
 
                 if (substr($this->sObject, -7) == 'Variant') {
                     $sUnit = 'variants' . (substr($this->sObject, 0, 10) == 'Transcript'? ' on transcripts' : '');
-                } elseif ($this->sObject == 'Custom_ViewList') {
+                } elseif ($this->sObject == 'Custom_ViewList' || $this->sObject == 'Custom_ViewListMOD') {
                     $sUnit = 'entries';
                 } elseif ($this->sObject == 'Shared_Column') {
                     $sUnit = 'active columns';
@@ -2886,7 +2892,7 @@ FROptions
             $zData = $this->autoExplode($zData);
 
             // Only the CustomViewList object has this 3rd argument, but other objects' prepareData()
-            // don't complain when called with this 3 argument they didn't define.
+            //  don't complain when called with this 3rd argument they didn't define.
             $zData = $this->prepareData($zData, 'list', $sViewListID);
 
             if (FORMAT == 'text/html') {
@@ -3025,7 +3031,10 @@ $sMVSOption
 
 OPMENU
 );
-                if (!LOVD_plus) {
+                if (!LOVD_plus
+                    || empty($_INSTANCE_CONFIG['viewlists']['restrict_downloads'])
+                    || (!empty($_INSTANCE_CONFIG['viewlists'][$sViewListID]['allow_download_from_level'])
+                        && $_INSTANCE_CONFIG['viewlists'][$sViewListID]['allow_download_from_level'] <= $_AUTH['level'])) {
                     print(<<<OPMENU
         $('#viewlistMenu_$sViewListID').append(
 '            <LI class="icon">' +
