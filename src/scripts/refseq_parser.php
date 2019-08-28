@@ -605,7 +605,7 @@ if ($_GET['step'] == 2) {
             $bFilesExisted = false;
             // 2009-02-25; 2.0-16; need this one for the genomic numbering (by Gerard)
             // 2009-03-25; 2.0-17; adapted by Gerard to avoid notices
-            $nGenomicNumberIntron = (array_key_exists(0, $aIntron) ? strlen($aIntron[0]) : 0);
+            $nGenomicNumberIntron = (array_key_exists(0, $aIntron)? strlen($aIntron[0]) : 0);
 
             while (list($nIntron, $sIntron) = each($aIntron)) {
                 if (!$sIntron) {
@@ -1359,7 +1359,7 @@ if ($_GET['step'] == 3) {
                 }
                 // 2009-12-03; 2.0-23; added the mRNA accession number, but only if it is the same in the database
                 if (!empty($_POST['version_id'])) {
-                    $_POST['note'] .= ' The sequence was taken from <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['version_id'] . '">' . $_POST['version_id'] . '</a>' . ($bStep2 ? ', covering ' . $_POST['symbol'] . ' transcript <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['transcript_id'] . '">' . $_POST['transcript_id'] . '</a>.' : '.') .'</p>';
+                    $_POST['note'] .= ' The sequence was taken from <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['version_id'] . '">' . $_POST['version_id'] . '</a>' . ($bStep2? ', covering ' . $_POST['symbol'] . ' transcript <a href="https://www.ncbi.nlm.nih.gov/nucleotide/' . $_POST['transcript_id'] . '">' . $_POST['transcript_id'] . '</a>.' : '.') .'</p>';
                 }
 
                 if (trim($_POST['note'])) {
