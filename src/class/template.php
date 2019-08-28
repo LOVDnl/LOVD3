@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2019-08-27
+ * Modified    : 2019-08-28
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -243,8 +243,13 @@ class LOVD_Template {
             unset($this->aMenu['configuration'], $this->aMenu['configuration_']);
             unset($this->aMenu['setup_']['/download/columns']);
             unset($this->aMenu['setup_']['/download/all']);
-            if ($_AUTH && $_AUTH['level'] <= LEVEL_ANALYZER) {
+            if (!$_AUTH || $_AUTH['level'] <= LEVEL_ANALYZER) {
                 unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            }
+
+            // Gene statistics is really just for MGHA.
+            if (!lovd_verifyInstance('mgha', false)) {
+                unset($this->aMenu['genes_']['/gene_statistics']);
             }
         } else {
             // Remove menu items for non-LOVD+.
@@ -348,7 +353,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD software &copy;2004-2019 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2019 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -392,7 +397,7 @@ class LOVD_Template {
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
+        if (!LOVD_plus && !((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
             // In install directory.
             print('
 function lovd_mapVariants ()
@@ -635,7 +640,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
   <TR>
 <?php
         if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
-            $_CONF['logo_uri'] = 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg';
+            $_CONF['logo_uri'] = 'gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg';
         }
         $aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
         if (!is_array($aImage)) {

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2018-01-16
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -61,6 +61,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // Default constructor.
         global $_DB;
 
+        $this->bShared = (LOVD_plus? false : true);
+
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT vot.* ' .
                                'FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
@@ -70,7 +72,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vot.*, ' .
-                                           't.geneid, t.id_ncbi';
+                                           't.geneid, t.id_ncbi, vog.chromosome'; // MGHA needs chromosome to get the Genomizer link to work.
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) ' . // Only done so that the vog.statusid can be checked.
                                            'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)';
@@ -82,11 +84,19 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                                           't.geneid, t.id_ncbi, ' .
                                           'e.name AS effect, ' .
                                           'ds.name AS status';
+        // LOVD+ adds the check if this transcript is a preferred transcript.
+        if (LOVD_plus) {
+            $this->aSQLViewList['SELECT'] .= ', gp2g.genepanelid';
+        }
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vot.effectid = e.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid)';
+        // LOVD+ adds the check if this transcript is a preferred transcript in any gene panel.
+        if (LOVD_plus) {
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_GP2GENE . ' AS gp2g ON (vot.transcriptid = gp2g.transcriptid)';
+        }
 
         $this->sObjectID = $sObjectID;
         $this->nID = $nID;
@@ -100,10 +110,19 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'effect_reported' => 'Affects function (as reported)',
                         'effect_concluded' => 'Affects function (by curator)',
                       ),
+                 (!LOVD_plus || !lovd_verifyInstance('mgha', false)? array() :
+                     // MGHA entry for the Genomizer link in the VOT ViewEntry.
+                     array(
+                         'genomizer_url_' => 'Genomizer',
+                         'clinvar_' => "ClinVar Description (dbNSFP)"
+                     )),
                  $this->buildViewEntry());
         if (LOVD_plus) {
             unset($this->aColumnsViewEntry['effect_reported']);
             unset($this->aColumnsViewEntry['effect_concluded']);
+            if (lovd_verifyInstance('mgha', false) && !isset($this->aColumnsViewEntry['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance'])) {
+                unset($this->aColumnsViewEntry['clinvar_']);
+            }
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -219,7 +238,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 if ($aCol['mandatory']) {
                     $this->aCheckMandatory[] = $sCol;
                 }
-                if (isset($aData[$sCol])) {
+
+                if (!(LOVD_plus && lovd_getProjectFile() == '/import.php') && isset($aData[$sCol])) {
+                    // These checks are disabled in LOVD+ to speed up the import.
                     $this->checkInputRegExp($sCol, $aData[$sCol]);
                     $this->checkSelectedInput($sCol, $aData[$sCol]);
                 }
@@ -387,6 +408,12 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             $zData['id_ncbi_'] = '<A href="transcripts/' . $zData['transcriptid'] . '">' . $zData['id_ncbi'] . '</A>';
             $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
             $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
+            if (LOVD_plus && lovd_verifyInstance('mgha', false)) { // Display the Genomizer URL in the VOT ViewEntry. TODO Once the ref and alt are separated we need to add it into this URL. Should we add this to the links table so as it can be used elsewhere?
+                $zData['genomizer_url_'] = '<A href="http://genomizer.com/?chr=' . $zData['chromosome'] . '&gene=' . $zData['geneid'] . '&ref_seq=' . $zData['id_ncbi'] . '&variant=' . $zData['VariantOnTranscript/DNA'] . '" target="_blank">Genomizer Link</A>';
+                if (isset($zData['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance'])) {
+                    $zData['clinvar_'] = implode(', ', lovd_mapCodeToDescription(explode(',', $zData['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance']), $_SETT['clinvar_var_effect']));
+                }
+            }
         }
 
         return $zData;

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2018-08-22
+ * Modified    : 2019-08-28
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,6 +55,7 @@ $aNeededLevel =
                 'Disease' => 0,
                 'Gene' => 0,
                 'Gene_Panel' => LEVEL_SUBMITTER, // LOVD+
+                'Gene_Panel_Gene' => LEVEL_SUBMITTER, // LOVD+
                 'Gene_Panel_Gene_REV' => LEVEL_SUBMITTER, // LOVD+
                 'Gene_Statistic' => LEVEL_SUBMITTER, // LOVD+
                 'Genome_Variant' => 0,
@@ -209,6 +210,8 @@ if (!file_exists($sFile)) {
 require $sFile;
 $sObjectClassname = 'LOVD_' . str_replace('_', '', $sObject);
 $_DATA = new $sObjectClassname($sObjectID, $nID);
+
+
 
 if (POST && ACTION == 'applyFR') {
     // Apply find & replace.

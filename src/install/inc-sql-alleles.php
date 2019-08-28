@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-04-13
- * Modified    : 2012-04-13
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -39,4 +40,18 @@ $aAlleleSQL =
                                                          (2,  "Parent #2", 7),
                                                          (3,  "Both (homozygous)", 8)',
               );
+
+if (LOVD_plus) {
+    $aAlleleSQL =
+        array(
+            'INSERT INTO ' . TABLE_ALLELES . ' VALUES(0,  "Heterozygous", 1),
+                                                     (11, "Heterozygous - Paternal (confirmed)", 2),
+                                                     (10, "Heterozygous - Paternal (inferred)", 3),
+                                                     (21, "Heterozygous - Maternal (confirmed)", 4),
+                                                     (20, "Heterozygous - Maternal (inferred)", 5),
+                                                     (1,  "Heterozygous - Parent #1", 6),
+                                                     (2,  "Heterozygous - Parent #2", 7),
+                                                     (3,  "Homozygous", 8)',
+        );
+}
 ?>
