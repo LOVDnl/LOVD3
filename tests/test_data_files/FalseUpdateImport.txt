@@ -39,7 +39,7 @@
 "00000001"	""	""	"00000022"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:26"	"00001"	"2015-06-03 11:30:26"	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	""
 "00000002"	""	""	"00000002"	"11"	"00001"	"9"	"00001"	"2015-06-03 11:30:33"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	""
 "00000003"	"00000003"	"00000022"	"00000001"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
-"00000004"	""	"00000002"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"M"
+"00000004"	"00000003"	"00000002"	""	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:48"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"M"
 "00000005"	""	""	"00000002"	"1"	"00001"	"9"	"00001"	"2015-06-03 11:30:41"	""	""	"12345IVA"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
 
 ## Individuals_To_Diseases ## Do not remove or alter this header ##
