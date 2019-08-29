@@ -885,6 +885,9 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
             // Diagnostics: Find default gene we'll use for all VOTs, since the gene is always the same anyway.
             $sDefaultGene = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
         }
+        // We need to check Genders of referenced mothers and fathers, so we need to know if the column is active.
+        $bGenderColumnActive = (bool) $_DB->query('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?',
+            array('Individual/Gender'))->fetchColumn();
 
 
 
@@ -1813,37 +1816,44 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     if ($aLine['panelid']) {
                         $bPanelInDB = isset($aParsed['Individuals']['ids'][(int) $aLine['panelid']]);
                         $bPanelInFile = isset($aParsed['Individuals']['data'][(int) $aLine['panelid']]);
-                        if (!$bPanelInDB && !$bPanelInFile) {
+
+                        // It is not allowed to import a record where the panelid and id are the same.
+                        // In theory, they could mean to link to the DB entry with this ID, but we're not going to risk that.
+                        if ($aLine['panelid'] == $aLine['id']) {
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'Panel ID\' can not link to itself; this field is used to indicate to which panel this individual belongs.');
+
+                        } elseif (!$bPanelInDB && !$bPanelInFile) {
                             // Individual does not exist and is not defined in the import file.
                             // Or the panel to which is referred is not yet parsed.
                             // It's assumed that in the import file panels are listed above individuals referring to them.
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine['panelid']) . '" does not exist in the database and is not defined (properly) in this import file.<BR>When referring to panels that are also defined in the import file, make sure they are defined above the individuals referring to them. Therefore, make sure that in the import file individual "' . htmlspecialchars($aLine['panelid']) . '" is defined above individual "' . htmlspecialchars($aLine['id']) . '".');
                         }
 
-                        // It is not allowed to import a record where the panelid and id are the same.
-                        if ($aLine['panelid'] == $aLine['id']) {
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'Panel ID\' can not link to itself; this field is used to indicate to which panel this individual belongs.');
-                        }
-
-                        // A panel from the import file is preferred, as that describes the new
-                        // panel size to which the new records must conform.
-                        $nPanel = false;
+                        // Find the referred panel in the file first, otherwise check the database.
+                        $nPanelSize = false;
                         if ($bPanelInFile) {
-                            $nPanel = $aParsed['Individuals']['data'][(int) $aLine['panelid']]['panel_size'];
+                            $nPanelSize = $aParsed['Individuals']['data'][(int) $aLine['panelid']]['panel_size'];
                         } elseif ($bPanelInDB) {
-                            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS .
-                                                  ' WHERE id = ?', array($aLine['panelid']))->fetchColumn();
+                            $nPanelSize = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
+                                array($aLine['panelid']))->fetchColumn();
                         }
 
-                        if ($nPanel !== false && $nPanel == 1) {
+                        if ($nPanelSize == 1) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel ID "' . htmlspecialchars($aLine['panelid']) . '" refers to an individual, not a panel (group of individuals). If you want to configure that individual as a panel, set its \'Panel size\' field to a value higher than 1.');
-                        } elseif ($nPanel !== false && $nPanel <= $aLine['panel_size']) {
+                        } elseif ($nPanelSize !== false && $nPanelSize <= $aLine['panel_size']) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Panel size of Individual "' . htmlspecialchars($aLine['id']) . '" must be lower than the panel size of Individual "' . htmlspecialchars($aLine['panelid']) . '".');
                         }
                     }
 
                     foreach (array('fatherid', 'motherid') as $sParentalField) {
                         if ($aLine[$sParentalField]) {
+                            // It is not allowed to import a record where the fatherid or motherid are the same as the individual id.
+                            // In theory, they could mean to link to the DB entry with this ID, but we're not going to risk that.
+                            if ($aLine[$sParentalField] == $aLine['id']) {
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'' . $sParentalField . '\' can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.');
+                                continue; // Check next field.
+                            }
+
                             $bParentInDB = isset($aParsed['Individuals']['ids'][(int) $aLine[$sParentalField]]);
                             $bParentInFile = isset($aParsed['Individuals']['data'][(int) $aLine[$sParentalField]]);
                             if (!$bParentInDB && !$bParentInFile) {
@@ -1853,28 +1863,25 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                 lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Individual "' . htmlspecialchars($aLine[$sParentalField]) . '" does not exist in the database and is not defined (properly) in this import file.<BR>When referring to parents that are also defined in the import file, make sure they are defined above the children referring to them. Therefore, make sure that in the import file individual "' . htmlspecialchars($aLine[$sParentalField]) . '" is defined above individual "' . htmlspecialchars($aLine['id']) . '".');
                             }
 
-                            // It is not allowed to import a record where the fatherid or motherid are the same as the individual id.
-                            if ($aLine[$sParentalField] == $aLine['id']) {
-                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The \'' . $sParentalField . '\' can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual.');
+                            $zParentData = array();
+                            if ($bParentInFile) {
+                                $zParentData = $aParsed['Individuals']['data'][(int) $aLine[$sParentalField]];
+                            } elseif ($bParentInDB) {
+                                $zParentData = $_DB->query('SELECT ' . ($bGenderColumnActive? '' : '"" AS ') .
+                                    '`Individual/Gender`, panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
+                                    array($aLine[$sParentalField]))->fetchAssoc();
                             }
 
-                            if ($_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac WHERE ac.colid = ?', array('Individual/Gender'))->fetchColumn()) {
-                                $zParentData = array();
-                                if ($bParentInDB) {
-                                    $zParentData = $_DB->query('SELECT `Individual/Gender`, panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aLine[$sParentalField]))->fetchAssoc();
-                                } elseif ($bParentInFile) {
-                                    $zParentData = $aParsed['Individuals']['data'][(int) $aLine[$sParentalField]];
-                                }
+                            if (isset($zParentData['panel_size']) && $zParentData['panel_size'] > 1) {
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" refers to an panel (group of individuals), not an individual. If you want to configure that panel as an individual, set its \'Panel size\' field to value 1.');
+                            }
 
-                                if (isset($zParentData['panel_size']) && $zParentData['panel_size'] > 1) {
-                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" refers to an panel (group of individuals), not an individual. If you want to configure that panel as an individual, set its \'Panel size\' field to value 1.');
-                                }
-
-                                if (isset($zParentData['Individual/Gender']) && $sParentalField == 'fatherid' && $zParentData['Individual/Gender'] == 'F') {
-                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" you entered does not refer to a male individual.');
-                                } elseif (isset($zParentData['Individual/Gender']) && $sParentalField == 'motherid' && $zParentData['Individual/Gender'] == 'M') {
-                                    lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '"  you entered does not refer to a female individual.');
-                                }
+                            if (isset($zParentData['Individual/Gender']) && $sParentalField == 'fatherid'
+                                && $zParentData['Individual/Gender'] == 'F') {
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '" you entered does not refer to a male individual.');
+                            } elseif (isset($zParentData['Individual/Gender']) && $sParentalField == 'motherid'
+                                && $zParentData['Individual/Gender'] == 'M') {
+                                lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): The ' . $sParentalField . ' "' . htmlspecialchars($aLine[$sParentalField]) . '"  you entered does not refer to a female individual.');
                             }
                         }
                     }
