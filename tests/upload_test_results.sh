@@ -13,7 +13,7 @@ for file in `ls -1 -t -r ${GLOB}/test_results/error_screenshots/ | grep -F .png`
     if [[ ! $RETURN == "Could not save metadata" ]];
     then
         # Transfer.sh service often fails.
-        mutt -s "Travis failure" -a "${file} -- I.F.A.C.Fokkema@LUMC.nl < <(echo "Travis run failed. Screenshot attached.")
+        mutt -s "Travis failure" -a "${file}" -- I.F.A.C.Fokkema@LUMC.nl < <(echo "Travis run failed. Screenshot attached.")
     fi
 
     rm -f "${file}"
