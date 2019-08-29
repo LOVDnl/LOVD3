@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2019-08-28
+ * Modified    : 2019-08-29
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -377,7 +377,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // Check if we actually have any transcripts enabled. When creating a variant, the user may disable them.
         // We need to know for the variant effect fields.
         $nTranscripts = 0;
-        if (ACTION == 'create') {
+        if (ACTION == 'create' && !empty($_POST['aTranscripts'])) {
             foreach (array_keys($_POST['aTranscripts']) as $nTranscriptID) {
                 if (empty($_POST['ignore_' . $nTranscriptID])) {
                     $nTranscripts ++;
