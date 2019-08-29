@@ -18,5 +18,5 @@ for file in `ls -1 -t -r ${GLOB}/test_results/error_screenshots/ | grep -F .png`
         mutt -s "Travis failure" -a "${GLOB}/test_results/error_screenshots/${file}" -- I.F.A.C.Fokkema@LUMC.nl < <(echo "Travis run failed. Screenshot attached.")
     fi
 
-    rm -f "${file}"
+    rm -f "${GLOB}/test_results/error_screenshots/${file}"
 done
