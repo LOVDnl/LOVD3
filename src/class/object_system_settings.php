@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2019-08-28
+ * Modified    : 2019-08-29
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -263,26 +263,28 @@ class LOVD_SystemSetting extends LOVD_Object {
         // Remove features that are anyway currently not developed yet. They can confuse users.
         unset($this->aFormData['feed_history'], $this->aFormData['count_hidden_data'], $this->aFormData['use_versioning']);
 
-        // Remove features currently unavailable for LOVD+ (or that we choose not to support).
-        foreach ($this->aFormData as $nKey => $aFormEntry) {
-            // Unset whole ranges of options, easier to do like this than to name all of the options.
-            if (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
-                && strpos($aFormEntry[3], '<B>Customize LOVD</B>') !== false) {
-                unset($this->aFormData[$nKey], $this->aFormData[$nKey+1], $this->aFormData[$nKey+2],
-                    $this->aFormData[$nKey+3], $this->aFormData[$nKey+4], $this->aFormData[$nKey+5],
-                    $this->aFormData[$nKey+6], $this->aFormData[$nKey+7]);
-                continue;
+        if (LOVD_plus) {
+            // Remove features currently unavailable for LOVD+ (or that we choose not to support).
+            foreach ($this->aFormData as $nKey => $aFormEntry) {
+                // Unset whole ranges of options, easier to do like this than to name all of the options.
+                if (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
+                    && strpos($aFormEntry[3], '<B>Customize LOVD</B>') !== false) {
+                    unset($this->aFormData[$nKey], $this->aFormData[$nKey + 1], $this->aFormData[$nKey + 2],
+                        $this->aFormData[$nKey + 3], $this->aFormData[$nKey + 4], $this->aFormData[$nKey + 5],
+                        $this->aFormData[$nKey + 6], $this->aFormData[$nKey + 7]);
+                    continue;
 
-            } elseif (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
-                && strpos($aFormEntry[3], '<B>Global LOVD statistics</B>') !== false) {
-                unset($this->aFormData[$nKey], $this->aFormData[$nKey+1], $this->aFormData[$nKey+2],
-                    $this->aFormData[$nKey+3], $this->aFormData[$nKey+4], $this->aFormData[$nKey+5],
-                    $this->aFormData[$nKey+6], $this->aFormData[$nKey+7]);
-                continue;
+                } elseif (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
+                    && strpos($aFormEntry[3], '<B>Global LOVD statistics</B>') !== false) {
+                    unset($this->aFormData[$nKey], $this->aFormData[$nKey + 1], $this->aFormData[$nKey + 2],
+                        $this->aFormData[$nKey + 3], $this->aFormData[$nKey + 4], $this->aFormData[$nKey + 5],
+                        $this->aFormData[$nKey + 6], $this->aFormData[$nKey + 7]);
+                    continue;
 
-            } elseif (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
-                && in_array($aFormEntry[3], array('allow_submitter_registration', 'allow_submitter_mods'))) {
-                unset($this->aFormData[$nKey]);
+                } elseif (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
+                    && in_array($aFormEntry[3], array('allow_submitter_registration', 'allow_submitter_mods'))) {
+                    unset($this->aFormData[$nKey]);
+                }
             }
         }
 

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2019-08-28
+ * Modified    : 2019-08-29
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -679,7 +679,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
                 // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
-                print('      ' . (LOVD_plus || !$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                print('      ' . (LOVD_plus || empty($_CONF['allow_submitter_registration']) || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
                       '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }
