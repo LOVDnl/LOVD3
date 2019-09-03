@@ -14,14 +14,14 @@ class AddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSeleniumWebdriv
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000001$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
         $element->click();
-        
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&target=0000000001$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath(
             '//b[contains(., "A variant that is located within a gene")]'));
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::linkText("GJB1"));
         $element->click();
-        
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1&target=0000000001$/', $this->driver->getCurrentURL()));
         $this->uncheck(WebDriverBy::name("ignore_00000001"));
         $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/Exon"), "2");
@@ -55,18 +55,16 @@ class AddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSeleniumWebdriv
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="allele"]/option[text()="Maternal (confirmed)"]'));
         $option->click();
-        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
-        $element->click();
 
         // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
-        $this->driver->getMouse()->mouseMove(null, 200, 200);
+        // $this->driver->getMouse()->mouseMove(null, 200, 200);
 
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "0.003");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
         $element->click();
-        
+
         $this->assertEquals("Successfully created the variant entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        
+
     }
 }

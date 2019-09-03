@@ -10,7 +10,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
     {
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
         $element->click();
-        
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
@@ -21,7 +21,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::cssSelector("#GJB1 > td.ordered"));
         $element->click();
-        
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create&reference=Transcript&geneid=GJB1$/', $this->driver->getCurrentURL()));
         $this->uncheck(WebDriverBy::name("ignore_00000001"));
         $this->enterValue(WebDriverBy::name("00000001_VariantOnTranscript/Exon"), "3");
@@ -56,11 +56,9 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option->click();
         $GenomicDnaChange = $this->driver->executeScript("return window.document.getElementById('variantForm').elements[11].value");
         $this->assertEquals("g.70443619G>A", $GenomicDnaChange);
-        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
-        $element->click();
 
         // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
-        $this->driver->getMouse()->mouseMove(null, 200, 200);
+        // $this->driver->getMouse()->mouseMove(null, 200, 200);
 
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "55/18000");
@@ -70,8 +68,8 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
         $element->click();
-        
+
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
-        
+
     }
 }
