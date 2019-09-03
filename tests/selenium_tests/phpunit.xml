@@ -40,7 +40,7 @@
             <file>admin_tests/multi_value_search.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
-        <testsuite name="authorization_tests">
+<!--        <testsuite name="authorization_tests">
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
@@ -52,12 +52,12 @@
             <file>authorization_tests/create_individual_diagnosed_with_IVA.php</file>
             <file>authorization_tests/add_screening_to_IVA_individual.php</file>
             <file>authorization_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
-            <!-- <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file> -->
+            <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file>
             <file>authorization_tests/make_user_curator_IVD.php</file>
             <file>authorization_tests/make_user_collaborator_IVD.php</file>
             <file>authorization_tests/authorization.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
+        </testsuite> -->
         <testsuite name="collaborator_tests">
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_GJB.php</file>

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-06-27
- * Modified    : 2017-12-08
- * For LOVD    : 3.0-21
+ * Modified    : 2019-09-03
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -108,6 +109,15 @@ class SubmissionApiSuccessTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Trigger automatic import of scheduled files.
         $this->driver->get(ROOT_URL . '/src/import?autoupload_scheduled_file');
+        // Wait 30 seconds until we see it's done.
+        for ($i = 0; $i < 30; $i ++) {
+            $sBody = $this->driver->findElement(WebDriverBy::tagName("body"))->getText();
+            $nDone = substr_count($sBody, '100%');
+            if ($nDone == 2 || ($nDone && strpos($sBody, 'Applying changes...') === false)) {
+                // Either it's done importing, or it's done checking but it didn't start importing (something is wrong).
+                break;
+            }
+        }
         $bodyText = $this->driver->findElement(WebDriverBy::tagName("body"))->getText();
         $this->assertContains('Success!', $bodyText);
 

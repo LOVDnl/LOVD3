@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-06-05
- * Modified    : 2019-08-29
+ * Modified    : 2019-09-03
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2016-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -46,6 +46,9 @@ class FalseInsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Import file']"));
         $element->click();
+
+        // Wait for the form to show up again. If this starts randomly failing like the hgnc_id check before, we'll build a proper waiting loop.
+        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::name('MAX_FILE_SIZE')));
 
         $element = $this->driver->findElement(WebDriverBy::linkText("Show 6 warnings"));
         $element->click();
