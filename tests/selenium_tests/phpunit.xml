@@ -18,7 +18,7 @@
             <file>admin_tests/add_variant_only_described_on_genomic_level_to_healthy_individual.php</file>
             <file>admin_tests/finish_individual_diagnosed_healthy.php</file>
             <file>admin_tests/create_individual_diagnosed_with_IVA.php</file>
-            <file>admin_tests/add_phenotype_info_to_IVA_individual.php</file>
+            <!-- <file>admin_tests/add_phenotype_info_to_IVA_individual.php</file> -->
             <file>admin_tests/add_screening_to_IVA_individual.php</file>
             <file>admin_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>admin_tests/add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
@@ -32,7 +32,7 @@
             <file>admin_tests/post_finish_add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_screening_to_IVA_individual.php</file>
-            <file>admin_tests/post_finish_add_phenotype_info_to_IVA_individual.php</file>
+            <!-- <file>admin_tests/post_finish_add_phenotype_info_to_IVA_individual.php</file> -->
             <file>shared_tests/test_create_token.php</file>
             <file>shared_tests/test_submission_api_fail.php</file>
             <file>shared_tests/test_submission_api_success.php</file>
@@ -52,7 +52,7 @@
             <file>authorization_tests/create_individual_diagnosed_with_IVA.php</file>
             <file>authorization_tests/add_screening_to_IVA_individual.php</file>
             <file>authorization_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
-            <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file>
+            <!-- <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file> -->
             <file>authorization_tests/make_user_curator_IVD.php</file>
             <file>authorization_tests/make_user_collaborator_IVD.php</file>
             <file>authorization_tests/authorization.php</file>
@@ -67,7 +67,7 @@
             <file>collaborator_tests/create_user_submitter.php</file>
             <file>collaborator_tests/create_disease_CMT.php</file>
             <file>collaborator_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>collaborator_tests/add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>collaborator_tests/add_phenotype_info_to_CMT_individual.php</file> -->
             <file>collaborator_tests/add_screening_to_CMT_individual.php</file>
             <file>collaborator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>collaborator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
@@ -84,7 +84,7 @@
             <file>collaborator_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
             <file>collaborator_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>collaborator_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>collaborator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>collaborator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file> -->
             <file>collaborator_tests/delete_gene_GJB.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
@@ -99,7 +99,7 @@
             <file>curator_tests/create_user_submitter.php</file>
             <file>curator_tests/create_disease_CMT.php</file>
             <file>curator_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>curator_tests/add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>curator_tests/add_phenotype_info_to_CMT_individual.php</file> -->
             <file>curator_tests/add_screening_to_CMT_individual.php</file>
             <file>curator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>curator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
@@ -114,7 +114,7 @@
             <file>curator_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
             <file>curator_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>curator_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>curator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>curator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file> -->
             <file>curator_tests/delete_gene_GJB.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
@@ -129,7 +129,7 @@
             <file>manager_tests/make_user_curator_GJB.php</file>
             <file>manager_tests/create_disease_CMT.php</file>
             <file>manager_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>manager_tests/add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>manager_tests/add_phenotype_info_to_CMT_individual.php</file> -->
             <file>manager_tests/add_screening_to_CMT_individual.php</file>
             <file>manager_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>manager_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
@@ -144,7 +144,7 @@
             <file>manager_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
             <file>manager_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>manager_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>manager_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>manager_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file> -->
             <file>manager_tests/delete_gene_GJB.php</file>
             <file>manager_tests/test_block_submitter_registration.php</file>
             <file>manager_tests/create_announcement_readonly.php</file>
@@ -173,7 +173,7 @@
             <file>submitter_tests/create_user_submitter2.php</file>
             <file>submitter_tests/create_disease_CMT.php</file>
             <file>submitter_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>submitter_tests/add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>submitter_tests/add_phenotype_info_to_CMT_individual.php</file> -->
             <file>submitter_tests/add_screening_to_CMT_individual.php</file>
             <file>submitter_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>submitter_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
@@ -190,7 +190,7 @@
             <file>submitter_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
             <file>submitter_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
             <file>submitter_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>submitter_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
+            <!-- <file>submitter_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file> -->
             <file>submitter_tests/delete_gene_GJB.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>

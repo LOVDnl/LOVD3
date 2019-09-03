@@ -125,7 +125,6 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         // $this->driver->getMouse()->mouseMove(null, 200, 200);
 
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "55/18000");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));

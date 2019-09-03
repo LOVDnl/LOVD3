@@ -47,7 +47,7 @@ class FalseInsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Import file']"));
         $element->click();
 
-        $element = $this->driver->findElement(WebDriverBy::linkText("Show 5 warnings"));
+        $element = $this->driver->findElement(WebDriverBy::linkText("Show 6 warnings"));
         $element->click();
 
         $bodyText = $this->driver->findElement(WebDriverBy::tagName("body"))->getText();

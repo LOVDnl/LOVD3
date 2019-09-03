@@ -60,7 +60,6 @@ class AddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSeleniumWebdriv
         // $this->driver->getMouse()->mouseMove(null, 200, 200);
 
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "0.003");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create variant entry']"));
         $element->click();
 
