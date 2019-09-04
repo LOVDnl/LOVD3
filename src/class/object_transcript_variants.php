@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2019-08-28
+ * Modified    : 2019-09-04
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -61,7 +61,10 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // Default constructor.
         global $_DB;
 
-        $this->bShared = (LOVD_plus? false : true);
+        if (LOVD_plus) {
+            // We don't have shared custom columns in LOVD+.
+            $this->bShared = false;
+        }
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT vot.* ' .
