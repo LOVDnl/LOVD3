@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-05-30
- * Modified    : 2016-10-17
- * For LOVD    : 3.0-18
+ * Modified    : 2019-09-04
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2016-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -93,8 +93,8 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         // Another form
         $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
         $this->enterValue(WebDriverBy::name("email_address"), "noreply@LOVD.nl");
-        $countryOption = $this->driver->findElement(WebDriverBy::xpath('//select[@name="refseq_build"]/option[text()="hg19 / GRCh37"]'));
-        $countryOption->click();
+        $selectOption = $this->driver->findElement(WebDriverBy::xpath('//select[@name="refseq_build"]/option[text()="hg19 / GRCh37"]'));
+        $selectOption->click();
         $sendstatsButton = $this->driver->findElement(WebDriverBy::name("send_stats"));
         $sendstatsButton->click();
         $includeButton = $this->driver->findElement(WebDriverBy::name("include_in_listing"));
