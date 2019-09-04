@@ -156,9 +156,9 @@
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/login_as_admin.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
-            <file>import_tests/create_gender_column.php</file>
+            <file>import_tests/enable_gender_column.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
-            <file>import_tests/create_disease_IVA.php</file>
+            <file>import_tests/create_disease_IVA2.php</file>
             <file>import_tests/insert_import.php</file>
             <file>import_tests/false_insert_import.php</file>
             <file>import_tests/false_update_import.php</file>
