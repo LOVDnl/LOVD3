@@ -47,9 +47,6 @@ class FalseInsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Import file']"));
         $element->click();
 
-        // Wait for the form to show up again. If this starts randomly failing like the hgnc_id check before, we'll build a proper waiting loop.
-        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::name('MAX_FILE_SIZE')));
-
         $element = $this->driver->findElement(WebDriverBy::linkText("Show 6 warnings"));
         $element->click();
 

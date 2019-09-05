@@ -4,7 +4,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateDiseaseIVATest2 extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCreateDiseaseIVA()
     {

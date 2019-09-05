@@ -5,6 +5,7 @@ php:
   # aliased to a recent 5.5.x version
   - 5.5
   # aliased to a recent 5.6.xversion
+  # This one is usually failing due to unexpected halting of the process (and Travis then killing the build).
   - 5.6
   # aliased to a recent 7.x version
   - 7.0
