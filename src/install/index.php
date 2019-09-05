@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2017-02-20
- * For LOVD    : 3.0-19
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -199,7 +199,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     $sMultiViews  = '<IMG src="gfx/mark_' . (int) $bMultiViews . '.png" alt="" width="11" height="11">&nbsp;MultiViews, mod_rewrite or equivalent : ' . ($bMultiViews? 'en' : 'dis') . 'abled (required)';
     // FIXME; link to manual?
 
-    if (!$bPHP || !$bPHPFunctions || !$bMySQL || !$bInnoDB || !$bMultiViews) {
+    if (!$bPHP || !$bPHPFunctions || !$bPHPClasses || !$bMySQL || !$bInnoDB || !$bMultiViews) {
         // Failure!
         lovd_showInfoTable('One or more requirements are not met!<BR>I will now bluntly refuse to install.<BR><BR>' .
                            $sPHP . '<BR>' .
@@ -442,7 +442,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // (3) Creating LOVD user & administrator.
     $aInstallSQL['Creating LOVD account &amp; LOVD database administrator account...'] =
              array(
-                    'INSERT INTO ' . TABLE_USERS . ' (name, institute, department, telephone, address, city, email, reference, username, password, password_force_change, level, allowed_ip, login_attempts, created_date) VALUES ("LOVD", "", "", "", "", "", "", "", "", "", 0, 0, "", 9, NOW())',
+                    'INSERT INTO ' . TABLE_USERS . ' (name, institute, department, telephone, address, city, email, reference, username, password, password_force_change, level, allowed_ip, login_attempts, created_date) VALUES ("LOVD' . (LOVD_plus? '+' : '') . '", "", "", "", "", "", "", "", "", "", 0, 0, "", 9, NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
                     'INSERT INTO ' . TABLE_USERS . ' (id, name, institute, department, telephone, address, city, countryid, email, reference, username, password, password_autogen, password_force_change, phpsessid, saved_work, level, allowed_ip, login_attempts, last_login, created_by, created_date) VALUES
                      ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' .
@@ -504,36 +504,13 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
 
 
     // (8) Creating standard LOVD custom columns.
-    require 'inc-sql-columns.php';
-    $nCols = count($aColSQL);
-    $aInstallSQL['Creating LOVD custom columns...'] = $aColSQL;
-    $nInstallSQL += $nCols;
-
-
+    // AND
     // (9) Activating standard custom columns.
-    foreach ($aColSQL as $sCol) {
-        $sCol = str_replace('INSERT INTO ' . TABLE_COLS . ' VALUES ', '', $sCol);
-        // FIXME; add some comments here, I can't follow this code.
-        preg_match_all("/(\"(?:.*[^\\\\])?\"|\d+|NULL|NOW\(\)),\s+/U", trim($sCol, '()') . ', ', $aCol);
-        // FIXME; misschien een list() hier?
-        $aCol = array_map('preg_replace', array_fill(0, count($aCol[1]), '/^"(.*)"$/'), array_fill(0, count($aCol[1]), '$1'), $aCol[1]);
-        if ($aCol[3] == '1' || $aCol[4] == '1') {
-            $sCategory = preg_replace('/\/.*$/', '', $aCol[0]);
-            if ($sCategory == 'VariantOnGenome') {
-                $sTable = 'TABLE_VARIANTS';
-            } elseif ($sCategory == 'VariantOnTranscript') {
-                $sTable = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
-            } else {
-                $sTable = 'TABLE_' . strtoupper($sCategory) . 'S';
-            }
+    $aInstallSQL['Activating LOVD standard custom columns...'] = lovd_getActivateCustomColumnQuery();
 
-            $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD COLUMN `' . $aCol[0] . '` ' . stripslashes($aCol[10]);
-            $aInstallSQL['Activating LOVD standard custom columns...'][] = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("' . $aCol[0] . '", "00000", NOW())';
-            if (LOVD_plus && $aCol[0] == 'VariantOnGenome/DBID') {
-                // Make sure the DBID column is indexed.
-                $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . constant($sTable) . ' ADD INDEX(`' . $aCol[0] . '`)';
-            }
-        }
+    if (LOVD_plus) {
+        // Make sure the DBID column is indexed.
+        $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX(`VariantOnGenome/DBID`)';
     }
 
 
@@ -548,6 +525,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
             'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES ("Phenotype/Age", 0, NOW())',
             'INSERT INTO ' . TABLE_SHARED_COLS . ' (diseaseid, colid, col_order, width, mandatory, description_form, description_legend_short, description_legend_full, select_options, public_view, public_add, created_by, created_date) VALUES (0, "Phenotype/Age", 0, 100, 0, "Type 35y for 35 years, 04y08m for 4 years and 8 months, 18y? for around 18 years, >54y for older than 54, ? for unknown.", "The age at which the individual was examined, if known. 04y08m = 4 years and 8 months.", "The age at which the individual was examined, if known.\r\n<UL style=\"margin-top:0px;\">\r\n  <LI>35y = 35 years</LI>\r\n  <LI>04y08m = 4 years and 8 months</LI>\r\n  <LI>18y? = around 18 years</LI>\r\n  <LI>&gt;54y = older than 54</LI>\r\n  <LI>? = unknown</LI>\r\n</UL>", "", 1, 1, 0, NOW())',
         );
+
 
     // (11) Creating standard custom links.
     require 'inc-sql-links.php';
@@ -568,6 +546,16 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     $nSources = count($aSourceSQL);
     $aInstallSQL['Creating external sources...'] = $aSourceSQL;
     $nInstallSQL += $nSources;
+
+
+    if (LOVD_plus) {
+        // (14) Creating the analyses if we are an LOVD+ instance.
+        require 'inc-sql-analyses.php';
+        if ($aAnalysesSQL) {
+            $aInstallSQL['Creating analyses...'] = $aAnalysesSQL;
+            $nInstallSQL += count($aAnalysesSQL);
+        }
+    }
 
 
 

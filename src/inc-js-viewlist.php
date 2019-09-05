@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2019-07-25
+ * Modified    : 2019-08-28
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -843,11 +843,11 @@ function lovd_FRCleanup (sViewListID, bSubmitVL, afterSubmitCallback)
     // Clear the find & replace options form.
     var FRoptions = $('#viewlistFRFormContainer_' + sViewListID);
     FRoptions.find('input[type=text]').val('');
-    FRoptions.find('input[type=checkbox]').removeAttr('checked');
+    FRoptions.find('input[type=checkbox]').prop('checked', false);
     var radioButtons = FRoptions.find('input[type=radio]');
-    radioButtons.removeAttr('checked');
+    radioButtons.prop('checked', false);
     // Check the first radio button (as default value)
-    radioButtons.first().attr('checked', true);
+    radioButtons.first().prop('checked', true);
 
     // Hide F&R options form.
     $(FRoptions).hide();

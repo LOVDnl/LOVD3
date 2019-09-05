@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-06-25
- * Modified    : 2013-01-23
- * For LOVD    : 3.0-02
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -83,14 +83,14 @@ function lovd_showToolTip (sText, handle, aDiffPos)
 
     } else {
         // Link tooltip to element.
-        var aPosition = lovd_getPosition(handle);
+        var oPosition = $(handle).offset();
         // Move tooltip if requested.
         if (aDiffPos && aDiffPos.length == 2) {
-            aPosition[0] += aDiffPos[0];
-            aPosition[1] += aDiffPos[1];
+            oPosition.left += aDiffPos[0];
+            oPosition.top += aDiffPos[1];
         }
-        oTT.style.left = aPosition[0]+'px';
-        oTT.style.top = aPosition[1]+13+'px'; // FIXME; can height of element be used here?
+        oTT.style.left = oPosition.left+'px';
+        oTT.style.top = oPosition.top+13+'px'; // FIXME; can height of element be used here?
         oTT.style.display = 'block';
         oTT.innerHTML = sText;
         // Check if we're having a custom link or other input (such as submitter data box).
@@ -126,19 +126,6 @@ function lovd_showToolTip (sText, handle, aDiffPos)
             timer_is_on = 1;
         }
     }
-}
-
-
-
-function lovd_getPosition (oElement)
-{
-    var aReturnArray = new Array(0, 0);
-    while (oElement != null) {
-        aReturnArray[0] += oElement.offsetLeft;
-        aReturnArray[1] += oElement.offsetTop;
-        oElement = oElement.offsetParent;
-    }
-    return aReturnArray;
 }
 
 

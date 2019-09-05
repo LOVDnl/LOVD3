@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-06-05
- * Modified    : 2019-08-29
+ * Modified    : 2019-09-03
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2016-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -47,7 +47,7 @@ class FalseInsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Import file']"));
         $element->click();
 
-        $element = $this->driver->findElement(WebDriverBy::linkText("Show 5 warnings"));
+        $element = $this->driver->findElement(WebDriverBy::linkText("Show 6 warnings"));
         $element->click();
 
         $bodyText = $this->driver->findElement(WebDriverBy::tagName("body"))->getText();

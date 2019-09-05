@@ -13,8 +13,6 @@ class CreateIndividualDiagnosedWithHealthyControlTest extends LOVDSeleniumWebdri
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/', $this->driver->getCurrentURL()));
         $this->enterValue(WebDriverBy::name("Individual/Lab_ID"), "1234HealthyCtrl");
-        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
-        $element->click();
         $this->enterValue(WebDriverBy::name("Individual/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("Individual/Remarks"), "No Remarks");
         $this->enterValue(WebDriverBy::name("Individual/Remarks_Non_Public"), "Still no remarks");

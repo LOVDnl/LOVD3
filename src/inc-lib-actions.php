@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-12-17
- * Modified    : 2012-12-17
- * For LOVD    : 3.0-01
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -41,6 +41,11 @@ function lovd_addAllDefaultCustomColumns ($sObjectType, $ID, $nUserID = false)
 {
     // This function enables all (HGVS)standard custom columns for the given gene or disease.
     global $_AUTH, $_DB;
+
+    // In LOVD+, we don't "do" shared columns.
+    if (LOVD_plus) {
+        return false;
+    }
 
     if ($sObjectType == 'gene') {
         $sCategory = 'VariantOnTranscript';

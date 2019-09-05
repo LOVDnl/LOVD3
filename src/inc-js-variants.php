@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2016-06-24
- * For LOVD    : 3.0-16
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -345,7 +345,7 @@ function lovd_getProteinChange (oElement)
                 } else if (aData === '<?php echo AJAX_DATA_ERROR; ?>') {
                     alert('Invalid input, or input missing.');
                 }
-                if (!oThisProtein.attr('disabled')) {
+                if (!oThisProtein.prop('disabled')) {
                     $(oThisProtein).siblings('img:first').attr({
                         src: 'gfx/cross.png',
                         onclick: '',
@@ -380,7 +380,7 @@ function lovd_getProteinChange (oElement)
                         sErrorMessages +=  '<B>' + index + ':</B> ' + aData['error'][index];
                         firstError = false;
                     }
-                    if (!oThisProtein.attr('disabled')) {
+                    if (!oThisProtein.prop('disabled')) {
                         $(oThisDNA).attr('class', 'err');
                         $(oThisDNA).siblings('img:first').attr({
                             src: 'gfx/lovd_form_warning.png',
@@ -412,7 +412,7 @@ function lovd_getProteinChange (oElement)
                             sErrorMessages +=  '<B>' + index + ':</B> ' + aData['warning'][index];
                             firstWarning = false;
                         }
-                        if (!oThisProtein.attr('disabled')) {
+                        if (!oThisProtein.prop('disabled')) {
                             $(oThisDNA).attr('class', 'warn');
                             $(oThisDNA).siblings('img:first').attr({
                                 src: 'gfx/lovd_form_information.png',

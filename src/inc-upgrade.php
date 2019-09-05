@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2019-07-30
+ * Modified    : 2019-08-28
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -38,6 +38,10 @@ if (!defined('ROOT_PATH')) {
 // How are the versions related?
 $sCalcVersionFiles = lovd_calculateVersion($_SETT['system']['version']);
 $sCalcVersionDB = lovd_calculateVersion($_STAT['version']);
+
+
+
+
 
 if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Version of files are not equal to version of database backend.
@@ -541,7 +545,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             MODIFY features TEXT,
                             MODIFY remarks TEXT',
                         'ALTER TABLE ' . TABLE_ALLELES . ' ALTER display_order SET DEFAULT 0',
-                        'ALTER TABLE ' . TABLE_VARIANTS . ' ALTER allele SET DEFAULT 0',
+                        (LOVD_plus? 'SELECT 1' :
+                            'ALTER TABLE ' . TABLE_VARIANTS . ' ALTER allele SET DEFAULT 0'),
                         'ALTER TABLE ' . TABLE_COLS . '
                             ALTER col_order SET DEFAULT 0,
                             ALTER width SET DEFAULT 50,
@@ -569,7 +574,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             ALTER public_view SET DEFAULT 1,
                             ALTER public_add SET DEFAULT 1',
                         'ALTER TABLE ' . TABLE_LINKS . ' MODIFY description TEXT',
-                        'ALTER TABLE ' . TABLE_CONFIG . ' ALTER system_title SET DEFAULT "LOVD - Leiden Open Variation Database",
+                        'ALTER TABLE ' . TABLE_CONFIG . ' ALTER system_title SET DEFAULT "' .
+                        (LOVD_plus? 'Leiden Open Variation Database for diagnostics' : 'LOVD - Leiden Open Variation Database') . '",
                             ALTER institute SET DEFAULT "",
                             ALTER location_url SET DEFAULT "",
                             ALTER email_address SET DEFAULT "",
@@ -640,39 +646,49 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'EXECUTE Statement',
                  ),
                  '3.0-21d' => array(
+                     'SET @bLOVDplus := (SELECT ' . (int) LOVD_plus . ')', // We're not running these for LOVD+, too intensive.
                      'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS . '" AND COLUMN_NAME = "VariantOnGenome/DNA" AND CHARACTER_MAXIMUM_LENGTH < 255)',
-                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
                             ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN `VariantOnGenome/DNA` VARCHAR(255) NOT NULL")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
-                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
                             UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnGenome/DNA\"")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
                      'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME = "VariantOnTranscript/DNA" AND CHARACTER_MAXIMUM_LENGTH < 255)',
-                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
                             ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN `VariantOnTranscript/DNA` VARCHAR(255) NOT NULL")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
-                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
                             UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnTranscript/DNA\"")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
                      'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME = "VariantOnTranscript/Protein" AND CHARACTER_MAXIMUM_LENGTH < 255)',
-                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
                             ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN `VariantOnTranscript/Protein` VARCHAR(255) NOT NULL")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
-                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
                             UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnTranscript/Protein\"")',
                      'PREPARE Statement FROM @sSQL',
                      'EXECUTE Statement',
+                 ),
+                 '3.0-21e' => array(
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_DISEASES . '" AND COLUMN_NAME = "inheritance")',
+                     'SET @sSQL := IF(@bExists > 0, \'SELECT "INFO: Column already exists."\', "
+                        ALTER TABLE ' . TABLE_DISEASES . ' ADD COLUMN inheritance VARCHAR(45) NULL AFTER name")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'UPDATE ' . TABLE_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\nstart-lost\r\ncoding\r\nnon-coding-exon\r\ncoding-near-splice\r\nnon-coding-exon-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nsplice\r\nnon-coding-intron-near-splice\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" AND id = "VariantOnTranscript/GVS/Function"',
+                     'UPDATE ' . TABLE_SHARED_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\nstart-lost\r\ncoding\r\nnon-coding-exon\r\ncoding-near-splice\r\nnon-coding-exon-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nsplice\r\nnon-coding-intron-near-splice\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" AND colid = "VariantOnTranscript/GVS/Function"',
                  ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
         // Simply reload all custom columns.
-        require ROOT_PATH . 'install/inc-sql-columns.php';
+        require_once ROOT_PATH . 'install/inc-sql-columns.php';
         $aUpdates['3.0-alpha-01'][] = 'DELETE FROM ' . TABLE_COLS . ' WHERE col_order < 255';
         $aUpdates['3.0-alpha-01'] = array_merge($aUpdates['3.0-alpha-01'], $aColSQL);
     }

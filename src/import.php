@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2019-08-26
+ * Modified    : 2019-08-28
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,12 +36,16 @@ require ROOT_PATH . 'inc-init.php';
 ini_set('auto_detect_line_endings', true); // So we can work with Mac files also...
 set_time_limit(0); // Disable time limit, parsing may take a long time.
 session_write_close(); // Also don't care about the session (in fact, it locks the whole LOVD while this page is running).
+if (LOVD_plus) {
+    ini_set('memory_limit', '4294967296'); // 4GB.
+}
 
 
 
 
 
 if (ACTION == 'schedule' && PATH_COUNT == 1) {
+    // URL: /import?schedule
     // Schedule files for import.
     define('LOG_EVENT', 'ImportSchedule');
     define('PAGE_TITLE', 'Schedule files for import');
@@ -106,17 +110,33 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                                     ORDER BY (sf.processed_date IS NOT NULL) DESC, sf.priority DESC, sf.processed_date, sf.scheduled_date, sf.filename')
                            ->fetchAllGroupAssoc();
 
-    // [0/1] indicates processed no/yes.
+    // [0/1] indicates processed no/yes. [-1] is for file still to be converted.
     // Files in format [filename] = array(scheduled => (0|1), priority => [0-9], processed_date => Y-m-d H:i:s, scheduled_date => Y-m-d H:i:s, file_lost => (0|1), file_date => Y-m-d H:i:s).
     $aFiles = array(
-        array(),
-        array(),
+        0 => array(),
+        1 => array(),
+        -1 => array(),
     );
 
     // Read out directory and store files in the correct array.
     $nFilesSchedulable = 0; // Keeping track of how many files on disk are not scheduled yet.
     while (($sFile = readdir($h)) !== false) {
-        if (preg_match('/(^(LOVD_API_submission)_(\d+)_([0-9:_-]+)\.(\d+)|\.total\.data)\.lovd$/', $sFile, $aRegs)) {
+        if (preg_match('/(?:^(LOVD_API_submission)_(\d+)_([0-9:_-]+)\.(\d+)\.lovd' .
+            (!LOVD_plus? '' :
+                '|' . preg_quote($_INSTANCE_CONFIG['conversion']['suffixes']['total'], '/')) . ')$/', $sFile, $aRegs)) {
+            // LOVD3 Submission API:
+            // array(5) {
+            //     0 => "LOVD_API_submission_00001_2017-11-09_15:44:00.924105.lovd",
+            //     1 => "LOVD_API_submission",
+            //     2 => "00001",
+            //     3 => "2017-11-09_15:44:00",
+            //     4 => "924105"
+            // }
+            // LOVD+:
+            // array(1) {
+            //     0 => "total.data.lovd"
+            // }
+
             // This should be an importable file.
             $bScheduled = isset($zScheduledFiles[$sFile]);
             if ($bScheduled) {
@@ -133,8 +153,8 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             $tFileModified = filemtime($_INI['paths']['data_files'] . '/' . $sFile);
 
             // For files sent over the API, always take the date from the file, and not the timestamp of the file.
-            if ($aRegs[2] == 'LOVD_API_submission') {
-                $tFileModified = strtotime(str_replace('_', ' ', $aRegs[4]));
+            if (isset($aRegs[1]) && $aRegs[1] == 'LOVD_API_submission') {
+                $tFileModified = strtotime(str_replace('_', ' ', $aRegs[3]));
             }
 
             // Store file in the files array.
@@ -148,6 +168,33 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             );
 
             $nFilesSchedulable += (int) !$bScheduled;
+
+        } elseif (LOVD_plus && preg_match('/' . preg_quote($_INSTANCE_CONFIG['conversion']['suffixes']['vep'], '/') . '$/', $sFile, $aRegs)) {
+            // Data files still to be converted (LOVD+ only).
+            // Remove the ones that have a total file, resulting in a list of files
+            //  that still need to be converted or are currently being converted.
+            $sTotalFile = str_replace($_INSTANCE_CONFIG['conversion']['suffixes']['vep'],
+                $_INSTANCE_CONFIG['conversion']['suffixes']['total'], $sFile);
+            $sTotalTmpFile = str_replace($_INSTANCE_CONFIG['conversion']['suffixes']['total'],
+                $_INSTANCE_CONFIG['conversion']['suffixes']['total.tmp'], $sTotalFile);
+            // Check if total file already exists. Try to not hit the disk.
+            if (isset($aFiles[0][$sTotalFile]) || isset($aFiles[1][$sTotalFile])
+                || file_exists($_INI['paths']['data_files'] . '/' . $sTotalFile)) {
+                // Total file already exists, discard.
+                continue;
+            }
+
+            // File should still be converted, or is being converted. Store to show.
+            // FIXME: Dump info on tmp table in the array, now we're checking it twice.
+            $bTotalTmpFileExists = file_exists($_INI['paths']['data_files'] . '/' . $sTotalTmpFile);
+            $aFiles[-1][$sFile] = array(
+                'scheduled' => (int) $bTotalTmpFileExists,
+                'priority' => 0,
+                'processed_date' => (!$bTotalTmpFileExists? '0000-00-00 00:00:00' : date('Y-m-d H:i:s', filemtime($_INI['paths']['data_files'] . '/' . $sTotalTmpFile))),
+                'scheduled_date' => '0000-00-00 00:00:00', // We don't have a "scheduled date".
+                'file_lost' => 0,
+                'file_date' => date('Y-m-d H:i:s', filemtime($_INI['paths']['data_files'] . '/' . $sFile)),
+            );
         }
     }
 
@@ -168,7 +215,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
         }
     }
 
-    if (!$zScheduledFiles && !$aFiles[0] && !$aFiles[1]) {
+    if (!$zScheduledFiles && !$aFiles[0] && !$aFiles[1] && !$aFiles[-1]) {
         // No files found, and nothing scheduled!
         lovd_showInfoTable('No files found, and nothing scheduled!<BR>Please check the documentation to see how to import LOVD files directly from the server.', 'information');
         $_T->printFooter();
@@ -220,6 +267,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     // Sort the file list (the DB list is already sorted).
     uasort($aFiles[0], 'lovd_sortFilesToImport'); // Sort data files, keeping indices.
     uasort($aFiles[1], 'lovd_sortFilesToImport'); // Sort data files, keeping indices.
+    uasort($aFiles[-1], 'lovd_sortFilesToImport'); // Sort data files, keeping indices.
     $nFilesProcessed = count($aFiles[1]);
     $nFilesScheduled = count($zScheduledFiles);
     $nFilesTotal = count($aFiles[0]) + $nFilesProcessed;
@@ -247,19 +295,28 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
       <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">
         <TABLE border="0" cellpadding="10" cellspacing="0">
           <TR valign="top">' . "\n");
-    foreach (array(1, 0) as $i) {
+    foreach (array(1, 0, -1) as $i) {
+        // Show the files still to be converted only for LOVD+.
+        if (!LOVD_plus && $i == -1) {
+            continue;
+        }
+        $bProcessed = ($i == 1);
+        $bConverted = ($i != -1);
+
         print('            <TD>
-              <TABLE border="0" cellpadding="10" cellspacing="1" width="' . ($i? '350' : '450') . '" class="data" style="font-size : 13px;">
+              <TABLE border="0" cellpadding="10" cellspacing="1" width="' . (!$bConverted || $bProcessed? '350' : '450') . '" class="data" style="font-size : 13px;">
                 <TR>
-                  <TH' . ($i? '' : '></TH><TH') . ' class="S16">' . ($i? 'Files already processed' : 'Files to be processed') . '</TH></TR>');
+                  <TH' . (!$bConverted || $bProcessed? '' : '></TH><TH') . ' class="S16">' .
+            ($bProcessed == 1? 'Files already processed' : ($bConverted? 'Files to be processed' : 'Files to be converted')) . '</TH></TR>');
         foreach ($aFiles[$i] as $sFile => $aFile) {
             // For LOVD API submissions, we change the annotation.
             // File names are long, we can shorten it and annotate better.
             // We deliberately overwrite $aFile['file_date'] here.
-            if (preg_match('/^LOVD_API_submission_(\d+)_/', $sFile, $aRegs)) {
+            if (preg_match('/^LOVD_API_submission_(\d+)_([0-9:_-]+)\.(\d+)\.lovd$/', $sFile, $aRegs)) {
                 $bAPI = true;
-                list(, $nUserID) = $aRegs;
+                list(, $nUserID, $sFileModified) = $aRegs;
                 $nUserID = sprintf('%0' . $_SETT['objectid_length']['users'] . 'd', $nUserID);
+                $sFileModified = str_replace('_', ' ', $sFileModified);
                 $sFileDisplayName = 'API submission (' . $nUserID . ': ';
                 if (!isset($aUsers[$nUserID])) {
                     $aUsers[$nUserID] = $_DB->query('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchColumn();
@@ -273,14 +330,27 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             $sAge = lovd_convertSecondsToTime($tNow - strtotime($aFile['file_date']), 0, true);
             // Build the link for actions for already scheduled files.
             $sAjaxActions = 'onclick="$.get(\'ajax/import_scheduler.php/' . urlencode($sFile) . '?view\').fail(function(){alert(\'Error retrieving actions, please try again later.\');}); return false;"';
-            if ($i) {
+            if ($bProcessed) {
                 // Already processed.
                 $bError = !empty($zScheduledFiles[$sFile]['process_errors']);
                 $bProcessing = ($zScheduledFiles[$sFile]['in_progress'] && !$bError);
 
                 print("\n" .
                       '                <TR class="' . ($bError? 'colRed' : 'del') . '" ' . $sAjaxActions . '>');
+            } elseif (LOVD_plus && !$bConverted) {
+                // Files to be converted.
+                $sErrorFile = $_INI['paths']['data_files'] . '/' . str_replace($_INSTANCE_CONFIG['conversion']['suffixes']['vep'], $_INSTANCE_CONFIG['conversion']['suffixes']['error'], $sFile);
+                $bError = (file_exists($sErrorFile) && filesize($sErrorFile) > 0);
+                $aErrors = (!$bError? array() : file($sErrorFile, FILE_IGNORE_NEW_LINES));
+                $bProcessing = ($aFile['scheduled'] // Processing if total tmp file exists, and ...
+                    && (!$aErrors // (there are no errors, or ...
+                        || (!$_INSTANCE_CONFIG['conversion']['annotation_error_exits'] // there are errors but LOVD+ won't stop on the first error, and ...
+                            && count($aErrors) < $_INSTANCE_CONFIG['conversion']['annotation_error_max_allowed']))); // we didn't reach the maximum of errors yet).
+
+                print("\n" .
+                      '                <TR class="' . ($bProcessing? 'del' : 'data') . ($bError? ' colRed' : '') . '">');
             } else {
+                // Converted but not already processed files.
                 $bError = false;
                 $bProcessing = false;
                 if ($aFile['scheduled']) {
@@ -291,7 +361,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 } else {
                     // Not imported yet, can be scheduled.
                     print("\n" .
-                          '                <TR class="data" style="cursor : pointer;" onclick="if ($(this).find(\':checkbox\').prop(\'checked\')) { $(this).find(\':checkbox\').attr(\'checked\', false); $(this).find(\'img\').first().hide(); $(this).removeClass(\'colGreen\'); } else { $(this).find(\':checkbox\').attr(\'checked\', true);  $(this).find(\'img\').show(); $(this).addClass(\'colGreen\'); }">
+                          '                <TR class="data" style="cursor : pointer;" onclick="if ($(this).find(\':checkbox\').prop(\'checked\')) { $(this).find(\':checkbox\').prop(\'checked\', false); $(this).find(\'img\').first().hide(); $(this).removeClass(\'colGreen\'); } else { $(this).find(\':checkbox\').prop(\'checked\', true);  $(this).find(\'img\').show(); $(this).addClass(\'colGreen\'); }">
                   <TD width="30" style="text-align : center;"><INPUT type="checkbox" name="files_to_schedule[]" value="' . $sFile . '" style="display : none;"><IMG src="gfx/check.png" alt="Import" width="16" height="16" style="display : none;"></TD>');
                 }
             }
@@ -301,30 +371,38 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             } elseif ($bProcessing) {
                 $sDownloadWarningMessage .= 'The data is currently being imported.';
             } elseif ($aFile['scheduled']) {
-                $sDownloadWarningMessage .= 'To import the data, configure automated imports (see INSTALL.txt) or click the information box above.';
+                $sDownloadWarningMessage .= 'To import the data, configure automated imports (see INSTALL.txt) or click the information box on the top of the page.';
+            } elseif (!$bConverted) {
+                $sDownloadWarningMessage .= 'This file has not yet been converted in the LOVD import format.';
             } else {
                 $sDownloadWarningMessage = 'To import the data, schedule this file for import by clicking on the file and selecting \\\'Schedule for import\\\'.';
             }
             $sDownloadHTML = ($aFile['file_lost']? '' : '
                     <A href="' . CURRENT_PATH . '?download_scheduled_file&amp;file=' . $sFile . '" target="_blank" onclick="event.stopPropagation(); if (!window.confirm(\'' . $sDownloadWarningMessage . '\')) { return false; }"><IMG src="gfx/menu_save.png" alt="Download" width="16" height="16" title="Download file" style="float : right;"></A>');
-            $sInformationHTML = (!$aFile['scheduled']? '' : '
+            $sInformationHTML = (!$aFile['scheduled'] || !$bConverted? '' : '
                     <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . ($sFile == $sFileDisplayName? '' : $sFile . ' - ') . 'Scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
             $sPriorityHTML = (!$aFile['priority']? '' : '
                     <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import: ' . $_SETT['import_priorities'][$aFile['priority']] . '" style="float : right;">');
             $sProcessingHTML = (!$bProcessing? '' : '
-                    <IMG src="gfx/menu_clock.png" alt="Processing ..." width="16" height="16" title="Processing started ' . $zScheduledFiles[$sFile]['processed_date'] . '" style="float : right;">');
+                    <IMG src="gfx/menu_clock.png" alt="Processing ..." width="16" height="16" title="' .
+                ($bConverted? 'Processing' : 'Conversion') . ' started ' . $aFile['processed_date'] . '" style="float : right;">');
             $sErrorsHTML = (!$bError? '' : '
-                    <IMG src="gfx/cross.png" alt="Errors while processing" width="16" height="16" title="Errors while processing:' . "\n" . htmlspecialchars($zScheduledFiles[$sFile]['process_errors']) . '" style="float : right;">');
+                    <IMG src="gfx/cross.png" alt="Errors while processing" width="16" height="16" title="Errors while processing:' . "\n" .
+                ($bProcessed? htmlspecialchars($zScheduledFiles[$sFile]['process_errors']) :
+                    htmlspecialchars(implode("\n", $aErrors))). '" style="float : right;">');
             print('
                   <TD>' . $sDownloadHTML . $sInformationHTML . $sPriorityHTML . $sProcessingHTML . $sErrorsHTML . '
                     <B>' . $sFileDisplayName . '</B><BR>
-                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $sAge . ' ago') . '</SPAN>
+                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus && $bConverted? 'Converted' : 'Created')) . ' ' . $sAge . ' ago') . '</SPAN>
                   </TD></TR>');
         }
-        print('</TABLE></TD>' . "\n");
+        print('</TABLE><BR>' .
+            (!(!$bProcessed && $bConverted)? '' : '
+              <INPUT type="submit" value="Schedule for import &raquo;">') . '
+            </TD>' . "\n");
     }
-    print('            <TD width="50">
-              <INPUT type="submit" value="Schedule for import &raquo;"></TD></TR></TABLE>
+    print('          </TR>
+        </TABLE>
       </FORM>' . "\n\n");
 
     $_T->printFooter();
@@ -352,7 +430,9 @@ if (ACTION == 'download_scheduled_file' && PATH_COUNT == 1 && !empty($_GET['file
         exit;
     }
 
-    if (!is_readable($_INI['paths']['data_files'])) {
+    // Obviously, no path allowed, and we'll check for its existence.
+    $sFile = basename($_GET['file']);
+    if (!is_readable($_INI['paths']['data_files'] . '/' . $sFile)) {
         $_T->printHeader();
         lovd_showInfoTable('File not found!', 'stop');
         $_T->printFooter();
@@ -360,9 +440,9 @@ if (ACTION == 'download_scheduled_file' && PATH_COUNT == 1 && !empty($_GET['file
     }
 
     // If we get here, we can print the header already.
-    header('Content-Disposition: attachment; filename="' . $_GET['file'] . '"');
+    header('Content-Disposition: attachment; filename="' . $sFile . '"');
     header('Pragma: public');
-    die(file_get_contents($_INI['paths']['data_files'] . '/' . $_GET['file']));
+    die(file_get_contents($_INI['paths']['data_files'] . '/' . $sFile));
 }
 
 
@@ -370,6 +450,7 @@ if (ACTION == 'download_scheduled_file' && PATH_COUNT == 1 && !empty($_GET['file
 
 
 if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
+    // URL: /import?autoupload_scheduled_file
     // This URL forces FORMAT to be text/plain.
     // All unneeded output will be prevented.
     define('FORMAT_ALLOW_TEXTPLAIN', true); // To allow automatic data loading.
@@ -522,7 +603,7 @@ $aExcludedTypes =
     );
 
 // Calculate maximum uploadable file size.
-$nMaxSizeLOVD = 100*1024*1024; // 100MB LOVD limit.
+$nMaxSizeLOVD = (!LOVD_plus? 100 : 250)*1024*1024; // 100MB LOVD limit, 250MB for LOVD+.
 $nMaxSize = min(
     $nMaxSizeLOVD,
     lovd_convertIniValueToBytes(ini_get('upload_max_filesize')),
@@ -2784,10 +2865,14 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     if (is_writable($_INI['paths']['data_files_archive'])) { // Must be set, but still.
                         // I'm deliberately not saving the file suffixes elsewhere, because we should support old and new suffixes.
                         // Sort these in most specific -> least specific, that's the order in which they will be tried.
-                        $aSuffixes = array(
-                            '.total.data.lovd',
-                            '.lovd',
-                        );
+                        if (LOVD_plus) {
+                            $aSuffixes = array_values($_INSTANCE_CONFIG['conversion']['suffixes']);
+                        } else {
+                            $aSuffixes = array(
+                                '.total.data.lovd',
+                                '.lovd',
+                            );
+                        }
                         $sFilePrefix = $sFile;
                         // Determine the prefix by trying all suffixes and removing those.
                         // Once successful, we quit trying.

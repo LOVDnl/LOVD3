@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2019-08-07
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -53,7 +53,7 @@ class LOVD_Gene extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH;
+        global $_AUTH, $_DB;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT g.*, ' .
@@ -216,6 +216,7 @@ class LOVD_Gene extends LOVD_Object {
             // Unfortunately, we can't limit this for the genes VL on the gene panel page,
             //  because we also want it to work on the AJAX viewlist, so we can't use lovd_getProjectFile(),
             //  but neither can we use the sViewListID, because we're in the constructor.
+            $_DB->query('SET group_concat_max_len = 10240'); // Make sure you can deal with long transcript lists.
             $this->aSQLViewList['SELECT'] .= ', IFNULL(CONCAT("<OPTION value=&quot;&quot;>-- select --</OPTION>", GROUP_CONCAT(CONCAT("<OPTION value=&quot;", t.id, "&quot;>", t.id_ncbi, "</OPTION>") ORDER BY t.id_ncbi SEPARATOR "")), "<OPTION value=&quot;&quot;>-- no transcripts available --</OPTION>") AS transcripts_HTML';
         }
 
@@ -525,7 +526,7 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
                 if ($nOMIMID) {
                     // Add link to OMIM for each disease that has an OMIM ID.
-                    $zData['disease_omim_'] .= (!$zData['disease_omim_'] ? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sSymbol . ($sSymbol == $sName? '' : ' (' . $sName . ')') . '</A>';
+                    $zData['disease_omim_'] .= (!$zData['disease_omim_']? '' : '<BR>') . '<A href="' . lovd_getExternalSource('omim', $nOMIMID, true) . '" target="_blank">' . $sSymbol . ($sSymbol == $sName? '' : ' (' . $sName . ')') . '</A>';
                 }
             }
 
