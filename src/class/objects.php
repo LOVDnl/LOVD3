@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-08-28
+ * Modified    : 2019-09-05
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -894,6 +894,8 @@ class LOVD_Object {
         // ViewEntry() and ViewList() call this function to see if data exists at all, and actually don't require a precise number.
         // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to check for existance.
         //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
+        // FIXME: This function's name is wrong, and it should be renamed to isNotEmpty() or entryExist() or so.
+        // FIXME: Also the $this->nCount should be renamed, and the custom VL's functions for filling nCount can be simplified.
         global $_DB;
 
         if ($ID) {
@@ -910,12 +912,15 @@ class LOVD_Object {
                 $aIDs = array($sIDColumn => $ID);
             }
 
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?', array_values($aIDs))->fetchColumn();
+            $nCount = (int) $_DB->query('SELECT 1 FROM ' . constant($this->sTable) . '
+                                         WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? LIMIT 1',
+                                array_values($aIDs))->fetchColumn();
         } else {
             if ($this->nCount !== '') {
                 return $this->nCount;
             }
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable))->fetchColumn();
+            $nCount = (int) $_DB->query('SELECT 1 FROM ' . constant($this->sTable) . '
+                                         LIMIT 1')->fetchColumn();
             $this->nCount = $nCount;
         }
         return $nCount;
@@ -2896,10 +2901,15 @@ FROptions
             $zData = $this->prepareData($zData, 'list', $sViewListID);
 
             if (FORMAT == 'text/html') {
+                // If defined, run the functions that define a row's class name.
+                if (empty($zData['class_name'])) {
+                    $zData['class_name'] = 'data';
+                }
+
                 // FIXME; rawurldecode() in the line below should have a better solution.
                 // IE (who else) refuses to respect the BASE href tag when using JS. So we have no other option than to include the full path here.
                 print("\n" .
-                      '        <TR class="' . (empty($zData['class_name'])? 'data' : $zData['class_name']) . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') .
+                      '        <TR class="' . $zData['class_name'] . '"' . (!$zData['row_id']? '' : ' id="' . $zData['row_id'] . '"') . ' valign="top"' . (!$zData['row_link']? '' : ' style="cursor : pointer;"') .
                         (!$zData['row_link']? '' :
                             (substr($zData['row_link'], 0, 11) == 'javascript:'?
                                 // Rowlink is javascript code, define it with an onClick attribute.

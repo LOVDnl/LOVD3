@@ -549,7 +549,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         list($nID, $nTranscriptID) = explode(',', $nID);
         $this->aSQLViewEntry['WHERE'] .= (empty($this->aSQLViewEntry['WHERE'])? '' : ' AND ') . 'vot.transcriptid = \'' . $nTranscriptID . '\'';
 
-        // Before passing this on to parent::viewEntry(), perform a standard getCount() check on the transcript ID,
+        // Before passing this on to parent::viewEntry(), perform a standard count() check on the transcript ID,
         // to make sure that we won't get a query error when the combination of VariantID/TranscriptID does not yield
         // any results. Easiest is then to fake a wrong $nID such that parent::viewEntry() will complain.
         if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($nID, $nTranscriptID))->fetchColumn()) {
