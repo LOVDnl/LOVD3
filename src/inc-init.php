@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-08-28
+ * Modified    : 2019-09-05
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -149,7 +149,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-21d',
+                            'version' => '3.0-21e',
                           ),
                 'user_levels' =>
                      array(
@@ -219,6 +219,26 @@ $_SETT = array(
                         9 => '+',   // Affects function
                     ),
                 'var_effect_default' => '00',
+                'diseases_inheritance' =>
+                    array(
+                        'AD' => 'Autosomal dominant',
+                        'Paternal imprinting' => 'Autosomal dominant with paternal imprinting',
+                        'Maternal imprinting' => 'Autosomal dominant with maternal imprinting',
+                        'AR' => 'Autosomal recessive',
+                        'DD' => 'Digenic dominant',
+                        'DR' => 'Digenic recessive',
+                        'IC' => 'Isolated Cases (Sporadic)',
+                        'Mi' => 'Mitochondrial',
+                        'Mu' => 'Multifactorial',
+                        'SMo' => 'Somatic mosaicism',
+                        'SMu' => 'Somatic mutation',
+                        'Oligogenic' => 'Oligogenic (3 genes)',
+                        'Polygenic' => 'Polygenic (>3 genes)',
+                        'XL' => 'X-linked',
+                        'XLD' => 'X-linked dominant',
+                        'XLR' => 'X-linked recessive',
+                        'YL' => 'Y-linked',
+                    ),
                 'data_status' =>
                      array(
                             STATUS_IN_PROGRESS => 'In progress',
