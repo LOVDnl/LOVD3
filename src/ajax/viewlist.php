@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2018-08-22
+ * Modified    : 2019-09-23
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -251,6 +251,11 @@ if (POST && ACTION == 'applyFR') {
     // Post request with no action specified. We do not allow normal viewlist
     // views via POST.
     die(AJAX_DATA_ERROR);
+}
+
+// Restrict the columns of this VL, if given.
+if (LOVD_plus && isset($_INSTANCE_CONFIG['viewlists'][$_GET['viewlistid']]['cols_to_show'])) {
+    $_DATA->setViewListCols($_INSTANCE_CONFIG['viewlists'][$_GET['viewlistid']]['cols_to_show']);
 }
 
 // Show the viewlist.
