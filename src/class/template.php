@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2019-08-21
+ * Modified    : 2019-09-13
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -826,7 +826,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // Measure the height of the sticky header (can depend on announcements or
         // font settings and such), and adapt the menu table to have a margin of this height.
         print('<SCRIPT type="text/javascript">' . "\n" .
-              '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+              '  $("table.logo").eq(1).css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
               '</SCRIPT>' . "\n\n");
 
         // Attach dropdown menus.
