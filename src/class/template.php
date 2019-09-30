@@ -243,8 +243,13 @@ class LOVD_Template {
             unset($this->aMenu['configuration'], $this->aMenu['configuration_']);
             unset($this->aMenu['setup_']['/download/columns']);
             unset($this->aMenu['setup_']['/download/all']);
-            if ($_AUTH && $_AUTH['level'] <= LEVEL_ANALYZER) {
+            if (!$_AUTH || $_AUTH['level'] <= LEVEL_ANALYZER) {
                 unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            }
+
+            // Gene statistics is really just for MGHA.
+            if (!lovd_verifyInstance('mgha', false)) {
+                unset($this->aMenu['genes_']['/gene_statistics']);
             }
         } else {
             // Remove menu items for non-LOVD+.
@@ -348,7 +353,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD software &copy;2004-2019 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2019 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -392,7 +397,7 @@ class LOVD_Template {
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
+        if (!LOVD_plus && !((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
             // In install directory.
             print('
 function lovd_mapVariants ()
@@ -521,7 +526,7 @@ function lovd_mapVariants ()
         lovd_includeJS('inc-js-openwindow.php', 1);
         lovd_includeJS('inc-js-toggle-visibility.js', 1); // Used on forms and variant overviews for small info tables.
         lovd_includeJS('lib/jQuery/jquery.min.js', 1);
-        lovd_includeJS('lib/jQuery/jquery-ui.custom.min.js', 1);
+        lovd_includeJS('lib/jQuery/jquery-ui.min.js', 1);
         lovd_includeJS('lib/jeegoocontext/jquery.jeegoocontext.min.js', 1);
 
         if (!$bFull) {
@@ -609,7 +614,7 @@ function lovd_mapVariants ()
     }
 
   </SCRIPT>
-  <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.custom.css">
+  <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.css">
 </HEAD>
 
 <BODY style="margin : 0px;">
@@ -635,7 +640,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
   <TR>
 <?php
         if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
-            $_CONF['logo_uri'] = 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg';
+            $_CONF['logo_uri'] = 'gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg';
         }
         $aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
         if (!is_array($aImage)) {
@@ -674,7 +679,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
                 // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
-                print('      ' . (LOVD_plus || !$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                print('      ' . (LOVD_plus || empty($_CONF['allow_submitter_registration']) || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
                       '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }

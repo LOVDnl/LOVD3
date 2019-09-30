@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-04-13
- * Modified    : 2017-09-20
- * For LOVD    : 3.0-20
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -31,20 +31,9 @@
  *************/
 
 // List symbols denoting variant effect values as listed in $_SETT['var_effect'].
-// Fixme: consider joining info in array below with $_SETT['var_effect'].
-$aEffectSymbols = array(
-    0 => '.',   // Not classified
-    1 => '-',   // Does not affect function
-    3 => '-?',  // Probably does not affect function
-    5 => '?',   // Effect unknown
-    6 => '#',   // Variant affects function but was not associated with any known disease phenotype
-    7 => '+?',  // Probably affects function
-    8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
-    9 => '+',   // Affects function
-);
+$aEffectSymbols = $_SETT['var_effect_short'];
 
-// Create symbols for binary combinations of variant effect symbols (i.e.
-// reported effect and concluded effect).
+// Create symbols for binary combinations of variant effect symbols (i.e. reported effect and concluded effect).
 $aEffectNames = array();
 foreach ($aEffectSymbols as $k1 => $v1) {
     foreach ($aEffectSymbols as $k2 => $v2) {
@@ -52,8 +41,7 @@ foreach ($aEffectSymbols as $k1 => $v1) {
     }
 }
 
-// Generate string of variant effect symbols to be used as part of SQL insert
-// statement.
+// Generate string of variant effect symbols to be used as part of SQL insert statement.
 $sEffectValuesSQL = join(', ', array_map(
     function ($sID, $sName) {
         return '("' . $sID . '", "' . $sName . '")';

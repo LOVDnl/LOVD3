@@ -36,7 +36,6 @@
 4.0.0 class_exists
 4.0.4 constant
 4.0.0 count
-4.0.1 create_function
 4.0.4 ctype_digit
 4.0.0 current
 4.0.0 date

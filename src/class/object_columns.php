@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2018-01-26
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -116,7 +116,7 @@ class LOVD_Column extends LOVD_Object {
                         'form_type_' => 'Form type',
                         'select_options' => 'Select options',
                         'preg_pattern' => 'Regular expression pattern',
-                        'public_view_' => 'Show to public',
+                        'public_view_' => (!LOVD_plus? 'Show to public' : 'Show column on data listing'),
                         'public_add_' => 'Show on submission form',
                         'allow_count_all_' => 'Include in search form',
                         'parent_objects' => 'Column activated for',
@@ -152,7 +152,7 @@ class LOVD_Column extends LOVD_Object {
                                     'db'   => array('c.standard', 'DESC', true),
                                     'legend' => array('Whether this column is activated by default. For shared columns (Phenotype or VariantOnTranscript columns) this means newly created diseases or genes, include this column by default.')),
                         'public_view_' => array(
-                                    'view' => array('Public', 60, 'style="text-align : center;"'),
+                                    'view' => array((!LOVD_plus? 'Public' : 'Visible'), 60, 'style="text-align : center;"'),
                                     'db'   => array('c.public_view', 'DESC', true),
                                     'legend' => array('Whether the public can see this column\'s contents or not.')),
                         'col_order' => array(
@@ -294,7 +294,7 @@ class LOVD_Column extends LOVD_Object {
              'width' => array('Column display width in pixels', '', 'text', 'width', 5),
                         array('', '', 'print', '<IMG src="gfx/trans.png" alt="" width="' . (int) $_POST['width'] . '" height="3" style="background : #000000;"><BR><SPAN class="form_note">(This is ' . (int) $_POST['width'] . ' pixels)</SPAN>'),
          'mandatory' => array('Mandatory field', '', 'checkbox', 'mandatory'),
-       'public_view' => array('Show contents to public', '', 'checkbox', 'public_view'),
+       'public_view' => array((LOVD_plus? 'Show column on data listings' :'Show contents to public'), '', 'checkbox', 'public_view'),
         'public_add' => array('Show field on submission form', '', 'checkbox', 'public_add'),
                         'hr',
 // FIXME; implement this later.

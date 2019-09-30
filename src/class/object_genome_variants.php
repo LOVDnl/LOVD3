@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2019-02-08
+ * Modified    : 2019-09-05
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -43,7 +43,7 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 class LOVD_GenomeVariant extends LOVD_Custom {
-    // This class extends the basic Object class and it handles the Link object.
+    // This class extends the basic Object class and it handles the GenomeVariant object.
     var $sObject = 'Genome_Variant';
     var $sCategory = 'VariantOnGenome';
     var $sTable = 'TABLE_VARIANTS';
@@ -74,12 +74,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
-        if (LOVD_plus) {
-            // Add curation status and confirmation status.
-            $this->aSQLViewEntry['SELECT'] .= ', ' .
-                                           'curs.name AS curation_status_, ' .
-                                           'cons.name AS confirmation_status_';
-        }
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS . ' AS vog ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
@@ -88,12 +82,6 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vog.edited_by = ue.id)';
-        if (LOVD_plus) {
-            // Add curation status and confirmation status.
-            $this->aSQLViewEntry['FROM'] .= ' ' .
-                                           'LEFT OUTER JOIN ' . TABLE_CURATION_STATUS . ' AS curs ON (vog.curation_statusid = curs.id)' .
-                                           'LEFT OUTER JOIN ' . TABLE_CONFIRMATION_STATUS . ' AS cons ON (vog.confirmation_statusid = cons.id)';
-        }
         $this->aSQLViewEntry['GROUP_BY'] = 'vog.id';
 
         // SQL code for viewing the list of variants
@@ -216,7 +204,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     function buildForm ($sPrefix = '')
     {
         $aForm = parent::buildForm($sPrefix);
-        // Link to HVS for nomenclature.
+        // Link to HGVS for nomenclature.
         if (isset($aForm[$sPrefix . 'VariantOnGenome/DNA'])) {
             $aForm[$sPrefix . 'VariantOnGenome/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnGenome/DNA'][0]);
         }
@@ -289,13 +277,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
     function getForm ()
     {
         // Build the form.
+        global $_AUTH, $_CONF, $_DB, $_SETT, $zData, $_DATA;
 
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             return parent::getForm();
         }
-
-        global $_AUTH, $_CONF, $_DB, $_SETT, $zData, $_DATA;
 
         $aSelectAllele = $_DB->query('SELECT id, name FROM ' . TABLE_ALLELES . ' ORDER BY display_order')->fetchAllCombine();
 
@@ -378,7 +365,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
         // Check if we actually have any transcripts enabled. When creating a variant, the user may disable them.
         // We need to know for the variant effect fields.
         $nTranscripts = 0;
-        if (ACTION == 'create') {
+        if (ACTION == 'create' && !empty($_POST['aTranscripts'])) {
             foreach (array_keys($_POST['aTranscripts']) as $nTranscriptID) {
                 if (empty($_POST['ignore_' . $nTranscriptID])) {
                     $nTranscripts ++;
@@ -496,9 +483,12 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                     $aArgs[] = STATUS_MARKED;
                 }
                 $n = $_DB->query($sQ, $aArgs)->fetchColumn();
-                if ($n > 1) {
+                if ($n > 1 && (!LOVD_plus || !lovd_verifyInstance('mgha', false))) {
                     list($sPrefix,) = explode('_', $zData['VariantOnGenome/DBID'], 2);
                     $sLink = '<A href="' . (substr($sPrefix, 0, 3) == 'chr'? 'variants' : 'view/' . $sPrefix) . '?search_VariantOnGenome%2FDBID=%3D%22' . $zData['VariantOnGenome/DBID'] . '%22">See all ' . $n . ' reported entries</A>';
+                    if (LOVD_plus) {
+                        $sLink = '<A href="variants/DBID/' . $zData['VariantOnGenome/DBID'] .'">See all ' . $n . ' reported entries</A>';
+                    }
                     // This is against our coding policy of never modifying actual contents of values (we always create a copy with _ appended), but now I simply can't without
                     // modifying the column list manually. If only array_splice() would work on associative arrays... I'm not going to create a workaround here.
                     $zData['VariantOnGenome/DBID'] .= ' <SPAN style="float:right">' . $sLink . '</SPAN>';

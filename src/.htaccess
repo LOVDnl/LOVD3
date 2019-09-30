@@ -9,6 +9,10 @@
 php_flag register_globals Off
 php_flag magic_quotes_gpc Off
 php_flag mysql.trace_mode Off
+# Allow to select many genes for the gene panel. 15000 allows for some 3000 genes to be processed.
+php_value max_input_vars 15000
+php_value suhosin.post.max_vars 15000
+php_value suhosin.request.max_vars 15000
 
 # We rely on MultiViews or the RewriteEngine. We can't check on MultiViews here,
 # nor can we cleanly try to enable it here without the need for AllowOverride All.
@@ -22,6 +26,7 @@ php_flag mysql.trace_mode Off
     RewriteRule ^analyses(.*)$ analyses.php
     RewriteRule ^announcements(.*)$ announcements.php
     RewriteRule ^api(.*)$ api.php
+    RewriteRule ^attachments(.*)$ attachments.php
     RewriteRule ^check_update(.*)$ check_update.php
     RewriteRule ^columns(.*)$ columns.php
     RewriteRule ^configuration(.*)$ configuration.php
@@ -46,6 +51,7 @@ php_flag mysql.trace_mode Off
     RewriteRule ^setup(.*)$ setup.php
     RewriteRule ^status(.*)$ status.php
     RewriteRule ^submit(.*)$ submit.php
+    RewriteRule ^summary_annotations(.*)$ summary_annotations.php
     RewriteRule ^transcripts(.*)$ transcripts.php
     RewriteRule ^uninstall(.*)$ uninstall.php
     RewriteRule ^users(.*)$ users.php

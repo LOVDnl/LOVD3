@@ -15,7 +15,6 @@ class AddPhenotypeInfoToHealthyIndividualTest extends LOVDSeleniumWebdriverBaseT
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes[\s\S]create&target=00000001$/', $this->driver->getCurrentURL()));
-//        $this->selectWindow("null");
         $this->enterValue(WebDriverBy::name("Phenotype/Age"), "35y");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
         $option->click();

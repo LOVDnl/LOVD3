@@ -13,10 +13,12 @@ class CreateGenderColumnTest extends LOVDSeleniumWebdriverBaseTestCase
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::linkText("Enable column"));
         $element->click();
-        
+
         $this->enterValue(WebDriverBy::name("password"), "test1234");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Add/enable custom data column Individual/Gender']"));
         $element->click();
-        
+
+        $bodyText = $this->driver->findElement(WebDriverBy::tagName("body"))->getText();
+        $this->assertContains('Successfully added column "Gender"!', $bodyText);
     }
 }

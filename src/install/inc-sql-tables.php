@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2019-02-13
+ * Modified    : 2019-08-27
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -137,7 +137,7 @@ $aTableSQL =
     url_external TEXT,
     allow_download BOOLEAN NOT NULL DEFAULT 0,
     allow_index_wiki BOOLEAN NOT NULL DEFAULT 0,
-    id_hgnc INT(10) UNSIGNED NOT NULL,
+    id_hgnc INT(10) UNSIGNED' . (LOVD_plus? '' : ' NOT NULL') . ',
     id_entrez INT(10) UNSIGNED,
     id_omim INT(10) UNSIGNED,
     show_hgmd BOOLEAN NOT NULL DEFAULT 0,
@@ -219,6 +219,7 @@ $aTableSQL =
     id SMALLINT(5) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT,
     symbol VARCHAR(25) NOT NULL DEFAULT "-",
     name VARCHAR(255) NOT NULL,
+    inheritance VARCHAR(45) NULL,
     id_omim INT(10) UNSIGNED,
     tissues TEXT,
     features TEXT,
@@ -228,7 +229,7 @@ $aTableSQL =
     edited_by SMALLINT(5) UNSIGNED ZEROFILL,
     edited_date DATETIME,
     PRIMARY KEY (id),
-    UNIQUE(id_omim),
+    UNIQUE (id_omim),
     INDEX (created_by),
     INDEX (edited_by),
     CONSTRAINT ' . TABLE_DISEASES . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -388,7 +389,7 @@ $aTableSQL =
 //    INDEX (statusid),
 //    INDEX (edited_by),
 //    INDEX (deleted_by),
-//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_ALLELES . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
+//    CONSTRAINT ' . TABLE_VARIANTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS . '_fk_owned_by FOREIGN KEY (owned_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS . '_fk_statusid FOREIGN KEY (statusid) REFERENCES ' . TABLE_DATA_STATUS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS . '_fk_edited_by FOREIGN KEY (edited_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -431,7 +432,7 @@ $aTableSQL =
 //    INDEX (position_c_start, position_c_start_intron, position_c_end, position_c_end_intron),
 //    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_id FOREIGN KEY (id) REFERENCES ' . TABLE_VARIANTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
 //    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_transcriptid FOREIGN KEY (transcriptid) REFERENCES ' . TABLE_TRANSCRIPTS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE,
-//    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_ALLELES . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
+//    CONSTRAINT ' . TABLE_VARIANTS_ON_TRANSCRIPTS . '_fk_effectid FOREIGN KEY (effectid) REFERENCES ' . TABLE_EFFECT . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
 //    ' . $sSettings
 
          , 'TABLE_PHENOTYPES' =>

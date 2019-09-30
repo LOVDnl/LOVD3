@@ -39,7 +39,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
     {
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
         $element->click();
-        
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/', $this->driver->getCurrentURL()));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
@@ -49,7 +49,7 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::cssSelector("#ARSD > td.ordered"));
         $element->click();
-        
+
         $this->assertContains("src/variants?create&reference=Transcript&geneid=ARSD", $this->driver->getCurrentURL());
         for ($second = 0; ; $second++) {
             if ($second >= 60) $this->fail("timeout");
@@ -120,14 +120,11 @@ class AddSummaryVariantLocatedWithinGeneTest extends LOVDSeleniumWebdriverBaseTe
         $option->click();
         $GenomicDNAChange = $this->driver->findElement(WebDriverBy::name('VariantOnGenome/DNA'));
         $this->assertEquals("g.2843789A>T", $GenomicDNAChange->getAttribute('value'));
-        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
-        $element->click();
 
         // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
-        $this->driver->getMouse()->mouseMove(null, 200, 200);
+        // $this->driver->getMouse()->mouseMove(null, 200, 200);
 
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "55/18000");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="LOVD3 Admin (#00001)"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
