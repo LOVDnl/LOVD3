@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2019-08-28
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -747,7 +747,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
-            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
+            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
 
             // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
             // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
@@ -2470,7 +2470,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
-            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['effect_concluded'] : $zData['effectid']{1});
+            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : $zData['effectid']{1});
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFieldsGenome[] = 'owned_by';
                 $aFieldsGenome[] = 'statusid';

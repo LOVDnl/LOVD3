@@ -169,6 +169,7 @@ $_SETT = array(
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
                     'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'set_concluded_effect' => (LOVD_plus? LEVEL_MANAGER : LEVEL_CURATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
                 ),
                 'gene_imprinting' =>
