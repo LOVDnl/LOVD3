@@ -1224,7 +1224,7 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
     // Show viewlist for searching and selecting a transcript.
     print('<H2>Select transcript</H2>');
     $_DATA = new LOVD_Transcript();
-    $_DATA->setRowLink('Transcripts', 'javascript: $("input[name=\'transcriptid\']").val("{{ID}}"); return false;');
+    $_DATA->setRowLink('Transcripts_convert_LOVD2', 'javascript: $("input[name=\'transcriptid\']").val("{{ID}}"); return false;');
     $_GET['page_size'] = 10;
     $_DATA->viewList('Transcripts_convert_LOVD2', array('cols_to_skip' => array('id_', 'variants')));
 
