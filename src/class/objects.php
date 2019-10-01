@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-09-05
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1497,7 +1497,7 @@ class LOVD_Object {
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
         // Also quotes all data with htmlspecialchars(), to prevent XSS.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         if (!is_array($zData)) {
             $zData = array();
@@ -1561,7 +1561,7 @@ class LOVD_Object {
             // Status coloring will only be done, when we have authorization.
             // Instead of having the logic in separate objects and the custom VL object, put it together here.
             // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
-            if (!LOVD_plus && $_AUTH['level'] >= LEVEL_COLLABORATOR) {
+            if (!LOVD_plus && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                 // Loop through possible status fields, always keep the minimum.
                 foreach (array('statusid', 'var_statusid', 'ind_statusid') as $sField) {
                     if (!empty($zData[$sField])) {

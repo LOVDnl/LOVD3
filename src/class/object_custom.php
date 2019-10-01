@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2019-08-28
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -321,10 +321,11 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Gathers the columns which are active for the current data type and returns them in a viewEntry format
         // Note: object_custom_viewlists.php implements their own version of this code.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
+
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
-            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_COLLABORATOR) {
+            if (!$aCol['public_view'] && $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                 continue;
             }
             $aViewEntry[$sID] = $aCol['head_column'];
@@ -340,13 +341,13 @@ class LOVD_Custom extends LOVD_Object {
     {
         // Gathers the columns which are active for the current data type and returns them in a viewList format
         // Note: object_custom_viewlists.php implements their own version of this code.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         $aViewList = array();
         foreach ($this->aColumns as $sID => $aCol) {
             // In LOVD_plus, the public_view field is used to set if a custom column will be displayed in a VL or not.
             // So, in LOVD_plus we need to check for ALL USERS if a custom column has public_view flag turned on or not.
-            if (!$aCol['public_view'] && (LOVD_plus? true : $_AUTH['level'] < LEVEL_COLLABORATOR)) {
+            if (!$aCol['public_view'] && (LOVD_plus? true : $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data'])) {
                 continue;
             }
             $bAlignRight = preg_match('/^(DEC|FLOAT|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2019-08-28
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -53,7 +53,7 @@ class LOVD_Gene extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH, $_DB;
+        global $_AUTH, $_DB, $_SETT;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT g.*, ' .
@@ -82,7 +82,7 @@ class LOVD_Gene extends LOVD_Object {
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ua ON (u2g.userid = ua.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND u2g.show_order > 0') . ') ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ua ON (u2g.userid = ua.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND u2g.show_order > 0') . ') ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) ' .
@@ -107,7 +107,7 @@ class LOVD_Gene extends LOVD_Object {
                                           (LOVD_plus? '' :
                                              // Speed optimization by skipping variant counts.
                                             'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
+                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
@@ -129,19 +129,19 @@ class LOVD_Gene extends LOVD_Object {
                         'reference' => 'Citation reference(s)',
                         'refseq_url_' => 'Refseq URL',
                         'curators_' => 'Curators',
-                        'collaborators_' => array('Collaborators', LEVEL_COLLABORATOR),
+                        'collaborators_' => array('Collaborators', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'variants_' => 'Total number of public variants reported',
                         'uniq_variants_' => 'Unique public DNA variants reported',
                         'count_individuals' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
-                        'allow_download_' => array('Allow public to download linked information', LEVEL_COLLABORATOR),
+                        'allow_download_' => array('Allow public to download linked information', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'download_' => 'Download all this gene\'s data',
                         'note_index' => 'Notes',
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'created_date_' => 'Date created',
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
-                        'updated_by_' => array('Last updated by', LEVEL_COLLABORATOR),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'updated_by_' => array('Last updated by', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'updated_date_' => 'Date last updated',
                         'version_' => 'Version',
                         'TableEnd_General' => '',
@@ -584,7 +584,7 @@ class LOVD_Gene extends LOVD_Object {
             }
             $this->aColumnsViewEntry['curators_'] .= ' (' . $nCurators . ')';
 
-            if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+            if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                 // Collaborator string.
                 $i = 0;
                 foreach ($aCollaborators as $nUserID => $sName) {
@@ -620,12 +620,12 @@ class LOVD_Gene extends LOVD_Object {
                 $zData['version_'] = '<B>' . $zData['id'] . date(':ymd', strtotime($zData['updated_date_'])) . '</B>';
             } else {
                 unset($this->aColumnsViewEntry['version_']);
-                if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+                if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                     // Also unset the empty updated_date field; users lower than collaborator don't see the updated_by field, either.
                     unset($this->aColumnsViewEntry['updated_date_']);
                 }
             }
-            if ($_AUTH['level'] < LEVEL_COLLABORATOR) {
+            if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                 // Public, change date timestamps to human readable format.
                 $zData['created_date_'] = date('F d, Y', strtotime($zData['created_date_']));
                 $zData['updated_date_'] = date('F d, Y', strtotime($zData['updated_date_']));

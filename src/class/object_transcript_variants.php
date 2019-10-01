@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2019-09-04
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,7 +59,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
     function __construct ($sObjectID = '', $nID = '', $bLoadAllTranscripts = true)
     {
         // Default constructor.
-        global $_DB;
+        global $_DB, $_SETT;
 
         if (LOVD_plus) {
             // We don't have shared custom columns in LOVD+.
@@ -154,7 +154,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'status' => array(
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true),
-                                    'auth' => LEVEL_COLLABORATOR),
+                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
         if (LOVD_plus) {
             unset($this->aColumnsViewList['effect']);
