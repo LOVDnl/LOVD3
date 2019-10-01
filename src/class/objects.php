@@ -2236,7 +2236,11 @@ class LOVD_Object {
         $aOptions['multi_value_filter'] &= $aOptions['show_options'];
 
         // Save viewlist options to session.
-        $_SESSION['viewlists'][$sViewListID]['options'] = $aOptions;
+        $_SESSION['viewlists'][$sViewListID]['options'] = array_merge(
+            $aOptions,
+            array(
+                'only_rows' => false, // only_rows should never be stored in SESSION.
+            ));
 
         if (!defined('LOG_EVENT')) {
            define('LOG_EVENT', $this->sObject . '::viewList()');

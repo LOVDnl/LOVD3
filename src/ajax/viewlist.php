@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2019-09-23
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -262,8 +262,12 @@ if (LOVD_plus && isset($_INSTANCE_CONFIG['viewlists'][$_GET['viewlistid']]['cols
 }
 
 // Show the viewlist.
-// Parameters are assumed to be in $_SESSION, only cols_to_skip can be overridden. This is for the external viewer.
-$aOptions = array();
+// Parameters could be assumed to be in $_SESSION. However, certain options we send through here.
+// only_rows is checked and sent here because of the logs retrieving single rows from the next page.
+// cols_to_skip can be overridden for the external viewer.
+$aOptions = array(
+    'only_rows' => (!empty($_GET['only_rows'])),
+);
 if ($aColsToSkip) {
     // Don't let the requested list of columns overwrite the original one. Only additional columns may be hidden.
     $aOptions['cols_to_skip'] = array_unique(array_merge(
