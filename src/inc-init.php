@@ -164,6 +164,7 @@ $_SETT = array(
                 array(
                     // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
                     // has already been called for gene-specific overviews.
+                    'delete_individual' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
                     'delete_variant' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
