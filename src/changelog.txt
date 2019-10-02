@@ -6,7 +6,7 @@
 
 /***************************
  * 3.0 Build 22 (tag:3.0-22)
- * 2018-10-02
+ * 2019-10-02
  *********/
  * Fixed bug; Curators were no longer able to see non-public individuals in the
    gene-specific Individual view.
