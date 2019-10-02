@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2019-08-28
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,7 +100,7 @@ class LOVD_Individual extends LOVD_Custom {
                                           (LOVD_plus? '' :
                                               'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, ' .
                                               'GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ", ") AS variants_in_genes_, ' .
-                                              'COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ') AS variants_, ' // Counting s2v.variantid will not include the limit opposed to vog in the join's ON() clause.
+                                              'COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ') AS variants_, ' // Counting s2v.variantid will not include the limit opposed to vog in the join's ON() clause.
                                           ) .
                                           'uo.name AS owned_by_, ' .
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
@@ -116,10 +116,10 @@ class LOVD_Individual extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) ' .
                                           (LOVD_plus? '' :
                                               'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.screeningid = s.id) ' .
-                                              ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                              ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                                                   'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')) ') .
                                               'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
-                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ' = vot.id) ' .
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ' = vot.id) ' .
                                               'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid) '
                                           ) .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id) ' .
@@ -147,11 +147,11 @@ class LOVD_Individual extends LOVD_Custom {
                         'diseases_' => 'Diseases',
                         'parents_' => 'Parent(s)',
                         'owned_by_' => 'Owner name',
-                        'status' => array('Individual data status', LEVEL_COLLABORATOR),
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'status' => array('Individual data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -212,7 +212,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'status' => array(
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true),
-                                    'auth' => LEVEL_COLLABORATOR),
+                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
                         'created_by' => array(
                                     'view' => false,
                                     'db'   => array('i.created_by', false, true)),
@@ -299,8 +299,8 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
 
-        $aDiseases = array_keys($this->aFormData['aDiseases'][5]);
         if (!empty($aData['active_diseases'])) {
+            $aDiseases = array_keys($this->aFormData['aDiseases'][5]);
             if (count($aData['active_diseases']) > 1 && in_array('00000', $aData['active_diseases'])) {
                 lovd_errorAdd('active_diseases', 'You cannot select both "Healthy/Control" and a disease for the same individual entry.');
             } else {

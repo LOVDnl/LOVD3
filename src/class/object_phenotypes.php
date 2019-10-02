@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2019-09-04
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -54,6 +54,7 @@ class LOVD_Phenotype extends LOVD_Custom {
     function __construct ($sObjectID = '', $nID = '')
     {
         // Default constructor.
+        global $_SETT;
 
         if (LOVD_plus) {
             // We don't have shared custom columns in LOVD+.
@@ -107,11 +108,11 @@ class LOVD_Phenotype extends LOVD_Custom {
                  $this->buildViewEntry(),
                  array(
                         'owned_by_' => 'Owner name',
-                        'status' => array('Phenotype data status', LEVEL_COLLABORATOR),
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'status' => array('Phenotype data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -132,7 +133,7 @@ class LOVD_Phenotype extends LOVD_Custom {
                         'status' => array(
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true),
-                                    'auth' => LEVEL_COLLABORATOR),
+                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
                         'individualid' => array(
                                     'view' => array('Individual ID', 70, 'style="text-align : right;"'),
                                     'db'   => array('p.individualid', 'ASC', true)),
@@ -258,7 +259,7 @@ class LOVD_Phenotype extends LOVD_Custom {
 
         if ($sView == 'entry') {
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
-            if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+            if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                 $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($zData['individual_statusid']) . '">(' . $_SETT['data_status'][$zData['individual_statusid']] . ')</SPAN>';
             }
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';

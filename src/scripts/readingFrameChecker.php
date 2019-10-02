@@ -247,7 +247,7 @@ if (!empty($_GET['variant']) && !empty($_GET['exon_from']) && !empty($_GET['exon
         $sVariantUnknowns = 'c.' . $aStartLengthTable[0][0] .
             ($_GET['exon_from'] == 1? '' : '-?') . '_' . $aStartLengthTable[1][2] .
             ($_GET['exon_to'] == $nExons? '' : '+?') . $_GET['variant'];
-        // HGVS notation, the new version.
+        // HGVS notation, the new version; c.(153+1_154-1)_(295+1_296-1)del.
         $sVariantHGVS = 'c.(' .
             ($_GET['exon_from'] == 1? '?' : ($aStartLengthTable[0][0] - 1) . '+1') . '_' . $aStartLengthTable[0][0] .
             ($_GET['exon_from'] == 1? '' : '-1') . ')_(' . $aStartLengthTable[1][2] .

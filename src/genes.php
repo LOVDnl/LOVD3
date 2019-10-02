@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2019-08-27
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1394,11 +1394,18 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     // Load authorization, collaborators and up see statistics about all variants, not just the public ones.
     lovd_isAuthorized('gene', $sID);
+    $bSeeNonPublicVariants = ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
 
     // Check if there are variants at all.
-    $nVariants = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND statusid >= ' . STATUS_MARKED), array($sID))->fetchColumn();
+    $nVariants = $_DB->query('
+        SELECT COUNT(*)
+        FROM ' . TABLE_VARIANTS . ' AS vog
+          INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
+          INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+        WHERE t.geneid = ?' . ($bSeeNonPublicVariants? '' : ' AND statusid >= ' . STATUS_MARKED),
+        array($sID))->fetchColumn();
     if (!$nVariants) {
-        lovd_showInfoTable('There are currently no ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants in this gene.', 'stop');
+        lovd_showInfoTable('There are currently no ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants in this gene.', 'stop');
         $_T->printFooter();
         exit;
     }
@@ -1422,40 +1429,40 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     // To save ourselves a lot of code, we'll build the DIV containers as templates.
     $aGraphs = array(
         // Variant types (DNA level).
-        'Variant type (DNA level, all ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants)' =>
+        'Variant type (DNA level, all ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants)' =>
         array(
-            'variantsTypeDNA_all' => 'All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants',
-            'variantsTypeDNA_unique' => 'Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants',
+            'variantsTypeDNA_all' => 'All ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants',
+            'variantsTypeDNA_unique' => 'Unique ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants',
         ),
         // Variant types (DNA level) ((likely) pathogenic only).
-        'Variant type (DNA level, all ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants)' =>
+        'Variant type (DNA level, all ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants)' =>
         array(
-            'variantsTypeDNA_all_pathogenic' => 'All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants',
-            'variantsTypeDNA_unique_pathogenic' => 'Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants',
+            'variantsTypeDNA_all_pathogenic' => 'All ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants',
+            'variantsTypeDNA_unique_pathogenic' => 'Unique ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants',
         ),
         // Variant types (protein level).
-        'Variant type (Protein level, all ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants) (note: numbers are sums for all transcripts of this gene)' =>
+        'Variant type (Protein level, all ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants) (note: numbers are sums for all transcripts of this gene)' =>
         array(
-            'variantsTypeProtein_all' => 'All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants',
-            'variantsTypeProtein_unique' => 'Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants',
+            'variantsTypeProtein_all' => 'All ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants',
+            'variantsTypeProtein_unique' => 'Unique ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants',
         ),
         // Variant types (protein level) ((likely) pathogenic only).
-        'Variant type (Protein level, all ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants) (note: numbers are sums for all transcripts of this gene)' =>
+        'Variant type (Protein level, all ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants) (note: numbers are sums for all transcripts of this gene)' =>
         array(
-            'variantsTypeProtein_all_pathogenic' => 'All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants',
-            'variantsTypeProtein_unique_pathogenic' => 'Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants',
+            'variantsTypeProtein_all_pathogenic' => 'All ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants',
+            'variantsTypeProtein_unique_pathogenic' => 'Unique ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants',
         ),
         // Variant locations (DNA level).
-        'Variant location (DNA level, all ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants) (note: numbers are sums for all transcripts of this gene)' =>
+        'Variant location (DNA level, all ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants) (note: numbers are sums for all transcripts of this gene)' =>
         array(
-            'variantsLocations_all' => 'All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants',
-            'variantsLocations_unique' => 'Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants',
+            'variantsLocations_all' => 'All ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants',
+            'variantsLocations_unique' => 'Unique ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants',
         ),
         // Variant locations (DNA level) ((likely) pathogenic only).
-        'Variant type (DNA level, all ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants) (note: numbers are sums for all transcripts of this gene)' =>
+        'Variant type (DNA level, all ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants) (note: numbers are sums for all transcripts of this gene)' =>
         array(
-            'variantsLocations_all_pathogenic' => 'All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants',
-            'variantsLocations_unique_pathogenic' => 'Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'pathogenic variants',
+            'variantsLocations_all_pathogenic' => 'All ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants',
+            'variantsLocations_unique_pathogenic' => 'Unique ' . ($bSeeNonPublicVariants? '' : 'public ') . 'pathogenic variants',
         ),
     );
 
@@ -1474,18 +1481,18 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     flush();
     $_T->printFooter(false);
-    $_G->variantsTypeDNA('variantsTypeDNA_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
-    $_G->variantsTypeDNA('variantsTypeDNA_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
-    $_G->variantsTypeDNA('variantsTypeDNA_all_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, true);
-    $_G->variantsTypeDNA('variantsTypeDNA_unique_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, true);
-    $_G->variantsTypeProtein('variantsTypeProtein_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, false);
-    $_G->variantsTypeProtein('variantsTypeProtein_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, false);
-    $_G->variantsTypeProtein('variantsTypeProtein_all_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, true);
-    $_G->variantsTypeProtein('variantsTypeProtein_unique_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, true);
-    $_G->variantsLocations('variantsLocations_all', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
-    $_G->variantsLocations('variantsLocations_unique', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
-    $_G->variantsLocations('variantsLocations_all_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), false, true);
-    $_G->variantsLocations('variantsLocations_unique_pathogenic', $sID, ($_AUTH['level'] >= LEVEL_COLLABORATOR), true, true);
+    $_G->variantsTypeDNA('variantsTypeDNA_all', $sID, $bSeeNonPublicVariants, false);
+    $_G->variantsTypeDNA('variantsTypeDNA_unique', $sID, $bSeeNonPublicVariants, true);
+    $_G->variantsTypeDNA('variantsTypeDNA_all_pathogenic', $sID, $bSeeNonPublicVariants, false, true);
+    $_G->variantsTypeDNA('variantsTypeDNA_unique_pathogenic', $sID, $bSeeNonPublicVariants, true, true);
+    $_G->variantsTypeProtein('variantsTypeProtein_all', $sID, $bSeeNonPublicVariants, false, false);
+    $_G->variantsTypeProtein('variantsTypeProtein_unique', $sID, $bSeeNonPublicVariants, true, false);
+    $_G->variantsTypeProtein('variantsTypeProtein_all_pathogenic', $sID, $bSeeNonPublicVariants, false, true);
+    $_G->variantsTypeProtein('variantsTypeProtein_unique_pathogenic', $sID, $bSeeNonPublicVariants, true, true);
+    $_G->variantsLocations('variantsLocations_all', $sID, $bSeeNonPublicVariants, false);
+    $_G->variantsLocations('variantsLocations_unique', $sID, $bSeeNonPublicVariants, true);
+    $_G->variantsLocations('variantsLocations_all_pathogenic', $sID, $bSeeNonPublicVariants, false, true);
+    $_G->variantsLocations('variantsLocations_unique_pathogenic', $sID, $bSeeNonPublicVariants, true, true);
 
     print('</BODY>' . "\n" .
           '</HTML>' . "\n");

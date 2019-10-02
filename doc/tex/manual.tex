@@ -43,14 +43,14 @@ This is the manual for the Leiden Open (source) Variation Database (LOVD) versio
 LOVD 3.0 is a partial rewrite of LOVD 2.0, which first stable release was completed in 2007.
 Also, LOVD 3.0 has a greatly improved database model, and includes lots of new features aimed at making LOVD useful for more research environments.
 
-LOVD is designed to provide a flexible, freely available tool for gene-centered collection and display of DNA variations.
+LOVD is designed to provide a flexible, freely available tool for gene-centered collection and display of DNA variants.
 LOVD 3.0 extends this idea to also provide patient-centered data storage and storage of NGS data, even of variants outside of genes.
 \vskip \baselineskip
 
-LOVD was developed approaching the ``LSDB-in-a-Box'' idea for the easy creation and maintenance of a fully web-based gene sequence variation database,
+LOVD was developed approaching the ``LSDB-in-a-Box'' idea for the easy creation and maintenance of a fully web-based gene sequence variant database,
 that is platform-in\-de\-pen\-dent and uses PHP and MySQL open source software only.
 The design of the database follows the recommendations of the \href{http://www.hgvs.org/}{Human Genome Variation Society} (HGVS)
-and focuses on the collection and display of DNA sequence variations, but it has fully implemented methods for storing complete clinical data as well.
+and focuses on the collection and display of DNA sequence variants, but it has fully implemented methods for storing complete clinical data as well.
 The open LOVD setup also facilitates functional extensions with scripts written by the community.
 \vskip \baselineskip
 
@@ -477,26 +477,34 @@ However, you might require help from your system administrator, since there are 
 LOVD is a web-based software project.
 Therefore, installation requires a correctly set-up webserver.
 A suitable server with the necessary software installed is available at virtually all academic institutions and countless commercial hosting providers.
-If you don't want to run LOVD on a server but rather want to have it running on your computer, we can recommend the
- \href{http://www.apachefriends.org/en/xampp.html}{XAMPP} package, which installs all needed software on your computer regardless of whether it's Linux, Windows or Mac.
+If you don't want to run LOVD on a server but rather want to have it running on your computer,
+ we can recommend the \href{https://www.apachefriends.org/}{XAMPP} package,
+ which installs all needed software on your computer regardless of whether it's Linux, Windows or Mac.
+For Windows users, a working alternative is the \href{http://www.wampserver.com/en/}{WampServer} package.
 Also, at the time of this writing, we are offering free server space if you need to set up an LOVD.
 \href{http://www.LOVD.nl/3.0/faq/server_space}{See our website} for more information.
 In that case you don't need to install anything and you can skip this chapter.
 \vskip \baselineskip
 
-If you're experienced with web servers and you want to set it up yourself: LOVD has been extensively tested
- with the Apache webserver, but any webserver able to run PHP scripts should suffice.
-You'll need PHP 5.3.0 or higher and MySQL 4.1.2 or higher.
-LOVD will force the use of the UTF-8 character set, but we recommend setting this as the default value for your software nonetheless.
-Also, you'll need to install a properly configured Mail Transfer Agent for sending emails (such as registration information).\\
+If you're experienced with web servers and you want to set it up yourself: LOVD has
+ been extensively tested with the Apache webserver, but any webserver able to run PHP scripts should suffice.
+You'll need PHP 5.3.0 or higher with mbstring support enabled and openssl installed and MySQL 4.1.2 or higher;
+ MariaDB also works as an alternative to MySQL.
+LOVD will force the use of the UTF-8 character set,
+ but we recommend setting this as the default value for your software nonetheless.
+Also, you'll need to install a properly configured Mail Transfer Agent for sending emails
+ (such as registration information).\\
 LOVD may work with other database platforms, but we are not developing for other database backends.
 You are welcome to try other database backends and report the results to us, but we can't provide any support for it.
 For more information, see the \href{http://lovd.nl/3.0/faq/software}{FAQ about software needed}.
 \vskip \baselineskip
 
-Before installing LOVD, be sure you have the required credentials for connecting to the MySQL database.
-You need a \emph{hostname}, \emph{username}, \emph{password} and a \emph{database name} to be able to install LOVD.
-If you are installing LOVD on a remote server, be sure to have the FTP username and password to be able to copy the necessary files to the server.
+Before installing LOVD, be sure you have the required credentials for
+ connecting to the MySQL database.
+You need a \emph{hostname}, \emph{username}, \emph{password} and a \emph{database name}
+ to be able to install LOVD.
+If you are installing LOVD on a remote server, be sure to have the
+ (s)FTP username and password to be able to copy the necessary files to the server.
 
 
 
@@ -509,26 +517,37 @@ Usually you will be able to open both formats.
 
 Download the file of your choice and save it to your hard drive.
 Now extract the file using GZIP/TAR or ZIP to the desired location.
-On a server, common directories may be /var/www on Unix or Linux servers, or C:\textbackslash{}htdocs on a Windows server.
-When using XAMPP, the directory is C:\textbackslash{}xampp\textbackslash{}htdocs for Windows, /opt/lampp/htdocs for Linux, or /Applications/XAMPP/htdocs for Mac.
+On a server, common directories may be \texttt{/var/www} on Unix or Linux servers,
+ or \texttt{C:\textbackslash{}htdocs} on a Windows server.
+When using XAMPP, the directory is \texttt{C:\textbackslash{}xampp\textbackslash{}htdocs} for Windows,
+ \texttt{/opt/lampp/htdocs} for Linux, or \texttt{/Applications/XAMPP/htdocs} for Mac.
 To be sure, consult the documentation of the webserver software you are using.
 
 
 
 \subsection{Pre-install Setup}
-You will need to rename the standard config file config.ini.php-lovd to config.ini.php and edit it in, for example, a basic text editor.
-This is absolutely mandatory, because you will need to enter the MySQL hostname, username, password and database name here.
-In case you're using XAMPP, the needed values are ``localhost'', ``root'', ``'' (empty) and ``test'', respectively. No quotes around the values needed.
-Please note that these are not the recommended settings for production environments, but it will help you quickly set up LOVD on your computer.
+You will need to rename the standard config file config.ini.php-lovd to config.ini.php and edit it in,
+ for example, a basic text editor.
+This is absolutely mandatory, because you will need to enter the
+ MySQL hostname, username, password and database name here.
+In case you're using XAMPP, the needed values are ``localhost'', ``root'', ``'' (empty) and ``test'', respectively.
+No quotes around the values needed.
+Please note that these are not the recommended settings for production environments,
+ but it will help you quickly set up LOVD on your computer.
+\vskip \baselineskip
 
 Please go through the entire config.ini.php file to determine if you need to change any of the other settings.
 
 \begin{warntable}
-A .htaccess file is put in the root directory of your LOVD installation protecting the config.ini.php file.
-This will prevent the config file from being accessed by others on Apache HTTP servers (if configured properly), the most commonly used webserver.
+A .htaccess file is put in the root directory of your LOVD
+ installation protecting the config.ini.php file, as well as setting some PHP options.
+This will prevent the config file from being accessed by others on Apache HTTP servers
+ (if configured properly), the most commonly used webserver.
 If you use Apache, please check that your version and configuration support this feature.
-Make sure you have the .htaccess file into your LOVD directory, on Unix and Linux systems it's a hidden file so it can be missed easily.
-For the .htaccess file to work, you need to have ``Limit'' and ``Options'' enabled in Apache's ``AllowOverride'' setting.
+Make sure you have the .htaccess file into your LOVD directory,
+ on Unix and Linux systems it's a hidden file so it can be missed easily.
+For the .htaccess file to work, you need to have ``Limit'' and ``Options''
+ enabled in Apache's ``AllowOverride'' setting.
 
 Also, make sure you have MultiViews or mod\_rewrite enabled.
 This allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.
@@ -545,9 +564,10 @@ More information about AllowOverride:\\
 
 \textbf{If you use a different webserver}, make sure to configure it to deny access to the config.ini.php file.
 LOVD will access the file through the filesystem.
-Also, the .htaccess file sets a couple of PHP options and enables mod\_rewrite.
-If you use a different webserver, please disable the following PHP options: \emph{register\_globals}, \emph{magic\_quotes\_gpc}, \emph{mysql.trace\_mode}.
-Also make sure there is ``MultiViews'' functionality, which allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.%
+Also, since the .htaccess file sets a couple of options, please disable the following PHP options:
+ \texttt{register\_globals}, \texttt{magic\_quotes\_gpc}, \texttt{mysql.trace\_mode}.
+Also make sure there is ``MultiViews'' functionality,
+ which allows a PHP file like ``/setup.php'' to be accessed as ``/setup''.
 \end{warntable}
 
 
@@ -555,12 +575,14 @@ Also make sure there is ``MultiViews'' functionality, which allows a PHP file li
 
 
 \section{Install process}
-To install LOVD on a remote webserver, upload the LOVD directory with all the files to the webserver by, for instance, FTP.
-If you install LOVD on your own computer, you do not need to follow this step.
+To install LOVD on a remote webserver,
+ upload the LOVD directory with all the files to the webserver by, for instance, (s)FTP.
+If you install LOVD on your own computer, you do not need that step.
 \vskip \baselineskip
 
-Next, point your web browser to the directory where you've uploaded the LOVD files.
-This could, for instance, be \emph{http://localhost/LOVDv.3.0/} or \emph{http://www.your-domain.org/LOVD/}.
+Next, point your web browser to the directory where you've saved the LOVD files.
+This could, for instance, be \texttt{http://localhost/LOVDv.3.0/} or, if you're using a remote server,
+ something like \texttt{http://www.your-domain.org/LOVD/}.
 LOVD will tell you it's not installed yet, and include a link to the install directory.
 
 \begin{figure}[ht]
@@ -572,11 +594,14 @@ LOVD will tell you it's not installed yet, and include a link to the install dir
   \end{shaded}
 \end{figure}
 
+\noindent
 LOVD will first check a few requirements.
-Both the PHP and MySQL versions will be checked, to make sure your LOVD will function properly on your webserver environment.
+Both the PHP and MySQL versions will be checked, to make sure your LOVD
+ will function properly on your webserver environment.
 Also some settings of the web server, PHP and MySQL will be checked.
 Finally, LOVD will check if your config file has been hidden.
-If all looks well, LOVD will tell you all requirements are OK and you're ready to start installing LOVD.
+If all looks well, LOVD will tell you all requirements are OK
+ and you're ready to start installing LOVD.
 \vskip \baselineskip
 
 Installing LOVD consists of only 4 simple steps and will take only a couple of minutes, or less.
@@ -592,7 +617,8 @@ Installing LOVD consists of only 4 simple steps and will take only a couple of m
 
 \subsection{Administrator account details}
 Fill in the database administrator data to install LOVD.
-The database administrator will be the first user registered with LOVD and has full access to all of LOVD's functionalities.
+The database administrator will be the first user registered with LOVD
+ and has full access to all of LOVD's functionalities.
 The database administrator is the only user capable of creating manager accounts.
 Managers can only create curator and submitter accounts.
 
@@ -606,18 +632,21 @@ Managers can only create curator and submitter accounts.
 Most of the form is pretty straight forward, but I will highlight one field - ``Allowed IP address list''.
 An IP address is an address a computer is known by on the network.
 To help prevent others to try and guess the username/password combination,
-you can restrict access to the database administrator account to a number of IP addresses or ranges.
-This also means you need to be very careful with this setting, as being too restrictive may lock you out of your account.
+ you can restrict access to the database administrator account to a number of IP addresses or ranges.
+This also means you need to be very careful with this setting,
+ as being too restrictive may lock you out of your account.
 The default, unrestricted, value is *.
 
 \begin{infotable}
 The database administrator is the absolute owner of the LOVD installation.
-Not only is he the only one that can uninstall LOVD from the database using the uninstaller,
-he will also be able to create, edit or delete all user accounts in the system and
-(depending on the settings) receive submission and registration notifications.
+Not only are they the only one that can uninstall LOVD from the database using the uninstaller,
+ they will also be able to create, edit or delete all user accounts in the system and
+ (depending on the settings) receive copies of emailed notifications.
 \end{infotable}
 
-After completing the database administrator account details, click the ``Continue \guillemotright'' button at the bottom.
+\noindent
+After completing the database administrator account details,
+ click the ``Continue \guillemotright'' button at the bottom.
 LOVD will apply a simple username and password quality check.
 If LOVD tells you that the provided details are OK, click the ``Next \guillemotright'' button.
 
@@ -625,28 +654,32 @@ If LOVD tells you that the provided details are OK, click the ``Next \guillemotr
 
 \subsection{Installing database tables}
 The next step is to create and fill all necessary LOVD database tables.
-LOVD will do this automatically, and you can watch the progress bar complete while the tables are created,
-the country list filled, the database administrator account created, the custom columns preconfigured,
-the standard columns enabled, and the custom links generated.
+LOVD will do this automatically,
+ and you can watch the progress bar complete while the tables are created,
+ the country list filled, the database administrator account created, the custom columns preconfigured,
+ the standard columns enabled, and the custom links generated.
 This may take a while on non-optimal conditions, so please be patient.
 When everything is done, a ``Next \guillemotright'' button appears - click it to continue.
 
 \begin{figure}[ht]
   \begin{shaded}
   \frame{\includegraphics[width=\linewidth]{c02s02_screenshot_installer_03.png}}%
-  \caption{Watch the progress bar complete while LOVD informs you which part of the database table installation is currently in progress.}
+  \caption{Watch the progress bar complete while LOVD
+   informs you which part of the database table installation is currently in progress.}
   \end{shaded}
 \end{figure}
 
 
 
 \subsection{Configuring LOVD system settings}
-The final form in the installation process is completing the initial configuration of the LOVD system settings.
+The final form in the installation process is completing
+ the initial configuration of the LOVD system settings.
 These settings can be changed after installation at any time through the LOVD setup.
 
-The only setting that cannot be changed at a later time, is the install lock, which is checked by default.
+The only two settings that cannot be changed at a later time, are the install lock, which is checked by default,
+ and the human build that the system will use to map your variants to.
 Setting the uninstall lock will prevent uninstallation of LOVD by the database administrator.
-The only way to remove this lock is directly through the MySQL database backend.
+The only way to remove this lock after installation is directly through the MySQL database backend.
 
 \begin{figure}[ht]
   \begin{shaded}
@@ -659,7 +692,8 @@ For more information on the options of the LOVD system settings, see the \hyperl
 \vskip \baselineskip
 
 After filling in the form, click ``Continue \guillemotright''.
-If everything was filled in correctly, LOVD will register the LOVD system settings.
+If everything was filled in correctly, LOVD will register
+ the LOVD system settings.
 Click ``Next \guillemotright'' to continue to the last step.
 Almost done!
 
@@ -667,9 +701,9 @@ Almost done!
 
 \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
 \subsection{Done}
-% FIXME; to be honest nothing is done in this step... so... kill it?
 When everything has been filled in and stored correctly, the installation is complete.
-Now that you're done installing LOVD, click the ``Continue to Setup area \guillemotright'' button to be forwarded to the \hyperlink{chap:setup}{LOVD setup area}.
+Now that you're done installing LOVD, click the ``Continue to Setup area \guillemotright'' button
+ to be forwarded to the \hyperlink{chap:setup}{LOVD setup area}.
 From there, you can perform the most important actions for managers in LOVD,
  such as creating new gene databases or disease information entries,
  registering new user accounts or authorizing curators, or manage the custom columns and links.
@@ -4400,7 +4434,7 @@ The JSON format allows for multiple individuals to be submitted at once;
  the file is required to contain at least one individual with each at least one variant.
 The mandatory columns are the same as otherwise mandatory in LOVD3.
 For fields that require a fixed set of options, such as the individual's gender,
- the possible options are mentioned in a comment next to the field.
+ the possible options are mentioned in a comment in the example JSON file.
 JSON officially can't contain comments so a JSON parser might fail on the example file, but LOVD3 is OK with them.
 
 Do note that not all fields that may be configured in LOVD3 will be representable (yet) in this format.
@@ -4709,12 +4743,21 @@ If that doesn't resolve your problem or answer your question, please follow the 
 \end{itemize}
 \end{document}
 
-%            s (section) ss (subsection)
-\hypertarget{sec:name_of_label}{}
-\hyperlink{sec:name_of_label}{name of link}
-||
+%      ch (chapter) sec (section) ssec (subsection)
 \label{sec:name_of_label}
 \nameref{sec:name_of_label}
+
+\label{marker}
+you give the object you want to reference a marker, you can see it like a name. For pictures, it must appear after or inside the \caption.
+\ref{marker}
+you can reference the object you have marked before. This prints the number that was assigned to the object.
+\pageref{marker}
+It will print the number of the page where the object is.
+\nameref{marker}
+It will print the name of the assigned object.
+\hyperref[marker]{text}
+Then we don't need \hypertarget anymore!
+
 
 
 \begin{infobox}
@@ -4851,6 +4894,8 @@ wrote this paper as a way to answer the questions we
 received on "what should a curator do". When you have
 comments on this document, please do not hesitate to tell
 us; we would appreciate your comments to improve the document.
+
+Also, how can curators curate new entries? It's not explained anywhere...
 
 
 

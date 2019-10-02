@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2019-09-05
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -122,14 +122,14 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                       ),
                  $this->buildViewEntry(),
                  array(
-                        'mapping_flags_' => array('Automatic mapping', LEVEL_COLLABORATOR),
+                        'mapping_flags_' => array('Automatic mapping', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'average_frequency_' => 'Average frequency (large NGS studies)',
                         'owned_by_' => 'Owner',
-                        'status' => array('Variant data status', LEVEL_COLLABORATOR),
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
         if (!LOVD_plus) {
             unset($this->aColumnsViewEntry['curation_status_']);
@@ -176,7 +176,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                         'status' => array(
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true),
-                                    'auth' => LEVEL_COLLABORATOR),
+                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
                         'created_by' => array(
                                     'view' => false,
                                     'db'   => array('vog.created_by', false, true)),
@@ -464,7 +464,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
             foreach ($zData['individuals'] as $aIndividual) {
                 list($nID, $nStatusID) = $aIndividual;
                 $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
-                if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+                if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                     $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($nStatusID) . '">(' . $_SETT['data_status'][$nStatusID] . ')</SPAN>';
                 }
             }

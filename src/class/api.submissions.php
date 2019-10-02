@@ -1288,7 +1288,7 @@ class LOVD_API_Submissions {
 
 
 
-                    // Check next level of variation (cDNA), if present.
+                    // Check next level of variant (cDNA), if present.
                     if (isset($aVariant['seq_changes']) && isset($aVariant['seq_changes']['variant'])) {
                         // We collect the genes and transcripts annotated for this variant.
                         // If we cannot find *any* of the transcripts that are annotated for this variant, we throw an error.
@@ -1454,7 +1454,7 @@ class LOVD_API_Submissions {
 
 
 
-                            // Check next level of variation (RNA or Protein), if present.
+                            // Check next level of variant (RNA or Protein), if present.
                             if (isset($aVariantLevel2['seq_changes']) && isset($aVariantLevel2['seq_changes']['variant'])) {
                                 foreach ($aVariantLevel2['seq_changes']['variant'] as $iVariantLevel3 => $aVariantLevel3) {
                                     $nVariantLevel3 = $iVariantLevel3 + 1; // We start counting at 1, like most humans do.
@@ -1493,7 +1493,7 @@ class LOVD_API_Submissions {
 
 
 
-                                    // Check next level of variation (only AA allowed, only if this variant was RNA).
+                                    // Check next level of variant (only AA allowed, only if this variant was RNA).
                                     if (isset($aVariantLevel3['seq_changes']) && isset($aVariantLevel3['seq_changes']['variant'])) {
                                         // If the previous level was already AA, we should not be seeing any children, actually.
 

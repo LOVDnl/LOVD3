@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2019-09-05
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -159,8 +159,8 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'd.*, ' .
-                                           '(SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i2d.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') AS individuals, ' .
-                                           '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
+                                           '(SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i2d.diseaseid = d.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') AS individuals, ' .
+                                           '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
                                            'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -172,8 +172,8 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'd.*, d.id AS diseaseid, ' .
-                                          '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
-                                          '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
+                                          '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
+                                          '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
                                           'COUNT(g2d.geneid) AS gene_count, ' .
                                           'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
@@ -201,10 +201,10 @@ class LOVD_Disease extends LOVD_Object {
                         'tissues' => 'Associated tissues',
                         'features' => 'Disease features',
                         'remarks' => 'Remarks',
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       );
 
         // List of columns and (default?) order for viewing a list of entries.

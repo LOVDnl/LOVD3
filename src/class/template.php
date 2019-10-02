@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2019-08-29
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -648,7 +648,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         }
         list($nWidth, $nHeight, $sType, $sSize) = $aImage;
         print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($nHeight + 5) . '">' . "\n" .
-              '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
+              '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . ' style="margin-right: 20px;">' . "\n" .
               '    </TD>' . "\n");
 
         print('    <TD valign="top" style="padding-top : 2px; white-space : nowrap; width : 100%">' . "\n" .
@@ -831,7 +831,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // Measure the height of the sticky header (can depend on announcements or
         // font settings and such), and adapt the menu table to have a margin of this height.
         print('<SCRIPT type="text/javascript">' . "\n" .
-              '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+              '  $("table.logo").eq(1).css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
               '</SCRIPT>' . "\n\n");
 
         // Attach dropdown menus.

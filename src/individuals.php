@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2019-08-27
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -121,7 +121,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             $aNavigation['phenotypes?create&amp;target=' . $nID] = array('menu_plus.png', 'Add phenotype information to individual', 1);
         }
         $aNavigation['screenings?create&amp;target=' . $nID]     = array('menu_plus.png', 'Add screening to individual', 1);
-        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+        if ($_AUTH['level'] >= $_SETT['user_level_settings']['delete_individual']) {
             $aNavigation[CURRENT_PATH . '?delete']               = array('cross.png', 'Delete individual entry', 1);
         }
     }
@@ -522,7 +522,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     // FIXME: What if individual also contains other user's data?
     lovd_isAuthorized('individual', $nID);
-    lovd_requireAUTH(LEVEL_CURATOR);
+    lovd_requireAUTH($_SETT['user_level_settings']['delete_individual']);
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();

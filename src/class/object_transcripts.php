@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2019-08-28
+ * Modified    : 2019-10-01
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,7 +52,7 @@ class LOVD_Transcript extends LOVD_Object {
 
     function __construct ()
     {
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         // Default constructor.
 
@@ -81,7 +81,7 @@ class LOVD_Transcript extends LOVD_Object {
         if (!LOVD_plus) {
             // Speed optimization by skipping variant counts.
             $this->aSQLViewList['SELECT'] .= ', ' .
-                'COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 'vot.id' : 'vog.id') . ') AS variants';
+                'COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants';
         }
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
@@ -90,7 +90,7 @@ class LOVD_Transcript extends LOVD_Object {
                                             'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
                                             // If user is less than a collaborator, only show public variants and
                                             // variants owned/created by him.
-                                            ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                            ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                                                 'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
                                                     '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
                                                     (!$_AUTH? '' :
@@ -113,10 +113,10 @@ class LOVD_Transcript extends LOVD_Object {
                         'id_protein_uniprot' => 'Protein - Uniprot ID',
                         'exon_table' => 'Exon/intron information',
                         'remarks' => 'Remarks',
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
