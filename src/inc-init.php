@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-10-02
- * For LOVD    : 3.0-22
+ * Modified    : 2019-11-06
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -149,7 +149,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-22',
+                            'version' => '3.0-22b',
                           ),
                 'user_levels' =>
                      array(
@@ -620,6 +620,8 @@ $_TABLES =
                 'TABLE_LOGS' => TABLEPREFIX . '_logs',
                 'TABLE_MODULES' => TABLEPREFIX . '_modules',
                 'TABLE_SCHEDULED_IMPORTS' => TABLEPREFIX . '_scheduled_imports',
+                'TABLE_SUMMARY_ANNOTATIONS' => TABLEPREFIX . '_summary_annotations',
+                'TABLE_SUMMARY_ANNOTATIONS_REV' => TABLEPREFIX . '_summary_annotations_revisions',
               );
 
 foreach ($_TABLES as $sConst => $sTable) {

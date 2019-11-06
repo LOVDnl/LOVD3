@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2019-11-06
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -87,6 +87,7 @@ $aColSQL =
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Protein",                  7, 200, 1, 1, 1, "Protein",              "", "Description of variant at protein level (following HGVS recommendations).", "Description of variant at protein level (following HGVS recommendations).<BR>\r\n<UL style=\"margin-top : 0px;\">\r\n  <LI>p.(Arg345Pro) = change predicted from DNA (RNA not analysed)</LI>\r\n  <LI>p.Arg345Pro = change derived from RNA analysis</LI>\r\n  <LI>p.? = unknown effect</LI>\r\n  <LI>p.0? = probably no protein produced</LI>\r\n</UL>", "VARCHAR(255)", "Protein change (HGVS format)|Description of variant at protein level (following HGVS recommendations); e.g. p.(Arg345Pro) = change predicted from DNA (RNA not analysed), p.Arg345Pro = change derived from RNA analysis, p.0 (no protein produced), p.? (unknown effect).|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/Published_as",             4, 200, 0, 0, 0, "Published as",         "Variant as originally reported (e.g. 521delT); provide only when different from \"DNA change\".", "Variant as originally reported (e.g. 521delT); listed only when different from \"DNA change\". Variants seen in animal models, tested in vitro, predicted from RNA analysis, etc. are described between brackets like c.(456C>G).", "Variant as originally reported (e.g. 521delT); listed only when different from \"DNA change\". Variants seen in animal models, tested in vitro, predicted from RNA analysis, etc. are described between brackets like c.(456C>G).", "VARCHAR(100)", "Published as|Variants seen in animal models, tested in vitro, predicted from RNA analysis, etc. are described between brackets like c.(456C>G).|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
                 'INSERT INTO ' . TABLE_COLS . ' VALUES ("VariantOnTranscript/RNA",                      6, 200, 1, 1, 1, "RNA change",           "", "Description of variant at RNA level (following HGVS recommendations).", "Description of variant at RNA level (following HGVS recommendations).<BR>\r\n<UL style=\"margin-top : 0px;\">\r\n  <LI>r.123c>u</LI>\r\n  <LI>r.? = unknown</LI>\r\n  <LI>r.(?) = RNA not analysed but probably transcribed copy of DNA variant</LI>\r\n  <LI>r.spl? = RNA not analysed but variant probably affects splicing</LI>\r\n  <LI>r.(spl?) = RNA not analysed but variant may affect splicing</LI>\r\n  <LI>r.0? = change expected to abolish transcription</LI>\r\n</UL>", "VARCHAR(100)", "RNA change (HGVS format)|Description of variant at RNA level (following HGVS recommendations); e.g. r.123c>u, r.? = unknown, r.(?) = RNA not analysed but probably transcribed copy of DNA variant, r.spl? = RNA not analysed but variant probably affects splicing, r.(spl?) = RNA not analysed but variant may affect splicing.|text|30", "", "", 1, 1, 1, 0, NOW(), NULL, NULL)',
+                'INSERT INTO ' . TABLE_COLS . ' VALUES ("SummaryAnnotation/Remarks",                    1, 200, 0, 1, 0, "Variant remarks",      "", "Remarks regarding the variant described, independent of a specific observation.", "Remarks regarding the variant described, independent of a specific observation, e.g. 345 kb deletion, association with disease from other studies, etc.", "TEXT", "Remarks||textarea|50|3", "", "", 1, 0, 1, 0, NOW(), NULL, NULL)',
               );
 
 if (LOVD_plus) {
