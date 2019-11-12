@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2019-11-12
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1118,6 +1118,14 @@ function lovd_getTableInfoByCategory ($sCategory)
                     'table_alias' => 'vot',
                     'shared' => true,
                     'unit' => 'gene', // Is also used to determine the key (geneid).
+                ),
+            'SummaryAnnotation' =>
+                array(
+                    'table_sql' => TABLE_SUMMARY_ANNOTATIONS,
+                    'table_sql_rev' => TABLE_SUMMARY_ANNOTATIONS_REV,
+                    'table_name' => 'Summary Annotations',
+                    'shared' => false,
+                    'unit' => '',
                 ),
         );
     if (!array_key_exists($sCategory, $aTables)) {

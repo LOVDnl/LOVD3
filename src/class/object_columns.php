@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2019-11-12
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -200,8 +200,8 @@ class LOVD_Column extends LOVD_Object {
         parent::checkFields($aData, $zData, $aOptions);
 
         // Category; not chosen on this form, but we want to make sure it's correct anyways.
-        if (!empty($aData['category']) && !in_array($aData['category'], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
-            lovd_errorAdd('category', 'The category is not correct. Please choose one of the following: Individual, Phenotype, Screening, VariantOnGenome or VariantOnTranscript.');
+        if (!empty($aData['category']) && !in_array($aData['category'], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript', 'SummaryAnnotation'))) {
+            lovd_errorAdd('category', 'The category is not correct. Please choose one of the following: Individual, Phenotype, Screening, VariantOnGenome, VariantOnTranscript or SummaryAnnotation.');
         }
 
         // ColID format.
@@ -348,6 +348,12 @@ class LOVD_Column extends LOVD_Object {
                 $this->aFormData['public_view'][0] .= ' *';
                 $this->aFormData['public_add'][0] .= ' *';
                 $this->aFormData['apply_to_all'][0] = str_replace('{{ UNIT }}', 'genes', $this->aFormData['apply_to_all'][0]);
+                break;
+            case 'SummaryAnnotation':
+                unset($this->aFormData['settings_note']);
+                unset($this->aFormData['standard']);
+                unset($this->aFormData['apply_to_all']);
+                $this->aFormData['colid_note'][3] = str_replace('{{ EXAMPLE }}', 'Reference/PubMed', $this->aFormData['colid_note'][3]);
                 break;
         }
 

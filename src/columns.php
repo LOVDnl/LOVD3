@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2019-11-12
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -49,7 +49,7 @@ if (PATH_COUNT < 3 && !ACTION) {
 
     if (!empty($_PE[1])) {
         // FIXME; Is there a better way checking if it's a valid category?
-        if (in_array($_PE[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
+        if (in_array($_PE[1], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript', 'SummaryAnnotation'))) {
             // Category given.
             $_GET['search_category'] = $_PE[1];
             define('PAGE_TITLE', 'Browse ' . $_PE[1] . ' custom data columns');
@@ -87,7 +87,7 @@ if (PATH_COUNT < 3 && !ACTION) {
 
     } else {
         // Let users restrict their choices.
-        $aCategories = array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript');
+        $aCategories = array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript', 'SummaryAnnotation');
         foreach ($aCategories as $sCategory) {
             print('        <LI><A href="' . CURRENT_PATH . '/' . $sCategory . '">Show only ' . $sCategory . ' columns</A></LI>' . "\n");
         }
@@ -113,9 +113,7 @@ if (PATH_COUNT > 2 && !ACTION) {
     // URL: /columns/Phenotype/Blood_pressure/Systolic
     // View specific column.
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
+    $sColumnID = implode('/', array_slice($_PE, 1));
 
     define('PAGE_TITLE', 'Custom data column ' . $sColumnID);
     $_T->printHeader();
@@ -681,6 +679,10 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                     'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'VariantOnTranscript\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the variant(s) found, specific for the transcript level</B>, such as predicted effect on protein level',
                                   ),
+                             array(
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'SummaryAnnotation\'); $(\'#optionForm\').submit();',
+                                    'option_text' => '<B>Information on a variant, shared amongst all instances of that variant</B>, such as external IDs',
+                                  ),
                               ),
                   );
 
@@ -832,10 +834,8 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 
     define('TAB_SELECTED', 'setup');
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = substr($sColumnID, 0, strpos($sColumnID, '/'));
+    $sColumnID = implode('/', array_slice($_PE, 1));
+    $sCategory = $_PE[1];
 
     define('PAGE_TITLE', 'Edit custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColEdit');
@@ -1373,10 +1373,8 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     // URL: /columns/Phenotype/Blood_pressure/Systolic?add
     // Add specific column to the data table, and enable.
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = $aCol[1];
+    $sColumnID = implode('/', array_slice($_PE, 1));
+    $sCategory = $_PE[1];
 
     define('PAGE_TITLE', 'Add/enable custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColAdd');
@@ -1752,10 +1750,8 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     // URL: /columns/Phenotype/Blood_pressure/Systolic?remove
     // Disable specific custom column.
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = $aCol[1];
+    $sColumnID = implode('/', array_slice($_PE, 1));
+    $sCategory = $_PE[1];
 
     define('PAGE_TITLE', 'Remove custom data column ' . $sColumnID);
     define('LOG_EVENT', 'ColRemove');
@@ -2099,10 +2095,8 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
 
     define('TAB_SELECTED', 'setup');
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = $aCol[1];
+    $sColumnID = implode('/', array_slice($_PE, 1));
+    $sCategory = $_PE[1];
 
     $zData = $_DB->query('SELECT c.id, c.hgvs, c.head_column, ac.colid, c.created_by FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
 
