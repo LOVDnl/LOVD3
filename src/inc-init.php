@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-11-06
+ * Modified    : 2019-11-20
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -171,6 +171,9 @@ $_SETT = array(
                     'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
                     'set_concluded_effect' => (LOVD_plus? LEVEL_MANAGER : LEVEL_CURATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
+                    'summary_annotation_create' => (LOVD_plus? LEVEL_ANALYZER : LEVEL_CURATOR),
+                    'summary_annotation_edit' => (LOVD_plus? LEVEL_ANALYZER : LEVEL_CURATOR),
+                    'summary_annotation_view_history' => LEVEL_SUBMITTER,
                 ),
                 'gene_imprinting' =>
                      array(
