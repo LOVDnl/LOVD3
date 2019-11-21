@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2019-11-21
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -67,6 +67,7 @@ $aNeededLevel =
                 'Screening' => 0,
                 'ScreeningMOD' => 0, // LOVD+
                 'Shared_Column' => LEVEL_CURATOR,
+                'Summary_Annotation_REV' => $_SETT['user_level_settings']['summary_annotation_view_history'],
                 'Transcript' => 0,
                 'Transcript_Variant' => 0,
                 'User' => LEVEL_SUBMITTER, // Certain fields will be forcefully removed, though.

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2019-11-21
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -155,7 +155,9 @@ class LOVD_Custom extends LOVD_Object {
         parent::__construct();
 
         // Hide entries that are not marked or public.
-        if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+        // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+        if ($this->sCategory != 'SummaryAnnotation'
+            && $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
             if (in_array($this->sCategory, array('VariantOnGenome', 'VariantOnTranscript'))) {
                 $sAlias = 'vog';
             } else {
