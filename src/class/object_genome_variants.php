@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2019-12-18
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -71,6 +71,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                            'a.name AS allele_, ' .
                                            'GROUP_CONCAT(DISTINCT i.id, ";", i.statusid SEPARATOR ";;") AS __individuals, ' .
                                            'GROUP_CONCAT(s2v.screeningid SEPARATOR "|") AS screeningids, ' .
+                                           'sa.id AS summaryannotationid, ' .
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -79,6 +80,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
                                            'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_SUMMARY_ANNOTATIONS . ' AS sa ON (vog.`VariantOnGenome/DBID` = sa.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vog.edited_by = ue.id)';
@@ -476,6 +478,7 @@ class LOVD_GenomeVariant extends LOVD_Custom {
 
             if (!empty($zData['VariantOnGenome/DBID'])) {
                 // Allow linking to view of all these variants.
+                $zData['DBID'] = $zData['VariantOnGenome/DBID']; // Save a copy.
                 $sQ = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE chromosome = ? AND `VariantOnGenome/DBID` = ?';
                 $aArgs = array($zData['chromosome'], $zData['VariantOnGenome/DBID']);
                 if ($_AUTH['level'] < LEVEL_CURATOR) {

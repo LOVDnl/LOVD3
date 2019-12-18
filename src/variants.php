@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2019-12-18
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -386,6 +386,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 <?php
 
     lovd_isAuthorized('variant', $nID);
+    print('      <TABLE cellpadding="0" cellspacing="0" border="0">
+        <TR>
+          <TD valign="top">' . "\n");
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->viewEntry($nID);
@@ -459,9 +462,55 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     }
     lovd_showJGNavigation($aNavigation, 'Variants');
 
-    print('      <BR><BR>' . "\n\n" .
-          '      <DIV id="viewentryDiv">' . "\n" .
-          '      </DIV>' . "\n\n");
+    print('
+          </TD>
+          <TD valign="top" id="summary_annotation_view_entry" style="padding-left: 10px;">' . "\n\n\n");
+    // RIGHT COLUMN on the variant view entry.
+
+    // Load the variant data so as we can search by the DBID.
+    $sDBID = $zData['DBID'];
+    if ($zData['summaryannotationid']) {
+        $sSummaryAnnotationsID = $zData['summaryannotationid'];
+        // Checks if there is an existing summary annotation record.
+        require ROOT_PATH . 'class/object_summary_annotations.php';
+        $_DATA = new LOVD_SummaryAnnotation();
+        $zData = $_DATA->viewEntry($sSummaryAnnotationsID);
+
+        $aNavigation = array();
+        if ($_AUTH) {
+            if ($_AUTH['level'] >= $_SETT['user_level_settings']['summary_annotation_edit']) {
+                $aNavigation['summary_annotations/' . $sSummaryAnnotationsID . '?edit&redirect_to=' . $nID . (isset($_GET['in_window'])? '&amp;in_window' : '')] = array('menu_edit.png', 'Edit summary annotation record', 1);
+            }
+            if ($_AUTH['level'] >= $_SETT['user_level_settings']['summary_annotation_view_history']) {
+                $aNavigation['summary_annotations/' . $sSummaryAnnotationsID . '?history' . (isset($_GET['in_window'])? '&amp;in_window' : '')]                  = array('menu_clock.png', 'View history of this record', 1);
+            }
+        }
+        lovd_showJGNavigation($aNavigation, 'SummaryAnnotations');
+        print('            <BR>' . "\n\n");
+
+    } elseif ($_AUTH['level'] >= $_SETT['user_level_settings']['summary_annotation_create']) {
+        // When there is no SAR and you don't have the right to create one, just do nothing.
+        // Otherwise, show a button that can be used to create a new summary annotation record.
+        $sSummaryAnnotationsID = '';
+        print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="400">' . "\n" .
+              '              <TR>' . "\n" .
+              '                <TH colspan="2">Summary annotations</TH>' . "\n" .
+              '              </TR>' . "\n" .
+              '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'summary_annotations/' . $sDBID . '?create&redirect_to=' . $nID . (isset($_GET['in_window'])? '&in_window' : '') . '\';">' . "\n" .
+              '                <TD align="center" width="40"><IMG src="gfx/lovd_variants_create.png" alt="Summary annotations" width="32" height="32"></TD>' . "\n" .
+              '                <TD>Annotations that may be applicable to any instance of a particular variant can be stored in a summary annotation record. Click here to create a summary annotation record for this variant.</TD>' . "\n" .
+              '              </TR>' . "\n" .
+              '            </TABLE><BR><BR>' . "\n\n");
+    }
+
+    print('
+          </TD>
+        </TR>
+      </TABLE><BR><BR>
+  
+  
+      <DIV id="viewentryDiv">
+      </DIV>' . "\n\n");
 
     $_GET['search_id_'] = $nID;
     print('      <BR><BR>' . "\n\n");
