@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2019-12-18
+ * Modified    : 2019-12-19
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -502,6 +502,44 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
               '              </TR>' . "\n" .
               '            </TABLE><BR><BR>' . "\n\n");
     }
+
+
+
+    // Table to display the number of variant observations with the same DBID for each classification.
+    $sSQLCount = 'SELECT
+                    LEFT(e.id, 1) AS id,
+                    (SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.`VariantOnGenome/DBID` = ? AND LEFT(vog.effectid, 1) = LEFT(e.id, 1)) AS reported,
+                    (SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.`VariantOnGenome/DBID` = ? AND RIGHT(vog.effectid, 1) = LEFT(e.id, 1)) AS concluded
+                  FROM ' . TABLE_EFFECT . ' AS e GROUP BY LEFT(e.id, 1)';
+    $aClassificationsCount = $_DB->query($sSQLCount, array($sDBID, $sDBID))->fetchAllGroupAssoc();
+
+    print('
+            <H4 class="LOVD">Classifications for all observations of this variant</H4>
+            <TABLE width="600" class="data">
+              <TR>
+                <TH>Classification</TH>
+                <TH>' . (LOVD_plus? 'Proposed' : 'Reported') . '</TH>
+                <TH>' . (LOVD_plus? 'Final' : 'Concluded') . '</TH>
+              </TR>');
+    // We want to always print the classification rows in the same order as stored in $_SETT.
+    foreach ($_SETT['var_effect'] as $sClassificationID => $sClassification) {
+        if (!array_sum($aClassificationsCount[$sClassificationID])) {
+            // No observations fall in this category. Save space by removing this line.
+            continue;
+        }
+        print('
+              <TR>
+                <TD>'. $sClassification . '</TD>');
+        foreach (array('reported', 'concluded') as $sType) {
+            print('
+                <TD>' . $aClassificationsCount[$sClassificationID][$sType] . '</TD>');
+        }
+        print('
+              </TR>');
+    }
+    print('</TABLE>' . "\n\n");
+
+
 
     print('
           </TD>
