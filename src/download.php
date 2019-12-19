@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2019-07-25
- * For LOVD    : 3.0-22
+ * Modified    : 2019-12-19
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -171,8 +171,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sFileName = 'custom_columns';
         $sHeader = 'Custom column';
         lovd_requireAuth(LEVEL_MANAGER);
-    } elseif ($_PE[1] == 'columns' && in_array($_PE[2], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
-        // FIXME; Is there a better way checking if it's a valid category?
+    } elseif ($_PE[1] == 'columns' && lovd_getTableInfoByCategory($_PE[2]) !== false) {
         // Category given.
         $sFileName = 'custom_columns_' . $_PE[2];
         $sHeader = 'Custom column';

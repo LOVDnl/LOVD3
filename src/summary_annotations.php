@@ -59,7 +59,7 @@ if (PATH_COUNT == 2 && ACTION == 'create') {
     // For redirection.
     $nIDToRedirectTo = (empty($_REQUEST['redirect_to'])? 0 : $_REQUEST['redirect_to']);
 
-    lovd_requireAUTH($_SETT['user_level_settings']['summary_annotation_create']); // FIXME; authorize curators.
+    lovd_requireAUTH($_SETT['user_level_settings']['summary_annotation_create']);
 
     require ROOT_PATH . 'class/object_summary_annotations.php';
     $_DATA = new LOVD_SummaryAnnotation();
