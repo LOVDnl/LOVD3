@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-02-13
- * For LOVD    : 3.0-22
+ * Modified    : 2019-12-19
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -374,7 +374,7 @@ class LOVD_User extends LOVD_Object {
                         'hr',
                         array('Country', '', 'select', 'countryid', 1, $aCountryList, true, false, false),
                         array('City', 'Please enter your city, even if it\'s included in your postal address, for sorting purposes.', 'text', 'city', 30),
-                        array('Reference (optional)', 'Your submissions will contain a reference to you in the format "Country:City" by default. You may change this to your preferred reference here.', 'text', 'reference', 30),
+         'reference' => array('Reference (optional)', 'Your submissions will contain a reference to you in the format "Country:City" by default. You may change this to your preferred reference here.', 'text', 'reference', 30),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Security</B>'),
@@ -425,6 +425,9 @@ class LOVD_User extends LOVD_Object {
                 unset($this->aFormData['change_self']);
             }
         }
+        // Unused, don't let it confuse users.
+        unset($this->aFormData['reference']);
+
         if (LOVD_plus && isset($this->aFormData['level'])) {
             $this->aFormData['level'][1] = ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Analyzers</B> can analyze individuals that are not analyzed yet by somebody else, but can not send variants for confirmation.<BR><B>Read-only</B> users can only see existing data in LOVD+, but can not start or edit any analyses or data.';
         }
