@@ -5,6 +5,16 @@
  *************/
 
 /***************************
+ * 3.0 Build 23
+ * 2020-??-??
+ *********/
+ * Added the summary annotation record feature; Curators and up may now store
+   annotations to variants, independent of the observation. These annotations
+   will show up for every observation of the variant. Examples of annotations
+   are external IDs or information on the clinical significance of the variant.
+
+
+/***************************
  * 3.0 Build 22 (tag:3.0-22)
  * 2019-10-02
  *********/
