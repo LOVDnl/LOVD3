@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2019-10-01
+ * Modified    : 2019-12-19
  * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,10 +42,10 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Phenotype extends LOVD_Custom {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Phenotype extends LOVD_Custom
+{
+    // This class extends the Custom class and it handles the Phenotypes.
     var $sObject = 'Phenotype';
-    var $bShared = true;
 
 
 
@@ -55,11 +55,6 @@ class LOVD_Phenotype extends LOVD_Custom {
     {
         // Default constructor.
         global $_SETT;
-
-        if (LOVD_plus) {
-            // We don't have shared custom columns in LOVD+.
-            $this->bShared = false;
-        }
 
         // SQL code for loading an entry for an edit form.
         // FIXME; change owner to owned_by_ in the load entry query below.
