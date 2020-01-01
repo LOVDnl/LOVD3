@@ -41,8 +41,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_User extends LOVD_Object {
-    // This class extends the basic Object class and it handles the User object.
+class LOVD_User extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Users.
     var $sObject = 'User';
 
 

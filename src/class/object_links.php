@@ -7,7 +7,7 @@
  * Modified    : 2017-10-26
  * For LOVD    : 3.0-17
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -41,8 +41,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Link extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Link extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Links.
     var $sObject = 'Link';
 
 

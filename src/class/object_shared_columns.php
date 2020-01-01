@@ -7,7 +7,7 @@
  * Modified    : 2018-01-26
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -40,8 +40,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_SharedColumn extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Column object.
+class LOVD_SharedColumn extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Shared Columns.
     var $sObject = 'Shared_Column';
     var $sTable  = 'TABLE_SHARED_COLS';
     var $aTableInfo = array(); // Info about the type of custom column (VOT or Phenotype).

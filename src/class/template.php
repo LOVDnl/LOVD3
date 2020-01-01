@@ -40,7 +40,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_Template {
+class LOVD_Template
+{
     // This class provides the code necessary to view the headers and footers.
     // It's replacing inc-top.php, inc-top-clean.php, inc-bot.php, inc-bot-clean.php,
     //   and the lovd_printHeader() function from inc-lib-init.php.

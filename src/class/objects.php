@@ -38,9 +38,10 @@ if (!defined('ROOT_PATH')) {
 }
 
 
-class LOVD_Object {
-    // This class is the base class which is inherited by other object classes.
-    // It provides basic functionality for setting up forms and showing data.
+class LOVD_Object
+{
+    // This class is the base class which is inherited by all other object classes.
+    // It provides functionality for setting up forms and for showing, checking, inserting, updating and deleting data.
     var $sObject = '';
     var $sTable = '';
     var $aFormData = array();
