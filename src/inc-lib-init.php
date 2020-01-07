@@ -108,7 +108,122 @@ function lovd_calculateVersion ($sVersion)
         return false;
     }
 }
+//T.S: changed so non lovd plus won't get false return 
+function lovd_verifyInstance ($sName, $bExact = true)
+{
+    // Check if this instance belongs to $sName instance group (LOVD+ feature).
+    // If $bExact is set to true, it will match the exact instance name instead
+    //  of matching just the prefix.
 
+    global $_INI;
+
+    // Only LOVD+ can have the instance name in the config file.
+    if (LOVD_plus || empty($_INI['instance']['name'])) {
+        return false;
+    }
+
+    if (strtolower($_INI['instance']['name']) == strtolower($sName)) {
+        return true;
+    }
+
+    if (!$bExact) {
+        if (strpos(strtolower($_INI['instance']['name']), strtolower($sName)) === 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+
+function lovd_getFilesFromDir ($sPath = '', $sPrefix = '', $aSuffixes = array())
+{
+    // Reads out the given path (defaults to the root path), collects all files and sorts them by the prefix.
+    // Returns an array with prefixes and their suffixes in a sub array.
+    //$aFiles =
+    //    array(
+    //        prefix =>
+    //            array(
+    //               suffix,
+    //                //suffix,
+    //             ),
+    //     );
+
+    $sPath = ($sPath?: ROOT_PATH);
+    $sPrefix = ($sPrefix?: '.+');
+    if (!is_array($aSuffixes) || !$aSuffixes) {
+        $aSuffixes = array('.+');
+    }
+
+    $aFiles = array();
+    // Loop through the files in the dir and try and find a meta and data file, that match but have no total data file.
+    $h = opendir($sPath);
+    if (!$h) {
+        return false;
+    }
+    while (($sFile = readdir($h)) !== false) {
+        if ($sFile{0} == '.') {
+            // Current dir, parent dir, and hidden files.
+            continue;
+        }
+        if (preg_match('/^(' . $sPrefix . ')\.(' . implode('|', array_values($aSuffixes)) . ')$/', $sFile, $aRegs)) {
+            //             1                                               2
+            // Files matching the pattern.
+            list(, $sFilePrefix, $sFileType) = $aRegs;
+            if (!isset($aFiles[$sFilePrefix])) {
+                $aFiles[$sFilePrefix] = array();
+            }
+            $aFiles[$sFilePrefix][] = $sFileType;
+        }
+    }
+
+    return $aFiles;
+}
+
+//T.S: Blocked code so it doesn't return false if not lovd plus
+function lovd_initAdapter()
+{
+    // Select adapter class to instantiate based on instance name.
+    // globaling $_INSTANCE_CONFIG is necessary to let it exist outside of this
+    //  function.
+    global $_INI, $_INSTANCE_CONFIG;
+
+//    if (!LOVD_plus) {
+//        return false;
+//  }
+
+    $sAdaptersDir = ROOT_PATH . 'scripts/adapters/';
+
+    // FIXME+: This adapter.lib file provides both settings and a class that is only used for data conversion.
+    //  This should be split; the data conversion class should only be included when needed, as a class file.
+    // We'll always include the default adapter. The default adapter contains
+    // settings which can be overridden, and the converter class that can be
+    // extended by a instance-specific class.
+    require_once $sAdaptersDir . 'adapter.lib.DEFAULT.php';
+
+    // Include the instance's adapter, if present.
+    $sInstanceName = strtoupper($_INI['instance']['name']);
+    if (file_exists($sAdaptersDir . 'adapter.lib.' . $sInstanceName . '.php')) {
+        require_once $sAdaptersDir . 'adapter.lib.' . $sInstanceName . '.php';
+    }
+
+    // Try and instantiate the instance's class, if present.
+    // Camelcase the adapter name.
+    $sClassPrefix = ucwords(strtolower(str_replace('_', ' ', $_INI['instance']['name'])));
+    $sClassPrefix = str_replace(' ', '', $sClassPrefix);
+    $sClassName = 'LOVD_' . $sClassPrefix . 'DataConverter';
+
+    // We don't require the instance's adapter to define any class, though.
+    if (class_exists($sClassName)) {
+        $zAdapter = new $sClassName($sAdaptersDir);
+    } else {
+        // If it's not available, we just use the default adapter.
+        $zAdapter = new LOVD_DefaultDataConverter($sAdaptersDir);
+    }
+
+    return $zAdapter;
+}
 
 
 

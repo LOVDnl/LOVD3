@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2019-01-22
- * For LOVD    : 3.0-22
+ * Modified    : 2016-09-14
+ * For LOVD    : 3.0-17
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
- *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -99,7 +99,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
                     if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
                         // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
                         $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
-                        return lovd_getGeneInfoFromHGNC($nHGNCID, $bRecursion);
+                        return lovd_getGeneInfoFromHGNC ($nHGNCID, $bRecursion);
                     } elseif (function_exists('lovd_errorAdd')) {
                         $sSymbols = '';
                         for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
@@ -117,7 +117,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
                             if ($aOutput['response']['numFound'] == 1 && $bRecursion) {
                                 // 2014-08-06; 3.0-11; HGNC *again* changed their output, and once again we need to adapt quickly.
                                 $nHGNCID = preg_replace('/[^0-9]+/', '', $aOutput['response']['docs'][0]['hgnc_id']);
-                                return lovd_getGeneInfoFromHGNC($nHGNCID, $bRecursion);
+                                return lovd_getGeneInfoFromHGNC ($nHGNCID, $bRecursion);
                             } elseif (function_exists('lovd_errorAdd')) {
                                 $sSymbols = '';
                                 for ($i = 0; $i < $aOutput['response']['numFound']; $i ++) {
@@ -184,7 +184,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
             'immunoglobulin gene',    // From group "other", none of them work (verified).
             'region',                 // From group "other", none of them work (verified).
             'transposable element',   // From group "other", none of them work (verified).
-//            'unknown',                // From group "other", none of them work (verified). // 2015-01-19 C1orf195 from this group works for me...
+            'unknown',                // From group "other", none of them work (verified).
             'virus integration site', // From group "other", none of them work (verified).
             'immunoglobulin pseudogene', // From group "pseudogene", none of them work (verified).
         );
@@ -217,7 +217,7 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
         // 2016-09-14; 3.0-17; HGNC can actually return multiple OMIM IDs,
         //  take just the first one.
         if (!isset($aGene[$sCol])) {
-            $aGene[$sCol] = NULL;
+            $aGene[$sCol] = '';
         } elseif (is_array($aGene[$sCol])) {
             $aGene[$sCol] = $aGene[$sCol][0];
         }
@@ -284,7 +284,7 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
             $aColumns[] = 'gd_app_name';
         }
     }
-    $aHgncFile = lovd_php_file('https://www.genenames.org/cgi-bin/download/custom?' . $sColumns . 'status=Approved&status=Entry%20Withdrawn&where=' . $sWhere . '&order_by=gd_app_sym_sort&format=text&submit=submit');
+    $aHgncFile = lovd_php_file('http://www.genenames.org/cgi-bin/download?' . $sColumns . 'status_opt=2&where=' . $sWhere . '&order_by=gd_app_sym_sort&limit=&format=text&submit=submit');
 
     // If the HGNC is having database problems, we get an HTML page.
     if (empty($aHgncFile) || stripos(implode($aHgncFile), '<html') !== false) {
@@ -310,15 +310,6 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
             foreach (array_diff($aColumns, $aCols) as $sUnwantedColumn) {
                 // Don't return columns the caller hasn't asked for.
                 unset($aHGNCgenes[$sSymbol][$sUnwantedColumn]);
-            }
-
-            // 2017-06-16; 3.0-19; Also clean bulk downloads for multiple OMIM IDs,
-            //  and set to NULL when empty (for strict mode).
-            if (empty($aHGNCgenes[$sSymbol]['md_mim_id'])) {
-                $aHGNCgenes[$sSymbol]['md_mim_id'] = NULL;
-            } elseif (preg_match('/^(\d+), /', $aHGNCgenes[$sSymbol]['md_mim_id'], $aRegs)) {
-                // Just trim the other(s) off.
-                $aHGNCgenes[$sSymbol]['md_mim_id'] = $aRegs[1];
             }
         }
         return $aHGNCgenes;
@@ -397,14 +388,50 @@ function lovd_getGeneInfoFromHgncOld ($sHgncId, $aCols, $bRecursion = false)
 }
 
 
-
-
-
 function lovd_getUDForGene ($sBuild, $sGene)
 {
     // Retrieves an UD for any given gene and genome build.
     // In principle, any build is supported, but we'll check against the available builds supported in LOVD.
-    global $_SETT;
+    global $_CONF, $_SETT;
+
+    if (!$sBuild || !is_string($sBuild) || !isset($_SETT['human_builds'][$sBuild])) {
+        return false;
+    }
+
+    if (!$sGene || !is_string($sGene)) {
+        return false;
+    }
+
+    $sUD = '';
+    //Here the variable dog is made as sliceChromosomeByGene needs organism dog.
+    $sOrganism = 'dog';
+    // Let's get the mapping information.
+    $sJSONResponse = implode('', file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism=' . $sOrganism . '&upStream=' . 5000 . '&downStream=' . 2000));
+    //$sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . 'sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sBuild . '&upStream=' . 5000 . '$downStream=' . 2000));
+    
+    //If curl is installed on the computer and json is not working, activate this part below.
+    //$sUpstream = 5000;
+    //$sDownstream = 2000;
+    //$ch=curl_init('https://mutalyzer.nl/json/sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sOrganism . '&upStream=' . $sUpstream . '&downStream=' . $sDownstream);
+    //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //$sJSONResponse=curl_exec($ch);
+    
+
+    // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but file_get_contents() just returns false.
+    if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
+        $sResponse = (!is_array($aResponse)? $aResponse : implode("", $aResponse));
+        $sUD = $sResponse;
+    }
+
+    return $sUD;
+}
+
+/*
+function lovd_getUDForGene ($sBuild, $sGene)
+{
+    // Retrieves an UD for any given gene and genome build.
+    // In principle, any build is supported, but we'll check against the available builds supported in LOVD.
+    global $_CONF, $_SETT;
 
     if (!$sBuild || !is_string($sBuild) || !isset($_SETT['human_builds'][$sBuild])) {
         return false;
@@ -417,15 +444,27 @@ function lovd_getUDForGene ($sBuild, $sGene)
     $sUD = '';
 
     // Let's get the mapping information.
-    $aResponse = lovd_callMutalyzer('getGeneLocation', array('build' => $sBuild, 'gene' => $sGene));
-    // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but lovd_callMutalyzer() just returns false.
-    if ($aResponse) {
-        $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
-        $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
-        $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
-        $sUD = lovd_callMutalyzer('sliceChromosome', array('chromAccNo' => $sChromosome, 'start' => $nStart, 'end' => $nEnd, 'orientation' => ($aResponse['orientation'] == 'forward'? 1 : 2)));
+    //$sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $sBuild . '&gene=' . $sGene));
+    //$ch=curl_init('https://mutalyzer.nl/json/getGeneLocation?build=' . $sBuild . '&gene='. $sGene);
+    //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //$sJSONResponse=curl_exec($ch);
+    
+    // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but file_get_contents() just returns false.
+    //$sJSONResponse = @implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . 'sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sBuild . '&upStream' . 5000 . '$downStream' . 2000));
+    //$sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
+    $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
+    $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
+    $sJSONResponse = implode("\n", lovd_php_file(str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . 'sliceChromosomeByGene?geneSymbol=' . $sGene . '&organism='. $sBuild . '&start=' . $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2)));
+        
+        //$ch=curl_init('https://mutalyzer.nl/json/sliceChromosome?chromAccNo=' . $sChromosome . '&start='. $nStart . '&end=' . $nEnd . '&orientation=' . ($aResponse['orientation'] == 'forward'? 1 : 2));
+        //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        //$sJSONResponse=curl_exec($ch);
+        
+    if ($sJSONResponse && $aResponse = json_decode($sJSONResponse, true)) {
+        $sResponse = (!is_array($aResponse)? $aResponse : implode('', $aResponse));
+        $sUD = $sResponse;
     }
 
     return $sUD;
-}
+}*/
 ?>

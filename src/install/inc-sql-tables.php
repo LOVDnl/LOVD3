@@ -116,10 +116,10 @@ $aTableSQL =
         , 'TABLE_CHROMOSOMES' =>
    'CREATE TABLE ' . TABLE_CHROMOSOMES . ' (
     name VARCHAR(2) NOT NULL,
-    sort_id TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
+    sort_id TINYINT(3) UNSIGNED NOT NULL,
     hg18_id_ncbi VARCHAR(20) NOT NULL,
     hg19_id_ncbi VARCHAR(20) NOT NULL,
-    hg38_id_ncbi VARCHAR(20) NOT NULL,
+    CanF_id_ncbi VARCHAR(20) NOT NULL,
     PRIMARY KEY (name))
     ' . $sSettings
 
@@ -654,14 +654,14 @@ $aTableSQL =
 
          , 'TABLE_CONFIG' =>
    'CREATE TABLE ' . TABLE_CONFIG . ' (
-    system_title VARCHAR(255) NOT NULL DEFAULT "LOVD - Leiden Open Variation Database",
-    institute VARCHAR(255) NOT NULL DEFAULT "",
-    location_url VARCHAR(255) NOT NULL DEFAULT "",
-    email_address VARCHAR(75) NOT NULL DEFAULT "",
-    send_admin_submissions BOOLEAN NOT NULL DEFAULT 0,
-    api_feed_history TINYINT(2) UNSIGNED NOT NULL DEFAULT 0,
-    refseq_build VARCHAR(4) NOT NULL DEFAULT "hg38",
-    proxy_host VARCHAR(255) NOT NULL DEFAULT "",
+    system_title VARCHAR(255) NOT NULL,
+    institute VARCHAR(255) NOT NULL,
+    location_url VARCHAR(255) NOT NULL,
+    email_address VARCHAR(75) NOT NULL,
+    send_admin_submissions BOOLEAN NOT NULL,
+    api_feed_history TINYINT(2) UNSIGNED NOT NULL,
+    refseq_build VARCHAR(10) NOT NULL,
+    proxy_host VARCHAR(255) NOT NULL,
     proxy_port SMALLINT(5) UNSIGNED,
     proxy_username VARCHAR(255) NOT NULL DEFAULT "",
     proxy_password VARCHAR(255) NOT NULL DEFAULT "",

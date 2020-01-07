@@ -127,7 +127,7 @@ define('MAPPING_DONE', 32);             // FIXME; Create a button in Setup which
 define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 
 // Diagnostics: To make it easier to share certain code between
-// LOVD and LOVD+, simply define if we're active or not.
+// LOVD and LOVD+, simply define if we're active or not. 
 @define('LOVD_plus', false);
 
 // For the installation process (and possibly later somewhere else, too).
@@ -413,6 +413,53 @@ $_SETT = array(
                                                             'M'  => 'NC_012920.1',
                                                           ),
                                           ),
+                            'canFam3' =>
+                                        array(
+                                            'ncbi_name'      => 'CanFam3.1',
+                                            'ncbi_sequences' =>
+                                                     array(
+                                                            '1'  => 'NC_006583.3',
+                                                            '2'  => 'NC_006584.3',
+                                                            '3'  => 'NC_006585.3',
+                                                            '4'  => 'NC_006586.3',
+                                                            '5'  => 'NC_006587.3',
+                                                            '6'  => 'NC_006588.3',
+                                                            '7'  => 'NC_006589.3',
+                                                            '8'  => 'NC_006590.3',
+                                                            '9'  => 'NC_006591.3',
+                                                            '10' => 'NC_006592.3',
+                                                            '11' => 'NC_006593.3',
+                                                            '12' => 'NC_006594.3',
+                                                            '13' => 'NC_006595.3',
+                                                            '14' => 'NC_006596.3',
+                                                            '15' => 'NC_006597.3',
+                                                            '16' => 'NC_006598.3',
+                                                            '17' => 'NC_006599.3',
+                                                            '18' => 'NC_006600.3',
+                                                            '19' => 'NC_006601.3',
+                                                            '20' => 'NC_006602.3',
+                                                            '21' => 'NC_006603.3',
+                                                            '22' => 'NC_006604.3',
+                                                            '23' => 'NC_006605.3',
+                                                            '24' => 'NC_006606.3',
+                                                            '25' => 'NC_006607.3',
+                                                            '26' => 'NC_006608.3',
+                                                            '27' => 'NC_006609.3',
+                                                            '28' => 'NC_006610.3',
+                                                            '29' => 'NC_006611.3',
+                                                            '30' => 'NC_006612.3',
+                                                            '31' => 'NC_006613.3',
+                                                            '32' => 'NC_006614.3',
+                                                            '33' => 'NC_006615.3',
+                                                            '34' => 'NC_006616.3',
+                                                            '35' => 'NC_006617.3',
+                                                            '36' => 'NC_006618.3',
+                                                            '37' => 'NC_006619.3',
+                                                            '38' => 'NC_006620.3',
+                                                            'X'  => 'NC_006621.3',
+                                                            'M'  => 'NC_002008.4',
+                                                          ),
+                                          ),
                     ),
                 // Mitochondrial aliases. The key is the gene symbol used by HGNC, the value is the gene symbol used by NCBI.
                 'mito_genes_aliases' =>
@@ -657,6 +704,10 @@ if ($_INI['database']['driver'] == 'mysql') {
     // Can't happen.
     exit;
 }
+//T.S: Added function lovd_initAdapter but not on lovd plus version
+if (!LOVD_plus) {
+    $_ADAPTER = lovd_initAdapter();
+}
 
 
 
@@ -820,7 +871,7 @@ if (!defined('NOT_INSTALLED')) {
     foreach ($_PE as $key => $val) {
         if ($val !== strip_tags($val)) {
             $_PE[$key] = '';
-        }
+       }
     }
     if (isset($_SETT['objectid_length'][$_PE[0]]) && isset($_PE[1]) && ctype_digit($_PE[1])) {
         $_PE[1] = sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
