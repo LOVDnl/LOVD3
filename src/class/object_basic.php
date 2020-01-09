@@ -7,7 +7,7 @@
  * Modified    : 2016-04-29
  * For LOVD    : 3.0-15
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2016-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -35,9 +35,13 @@ require_once ROOT_PATH . 'class/objects.php';
 
 class LOVD_Basic extends LOVD_Object
 {
-    // "Basic" LOVD object to be used for entities within the LOVD system that
-    // do not have user interface related metadata, but which provides access
-    // to useful methods such as checkFields().
+    // This class extends the basic Object class and it gives quick access to the Object class' methods,
+    // such as insertEntry(). In practice, this method is only used in import.php for the linking objects
+    // (Genes_To_Diseases, Individuals_To_Diseases, Screenings_To_Genes, Screenings_To_Variants)
+    // to get them inserted into the database.
+
+
+
 
 
     function __construct($sTable)

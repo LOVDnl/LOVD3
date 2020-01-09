@@ -7,7 +7,7 @@
  * Modified    : 2017-10-26
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -40,9 +40,10 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Announcement extends LOVD_Object {
-// This class extends the basic Object class and it handles the Announcement object.
-var $sObject = 'Announcement';
+class LOVD_Announcement extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Announcements.
+    var $sObject = 'Announcement';
 
 
 

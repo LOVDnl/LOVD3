@@ -41,8 +41,9 @@ require ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_SystemSetting extends LOVD_Object {
-    // This class, handling the System Settings, extends the basic Object class.
+class LOVD_SystemSetting extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the System Settings.
     var $sObject = 'Settings';
     var $sTable  = 'TABLE_CONFIG';
 

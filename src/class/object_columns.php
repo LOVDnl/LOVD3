@@ -42,8 +42,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Column extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Column object.
+class LOVD_Column extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Custom Columns.
     var $sObject = 'Column';
     var $sTable  = 'TABLE_COLS';
 

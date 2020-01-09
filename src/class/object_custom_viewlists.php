@@ -42,8 +42,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_CustomViewList extends LOVD_Object {
-    // This class extends the basic Object class and it handles pre-configured custom viewLists.
+class LOVD_CustomViewList extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the pre-configured Custom ViewLists.
     var $sObject = 'Custom_ViewList';
     var $nOtherID = 0; // Some objects (like DistanceToVar) need an additional ID.
     var $aColumns = array();

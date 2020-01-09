@@ -35,7 +35,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_API_Submissions {
+class LOVD_API_Submissions
+{
     // This class defines the LOVD API object handling submissions.
 
     private $API;                     // The API object.
