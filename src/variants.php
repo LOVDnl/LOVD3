@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2019-10-01
+ * Modified    : 2020-01-16
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -431,6 +431,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             }
         }
         $aNavigation[CURRENT_PATH . '?map']        = array('menu_transcripts.png', 'Manage transcripts for this variant', 1);
+        if (LOVD_plus && $_AUTH['level'] >= LEVEL_CURATOR) {
+            $aNavigation[CURRENT_PATH . '?delete_non-preferred_transcripts'] = array('menu_transcripts.png', 'Delete non-preferred transcripts', 1);
+        }
         if ($_AUTH['level'] >= $_SETT['user_level_settings']['delete_variant']) {
             $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete variant entry', 1);
         }
@@ -476,6 +479,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         'track_history' => false,
         'show_navigation' => false,
     );
+    if (LOVD_plus) {
+        // LOVD+ adds a check whether the transcript is a preferred transcript in any gene panel.
+        $_DATA->appendRowClass(function($zData) {
+            if (!empty($zData['genepanelid'])) {
+                return 'preferred-transcript';
+            }
+            return '';
+        });
+    }
     $_DATA->viewList($sViewListID, $aVLOptions);
     unset($_GET['search_id_']);
 ?>
@@ -485,6 +497,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $( function () {
             lovd_AJAX_viewEntryLoad();
             setInterval(lovd_AJAX_viewEntryLoad, 250);
+
+            // If there is only one row of VOT, then trigger click on the first row so that the details of that transcript is displayed.
+            if ($('#viewlistTable_<?php echo $sViewListID; ?> tr').length === 2) { // Table heading + first row.
+                $('#viewlistTable_<?php echo $sViewListID; ?> tr')[1].click();
+            }
         });
 
 
@@ -2863,7 +2880,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
 
 
 
-if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
+if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_non-preferred_transcripts', 'map'))) {
+    // URL: /variants/0000000001?delete_non-preferred_transcripts
     // URL: /variants/0000000001?map
     // Map a variant to additional transcripts, or remove transcripts from the variant.
 
@@ -2894,6 +2912,34 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
     $zData = $_DATA->loadEntry($nID);
     // Load all transcript ID's that are currently present in the database connected to this variant.
     $aCurrentTranscripts = $_DB->query('SELECT t.id, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid', array($nID))->fetchAllCombine();
+    if (ACTION == 'delete_non-preferred_transcripts') {
+        if (!LOVD_plus) {
+            // Only available for LOVD+!
+            exit;
+        }
+        // Additionally, fetch which transcripts are *not* preferred transcripts.
+        $aTranscriptsToRemove = $_DB->query('SELECT t.id, t.id_ncbi FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_GP2GENE . ' AS gp2g ON (t.id = gp2g.transcriptid) WHERE vot.id = ?  AND gp2g.transcriptid IS NULL', array($nID))->fetchAllCombine();
+
+        // But, remove transcripts only if we'll have at least one left!
+        if (count($aCurrentTranscripts) == count($aTranscriptsToRemove)) {
+            // Send user back to the VE.
+            header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('No preferred transcripts selected for this variant.', 'stop');
+            $_T->printFooter();
+            exit;
+
+        } elseif (!$aTranscriptsToRemove) {
+            // And, obviously, do nothing when we have nothing to do.
+            header('Refresh: 5; url=' . lovd_getInstallURL() . CURRENT_PATH);
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('This variant does not have any non-preferred transcript.<BR>All transcripts of this variant has been set as preferred transcripts in at least one gene panel.');
+            $_T->printFooter();
+            exit;
+        }
+    }
 
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -3014,7 +3060,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
             $_DB->commit();
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Updated the transcript list for variant #' . $nID);
+            if (ACTION == 'map') {
+                lovd_writeLog('Event', LOG_EVENT, 'Updated the transcript list for variant #' . $nID);
+            } elseif (ACTION == 'delete_non-preferred_transcripts' && $aToRemove) {
+                $sTranscriptsRemoved = '';
+                foreach ($aToRemove as $nTranscriptID) {
+                    $sTranscriptsRemoved .= (!$sTranscriptsRemoved? '' : ', ') . $aTranscriptsToRemove[$nTranscriptID];
+                }
+                lovd_writeLog('Event', LOG_EVENT, 'Deleted non-preferred transcript annotations for variant #' . $nID . ' : ' . $sTranscriptsRemoved);
+            }
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . (!empty($aNewTranscripts)? '?edit#' . implode(',', $aNewTranscripts) : ''));
@@ -3049,22 +3103,29 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
         $aVOT = $_DB->query('SELECT t.id, t.geneid, t.name, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, id_ncbi', array($nID))->fetchAllAssoc();
     }
 
-    lovd_showInfoTable('The variant entry is currently NOT mapped to the following transcripts. Click on a transcript to map the variant to it.', 'information');
+    if (!(LOVD_plus && ACTION == 'delete_non-preferred_transcripts')) {
+        // Normal mapping feature.
+        lovd_showInfoTable('The variant entry is currently NOT mapped to the following transcripts. Click on a transcript to map the variant to it.', 'information');
 
-    $_GET['page_size'] = 10;
-    $_GET['search_tid'] = '';
-    foreach ($aVOT as $aTranscript) {
-        $_GET['search_tid'] .= '!' . $aTranscript['id'] . ' ';
+        $_GET['page_size'] = 10;
+        $_GET['search_tid'] = '';
+        foreach ($aVOT as $aTranscript) {
+            $_GET['search_tid'] .= '!' . $aTranscript['id'] . ' ';
+        }
+        $_GET['search_tid'] = (!empty($_GET['search_tid'])? rtrim($_GET['search_tid']) : '!0');
+        $_GET['search_chromosome'] = '="' . $zData['chromosome'] . '"';
+        require ROOT_PATH . 'class/object_custom_viewlists.php';
+        $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
+        $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
+        $_DATA->viewList('VOT_map', array('track_history' => false));
+        print('      <BR><BR>' . "\n\n");
+
+        lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');
+
+    } else {
+        // Only deselecting transcripts, not adding anything.
+        lovd_showInfoTable('The following transcript' . (count($aTranscriptsToRemove) == 1? '' : 's') . ' have been deselected from this variant: ' . implode(', ', $aTranscriptsToRemove) . '. If you wish, you can deselect more by clicking on the cross at the right side of the transcript.<BR>Please confirm removal by typing in your password below and click "Save transcript list".', 'information');
     }
-    $_GET['search_tid'] = (!empty($_GET['search_tid'])? rtrim($_GET['search_tid']) : '!0');
-    $_GET['search_chromosome'] = '="' . $zData['chromosome'] . '"';
-    require ROOT_PATH . 'class/object_custom_viewlists.php';
-    $_DATA = new LOVD_CustomViewList(array('Gene', 'Transcript', 'DistanceToVar'), $zData['id']); // DistanceToVar needs the VariantID.
-    $_DATA->setRowLink('VOT_map', 'javascript:lovd_addTranscript(\'{{ViewListID}}\', \'{{ID}}\', \'{{zData_geneid}}\', \'{{zData_name}}\', \'{{zData_id_ncbi}}\'); return false;');
-    $_DATA->viewList('VOT_map', array('track_history' => false));
-    print('      <BR><BR>' . "\n\n");
-
-    lovd_showInfoTable('The variant entry is currently mapped to the following transcripts. Click on the cross at the right side of the transcript to remove the mapping.', 'information');
 
     print('      <TABLE class="sortable_head" style="width : 652px;"><TR><TH width="100">Gene</TH>' .
           '<TH style="text-align : left;">Name</TH><TH width="123" style="text-align : left;">Transcript ID</TH><TH width="20">&nbsp;</TH>' .
@@ -3149,6 +3210,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'map') {
         }
       </SCRIPT>
 <?php
+
+    if (LOVD_plus && ACTION == 'delete_non-preferred_transcripts') {
+        // Trigger the removal of the non-preferred transcripts.
+        print('
+      <SCRIPT type="text/javascript">
+        $.each(["' . implode('", "', array_keys($aTranscriptsToRemove)) . '"], function(index, value) {
+            $("#li_" + value).remove();
+        });
+      </SCRIPT>' . "\n\n");
+    }
     $_T->printFooter();
     exit;
 }

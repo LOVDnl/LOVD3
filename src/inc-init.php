@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-10-02
+ * Modified    : 2020-01-16
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -829,7 +829,7 @@ if (!defined('NOT_INSTALLED')) {
     define('PATH_COUNT', count($_PE)); // So you don't need !empty($_PE[1]) && ...
 
     // Define ACTION.
-    if ($_SERVER['QUERY_STRING'] && preg_match('/^(\w+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {
+    if ($_SERVER['QUERY_STRING'] && preg_match('/^([\w-]+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {
         define('ACTION', $aRegs[1]);
     } else {
         define('ACTION', false);
