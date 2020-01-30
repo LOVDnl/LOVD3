@@ -2,7 +2,7 @@ Release LOVD?
 =============
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
-git pull, git commit, git log, git tag -a -m 'Tag 3.0-15' '3.0-15', git push, git push --tags
+git pull, git commit, git tag -a -m 'Tag 3.0-15' '3.0-15', git push, git push --tags
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
 Update download.php, news.php (mark closed bugs), package_update.php, sync docs dirs. Update GitHub. Update Facebook & Twitter.
@@ -11,7 +11,7 @@ Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
 /DNA_profiles/ heeft aangepaste index.php.
 /my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste class/template.php, download.php, import.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
+/shared/ heeft een aangepaste class/api.submissions.php, class/template.php, download.php, import.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
 /whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 After updating all installations, send email to team with all improvements summarized.
 

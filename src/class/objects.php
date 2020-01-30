@@ -2803,7 +2803,7 @@ FROptions
             if (ACTION == 'downloadSelected') {
                 print('## Filter: selected = ' . implode(',', $aSessionViewList['checked']) . "\r\n");
             }
-            print('# charset=UTF-8' . "\r\n");
+            print('# charset = UTF-8' . "\r\n");
             $i = 0;
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aOptions['cols_to_skip'])) {
