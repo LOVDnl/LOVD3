@@ -150,9 +150,6 @@ class LOVD_Screening extends LOVD_Custom
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
-                        'created_date' => array(
-                                    'view' => array('Date created', 130),
-                                    'db'   => array('s.created_date', 'ASC', true)),
                         'created_by' => array(
                                     'view' => false,
                                     'db'   => array('s.created_by', false, true)),
