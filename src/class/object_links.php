@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2017-10-26
- * For LOVD    : 3.0-17
+ * Modified    : 2019-02-04
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -79,9 +79,9 @@ class LOVD_Link extends LOVD_Object
                         'active_columns' => '# active columns',
                         'active_columns_' => 'Active columns',
                         'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
+                        'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
+                        'edited_date_' => 'Date last edited',
                       );
 
         // List of columns and (default?) order for viewing a list of entries.

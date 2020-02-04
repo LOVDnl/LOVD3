@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-04
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -1511,9 +1511,14 @@ class LOVD_Object
         // Quote special characters, disallowing HTML and other tricks.
         $zData = lovd_php_htmlspecialchars($zData);
 
-        $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
+        $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'last_login', 'start_date', 'end_date', 'valid_from', 'valid_to');
         foreach($aDateColumns as $sDateColumn) {
+            // Replace empty date values with "N/A".
             $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A');
+            if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $zData[$sDateColumn . ($sView == 'list'? '' : '_')])) {
+                // Add timezone to full datetime values. VLs usually have removed the times.
+                $zData[$sDateColumn . ($sView == 'list'? '' : '_')] .= ' ' . date('P (T)', strtotime($zData[$sDateColumn]));
+            }
         }
 
         if ($sView == 'list') {

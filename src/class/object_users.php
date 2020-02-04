@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-12-19
+ * Modified    : 2020-02-04
  * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -133,9 +133,9 @@ class LOVD_User extends LOVD_Object
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
                         'status_' => array('Status', LEVEL_MANAGER),
                         'locked_' => array('Locked', LEVEL_MANAGER),
-                        'last_login' => array('Last login', LEVEL_MANAGER),
+                        'last_login_' => array('Last login', LEVEL_MANAGER),
                         'created_by_' => array('Created by', LEVEL_CURATOR),
-                        'created_date' => array('Date created', LEVEL_CURATOR),
+                        'created_date_' => array('Date created', LEVEL_CURATOR),
                         'edited_by_' => array('Last edited by', LEVEL_MANAGER),
                         'edited_date_' => array('Date last edited', LEVEL_MANAGER),
                       );
