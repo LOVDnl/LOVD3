@@ -22,7 +22,6 @@ Prioritize:
 In form fields (SELECTs?) set style="max-width:400px" or so?
 
 Columns we no longer use that can be removed:
-- TABLE_GENES/allow_index_wiki
 - TABLE_TRANSCRIPTS/id_mutalyzer
 - TABLE_USERS/reference
 

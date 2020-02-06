@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2020-02-04
+ * Modified    : 2020-02-06
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -971,7 +971,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                 );
                             break;
                         case 'Genes':
-                            // The following columns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, allow_index_wiki, show_hgmd, show_genecards,
+                            // The following columns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, show_hgmd, show_genecards,
                             // show_genetests, note_index, note_listing, refseq, refseq_url, disclaimer, disclaimer_text, header, header_align,
                             // footer, footer_align.
                             if ($sMode == 'update') {

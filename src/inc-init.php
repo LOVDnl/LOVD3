@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-01-16
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-06
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -269,7 +269,6 @@ $_SETT = array(
                 'upstream_URL' => 'http://www.LOVD.nl/',
                 'upstream_BTS_URL' => 'https://github.com/LOVDnl/LOVD3/issues/',
                 'upstream_BTS_URL_new_ticket' => 'https://github.com/LOVDnl/LOVD3/issues/new',
-                'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
                      array(
                             10,
@@ -760,10 +759,7 @@ if (get_magic_quotes_gpc()) {
 }
 
 // Use of SSL required?
-// FIXME:
-//// (SSL not required when exporting data to WikiProfessional because their scripts do not support it)
-//// (The UCSC also has issues with retrieving the BED files through SSL...)
-//if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/export_data.php' && !empty($_GET['format']) && $_GET['format'] == 'wiki') && !(substr(lovd_getProjectFile(), 0, 9) == '/api/rest' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
+// (The UCSC has issues with retrieving the BED files through SSL...)
 if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
     // We were enabled, when SSL was available. So I guess SSL is still available. If not, this line here would be a problem.
     // No, not sending any $_POST values either. Let's just assume no-one is working with LOVD when the ssl setting is activated.

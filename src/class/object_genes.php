@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-02-04
+ * Modified    : 2020-02-06
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -453,7 +453,6 @@ class LOVD_Gene extends LOVD_Object
                         array('', '', 'note', 'Using the following settings you can control some security settings of LOVD.'),
                         'hr',
                         array('Allow public to download variant entries', '', 'checkbox', 'allow_download'),
-                        array('Allow my public variant and individual data to be indexed by WikiProfessional', '', 'checkbox', 'allow_index_wiki'),
                         'hr',
                         'skip',
                   );
@@ -544,7 +543,6 @@ class LOVD_Gene extends LOVD_Object
             }
 
             $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
-            $zData['allow_index_wiki_'] = '<IMG src="gfx/mark_' . $zData['allow_index_wiki'] . '.png" alt="" width="11" height="11">';
 
             // Human readable RefSeq link.
             if ($zData['refseq_url']) {
