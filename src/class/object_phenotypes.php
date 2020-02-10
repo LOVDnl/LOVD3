@@ -67,7 +67,7 @@ class LOVD_Phenotype extends LOVD_Custom
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
                                            'i.statusid AS individual_statusid, ' .
                                            'd.symbol AS disease, ' .
-                                           'uo.name AS owned_by_, ' .
+                                           'uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .

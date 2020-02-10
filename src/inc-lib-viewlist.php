@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -112,35 +112,6 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
     }
 
     return preg_replace('/{{SPACE}}/', ' ', $sFormattedExpressions);
-}
-
-
-
-
-
-function lovd_hideEmail ($s)
-{
-    // Function kindly provided by Ileos.nl in the interest of Open Source.
-    // Obscure email addresses from spambots.
-
-    $a_replace = array(45 => '-', '.',
-        48 => '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        64 => '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-        95 => '_',
-        97 => 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    );
-
-    $s_return = '';
-    for ($i = 0; $i < strlen($s); $i ++) {
-        $s_sub = substr($s, $i, 1);
-        if ($key = array_search($s_sub, $a_replace)) {
-            $s_return .= '&#' . str_pad($key, 3, '0', STR_PAD_LEFT) . ';';
-        } else {
-            $s_return .= $s_sub;
-        }
-    }
-
-    return $s_return;
 }
 
 

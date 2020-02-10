@@ -116,6 +116,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // Load appropriate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
 
+    // Tooltip JS code for the owner field. Other VEs don't have to load this, because they have VLs.
+    lovd_includeJS('inc-js-tooltip.php');
+
     require ROOT_PATH . 'class/object_phenotypes.php';
     $_DATA = new LOVD_Phenotype('', $nID);
     $zData = $_DATA->viewEntry($nID);
