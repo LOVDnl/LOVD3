@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2020-02-04
+ * Modified    : 2020-02-10
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,10 +57,9 @@ class LOVD_Screening extends LOVD_Custom
         global $_AUTH, $_SETT;
 
         // SQL code for loading an entry for an edit form.
-        // FIXME; change owner to owned_by_ in the load entry query below.
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
                                'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ";") AS _genes, ' .
-                               'uo.name AS owner ' .
+                               'uo.name AS owned_by_ ' .
                                'FROM ' . TABLE_SCREENINGS . ' AS s ' .
                                'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id) ' .

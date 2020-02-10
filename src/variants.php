@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-02-06
+ * Modified    : 2020-02-10
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2513,8 +2513,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if (!$bSubmit && !(GET && ACTION == 'publish')) {
                 // Put $zData with the old values in $_SESSION for mailing.
-                // FIXME; change owner to owned_by_ in the load entry query of object_genome_variants.php.
-                $zData['owned_by_'] = $zData['owner'];
                 $zData['allele_'] = $_DB->query('SELECT name FROM ' . TABLE_ALLELES . ' WHERE id = ?', array($zData['allele']))->fetchColumn();
                 if (!empty($_POST['aTranscripts'])) {
                     $zData['aTranscripts'] = array_keys($_POST['aTranscripts']);
@@ -2714,6 +2712,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
+    $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
     if (!empty($_POST)) {
@@ -2731,12 +2730,15 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
         if (!lovd_error()) {
             // We will need to update the timestamps of any gene affected by this deletion, if the variant's status is Marked or higher.
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS. ' AS vog ON (vot.id = vog.id) WHERE vog.id = ? AND vog.statusid >= ?', array($nID, STATUS_MARKED))->fetchAllColumn();
+            if ($zData['statusid'] >= STATUS_MARKED) {
+                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ?', array($nID))->fetchAllColumn();
+            }
 
             // This also deletes the entries in TABLE_VARIANTS_ON_TRANSCRIPTS && TABLE_SCR2VAR.
             $_DATA->deleteEntry($nID);
 
-            if ($aGenes) {
+            if ($zData['statusid'] >= STATUS_MARKED && $aGenes) {
+                // Change updated date for genes.
                 lovd_setUpdatedDate($aGenes);
             }
 
@@ -2772,7 +2774,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting variant entry', '', 'print', $nID),
+                        array('Deleting variant entry', '', 'print', $nID . ' (Owner: ' . $zData['owned_by_'] . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete variant entry'),

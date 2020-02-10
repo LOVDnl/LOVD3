@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2019-12-19
+ * Modified    : 2020-02-10
  * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -59,9 +59,8 @@ class LOVD_GenomeVariant extends LOVD_Custom
         global $_AUTH, $_CONF, $_SETT;
 
         // SQL code for loading an entry for an edit form.
-        // FIXME; change owner to owned_by_ in the load entry query below.
         $this->sSQLLoadEntry = 'SELECT vog.*, ' .
-                               'uo.name AS owner ' .
+                               'uo.name AS owned_by_ ' .
                                'FROM ' . TABLE_VARIANTS . ' AS vog ' .
                                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
                                'WHERE vog.id = ?';
