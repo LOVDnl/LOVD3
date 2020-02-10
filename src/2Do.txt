@@ -23,7 +23,6 @@ In form fields (SELECTs?) set style="max-width:400px" or so?
 
 Columns we no longer use that can be removed:
 - TABLE_TRANSCRIPTS/id_mutalyzer
-- TABLE_USERS/reference
 
 - Access sharing: Users zouden moeten worden gesorteerd op naam.
 - Gerard: Als ik bij (bijv.) Age examined (Phenotype) '<00y' invul, dus onderzoek aan een ongeboren kind, komt er '<00y (before )' te staan, zou dit '<00y (before birth)' moeten zijn?

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -442,11 +442,11 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // (3) Creating LOVD user & administrator.
     $aInstallSQL['Creating LOVD account &amp; LOVD database administrator account...'] =
              array(
-                    'INSERT INTO ' . TABLE_USERS . ' (name, institute, department, telephone, address, city, email, reference, username, password, password_force_change, level, allowed_ip, login_attempts, created_date) VALUES ("LOVD' . (LOVD_plus? '+' : '') . '", "", "", "", "", "", "", "", "", "", 0, 0, "", 9, NOW())',
+                    'INSERT INTO ' . TABLE_USERS . ' (name, institute, department, telephone, address, city, email, username, password, password_force_change, level, allowed_ip, login_attempts, created_date) VALUES ("LOVD' . (LOVD_plus? '+' : '') . '", "", "", "", "", "", "", "", "", 0, 0, "", 9, NOW())',
                     'UPDATE ' . TABLE_USERS . ' SET id = 0, created_by = 0',
-                    'INSERT INTO ' . TABLE_USERS . ' (id, name, institute, department, telephone, address, city, countryid, email, reference, username, password, password_autogen, password_force_change, phpsessid, saved_work, level, allowed_ip, login_attempts, last_login, created_by, created_date) VALUES
+                    'INSERT INTO ' . TABLE_USERS . ' (id, name, institute, department, telephone, address, city, countryid, email, username, password, password_autogen, password_force_change, phpsessid, saved_work, level, allowed_ip, login_attempts, last_login, created_by, created_date) VALUES
                      ("00001", ' . $_DB->quote($_POST['name']) . ', ' . $_DB->quote($_POST['institute']) . ', ' . $_DB->quote($_POST['department']) . ', ' . $_DB->quote($_POST['telephone']) . ', ' . $_DB->quote($_POST['address']) . ', ' .
-                        $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['reference']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW())',
+                        $_DB->quote($_POST['city']) . ', ' . $_DB->quote($_POST['countryid']) . ', ' . $_DB->quote($_POST['email']) . ', ' . $_DB->quote($_POST['username']) . ', ' . $_DB->quote($_POST['password']) . ', "", 0, "' . session_id() . '", "", ' . LEVEL_ADMIN . ', ' . $_DB->quote($_POST['allowed_ip']) . ', 0, NOW(), 1, NOW())',
                   );
     $nInstallSQL ++;
 

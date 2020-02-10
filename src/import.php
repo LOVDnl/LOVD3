@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2020-02-06
+ * Modified    : 2020-02-10
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2413,7 +2413,6 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     'country_' => 'Country',
                     'email' => 'Email address',
                     'telephone' => 'Telephone',
-                    'reference' => 'Reference',
                 );
             $zUser['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($zUser['countryid']))->fetchColumn();
 
