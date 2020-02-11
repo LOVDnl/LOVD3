@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This file configures the apache server. 
+# This file configures the apache server.
 # The githubaccount parameter is required. This will be the root folder for localhost.
 for i in "$@"
 do
@@ -50,3 +50,7 @@ sudo apt-get -qq -y install exim4 apcupsd nmap
 
 echo 'Restart apache2'
 sudo /etc/init.d/apache2 restart
+
+# Make sure the error logs are readable for us.
+sudo chmod +rx /var/log/apache2
+sudo chmod +r /var/log/apache2/error.log

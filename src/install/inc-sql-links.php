@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2017-05-16
- * For LOVD    : 3.0-19
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -47,9 +47,11 @@ $aLinkSQL =
 
 if (LOVD_plus) {
     // Extra links just for LOVD+.
-    $aLinkSQL = array_merge($aLinkSQL,
-        array(
+    if (lovd_verifyInstance('leiden')) {
+        $aLinkSQL = array_merge($aLinkSQL,
+            array(
                 'INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES ("VariantOnGenome/Alamut", 006)',
-        ));
+            ));
+    }
 }
 ?>

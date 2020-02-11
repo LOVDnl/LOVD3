@@ -4,6 +4,145 @@
  *
  *************/
 
+/***************************
+ * 3.0 Build 22 (tag:3.0-22)
+ * 2019-10-02
+ *********/
+ * Fixed bug; Curators were no longer able to see non-public individuals in the
+   gene-specific Individual view.
+ * Fixed bug; Submitters could submit data without a variant effect by disabling
+   all transcripts of the gene they selected.
+ * Sending format=application/json in GET queries to the LOVD2-style API will
+   make the API return JSON.
+   Closes #348: "Make current REST API reply in JSON, too".
+ * Included version 3.0-22 of the official LOVD Reference Sequence Parser
+   script.
+   - Updated the script to only show transcripts of the gene passed to it.
+     Closes #314: "Refseq parser widget hangs in Firefox 57".
+ * Fixed bug; When confirming variants with a different screening, but not
+   selecting any variants, a query error occured.
+   - Also, when confirming variants with another screening, clicking the row no
+     longer forwards to that variant. It now captures the click and switches the
+     row's checkbox.
+   Closes #289: "Improve confirming a variant with a screening".
+ * Fixed bug; Incomplete custom links could break the unique variant view's
+   HTML.
+ * Various improvements to the submission API.
+   - Added support for dbSNP IDs, PubMed links, Genetic origin and Pathogenicity
+     and Variant comments.
+   - Fixed a minor data formatting bug in HPO terms.
+   - Added some automated data formatting for RNA and protein fields.
+   - If a gene is given for a variant, and it exists in LOVD, it must match with
+     the given transcript.
+ * Fix broken links to the gene pages on the HGNC website after their updates.
+ * Made several improvements to the speed of LOVD. Improved the speed of the
+   update import, the Individual listings on Disease pages, and complex Variant
+   listings.
+   Closes #386: "The variants/in_gene page is extremely slow on the GV shared".
+ * Fix username field to also allow for an email address.
+ * Fixed bug in Find & Replace; Selection lists were not compared correctly.
+ * Fixed bug; Delins variants were recognized as deletions in the statistics.
+ * Allow some support for JSON data in LOVD3 data fields. If the fields contain
+   JSON data, LOVD will format the data nicely and will not display the full
+   contents in data listings.
+ * Included version 3.0-22 of the official LOVD Reading Frame Checker.
+   - Updated the HGVS description of the DNA change to the new HGVS format.
+ * Fixed bug; The variant mapper didn't fill in the variant effect on the new
+   transcript mappings, but left it at its default.
+ * Several improvements to the download feature.
+   - The public gene-specific downloads had some system columns included.
+   - A download will now no longer show inactive Phenotype and
+     VariantOnTranscript columns, if filters are active for Diseases or Genes,
+     respectively.
+ * When creating a transcript without selecting a gene first, LOVD no longer
+   uses a dropdown but instead uses a more efficient data listing.
+ * Enlarge the DNA and protein fields to support longer insertions.
+   Closes #251: "VariantOnGenome/DNA field in lovd_variants table too small by
+   default".
+ * Allow for publisher and journal-specific queries using the DOI reference
+   search.
+   Closes #257: "Make DOI reference search be partial if requested".
+ * Updated the LOVD2 to LOVD3 converter; It can now also handle DOIs, updated
+   column mappings and handling, added support for converting phenotype OMIM IDs
+   to LOVD3 Diseases.
+ * Changed the icon of the update checker when there are no updates available,
+   and added Alt and Title tags.
+ * Fixed security issue in loading the authorization for ViewLists, which
+   allowed Curators to craft special requests to load data listings with
+   non-public data of other genes.
+ * Fixed bug; Some data listings were not authorized for Curators at all, which
+   hid non-public data from them that they should have been able to see.
+ * Allow Curators to download more data listings.
+ * Fixed bug; When importing, LOVD could use the wrong data for checking the
+   panelid, fatherid and motherid links.
+ * Added inheritance field for diseases.
+   Closes #275: "Copy the inheritance field feature from LOVD+".
+ * Upgraded jQuery, jQuery UI and the cupertino theme.
+ * Fixed bug; Deleting a single log entry didn't load the next page's first log
+   entry anymore.
+
+
+/***************************
+ * 3.0 Build 21 (tag:3.0-21)
+ * 2018-03-14
+ *********/
+ * Many changes to the submission API.
+   - Display the admin's email address better when it's multiple addresses.
+   - Added LSDB ID to Admin's Auth Token dialog, so the Admin can find out which
+     ID the clients need to use to start submitting data into the LOVD.
+   - Fixed bug; 3'UTR variants were not accepted.
+   - Built scheduling interface for importing files submitted through the API.
+     Files submitted through the API are displayed and ranked, showing
+     information on the file and possible import errors, and action handles to
+     download the file or to (re/un)schedule it for import or set the priority.
+   - Various improvements to the import script, allowing automation of importing
+     new data into LOVD3.
+   - Fixed bug; The LOVD receiving a submission might have more custom columns
+     that are mandatory. Try to predict the default values for those, and fill
+     those in.
+   - Fixed bug; API submissions had their screenings set to "no variants found".
+   - Keep the JSON file for each API submission.
+   - Imports can be run manually or run automatically.
+   - Documented the automation in INSTALL.txt.
+   - The autoimporter sends an email to every curator (or the managers in case
+     of intragenic data) that is affected by the imported data, in case
+     non-public data was included (which is the default).
+   - Added a section in the manual on the submission API.
+   Closes #149: "Create API to submit data into".
+ * Fixed bug; The LOVD2 to LOVD3 converter script caused some problems with
+   other data views.
+   Closes #313: "Cannot click through on transcripts viewlist".
+ * Fixed bug; The data status color coding was visible to the public, which
+   caused confusion with users.
+ * Fixed bug; The Owner field didn't always show a tooltip in data listings.
+   Closes #307: "Owner field doesn't always show tooltip".
+ * Allow genes to be viewed by their HGNC ID.
+   Closes #270: "Redirect genes/HGNC_ID to genes/SYMBOL".
+ * The concluded variant effect is renamed to "by curator".
+ * The Phenotype/Additional column will now be added to the Individuals data
+   listing, if it's available.
+   Closes #327: "Create new view: Individuals and Phenotypes".
+ * Fixed bug; Fields edited through the Find & Replace feature will now actually
+   be checked, and some other minor changes.
+   Closes #127: "Find & Replace improvements".
+   Closes #214: "Custom links not shown properly during find & replace".
+ * The variant effect fields for the genomic level will now only show on the
+   data entry form, now when there is more than one transcript associated with
+   the variant, or when there is a conflict between the variant effect on the
+   genomic and transcript level.
+   Closes #305: "Don't duplicate the "Variant effect" fields unnecessarily".
+ * Updated the ORCID API from v.1.2 to v.2.1; users could no longer register
+   with their ORCID.
+   Closes #340: "ORCID returning ID not found error when creating new user".
+ * Rewrote communication with Mutalyzer to use a more stable method.
+ * Fixed bug; In the grouped views, data owners were not shown when the
+   department field was empty.
+ * Fixed bug; The "variants affecting transcripts" view didn't show all
+   transcripts associated with each variant, but only each gene. This
+   resulted in unpredictable sorting and the not showing of transcripts that did
+   have variants.
+
+
 /***************************************
  * 3.0 Build 20a (patch 01) (tag:3.0-20)
  * 2017-10-17

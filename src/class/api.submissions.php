@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2017-12-01
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-08
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -35,7 +35,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_API_Submissions {
+class LOVD_API_Submissions
+{
     // This class defines the LOVD API object handling submissions.
 
     private $API;                     // The API object.
@@ -58,14 +59,28 @@ class LOVD_API_Submissions {
             '1' => '0',
             '2' => '3',
         ),
-        // Let's hope this one doesn't clash, otherwise we need to rebuild this array.
-        // FIXME: This will clash if we want to support genetic_origin.
-        '@term' => array(
+        'genetic_origin' => array(
+            'inherited' => 'Germline',
+            'de novo' => 'De novo',
+            'somatic' => 'Somatic',
+        ),
+        'genetic_source' => array(
+            'paternal' => '10',
+            'maternal' => '20',
+        ),
+        'genetic_evidence' => array(
+            'inferred' => '0',
+            'confirmed' => '1',
+        ),
+        'pathogenicity' => array(
+            // 'Unclassified' => '00', // Not allowed for submission.
             'Non-pathogenic' => '10',
             'Probably Not Pathogenic' => '30',
             'Probably Pathogenic' => '70',
             'Pathogenic' => '90',
             'Not Known' => '50',
+            'Causative' => '60',
+            // 8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
         ),
         '@template' => array(
             'DNA' => 'DNA',
@@ -94,8 +109,6 @@ class LOVD_API_Submissions {
     );
 
     // The sections/objects and their columns that we'll use.
-    // FIXME: Support */Reference fields parsing <db_xref accession="12345" source="pubmed"/>?
-    // FIXME: Support VariantOnGenome/Genetic_origin (and allele) by parsing <genetic_origin term="inherited"><source term="paternal"/><evidence_code term="inferred"/></genetic_origin>
     private $aObjects = array(
         'Columns' => array(),
         'Genes' => array(),
@@ -105,9 +118,9 @@ class LOVD_API_Submissions {
         'Individuals' => array('id', 'panel_size', 'owned_by', 'statusid', 'created_by', 'Individual/Lab_ID', 'Individual/Gender'),
         'Individuals_To_Diseases' => array('individualid', 'diseaseid'),
         'Phenotypes' => array('id', 'diseaseid', 'individualid', 'owned_by', 'statusid', 'created_by', 'Phenotype/Additional'),
-        'Screenings' => array('id', 'individualid', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
+        'Screenings' => array('id', 'individualid', 'variants_found', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
         'Screenings_To_Genes' => array(),
-        'Variants_On_Genome' => array('id', 'allele', 'effectid', 'chromosome', 'position_g_start', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID'),
+        'Variants_On_Genome' => array('id', 'allele', 'effectid', 'chromosome', 'position_g_start', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID', 'VariantOnGenome/Reference'),
         'Variants_On_Transcripts' => array('id', 'transcriptid', 'effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
         'Screenings_To_Variants' => array('screeningid', 'variantid'),
     );
@@ -131,6 +144,41 @@ class LOVD_API_Submissions {
 
         $this->API = $oAPI;
         return true;
+    }
+
+
+
+
+
+    private function addColumn ($sColID)
+    {
+        // Adds requested column to $this->aObjects, if they're active in LOVD, so that the API can populate the column.
+        global $_DB;
+
+        // Don't repeat yourself.
+        static $aColumns = array();
+        if (isset($aColumns[$sColID])) {
+            // We ran before.
+            return $aColumns[$sColID];
+        }
+
+        // Find column in the database.
+        $sSQL = 'SELECT SUBSTRING_INDEX(ac.colid, "/", 1) AS category, ac.colid
+                 FROM ' . TABLE_ACTIVE_COLS . ' AS ac
+                 WHERE ac.colid = ?';
+        if ($zColumn = $_DB->query($sSQL, array($sColID))->fetchAssoc()) {
+            // Translate the category to that used in the file.
+            // FIXME: Why is there no function for this?
+            $sCategory = str_replace('Genomes', 'Genome', str_replace('On', 's_On_', $zColumn['category'] . 's'));
+
+            // Store column in the objects array, so it will defined in the file and entry.
+            $this->aObjects[$sCategory][] = $zColumn['colid'];
+            $aColumns[$sColID] = true;
+        } else {
+            $aColumns[$sColID] = false;
+        }
+
+        return $aColumns[$sColID];
     }
 
 
@@ -356,7 +404,7 @@ class LOVD_API_Submissions {
             if ($aPhenotypes['hpo']) {
                 $sPhenotype = '';
                 foreach ($aPhenotypes['hpo'] as $nAccession => $sTerm) {
-                    $sPhenotype .= (!$sPhenotype ? '' : '; ') . 'HP:' . $nAccession . ' (' . $sTerm . ')';
+                    $sPhenotype .= (!$sPhenotype ? '' : '; ') . $sTerm . ' (HP:' . $nAccession . ')';
                 }
                 // We're assuming here, that the Phenotype/Additional column is
                 //  active. It's an LOVD-standard custom column added to new
@@ -397,12 +445,58 @@ class LOVD_API_Submissions {
                 // Map the data.
                 $aVOG['id'] = $nVariantID;
                 $aVOG['allele'] = $this->aValueMappings['@copy_count'][$aVariant['@copy_count']];
-                $aVOG['effectid'] = $this->aValueMappings['@term'][$aVariant['pathogenicity'][0]['@term']];
+                $aVOG['effectid'] = $this->aValueMappings['pathogenicity'][$aVariant['pathogenicity'][0]['@term']];
                 $aVOG['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
                 $aVOG['owned_by'] = $this->zAuth['id'];
                 $aVOG['statusid'] = STATUS_PENDING;
                 $aVOG['created_by'] = $this->zAuth['id'];
                 $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
+
+                // Add genetic_origin, if present. This may also affect the 'allele' field.
+                if (isset($aVariant['genetic_origin'])) {
+                    $aVOG['VariantOnGenome/Genetic_origin'] = $this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']];
+
+                    // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
+                    // Source will be ignored if @copy_count = 2.
+                    if (isset($aVariant['genetic_origin']['source']) && $aVariant['@copy_count'] == '1') {
+                        $aVOG['allele'] = $this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']];
+                        if (isset($aVariant['genetic_origin']['evidence_code'])) {
+                            $aVOG['allele'] += $this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']];
+                        }
+                    }
+                }
+
+                // Check if the pathogenicity has a comment, that we need to process.
+                if (isset($aVariant['pathogenicity'][0]['comment'])) {
+                    foreach ($aVariant['pathogenicity'][0]['comment'] as $aEntries) {
+                        if (!is_array($aEntries)) {
+                            $aEntries = array($aEntries);
+                        }
+                        foreach ($aEntries as $aEntry) {
+                            if (!is_array($aEntry)) {
+                                $aEntry = array($aEntry);
+                            }
+                            foreach ($aEntry as $sEntry) {
+                                // Try to link the Remarks column, if active.
+                                if (!isset($aVOG['VariantOnGenome/Remarks']) && $this->addColumn('VariantOnGenome/Remarks')) {
+                                    $aVOG['VariantOnGenome/Remarks'] = '';
+                                }
+
+                                // Use the Remarks column, but don't overwrite an existing value.
+                                if (isset($aVOG['VariantOnGenome/Remarks'])) {
+                                    $aVOG['VariantOnGenome/Remarks'] .= (!$aVOG['VariantOnGenome/Remarks']? '' : '\r\n') . $sEntry;
+                                } else {
+                                    // There is no fallback. I don't like throwing an error,
+                                    //  but I have to if I don't want data to be lost.
+                                    $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Pathogenicity: Comment(s) found, but this LOVD doesn\'t have the Remarks column activated. ' .
+                                        'Remove your comment or ask the admin to enable the variant\'s Remarks column: ' . $_SETT['admin']['address_formatted'] . '.';
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Fill in the positions. If this fails, this is reason to reject the variant.
                 $aVariantInfo = lovd_getVariantInfo($aVariant['name']['#text']);
@@ -422,6 +516,94 @@ class LOVD_API_Submissions {
                 $aVOG['position_g_start'] = $aVariantInfo['position_start'];
                 $aVOG['position_g_end'] = $aVariantInfo['position_end'];
 
+                // Check for db_xrefs.
+                if (isset($aVariant['db_xref'])) {
+                    foreach ($aVariant['db_xref'] as $aID) {
+                        if (strtolower($aID['@source']) == 'dbsnp') {
+                            // Try to link the dbSNP column, if active.
+                            if (!isset($aVOG['VariantOnGenome/dbSNP']) && $this->addColumn('VariantOnGenome/dbSNP')) {
+                                $aVOG['VariantOnGenome/dbSNP'] = '';
+                            }
+
+                            // Use the dbSNP column, but don't overwrite an existing value.
+                            if (isset($aVOG['VariantOnGenome/dbSNP']) && (!$aVOG['VariantOnGenome/dbSNP'] || $aVOG['VariantOnGenome/dbSNP'] == $aID['@accession'])) {
+                                $aVOG['VariantOnGenome/dbSNP'] = $aID['@accession'];
+                            } else {
+                                // Use the VariantOnGenome/Reference column, that is HGVS standard
+                                //  and therefore should always be active.
+                                $aVOG['VariantOnGenome/Reference'] .= (!$aVOG['VariantOnGenome/Reference']? '' : '; ') .
+                                    '{dbSNP:' . $aID['@accession'] . '}';
+                            }
+
+                        } elseif (strtolower($aID['@source']) == 'pubmed') {
+                            // @name can hold text, optional. accession can also be empty (Germany needs that).
+
+                            if (!empty($aID['@accession'])) {
+                                $sName = '';
+                                if (empty($aID['@name'])) {
+                                    // We don't have text to go with our PMID. Fetching that info should be fast.
+                                    $sResponse = @join('', lovd_php_file('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id=' . $aID['@accession']));
+                                    if ($sResponse) {
+                                        $aPubMedData = json_decode($sResponse, true);
+                                        if (isset($aPubMedData['result'][$aID['@accession']]) && isset($aPubMedData['result'][$aID['@accession']]['authors'])) {
+                                            $sName = preg_replace('/ [A-Z]+$/', '', $aPubMedData['result'][$aID['@accession']]['sortfirstauthor']) . ' et al (' .
+                                                substr($aPubMedData['result'][$aID['@accession']]['pubdate'], 0, strpos($aPubMedData['result'][$aID['@accession']]['pubdate'] . ' ', ' ')) . ')';
+                                        }
+                                    }
+                                    if (!$sName) {
+                                        // It somehow failed. Default to name = "Pubmed".
+                                        $sName = 'PubMed';
+                                    }
+                                } else {
+                                    // Accession and name given.
+                                    $sName = str_replace(':', ';', $aID['@name']);
+                                }
+                                $aVOG['VariantOnGenome/Reference'] .= (!$aVOG['VariantOnGenome/Reference']? '' : '; ') .
+                                    '{PMID:' . $sName . ':' . $aID['@accession'] . '}';
+                            } else {
+                                // We don't have an ID...
+                                if (!empty($aID['@name'])) {
+                                    // We'll use this, then.
+                                    $aVOG['VariantOnGenome/Reference'] .= (!$aVOG['VariantOnGenome/Reference']? '' : '; ') .
+                                        $aID['@name'];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Check for comments to process.
+                if (isset($aVariant['comment'])) {
+                    foreach ($aVariant['comment'] as $aEntries) {
+                        if (!is_array($aEntries)) {
+                            $aEntries = array($aEntries);
+                        }
+                        foreach ($aEntries as $aEntry) {
+                            if (!is_array($aEntry)) {
+                                $aEntry = array($aEntry);
+                            }
+                            foreach ($aEntry as $sEntry) {
+                                // Try to link the Remarks column, if active.
+                                if (!isset($aVOG['VariantOnGenome/Remarks']) && $this->addColumn('VariantOnGenome/Remarks')) {
+                                    $aVOG['VariantOnGenome/Remarks'] = '';
+                                }
+
+                                // Use the Remarks column, but don't overwrite an existing value.
+                                if (isset($aVOG['VariantOnGenome/Remarks'])) {
+                                    $aVOG['VariantOnGenome/Remarks'] .= (!$aVOG['VariantOnGenome/Remarks']? '' : '\r\n') . $sEntry;
+                                } else {
+                                    // There is no fallback. I don't like throwing an error,
+                                    //  but I have to if I don't want data to be lost.
+                                    $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Comment(s) found, but this LOVD doesn\'t have the Remarks column activated. ' .
+                                        'Remove your comment or ask the admin to enable the variant\'s Remarks column: ' . $_SETT['admin']['address_formatted'] . '.';
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
                 $aTemplates = array();
                 $aTechniques = array();
@@ -437,17 +619,48 @@ class LOVD_API_Submissions {
                 // This function will try and get the default values from LOVD itself.
                 $this->addMandatoryDefaultValues('Screenings', $aScreening);
 
-                $aData['Screenings'][] = array_merge(
+                // Before we add this screening to the list of screenings, let's see if we're not duplicating screenings.
+                // When sending in multiple variants per individual, we'd be repeating the screening information for every variant.
+                // Loop the list of screenings. If we find the same one, don't duplicate it.
+                $aScreening = array_merge(
                     $aScreening,
                     array(
                         'id' => $nScreeningID,
                         'individualid' => $nIndividualID,
+                        'variants_found' => 1,
                         'owned_by' => $this->zAuth['id'],
                         'created_by' => $this->zAuth['id'],
                         'Screening/Template' => implode(';', array_unique($aTemplates)),
                         'Screening/Technique' => implode(';', array_unique($aTechniques)),
                     )
                 );
+                $bScreeningIsNew = true;
+                foreach ($aData['Screenings'] as $aProcessedScreening) {
+                    foreach ($aProcessedScreening as $sKey => $sValue) {
+                        // We could just do $a == $b, but the 'id' key will always be different.
+                        // So, just compare key by key, ignoring the 'id' key.
+                        if ($sKey != 'id' && $sValue != $aScreening[$sKey]) {
+                            // Found a difference.
+                            // Continue to the next screening.
+                            continue 2;
+                        }
+                    }
+
+                    // When we get here, no differences were found. Just one more thing to check.
+                    if (array_keys($aProcessedScreening) == array_keys($aScreening)) {
+                        // Yup, all fields match.
+                        // The screening we see in the data is the same as this one that we previously saw.
+                        $nScreeningID = $aProcessedScreening['id'];
+                        $bScreeningIsNew = false;
+                        break;
+                    }
+                }
+
+                if ($bScreeningIsNew) {
+                    // We didn't find a screening that was the same.
+                    $aData['Screenings'][] = $aScreening;
+                }
+
                 $aData['Screenings_To_Variants'][] = array(
                     'screeningid' => $nScreeningID,
                     'variantid' => $nVariantID,
@@ -525,8 +738,19 @@ class LOVD_API_Submissions {
                         }
 
                         // Store RNA.
+                        // Has RNA been checked?
+                        $bRNAChecked = false;
+                        foreach ($aData['Screenings'] as $aScreening) {
+                            if (strpos($aScreening['Screening/Template'], 'RNA') !== false) {
+                                $bRNAChecked = true;
+                                break;
+                            }
+                        }
                         if (count($aRNAs) == 1) {
-                            $sRNA = $aRNAs[0];
+                            // When RNA has not been checked, the RNA field description requires parentheses.
+                            $sRNA = (!$bRNAChecked && preg_match('/^r.[^(]/', $aRNAs[0])?
+                                'r.(' . substr($aRNAs[0], 2) . ')' :
+                                $aRNAs[0]);
                         } elseif (!$aRNAs) {
                             // Default value.
                             $sRNA = 'r.(?)';
@@ -545,10 +769,17 @@ class LOVD_API_Submissions {
 
                         // Store Protein.
                         if (count($aProteins) == 1) {
-                            $sProtein = $aProteins[0];
+                            // When RNA has not been checked, the protein description requires parentheses.
+                            $sProtein = (!$bRNAChecked && preg_match('/^p.[^(]/', $aProteins[0])?
+                                'p.(' . substr($aProteins[0], 2) . ')' :
+                                $aProteins[0]);
                         } elseif (!$aProteins) {
-                            // Default value.
-                            $sProtein = '-';
+                            // Default value depends on transcript. '-' for non-coding transcripts, p.(?) otherwise.
+                            if (in_array(substr($aVariantLevel2['ref_seq']['@accession'], 0, 2), array('NR', 'XR'))) {
+                                $sProtein = '-';
+                            } else {
+                                $sProtein = 'p.(?)';
+                            }
                         } else {
                             // Multiple Protein changes...
                             $sProtein = 'p.[';
@@ -702,8 +933,12 @@ class LOVD_API_Submissions {
             return false;
         }
 
+        // Debugging:
+        // $this->API->aResponse['data'] = $aData;
+        // return true;
+
         // Write the LOVD3 output file (and optionally, the JSON data).
-        return $this->writeImportFile($aData, $sInput);
+        return $this->writeImportFile($aData, $sInputClean);
     }
 
 
@@ -866,6 +1101,42 @@ class LOVD_API_Submissions {
                             'Options: ' . implode(', ', array_keys($this->aValueMappings['@copy_count'])) . '.';
                     }
 
+                    // Check genetic_origin, if present.
+                    if (isset($aVariant['genetic_origin'])) {
+                        if (empty($aVariant['genetic_origin']['@term'])) {
+                            // No term, no way.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Missing required @term element.';
+                        } elseif (!isset($this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']])) {
+                            // Value not recognized.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Term code \'' . $aVariant['genetic_origin']['@term'] . '\' not recognized. ' .
+                                'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_origin'])) . '.';
+                        }
+
+                        // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
+                        // FIXME: When @copy_count is 2, and the variant is homozygous, we ignore the source. Should we let the user know?
+                        if (isset($aVariant['genetic_origin']['source'])) {
+                            if (empty($aVariant['genetic_origin']['source']['@term'])) {
+                                // No term, no way.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Missing required @term element.';
+                            } elseif (!isset($this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']])) {
+                                // Value not recognized.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Term code \'' . $aVariant['genetic_origin']['source']['@term'] . '\' not recognized. ' .
+                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_source'])) . '.';
+                            }
+
+                            if (isset($aVariant['genetic_origin']['evidence_code'])) {
+                                if (empty($aVariant['genetic_origin']['evidence_code']['@term'])) {
+                                    // No term, no way.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Missing required @term element.';
+                                } elseif (!isset($this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']])) {
+                                    // Value not recognized.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Term code \'' . $aVariant['genetic_origin']['evidence_code']['@term'] . '\' not recognized. ' .
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_evidence'])) . '.';
+                                }
+                            }
+                        }
+                    }
+
                     // Check variant type, if present.
                     if (isset($aVariant['@type'])) {
                         // Check types.
@@ -910,6 +1181,7 @@ class LOVD_API_Submissions {
                     }
 
                     // Check pathogenicity, if present.
+                    // FIXME: Currently ignoring "evidence_code", which seems to be able to contain "reported" and "concluded".
                     if (isset($aVariant['pathogenicity'])) {
                         // We don't want to find conflicting info. Mark if we found pathogenicity of individual level.
                         $bPathogenicityIndividualScope = false;
@@ -920,7 +1192,7 @@ class LOVD_API_Submissions {
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Missing required Pathogenicity @scope or @term elements.';
                             } elseif ($aPathogenicity['@scope'] != 'individual') {
                                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity scope \'' . $aPathogenicity['@scope'] . '\' not understood. ' .
-                                    'LOVD only supports: individual.';
+                                    'LOVD only supports: individual.'; // VarioML: individual | family | population.
                             } else {
                                 if ($bPathogenicityIndividualScope) {
                                     // We already saw this scope, that's not possible.
@@ -928,11 +1200,63 @@ class LOVD_API_Submissions {
                                 } else {
                                     $bPathogenicityIndividualScope = true;
                                 }
-                                if (!isset($this->aValueMappings['@term'][$aPathogenicity['@term']])) {
+                                if (!isset($this->aValueMappings['pathogenicity'][$aPathogenicity['@term']])) {
                                     // Value not recognized.
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Pathogenicity #' . $nPathogenicity . ': Pathogenicity term \'' . $aPathogenicity['@term'] . '\' not recognized. ' .
-                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['@term'])) . '.';
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['pathogenicity'])) . '.';
                                 }
+                            }
+                        }
+                    }
+
+                    // (temporarily) allow for alternative PubMed info, map to db_xref.
+                    // This is undocumented and may be removed later, when our users will adhere to the standards for
+                    //  providing PubMed (literature) links.
+                    if (isset($aVariant['literature'])) {
+                        foreach ($aVariant['literature'] as $aEntries) {
+                            if (!is_array($aEntries)) {
+                                $aEntries = array($aEntries);
+                            }
+                            foreach ($aEntries as $aEntry) {
+                                if (!is_array($aEntry)) {
+                                    $aEntry = array($aEntry);
+                                }
+                                foreach ($aEntry as $sEntry) {
+                                    if (!isset($aVariant['db_xref'])) {
+                                        $aVariant['db_xref'] = array();
+                                    }
+                                    $aVariant['db_xref'][] = array(
+                                        '@source' => 'pubmed',
+                                        '@name' => $sEntry,
+                                    );
+                                }
+                            }
+                        }
+                        if (isset($aVariant['db_xref'])) {
+                            // We don't measure if it's changed or not, we'll just overwrite.
+                            $aInput['lsdb']['individual'][$iIndividual]['variant'][$iVariant]['db_xref'] = $aVariant['db_xref'];
+                        }
+                        unset($aVariant['literature'], $aInput['lsdb']['individual'][$iIndividual]['variant'][$iVariant]['literature']);
+                    }
+
+                    // Check db_xref, if present.
+                    if (isset($aVariant['db_xref'])) {
+                        foreach ($aVariant['db_xref'] as $iDBXRef => $aID) {
+                            $nDBXRef = $iDBXRef + 1; // We start counting at 1, like most humans do.
+                            if (!isset($aID['@source'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Missing required @source element.';
+                            } elseif (!in_array(strtolower($aID['@source']), array('dbsnp', 'pubmed'))) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Source not understood. ' .
+                                    'Currently supported: dbsnp, pubmed.';
+                            } elseif (strtolower($aID['@source']) != 'pubmed' && !isset($aID['@accession'])) {
+                                // PubMed is allowed to leave the accession out, as a common reference.
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Missing required @accession element.';
+                            } elseif (strtolower($aID['@source']) == 'dbsnp' && !preg_match('/^rs\d+$/', $aID['@accession'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Accession not understood. ' .
+                                    'Expecting "rs", followed by one or more digits.';
+                            } elseif (strtolower($aID['@source']) == 'pubmed' && !empty($aID['@accession']) && !ctype_digit($aID['@accession'])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': DB XRef #' . $nDBXRef . ': Accession not understood. ' .
+                                    'Expecting one or more digits.';
                             }
                         }
                     }
@@ -965,7 +1289,7 @@ class LOVD_API_Submissions {
 
 
 
-                    // Check next level of variation (cDNA), if present.
+                    // Check next level of variant (cDNA), if present.
                     if (isset($aVariant['seq_changes']) && isset($aVariant['seq_changes']['variant'])) {
                         // We collect the genes and transcripts annotated for this variant.
                         // If we cannot find *any* of the transcripts that are annotated for this variant, we throw an error.
@@ -1044,10 +1368,18 @@ class LOVD_API_Submissions {
                                                 $aTranscripts[$iVariantLevel2] = $aVariantLevel2['ref_seq']['@accession'];
                                                 // We'll search flexibly, so get the transcript ID without the version.
                                                 $sTranscriptNoVersion = substr($aVariantLevel2['ref_seq']['@accession'], 0, strpos($aVariantLevel2['ref_seq']['@accession'] . '.', '.') + 1);
-                                                $sTranscriptAvailable = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
-                                                    array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchColumn();
+                                                list($sTranscriptAvailable, $sTranscriptGene) = $_DB->query('SELECT id_ncbi, geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
+                                                    array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchRow();
                                                 if ($sTranscriptAvailable) {
                                                     $aTranscriptsExisting[$iVariantLevel2] = $sTranscriptAvailable;
+
+                                                    // But also check gene. If we have a gene from the JSON file, and we have
+                                                    //  that in the database, then it must match this transcript.
+                                                    if (isset($aVariantLevel2['gene']['@accession'])
+                                                        && $aVariantLevel2['gene']['@accession'] != $sTranscriptGene) {
+                                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': ' .
+                                                            'Gene source (' . $aVariantLevel2['gene']['@accession'] . ') mismatches with gene (' . $sTranscriptGene . ') attached to given RefSeq accession (' . $aVariantLevel2['ref_seq']['@accession'] . ').';
+                                                    }
                                                 }
                                             }
                                         }
@@ -1123,7 +1455,7 @@ class LOVD_API_Submissions {
 
 
 
-                            // Check next level of variation (RNA or Protein), if present.
+                            // Check next level of variant (RNA or Protein), if present.
                             if (isset($aVariantLevel2['seq_changes']) && isset($aVariantLevel2['seq_changes']['variant'])) {
                                 foreach ($aVariantLevel2['seq_changes']['variant'] as $iVariantLevel3 => $aVariantLevel3) {
                                     $nVariantLevel3 = $iVariantLevel3 + 1; // We start counting at 1, like most humans do.
@@ -1162,7 +1494,7 @@ class LOVD_API_Submissions {
 
 
 
-                                    // Check next level of variation (only AA allowed, only if this variant was RNA).
+                                    // Check next level of variant (only AA allowed, only if this variant was RNA).
                                     if (isset($aVariantLevel3['seq_changes']) && isset($aVariantLevel3['seq_changes']['variant'])) {
                                         // If the previous level was already AA, we should not be seeing any children, actually.
 
@@ -1271,6 +1603,10 @@ class LOVD_API_Submissions {
                 // Quote data.
                 $z = array_map('addslashes', $z);
                 foreach ($aColumns as $nKey => $sCol) {
+                    // Prevent notices here, when the columns are added later in the file.
+                    if (!isset($z[$sCol])) {
+                        $z[$sCol] = '';
+                    }
                     // Replace line endings and tabs (they should not be there but oh well), so they don't cause problems with importing.
                     fputs($f, ($nKey? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n", "\t"), array('\r\n', '\r', '\n', '\t'), $z[$sCol]) . '"');
                 }

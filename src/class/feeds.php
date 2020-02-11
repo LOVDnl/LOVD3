@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-09
- * Modified    : 2014-01-15
- * For LOVD    : 3.0-10
+ * Modified    : 2018-04-18
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -35,7 +35,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class Feed {
+class Feed
+{
     // Some member variables.
     private $sAtomFeed = '<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -164,7 +165,7 @@ class Feed {
                 $sContentType = 'text';
             }
             $sEntry = str_replace('{{ ENTRY_CONTENT_TYPE }}', $sContentType, $sEntry);
-            $sEntry = str_replace('{{ ENTRY_CONTENT }}', str_replace("\n", "\n      ", $sContent), $sEntry);
+            $sEntry = str_replace('{{ ENTRY_CONTENT }}', str_replace("\n", "\n      ", trim($sContent)), $sEntry);
         } else {
             $sEntry = preg_replace('/.+[\r\n]{1,2}.+{{ ENTRY_CONTENT }}.*[\r\n]{1,2}.+[\r\n]{1,2}/', '', $sEntry); // This removes the entire line plus the ones directly before and after.
         }
@@ -185,13 +186,16 @@ class Feed {
     function formatDate ($t)
     {
         // Formats dates (timestamp or formatted) to the format needed for the Atom format.
-        if (!preg_match('/^[0-9]+$/', $t)) {
+        if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}$/', $t)) {
+            // Already looks good.
+            return $t;
+        }
+        if (!ctype_digit($t)) {
             // Not a timestamp, change to timestamp.
             $t = strtotime($t); // Just assume this works.
         }
 
-        $sDate = date('Y-m-d\TH:i:sO', $t);
-        $sDate = substr($sDate, 0, -2) . ':00'; // Needs to be done, because we need +02:00 instead of +0200 (= 'P' in PHP/5.1.3)
+        $sDate = date('c', $t);
         return($sDate);
     }
 

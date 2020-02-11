@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-10-01
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -51,8 +51,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     if (!empty($_PE[1])) {
         $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array(rawurldecode($_PE[1])))->fetchColumn();
         if ($sGene) {
-            // We need the authorization call once we show the individuals with VARIANTS in gene X, not before!
-//            lovd_isAuthorized('gene', $sGene); // To show non public entries.
+            lovd_isAuthorized('gene', $sGene); // To show non public entries.
             $_GET['search_genes_searched'] = '="' . $sGene . '"';
         } else {
             // Command or gene not understood.
@@ -63,8 +62,8 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         }
     }
 
-    // Managers are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+    // Managers and authorized curators are allowed to download this list...
+    if ($_AUTH['level'] >= LEVEL_CURATOR) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -82,7 +81,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     $_DATA = new LOVD_Individual();
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         'find_and_replace' => true,
     );
     $_DATA->viewList('Individuals', $aVLOptions);
@@ -115,14 +114,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
         $aNavigation[CURRENT_PATH . '?edit']                     = array('menu_edit.png', 'Edit individual entry', 1);
         if ($zData['statusid'] < STATUS_OK && $_AUTH['level'] >= LEVEL_CURATOR) {
-            $aNavigation[CURRENT_PATH . '?publish']              = array('check.png', ($zData['statusid'] == STATUS_MARKED ? 'Remove mark from' : 'Publish (curate)') . ' individual entry', 1);
+            $aNavigation[CURRENT_PATH . '?publish']              = array('check.png', ($zData['statusid'] == STATUS_MARKED? 'Remove mark from' : 'Publish (curate)') . ' individual entry', 1);
         }
         // You can only add phenotype information to this individual, when there are phenotype columns enabled.
         if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID))->fetchColumn()) {
             $aNavigation['phenotypes?create&amp;target=' . $nID] = array('menu_plus.png', 'Add phenotype information to individual', 1);
         }
         $aNavigation['screenings?create&amp;target=' . $nID]     = array('menu_plus.png', 'Add screening to individual', 1);
-        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+        if ($_AUTH['level'] >= $_SETT['user_level_settings']['delete_individual']) {
             $aNavigation[CURRENT_PATH . '?delete']               = array('cross.png', 'Delete individual entry', 1);
         }
     }
@@ -169,7 +168,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             'cols_to_skip' => array('screeningid', 'individualid', 'created_date', 'edited_date'),
             'track_history' => false,
             'show_navigation' => false,
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         );
+        // This ViewList ID is checked in ajax/viewlist.php. Don't just change it.
         $_DATA->viewList('Screenings_for_I_VE', $aScreeningVLOptions);
         unset($_GET['search_individualid']);
 
@@ -181,7 +182,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // VOG needs to be first, so it groups by the VOG ID.
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVariantVLOptions = array(
-            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         );
         $_DATA->viewList('CustomVL_VOT_for_I_VE', $aVariantVLOptions);
     }
@@ -521,7 +522,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     // FIXME: What if individual also contains other user's data?
     lovd_isAuthorized('individual', $nID);
-    lovd_requireAUTH(LEVEL_CURATOR);
+    lovd_requireAUTH($_SETT['user_level_settings']['delete_individual']);
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual();

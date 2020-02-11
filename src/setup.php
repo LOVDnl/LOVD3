@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2017-11-08
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -37,7 +37,7 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-define('PAGE_TITLE', 'LOVD Setup');
+define('PAGE_TITLE', 'LOVD' . (LOVD_plus? '+' : '') . ' Setup');
 $_T->printHeader();
 $_T->printTitle();
 
@@ -55,10 +55,12 @@ $nIndividuals = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS)->fetchC
 $nGenes       = count(lovd_getGeneList());
 $aTotalVars   = array();
 $nTotalVars   = 0;
-$q = $_DB->query('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
-while ($r = $q->fetchRow()) {
-    $aTotalVars[$r[1]] = $r[0];
-    $nTotalVars += $r[0];
+if (!LOVD_plus) {
+    $q = $_DB->query('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
+    while ($r = $q->fetchRow()) {
+        $aTotalVars[$r[1]] = $r[0];
+        $nTotalVars += $r[0];
+    }
 }
 
 
@@ -81,17 +83,21 @@ print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . 
       '                  Users : ' . $nUsers . '<BR>' . "\n" .
       '                  Log entries : ' . $nLogs . '<BR>----------<BR>' . "\n" .
       '                  Individuals : ' . $nIndividuals . '<BR>' . "\n" .
-      '                  Genes : ' . $nGenes . '</TD></TR>' . "\n" .
-      '              <TR>' . "\n" .
-      '                <TH>Variants</TH></TR>' . "\n" .
-      '              <TR>' . "\n" .
-      '                <TD>' . "\n" .
-      '                  Total : ' . $nTotalVars);
-foreach ($aTotalVars as $nStatus => $nVars) {
-    print('<BR>' . "\n" .
-          '                  ' . $_SETT['data_status'][$nStatus] . ' : ' . $nVars);
+      '                  Genes : ' . $nGenes . '</TD></TR>');
+if ($nTotalVars) {
+    print("\n" .
+          '              <TR>' . "\n" .
+          '                <TH>Variants</TH></TR>' . "\n" .
+          '              <TR>' . "\n" .
+          '                <TD>' . "\n" .
+          '                  Total : ' . $nTotalVars);
+    foreach ($aTotalVars as $nStatus => $nVars) {
+        print('<BR>' . "\n" .
+            '                  ' . $_SETT['data_status'][$nStatus] . ' : ' . $nVars);
+    }
+    print('</TD></TR>');
 }
-print('</TD></TR></TABLE><BR>' . "\n\n");
+print('</TABLE><BR>' . "\n\n");
 
 // Mention that LOVD can be updated!
 if (!LOVD_plus && $_STAT['update_level']) { // Not for LOVD+, unless we build a separate list.
@@ -106,10 +112,10 @@ print('          </TD>' . "\n" .
 
 $aItems =
      array(
-            'General LOVD Setup' =>
+            'General LOVD' . (LOVD_plus? '+' : '') . ' Setup' =>
                  array(
-                        array('settings?edit', 'lovd_settings.png', 'LOVD System settings', 'View and change LOVD System settings, including settings on statistics, security and the legend.'),
-         'uninstall' => array('uninstall', 'lovd_warning.png', 'Uninstall LOVD', 'Uninstall LOVD.'),
+                        array('settings?edit', 'lovd_settings.png', 'LOVD' . (LOVD_plus? '+' : '') . ' System settings', 'View and change LOVD' . (LOVD_plus? '+' : '') . ' System settings, including settings on statistics, security and the legend.'),
+         'uninstall' => array('uninstall', 'lovd_warning.png', 'Uninstall LOVD' . (LOVD_plus? '+' : '') . '', 'Uninstall LOVD' . (LOVD_plus? '+' : '') . '.'),
                       ),
             'Authorized users' =>
                  array(
@@ -120,7 +126,7 @@ $aItems =
                  array(
                         array('columns?create', 'lovd_columns_create.png', 'Create new custom data column', 'Create new custom data column.'),
                         array('columns', 'lovd_columns_view.png', 'Browse all custom data columns', 'Browse all custom data columns already available to enable or disable them, or view or edit their settings.'),
-          'download' => array('download/columns', 'lovd_save.png', 'Download all LOVD custom columns', 'Download all LOVD custom columns in the LOVD import format.'),
+          'download' => array('download/columns', 'lovd_save.png', 'Download all LOVD' . (LOVD_plus? '+' : '') . ' custom columns', 'Download all LOVD' . (LOVD_plus? '+' : '') . ' custom columns in the LOVD import format.'),
 /*
       '              <TR class="pointer" onclick="window.location.href=\'' . lovd_getInstallURL() . 'setup_columns_global_import.php\';">' . "\n" .
       '                <TD align="center" width="40"><IMG src="gfx/lovd_columns_import.png" alt="Import new LOVD custom columns" width="32" height="32"></TD>' . "\n" .
@@ -152,7 +158,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
                  array(
           'download' => array('download/all', 'lovd_save.png', 'Download all data', 'Download all data in LOVD import format (custom columns, genes, transcripts, diseases, individuals, phenotypes, screenings &amp; variants).'),
                         array('import', 'lovd_import.png', 'Import data', 'Import data using the LOVD import format (custom columns, diseases, individuals, phenotypes, screenings &amp; variants).'),
-          'schedule' => array('import?schedule', 'lovd_clock.png', 'Schedule data for import', 'Schedule data files to be imported into LOVD.'),
+          'schedule' => array('import?schedule', 'lovd_clock.png', 'Schedule data for import', 'Schedule data files to be imported into LOVD' . (LOVD_plus? '+' : '') . '.'),
                       ),
             'System logs' =>
                  array(
@@ -161,7 +167,7 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
           );
 // Remove uninstall.
 if ($_CONF['lock_uninstall'] || $_AUTH['level'] < LEVEL_ADMIN) {
-    unset($aItems['General LOVD Setup']['uninstall']);
+    unset($aItems['General LOVD' . (LOVD_plus? '+' : '') . ' Setup']['uninstall']);
 }
 if (LOVD_plus) {
     unset($aItems['Custom data columns']['download']);
@@ -190,11 +196,16 @@ print('          </TD>' . "\n" .
 
 $aItems =
     array(
-            'Gene databases' =>
-                 array(
-                        array('genes?create', 'lovd_genes_create.png', 'Create new gene database', 'Create a new gene database.'),
-                        array('genes', 'lovd_genes_view.png', 'View all gene databases', 'Manage configured gene databases.'),
-                      ),
+        'Gene panels' =>
+            array(
+                array('gene_panels?create', 'lovd_genes_create.png', 'Create new gene panel', 'Create a new gene panel.'),
+                array('gene_panels', 'lovd_genes_view.png', 'View all gene panels', 'Manage configured gene panels.'),
+            ),
+        'Gene databases' =>
+            array(
+                array('genes?create', 'lovd_genes_create.png', 'Create new gene database', 'Create a new gene database.'),
+                array('genes', 'lovd_genes_view.png', 'View all gene databases', 'Manage configured gene databases.'),
+            ),
             'Transcripts' =>
                  array(
                         array('transcripts?create', 'lovd_transcripts_create.png', 'Create new transcript', 'Create a new transcript.'),
@@ -217,7 +228,7 @@ $aItems =
                       ),
             'Announcements' =>
                  array(
-                        array('announcements?create', 'lovd_announcements_create.png', 'Create new announcement', 'Create a new announcement, optionally making LOVD read-only.'),
+                        array('announcements?create', 'lovd_announcements_create.png', 'Create new announcement', 'Create a new announcement, optionally making LOVD' . (LOVD_plus? '+' : '') . ' read-only.'),
                         array('announcements', 'lovd_information.png', 'View all announcements', 'Manage system announcements.'),
                       ),
 /*
@@ -231,6 +242,11 @@ print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setu
 */
           );
 
+if (LOVD_plus) {
+    unset($aItems['Gene databases'], $aItems['Transcripts'], $aItems['Individuals'], $aItems['Variants']);
+} else {
+    unset($aItems['Gene panels']);
+}
 
 foreach ($aItems as $sTitle => $aLinks) {
     print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
@@ -255,13 +271,11 @@ print('          </TD>' . "\n" .
 // Newly installed? Flash create gene link.
 if (isset($_GET['newly_installed'])) {
     print('      <SCRIPT type="text/javascript">' . "\n" .
-          '        <!--' . "\n" .
           '        varTR = document.getElementById(\'setupRight\').getElementsByTagName(\'tr\')[1];' . "\n");
     for ($i = 0; $i < 30; $i ++) {
         print('        setTimeout("varTR.style.background=\'#' . ($i%2? 'F0F3FF' : 'C8DCFA') . '\'", ' . ($i * 1000) . ');' . "\n");
     }
-    print('        setTimeout("varTR.style.background=\'\'", ' . ($i * 1000) . ');' . "\n");
-    print('        // -->' . "\n" .
+    print('        setTimeout("varTR.style.background=\'\'", ' . ($i * 1000) . ');' . "\n" .
           '      </SCRIPT>' . "\n\n");
 }
 

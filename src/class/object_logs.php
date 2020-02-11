@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2016-10-14
- * For LOVD    : 3.0-18
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -41,8 +41,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Log extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Log object.
+class LOVD_Log extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Logs.
     var $sObject = 'Log';
 
 
@@ -115,6 +116,7 @@ class LOVD_Log extends LOVD_Object {
             case 'AnalysisClose':
             case 'AnalysisOpen':
             case 'AnalysisRun':
+            case 'AnalysisRunClone':
             case 'AnalysisRunModify':
             case 'AnalysisRunDelete':
                 $zData['entry'] = preg_replace('/(individual) ([0-9]+):([0-9]+)( |$)/', '$1 <A href="individuals/$2/analyze/$3">$2</A> (analysis $3)$4', $zData['entry']);

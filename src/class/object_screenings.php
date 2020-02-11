@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2017-11-30
- * For LOVD    : 3.0-21
+ * Modified    : 2019-12-19
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,10 +42,10 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Screening extends LOVD_Custom {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Screening extends LOVD_Custom
+{
+    // This class extends the Custom class and it handles the Screenings.
     var $sObject = 'Screening';
-    var $bShared = false;
 
 
 
@@ -54,7 +54,7 @@ class LOVD_Screening extends LOVD_Custom {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         // SQL code for loading an entry for an edit form.
         // FIXME; change owner to owned_by_ in the load entry query below.
@@ -71,7 +71,7 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
                                            'i.statusid AS individual_statusid, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
-                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
+                                           'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
                                            'uo.name AS owned_by_, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -83,7 +83,7 @@ class LOVD_Screening extends LOVD_Custom {
         $this->aSQLViewEntry['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
-                                           ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                           ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                                                'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')) ') .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
@@ -94,14 +94,14 @@ class LOVD_Screening extends LOVD_Custom {
         // SQL code for viewing the list of screenings
         $this->aSQLViewList['SELECT']   = 's.*, ' .
                                           's.id AS screeningid, ' .
-                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
+                                          'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
                                           'GROUP_CONCAT(DISTINCT s2g.geneid SEPARATOR ", ") AS genes, ' .
                                           'i.statusid, ' .
                                           'uo.name AS owned_by_, ' .
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner';
         $this->aSQLViewList['FROM']     = TABLE_SCREENINGS . ' AS s ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) ' .
-                                          ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
+                                          ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')) ') .
                                           'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
@@ -120,10 +120,10 @@ class LOVD_Screening extends LOVD_Custom {
                  array(
                         'variants_found_' => 'Variants found?',
                         'owned_by_' => 'Owner name',
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -167,7 +167,7 @@ class LOVD_Screening extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
 
@@ -176,7 +176,7 @@ class LOVD_Screening extends LOVD_Custom {
                  array(
                         'owned_by',
                       );
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         if (!empty($aData['genes']) && is_array($aData['genes'])) {
             if (count($aData['genes']) > 15) {
@@ -278,7 +278,7 @@ class LOVD_Screening extends LOVD_Custom {
 
         if ($sView == 'entry') {
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
-            if ($_AUTH['level'] >= LEVEL_COLLABORATOR) {
+            if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                 $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($zData['individual_statusid']) . '">(' . $_SETT['data_status'][$zData['individual_statusid']] . ')</SPAN>';
             }
         }

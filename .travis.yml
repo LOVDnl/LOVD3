@@ -5,6 +5,7 @@ php:
   # aliased to a recent 5.5.x version
 #  - 5.5
   # aliased to a recent 5.6.xversion
+  # This one is usually failing due to unexpected halting of the process (and Travis then killing the build).
   - 5.6
   # aliased to a recent 7.x version
 #  - 7.0
@@ -33,11 +34,10 @@ dist: trusty
 addons:
   firefox: "54.0"
   apt:
-    sources:
-    - mysql-5.7-trusty
     packages:
     - mysql-server
     - mysql-client
+    - mutt
 #    - chromium-browser=61.0.3163.100-0ubuntu0.14.04.1202
     - chromium-browser
 
@@ -62,25 +62,31 @@ script:
 
   # Run all test suites.
   - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite collaborator_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite import_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite manager_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - ./tests/upload_test_results.sh
   - vendor/bin/phpunit -v --configuration ./tests/unit_tests/phpunit.xml
-
-after_failure:
   - ./tests/upload_test_results.sh
 
 notifications:
   email:
    recipients:
       - I.F.A.C.Fokkema@lumc.nl
-      - M.Kroon@lumc.nl
    on_success: never
    ## [always|never|change] # default: change
-   on_failure: never
+   on_failure: always
    ## [always|never|change] # default: always

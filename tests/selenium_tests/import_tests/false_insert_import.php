@@ -3,12 +3,13 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2016
- * Modified    : 2017-09-18
- * For LOVD    : 3.0-20
+ * Created     : 2015-06-05
+ * Modified    : 2019-09-03
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2016-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -45,12 +46,13 @@ class FalseInsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $element->click();
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Import file']"));
         $element->click();
-        
-        $element = $this->driver->findElement(WebDriverBy::linkText("Show 5 warnings"));
+
+        $element = $this->driver->findElement(WebDriverBy::linkText("Show 6 warnings"));
         $element->click();
-        
+
         $bodyText = $this->driver->findElement(WebDriverBy::tagName("body"))->getText();
-        
+
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Columns, line 9\): The field [\s\S]col_order[\s\S] must contain a positive integer, "abc" does not match\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Columns, line 9\): Incorrect value for field [\s\S]col_order[\s\S], which needs to be numeric, between 0 and 255\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Columns, line 9\): Incorrect value for field [\s\S]standard[\s\S], which should be 0 or 1\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Columns, line 9\): Select option #3 "yes\(\)[\s\S]* = Consanguineous parents" not understood\.[\s\S]*$/', $bodyText));
@@ -72,9 +74,7 @@ class FalseInsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 48\): Panel size of Individual "00000006" must be lower than the panel size of Individual "00000002"\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 49\): Individual "00000022" does not exist in the database and is not defined \(properly\) in this import file\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 49\): Individual "00000022" does not exist in the database and is not defined \(properly\) in this import file\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 50\): Individual "00000008" does not exist in the database and is not defined \(properly\) in this import file\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 50\): The [\s\S]fatherid[\s\S] can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 50\): Individual "00000008" does not exist in the database and is not defined \(properly\) in this import file\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 50\): The [\s\S]motherid[\s\S] can not link to itself; this field is used to indicate which individual in the database is the parent of the given individual\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 51\): The fatherid "00000002" refers to an panel \(group of individuals\), not an individual\. If you want to configure that panel as an individual, set its [\s\S]Panel size[\s\S] field to value 1\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Individuals, line 51\): The motherid "00000002" refers to an panel \(group of individuals\), not an individual\. If you want to configure that panel as an individual, set its [\s\S]Panel size[\s\S] field to value 1\.[\s\S]*$/', $bodyText));

@@ -4,14 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-27
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               Juny Kesumadewi <juny.kesumadewi@unimelb.edu.au>
  *
  *
  * This file is part of LOVD.
@@ -126,7 +127,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     lovd_showJGNavigation($aNavigation, 'Diseases');
 
     if ($zData['individuals']) {
-        $_GET['search_diseaseids'] = $nID;
+        $_GET['search_diseaseids_searched'] = $nID;
         print('<BR><BR>' . "\n\n");
         $_T->printTitle('Individuals', 'H4');
         require ROOT_PATH . 'class/object_individuals.php';
@@ -199,7 +200,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('symbol', 'name', 'id_omim', 'tissues', 'features', 'remarks',
+            $aFields = array('symbol', 'name', 'inheritance', 'id_omim', 'tissues', 'features', 'remarks',
                              'created_by', 'created_date');
 
             // Prepare values.
@@ -246,7 +247,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                      $(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\', eval($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\')) + 1);
                                  }
                                  if (opener.document.location.href.match(/\/(individuals\/' . (empty($_POST['genes'])? '' : '|genes\/(' . implode('|', $_POST['genes']) . ')\?') . ')/)) {
-                                     $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').attr(\'selected\', 1);
+                                     $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').prop(\'selected\', 1);
                                  }
                                  setTimeout(\'self.close();\', 1000);</SCRIPT>' . "\n\n");
             } else {
@@ -330,7 +331,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('symbol', 'name', 'id_omim', 'tissues', 'features', 'remarks',
+            $aFields = array('symbol', 'name', 'inheritance', 'id_omim', 'tissues', 'features', 'remarks',
                              'edited_by', 'edited_date');
 
             // Prepare values.

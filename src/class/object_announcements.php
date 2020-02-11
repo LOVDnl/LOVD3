@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-08-26
- * Modified    : 2016-08-26
- * For LOVD    : 3.0-17
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               M. Kroon <m.kroon@lumc.nl>
  *
  *
  * This file is part of LOVD.
@@ -39,9 +40,10 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Announcement extends LOVD_Object {
-// This class extends the basic Object class and it handles the Announcement object.
-var $sObject = 'Announcement';
+class LOVD_Announcement extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Announcements.
+    var $sObject = 'Announcement';
 
 
 
@@ -107,7 +109,7 @@ var $sObject = 'Announcement';
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_DB;
@@ -118,7 +120,7 @@ var $sObject = 'Announcement';
                 'type',
                 'announcement',
             );
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // NO XSS attack prevention, because the message might require HTML (links, markup etc).
         // lovd_checkXSS();

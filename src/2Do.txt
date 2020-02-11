@@ -1,9 +1,7 @@
 Release LOVD?
 =============
-Did you run all unit tests?
 Changed something? Change the manual, too! Don't forget setting the LOVD version and last updated time in the manual, too!!!
 Check changelog and release date in it (and don't use "mutation") && inc-upgrade.php, edit inc-init.php, update manual PDF size in docs/index.php.
-If bugs have been closed, mark them in the changelog.
 git pull, git commit, git log, git tag -a -m 'Tag 3.0-15' '3.0-15', git push, git push --tags
 ER MOGEN GEEN ONGECOMMITTE CHANGES IN STAAN IN DEZE STAP (INCL. NIEUWE FILES!!!), TENZIJ GEMARKEERD ALS DMD_SPECIFIC, ANDERS WORDEN DEZE GEPACKAGED!!!
 Run package script, follow instructions.
@@ -11,10 +9,9 @@ Update download.php, news.php (mark closed bugs), package_update.php, sync docs 
 
 Update LOVD installations:
 (De LOVD3 databases zouden misschien een eigen /www/LOVD_upgrade.php versie moeten krijgen?)
-/antwerpen/ heeft aangepaste .htaccess.
 /DNA_profiles/ heeft aangepaste index.php.
 /my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
-/shared/ heeft een aangepaste ajax/viewlist.php, class/template.php, import.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
+/shared/ heeft een aangepaste class/template.php, download.php, import.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
 /whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
 After updating all installations, send email to team with all improvements summarized.
 
@@ -28,11 +25,6 @@ Columns we no longer use that can be removed:
 - TABLE_GENES/allow_index_wiki
 - TABLE_TRANSCRIPTS/id_mutalyzer
 - TABLE_USERS/reference
-
-\item[$\circ$] LSDB list: Adding data from dead LSDBs: Brenda?
-
-Website:
-- Create search interface w/ Ajax for ww query service, but in a secure way, so it can't be abused.
 
 - Access sharing: Users zouden moeten worden gesorteerd op naam.
 - Gerard: Als ik bij (bijv.) Age examined (Phenotype) '<00y' invul, dus onderzoek aan een ongeboren kind, komt er '<00y (before )' te staan, zou dit '<00y (before birth)' moeten zijn?
@@ -429,7 +421,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
   * Bij gebruik LRG webservice: Pontus: "Should a key be leaked or stolen in a way so that it is misused, we may need to reserve the right to ban that key. In that case, you would perhaps want to implement some way of redistributing new keys to the LOVD installations..."
     Me: "I see - in that case I can't hard-code it in, but need to store it in the database somewhere. However, anyone wanting to abuse the system could easily find out the new key. So if somebody really does want to do harm, it's quite impossible to lock them out *without* locking LOVDs out, unless you would introduce per-LOVD keys and match each key with a certain IP address..."
 - De inc-init moet toch een autocommit hebben? waarom staat dat niet aan?
-- Mutalyzer webservice "Ping" module ergens in REST2SOAP ofzo integreren, zodat meteen kan worden gechecked of mutalyzer gewoon up is.
 - API.
   + Als we pathogenicity gaan delen, dan misschien om alles te verduidelijken, ook aantallen andere vars of andere path vars noemen?
 - How to store functional assays? Functional effect screenings? Separate table, with DBID or something to link to variant in general? Chr,g_pos?
@@ -691,7 +682,7 @@ Not sure yet how to...
 - Aanmaken disease - voorstellen cols dmv OMIM ID en ontology lookup?
 - Bij het editen insluiten de modified_date van de entry. Als die, bij het editen van de data ineens anders is, moet je een foutmelding geven. Twee mensen hebben tegelijkertijd er aan gewerkt!
     Wellicht direct in de update query?
-- Genen als HOXA@ en UGT1A zijn officieel een erkend gensymbool maar zijn families van genen; ze hebben een NG per groep genen, maar een NM per gen, en de Mutalyzer SOAP call flipt omdat die geen NC slice kan maken.
+- Genen als HOXA@ en UGT1A zijn officieel een erkend gensymbool maar zijn families van genen; ze hebben een NG per groep genen, maar een NM per gen, en de Mutalyzer call flipt omdat die geen NC slice kan maken.
 
 
 HANDLEIDING

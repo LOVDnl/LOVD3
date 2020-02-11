@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2018-01-25
- * For LOVD    : 3.0-21
+ * Modified    : 2019-12-19
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,10 +42,10 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Individual extends LOVD_Custom {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Individual extends LOVD_Custom
+{
+    // This class extends the Custom class and it handles the Individuals.
     var $sObject = 'Individual';
-    var $bShared = false;
 
 
 
@@ -97,9 +97,11 @@ class LOVD_Individual extends LOVD_Custom {
                                           'GROUP_CONCAT(DISTINCT d.id) AS diseaseids, ' .
                                         // FIXME; Can we get this order correct, such that diseases without abbreviation nicely mix with those with? Right now, the diseases without symbols are in the back.
                                           'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
-                                          'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, ' .
-                                          'GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ", ") AS variants_in_genes_, ' .
-                                          'COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ') AS variants_, ' . // Counting s2v.variantid will not include the limit opposed to vog in the join's ON() clause.
+                                          (LOVD_plus? '' :
+                                              'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, ' .
+                                              'GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ", ") AS variants_in_genes_, ' .
+                                              'COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ') AS variants_, ' // Counting s2v.variantid will not include the limit opposed to vog in the join's ON() clause.
+                                          ) .
                                           'uo.name AS owned_by_, ' .
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                           'ds.name AS status';
@@ -112,14 +114,25 @@ class LOVD_Individual extends LOVD_Custom {
                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.screeningid = s.id) ' .
-                                          ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
-                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')) ') .
-                                          'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 's2v.variantid' : 'vog.id') . ' = vot.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid) ' .
+                                          (LOVD_plus? '' :
+                                              'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.screeningid = s.id) ' .
+                                              ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                                                  'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')) ') .
+                                              'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ' = vot.id) ' .
+                                              'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid) '
+                                          ) .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (i.statusid = ds.id)';
+        // Conditional inclusion of a JOIN that is only needed to search. This prevents long delays when using HAVING on
+        //  the Individual's Disease column. We can't just use a WHERE on the same JOIN, as it will limit the results,
+        //  meaning no diseases other than the one searched for will be shown. This extra join should fix that.
+        // If we need this more often, we should handle it more gracefully.
+        if (!empty($_GET['search_diseaseids_searched'])) {
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d_s ON (i.id = i2d_s.individualid)';
+            // The search field will be defined below.
+        }
+
         $this->aSQLViewList['GROUP_BY'] = 'i.id';
 
         // Run parent constructor to find out about the custom columns.
@@ -134,11 +147,11 @@ class LOVD_Individual extends LOVD_Custom {
                         'diseases_' => 'Diseases',
                         'parents_' => 'Parent(s)',
                         'owned_by_' => 'Owner name',
-                        'status' => array('Individual data status', LEVEL_COLLABORATOR),
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'status' => array('Individual data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -159,9 +172,14 @@ class LOVD_Individual extends LOVD_Custom {
                         'diseaseids' => array(
                                     'view' => array('Disease ID', 0),
                                     'db'   => array('diseaseids', false, true)),
+                        'diseaseids_searched' => array( // Special, optionally included joined table.
+                                    'view' => false,
+                                    'db'   => array('i2d_s.diseaseid', false, 'INT_UNSIGNED')),
                         'diseases_' => array(
                                     'view' => array('Disease', 175),
                                     'db'   => array('diseases_', 'ASC', true)),
+                 ),
+                 (LOVD_plus? array() : array(
                         'phenotypes_' => array(
                                     'view' => false), // Placeholder for Phenotype/Additional.
                         'genes_searched' => array(
@@ -177,6 +195,8 @@ class LOVD_Individual extends LOVD_Custom {
                         'variants_' => array(
                                     'view' => array('Variants', 75, 'style="text-align : right;"'),
                                     'db'   => array('variants_', 'DESC', 'INT_UNSIGNED')),
+                 )),
+                 array(
                         'panel_size' => array(
                                     'view' => array('Panel size', 70, 'style="text-align : right;"'),
                                     'db'   => array('i.panel_size', 'DESC', true),
@@ -192,7 +212,7 @@ class LOVD_Individual extends LOVD_Custom {
                         'status' => array(
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true),
-                                    'auth' => LEVEL_COLLABORATOR),
+                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
                         'created_by' => array(
                                     'view' => false,
                                     'db'   => array('i.created_by', false, true)),
@@ -228,7 +248,7 @@ class LOVD_Individual extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_DB;
 
@@ -244,7 +264,7 @@ class LOVD_Individual extends LOVD_Custom {
                       );
 
         // Checks fields before submission of data.
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         foreach (array('fatherid', 'motherid') as $sParentalField) {
             // This is not yet implemented correctly. These checks are implemented correctly in import.php in section "Individuals".
@@ -279,8 +299,8 @@ class LOVD_Individual extends LOVD_Custom {
             }
         }
 
-        $aDiseases = array_keys($this->aFormData['aDiseases'][5]);
         if (!empty($aData['active_diseases'])) {
+            $aDiseases = array_keys($this->aFormData['aDiseases'][5]);
             if (count($aData['active_diseases']) > 1 && in_array('00000', $aData['active_diseases'])) {
                 lovd_errorAdd('active_diseases', 'You cannot select both "Healthy/Control" and a disease for the same individual entry.');
             } else {

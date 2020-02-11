@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-09
- * Modified    : 2016-11-18
- * For LOVD    : 3.0-18
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
  * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -94,7 +94,7 @@ if (!file_exists($sFile)) {
 
 
 
-if (in_array($sObject, array('Phenotype', 'Transcript_Variant', 'Custom_ViewList'))) {
+if (in_array($sObject, array('Phenotype', 'Transcript_Variant', 'Custom_ViewList', 'ScreeningMOD'))) {
     // Exception for VOT viewEntry, we need to isolate the gene from the ID to correctly pass this to the data object.
     if ($sObject == 'Transcript_Variant') {
         // This line below is redundant as long as it's also called at the lovd_isAuthorized() call. Remove it here maybe...?

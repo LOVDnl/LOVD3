@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2016-09-15
- * For LOVD    : 3.0-17
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -42,8 +42,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Column extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Column object.
+class LOVD_Column extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Custom Columns.
     var $sObject = 'Column';
     var $sTable  = 'TABLE_COLS';
 
@@ -116,7 +117,7 @@ class LOVD_Column extends LOVD_Object {
                         'form_type_' => 'Form type',
                         'select_options' => 'Select options',
                         'preg_pattern' => 'Regular expression pattern',
-                        'public_view_' => 'Show to public',
+                        'public_view_' => (!LOVD_plus? 'Show to public' : 'Show column on data listing'),
                         'public_add_' => 'Show on submission form',
                         'allow_count_all_' => 'Include in search form',
                         'parent_objects' => 'Column activated for',
@@ -152,7 +153,7 @@ class LOVD_Column extends LOVD_Object {
                                     'db'   => array('c.standard', 'DESC', true),
                                     'legend' => array('Whether this column is activated by default. For shared columns (Phenotype or VariantOnTranscript columns) this means newly created diseases or genes, include this column by default.')),
                         'public_view_' => array(
-                                    'view' => array('Public', 60, 'style="text-align : center;"'),
+                                    'view' => array((!LOVD_plus? 'Public' : 'Visible'), 60, 'style="text-align : center;"'),
                                     'db'   => array('c.public_view', 'DESC', true),
                                     'legend' => array('Whether the public can see this column\'s contents or not.')),
                         'col_order' => array(
@@ -173,7 +174,7 @@ class LOVD_Column extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_DB;
@@ -197,7 +198,7 @@ class LOVD_Column extends LOVD_Object {
             lovd_errorAdd('active_links', 'Only VARCHAR or TEXT columns can have custom links activated for it!');
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // Category; not chosen on this form, but we want to make sure it's correct anyways.
         if (!empty($aData['category']) && !in_array($aData['category'], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
@@ -294,7 +295,7 @@ class LOVD_Column extends LOVD_Object {
              'width' => array('Column display width in pixels', '', 'text', 'width', 5),
                         array('', '', 'print', '<IMG src="gfx/trans.png" alt="" width="' . (int) $_POST['width'] . '" height="3" style="background : #000000;"><BR><SPAN class="form_note">(This is ' . (int) $_POST['width'] . ' pixels)</SPAN>'),
          'mandatory' => array('Mandatory field', '', 'checkbox', 'mandatory'),
-       'public_view' => array('Show contents to public', '', 'checkbox', 'public_view'),
+       'public_view' => array((LOVD_plus? 'Show column on data listings' :'Show contents to public'), '', 'checkbox', 'public_view'),
         'public_add' => array('Show field on submission form', '', 'checkbox', 'public_add'),
                         'hr',
 // FIXME; implement this later.
@@ -383,7 +384,7 @@ class LOVD_Column extends LOVD_Object {
             $zData['row_id']      = $zData['id'];
             $zData['row_link']    = 'columns/' . $zData['id']; // Note: I chose not to use rawurlencode() here!
             $zData['colid_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['colid'] . '</A>';
-            $zData['form_type_']  = lovd_describeFormType($zData);
+            $zData['form_type_']  = $this->describeFormType($zData);
         } else {
             // Remove unnecessary columns.
             if ($zData['edited_by'] == NULL) {
@@ -402,7 +403,7 @@ class LOVD_Column extends LOVD_Object {
             $zData['mandatory_']       = '<IMG src="gfx/mark_' . $zData['mandatory'] . '.png" alt="" width="11" height="11">';
             $zData['description_legend_short'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_short']));
             $zData['description_legend_full'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_full']));
-            $zData['form_type_']       = lovd_describeFormType($zData) . '<BR>' . $zData['form_type'];
+            $zData['form_type_']       = $this->describeFormType($zData) . '<BR>' . $zData['form_type'];
             $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
             $zData['allow_count_all_'] = '<IMG src="gfx/mark_' . $zData['allow_count_all'] . '.png" alt="" width="11" height="11">';
 

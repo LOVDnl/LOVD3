@@ -4,13 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2018-01-17
- * For LOVD    : 3.0-21
+ * Modified    : 2020-01-22
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
- *               Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -40,7 +40,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_Template {
+class LOVD_Template
+{
     // This class provides the code necessary to view the headers and footers.
     // It's replacing inc-top.php, inc-top-clean.php, inc-bot.php, inc-bot-clean.php,
     //   and the lovd_printHeader() function from inc-lib-init.php.
@@ -243,8 +244,13 @@ class LOVD_Template {
             unset($this->aMenu['configuration'], $this->aMenu['configuration_']);
             unset($this->aMenu['setup_']['/download/columns']);
             unset($this->aMenu['setup_']['/download/all']);
-            if ($_AUTH && $_AUTH['level'] <= LEVEL_ANALYZER) {
+            if (!$_AUTH || $_AUTH['level'] <= LEVEL_ANALYZER) {
                 unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            }
+
+            // Gene statistics is really just for MGHA.
+            if (!lovd_verifyInstance('mgha', false)) {
+                unset($this->aMenu['genes_']['/gene_statistics']);
             }
         } else {
             // Remove menu items for non-LOVD+.
@@ -348,7 +354,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD software &copy;2004-2018 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2020 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -360,21 +366,27 @@ class LOVD_Template {
             if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
                 // Check for updates!
                 $sImgURL = 'check_update?icon';
+                $sImgAlt = 'Checking for LOVD updates...';
             } else {
                 // No need to re-check, use saved info.
                 if ($_STAT['update_version'] == 'Error') {
                     $sType = 'error';
+                    $sImgAlt = 'An error occured while checking for updates.';
                 } elseif (lovd_calculateVersion($_STAT['update_version']) > lovd_calculateVersion($_SETT['system']['version'])) {
                     $sType = 'newer';
+                    $sImgAlt = 'There is an LOVD update available.';
                 } else {
                     $sType = 'newest';
+                    $sImgAlt = 'There are currently no updates.';
                 }
                 $sImgURL = 'gfx/lovd_update_' . $sType . '_blue.png';
             }
             if ($_AUTH && ($_AUTH['level'] >= LEVEL_MANAGER || count($_AUTH['curates']))) {
-                print('      <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;"><IMG src="' . $sImgURL . '" alt="" width="32" height="32" style="margin : 5px;"></A>' . "\n");
+                print('      <A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;">
+        <IMG src="' . $sImgURL . '" alt="' . $sImgAlt . '" title="' . $sImgAlt . '" width="32" height="32" style="margin : 5px;">
+      </A>' . "\n");
             } else {
-                print('      <IMG src="' . $sImgURL . '" alt="" width="32" height="32" style="margin : 5px;">' . "\n");
+                print('      <IMG src="' . $sImgURL . '" alt="' . $sImgAlt . '" title="' . $sImgAlt . '" width="32" height="32" style="margin : 5px;">' . "\n");
             }
         }
 ?>
@@ -386,7 +398,7 @@ class LOVD_Template {
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
+        if (!LOVD_plus && !((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
             // In install directory.
             print('
 function lovd_mapVariants ()
@@ -515,7 +527,7 @@ function lovd_mapVariants ()
         lovd_includeJS('inc-js-openwindow.php', 1);
         lovd_includeJS('inc-js-toggle-visibility.js', 1); // Used on forms and variant overviews for small info tables.
         lovd_includeJS('lib/jQuery/jquery.min.js', 1);
-        lovd_includeJS('lib/jQuery/jquery-ui.custom.min.js', 1);
+        lovd_includeJS('lib/jQuery/jquery-ui.min.js', 1);
         lovd_includeJS('lib/jeegoocontext/jquery.jeegoocontext.min.js', 1);
 
         if (!$bFull) {
@@ -593,7 +605,7 @@ function lovd_mapVariants ()
     function lovd_changeURL ()
     {
         // Replaces the gene in the current URL with the one selected.
-        var sURL = '<?php if (!empty($_SESSION['currdb'])) { echo $sGeneSwitchURL; } ?>';
+        var sURL = '<?php if (!empty($_SESSION['currdb'])) { echo addslashes($sGeneSwitchURL); } ?>';
         // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
         if (geneSwitcher['switchType'] === 'autocomplete') {
             document.location.href = sURL.replace('{{GENE}}', $('#select_gene_autocomplete').val());
@@ -603,7 +615,7 @@ function lovd_mapVariants ()
     }
 
   </SCRIPT>
-  <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.custom.css">
+  <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.css">
 </HEAD>
 
 <BODY style="margin : 0px;">
@@ -629,7 +641,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
   <TR>
 <?php
         if (!is_readable(ROOT_PATH . $_CONF['logo_uri'])) {
-            $_CONF['logo_uri'] = 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg';
+            $_CONF['logo_uri'] = 'gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg';
         }
         $aImage = @getimagesize(ROOT_PATH . $_CONF['logo_uri']);
         if (!is_array($aImage)) {
@@ -637,7 +649,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         }
         list($nWidth, $nHeight, $sType, $sSize) = $aImage;
         print('    <TD valign="top" width="' . ($nWidth + 20) . '" height="' . ($nHeight + 5) . '">' . "\n" .
-              '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . '>' . "\n" .
+              '      <IMG src="' . $_CONF['logo_uri'] . '" alt="LOVD - Leiden Open Variation Database" ' . $sSize . ' style="margin-right: 20px;">' . "\n" .
               '    </TD>' . "\n");
 
         print('    <TD valign="top" style="padding-top : 2px; white-space : nowrap; width : 100%">' . "\n" .
@@ -668,7 +680,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
                       '      <A href="users/' . $_AUTH['id'] . '"><B>Your account</B></A> | ' . (false && $_AUTH['level'] == LEVEL_SUBMITTER && $_CONF['allow_submitter_mods']? '<A href="variants?search_created_by=' . $_AUTH['id'] . '"><B>Your submissions</B></A> | ' : '') . (!empty($_AUTH['saved_work']['submissions']['individual']) || !empty($_AUTH['saved_work']['submissions']['screening'])? '<A href="users/' . $_AUTH['id'] . '?submissions"><B>Unfinished submissions</B></A> | ' : '') . '<A href="logout"><B>Log out</B></A>' . "\n");
             } else {
                 // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
-                print('      ' . (LOVD_plus || !$_CONF['allow_submitter_registration'] || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
+                print('      ' . (LOVD_plus || empty($_CONF['allow_submitter_registration']) || $_CONF['lovd_read_only']? '' : '<A href="users?register"><B>Register as submitter</B></A> | ') .
                       '<A href="login"><B>Log in</B></A>' . "\n");
             }
         }
@@ -820,7 +832,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // Measure the height of the sticky header (can depend on announcements or
         // font settings and such), and adapt the menu table to have a margin of this height.
         print('<SCRIPT type="text/javascript">' . "\n" .
-              '  $("table.logo :eq(1)").css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
+              '  $("table.logo").eq(1).css("margin-top", $("#stickyheader").outerHeight(true) + "px");' . "\n" .
               '</SCRIPT>' . "\n\n");
 
         // Attach dropdown menus.

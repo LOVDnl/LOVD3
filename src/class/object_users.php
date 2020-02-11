@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-08-14
- * For LOVD    : 3.0-20
+ * Modified    : 2019-12-19
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -41,8 +41,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_User extends LOVD_Object {
-    // This class extends the basic Object class and it handles the User object.
+class LOVD_User extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Users.
     var $sObject = 'User';
 
 
@@ -204,7 +205,7 @@ class LOVD_User extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_AUTH, $_DB, $_PE, $_SETT;
@@ -226,7 +227,7 @@ class LOVD_User extends LOVD_Object {
             $this->aCheckMandatory[] = 'password_1';
             $this->aCheckMandatory[] = 'password_2';
         }
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // Email address.
         if (!empty($aData['email'])) {
@@ -240,8 +241,8 @@ class LOVD_User extends LOVD_Object {
 
         if (lovd_getProjectFile() == '/install/index.php' || ACTION == 'create') {
             // Check username format.
-            if ($aData['username'] && !lovd_matchUsername($aData['username'])) {
-                lovd_errorAdd('username', 'Please fill in a correct username; 4 to 20 characters and starting with a letter followed by letters, numbers, dots, underscores and dashes only.');
+            if ($aData['username'] && !lovd_matchUsername($aData['username']) && !lovd_matchEmail($aData['username'])) {
+                lovd_errorAdd('username', 'Please fill in a correct username; 4 to 20 characters and starting with a letter followed by letters, numbers, dots, underscores and dashes only. An email address is also allowed.');
             }
         }
 
@@ -374,7 +375,7 @@ class LOVD_User extends LOVD_Object {
                         'hr',
                         array('Country', '', 'select', 'countryid', 1, $aCountryList, true, false, false),
                         array('City', 'Please enter your city, even if it\'s included in your postal address, for sorting purposes.', 'text', 'city', 30),
-                        array('Reference (optional)', 'Your submissions will contain a reference to you in the format "Country:City" by default. You may change this to your preferred reference here.', 'text', 'reference', 30),
+         'reference' => array('Reference (optional)', 'Your submissions will contain a reference to you in the format "Country:City" by default. You may change this to your preferred reference here.', 'text', 'reference', 30),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Security</B>'),
@@ -425,6 +426,9 @@ class LOVD_User extends LOVD_Object {
                 unset($this->aFormData['change_self']);
             }
         }
+        // Unused, don't let it confuse users.
+        unset($this->aFormData['reference']);
+
         if (LOVD_plus && isset($this->aFormData['level'])) {
             $this->aFormData['level'][1] = ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Analyzers</B> can analyze individuals that are not analyzed yet by somebody else, but can not send variants for confirmation.<BR><B>Read-only</B> users can only see existing data in LOVD+, but can not start or edit any analyses or data.';
         }

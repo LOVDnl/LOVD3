@@ -4,14 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2017-07-25
- * For LOVD    : 3.0-20
+ * Modified    : 2019-10-01
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               Juny Kesumadewi <juny.kesumadewi@unimelb.edu.au>
  *
  *
  * This file is part of LOVD.
@@ -126,8 +127,9 @@ $_SETT['disease_tissues'] = array(
 
 
 
-class LOVD_Disease extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Disease extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Diseases.
     var $sObject = 'Disease';
 
 
@@ -137,14 +139,14 @@ class LOVD_Disease extends LOVD_Object {
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         // SQL code for preparing load entry query.
         // Increase DB limits to allow concatenation of large number of gene IDs.
         $this->sSQLPreLoadEntry = 'SET group_concat_max_len = 200000';
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT d.*, ' .
+        $this->sSQLLoadEntry = 'SELECT d.*, d.inheritance as _inheritance, ' .
                                'd.tissues AS _tissues, ' .
                                'GROUP_CONCAT(g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes ' .
                                'FROM ' . TABLE_DISEASES . ' AS d ' .
@@ -158,8 +160,8 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'd.*, ' .
-                                           '(SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i2d.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') AS individuals, ' .
-                                           '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
+                                           '(SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i2d.diseaseid = d.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') AS individuals, ' .
+                                           '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
                                            'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
@@ -171,14 +173,20 @@ class LOVD_Disease extends LOVD_Object {
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'd.*, d.id AS diseaseid, ' .
-                                          '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
-                                          '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
+                                          '(SELECT COUNT(DISTINCT i.id) FROM ' . TABLE_IND2DIS . ' AS i2d LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (i2d.individualid = i.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND i.statusid >= ' . STATUS_MARKED) . ') WHERE i2d.diseaseid = d.id) AS individuals, ' .
+                                          '(SELECT COUNT(*) FROM ' . TABLE_PHENOTYPES . ' AS p WHERE p.diseaseid = d.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND p.statusid >= ' . STATUS_MARKED) . ') AS phenotypes, ' .
                                           'COUNT(g2d.geneid) AS gene_count, ' .
                                           'GROUP_CONCAT(DISTINCT g2d.geneid ORDER BY g2d.geneid SEPARATOR ";") AS _genes';
         $this->aSQLViewList['FROM']     = TABLE_DISEASES . ' AS d ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid)';
         $this->aSQLViewList['WHERE']    = 'd.id > 0';
         $this->aSQLViewList['GROUP_BY'] = 'd.id';
+
+        $sInheritanceLegend = '<TABLE>';
+        foreach ($_SETT['diseases_inheritance'] as $sKey => $sDescription) {
+            $sInheritanceLegend .= '<TR><TD>' . $sKey . '</TD><TD>: ' . $sDescription . '</TD></TR>';
+        }
+        $sInheritanceLegend .= '</TABLE>';
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
@@ -187,16 +195,17 @@ class LOVD_Disease extends LOVD_Object {
                         'name' => 'Name',
                         'id_omim' => 'OMIM ID',
                         'link_HPO_' => 'Human Phenotype Ontology Project (HPO)',
+                        'inheritance' => 'Inheritance',
                         'individuals' => 'Individuals reported having this disease',
                         'phenotypes_' => 'Phenotype entries for this disease',
                         'genes_' => 'Associated with',
                         'tissues' => 'Associated tissues',
                         'features' => 'Disease features',
                         'remarks' => 'Remarks',
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -214,6 +223,12 @@ class LOVD_Disease extends LOVD_Object {
                         'id_omim' => array(
                                     'view' => array('OMIM ID', 75, 'style="text-align : right;"'),
                                     'db'   => array('d.id_omim', 'ASC', true)),
+                        'inheritance' => array(
+                                    'view' => array('Inheritance', 75),
+                                    'db'   => array('inheritance', 'ASC', true),
+                                    'legend' => array('Abbreviations:' . strip_tags(str_replace('<TR>', "\n", preg_replace('/\s+/', ' ', $sInheritanceLegend))),
+                                        'Values based on OMIM\'s and HPO\'s values for inheritance.<BR>' . str_replace(array("\r", "\n"), '', $sInheritanceLegend),
+                                    )),
                         'individuals' => array(
                                     'view' => array('Individuals', 80, 'style="text-align : right;"'),
                                     'db'   => array('individuals', 'DESC', 'INT_UNSIGNED')),
@@ -242,7 +257,7 @@ class LOVD_Disease extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_AUTH, $_DB;
@@ -256,7 +271,7 @@ class LOVD_Disease extends LOVD_Object {
                         'symbol',
                         'name',
                       );
-        $aData = parent::checkFields($aData);
+        $aData = parent::checkFields($aData, $zData, $aOptions);
 
         if (!empty($aData['id_omim']) && !preg_match('/^[1-9]\d{5}$/', $aData['id_omim'])) {
             lovd_errorAdd('id_omim', 'The OMIM ID has to be six digits long and cannot start with a \'0\'.');
@@ -314,13 +329,12 @@ class LOVD_Disease extends LOVD_Object {
     function getForm ()
     {
         // Build the form.
+        global $_AUTH, $_DB, $_SETT;
 
         // If we've built the form before, simply return it. Especially imports will repeatedly call checkFields(), which calls getForm().
         if (!empty($this->aFormData)) {
             return parent::getForm();
         }
-
-        global $_DB, $_AUTH, $_SETT;
 
         // Get list of genes, to connect disease to gene.
         if ($_AUTH['level'] == LEVEL_CURATOR) {
@@ -352,6 +366,7 @@ class LOVD_Disease extends LOVD_Object {
                         array('Disease abbreviation', '', 'text', 'symbol', 15),
                         array('Disease name', '', 'text', 'name', 40),
                         array('OMIM ID (optional)', '', 'text', 'id_omim', 10),
+                        array('Inheritance', '', 'select', 'inheritance', count($_SETT['diseases_inheritance']), $_SETT['diseases_inheritance'], false, true, false),
                         array('Associated tissues (optional)', '', 'select', 'tissues', 10, $_SETT['disease_tissues'],
                               false, true, false),
                         array('Disease features (optional)', '', 'textarea', 'features', 50, 5),

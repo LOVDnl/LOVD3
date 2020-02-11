@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2017-04-24
- * For LOVD    : 3.0-19
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -32,12 +32,20 @@
 
 function lovd_checkDBID ($aData)
 {
-    // Checks if given variant and DBID match. I.e., whether or not there is
-    // already an entry where this variant and DBID come together.
+    // Checks if given variant and DBID match.
+    // For LOVD+, regenerates the DBID and verifies.
+    // For LOVD, it checks whether or not there is already an entry where this
+    //  variant and this DBID come together. Ignores the current variant, if the
+    //  ID is given.
     // NOTE: We're assuming that the DBID field actually exists. Using this
     // function implies you've checked for it's presence.
-    // All checks ignore the current variant, if the ID is given.
     global $_DB;
+
+    if (LOVD_plus) {
+        // The LOVD+ version of the fetch function is very fast and will
+        //  generate an DBID irrespective of the database contents.
+        return ($aData['VariantOnGenome/DBID'] == lovd_fetchDBID($aData));
+    }
 
     // <chr||GENE>_000000 is always allowed.
     $sSymbol = substr($aData['VariantOnGenome/DBID'], 0, strpos($aData['VariantOnGenome/DBID'], '_'));
@@ -138,7 +146,7 @@ function lovd_checkORCIDChecksum ($sID)
     }
     $nRemainder = $nTotal % 11;
     $nResult = (12 - $nRemainder) % 11;
-    $sResult = ($nResult == 10 ? 'X' : (string) $nResult);
+    $sResult = ($nResult == 10? 'X' : (string) $nResult);
     return ($sResult == substr($sID, -1));
 }
 
@@ -207,7 +215,7 @@ function lovd_error ()
     // Tells the program whether or not we've had an error.
     global $_ERROR;
 
-    return (count($_ERROR['messages']) > 1);
+    return (isset($_ERROR['messages']) && count($_ERROR['messages']) > 1);
 }
 
 
@@ -272,7 +280,7 @@ function lovd_errorPrint ()
     // Prints error variable.
     global $_ERROR;
 
-    if (count($_ERROR['messages']) > 1) {
+    if (isset($_ERROR['messages']) && count($_ERROR['messages']) > 1) {
         unset($_ERROR['messages'][0]);
         if (FORMAT == 'text/html') {
             print('      <DIV class="err">' . "\n" .
@@ -351,16 +359,28 @@ function lovd_formatMail ($aBody)
 
 function lovd_fetchDBID ($aData)
 {
-    // Searches through the $aData variants to fetch lowest DBID belonging to
-    // this variant, otherwise returns next variant ID not in use.
+    // For LOVD+, generates the DBID based on the DNA data.
+    // For LOVD, searches through the $aData variants to fetch lowest DBID
+    //  belonging to this variant, otherwise returns next variant ID not in use.
     // NOTE: We're assuming that the DBID field actually exists. Using this
     // function implies you've checked for it's presence.
-    global $_DB;
+    global $_DB, $_CONF;
 
     $sGenomeVariant = '';
     if (!empty($aData['VariantOnGenome/DNA'])) {
         $sGenomeVariant = str_replace(array('(', ')', '?'), '', $aData['VariantOnGenome/DNA']);
     }
+
+    if (LOVD_plus) {
+        if (!empty($aData) && !empty($sGenomeVariant)) {
+            // TODO: WARNING! UPDATE THE QUERY IN scripts/hash_dbid.php WHENEVER THIS IS UPDATED!
+            $sDBID = sha1($_CONF['refseq_build'] . '.chr' . $aData['chromosome'] . ':' . $sGenomeVariant);
+            return $sDBID;
+        } else {
+            return false;
+        }
+    }
+
     if (!isset($aData['aTranscripts'])) {
         $aData['aTranscripts'] = array();
     }
@@ -392,7 +412,7 @@ function lovd_fetchDBID ($aData)
                 $aArgs[] = $aData['position_g_start'];
             }
         }
-        if (!LOVD_plus && !empty($aTranscriptVariants)) {
+        if (!empty($aTranscriptVariants)) {
             if (!empty($sGenomeVariant)) {
                 $sSQL .= ' UNION ';
             }
@@ -426,7 +446,7 @@ function lovd_fetchDBID ($aData)
                 // Check this option, if it doesn't pass we'll skip it now.
                 $aDataCopy = $aData;
                 $aDataCopy['VariantOnGenome/DBID'] = $sDBIDoption;
-                if (!LOVD_plus && !lovd_checkDBID($aDataCopy)) {
+                if (!lovd_checkDBID($aDataCopy)) {
                     continue;
                 }
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
@@ -684,7 +704,7 @@ function lovd_sendMail ($aTo, $sSubject, $sBody, $sHeaders, $bHalt = true, $bFwd
         $sSubject = 'FW: ' . $sSubject;
         // 2013-08-26; 3.0-08; Encode the subject as well. Prefixing with "Subject: " to make sure the first line including the SMTP header does not exceed the 76 chars.
         $sSubjectEncoded = substr(mb_encode_mimeheader('Subject: ' . $sSubject, 'UTF-8'), 9);
-        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders ? PHP_EOL . $sAdditionalHeaders : ''), $bHalt, false);
+        return lovd_sendMail(array($_SETT['admin']), $sSubjectEncoded, $sBody, $_SETT['email_headers'] . ($sAdditionalHeaders? PHP_EOL . $sAdditionalHeaders : ''), $bHalt, false);
     } elseif (!$bMail) {
         // $sSubject is used here as it can always be used to describe the email type. This function also logs the email error.
         lovd_emailError(LOG_EVENT, $sSubject, $sTo, $bHalt);
@@ -1027,7 +1047,7 @@ function lovd_viewForm ($a,
 
                 // Select all link.
                 if ($bMultiple && $bSelectAll) {
-                    print('&nbsp;<A href="#" onclick="$(this.previousSibling.previousSibling).children().each(function(){$(this).attr(\'selected\', true);}); $(this.previousSibling.previousSibling).change(); return false">Select&nbsp;all</A>');
+                    print('&nbsp;<A href="#" onclick="$(this.previousSibling.previousSibling).children().each(function(){$(this).prop(\'selected\', true);}); $(this.previousSibling.previousSibling).change(); return false">Select&nbsp;all</A>');
                 }
 
                 print($sDataSuffix);

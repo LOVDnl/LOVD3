@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2017-01-25
- * For LOVD    : 3.0-19
+ * Modified    : 2019-08-01
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -38,7 +38,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_PDO extends PDO {
+class LOVD_PDO extends PDO
+{
     // This class provides a wrapper around PDO such that database errors are handled automatically by LOVD.
     // FIXME; lovd_queryDB() provided a $bDebug argument. How to implement that now?
     private $aLastError = array();
@@ -59,7 +60,12 @@ class LOVD_PDO extends PDO {
                 // Still needs check though, in case two PDO connections are opened.
                 define('MYSQL_ATTR_INIT_COMMAND', 1002);
             }
-            $aOptions = array(MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8, SQL_MODE = REPLACE(@@SQL_MODE, "NO_ZERO_DATE", "")', PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE);
+            $aOptions = array(
+                // ONLY_FULL_GROUP_BY is causing issues; even if we try to play nice,
+                //  the totally unnecessary MIN() and MAX() calls slow down queries a lot. See #386.
+                MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8, SQL_MODE = REPLACE(REPLACE(@@SQL_MODE, "NO_ZERO_DATE", ""), "ONLY_FULL_GROUP_BY", "")',
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
+            );
         }
         try {
             parent::__construct($sDSN, $sUsername, $sPassword, $aOptions);

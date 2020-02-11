@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -53,8 +53,6 @@ if (PATH_COUNT < 3 && !ACTION) {
             // Category given.
             $_GET['search_category'] = $_PE[1];
             define('PAGE_TITLE', 'Browse ' . $_PE[1] . ' custom data columns');
-
-            require_once ROOT_PATH . 'inc-lib-columns.php';
             $aTableInfo = lovd_getTableInfoByCategory($_PE[1]);
         } else {
             header('Location:' . lovd_getInstallURL() . $_PE[0] . '?search_category=' . $_PE[1]);
@@ -126,7 +124,6 @@ if (PATH_COUNT > 2 && !ACTION) {
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
 
-    require_once ROOT_PATH . 'inc-lib-columns.php';
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
     $zData = $_DATA->viewEntry($sColumnID);
@@ -160,7 +157,6 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
 
     $sCategory = $_PE[1];
 
-    require_once ROOT_PATH . 'inc-lib-columns.php';
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if (!$aTableInfo) {
         $_T->printHeader();
@@ -276,7 +272,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
         $_T->printTitle();
 
         if (isset($_SERVER['HTTP_REFERER']) && substr($_SERVER['HTTP_REFERER'], -4) == 'edit') {
-            lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of losing data!', 'warning');
+            lovd_showInfoTable('Please note that changing the data type of an existing column causes a risk of losing data, including historic data!', 'warning');
         }
 
         print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '&amp;workID=' . $_GET['workID'] . '" method="post">' . "\n");
@@ -433,7 +429,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
             }
 
             // MySQL and Form type.
-            // FIXME; put this in a function in inc-lib-columns when it's used more than once in the code.
+            // FIXME; put this in a function somewhere when it's used more than once in the code.
             $sFormType = $_POST['name'] . '|' . $_POST['help_text'];
             switch ($_POST['form_type']) {
                 case 'text':
@@ -853,7 +849,6 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 
     // Require form functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require_once ROOT_PATH . 'inc-lib-columns.php';
 
     // Generate a unique workID, that is sortable.
     if (!isset($_POST['workID'])) {
@@ -916,7 +911,31 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                 if (in_array($sColumnID, $aColumns)) {
                     // Column active for this table.
                     // This variables have been checked using regexps, so can be considered safe.
-                    $q = $_DB->query('ALTER TABLE ' . $aColumnInfo['table_sql'] . ' MODIFY COLUMN `' . $sColumnID . '` ' . $_POST['mysql_type']);
+                    $sSQL = 'ALTER TABLE ' . $aColumnInfo['table_sql'] . ' MODIFY COLUMN `' . $sColumnID . '` ' . $_POST['mysql_type'];
+                    $dStart = time();
+                    $q = $_DB->exec($sSQL, false);
+                    if ($q === false) {
+                        $sError = $_DB->formatError(); // Save the PDO error before it disappears.
+                        $tPassed = time() - $dStart;
+                        $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
+                        lovd_queryError(LOG_EVENT . $sMessage, $sSQL, $sError);
+                    }
+
+                    // We're assuming here, that the column exists in the revisions table. If not, this will lead
+                    //  to a query error and you won't be able to edit this column's MySQL type anymore.
+                    // Can we handle this in a better way?
+                    if (!empty($aColumnInfo['table_sql_rev'])) {
+                        // Modify the same column in the revision table.
+                        $sSQL = 'ALTER TABLE ' . $aColumnInfo['table_sql_rev'] . ' MODIFY COLUMN `' . $sColumnID . '` ' . $_POST['mysql_type'];
+                        $dStart = time();
+                        $q = $_DB->exec($sSQL, false);
+                        if ($q === false) {
+                            $sError = $_DB->formatError(); // Save the PDO error before it disappears.
+                            $tPassed = time() - $dStart;
+                            $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
+                            lovd_queryError(LOG_EVENT . $sMessage, $sSQL, $sError);
+                        }
+                    }
                 }
             }
 
@@ -1159,7 +1178,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 
     print('</FORM>' . "\n\n");
 
-    $sJSMessage = 'Are you sure you want to change the MySQL data type of this column? Changing the data type of an existing column causes a risk of losing data!';
+    $sJSMessage = 'Are you sure you want to change the MySQL data type of this column? Changing the data type of an existing column causes a risk of losing data, including historic data!';
     $sJSMessage .= ($tAlter > $tAlterMax? '\nPlease note that the time estimated to edit this columns MySQL type is ' . round($tAlter) . ' seconds. During this time, no updates to the data table are possible.' : '');
 
 ?>
@@ -1364,7 +1383,6 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require_once ROOT_PATH . 'inc-lib-columns.php';
 
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
@@ -1414,7 +1432,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $nPossibleTargets = count($aPossibleTargets);
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases which do NOT have this column yet.
-            $sSQL = 'SELECT DISTINCT d.id, IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.symbol, " (", d.name, ")")), d.symbol, d.name FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
+            $sSQL = 'SELECT DISTINCT d.id, IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.symbol, " (", d.name, ")")) FROM ' . TABLE_DISEASES . ' AS d LEFT JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) LEFT JOIN ' . TABLE_SHARED_COLS . ' AS c ON (d.id = c.diseaseid AND c.colid = ?) WHERE c.colid IS NULL';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
                 // Maybe a JOIN would be simpler?
@@ -1523,7 +1541,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
 
             // Now, start with ALTER TABLE if necessary, since that will take the longest time and ends a transaction anyway.
-            // If it fails directly after this, one can always just redo the add. LOVD will detect properly that it needs to be added to the ACTIVE_COLS table, then.
+            // If it fails directly after this, one can always just redo the add. LOVD will detect properly that it only needs to be added to the ACTIVE_COLS table, then.
             if (!$zData['active_checked']) {
                 $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' ADD COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'];
                 $dStart = time();
@@ -1534,6 +1552,35 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                     $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
                     lovd_queryError(LOG_EVENT . $sMessage, $sSQL, $sError);
                 }
+            }
+            // Separating this to make sure this runs also when we don't need to add the column to the main data table.
+            if (!empty($aTableInfo['table_sql_rev'])) {
+                // Insert the same column into the revision table.
+                // Since we do not remove columns from the revisions table it could be possible that this column already exists so lets check.
+                $aTableColumns = lovd_getColumnData($aTableInfo['table_sql_rev']); // Load the column details of this table into an array.
+                if (!isset($aTableColumns[$zData['id']])) {
+                    // This column doesn't already exist so it is safe to create it in the revision table.
+                    $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql_rev'] . ' ADD COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'];
+                    $dStart = time();
+                    $q = $_DB->exec($sSQL, false);
+                    if ($q === false) {
+                        $sError = $_DB->formatError(); // Save the PDO error before it disappears.
+                        $tPassed = time() - $dStart;
+                        $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
+                        lovd_queryError(LOG_EVENT . $sMessage, $sSQL, $sError);
+                    }
+                } elseif ($aTableColumns[$zData['id']]['type'] != $zData['mysql_type']) {
+                    // This column already exists but it is a different data type, change it to match the main tables new data type.
+                    $sSQL = 'ALTER TABLE ' . $aTableInfo['table_sql_rev'] . ' MODIFY COLUMN `' . $zData['id'] . '` ' . $zData['mysql_type'];
+                    $dStart = time();
+                    $q = $_DB->exec($sSQL, false);
+                    if ($q === false) {
+                        $sError = $_DB->formatError(); // Save the PDO error before it disappears.
+                        $tPassed = time() - $dStart;
+                        $sMessage = ($tPassed < 2? '' : ' (fail after ' . $tPassed . ' seconds - disk full maybe?)');
+                        lovd_queryError(LOG_EVENT . $sMessage, $sSQL, $sError);
+                    }
+                } // Otherwise we do nothing as this column already exists in the revisions table.
             }
 
             $_BAR->setProgress(80);
@@ -1715,7 +1762,6 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require_once ROOT_PATH . 'inc-lib-columns.php';
 
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
@@ -1754,7 +1800,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases that DO HAVE this column and you are authorized to remove columns from.
-            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") AS symbol_name FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
+            $sSQL = 'SELECT DISTINCT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid AND sc.colid = ?)';
             $aSQL = array($zData['id']);
             if ($_AUTH['level'] < LEVEL_MANAGER) {
                 // FIXME: Before today (2013-06-24), this code contained a check if the column had values or not. Removal was then disallowed. Perhaps we should be checking here if there are values in
@@ -1762,7 +1808,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                 $sSQL .= ' LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) WHERE g2d.geneid IN (?' . str_repeat(', ?', count($_AUTH['curates']) - 1) . ') OR d.id = 0 GROUP BY d.id';
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
-            $sSQL .= ' ORDER BY symbol_name';
+            $sSQL .= ' ORDER BY d.symbol, d.name';
             $aPossibleTargets = array_map(
                 function ($sInput) {
                     return lovd_shortenString($sInput, 75);

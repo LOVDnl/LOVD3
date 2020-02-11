@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2014-09-19
- * For LOVD    : 3.0-12
+ * Modified    : 2019-08-21
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2014 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -163,14 +163,26 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $_STAT['update_level'] = 0;
         $_STAT['update_description'] = '';
 
-    } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?(\-[0-9a-z-]{2,11})?)(\nReleased\s*:\s*[0-9]{4}\-[0-9]{2}\-[0-9]{2})?$/', $sUpdates, $aUpdates) && is_array($aUpdates)) {
+    } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?(\-[0-9a-z-]{2,11})?)(\nReleased\s*:\s*([0-9]{4}\-[0-9]{2}\-[0-9]{2}))?$/', $sUpdates, $aUpdates) && is_array($aUpdates)) {
         // Weird version conflict?
-        // FIXME; shouldn't we check maybe if the given version *IS* actually newer? Maybe it's just a non-registered release?
-        lovd_writeLog('Error', 'CheckUpdate', 'Version conflict while parsing upstream server output: current version (' . $_SETT['system']['version'] . ') > ' . $aUpdates[1]);
-        $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
-        $_STAT['update_checked_date'] = $sNow;
-        $_STAT['update_version'] = 'Error';
-        $_STAT['update_released_date'] = '';
+        // If the version reported by LOVD is the root version of what we have, then we're still good. We're just running a unreleased improved build.
+        $sLOVDVersionReported = preg_replace('/[a-z]$/', '', $aUpdates[1]); // Trim possible char off from the right.
+        if (strpos($_SETT['system']['version'], $sLOVDVersionReported) === 0
+            && preg_match('/^[a-z]$/', substr($_SETT['system']['version'], strlen($sLOVDVersionReported)))) {
+            // We just have a letter better than what's online. Big deal.
+            $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = 0, update_description = "", update_released_date = NULL', array($sNow, $aUpdates[1]));
+            $_STAT['update_checked_date'] = $sNow;
+            $_STAT['update_version'] = $aUpdates[1];
+            $_STAT['update_released_date'] = $aUpdates[5];
+        } else {
+            // OK, now it's still weird. We have a higher version than what's online?
+            lovd_writeLog('Error', 'CheckUpdate', 'Version conflict while parsing upstream server output: current version (' . $_SETT['system']['version'] . ') > ' . $aUpdates[1]);
+            $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
+            $_STAT['update_checked_date'] = $sNow;
+            $_STAT['update_version'] = 'Error';
+            $_STAT['update_released_date'] = '';
+        }
+
         $_STAT['update_level'] = 0;
         $_STAT['update_description'] = '';
 

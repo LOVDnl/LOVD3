@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2017-09-08
- * For LOVD    : 3.0-20
+ * Modified    : 2018-01-19
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -47,15 +47,12 @@ if (!$_AUTH) {
     die(AJAX_NO_AUTH);
 }
 
-require ROOT_PATH . 'class/soap_client.php';
-$_Mutalyzer = new LOVD_SoapClient();
-try {
-    $aOutput = $_Mutalyzer->checkSyntax(array('variant' => $_GET['variant']))->checkSyntaxResult;
-} catch (SoapFault $e) {
+$aResponse = lovd_callMutalyzer('checkSyntax', array('variant' => $_GET['variant']));
+if ($aResponse === false) {
     die(AJAX_UNKNOWN_RESPONSE);
 }
 
-if (isset($aOutput->valid) && $aOutput->valid) {
+if (!empty($aResponse['valid'])) {
     die(AJAX_TRUE);
 } else {
     die(AJAX_FALSE);

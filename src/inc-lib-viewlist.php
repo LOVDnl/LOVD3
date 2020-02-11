@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2016-10-11
- * For LOVD    : 3.0-18
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -50,7 +50,12 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
     if ($sColumnType == 'DATETIME') {
         $sExpression = preg_replace('/ (\d)/', "{{SPACE}}$1", trim($sExpression));
     } else {
-        $sExpression = preg_replace_callback('/("[^"]+")/', create_function('$aRegs', 'return str_replace(\' \', \'{{SPACE}}\', $aRegs[1]);'), trim($sExpression));
+        $sExpression = preg_replace_callback(
+            '/("[^"]+")/',
+            function ($aRegs)
+            {
+                return str_replace(' ', '{{SPACE}}', $aRegs[1]);
+            }, trim($sExpression));
     }
     $aANDExpressions = explode(' ', $sExpression);
     $nANDLength = count($aANDExpressions);

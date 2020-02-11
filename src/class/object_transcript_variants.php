@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2018-01-16
- * For LOVD    : 3.0-21
+ * Modified    : 2019-12-19
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,22 +42,24 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_TranscriptVariant extends LOVD_Custom {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_TranscriptVariant extends LOVD_Custom
+{
+    // This class extends the Custom class and it handles the Variants On Transcripts.
     var $sObject = 'Transcript_Variant';
     var $sCategory = 'VariantOnTranscript';
     var $sTable = 'TABLE_VARIANTS_ON_TRANSCRIPTS';
-    var $bShared = true;
     var $aTranscripts = array();
+    // Flag to give transcript-specific fields used in getForm() and checkFields() a prefix to separate them.
+    var $bPrefixTranscriptFields = true;
 
 
 
 
 
-    function __construct ($sObjectID = '', $nID = '')
+    function __construct ($sObjectID = '', $nID = '', $bLoadAllTranscripts = true)
     {
         // Default constructor.
-        global $_DB;
+        global $_DB, $_SETT;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT vot.* ' .
@@ -68,7 +70,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vot.*, ' .
-                                           't.geneid, t.id_ncbi';
+                                           't.geneid, t.id_ncbi, vog.chromosome'; // MGHA needs chromosome to get the Genomizer link to work.
         $this->aSQLViewEntry['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) ' . // Only done so that the vog.statusid can be checked.
                                            'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)';
@@ -80,11 +82,19 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                                           't.geneid, t.id_ncbi, ' .
                                           'e.name AS effect, ' .
                                           'ds.name AS status';
+        // LOVD+ adds the check if this transcript is a preferred transcript.
+        if (LOVD_plus) {
+            $this->aSQLViewList['SELECT'] .= ', gp2g.genepanelid';
+        }
         $this->aSQLViewList['FROM']     = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vot.effectid = e.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid)';
+        // LOVD+ adds the check if this transcript is a preferred transcript in any gene panel.
+        if (LOVD_plus) {
+            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_GP2GENE . ' AS gp2g ON (vot.transcriptid = gp2g.transcriptid)';
+        }
 
         $this->sObjectID = $sObjectID;
         $this->nID = $nID;
@@ -98,10 +108,19 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'effect_reported' => 'Affects function (as reported)',
                         'effect_concluded' => 'Affects function (by curator)',
                       ),
+                 (!LOVD_plus || !lovd_verifyInstance('mgha', false)? array() :
+                     // MGHA entry for the Genomizer link in the VOT ViewEntry.
+                     array(
+                         'genomizer_url_' => 'Genomizer',
+                         'clinvar_' => "ClinVar Description (dbNSFP)"
+                     )),
                  $this->buildViewEntry());
         if (LOVD_plus) {
             unset($this->aColumnsViewEntry['effect_reported']);
             unset($this->aColumnsViewEntry['effect_concluded']);
+            if (lovd_verifyInstance('mgha', false) && !isset($this->aColumnsViewEntry['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance'])) {
+                unset($this->aColumnsViewEntry['clinvar_']);
+            }
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -130,7 +149,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                         'status' => array(
                                     'view' => array('Status', 70),
                                     'db'   => array('ds.name', false, true),
-                                    'auth' => LEVEL_COLLABORATOR),
+                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
         if (LOVD_plus) {
             unset($this->aColumnsViewList['effect']);
@@ -141,11 +160,27 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         // Because the disease information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
 
-        // Set list of transcripts available for this variant for getForm(), checkFields(), etc...
-        if (ACTION == 'create' || lovd_getProjectFile() == '/import.php') {
-            $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', substr_count($sObjectID, ',')) . ') ' . (lovd_getProjectFile() == '/import.php'? 'LIMIT 1' : 'ORDER BY id_ncbi'), explode(',', $sObjectID))->fetchAllRow();
+
+        if (!empty($this->nID)) {
+            // Known variant ID, load all transcripts for existing variant.
+            $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' .
+                TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS .
+                ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, ' .
+                't.id_ncbi', array($this->nID))->fetchAllRow();
         } else {
-            $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, t.id_ncbi', array($this->nID))->fetchAllRow();
+            // Unknown variant, but then we must have a gene symbol ($sObjectID).
+            // Get list of transcript(s) available for this gene for getForm(), checkFields(), etc...
+            $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' .
+                TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' .
+                str_repeat(', ?', substr_count($sObjectID, ',')) . ') ' .
+                (!$bLoadAllTranscripts? 'LIMIT 1' : 'ORDER BY id_ncbi'),
+                explode(',', $sObjectID))->fetchAllRow();
+
+            if (!$bLoadAllTranscripts) {
+                // Only a single transcript, don't use field prefixes for getForm() and
+                // checkFields()
+                $this->bPrefixTranscriptFields = false;
+            }
         }
         foreach ($aTranscripts as $aTranscript) {
             $this->aTranscripts[$aTranscript[0]] = array($aTranscript[1], $aTranscript[2], $aTranscript[3]);
@@ -178,7 +213,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         // Loop through all transcripts to have each transcript's set of columns checked.
@@ -192,7 +227,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             if (!empty($aData['ignore_' . $nTranscriptID])) {
                 continue;
             }
-            $sPrefix = (lovd_getProjectFile() == '/import.php'? '' : $nTranscriptID . '_');
+            $sPrefix = (!$this->bPrefixTranscriptFields? '' : $nTranscriptID . '_');
             foreach ($this->aColumns as $sCol => $aCol) {
                 if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
                     continue;
@@ -201,7 +236,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
                 if ($aCol['mandatory']) {
                     $this->aCheckMandatory[] = $sCol;
                 }
-                if (isset($aData[$sCol])) {
+
+                if (!(LOVD_plus && lovd_getProjectFile() == '/import.php') && isset($aData[$sCol])) {
+                    // These checks are disabled in LOVD+ to speed up the import.
                     $this->checkInputRegExp($sCol, $aData[$sCol]);
                     $this->checkSelectedInput($sCol, $aData[$sCol]);
                 }
@@ -216,7 +253,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         }
 
         // Bypass LOVD_Custom::checkFields(), since it's functionality has been copied above.
-        LOVD_Object::checkFields($aData);
+        LOVD_Object::checkFields($aData, $zData, $aOptions);
 
         lovd_checkXSS();
     }
@@ -242,7 +279,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             if ($sGene != $this->sObjectID) {
                 continue;
             }
-            $sPrefix = (lovd_getProjectFile() == '/import.php'? '' : $nTranscriptID . '_');
+            $sPrefix = (!$this->bPrefixTranscriptFields? '' : $nTranscriptID . '_');
             $aEffectForm = array(array('Affects function (as reported)', '', 'select', $sPrefix . 'effect_reported', 1, $_SETT['var_effect'], false, false, false));
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aEffectForm[] = array('Affects function (by curator)', '', 'select', $sPrefix . 'effect_concluded', 1, $_SETT['var_effect'], false, false, false);
@@ -369,6 +406,12 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
             $zData['id_ncbi_'] = '<A href="transcripts/' . $zData['transcriptid'] . '">' . $zData['id_ncbi'] . '</A>';
             $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
             $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
+            if (LOVD_plus && lovd_verifyInstance('mgha', false)) { // Display the Genomizer URL in the VOT ViewEntry. TODO Once the ref and alt are separated we need to add it into this URL. Should we add this to the links table so as it can be used elsewhere?
+                $zData['genomizer_url_'] = '<A href="http://genomizer.com/?chr=' . $zData['chromosome'] . '&gene=' . $zData['geneid'] . '&ref_seq=' . $zData['id_ncbi'] . '&variant=' . $zData['VariantOnTranscript/DNA'] . '" target="_blank">Genomizer Link</A>';
+                if (isset($zData['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance'])) {
+                    $zData['clinvar_'] = implode(', ', lovd_mapCodeToDescription(explode(',', $zData['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance']), $_SETT['clinvar_var_effect']));
+                }
+            }
         }
 
         return $zData;
@@ -501,7 +544,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom {
         list($nID, $nTranscriptID) = explode(',', $nID);
         $this->aSQLViewEntry['WHERE'] .= (empty($this->aSQLViewEntry['WHERE'])? '' : ' AND ') . 'vot.transcriptid = \'' . $nTranscriptID . '\'';
 
-        // Before passing this on to parent::viewEntry(), perform a standard getCount() check on the transcript ID,
+        // Before passing this on to parent::viewEntry(), perform a standard count() check on the transcript ID,
         // to make sure that we won't get a query error when the combination of VariantID/TranscriptID does not yield
         // any results. Easiest is then to fake a wrong $nID such that parent::viewEntry() will complain.
         if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($nID, $nTranscriptID))->fetchColumn()) {

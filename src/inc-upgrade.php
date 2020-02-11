@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2017-12-04
- * For LOVD    : 3.0-20
+ * Modified    : 2020-01-22
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -38,6 +38,10 @@ if (!defined('ROOT_PATH')) {
 // How are the versions related?
 $sCalcVersionFiles = lovd_calculateVersion($_SETT['system']['version']);
 $sCalcVersionDB = lovd_calculateVersion($_STAT['version']);
+
+
+
+
 
 if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Version of files are not equal to version of database backend.
@@ -541,7 +545,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             MODIFY features TEXT,
                             MODIFY remarks TEXT',
                         'ALTER TABLE ' . TABLE_ALLELES . ' ALTER display_order SET DEFAULT 0',
-                        'ALTER TABLE ' . TABLE_VARIANTS . ' ALTER allele SET DEFAULT 0',
+                        (LOVD_plus? 'SELECT 1' :
+                            'ALTER TABLE ' . TABLE_VARIANTS . ' ALTER allele SET DEFAULT 0'),
                         'ALTER TABLE ' . TABLE_COLS . '
                             ALTER col_order SET DEFAULT 0,
                             ALTER width SET DEFAULT 50,
@@ -569,7 +574,8 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                             ALTER public_view SET DEFAULT 1,
                             ALTER public_add SET DEFAULT 1',
                         'ALTER TABLE ' . TABLE_LINKS . ' MODIFY description TEXT',
-                        'ALTER TABLE ' . TABLE_CONFIG . ' ALTER system_title SET DEFAULT "LOVD - Leiden Open Variation Database",
+                        'ALTER TABLE ' . TABLE_CONFIG . ' ALTER system_title SET DEFAULT "' .
+                        (LOVD_plus? 'Leiden Open Variation Database for diagnostics' : 'LOVD - Leiden Open Variation Database') . '",
                             ALTER institute SET DEFAULT "",
                             ALTER location_url SET DEFAULT "",
                             ALTER email_address SET DEFAULT "",
@@ -622,18 +628,67 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                           CONSTRAINT ' . TABLE_SCHEDULED_IMPORTS . '_fk_processed_by FOREIGN KEY (processed_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)
                       ENGINE=InnoDB,
                       DEFAULT CHARACTER SET utf8',
-		 ),
+                 ),
                  '3.0-20c' => array(
                      'ALTER TABLE ' . TABLE_CHROMOSOMES . ' ADD COLUMN hg38_id_ncbi VARCHAR(20) NOT NULL AFTER hg19_id_ncbi',
                      // Weird, but much simpler... so, oh well. All chromosomes got updated one version, except M.
                      'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = CONCAT(LEFT(hg19_id_ncbi, 10), (TRIM(LEADING "." FROM RIGHT(hg19_id_ncbi, 2))+1)) WHERE name != "M"',
-		     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = hg19_id_ncbi WHERE name = "M"',
-		 ),
+                     'UPDATE ' . TABLE_CHROMOSOMES . ' SET hg38_id_ncbi = hg19_id_ncbi WHERE name = "M"',
+                 ),
+                 '3.0-21b' => array(
+                     'UPDATE ' . TABLE_SOURCES . ' SET url = "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:{{ ID }}" WHERE id = "hgnc"',
+                 ),
+                 '3.0-21c' => array(
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_USERS . '" AND COLUMN_NAME = "username" AND CHARACTER_MAXIMUM_LENGTH < 50)',
+                     'SET @sSQL := IF(@bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            ALTER TABLE ' . TABLE_USERS . ' MODIFY COLUMN username VARCHAR(50) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                 ),
+                 '3.0-21d' => array(
+                     'SET @bLOVDplus := (SELECT ' . (int) LOVD_plus . ')', // We're not running these for LOVD+, too intensive.
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS . '" AND COLUMN_NAME = "VariantOnGenome/DNA" AND CHARACTER_MAXIMUM_LENGTH < 255)',
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            ALTER TABLE ' . TABLE_VARIANTS . ' MODIFY COLUMN `VariantOnGenome/DNA` VARCHAR(255) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnGenome/DNA\"")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME = "VariantOnTranscript/DNA" AND CHARACTER_MAXIMUM_LENGTH < 255)',
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN `VariantOnTranscript/DNA` VARCHAR(255) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnTranscript/DNA\"")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME = "VariantOnTranscript/Protein" AND CHARACTER_MAXIMUM_LENGTH < 255)',
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' MODIFY COLUMN `VariantOnTranscript/Protein` VARCHAR(255) NOT NULL")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'SET @sSQL := IF(@bLOVDplus OR @bExists < 1, \'SELECT "INFO: Column not found or already enlarged."\', "
+                            UPDATE ' . TABLE_COLS . ' SET mysql_type = \"VARCHAR(255)\" WHERE id = \"VariantOnTranscript/Protein\"")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                 ),
+                 '3.0-21e' => array(
+                     'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_DISEASES . '" AND COLUMN_NAME = "inheritance")',
+                     'SET @sSQL := IF(@bExists > 0, \'SELECT "INFO: Column already exists."\', "
+                        ALTER TABLE ' . TABLE_DISEASES . ' ADD COLUMN inheritance VARCHAR(45) NULL AFTER name")',
+                     'PREPARE Statement FROM @sSQL',
+                     'EXECUTE Statement',
+                     'UPDATE ' . TABLE_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\nstart-lost\r\ncoding\r\nnon-coding-exon\r\ncoding-near-splice\r\nnon-coding-exon-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nsplice\r\nnon-coding-intron-near-splice\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" AND id = "VariantOnTranscript/GVS/Function"',
+                     'UPDATE ' . TABLE_SHARED_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\nstart-lost\r\ncoding\r\nnon-coding-exon\r\ncoding-near-splice\r\nnon-coding-exon-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nsplice\r\nnon-coding-intron-near-splice\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" AND colid = "VariantOnTranscript/GVS/Function"',
+                 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
         // Simply reload all custom columns.
-        require ROOT_PATH . 'install/inc-sql-columns.php';
+        require_once ROOT_PATH . 'install/inc-sql-columns.php';
         $aUpdates['3.0-alpha-01'][] = 'DELETE FROM ' . TABLE_COLS . ' WHERE col_order < 255';
         $aUpdates['3.0-alpha-01'] = array_merge($aUpdates['3.0-alpha-01'], $aColSQL);
     }
@@ -712,7 +767,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     require ROOT_PATH . 'class/progress_bar.php';
     // FIXME; if we're not in post right now, don't send the form in POST either! (GET variables then should be put in input fields then)
-    $sFormNextPage = '<FORM action="' . $_SERVER['REQUEST_URI'] . '" method="post" id="upgrade_form">' . "\n";
+    $sFormNextPage = '<FORM action="' . addslashes($_SERVER['REQUEST_URI']) . '" method="post" id="upgrade_form">' . "\n";
     foreach ($_POST as $key => $val) {
         // Added htmlspecialchars to prevent XSS and allow values to include quotes.
         if (is_array($val)) {
@@ -866,7 +921,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $_SERVER['REQUEST_URI'] = preg_replace('/[?&]force_lock$/', '', $_SERVER['REQUEST_URI']);
     }
 
-    print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].action=\'' . str_replace('\'', '\\\'', $_SERVER['REQUEST_URI']) . '\';</SCRIPT>' . "\n");
+    print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].action=\'' . addslashes($_SERVER['REQUEST_URI']) . '\';</SCRIPT>' . "\n");
     if ($bLocked) {
         print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].submit.value = document.forms[\'upgrade_form\'].submit.value.replace(\'Proceed\', \'Force upgrade\');</SCRIPT>' . "\n");
     }

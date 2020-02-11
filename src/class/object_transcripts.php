@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2017-05-15
- * For LOVD    : 3.0-19
+ * Modified    : 2019-10-01
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,8 +42,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Transcript extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Transcript extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Transcripts.
     var $sObject = 'Transcript';
 
 
@@ -52,7 +53,7 @@ class LOVD_Transcript extends LOVD_Object {
 
     function __construct ()
     {
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         // Default constructor.
 
@@ -77,21 +78,27 @@ class LOVD_Transcript extends LOVD_Object {
 
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
-                                          'g.chromosome, ' .
-                                          'COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 'vot.id' : 'vog.id') . ') AS variants';
+                                          'g.chromosome';
+        if (!LOVD_plus) {
+            // Speed optimization by skipping variant counts.
+            $this->aSQLViewList['SELECT'] .= ', ' .
+                'COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants';
+        }
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
-                                          // If user is less than a collaborator, only show public variants and
-                                          // variants owned/created by him.
-                                          ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
-                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
-                                                  '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
-                                                  (!$_AUTH? '' :
-                                                      ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
-                                                      'vog.owned_by = "' . $_AUTH['id'] . '"'
-                                                  ) . ')) '
-                                          );
+                                          (LOVD_plus? '' :
+                                            // Speed optimization by skipping variant counts.
+                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+                                            // If user is less than a collaborator, only show public variants and
+                                            // variants owned/created by him.
+                                            ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                                                'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
+                                                    '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
+                                                    (!$_AUTH? '' :
+                                                        ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
+                                                        'vog.owned_by = "' . $_AUTH['id'] . '"'
+                                                    ) . ')) '
+                                            ));
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 
         // List of columns and (default?) order for viewing an entry.
@@ -107,10 +114,10 @@ class LOVD_Transcript extends LOVD_Object {
                         'id_protein_uniprot' => 'Protein - Uniprot ID',
                         'exon_table' => 'Exon/intron information',
                         'remarks' => 'Remarks',
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -138,6 +145,11 @@ class LOVD_Transcript extends LOVD_Object {
                     'view' => array('Variants', 70, 'style="text-align : right;"'),
                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
             );
+        if (LOVD_plus) {
+            // Diagnostics: Speed up view by removing the variants column.
+            unset($this->aColumnsViewList['variants']);
+        }
+
         $this->sSortDefault = 'geneid';
 
         // Because the disease information is publicly available, remove some columns for the public.
@@ -150,11 +162,11 @@ class LOVD_Transcript extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // XSS attack prevention. Deny input of HTML.
         lovd_checkXSS();
@@ -255,7 +267,6 @@ class LOVD_Transcript extends LOVD_Object {
     {
         global $_BAR, $_SETT, $_DB;
 
-        $_Mutalyzer = new LOVD_SoapClient();
         $aTranscripts = array(
             'id' => array(),
             'name' => array(),
@@ -273,12 +284,7 @@ class LOVD_Transcript extends LOVD_Object {
             $sAliasSymbol = $_SETT['mito_genes_aliases'][$sSymbol];
         }
 
-        try {
-            // Can throw notice when TranscriptInfo is not present (when a gene recently has been renamed, for instance).
-            $aTranscripts['info'] = @$_Mutalyzer->getTranscriptsAndInfo(array('genomicReference' => $sRefseqUD, 'geneName' => $sAliasSymbol))->getTranscriptsAndInfoResult->TranscriptInfo;
-        } catch (SoapFault $e) {
-            lovd_soapError($e);
-        }
+        $aTranscripts['info'] = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $sRefseqUD, 'geneName' => $sAliasSymbol));
         if (empty($aTranscripts['info'])) {
             // No transcripts found.
             $aTranscripts['info'] = array();
@@ -286,9 +292,9 @@ class LOVD_Transcript extends LOVD_Object {
         }
 
         $nTranscripts = count($aTranscripts['info']);
-        foreach($aTranscripts['info'] as $oTranscript) {
+        foreach($aTranscripts['info'] as $aTranscript) {
             $nProgress += ((100 - $nProgress)/$nTranscripts);
-            $_BAR->setMessage('Collecting ' . $oTranscript->id . ' info...');
+            $_BAR->setMessage('Collecting ' . $aTranscript['id'] . ' info...');
 
             if (isset($_SETT['mito_genes_aliases'][$sSymbol])) {
                 // For mitochondrial genes, we won't be able to get any proper transcript information. Fake one.
@@ -308,32 +314,32 @@ class LOVD_Transcript extends LOVD_Object {
                 $aTranscripts['positions'] = array($sRefseqNM =>
                     array(
                         // For mitochondrial genes we used the NC to call getTranscriptAndInfo, therefore we can use the gTransStart and gTransEnd.
-                        'chromTransStart' => (isset($oTranscript->gTransStart)? $oTranscript->gTransStart : 0),
-                        'chromTransEnd' => (isset($oTranscript->gTransEnd)? $oTranscript->gTransEnd : 0),
-                        'cTransStart' => (isset($oTranscript->cTransStart)? $oTranscript->cTransStart : 0),
-                        'cTransEnd' => (isset($oTranscript->sortableTransEnd)? $oTranscript->sortableTransEnd : 0),
-                        'cCDSStop' => (isset($oTranscript->cCDSStop)? $oTranscript->cCDSStop : 0),
+                        'chromTransStart' => (isset($aTranscript['gTransStart'])? $aTranscript['gTransStart'] : 0),
+                        'chromTransEnd' => (isset($aTranscript['gTransEnd'])? $aTranscript['gTransEnd'] : 0),
+                        'cTransStart' => (isset($aTranscript['cTransStart'])? $aTranscript['cTransStart'] : 0),
+                        'cTransEnd' => (isset($aTranscript['sortableTransEnd'])? $aTranscript['sortableTransEnd'] : 0),
+                        'cCDSStop' => (isset($aTranscript['cCDSStop'])? $aTranscript['cCDSStop'] : 0),
                     )
                 );
             } else {
-                if (in_array($oTranscript->id, $aTranscripts['added'])) {
+                if (in_array($aTranscript['id'], $aTranscripts['added'])) {
                     // Transcript already exists; continue to the next transcript.
                     continue;
                 }
-                $aTranscripts['id'][] = $oTranscript->id;
+                $aTranscripts['id'][] = $aTranscript['id'];
                 // Until revision 679 the transcript version was not used in the index. The version number was removed with preg_replace.
                 // Can not figure out why version is not included. Therefore, for now we will do without preg_replace.
-                $aTranscripts['name'][$oTranscript->id] = str_replace($sGeneName . ', ', '', $oTranscript->product);
-                $aTranscripts['mutalyzer'][$oTranscript->id] = str_replace($sSymbol . '_v', '', $oTranscript->name);
-                $aTranscripts['positions'][$oTranscript->id] =
+                $aTranscripts['name'][$aTranscript['id']] = str_replace($sGeneName . ', ', '', $aTranscript['product']);
+                $aTranscripts['mutalyzer'][$aTranscript['id']] = str_replace($sSymbol . '_v', '', $aTranscript['name']);
+                $aTranscripts['positions'][$aTranscript['id']] =
                     array(
-                        'chromTransStart' => (isset($oTranscript->chromTransStart)? $oTranscript->chromTransStart : 0),
-                        'chromTransEnd' => (isset($oTranscript->chromTransEnd)? $oTranscript->chromTransEnd : 0),
-                        'cTransStart' => $oTranscript->cTransStart,
-                        'cTransEnd' => $oTranscript->sortableTransEnd,
-                        'cCDSStop' => $oTranscript->cCDSStop,
+                        'chromTransStart' => (isset($aTranscript['chromTransStart'])? $aTranscript['chromTransStart'] : 0),
+                        'chromTransEnd' => (isset($aTranscript['chromTransEnd'])? $aTranscript['chromTransEnd'] : 0),
+                        'cTransStart' => $aTranscript['cTransStart'],
+                        'cTransEnd' => $aTranscript['sortableTransEnd'],
+                        'cCDSStop' => $aTranscript['cCDSStop'],
                     );
-                $aTranscripts['protein'][$oTranscript->id] = (!isset($oTranscript->proteinTranscript)? '' : $oTranscript->proteinTranscript->id);
+                $aTranscripts['protein'][$aTranscript['id']] = (empty($aTranscript['proteinTranscript']['id'])? '' : $aTranscript['proteinTranscript']['id']);
             }
             $_BAR->setProgress($nProgress);
         }
