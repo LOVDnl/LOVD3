@@ -1,14 +1,11 @@
 language: php
 php:
-  # aliased to a recent 5.4.x version
-#  - 5.4
-  # aliased to a recent 5.5.x version
-#  - 5.5
-  # aliased to a recent 5.6.xversion
-  # This one is usually failing due to unexpected halting of the process (and Travis then killing the build).
+  # aliased to a recent 5.6.x version
   - 5.6
-  # aliased to a recent 7.x version
-#  - 7.0
+  # aliased to a recent 7.1.x version
+  - 7.1
+  # aliased to a recent 7.2.x version
+  - 7.2
 
 env:
   # Let Selenium use Firefox driver.
@@ -19,27 +16,28 @@ env:
 matrix:
   exclude:
     # Exclude some combinations of php version and selenium driver.
-#    - php: 5.4
-#      env: LOVD_SELENIUM_DRIVER=chrome
-#    - php: 5.5
-#      env: LOVD_SELENIUM_DRIVER=firefox
     - php: 5.6
       env: LOVD_SELENIUM_DRIVER=chrome
-#    - php: 7.0
-#      env: LOVD_SELENIUM_DRIVER=firefox
+    - php: 7.1
+      env: LOVD_SELENIUM_DRIVER=firefox
 
 sudo: required
-dist: trusty
+dist: xenial
 
 addons:
-  firefox: "54.0"
+#  firefox: "54.0"
   apt:
+#    sources:
+#      - google-chrome
     packages:
     - mysql-server
     - mysql-client
     - mutt
 #    - chromium-browser=61.0.3163.100-0ubuntu0.14.04.1202
     - chromium-browser
+
+services:
+  - mysql
 
 before_install:
   - ./tests/travis/setup/setup_chrome.sh
