@@ -2,8 +2,9 @@
 
 # Installation of chrome on Travis' trusty machines.
 # Based on: http://blog.500tech.com/setting-up-travis-ci-to-run-tests-on-latest-google-chrome-version/
-export DISPLAY=:99.0
-sh -e /etc/init.d/xvfb start
+#export DISPLAY=:99.0
+#sh -e /etc/init.d/xvfb start
+# (no longer needed for xenial, now started from .travis.yml)
 
 # Fixme: uncomment lines below to use latest stable Chrome browser for testing
 #export CHROME_BIN=/usr/bin/google-chrome
