@@ -5,11 +5,9 @@
 ## Then the selenium server is downloaded and started.
 ## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
+# Before changing any of these versions, ensure they are compatible with each other, and with your browser versions.
 seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar"
-# Currently using a fixed version of the chrome driver.
-# chromeDriverVersion=$(curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
-chromeDriverVersion="79.0.3945.16"
-chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip"
+chromeDriverURL="http://chromedriver.storage.googleapis.com/79.0.3945.16/chromedriver_linux64.zip"
 geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
 
 echo "Download Selenium"
@@ -52,10 +50,10 @@ echo "Starting Selenium"
 sudo java -Djava.net.preferIPv4Stack=true \
     -Dwebdriver.chrome.driver=chromedriver \
     -Dwebdriver.gecko.driver=geckodriver \
-    -jar ${serverFile} -port 4444 \
-    > /tmp/selenium.log 2> /tmp/selenium_error.log &
+    -jar ${serverFile} -port 4444 &
+#    > /tmp/selenium.log 2> /tmp/selenium_error.log &
 sleep 3
-cat /tmp/selenium.log
+#cat /tmp/selenium.log
 
 wget --retry-connrefused --tries=10 --waitretry=3 --output-file=/dev/null ${serverUrl}/wd/hub/status -O /dev/null
 if [ ! $? -eq 0 ]; then

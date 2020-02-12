@@ -22,10 +22,15 @@ env:
 #      env: LOVD_SELENIUM_DRIVER=firefox
 
 sudo: required
+# xenial = 16.04 LTS. Next is bionic, which doesn't have any PHP5 versions anymore to test with.
+# xenial comes with Firefox 63.0.1.
 dist: xenial
 
+git:
+  depth: 1
+
 addons:
-#  firefox: "54.0"
+  chrome: stable
   apt:
 #    sources:
 #      - google-chrome
@@ -54,6 +59,10 @@ before_install:
   - ./tests/travis/setup/setup_php.sh
   - ./tests/travis/setup/setup_config.sh
   - ./tests/travis/setup/setup_selenium_server.sh
+
+before_script:
+  - firefox --version
+  - google-chrome --version
 
 script:
   # Use phpunit or vendor/bin/phpunit to start tests.
