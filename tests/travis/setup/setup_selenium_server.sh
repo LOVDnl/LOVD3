@@ -2,15 +2,15 @@
 
 ## This file is used in Travis CI.
 ## In this file composer is used to install the dependencies defined in composer.json
-## Then the selenium server is downloaded and started. 
+## Then the selenium server is downloaded and started.
 ## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
-seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.4/selenium-server-standalone-3.4.0.jar"
+seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.9/selenium-server-standalone-3.9.1.jar"
 # Currently using a fixed version of the chrome driver.
 # chromeDriverVersion=$(curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
-chromeDriverVersion="2.24"
+chromeDriverVersion="80.0.3987.16"
 chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip"
-geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.18.0/geckodriver-v0.18.0-linux64.tar.gz"
+geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
 
 echo "Download Selenium"
 if [ ! -f ${seleniumDownloadURL} ]; then
