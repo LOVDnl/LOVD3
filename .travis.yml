@@ -58,6 +58,10 @@ before_script:
   - ./tests/travis/setup/setup_selenium_server.sh
   - phpenv config-rm xdebug.ini
 
+before_script:
+  - firefox --version
+  - google-chrome --version
+
 script:
   # Use phpunit or vendor/bin/phpunit to start tests.
   # vendor/bin/phpunit is the best option to run the tests. Because this one
