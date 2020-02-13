@@ -660,7 +660,7 @@ if ($_INI['database']['driver'] == 'mysql') {
 
 
 
-ini_set('default_charset','UTF-8');
+@ini_set('default_charset','UTF-8');
 if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
@@ -729,8 +729,9 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
         define('NOT_INSTALLED', true);
     }
 
+    // phpunit check is necessary because our Travis tests load inc-init.php when we're not installed yet to get LOVD globals.
     // inc-js-submit-settings.php check is necessary because it gets included in the install directory.
-    if (dirname(lovd_getProjectFile()) != '/install' && lovd_getProjectFile() != '/inc-js-submit-settings.php') {
+    if (dirname(lovd_getProjectFile()) != '/install' && !in_array(lovd_getProjectFile(), array('phpunit', '/inc-js-submit-settings.php'))) {
         // We're not installing, so throwing an error.
 
         if (defined('NOT_INSTALLED')) {
@@ -773,11 +774,11 @@ if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' &
 }
 
 // Session settings - use cookies.
-ini_set('session.use_cookies', 1);
-ini_set('session.use_only_cookies', 1);
+@ini_set('session.use_cookies', 1);
+@ini_set('session.use_only_cookies', 1);
 if (ini_get('session.cookie_path') == '/') {
     // Don't share cookies with other systems - set the cookie path!
-    ini_set('session.cookie_path', lovd_getInstallURL(false));
+    @ini_set('session.cookie_path', lovd_getInstallURL(false));
 }
 if (!empty($_STAT['signature'])) {
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
@@ -785,7 +786,7 @@ if (!empty($_STAT['signature'])) {
 } else {
     $_SETT['cookie_id'] = md5($_INI['database']['database'] . $_INI['database']['table_prefix']);
 }
-session_name('PHPSESSID_' . $_SETT['cookie_id']);
+@session_name('PHPSESSID_' . $_SETT['cookie_id']);
 
 // Start sessions - use cookies.
 @session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.

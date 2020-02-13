@@ -74,7 +74,8 @@ function getWebDriverInstance ()
             WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
 
         // Set time for trying to access DOM elements
-        $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
+        // This keeps failing. No clue why. Both Chrome and FF don't like it, although Chrome seems to handle it on the Travis environment.
+        // $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
 
         if (isset($_INI['test']['xdebug_enabled']) && $_INI['test']['xdebug_enabled'] == 'true') {
             // Load page of target host. This is necessary to set a cookie.
@@ -129,6 +130,12 @@ function setMutalyzerServiceURL ($sURL)
     //  the Mutalyzer team. This way, one test run of LOVD also tests their
     //  update.
     list($db,) = getLOVDGlobals();
+
+    if (defined('NOT_INSTALLED')) {
+        // Just return true here. Don't fail on not being able to set this URL.
+        return true;
+    }
+
     $result = $db->query('UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url=?', array($sURL));
 
     // Return true if query was executed successfully

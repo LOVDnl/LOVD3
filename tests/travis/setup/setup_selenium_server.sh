@@ -47,7 +47,7 @@ if [ ! -f "geckodriver" ]; then
 fi
 
 echo "Starting Selenium"
-sudo java -Djava.net.preferIPv4Stack=true \
+java -Djava.net.preferIPv4Stack=true \
     -Dwebdriver.chrome.driver=chromedriver \
     -Dwebdriver.gecko.driver=geckodriver \
     -jar ${serverFile} -port 4444 &
