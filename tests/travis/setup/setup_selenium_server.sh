@@ -10,7 +10,7 @@ serverFile=selenium-server-standalone-2.53.1.jar
 # Download chromedriver.
 # Fixme: uncomment following line and remove "=2.24" line to use latest release.
 #chromeDriverVersion=`curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
-chromeDriverVersion=2.24
+chromeDriverVersion=2.39
 chromeDriverSrc=http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip
 
 phpVersion=`php -v`
