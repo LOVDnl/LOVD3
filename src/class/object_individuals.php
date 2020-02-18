@@ -263,6 +263,11 @@ class LOVD_Individual extends LOVD_Custom
                         'statusid',
                       );
 
+        // Check the 'active_diseases' field only when not importing.
+        if (!$bImport) {
+            $this->aCheckMandatory[] = 'active_diseases';
+        }
+
         // Checks fields before submission of data.
         parent::checkFields($aData, $zData, $aOptions);
 
