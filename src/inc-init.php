@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-02-13
+ * Modified    : 2020-02-18
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -149,7 +149,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-22',
+                            'version' => '3.0-23',
                           ),
                 'user_levels' =>
                      array(
@@ -374,7 +374,7 @@ $_SETT = array(
                                                             '22' => 'NC_000022.10',
                                                             'X'  => 'NC_000023.10',
                                                             'Y'  => 'NC_000024.9',
-                                                            'M'  => 'NC_012920.1',
+                                                            'M'  => 'NC_012920.1', // Note that hg19 uses NC_012920!
                                                           ),
                                           ),
                             // http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/
