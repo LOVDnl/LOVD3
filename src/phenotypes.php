@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -115,6 +115,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     // Load appropriate user level for this phenotype entry.
     lovd_isAuthorized('phenotype', $nID);
+
+    // Tooltip JS code for the owner field. Other VEs don't have to load this, because they have VLs.
+    lovd_includeJS('inc-js-tooltip.php');
 
     require ROOT_PATH . 'class/object_phenotypes.php';
     $_DATA = new LOVD_Phenotype('', $nID);
@@ -405,8 +408,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if (!$bSubmit && !(GET && ACTION == 'publish')) {
                 // Put $zData with the old values in $_SESSION for mailing.
-                // FIXME; change owner to owned_by_ in the load entry query of object_phenotypes.php.
-                $zData['owned_by_'] = $zData['owner'];
                 $zData['diseaseid_'] = $_DB->query('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($zData['diseaseid']))->fetchColumn();
                 $_SESSION['work']['edits']['phenotype'][$nID] = $zData;
             }
@@ -553,7 +554,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             }
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted phenotype information entry ' . $nID . ' (Owner: ' . $zData['owner'] . ')');
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted phenotype information entry ' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals/' . $zData['individualid']);
@@ -585,7 +586,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting phenotype information entry', '', 'print', $nID . ' (Owner: ' . $zData['owner'] . ')'),
+                        array('Deleting phenotype information entry', '', 'print', $nID . ' (Owner: ' . $zData['owned_by_'] . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete phenotype information entry'),

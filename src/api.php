@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2019-08-06
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-06
+ * For LOVD    : 3.0-23
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -31,7 +31,7 @@
  *  3.0-22       /api/rest.php/*****?format=application/json   (JSON output for whole LOVD2-style API)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -122,6 +122,9 @@ if ($sDataType == 'variants') {
         header('HTTP/1.0 503 Service Unavailable');
         die('This gene does not have the VariantOnTranscript/DNA or the VariantOnGenome/DBID fields enabled, crucial for the API.');
     }
+
+    // Store if we have hg38 annotation or not (GV shared had a custom column for that).
+    $bDNA38 = $_DATA['Genome']->colExists('VariantOnGenome/DNA/hg38');
 
     $bUnique = ($nID == 'unique');
     if ($bUnique) {
@@ -225,7 +228,8 @@ if ($sDataType == 'variants') {
                    ORDER BY t.id_ncbi
                    SEPARATOR ";"
                  ) AS _position_mRNA,
-                 CONCAT("chr", vog.chromosome, ":' . (FORMAT == 'application/json'? 'g.' : '') . '", 
+                 ' . (!$bDNA38? '' : 'vog.chromosome, vog.`VariantOnGenome/DNA/hg38` AS `DNA/hg38`, ') . '
+                 CONCAT("chr", vog.chromosome, ":", 
                    IF(
                      vog.position_g_start = vog.position_g_end,
                      vog.position_g_start,
@@ -469,7 +473,7 @@ if ($sDataType == 'variants') {
     // Make all transformations.
     $aData = array_map(function ($zData)
     {
-        global $bUnique, $nRefSeqID, $sChromosome, $sRefSeq, $sSymbol, $_SETT;
+        global $_CONF, $_SETT, $bDNA38, $bUnique, $nRefSeqID, $sChromosome, $sRefSeq, $sSymbol;
 
         // Format fields for JSON payload.
         // The Atom data will also use these transformations, but may have less fields and in a different order.
@@ -503,7 +507,9 @@ if ($sDataType == 'variants') {
             'symbol' => $sSymbol,
             'id' => $zData['id'],
             'position_mRNA' => $zData['_position_mRNA'],
-            'position_genomic' => $zData['position_genomic'],
+            'position_genomic' => array(
+                $_CONF['refseq_build'] => $zData['position_genomic'],
+            ),
             'Variant/DNA' => explode(';;', $zData['__VariantOnTranscript/DNA']),
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
@@ -512,6 +518,15 @@ if ($sDataType == 'variants') {
             'created_date' => date('c', strtotime($zData['created_date'])),
             'edited_date' => date('c', strtotime($zData['edited_date'])),
         );
+
+        // GV shared and future LOVDs; if we have hg38 data, add that.
+        if (FORMAT == 'application/json' && $_CONF['refseq_build'] != 'hg38'
+            && $bDNA38 && $zData['DNA/hg38']) {
+            $aPositions = lovd_getVariantInfo($zData['DNA/hg38']);
+            $aReturn['position_genomic']['hg38'] = 'chr' . $zData['chromosome'] .
+                ':' . $aPositions['position_start'] .
+                ($aPositions['position_start'] == $aPositions['position_end']? '' : '_' . $aPositions['position_end']);
+        }
 
         if ($bUnique && FORMAT == 'application/json') {
             unset($aReturn['id']);
@@ -566,6 +581,7 @@ if ($sDataType == 'variants') {
 
         $sContent = '';
         $zData['position_mRNA'] = $zData['position_mRNA'][0];
+        $zData['position_genomic'] = current($zData['position_genomic']); // JSON made this an array, so undo that here and take first value.
         $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA'][0]);
         if (!empty($_GET['show_variant_effect'])) {
             // Optionally, add the variant effect to the output.

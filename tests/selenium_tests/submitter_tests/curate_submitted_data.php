@@ -22,7 +22,7 @@ class CurateSubmittedDataTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::linkText("0000000001"));
         $element->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000001$/', $this->driver->getCurrentURL()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000001($|#)/', $this->driver->getCurrentURL()));
         $this->assertEquals("Pending", $this->driver->findElement(WebDriverBy::xpath("//tr[12]/td/span"))->getText());
         $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Variants"));
         $element->click();
@@ -52,7 +52,7 @@ class CurateSubmittedDataTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::linkText("0000000002"));
         $element->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000002$/', $this->driver->getCurrentURL()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000002($|#)/', $this->driver->getCurrentURL()));
         $this->assertEquals("Pending", $this->driver->findElement(WebDriverBy::xpath("//tr[12]/td/span"))->getText());
         $element = $this->driver->findElement(WebDriverBy::id("viewentryOptionsButton_Variants"));
         $element->click();

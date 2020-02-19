@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-01-16
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-18
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -149,7 +149,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-22',
+                            'version' => '3.0-23',
                           ),
                 'user_levels' =>
                      array(
@@ -269,7 +269,6 @@ $_SETT = array(
                 'upstream_URL' => 'http://www.LOVD.nl/',
                 'upstream_BTS_URL' => 'https://github.com/LOVDnl/LOVD3/issues/',
                 'upstream_BTS_URL_new_ticket' => 'https://github.com/LOVDnl/LOVD3/issues/new',
-                'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
                      array(
                             10,
@@ -375,7 +374,7 @@ $_SETT = array(
                                                             '22' => 'NC_000022.10',
                                                             'X'  => 'NC_000023.10',
                                                             'Y'  => 'NC_000024.9',
-                                                            'M'  => 'NC_012920.1',
+                                                            'M'  => 'NC_012920.1', // Note that hg19 uses NC_012920!
                                                           ),
                                           ),
                             // http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/
@@ -660,7 +659,7 @@ if ($_INI['database']['driver'] == 'mysql') {
 
 
 
-ini_set('default_charset','UTF-8');
+@ini_set('default_charset','UTF-8');
 if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
@@ -729,8 +728,9 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
         define('NOT_INSTALLED', true);
     }
 
+    // phpunit check is necessary because our Travis tests load inc-init.php when we're not installed yet to get LOVD globals.
     // inc-js-submit-settings.php check is necessary because it gets included in the install directory.
-    if (dirname(lovd_getProjectFile()) != '/install' && lovd_getProjectFile() != '/inc-js-submit-settings.php') {
+    if (dirname(lovd_getProjectFile()) != '/install' && !in_array(lovd_getProjectFile(), array('phpunit', '/inc-js-submit-settings.php'))) {
         // We're not installing, so throwing an error.
 
         if (defined('NOT_INSTALLED')) {
@@ -760,10 +760,7 @@ if (get_magic_quotes_gpc()) {
 }
 
 // Use of SSL required?
-// FIXME:
-//// (SSL not required when exporting data to WikiProfessional because their scripts do not support it)
-//// (The UCSC also has issues with retrieving the BED files through SSL...)
-//if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/export_data.php' && !empty($_GET['format']) && $_GET['format'] == 'wiki') && !(substr(lovd_getProjectFile(), 0, 9) == '/api/rest' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
+// (The UCSC has issues with retrieving the BED files through SSL...)
 if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
     // We were enabled, when SSL was available. So I guess SSL is still available. If not, this line here would be a problem.
     // No, not sending any $_POST values either. Let's just assume no-one is working with LOVD when the ssl setting is activated.
@@ -773,11 +770,11 @@ if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' &
 }
 
 // Session settings - use cookies.
-ini_set('session.use_cookies', 1);
-ini_set('session.use_only_cookies', 1);
+@ini_set('session.use_cookies', 1);
+@ini_set('session.use_only_cookies', 1);
 if (ini_get('session.cookie_path') == '/') {
     // Don't share cookies with other systems - set the cookie path!
-    ini_set('session.cookie_path', lovd_getInstallURL(false));
+    @ini_set('session.cookie_path', lovd_getInstallURL(false));
 }
 if (!empty($_STAT['signature'])) {
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
@@ -785,7 +782,7 @@ if (!empty($_STAT['signature'])) {
 } else {
     $_SETT['cookie_id'] = md5($_INI['database']['database'] . $_INI['database']['table_prefix']);
 }
-session_name('PHPSESSID_' . $_SETT['cookie_id']);
+@session_name('PHPSESSID_' . $_SETT['cookie_id']);
 
 // Start sessions - use cookies.
 @session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.

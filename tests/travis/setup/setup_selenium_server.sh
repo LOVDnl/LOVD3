@@ -2,7 +2,7 @@
 
 ## This file is used in Travis CI.
 ## In this file composer is used to install the dependencies defined in composer.json
-## Then the selenium server is downloaded and started. 
+## Then the selenium server is downloaded and started.
 ## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
 serverUrl='http://127.0.0.1:4444'
 serverFile=selenium-server-standalone-2.53.1.jar
@@ -10,7 +10,7 @@ serverFile=selenium-server-standalone-2.53.1.jar
 # Download chromedriver.
 # Fixme: uncomment following line and remove "=2.24" line to use latest release.
 #chromeDriverVersion=`curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE`
-chromeDriverVersion=2.24
+chromeDriverVersion=2.39
 chromeDriverSrc=http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip
 
 phpVersion=`php -v`
@@ -49,7 +49,7 @@ export DISPLAY=:99.0
 
 #sh -e /etc/init.d/xvfb start
 #sleep 3
-sudo java -jar $serverFile -port 4444 -Djava.net.preferIPv4Stack=true -Dwebdriver.chrome.driver=chromedriver > /tmp/selenium.log 2> /tmp/selenium_error.log &
+java -jar $serverFile -port 4444 -Djava.net.preferIPv4Stack=true -Dwebdriver.chrome.driver=chromedriver > /tmp/selenium.log 2> /tmp/selenium_error.log &
 
 sleep 3
 
