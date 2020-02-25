@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-02-25
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -508,10 +508,8 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // (9) Activating standard custom columns.
     $aInstallSQL['Activating LOVD standard custom columns...'] = lovd_getActivateCustomColumnQuery();
 
-    if (LOVD_plus) {
-        // Make sure the DBID column is indexed.
-        $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX(`VariantOnGenome/DBID`)';
-    }
+    // Make sure the DBID column is indexed.
+    $aInstallSQL['Activating LOVD standard custom columns...'][] = 'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (`VariantOnGenome/DBID`)';
 
 
     // (10) Creating the "Healthy / Control" disease. Maybe later enable some more default columns? (IQ, ...)

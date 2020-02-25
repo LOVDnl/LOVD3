@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-02-24
+ * Modified    : 2020-02-25
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,6 +69,23 @@ function lovd_addConditionalSQL ($sCondition, $aConditionArgs, $sSQL)
             $aReturn = array(
                 'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $sTable . '" AND COLUMN_NAME = "' . $sColumn . '")',
                 'SET @sSQL := IF(@bExists > 0, \'SELECT "INFO: Column already exists."\', "' . $sSQL . '")',
+                'PREPARE Statement FROM @sSQL',
+                'EXECUTE Statement',
+            );
+            break;
+        case 'column_exists_has_no_key':
+            // Args: Table, Column.
+            if (count($aConditionArgs) != 2) {
+                return array(
+                    // This will cause a query error.
+                    'lovd_addConditionalSQL() error; $aConditionArgs does not exactly contain two arguments.'
+                );
+            }
+            list($sTable, $sColumn) = $aConditionArgs;
+            $aReturn = array(
+                'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $sTable . '" AND COLUMN_NAME = "' . $sColumn . '")',
+                'SET @bHasKey := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $sTable . '" AND COLUMN_NAME = "' . $sColumn . '" AND COLUMN_KEY != "")',
+                'SET @sSQL := IF(@bExists = 0 OR @bHasKey = 1, \'SELECT "INFO: Column does not exists or already has key."\', "' . $sSQL . '")',
                 'PREPARE Statement FROM @sSQL',
                 'EXECUTE Statement',
             );
@@ -760,7 +777,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-23' => array(
                      'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN allow_index_wiki',
                      'ALTER TABLE ' . TABLE_USERS . ' DROP COLUMN reference',
-                 )
+                 ),
+                 '3.0-24' => lovd_addConditionalSQL(
+                     'column_exists_has_no_key', array(TABLE_VARIANTS, 'VariantOnGenome/DBID'),
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (`VariantOnGenome/DBID`)'
+                 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
