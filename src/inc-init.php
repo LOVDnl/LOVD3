@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-02-18
- * For LOVD    : 3.0-23
+ * Modified    : 2020-02-25
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -164,8 +164,15 @@ $_SETT = array(
                 array(
                     // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
                     // has already been called for gene-specific overviews.
+                    // FIXME: Many more will follow. Better use 'object_action' naming convention.
                     'delete_individual' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
                     'delete_variant' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
+                    'genepanels_create' => LEVEL_MANAGER,
+                    'genepanels_delete' => LEVEL_ADMIN,
+                    'genepanels_edit' => LEVEL_MANAGER,
+                    'genepanels_genes_delete' => LEVEL_MANAGER,
+                    'genepanels_genes_edit' => LEVEL_ANALYZER,
+                    'genepanels_manage_genes' => LEVEL_MANAGER,
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
                     'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
