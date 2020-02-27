@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-02-24
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -315,15 +315,25 @@ class LOVD_Individual extends LOVD_Custom
             }
         }
 
-        // Diagnostics: Don't allow individuals with an identical Lab-ID.
-        // Can't enforce this in the table, because it's a custom column that's not active during installation, so I'll just do it like this.
+        // LOVD+: Don't allow individuals with an identical Lab-ID.
+        // Can't enforce this in the table, because it's a custom column, so I'll just do it like this.
         if (LOVD_plus && !empty($aData['Individual/Lab_ID'])) {
-            if ($zData && isset($zData['id']) && isset($zData['Individual/Lab_ID'])) {
-                if ($_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Lab_ID` = ? AND id != ?', array($aData['Individual/Lab_ID'], $zData['id']))->fetchColumn()) {
-                    lovd_errorAdd('Individual/Lab_ID', 'Another individual with this Lab ID already exists in the database.');
-                }
-            } elseif ($_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE `Individual/Lab_ID` = ?', array($aData['Individual/Lab_ID']))->fetchColumn()) {
-                lovd_errorAdd('Individual/Lab_ID', 'Another individual with this Lab ID already exists in the database.');
+            if ($zData && isset($zData['id'])) {
+                $r = $_DB->query('SELECT id, created_date
+                                  FROM ' . TABLE_INDIVIDUALS . '
+                                  WHERE `Individual/Lab_ID` = ? AND id != ?',
+                        array($aData['Individual/Lab_ID'], $zData['id']))->fetchRow();
+            } else {
+                $r = $_DB->query('SELECT id, created_date
+                                  FROM ' . TABLE_INDIVIDUALS . '
+                                  WHERE `Individual/Lab_ID` = ?',
+                        array($aData['Individual/Lab_ID']))->fetchRow();
+            }
+            if ($r) {
+                list($nID, $sCreatedDate) = $r;
+                // NOTE: Do not just change this error message, we are parsing for it in ajax/import_scheduler.php.
+                lovd_errorAdd('Individual/Lab_ID',
+                    'Another individual with this Lab ID already exists in the database; #' . $nID . ', imported ' . $sCreatedDate . '.');
             }
         }
 
