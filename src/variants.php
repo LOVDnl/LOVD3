@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-04
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -141,6 +141,7 @@ if (!ACTION && (empty($_PE[1]) ||
         'cols_to_skip' => $aColsToHide,
         'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
+        'curate_set' => true,
     );
     $_DATA->viewList('VOG', $aVLOptions);
     $_T->printFooter();
