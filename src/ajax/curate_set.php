@@ -82,7 +82,10 @@ function lovd_showCurationDialog ($aJob)
     foreach ($aJob['objects'] as $sObjectType => $aObjects) {
         $sDialog .= '<TR><TD valign=top rowspan=' . count($aObjects) . '><B>' . $sObjectType . '</B></TD>';
         foreach ($aObjects as $nKey => $nObjectID) {
-            $sDialog .= (!$nKey? '' : '<TR>') . '<TD>#' . $nObjectID . '</TD><TD id=' . $sObjectType . '_' . $nObjectID . '_status></TD></TR>';
+            $sDialog .= (!$nKey? '' : '<TR>') .
+                '<TD valign=top>#' . $nObjectID . '</TD>' .
+                '<TD valign=top id=' . $sObjectType . '_' . $nObjectID . '_status></TD>' .
+                '<TD id=' . $sObjectType . '_' . $nObjectID . '_errors></TD></TR>';
         }
     }
     $sDialog .= '</TABLE>';
@@ -91,8 +94,7 @@ function lovd_showCurationDialog ($aJob)
     $("#curate_set_dialog").html("' . $sDialog . '<BR>");
 
     // Select the right buttons.
-    $("#curate_set_dialog").dialog({buttons: $.extend({}, oButtonClose)});
-    ');
+    $("#curate_set_dialog").dialog({buttons: $.extend({}, oButtonClose)});');
 
     // Store data in SESSION. I don't really want to POST it over.
     if (!isset($_SESSION['work'][CURRENT_PATH])) {
@@ -109,9 +111,7 @@ function lovd_showCurationDialog ($aJob)
     $_SESSION['work'][CURRENT_PATH][$nWorkID]['job'] = $aJob;
 
     print('
-    $.get("' . CURRENT_PATH . '?process&workid=' . $nWorkID . '").fail(function(){alert("Request failed. Please try again.");});
-    
-    ');
+    $.get("' . CURRENT_PATH . '?process&workid=' . $nWorkID . '").fail(function(){alert("Request failed. Please try again.");});');
     exit;
 }
 
