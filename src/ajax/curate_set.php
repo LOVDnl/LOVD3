@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 // Check for basic format.
-if (!ACTION || !in_array(ACTION, array('fromVL'))) {
+if (!ACTION || !in_array(ACTION, array('fromVL', 'process'))) {
     die('alert("Error while sending data.");');
 }
 
@@ -153,5 +153,153 @@ if (ACTION == 'fromVL' && GET) {
     // Open dialog, and list the data types.
     lovd_showCurationDialog($aJob);
     exit;
+}
+
+
+
+
+
+if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
+    // URL: /ajax/curate_set.php?process&workid=1583341843.3402
+    // Process work as stored in $_SESSION.
+
+    if (!isset($_SESSION['work'][CURRENT_PATH][$_GET['workid']])) {
+        die('alert("Work ID not found. This may be a bug in LOVD; please report.");');
+    } elseif (empty($_SESSION['work'][CURRENT_PATH][$_GET['workid']]['job'])
+        || empty($_SESSION['work'][CURRENT_PATH][$_GET['workid']]['job']['objects'])) {
+        die('alert("Found nothing to do?");');
+    }
+
+    define('LOG_EVENT','QuickCurate');
+
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    $aCheckFieldsOptions = array(
+        'mandatory_password' => false,  // Password field is not mandatory.
+        'trim_fields' => false,         // No trimming of whitespace.
+    );
+
+    // We cannot flush, because the browser will only execute the JS when we're done completely.
+    // We also don't want to let the user wait too long, so if this takes a while, we need to split this task.
+    $tStart = microtime(true);
+
+    $aJob = $_SESSION['work'][CURRENT_PATH][$_GET['workid']]['job'];
+    foreach ($aJob['objects'] as $sObjectType => $aObjects) {
+        // Load necessary objects.
+
+        switch ($sObjectType) {
+            case 'variants':
+                require ROOT_PATH . 'class/object_genome_variants.php';
+                require ROOT_PATH . 'class/object_transcript_variants.php';
+
+                $_DATA = array();
+                $_DATA['Genome'] = new LOVD_GenomeVariant();
+                $bDBID = in_array('VariantOnGenome/DBID', $_DATA['Genome']->buildFields());
+                break;
+        }
+
+
+
+        foreach ($aObjects as $nKey => $nObjectID) {
+            // Loop through the individual records, loading the data, running checkFields(), and running the update.
+
+            $_POST = array(
+                'statusid' => STATUS_OK,
+                'edited_by' => $_AUTH['id'],
+                'edited_date' => date('Y-m-d H:i:s'),
+            );
+
+            $_DB->beginTransaction();
+
+            switch ($sObjectType) {
+                case 'variants':
+                    $zData = $_DATA['Genome']->loadEntry($nObjectID);
+                    $_DATA['Transcript'] = array();
+
+                    // FIXME: The following ~20 lines are just repeated from other code. It would be good to have a method for this in the VOG object.
+                    // Load gene-related data.
+                    $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ?', array($nObjectID))->fetchAllColumn();
+
+                    if ($aGenes) {
+                        foreach ($aGenes as $sGene) {
+                            $_DATA['Transcript'][$sGene] = new LOVD_TranscriptVariant($sGene, $nObjectID);
+                            $zData = array_merge($zData, $_DATA['Transcript'][$sGene]->loadAll($nObjectID));
+                        }
+
+                        if ($bDBID) {
+                            // This is done so that fetchDBID can have this information and can give a better prediction.
+                            // We don't care about which gene we pass, because the VOT object loads *ALL* transcripts linked to this variant.
+                            $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
+                        }
+                    }
+
+                    $_POST += $zData; // Won't overwrite existing key (statusid).
+                    // Now loop through $_POST to find the effectid fields, that need to be split.
+                    foreach ($_POST as $key => $val) {
+                        if (preg_match('/^(\d+_)?effect(id)$/', $key, $aRegs)) { // (id) instead of id to make sure we have a $aRegs (so to prevent notices).
+                            $_POST[$aRegs[1] . 'effect_reported'] = $val{0};
+                            $_POST[$aRegs[1] . 'effect_concluded'] = $val{1};
+                        }
+                    }
+
+                    lovd_errorClean();
+
+                    foreach ($aGenes as $sGene) {
+                        $_DATA['Transcript'][$sGene]->checkFields($_POST, $zData, $aCheckFieldsOptions);
+                    }
+                    $_DATA['Genome']->checkFields($_POST, $zData, $aCheckFieldsOptions);
+
+                    if (!lovd_error()) {
+                        // Prepare the fields to be used.
+                        $aFields = array_merge(
+                            array('statusid', 'edited_by', 'edited_date'),
+                            (!$bDBID? array() : array('VariantOnGenome/DBID')));
+
+                        $_DATA['Genome']->updateEntry($nObjectID, $_POST, $aFields);
+                    }
+
+                    break;
+            }
+
+            if (!lovd_error()) {
+                if ($aGenes) {
+                    lovd_setUpdatedDate($aGenes);
+                }
+                $_DB->commit();
+
+                lovd_writeLog('Event', LOG_EVENT, 'Curated ' . rtrim($sObjectType, 's') . ' information entry ' . $nObjectID);
+
+                // Update the display.
+                print('
+                $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/check.png>");');
+
+            } else {
+                // Check failed, no update.
+                // In case we'd like to show the error, it's in $_ERROR['messages'] (keys 1 and further).
+                $_DB->rollBack();
+
+                print('
+                $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/cross.png>");
+                $("#' . $sObjectType . '_' . $nObjectID . '_errors").html("' . addslashes($_ERROR['messages'][1]) . (count($_ERROR['messages']) <= 2? '' : ' (' . (count($_ERROR['messages']) - 2) . ' more)') . '");');
+            }
+
+
+
+            // FIXME: Per entry, check RIGHTS! Make sure we know for sure that the user is authorized on these entries!!!
+
+
+
+
+
+
+
+
+
+        }
+    }
+
+    // FIXME: When X time has passed ($tStart), then end this page load and call another Ajax query with the same work ID. So make sure you UNSET what we've done already!!!
+    // OR, is this not necessary? Perhaps it's all so fast, that it's not important?
+
 }
 ?>
