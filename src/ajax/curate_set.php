@@ -146,12 +146,21 @@ if (ACTION == 'fromVL' && GET) {
 
     $aJob = array(
         'objects' => array(
-            $sObjectType => $_SESSION['viewlists'][$_GET['vlid']]['checked'],
+            $sObjectType => array_values($_SESSION['viewlists'][$_GET['vlid']]['checked']),
         ),
         'post_action' => array(
             'reload_VL' => $_GET['vlid'],
         ),
     );
+
+    // Variants in a VOG/VOT view, sometimes have checked IDs that include the VOT's transcript ID. Fix that.
+    if ($sObjectType == 'variants' && strpos($aJob['objects']['variants'][0], ':') !== false) {
+        foreach ($aJob['objects']['variants'] as $nKey => $sID) {
+            $aJob['objects']['variants'][$nKey] = str_pad(strstr($sID, ':', true), $_SETT['objectid_length']['variants'], '0', STR_PAD_LEFT);
+        }
+        // Values can be non-unique due to multiple transcripts.
+        $aJob['objects']['variants'] = array_unique($aJob['objects']['variants']);
+    }
 
     // Open dialog, and list the data types.
     lovd_showCurationDialog($aJob);
