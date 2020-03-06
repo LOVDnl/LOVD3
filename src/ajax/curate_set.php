@@ -206,6 +206,16 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
         foreach ($aObjects as $nKey => $nObjectID) {
             // Loop through the individual records, loading the data, running checkFields(), and running the update.
 
+            // First check if we're authorized at all on this entry.
+            if (!lovd_isAuthorized('variant', $nObjectID, false)) {
+                // Oops, no, we're not. This should not really be possible, since the menu should be turned off if
+                //  you're not authorized. So this suggests foul play. But either way, block this.
+                print('
+                $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/cross.png>");
+                $("#' . $sObjectType . '_' . $nObjectID . '_errors").html("You are not authorized to curate this entry.");');
+                continue;
+            }
+
             $_POST = array(
                 'statusid' => STATUS_OK,
                 'edited_by' => $_AUTH['id'],
@@ -291,18 +301,8 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                 $("#' . $sObjectType . '_' . $nObjectID . '_errors").html("' . addslashes($_ERROR['messages'][1]) . (count($_ERROR['messages']) <= 2? '' : ' (' . (count($_ERROR['messages']) - 2) . ' more)') . '");');
             }
 
-
-
-            // FIXME: Per entry, check RIGHTS! Make sure we know for sure that the user is authorized on these entries!!!
-
-
-
-
-
-
-
-
-
+            // Clear the data.
+            unset($_SESSION['work'][CURRENT_PATH][$_GET['workid']]);
         }
     }
 
