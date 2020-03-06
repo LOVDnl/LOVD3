@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-04
- * Modified    : 2020-03-05
+ * Modified    : 2020-03-06
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -88,7 +88,10 @@ function lovd_showCurationDialog ($aJob)
                 '<TD id=' . $sObjectType . '_' . $nObjectID . '_errors></TD></TR>';
         }
     }
-    $sDialog .= '</TABLE>';
+    $sDialog .= '</TABLE><BR><TABLE>' .
+        '<TR><TD><IMG src=\"gfx/cross.png\"></TD><TD>Errors occurred, entry was not published.</TD></TR>' .
+        '<TR><TD><IMG src=\"gfx/check_orange.png\"></TD><TD>Errors occurred, but entry was already public.</TD></TR>' .
+        '<TR><TD><IMG src=\"gfx/check.png\"></TD><TD>No errors, entry was published or was already public.</TD></TR></TABLE><BR><BR><TABLE>';
 
     print('
     $("#curate_set_dialog").html("' . $sDialog . '<BR>");
@@ -249,8 +252,8 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                     }
                     $_DATA['Genome']->checkFields($_POST, $zData, $aCheckFieldsOptions);
 
-                    if (!lovd_error()) {
-                        // Prepare the fields to be used.
+                    if (!lovd_error() && $zData['statusid'] < STATUS_OK) {
+                        // Prepare the fields to be used, but only update when entry isn't already public.
                         $aFields = array_merge(
                             array('statusid', 'edited_by', 'edited_date'),
                             (!$bDBID? array() : array('VariantOnGenome/DBID')));
@@ -262,12 +265,18 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
             }
 
             if (!lovd_error()) {
-                if ($aGenes) {
-                    lovd_setUpdatedDate($aGenes);
-                }
-                $_DB->commit();
+                if ($zData['statusid'] < STATUS_OK) {
+                    if ($aGenes) {
+                        lovd_setUpdatedDate($aGenes);
+                    }
+                    $_DB->commit();
 
-                lovd_writeLog('Event', LOG_EVENT, 'Curated ' . rtrim($sObjectType, 's') . ' information entry ' . $nObjectID);
+                    lovd_writeLog('Event', LOG_EVENT, 'Curated ' . rtrim($sObjectType, 's') . ' information entry ' . $nObjectID);
+
+                } else {
+                    // We have nothing to do.
+                    $_DB->rollBack();
+                }
 
                 // Update the display.
                 print('
@@ -275,11 +284,10 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
 
             } else {
                 // Check failed, no update.
-                // In case we'd like to show the error, it's in $_ERROR['messages'] (keys 1 and further).
                 $_DB->rollBack();
 
                 print('
-                $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/cross.png>");
+                $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/' . ($zData['statusid'] < STATUS_OK? 'cross' : 'check_orange') . '.png>");
                 $("#' . $sObjectType . '_' . $nObjectID . '_errors").html("' . addslashes($_ERROR['messages'][1]) . (count($_ERROR['messages']) <= 2? '' : ' (' . (count($_ERROR['messages']) - 2) . ' more)') . '");');
             }
 
