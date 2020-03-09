@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-04
- * Modified    : 2020-03-06
+ * Modified    : 2020-03-09
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -309,14 +309,28 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                 $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/' . ($zData['statusid'] < STATUS_OK? 'cross' : 'check_orange') . '.png>");
                 $("#' . $sObjectType . '_' . $nObjectID . '_errors").html("' . addslashes($_ERROR['messages'][1]) . (count($_ERROR['messages']) <= 2? '' : ' (' . (count($_ERROR['messages']) - 2) . ' more)') . '");');
             }
-
-            // Clear the data.
-            unset($_SESSION['work'][CURRENT_PATH][$_GET['workid']]);
         }
     }
 
+    // Anything more that we're supposed to do?
+    if (!empty($aJob['post_action'])) {
+        foreach ($aJob['post_action'] as $sAction => $sArg) {
+            switch ($sAction) {
+                case 'reload_VL':
+                    print('
+                    lovd_AJAX_viewListSubmit("' . $sArg . '");');
+                    break;
+                default:
+                    print('
+                    $("#curate_set_dialog").append("<BR>Unknown post action ' . htmlspecialchars($sAction) . '");');
+            }
+        }
+    }
+
+    // Clear the data.
+    unset($_SESSION['work'][CURRENT_PATH][$_GET['workid']]);
+
     // FIXME: When X time has passed ($tStart), then end this page load and call another Ajax query with the same work ID. So make sure you UNSET what we've done already!!!
     // OR, is this not necessary? Perhaps it's all so fast, that it's not important?
-
 }
 ?>

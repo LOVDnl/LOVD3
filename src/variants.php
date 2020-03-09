@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-03-04
+ * Modified    : 2020-03-09
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -170,6 +170,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
     $aVLOptions = array(
         'cols_to_skip' => array('name', 'id_protein_ncbi'),
         'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'curate_set' => true,
     );
     $_DATA->viewList('CustomVL_IN_GENE', $aVLOptions);
 
@@ -318,6 +319,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
             'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
             'find_and_replace' => !$bUnique,
             'multi_value_filter' => $bUnique,
+            'curate_set' => !$bUnique,
         );
         $_DATA->viewList($sViewListID, $aVLOptions);
 
