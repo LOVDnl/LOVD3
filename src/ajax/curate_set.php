@@ -66,7 +66,9 @@ var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 ');
 
 // Allowed types.
+// FIXME: If I won't have settings here, might as well change the keys in values.
 $aObjectTypes = array(
+    'phenotypes' => array(),
     'variants' => array(),
 );
 
@@ -201,6 +203,19 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
         // Load necessary objects.
 
         switch ($sObjectType) {
+            case 'phenotypes':
+                require ROOT_PATH . 'class/object_phenotypes.php';
+                // We could reload LOVD_Phenotype() for each entry, but we're handling this for a VL, so load that ID.
+                $nDiseaseID = NULL;
+                if (empty($aJob['post_action']['reload_VL'])) {
+                    die('alert("To curate phenotype entries, we need a disease ID. This may be a bug in LOVD; please report.");');
+                } else {
+                    // Get disease ID from the end of the VL ID.
+                    $aVLID = explode('_', $aJob['post_action']['reload_VL']);
+                    $nDiseaseID = array_pop($aVLID); // array_pop needs a var, can't combine these lines without @.
+                }
+                $_DATA = new LOVD_Phenotype($nDiseaseID);
+                break;
             case 'variants':
                 require ROOT_PATH . 'class/object_genome_variants.php';
                 require ROOT_PATH . 'class/object_transcript_variants.php';
@@ -209,6 +224,8 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                 $_DATA['Genome'] = new LOVD_GenomeVariant();
                 $bDBID = in_array('VariantOnGenome/DBID', $_DATA['Genome']->buildFields());
                 break;
+            default:
+                die('alert("Unhandled object type ' . $sObjectType . '.");');
         }
 
 
@@ -217,7 +234,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
             // Loop through the individual records, loading the data, running checkFields(), and running the update.
 
             // First check if we're authorized at all on this entry.
-            if (!lovd_isAuthorized('variant', $nObjectID, false)) {
+            if (!lovd_isAuthorized(rtrim($sObjectType, 's'), $nObjectID, false)) {
                 // Oops, no, we're not. This should not really be possible, since the menu should be turned off if
                 //  you're not authorized. So this suggests foul play. But either way, block this.
                 print('
@@ -235,6 +252,30 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
             $_DB->beginTransaction();
 
             switch ($sObjectType) {
+                case 'phenotypes':
+                    $aGenes = $_DB->query('
+                        SELECT DISTINCT t.geneid
+                        FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                          LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id)
+                          LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
+                          LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                          LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                          LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i on (s.individualid = i.id)
+                          LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
+                        WHERE p.id = ? AND i.statusid >= ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED, STATUS_MARKED))->fetchAllColumn();
+
+                    $zData = $_DATA->loadEntry($nObjectID);
+                    $_POST += $zData; // Won't overwrite existing key (statusid).
+                    lovd_errorClean();
+                    $_DATA->checkFields($_POST, $zData, $aCheckFieldsOptions);
+
+                    if (!lovd_error() && $zData['statusid'] < STATUS_OK) {
+                        // Prepare the fields to be used, but only update when entry isn't already public.
+                        $aFields = array('statusid', 'edited_by', 'edited_date');
+                        $_DATA->updateEntry($nObjectID, $_POST, $aFields);
+                    }
+                    break;
+
                 case 'variants':
                     $zData = $_DATA['Genome']->loadEntry($nObjectID);
                     $_DATA['Transcript'] = array();
@@ -280,8 +321,10 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
 
                         $_DATA['Genome']->updateEntry($nObjectID, $_POST, $aFields);
                     }
-
                     break;
+
+                default:
+                    die('alert("Unhandled object type ' . $sObjectType . '.");');
             }
 
             if (!lovd_error()) {
@@ -300,7 +343,8 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
 
                 // Update the display.
                 print('
-                $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/check.png>");');
+                $("#' . $sObjectType . '_' . $nObjectID . '_status").html("<IMG src=gfx/check.png>");
+                $("#' . $sObjectType . '_' . $nObjectID . '_errors").html("' . ($zData['statusid'] < STATUS_OK? 'Successfully published entry' : 'Entry was already public') . '");');
 
             } else {
                 // Check failed, no update.
