@@ -127,11 +127,11 @@ if (ACTION == 'fromVL' && GET) {
     // Fetch object types and object IDs, and call the curation process.
 
     if (!isset($_SESSION['viewlists'][$_GET['vlid']])) {
-        die('alert("Data listing not found. Please try to reload the page and try again.");');
+        die('$("#curate_set_dialog").html("Data listing not found. Please try to reload the page and try again.");');
     } elseif (empty($_SESSION['viewlists'][$_GET['vlid']]['options']['curate_set'])) {
-        die('alert("Data listing does not allow curation of a set.");');
+        die('$("#curate_set_dialog").html("Data listing does not allow curation of a set.");');
     } elseif (empty($_SESSION['viewlists'][$_GET['vlid']]['checked'])) {
-        die('alert("No entries selected yet to curate.");');
+        die('$("#curate_set_dialog").html("No entries selected yet to curate.");');
     }
 
     // Determine type.
@@ -141,7 +141,8 @@ if (ACTION == 'fromVL' && GET) {
     }
     if (!isset($aObjectTypes[$sObjectType])) {
         // FIXME: Try the ViewListID?
-        die('alert("Did not recognize object type. This may be a bug in LOVD; please report.");');
+        die('
+        $("#curate_set_dialog").html("Did not recognize object type. This may be a bug in LOVD; please report.");');
     }
 
     $aJob = array(
