@@ -66,11 +66,10 @@ var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 ');
 
 // Allowed types.
-// FIXME: If I won't have settings here, might as well change the keys in values.
 $aObjectTypes = array(
-    'individuals' => array(),
-    'phenotypes' => array(),
-    'variants' => array(),
+    'individuals',
+    'phenotypes',
+    'variants',
 );
 
 
@@ -142,8 +141,7 @@ if (ACTION == 'fromVL' && GET) {
     if (!empty($_SESSION['viewlists'][$_GET['vlid']]['row_link'])) {
         $sObjectType = substr($_SESSION['viewlists'][$_GET['vlid']]['row_link'], 0, strpos($_SESSION['viewlists'][$_GET['vlid']]['row_link'], '/'));
     }
-    if (!isset($aObjectTypes[$sObjectType])) {
-        // FIXME: Try the ViewListID?
+    if (!in_array($sObjectType, $aObjectTypes)) {
         die('
         $("#curate_set_dialog").html("Did not recognize object type. This may be a bug in LOVD; please report.");');
     }
@@ -194,10 +192,6 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
         'mandatory_password' => false,  // Password field is not mandatory.
         'trim_fields' => false,         // No trimming of whitespace.
     );
-
-    // We cannot flush, because the browser will only execute the JS when we're done completely.
-    // We also don't want to let the user wait too long, so if this takes a while, we need to split this task.
-    $tStart = microtime(true);
 
     $aJob = $_SESSION['work'][CURRENT_PATH][$_GET['workid']]['job'];
     foreach ($aJob['objects'] as $sObjectType => $aObjects) {
@@ -379,7 +373,9 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
         foreach ($aJob['post_action'] as $sAction => $sArg) {
             switch ($sAction) {
                 case 'reload_VL':
+                    // Reload the VL. But first, deselect all checkboxes.
                     print('
+                    check_list["' . $sArg . '"] = "none";
                     lovd_AJAX_viewListSubmit("' . $sArg . '");');
                     break;
                 default:
@@ -391,8 +387,5 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
 
     // Clear the data.
     unset($_SESSION['work'][CURRENT_PATH][$_GET['workid']]);
-
-    // FIXME: When X time has passed ($tStart), then end this page load and call another Ajax query with the same work ID. So make sure you UNSET what we've done already!!!
-    // OR, is this not necessary? Perhaps it's all so fast, that it's not important?
 }
 ?>
