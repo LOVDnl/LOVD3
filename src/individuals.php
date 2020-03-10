@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-10
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -336,12 +336,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     // If we're publishing... pretend the form has been sent with a different status.
     if (GET && ACTION == 'publish') {
         $_POST = $zData;
-        if ($zData['active_diseases_']) {
-            $_POST['active_diseases'] = explode(';', $zData['active_diseases_']);
-        } else {
-            // An array with an empty string as a value doesn't get past the checkFields() since '' is not a valid option.
-            $_POST['active_diseases'] = array();
-        }
         $_POST['statusid'] = STATUS_OK;
     }
 
@@ -395,14 +389,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             lovd_writeLog('Event', LOG_EVENT, 'Edited individual information entry ' . $nID);
 
             // Change linked diseases?
-            // Diseases the gene is currently linked to.
-            // FIXME; we moeten afspraken op papier zetten over de naamgeving van velden, ik zou hier namelijk geen _ achter plaatsen.
-            //   Een idee zou namelijk zijn om loadEntry()/viewEntry() automatisch velden te laten exploden afhankelijk van hun naam. Is dat wat?
-            $aDiseases = explode(';', $zData['active_diseases_']);
-
             // Remove diseases.
             $aToRemove = array();
-            foreach ($aDiseases as $nDisease) {
+            foreach ($zData['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $_POST['active_diseases'])) {
                     // User has requested removal...
                     $aToRemove[] = $nDisease;
@@ -422,7 +411,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             $aSuccess = array();
             $aFailed = array();
             foreach ($_POST['active_diseases'] as $nDisease) {
-                if (!in_array($nDisease, $aDiseases)) {
+                if (!in_array($nDisease, $zData['active_diseases'])) {
                     // Add disease to gene.
                     $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease), false);
                     if (!$q) {
@@ -466,8 +455,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     } else {
         // Load current values.
         $_POST = array_merge($_POST, $zData);
-        // Load connected diseases.
-        $_POST['active_diseases'] = explode(';', $_POST['active_diseases_']);
         if ($zData['statusid'] < STATUS_HIDDEN) {
             $_POST['statusid'] = STATUS_OK;
         }
