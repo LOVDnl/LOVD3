@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-04
- * Modified    : 2020-03-09
+ * Modified    : 2020-03-10
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -68,6 +68,7 @@ var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 // Allowed types.
 // FIXME: If I won't have settings here, might as well change the keys in values.
 $aObjectTypes = array(
+    'individuals' => array(),
     'phenotypes' => array(),
     'variants' => array(),
 );
@@ -203,6 +204,10 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
         // Load necessary objects.
 
         switch ($sObjectType) {
+            case 'individuals':
+                require ROOT_PATH . 'class/object_individuals.php';
+                $_DATA = new LOVD_Individual();
+                break;
             case 'phenotypes':
                 require ROOT_PATH . 'class/object_phenotypes.php';
                 // We could reload LOVD_Phenotype() for each entry, but we're handling this for a VL, so load that ID.
@@ -252,17 +257,29 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
             $_DB->beginTransaction();
 
             switch ($sObjectType) {
+                case 'individuals':
                 case 'phenotypes':
-                    $aGenes = $_DB->query('
-                        SELECT DISTINCT t.geneid
-                        FROM ' . TABLE_TRANSCRIPTS . ' AS t
-                          LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id)
-                          LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
-                          LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
-                          LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
-                          LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i on (s.individualid = i.id)
-                          LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
-                        WHERE p.id = ? AND i.statusid >= ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED, STATUS_MARKED))->fetchAllColumn();
+                    if ($sObjectType == 'individuals') {
+                        $aGenes = $_DB->query('
+                            SELECT DISTINCT t.geneid
+                            FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id)
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
+                              LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                              LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                            WHERE s.individualid = ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED))->fetchAllColumn();
+                    } elseif ($sObjectType == 'phenotypes') {
+                        $aGenes = $_DB->query('
+                            SELECT DISTINCT t.geneid
+                            FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id)
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
+                              LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                              LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                              LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i on (s.individualid = i.id)
+                              LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
+                            WHERE p.id = ? AND i.statusid >= ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED, STATUS_MARKED))->fetchAllColumn();
+                    }
 
                     $zData = $_DATA->loadEntry($nObjectID);
                     $_POST += $zData; // Won't overwrite existing key (statusid).

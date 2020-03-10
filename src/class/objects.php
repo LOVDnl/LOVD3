@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-03-04
+ * Modified    : 2020-03-10
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -430,7 +430,9 @@ class LOVD_Object
             }
 
             // Mandatory fields, as defined by child object.
-            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '')) {
+            // Empty multiple selection fields are not sent by the browser, but they are by the quick curation code,
+            //  so we have to check for an empty array() as well. Just make sure we don't complain about '0'.
+            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '' || $aData[$sName] === array())) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
                 $aErroredFields[$sName] = true;
             }

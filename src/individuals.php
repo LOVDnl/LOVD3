@@ -83,6 +83,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         'cols_to_skip' => $aColsToHide,
         'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         'find_and_replace' => true,
+        'curate_set' => true,
     );
     $_DATA->viewList('Individuals', $aVLOptions);
 
