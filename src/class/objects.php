@@ -2506,6 +2506,8 @@ class LOVD_Object
                             // 2015-09-18; 3.0-14; We need to run rawurldecode() or else Columns are not selectable this way.
                             $aSessionViewList['checked'][] = rawurldecode($zData['row_id']);
                         }
+                        // Now, unique() the list since we don't want to keep adding the same IDs.
+                        $aSessionViewList['checked'] = array_unique($aSessionViewList['checked']);
                     } elseif ($_GET['ids_changed'] == 'none') {
                         // If the unselect all button was clicked, reset the 'checked' array.
                         $aSessionViewList['checked'] = array();
