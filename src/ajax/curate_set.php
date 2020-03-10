@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 // Check for basic format.
-if (!ACTION || !in_array(ACTION, array('fromVL', 'process'))) {
+if (!ACTION || !in_array(ACTION, array('bySubmission', 'fromVL', 'process'))) {
     die('alert("Error while sending data.");');
 }
 
@@ -124,7 +124,47 @@ function lovd_showCurationDialog ($aJob)
 
 
 
-if (ACTION == 'fromVL' && GET) {
+if (ACTION == 'bySubmission' && GET && !empty($_GET['id'])) {
+    // URL: /ajax/curate_set.php?bySubmission&id=00000001
+    // Fetch object types and object IDs of this submission, and call the curation process.
+
+    $zData = $_DB->query('
+        SELECT i.id AS individuals, GROUP_CONCAT(p.id SEPARATOR ";") AS phenotypes, GROUP_CONCAT(s2v.variantid SEPARATOR ";") AS variants
+        FROM ' . TABLE_INDIVIDUALS . ' AS i
+          LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
+          LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid)
+          LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid)
+        WHERE i.id = ?', array($_GET['id']))->fetchAssoc();
+
+    if (!$zData) {
+        die('$("#curate_set_dialog").html("Submission data not found.");');
+    }
+
+    // Build Job array.
+    $aJob = array(
+        'objects' => array(
+        ),
+        'post_action' => array(
+            'reload_page' => '',
+        ),
+    );
+
+    foreach (array('individuals', 'phenotypes', 'variants') as $sObjectType) {
+        if (!empty($zData[$sObjectType])) {
+            $aJob['objects'][$sObjectType] = explode(';', $zData[$sObjectType]);
+        }
+    }
+
+    // Open dialog, and list the data types.
+    lovd_showCurationDialog($aJob);
+    exit;
+}
+
+
+
+
+
+if (ACTION == 'fromVL' && GET && !empty($_GET['vlid'])) {
     // URL: /ajax/curate_set.php?fromVL&vlid=VOG
     // Fetch object types and object IDs, and call the curation process.
 
@@ -257,7 +297,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                         $aGenes = $_DB->query('
                             SELECT DISTINCT t.geneid
                             FROM ' . TABLE_TRANSCRIPTS . ' AS t
-                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id)
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
                               LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
                               LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
                               LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
@@ -266,7 +306,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                         $aGenes = $_DB->query('
                             SELECT DISTINCT t.geneid
                             FROM ' . TABLE_TRANSCRIPTS . ' AS t
-                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id)
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
                               LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
                               LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
                               LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
@@ -372,6 +412,11 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
     if (!empty($aJob['post_action'])) {
         foreach ($aJob['post_action'] as $sAction => $sArg) {
             switch ($sAction) {
+                case 'reload_page':
+                    // Reload the entire page.
+                    print('
+                    $("#curate_set_dialog").on("dialogclose", function(event, ui) { window.location.href = window.location; });');
+                    break;
                 case 'reload_VL':
                     // Reload the VL. But first, deselect all checkboxes.
                     print('
