@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-10
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -430,7 +430,9 @@ class LOVD_Object
             }
 
             // Mandatory fields, as defined by child object.
-            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '')) {
+            // Empty multiple selection fields are not sent by the browser, but they are by the quick curation code,
+            //  so we have to check for an empty array() as well. Just make sure we don't complain about '0'.
+            if (in_array($sName, $this->aCheckMandatory) && (!isset($aData[$sName]) || $aData[$sName] === '' || $aData[$sName] === array())) {
                 lovd_errorAdd($sName, 'Please fill in the \'' . $sHeader . '\' field.');
                 $aErroredFields[$sName] = true;
             }
@@ -2236,12 +2238,14 @@ class LOVD_Object
                 'only_rows' => false,           // Only put the table rows in the output.
                 'find_and_replace' => false,    // Allow find and replace on columns.
                 'multi_value_filter' => false,  // Allow multi valued search on columns.
+                'curate_set' => false,          // Allow "curate set" option.
             ),
             $aOptions);
 
-        // Disallow F&R and multivalue search when options menu is hidden.
+        // Disallow F&R, multivalue search, and Cuate Set option when options menu is hidden.
         $aOptions['find_and_replace'] &= $aOptions['show_options'];
         $aOptions['multi_value_filter'] &= $aOptions['show_options'];
+        $aOptions['curate_set'] &= $aOptions['show_options'];
 
         // Save viewlist options to session.
         $_SESSION['viewlists'][$sViewListID]['options'] = array_merge(
@@ -2502,6 +2506,8 @@ class LOVD_Object
                             // 2015-09-18; 3.0-14; We need to run rawurldecode() or else Columns are not selectable this way.
                             $aSessionViewList['checked'][] = rawurldecode($zData['row_id']);
                         }
+                        // Now, unique() the list since we don't want to keep adding the same IDs.
+                        $aSessionViewList['checked'] = array_unique($aSessionViewList['checked']);
                     } elseif ($_GET['ids_changed'] == 'none') {
                         // If the unselect all button was clicked, reset the 'checked' array.
                         $aSessionViewList['checked'] = array();
@@ -3053,6 +3059,12 @@ $sMVSOption
 
 OPMENU
 );
+
+                if ($aOptions['curate_set']) {
+                    print('        // Add menu option for curating a selected set.' . "\n" .
+                          '        $("#viewlistMenu_' . $sViewListID . '").append(\'<LI class="icon"><A click="lovd_AJAX_viewListSubmit(\\\'' . $sViewListID . '\\\', function(){$.get(\\\'ajax/curate_set.php?fromVL&vlid=' . $sViewListID . '\\\').fail(function(){alert(\\\'Request failed. Please try again.\\\');});});"><SPAN class="icon"></SPAN>Curate (publish) selected entries</A></LI>\');' . "\n\n");
+                }
+
                 if (!LOVD_plus
                     || empty($_INSTANCE_CONFIG['viewlists']['restrict_downloads'])
                     || (!empty($_INSTANCE_CONFIG['viewlists'][$sViewListID]['allow_download_from_level'])
