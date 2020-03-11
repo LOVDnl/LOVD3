@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-04
- * Modified    : 2020-03-10
+ * Modified    : 2020-03-11
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -129,7 +129,7 @@ if (ACTION == 'bySubmission' && GET && !empty($_GET['id'])) {
     // Fetch object types and object IDs of this submission, and call the curation process.
 
     $zData = $_DB->query('
-        SELECT i.id AS individuals, GROUP_CONCAT(p.id SEPARATOR ";") AS phenotypes, GROUP_CONCAT(s2v.variantid SEPARATOR ";") AS variants
+        SELECT i.id AS individuals, GROUP_CONCAT(DISTINCT p.id SEPARATOR ";") AS phenotypes, GROUP_CONCAT(DISTINCT s2v.variantid SEPARATOR ";") AS variants
         FROM ' . TABLE_INDIVIDUALS . ' AS i
           LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
           LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid)
@@ -247,7 +247,14 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                 // We could reload LOVD_Phenotype() for each entry, but we're handling this for a VL, so load that ID.
                 $nDiseaseID = NULL;
                 if (empty($aJob['post_action']['reload_VL'])) {
-                    die('alert("To curate phenotype entries, we need a disease ID. This may be a bug in LOVD; please report.");');
+                    // So we don't have a VL; this probably means we're curating a full submission.
+                    // We didn't receive a disease ID, so we'll need to fetch it.
+                    // Each phenotype entry can have a different disease ID.
+                    if (!isset($aJob['diseaseids'])) {
+                        $aJob['diseaseids'] = $_DB->query('SELECT id, diseaseid FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($aObjects)-1) . ')', $aObjects)->fetchAllCombine();
+                        // Get first disease ID and store that for creation of the object.
+                        $nDiseaseID = current($aJob['diseaseids']);
+                    }
                 } else {
                     // Get disease ID from the end of the VL ID.
                     $aVLID = explode('_', $aJob['post_action']['reload_VL']);
@@ -313,6 +320,13 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                               LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i on (s.individualid = i.id)
                               LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
                             WHERE p.id = ? AND i.statusid >= ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED, STATUS_MARKED))->fetchAllColumn();
+
+                        // Ensure we have the correct disease ID. Mixed disease IDs can occur when a single
+                        // submission with multiple phenotype entries with multiple diseases is curated.
+                        if ($_DATA->sObjectID != $aJob['diseaseids'][$nObjectID]) {
+                            // Reload object with proper disease ID.
+                            $_DATA = new LOVD_Phenotype($aJob['diseaseids'][$nObjectID]);
+                        }
                     }
 
                     $zData = $_DATA->loadEntry($nObjectID);
