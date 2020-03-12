@@ -234,15 +234,20 @@ class LOVD_VV
             array(
                 // NOTE: When adding options here, check the JSON call because we use a array_unique() trick there.
                 'map_to_transcripts' => false, // Should we map the variant to transcripts?
+                'predict_protein' => false, // Should we get protein predictions?
             ),
             $aOptions);
+
+        // Some options require others.
+        // We want to map to transcripts also if we want protein prediction.
+        $aOptions['map_to_transcripts'] = ($aOptions['map_to_transcripts'] || $aOptions['predict_protein']);
 
         $aJSON = $this->callVV('LOVD/lovd', array(
             'genome_build' => $_CONF['refseq_build'],
             'variant_description' => $sVariant,
             'transcripts' => 'all',
             'select_transcripts' => 'all',
-            'check_only' => (array_unique(array_values($aOptions)) == array(false)? 'True' : 'tx'),
+            'check_only' => (array_unique(array_values($aOptions)) == array(false)? 'True' : (!$aOptions['predict_protein']? 'tx' : 'False')),
             'lift_over' => 'False',
         ));
         if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON[$sVariant])) {
@@ -330,6 +335,17 @@ class LOVD_VV
         // Wrapper to map a variant to transcripts as well as verifying it.
 
         return $this->verifyGenomic($sVariant, array('map_to_transcripts' => true));
+    }
+
+
+
+
+
+    public function verifyGenomicAndPredictProtein ($sVariant)
+    {
+        // Wrapper to map a variant to transcripts as well as verifying it.
+
+        return $this->verifyGenomic($sVariant, array('predict_protein' => true));
     }
 }
 ?>
