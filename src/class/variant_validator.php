@@ -215,5 +215,72 @@ class LOVD_VV
             return false;
         }
     }
+
+
+
+
+
+    public function verifyGenomic ($sVariant)
+    {
+        // Verify a genomic variant, and optionally get mappings and a protein prediction.
+        global $_CONF;
+
+        $aJSON = $this->callVV('LOVD/lovd', array(
+            'genome_build' => $_CONF['refseq_build'],
+            'variant_description' => $sVariant,
+            'transcripts' => 'all',
+            'select_transcripts' => 'all',
+            'check_only' => 'True',
+            'lift_over' => 'False',
+        ));
+        if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON[$sVariant])) {
+            $aData = $this->aResponse;
+
+            // Discard the meta data.
+            $aJSON = $aJSON[$sVariant];
+
+            // We'll copy the errors, but I've never seen them filled in, even with REF errors.
+            $aData['errors'] = $aJSON['errors'];
+            // Check the flag value.
+            if ($aJSON['flag']) {
+                // Flag is empty even when giving a delG on a REF:C and on roll forward errors.
+                switch ($aJSON['flag']) {
+                    // FIXME: Flag indicates warning, but genomic_variant_error suggests an error. The latter would be more useful.
+                    case 'genomic_variant_warning':
+                        // Seen with a REF error of a substitution.
+                        if ($aJSON[$sVariant]['genomic_variant_error']) {
+                            $aData['errors'][] = str_replace($sVariant . ': ', '', $aJSON[$sVariant]['genomic_variant_error']);
+                            $aJSON[$sVariant]['genomic_variant_error'] = NULL;
+                        }
+                        break;
+                    default:
+                        // FIXME: I think I'd like to save these. Perhaps log them? Can I otherwise get them from the code?
+                        break;
+                }
+            }
+            // Discard the errors array and the flag value.
+            $aJSON = $aJSON[$sVariant];
+
+            // Copy the (corrected) DNA value.
+            $aData['data']['DNA'] = $aJSON['g_hgvs'];
+            // If description is different, then apparently there's been some kind of correction.
+            if ($sVariant != $aJSON['g_hgvs']) {
+                $aData['warnings'][] = 'Variant description has been corrected.';
+            }
+
+            // Any errors given?
+            if ($aJSON['genomic_variant_error']) {
+                // Not a previously seen error, handled through the flag value.
+                // We'll assume a warning.
+                // FIXME: Value may need cleaning!
+                $aData['warnings'][] = $aJSON['genomic_variant_error'];
+            }
+
+            return $aData;
+        } else {
+            // Failure.
+            return false;
+        }
+    }
 }
 ?>
