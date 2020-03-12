@@ -148,7 +148,7 @@ class LOVD_VV
                         '/^\(' . preg_quote($aJSON['current_symbol'], '/') . '\),\s+/', // The current symbol.
                         '/, mRNA$/', // mRNA suffix.
                         '/, non-coding RNA$/', // non-coding RNA suffix, replaced to " (non-coding)".
-                    ), array('','','', '', ' (non-coding)'), $aTranscript['description']);
+                    ), array('', '', '', '', ' (non-coding)'), $aTranscript['description']);
 
                 // Figure out the genomic positions, which are given to us using the NCs.
                 $aGenomicPositions = array();
@@ -220,17 +220,29 @@ class LOVD_VV
 
 
 
-    public function verifyGenomic ($sVariant)
+    public function verifyGenomic ($sVariant, $aOptions = array())
     {
         // Verify a genomic variant, and optionally get mappings and a protein prediction.
         global $_CONF;
+
+        if (empty($aOptions) || !is_array($aOptions)) {
+            $aOptions = array();
+        }
+
+        // Append defaults for any remaining options.
+        $aOptions = array_replace(
+            array(
+                // NOTE: When adding options here, check the JSON call because we use a array_unique() trick there.
+                'map_to_transcripts' => false, // Should we map the variant to transcripts?
+            ),
+            $aOptions);
 
         $aJSON = $this->callVV('LOVD/lovd', array(
             'genome_build' => $_CONF['refseq_build'],
             'variant_description' => $sVariant,
             'transcripts' => 'all',
             'select_transcripts' => 'all',
-            'check_only' => 'True',
+            'check_only' => (array_unique(array_values($aOptions)) == array(false)? 'True' : 'tx'),
             'lift_over' => 'False',
         ));
         if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON[$sVariant])) {
@@ -276,11 +288,48 @@ class LOVD_VV
                 $aData['warnings'][] = $aJSON['genomic_variant_error'];
             }
 
+            // Mappings?
+            $aData['data']['transcript_mappings'] = array();
+            if ($aJSON['hgvs_t_and_p']) {
+                foreach ($aJSON['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
+                    if ($sTranscript != 'intergenic') {
+                        $aMapping = array(
+                            'DNA' => '',
+                            'protein' => '',
+                        );
+                        // FIXME: What to do with gap_statement?
+                        if ($aTranscript['gapped_alignment_warning']) {
+                            // Store this in warnings.
+                            $aData['warnings'][] = $aTranscript['gapped_alignment_warning'];
+                        }
+                        if ($aTranscript['t_hgvs']) {
+                            $aMapping['DNA'] = substr(strstr($aTranscript['t_hgvs'], ':'), 1);
+                        }
+                        if ($aTranscript['p_hgvs_tlc']) {
+                            $aMapping['protein'] = substr(strstr($aTranscript['p_hgvs_tlc'], ':'), 1);
+                        }
+                        // FIXME: What to do with transcript_variant_error?
+                        $aData['data']['transcript_mappings'][$sTranscript] = $aMapping;
+                    }
+                }
+            }
             return $aData;
+
         } else {
             // Failure.
             return false;
         }
+    }
+
+
+
+
+
+    public function verifyGenomicAndMap ($sVariant)
+    {
+        // Wrapper to map a variant to transcripts as well as verifying it.
+
+        return $this->verifyGenomic($sVariant, array('map_to_transcripts' => true));
     }
 }
 ?>
