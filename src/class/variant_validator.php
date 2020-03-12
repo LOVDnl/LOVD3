@@ -223,7 +223,7 @@ class LOVD_VV
     public function verifyGenomic ($sVariant, $aOptions = array())
     {
         // Verify a genomic variant, and optionally get mappings and a protein prediction.
-        global $_CONF;
+        global $_CONF, $_SETT;
 
         if (empty($aOptions) || !is_array($aOptions)) {
             $aOptions = array();
@@ -234,21 +234,30 @@ class LOVD_VV
             array(
                 // NOTE: When adding options here, check the JSON call because we use a array_unique() trick there.
                 'map_to_transcripts' => false, // Should we map the variant to transcripts?
-                'predict_protein' => false, // Should we get protein predictions?
+                'predict_protein' => false,    // Should we get protein predictions?
+                'lift_over' => false,          // Should we get other genomic mappings of this variant?
             ),
             $aOptions);
 
         // Some options require others.
-        // We want to map to transcripts also if we want protein prediction.
-        $aOptions['map_to_transcripts'] = ($aOptions['map_to_transcripts'] || $aOptions['predict_protein']);
+        // We want to map to transcripts also if we're asking for a liftover, and if we want protein prediction.
+        $aOptions['map_to_transcripts'] = ($aOptions['map_to_transcripts'] || $aOptions['lift_over'] || $aOptions['predict_protein']);
+
+// NOTE: Getting g. mapping requires asking for c. mapping as well. Examples:
+// https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.48275363C%3EA/refseq/all/True/primary?content-type=application%2Fjson
+// vs intergenic:
+// https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.14445090C%3EG/refseq/all/True/primary?content-type=application%2Fjson
+
+// Internal server error:
+// https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.1069645_1279669dup/refseq/all/True/primary?content-type=application%2Fjson
 
         $aJSON = $this->callVV('LOVD/lovd', array(
             'genome_build' => $_CONF['refseq_build'],
             'variant_description' => $sVariant,
             'transcripts' => 'all',
-            'select_transcripts' => 'all',
+            'select_transcripts' => 'all', // FIXME: Add method to restrict transcripts, to prevent very long running times. $_VV->verifyGenomic("NC_000015.9:g.40699840C>T", array("lift_over" => true, "predict_protein" => true)) takes 42 sec, time mostly spent on lifting over (without protein prediction it's still 41 sec, and just mapping to C takes 0.5 sec.).
             'check_only' => (array_unique(array_values($aOptions)) == array(false)? 'True' : (!$aOptions['predict_protein']? 'tx' : 'False')),
-            'lift_over' => 'False',
+            'lift_over' => ($aOptions['lift_over']? 'primary' : 'False'),
         ));
         if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON[$sVariant])) {
             $aData = $this->aResponse;
@@ -294,6 +303,7 @@ class LOVD_VV
             }
 
             // Mappings?
+            $aData['data']['genomic_mappings'] = array();
             $aData['data']['transcript_mappings'] = array();
             if ($aJSON['hgvs_t_and_p']) {
                 foreach ($aJSON['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
@@ -316,6 +326,33 @@ class LOVD_VV
                         // FIXME: What to do with transcript_variant_error?
                         $aData['data']['transcript_mappings'][$sTranscript] = $aMapping;
                     }
+
+                    // Genomic mappings, when requested, are given per transcript (or otherwise as "intergenic").
+                    if (empty($aTranscript['assembly_loci'])) {
+                        if (!empty($aTranscript['primary_assembly_loci'])) {
+                            // FIXME: I have requested these to be merged, hopefully this won't be needed anymore.
+                            $aTranscript['assembly_loci'] = $aTranscript['primary_assembly_loci'];
+                        } else {
+                            $aTranscript['assembly_loci'] = array();
+                        }
+                    }
+
+                    foreach ($aTranscript['assembly_loci'] as $sBuild => $aMappings) {
+                        // We support only the builds we have...
+                        if (!isset($_SETT['human_builds'][$sBuild])) {
+                            continue;
+                        }
+
+                        // There can be more than one mapping per build in theory...
+                        foreach ($aMappings as $sRefSeq => $aMapping) {
+                            $aData['data']['genomic_mappings'][$sBuild][] = $aMapping['hgvs_genomic_description'];
+                        }
+                    }
+
+                    // Clean up duplicates from multiple transcripts.
+                    foreach ($aData['data']['genomic_mappings'] as $sBuild => $aMappings) {
+                        $aData['data']['genomic_mappings'][$sBuild] = array_unique($aMappings);
+                    }
                 }
             }
             return $aData;
@@ -332,7 +369,7 @@ class LOVD_VV
 
     public function verifyGenomicAndMap ($sVariant)
     {
-        // Wrapper to map a variant to transcripts as well as verifying it.
+        // Wrapper to verify a genomic variant and map it to transcripts as well.
 
         return $this->verifyGenomic($sVariant, array('map_to_transcripts' => true));
     }
@@ -341,9 +378,21 @@ class LOVD_VV
 
 
 
+    public function verifyGenomicAndLiftOver ($sVariant)
+    {
+        // Wrapper to verify a genomic variant and lift it over to other genome builds
+        //  (through transcript mapping if possible).
+
+        return $this->verifyGenomic($sVariant, array('lift_over' => true));
+    }
+
+
+
+
+
     public function verifyGenomicAndPredictProtein ($sVariant)
     {
-        // Wrapper to map a variant to transcripts as well as verifying it.
+        // Wrapper to verify a genomic variant, map it to transcripts, and get protein predictions as well.
 
         return $this->verifyGenomic($sVariant, array('predict_protein' => true));
     }
