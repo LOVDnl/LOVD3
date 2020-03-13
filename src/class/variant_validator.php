@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-03-12
+ * Modified    : 2020-03-13
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -232,10 +232,10 @@ class LOVD_VV
         // Append defaults for any remaining options.
         $aOptions = array_replace(
             array(
-                // NOTE: When adding options here, check the JSON call because we use a array_unique() trick there.
                 'map_to_transcripts' => false, // Should we map the variant to transcripts?
                 'predict_protein' => false,    // Should we get protein predictions?
                 'lift_over' => false,          // Should we get other genomic mappings of this variant?
+                'select_transcripts' => 'all', // Should we limit our output to only a certain set of transcripts?
             ),
             $aOptions);
 
@@ -251,12 +251,21 @@ class LOVD_VV
 // Internal server error:
 // https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.1069645_1279669dup/refseq/all/True/primary?content-type=application%2Fjson
 
+        // Transcript list should be a list, or 'all'.
+        if (!$aOptions['select_transcripts']
+            || (!is_array($aOptions['select_transcripts']) && $aOptions['select_transcripts'] != 'all')) {
+            $aOptions['select_transcripts'] = 'all';
+        }
+
         $aJSON = $this->callVV('LOVD/lovd', array(
             'genome_build' => $_CONF['refseq_build'],
             'variant_description' => $sVariant,
             'transcripts' => 'all',
-            'select_transcripts' => 'all', // FIXME: Add method to restrict transcripts, to prevent very long running times. $_VV->verifyGenomic("NC_000015.9:g.40699840C>T", array("lift_over" => true, "predict_protein" => true)) takes 42 sec, time mostly spent on lifting over (without protein prediction it's still 41 sec, and just mapping to C takes 0.5 sec.).
-            'check_only' => (array_unique(array_values($aOptions)) == array(false)? 'True' : (!$aOptions['predict_protein']? 'tx' : 'False')),
+            'select_transcripts' => (!is_array($aOptions['select_transcripts'])?
+                $aOptions['select_transcripts'] :
+                implode('|', $aOptions['select_transcripts'])),
+            'check_only' => ($aOptions['predict_protein']?
+                'False' : ($aOptions['map_to_transcripts']? 'tx' : 'True')),
             'lift_over' => ($aOptions['lift_over']? 'primary' : 'False'),
         ));
         if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON[$sVariant])) {
@@ -367,34 +376,46 @@ class LOVD_VV
 
 
 
-    public function verifyGenomicAndMap ($sVariant)
+    public function verifyGenomicAndMap ($sVariant, $aTranscripts = array())
     {
         // Wrapper to verify a genomic variant and map it to transcripts as well.
 
-        return $this->verifyGenomic($sVariant, array('map_to_transcripts' => true));
+        return $this->verifyGenomic($sVariant,
+            array(
+                'map_to_transcripts' => true,
+                'select_transcripts' => $aTranscripts,
+            ));
     }
 
 
 
 
 
-    public function verifyGenomicAndLiftOver ($sVariant)
+    public function verifyGenomicAndLiftOver ($sVariant, $aTranscripts = array())
     {
         // Wrapper to verify a genomic variant and lift it over to other genome builds
         //  (through transcript mapping if possible).
 
-        return $this->verifyGenomic($sVariant, array('lift_over' => true));
+        return $this->verifyGenomic($sVariant,
+            array(
+                'lift_over' => true,
+                'select_transcripts' => $aTranscripts,
+            ));
     }
 
 
 
 
 
-    public function verifyGenomicAndPredictProtein ($sVariant)
+    public function verifyGenomicAndPredictProtein ($sVariant, $aTranscripts = array())
     {
         // Wrapper to verify a genomic variant, map it to transcripts, and get protein predictions as well.
 
-        return $this->verifyGenomic($sVariant, array('predict_protein' => true));
+        return $this->verifyGenomic($sVariant,
+            array(
+                'predict_protein' => true,
+                'select_transcripts' => $aTranscripts,
+            ));
     }
 }
 ?>
