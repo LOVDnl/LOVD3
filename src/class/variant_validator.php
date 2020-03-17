@@ -177,22 +177,16 @@ class LOVD_VV
                     'id_ncbi_protein' => '', // FIXME: NP ID is currently not sent (yet). See https://github.com/openvar/variantValidator/issues/139.
                     'genomic_positions' => $aGenomicPositions,
                     'transcript_positions' => array(
-                        'start' => ($aTranscript['coding_start'] == 'non-coding'? 1 : (2 - $aTranscript['coding_start'])), // FIXME: "non-coding" value hopefully will be fixed, and VV's start is off by 1, so I used 2. See https://github.com/openvar/variantValidator/issues/141.
-                        'cds_length' => ($aTranscript['coding_end'] == 'non-coding'? NULL : ($aTranscript['coding_end'] - $aTranscript['coding_start'] + 2)), // FIXME: "non-coding" value hopefully will be fixed, and VV's start is off by 1, so I used 2. See https://github.com/openvar/variantValidator/issues/141.
-                        'end' => NULL, // FIXME: Missing. See https://github.com/openvar/variantValidator/issues/141.
+                        'cds_start' => $aTranscript['coding_start'],
+                        'cds_length' => (!$aTranscript['coding_end']? NULL : ($aTranscript['coding_end'] - $aTranscript['coding_start'] + 1)),
+                        'length' => $aTranscript['length'],
                     )
                 );
             }
-//                                         never used!           never used!      rename to CDS_length?     used to calculate sense and antisense!
-// | id_ncbi     | id_protein_ncbi | position_c_mrna_start | position_c_mrna_end | position_c_cds_end | position_g_mrna_start | position_g_mrna_end |
-// | NM_002225.3 | NP_002216.2     |                  -334 |                4331 |               1281 |              40697686 |            40713512 |
-// | XR_243096.1 |                 |                     1 |                1958 |               1958 |              40697914 |            40711056 |
-// VV: NM_002225.3 {"start":336;"end":1615}    NM_002225.4 {"start":35;"end":1305}
-// NM_002225.3: GenBank says CDS 335..1615, meaning an upstream UTR of length 334, and a CDS of (1615-334=) 1281 (427 AAs); 1615 is the G of TAG. VV's start seems off by 1?
-// NM_002225.4: GenBank says CDS  34..1305, meaning an upstream UTR of length  33, and a CDS of (1305- 33=) 1272 (424 AAs); 1305 is the G of TAG. VV's start seems off by 1?
 
             ksort($aData['data']);
             return $aData;
+
         } else {
             // Failure.
             return false;
