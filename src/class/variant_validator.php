@@ -337,16 +337,11 @@ class LOVD_VV
                     }
 
                     // Genomic mappings, when requested, are given per transcript (or otherwise as "intergenic").
-                    if (empty($aTranscript['assembly_loci'])) {
-                        if (!empty($aTranscript['primary_assembly_loci'])) {
-                            // FIXME: I have requested these to be merged, hopefully this won't be needed anymore.
-                            $aTranscript['assembly_loci'] = $aTranscript['primary_assembly_loci'];
-                        } else {
-                            $aTranscript['assembly_loci'] = array();
-                        }
+                    if (empty($aTranscript['primary_assembly_loci'])) {
+                        $aTranscript['primary_assembly_loci'] = array();
                     }
 
-                    foreach ($aTranscript['assembly_loci'] as $sBuild => $aMappings) {
+                    foreach ($aTranscript['primary_assembly_loci'] as $sBuild => $aMappings) {
                         // We support only the builds we have...
                         if (!isset($_SETT['human_builds'][$sBuild])) {
                             continue;
