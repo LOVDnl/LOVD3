@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-03-13
+ * Modified    : 2020-03-17
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -153,15 +153,21 @@ class LOVD_VV
                 // Figure out the genomic positions, which are given to us using the NCs.
                 $aGenomicPositions = array();
                 foreach ($_SETT['human_builds'] as $sBuild => $aBuild) {
+                    if (!isset($aBuild['ncbi_sequences'])) {
+                        continue;
+                    }
                     // See if one of the build's chromosomes match.
                     foreach (array_intersect($aBuild['ncbi_sequences'], array_keys($aTranscript['genomic_spans'])) as $sChromosome => $sRefSeq) {
                         if (!isset($aGenomicPositions[$sBuild])) {
                             $aGenomicPositions[$sBuild] = array();
                         }
                         $aGenomicPositions[$sBuild][$sChromosome] = array(
-                            // FIXME: Can not know strand from these values. See https://github.com/openvar/variantValidator/issues/140.
-                            'start' => $aTranscript['genomic_spans'][$sRefSeq]['start_position'],
-                            'end' => $aTranscript['genomic_spans'][$sRefSeq]['end_position'],
+                            'start' => ($aTranscript['orientation'] == 1?
+                                $aTranscript['genomic_spans'][$sRefSeq]['start_position'] :
+                                $aTranscript['genomic_spans'][$sRefSeq]['end_position']),
+                            'end' => ($aTranscript['orientation'] == 1?
+                                $aTranscript['genomic_spans'][$sRefSeq]['end_position'] :
+                                $aTranscript['genomic_spans'][$sRefSeq]['start_position']),
                         );
                     }
                 }
