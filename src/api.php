@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2020-02-06
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-18
+ * For LOVD    : 3.0-24
  *
  * Supported URIs:
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
@@ -255,7 +255,7 @@ if ($sDataType == 'variants') {
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
-               WHERE ' . (!$nRefSeqID? '' : 'vot.transcriptid = ' . $nRefSeqID . ' AND ') . 'vog.statusid >= ' . STATUS_MARKED;
+               WHERE ' . ($nRefSeqID? 't.id = ' . $nRefSeqID : 't.geneid = "' . $_DB->quote($sSymbol) . '"') . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
         if ($nID) {
             $sFeedType = 'entry';
