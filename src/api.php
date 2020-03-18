@@ -255,7 +255,7 @@ if ($sDataType == 'variants') {
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
-               WHERE ' . ($nRefSeqID? 't.id = ' . $nRefSeqID : 't.geneid = "' . $_DB->quote($sSymbol) . '"') . ' AND vog.statusid >= ' . STATUS_MARKED;
+               WHERE ' . ($nRefSeqID? 't.id = ' . $nRefSeqID : 't.geneid = ' . $_DB->quote($sSymbol)) . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
         if ($nID) {
             $sFeedType = 'entry';
