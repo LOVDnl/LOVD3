@@ -135,12 +135,12 @@ if ($sDataType == 'variants') {
     }
 
     // Get chromosome, reference sequence, and other data.
-    // LOVD3 has multiple transcripts maybe, so we just grab the first one.
-    // This is actually not really useful for BED files...
+    // LOVD3 has multiple transcripts maybe, so we just grab the one holding
+    // the most variants.
     list($sChromosome, $nRefSeqID, $sRefSeq, $nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $bSense) =
         $_DB->query('SELECT g.chromosome, t.id, t.id_ncbi, t.position_c_mrna_start, t.position_c_mrna_end, t.position_c_cds_end, (t.position_g_mrna_start < t.position_g_mrna_end) AS sense
-                     FROM ' . TABLE_GENES . ' as g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid)
-                     WHERE g.id = ? ORDER BY t.id ASC LIMIT 1',
+                     FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                     WHERE g.id = ? GROUP BY t.id ORDER BY COUNT(vot.id) DESC LIMIT 1',
             array($sSymbol))->fetchRow();
 
     if (FORMAT == 'application/json') {
@@ -239,7 +239,7 @@ if ($sDataType == 'variants') {
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
                  vog.`VariantOnGenome/DNA`,
-                 GROUP_CONCAT(' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'vot.`VariantOnTranscript/DNA`
+                 GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'vot.`VariantOnTranscript/DNA`
                    ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
                  vog.`VariantOnGenome/DBID`,
                  GROUP_CONCAT(DISTINCT uc.name SEPARATOR ";") AS _created_by,
