@@ -168,15 +168,60 @@ if ($sDataType == 'variants') {
             }
             $bQueryPMID = ($nPMID && count($aPMIDCols));
             // We're not selecting any transcripts here, we want as much data as possible. That means we might be mixing
-            //  transcripts here. To try and get as much of the consistent variants here, and to try and guess which
-            //  transcript is better, order by transcript ID (oldest first) and grab the first vot.DNA that you find.
-            $sQ = 'SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type,
-                     SUBSTRING_INDEX(GROUP_CONCAT(DISTINCT vot.`VariantOnTranscript/DNA` ORDER BY vot.transcriptid SEPARATOR ";;"), ";;", 1) AS `VariantOnTranscript/DNA`
-                   FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
-                   (!$bJoinWithPatient? '' : ' LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ') . '
-                   WHERE t.geneid = "' . $sSymbol . '" AND vog.statusid >= ' . STATUS_MARKED . ' AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
+            //  transcripts here. To try and get as much of the consistent variants here, order by the count of variants
+            //  per transcript, and grab the first vot.DNA that you find.
+            // FIXME: Because of an unknown reason, the transcript sorting mechanism that works fine for the entire
+            //  genes table, refuses to work for the variants, even though they have much less results.
+            //  ORDER BY (SELECT COUNT(*) FROM lovd_v3_variants_on_transcripts WHERE transcriptid = vot.transcriptid) DESC
+            //  So, no other option then to prefetch the transcript counts.
+            $aTranscripts = $_DB->query('
+                SELECT t.id
+                FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                  INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                WHERE t.geneid = ? GROUP BY t.id ORDER BY COUNT(*) DESC', array($sSymbol))->fetchAllColumn();
+            $aData = $_DB->query('
+                SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type,
+                  SUBSTRING_INDEX(GROUP_CONCAT(DISTINCT vot.`VariantOnTranscript/DNA` ORDER BY ' . implode(', ', array_map(function ($nID) { return '(vot.transcriptid = ' . $nID . ') DESC'; }, $aTranscripts)) . ' SEPARATOR ";;"), ";;", 1) AS `VariantOnTranscript/DNA`
+                FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                  INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id)
+                  LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
+                   (!$bJoinWithPatient? '' : '
+                  LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                  LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id)') . '
+                WHERE t.geneid = ? AND vog.statusid >= ? AND vog.position_g_start != 0 AND vog.position_g_start IS NOT NULL' .
                    (!$bQueryPMID? '' : ' AND (`' . implode('` LIKE "%:' . $nPMID . '}%" OR `', $aPMIDCols) . '` LIKE "%:' . $nPMID . '}%") ') . '
-                   GROUP BY vog.`VariantOnGenome/DNA` ORDER BY vog.position_g_start, vog.position_g_end';
+                GROUP BY vog.`VariantOnGenome/DNA` ORDER BY vog.position_g_start, vog.position_g_end', array($sSymbol, STATUS_MARKED))->fetchAllAssoc();
+            $n = count($aData);
+
+            // We're exporting a BED file for a Genome Browser.
+            // This code structure is getting pretty bad, by the way.
+            $aVariantTypeColors =
+                array(
+                    'substr' => '204,0,255',
+                    '>'      => '204,0,255', // This one can be removed later.
+                    'del'    => '0,0,255',
+                    'ins'    => '0,153,0',
+                    'dup'    => '255,153,0',
+                    ''       => '0,0,0', // Backup, for non-matching variants.
+                );
+
+            // Print header.
+            header('Content-type: text/plain; charset=UTF-8');
+            print('track name="Variants in the LOVD ' . $sSymbol . ' database' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" description="Variants in LOVD ' . $sSymbol . ' db' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" visibility=' . (!empty($_GET['visibility']) && is_numeric($_GET['visibility'])? $_GET['visibility'] : 3) . ' itemRgb="On" db="' . $sBuild . '" url="' . ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants.php?select_db=' . $sSymbol . '&action=search_all&trackid=$$' . '"' . "\n\n");
+
+            foreach ($aData as $r) {
+                list($nPositionStart, $nPositionEnd, $sVariantType, $sDNA) = array_values($r);
+                if (!isset($aVariantTypeColors[$sVariantType])) {
+                    $sVariantType = '';
+                }
+                $sVariantTypeColor = $aVariantTypeColors[$sVariantType];
+
+                // Print the data.
+                print('chr' . $sChromosome . "\t" . ($nPositionStart-1) . "\t" . $nPositionEnd . "\t" . $sSymbol . ':' . preg_replace('/\s+/', '', $sDNA) . "\t" . '0' . "\t" . ($bSense? '+' : '-') . "\t" . ($nPositionStart-1) . "\t" . $nPositionEnd . "\t" . $sVariantTypeColor . "\n");
+            }
+            exit;
+
         } else {
             // Not mappable!
             header('HTTP/1.0 503 Service Unavailable');
@@ -392,8 +437,7 @@ $n = count($aData);
 
 if ($n) {
     header('HTTP/1.0 200 OK');
-} elseif (FORMAT != 'text/bed') {
-    // We don't want 404s in de text/bed format, ever. It should just return a BED file with a header, but no variants.
+} else {
     header('HTTP/1.0 404 Not Found');
     if ($nID) {
         // Really requested a (variant) ID. Goodbye.
@@ -401,35 +445,7 @@ if ($n) {
     }
 }
 
-if ($sDataType == 'variants' && FORMAT == 'text/bed') {
-    // We're exporting a BED file for a Genome Browser.
-    // This code structure is getting pretty bad, by the way.
-    $aVariantTypeColors =
-             array(
-                    'substr' => '204,0,255',
-                    '>'      => '204,0,255', // This one can be removed later.
-                    'del'    => '0,0,255',
-                    'ins'    => '0,153,0',
-                    'dup'    => '255,153,0',
-                    ''       => '0,0,0', // Backup, for non-matching variants.
-                  );
 
-    // Print header.
-    header('Content-type: text/plain; charset=UTF-8');
-    print('track name="Variants in the LOVD ' . $sSymbol . ' database' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" description="Variants in LOVD ' . $sSymbol . ' db' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" visibility=' . (!empty($_GET['visibility']) && is_numeric($_GET['visibility'])? $_GET['visibility'] : 3) . ' itemRgb="On" db="' . $sBuild . '" url="' . ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants.php?select_db=' . $sSymbol . '&action=search_all&trackid=$$' . '"' . "\n\n");
-
-    foreach ($aData as $r) {
-        list($nPositionStart, $nPositionEnd, $sVariantType, $sDNA) = array_values($r);
-        if (!isset($aVariantTypeColors[$sVariantType])) {
-            $sVariantType = '';
-        }
-        $sVariantTypeColor = $aVariantTypeColors[$sVariantType];
-
-        // Print the data.
-        print('chr' . $sChromosome . "\t" . ($nPositionStart-1) . "\t" . $nPositionEnd . "\t" . $sSymbol . ':' . preg_replace('/\s+/', '', $sDNA) . "\t" . '0' . "\t" . ($bSense? '+' : '-') . "\t" . ($nPositionStart-1) . "\t" . $nPositionEnd . "\t" . $sVariantTypeColor . "\n");
-    }
-    exit;
-}
 
 // Start feed class.
 require ROOT_PATH . 'class/feeds.php';
