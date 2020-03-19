@@ -140,7 +140,7 @@ if ($sDataType == 'variants') {
     list($sChromosome, $nRefSeqID, $sRefSeq, $nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $bSense) =
         $_DB->query('SELECT g.chromosome, t.id, t.id_ncbi, t.position_c_mrna_start, t.position_c_mrna_end, t.position_c_cds_end, (t.position_g_mrna_start < t.position_g_mrna_end) AS sense
                      FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-                     WHERE g.id = ? GROUP BY t.id ORDER BY COUNT(vot.id) DESC LIMIT 1',
+                     WHERE g.id = ? GROUP BY t.id ORDER BY COUNT(vot.id) DESC, t.id ASC LIMIT 1',
             array($sSymbol))->fetchRow();
 
     if (FORMAT == 'application/json') {
@@ -178,7 +178,7 @@ if ($sDataType == 'variants') {
                 SELECT t.id
                 FROM ' . TABLE_TRANSCRIPTS . ' AS t
                   INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-                WHERE t.geneid = ? GROUP BY t.id ORDER BY COUNT(*) DESC', array($sSymbol))->fetchAllColumn();
+                WHERE t.geneid = ? GROUP BY t.id ORDER BY COUNT(*) DESC, t.id ASC', array($sSymbol))->fetchAllColumn();
             $aData = $_DB->query('
                 SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type,
                   SUBSTRING_INDEX(GROUP_CONCAT(DISTINCT vot.`VariantOnTranscript/DNA` ORDER BY ' . implode(', ', array_map(function ($nID) { return '(vot.transcriptid = ' . $nID . ') DESC'; }, $aTranscripts)) . ' SEPARATOR ";;"), ";;", 1) AS `VariantOnTranscript/DNA`
@@ -374,7 +374,7 @@ if ($sDataType == 'variants') {
     // Listing or simple request on gene symbol.
     // First build query.
     // All transcripts are listed here, ordered by the number of variants.
-    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY (SELECT COUNT(*) FROM lovd_v3_variants_on_transcripts WHERE transcriptid = t.id) DESC SEPARATOR ";") AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
+    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY (SELECT COUNT(*) FROM lovd_v3_variants_on_transcripts WHERE transcriptid = t.id) DESC, t.id ASC SEPARATOR ";") AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
            FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id) LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT OUTER JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
            WHERE 1=1';
 
