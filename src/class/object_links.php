@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2019-02-04
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-30
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -200,8 +200,8 @@ class LOVD_Link extends LOVD_Object
                 }
 
                 // Check for reference order and/or references missing from the replacement text.
-                reset($aPatternRefs);
-                for ($i = 1; list(,$nRef) = each($aPatternRefs); $i ++) {
+                foreach ($aPatternRefs as $i => $nRef) {
+                    $i++; // References should start at 1, but array keys start at 0.
                     if ($nRef != $i) {
                         lovd_errorAdd('pattern_text', 'The link pattern is found to be incorrect. Expected reference [' . $i . '] ' . ($i == 1? 'first' : 'after [' . ($i - 1) . ']') . ', got [' . $nRef . '].');
                     }
