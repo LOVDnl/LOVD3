@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-24
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -74,9 +74,9 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
         foreach ($aORExpressions as $nORIndex => $sORExpression) {
             switch ($sColumnType) {
                 case 'TEXT':
-                    if ($sORExpression{0} == '!' && $sORExpression{1} == '=') {
+                    if (substr($sORExpression, 0, 2) == '!=') {
                         $sFormattedExpression .= 'Does not exactly match ' . trim($sORExpression, '!="');
-                    } elseif ($sORExpression{0} == '!' && $sORExpression{1} != '=') {
+                    } elseif ($sORExpression{0} == '!') {
                         $sFormattedExpression .= 'Does not contain ' . trim($sORExpression, '!=');
                     } elseif ($sORExpression{0} == '=') {
                         $sFormattedExpression .= 'Exactly matches ' . trim($sORExpression, '="');

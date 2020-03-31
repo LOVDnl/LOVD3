@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-03-09
+ * Modified    : 2020-03-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -242,7 +242,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
             'SELECT t.id, t.id_ncbi
              FROM ' . TABLE_TRANSCRIPTS . ' AS t
                INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-             WHERE t.geneid = ?', array($sGene))->fetchAllCombine();
+             WHERE t.geneid = ? ORDER BY t.id_ncbi', array($sGene))->fetchAllCombine();
         $nTranscriptsWithVariants = count($aTranscriptsWithVariants);
 
         // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscriptsWithVariants.
@@ -278,7 +278,8 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
-    list($nTranscriptID, $sTranscript) = each($aTranscriptsWithVariants);
+    $nTranscriptID = key($aTranscriptsWithVariants);
+    $sTranscript = current($aTranscriptsWithVariants);
     if (!$nTranscripts) {
         $sMessage = 'No transcripts found for this gene.';
     } elseif (!$nTranscriptsWithVariants) {
@@ -315,7 +316,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $aVLOptions = array(
-            'cols_to_skip' => array('chromosome', 'allele_'),
+            'cols_to_skip' => array('chromosome', 'allele_'), // Enforced for unique view in the object.
             'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
             'find_and_replace' => !$bUnique,
             'multi_value_filter' => $bUnique,
