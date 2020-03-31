@@ -316,7 +316,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $aVLOptions = array(
-            'cols_to_skip' => array('chromosome', 'allele_'),
+            'cols_to_skip' => array('chromosome', 'allele_'), // Enforced for unique view in the object.
             'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
             'find_and_replace' => !$bUnique,
             'multi_value_filter' => $bUnique,
