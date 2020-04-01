@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-03-17
+ * Modified    : 2020-04-01
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -284,7 +284,21 @@ class LOVD_VV
                     case 'genomic_variant_warning':
                         // Seen with a REF error of a substitution.
                         if ($aJSON[$sVariant]['genomic_variant_error']) {
-                            $aData['errors'][] = str_replace($sVariant . ': ', '', $aJSON[$sVariant]['genomic_variant_error']);
+                            // Clean off variant description.
+                            $sError = str_replace($sVariant . ': ', '', $aJSON[$sVariant]['genomic_variant_error']);
+                            // VV has declared their error messages are stable.
+                            // This means we can parse them and rely on them not to change.
+                            // Add error code if possible, so we won't have to parse the error message again somewhere.
+                            if (strpos($aJSON[$sVariant]['genomic_variant_error'], 'does not agree with reference sequence') !== false) {
+                                // EREF error.
+                                $aData['errors']['EREF'] = $sError;
+                            } elseif (strpos($aJSON[$sVariant]['genomic_variant_error'], 'is not associated with genome build') !== false) {
+                                // EBUILD error.
+                                $aData['errors']['EREFSEQ'] = $sError;
+                            } else {
+                                // Unrecognized error.
+                                $aData['errors'][] = $sError;
+                            }
                             $aJSON[$sVariant]['genomic_variant_error'] = NULL;
                         }
                         break;
