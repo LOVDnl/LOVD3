@@ -322,6 +322,7 @@ class LOVD_VV
                 // Not a previously seen error, handled through the flag value.
                 // We'll assume a warning.
                 // FIXME: Value may need cleaning!
+                // FIXME: Does this ever happen? Or is this only filled in when we also have a flag?
                 $aData['warnings'][] = $aJSON['genomic_variant_error'];
             }
 
@@ -335,10 +336,19 @@ class LOVD_VV
                             'DNA' => '',
                             'protein' => '',
                         );
-                        // FIXME: What to do with gap_statement?
-                        if ($aTranscript['gapped_alignment_warning']) {
+                        // FIXME: Handle gap_statement and gapped_alignment_warning differently?
+                        //  I think they're either both provided, or both not provided?
+                        //  (requires mapping to be requested) Concatenating them for now.
+                        if ($aTranscript['gap_statement'] || $aTranscript['gapped_alignment_warning']) {
                             // Store this in warnings.
-                            $aData['warnings'][] = $aTranscript['gapped_alignment_warning'];
+                            $sWarning = '';
+                            if ($aTranscript['gap_statement']) {
+                                $sWarning = rtrim($aTranscript['gap_statement'], '.') . '.';
+                            }
+                            if ($aTranscript['gapped_alignment_warning']) {
+                                $sWarning .= (!$sWarning? '' : ' ') . rtrim($aTranscript['gapped_alignment_warning'], '.') . '.';
+                            }
+                            $aData['warnings']['WGAP'] = $sWarning;
                         }
                         if ($aTranscript['t_hgvs']) {
                             $aMapping['DNA'] = substr(strstr($aTranscript['t_hgvs'], ':'), 1);
