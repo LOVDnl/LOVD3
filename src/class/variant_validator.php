@@ -312,9 +312,9 @@ class LOVD_VV
 
             // Copy the (corrected) DNA value.
             $aData['data']['DNA'] = $aJSON['g_hgvs'];
-            // If description is different, then apparently there's been some kind of correction.
-            if ($sVariant != $aJSON['g_hgvs']) {
-                $aData['warnings'][] = 'Variant description has been corrected.';
+            // If description is given but different, then apparently there's been some kind of correction.
+            if ($aJSON['g_hgvs'] && $sVariant != $aJSON['g_hgvs']) {
+                $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
             }
 
             // Any errors given?
