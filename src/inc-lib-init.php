@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-02-25
+ * Modified    : 2020-04-02
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -803,6 +803,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             // Transcript not configured correctly.
             return false;
         }
+    } elseif ($sTranscriptID === false) {
+        // If the transcript ID is passed as false, we are asked to ignore not having the transcript.
+        // Some random number, high enough to not be smaller than position_start if that's not in the UTR.
+        $aTranscriptOffsets[0] = 1000000;
     }
 
     // Isolate the position(s) from the variant. We don't support combined variants.
@@ -831,7 +835,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         // Convert 3' UTR notations into normal notations.
         if ($sStartPosition{0} == '*' || ($sEndPosition && $sEndPosition{0} == '*')) {
             // Check if a transcript ID has been provided.
-            if (!$sTranscriptID) {
+            if ($sTranscriptID === '') {
                 // No, but we'll need it.
                 return false;
             }
@@ -902,7 +906,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         // Convert 3' UTR notations into normal notations.
         if ($sStartPositionEarly{0} == '*' || $sStartPositionLate{0} == '*' || $sEndPositionEarly{0} == '*' || $sEndPositionLate{0} == '*') {
             // Check if a transcript ID has been provided.
-            if (!$sTranscriptID) {
+            if ($sTranscriptID === '') {
                 // No, but we'll need it.
                 return false;
             }
