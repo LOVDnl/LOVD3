@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-04-01
+ * Modified    : 2020-04-02
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -174,7 +174,7 @@ class LOVD_VV
 
                 $aData['data'][$aTranscript['reference']] = array(
                     'name' => $sName,
-                    'id_ncbi_protein' => '', // FIXME: NP ID is currently not sent (yet). See https://github.com/openvar/variantValidator/issues/139.
+                    'id_ncbi_protein' => $aTranscript['translation'],
                     'genomic_positions' => $aGenomicPositions,
                     'transcript_positions' => array(
                         'cds_start' => $aTranscript['coding_start'],
