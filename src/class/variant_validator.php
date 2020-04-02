@@ -223,7 +223,7 @@ class LOVD_VV
     public function verifyGenomic ($sVariant, $aOptions = array())
     {
         // Verify a genomic variant, and optionally get mappings and a protein prediction.
-        global $_CONF, $_SETT;
+        global $_SETT;
 
         if (empty($aOptions) || !is_array($aOptions)) {
             $aOptions = array();
@@ -251,6 +251,22 @@ class LOVD_VV
 // Internal server error:
 // https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.1069645_1279669dup/refseq/all/True/primary?content-type=application%2Fjson
 
+        // Allow calling for any build, not just the one we are configured to use.
+        // We always need to receive an NC anyway, so we can deduce the build (except for chrM).
+        // We can pull this out of the datebase, but I prefer to rely on an array rather
+        //  than a database, in case this object will ever be pulled out of LOVD.
+        $sVariantNC = substr($sVariant, 0, strpos($sVariant, ':'));
+        $sBuild = '';
+        foreach ($_SETT['human_builds'] as $sCode => $aBuild) {
+            if (isset($aBuild['ncbi_sequences'])) {
+                if (in_array($sVariantNC, $aBuild['ncbi_sequences'])) {
+                    // We pick the NCBI name here, because for chrM we actually
+                    //  use GRCh37's NC_012920.1 instead of hg19's NC_001807.4.
+                    $sBuild = $aBuild['ncbi_name'];
+                }
+            }
+        }
+
         // Transcript list should be a list, or 'all'.
         if (!$aOptions['select_transcripts']
             || (!is_array($aOptions['select_transcripts']) && $aOptions['select_transcripts'] != 'all')) {
@@ -258,7 +274,7 @@ class LOVD_VV
         }
 
         $aJSON = $this->callVV('LOVD/lovd', array(
-            'genome_build' => $_CONF['refseq_build'],
+            'genome_build' => $sBuild,
             'variant_description' => $sVariant,
             'transcripts' => 'all',
             'select_transcripts' => (!is_array($aOptions['select_transcripts'])?
@@ -314,6 +330,7 @@ class LOVD_VV
             $aData['data']['DNA'] = $aJSON['g_hgvs'];
             // If description is given but different, then apparently there's been some kind of correction.
             if ($aJSON['g_hgvs'] && $sVariant != $aJSON['g_hgvs']) {
+                // FIXME: You can actually compare the two values to see if this is a WROLLFORWARD or maybe delG to del or so. chrM is currently corrected to g. as well.
                 $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
             }
 
