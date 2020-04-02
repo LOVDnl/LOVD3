@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-02-25
+ * Modified    : 2020-04-02
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -34,6 +34,18 @@
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
+}
+
+// Sometimes inc-init.php gets run over CLI (LOVD+, external scripts, etc.).
+// Handle that here, instead of building lots of code in many different places.
+if (!isset($_SERVER['HTTP_HOST'])) {
+    // To prevent notices...
+    $_SERVER = array_merge($_SERVER, array(
+        'HTTP_HOST' => 'localhost',
+        'REQUEST_URI' => '/' . basename(__FILE__),
+        'QUERY_STRING' => '',
+        'REQUEST_METHOD' => 'GET',
+    ));
 }
 
 // Require library standard functions.
@@ -381,7 +393,7 @@ $_SETT = array(
                                                             '22' => 'NC_000022.10',
                                                             'X'  => 'NC_000023.10',
                                                             'Y'  => 'NC_000024.9',
-                                                            'M'  => 'NC_012920.1', // Note that hg19 uses NC_012920!
+                                                            'M'  => 'NC_012920.1', // GRCh37; Note that hg19 actually uses NC_001807.4!
                                                           ),
                                           ),
                             // http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/
