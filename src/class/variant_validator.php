@@ -308,6 +308,9 @@ class LOVD_VV
                             if (strpos($aJSON[$sVariant]['genomic_variant_error'], 'does not agree with reference sequence') !== false) {
                                 // EREF error.
                                 $aData['errors']['EREF'] = $sError;
+                            } elseif (strpos($aJSON[$sVariant]['genomic_variant_error'], 'is outside the boundaries of reference sequence') !== false) {
+                                // ERANGE error.
+                                $aData['errors']['ERANGE'] = $sError;
                             } elseif (strpos($aJSON[$sVariant]['genomic_variant_error'], 'is not associated with genome build') !== false) {
                                 // EBUILD error.
                                 $aData['errors']['EREFSEQ'] = $sError;
