@@ -354,7 +354,8 @@ class LOVD_VV
             $aData['data']['transcript_mappings'] = array();
             if ($aJSON['hgvs_t_and_p']) {
                 foreach ($aJSON['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
-                    if ($sTranscript != 'intergenic') {
+                    if ($sTranscript != 'intergenic' && empty($aTranscript['transcript_variant_error'])) {
+                        // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
                         $aMapping = array(
                             'DNA' => '',
                             'RNA' => 'r.(?)',
