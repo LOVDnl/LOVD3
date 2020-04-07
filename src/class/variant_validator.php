@@ -388,6 +388,10 @@ class LOVD_VV
                             // FIXME: VV returns p.(Ala86=) rather than p.(=); perhaps return r.(257=) instead of r.(=).
                             //  If you instead would like to make VV return p.(=), here is where you change this.
                             //  If you do, don't forget to check that you're on a coding transcript.
+                            // For UTRs, a c.= returns a p.? (safe choice). I prefer a p.(=).
+                            if ($aMapping['protein'] == 'p.?') {
+                                $aMapping['protein'] = 'p.(=)';
+                            }
                         } elseif ($aOptions['predict_protein'] && in_array($aMapping['protein'], array('', 'p.?', 'p.(=)'))) {
                             // lovd_getVariantInfo() is generally fast, so we don't have to worry about slowdowns.
                             // But we need to prevent the possible database query for 3' UTR variants,
