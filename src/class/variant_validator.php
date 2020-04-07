@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-04-06
+ * Modified    : 2020-04-07
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -358,7 +358,7 @@ class LOVD_VV
                         // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
                         $aMapping = array(
                             'DNA' => '',
-                            'RNA' => 'r.(?)',
+                            'RNA' => (!$aOptions['predict_protein']? '' : 'r.(?)'),
                             'protein' => '',
                         );
                         // FIXME: Handle gap_statement and gapped_alignment_warning differently?
@@ -382,13 +382,13 @@ class LOVD_VV
                             $aMapping['protein'] = substr(strstr($aTranscript['p_hgvs_tlc'], ':'), 1);
                         }
                         // Check values, perhaps we can do better.
-                        if (substr($aMapping['DNA'], -1) == '=') {
+                        if ($aOptions['predict_protein'] && substr($aMapping['DNA'], -1) == '=') {
                             // DNA actually didn't change. Protein will indicate the same.
                             $aMapping['RNA'] = 'r.(=)';
                             // FIXME: VV returns p.(Ala86=) rather than p.(=); perhaps return r.(257=) instead of r.(=).
                             //  If you instead would like to make VV return p.(=), here is where you change this.
                             //  If you do, don't forget to check that you're on a coding transcript.
-                        } elseif (in_array($aMapping['protein'], array('', 'p.?', 'p.(=)'))) {
+                        } elseif ($aOptions['predict_protein'] && in_array($aMapping['protein'], array('', 'p.?', 'p.(=)'))) {
                             // lovd_getVariantInfo() is generally fast, so we don't have to worry about slowdowns.
                             // But we need to prevent the possible database query for 3' UTR variants,
                             //  because we don't even know if we have the transcript.
