@@ -296,7 +296,6 @@ class LOVD_VV
             if ($aJSON['flag']) {
                 // Flag is empty even when giving a delG on a REF:C and on roll forward errors.
                 switch ($aJSON['flag']) {
-                    // FIXME: Flag indicates warning, but genomic_variant_error suggests an error. The latter would be more useful.
                     case 'genomic_variant_warning':
                         // Seen with a REF error of a substitution.
                         if ($aJSON[$sVariant]['genomic_variant_error']) {
@@ -336,8 +335,38 @@ class LOVD_VV
             $aData['data']['DNA'] = $aJSON['g_hgvs'];
             // If description is given but different, then apparently there's been some kind of correction.
             if ($aJSON['g_hgvs'] && $sVariant != $aJSON['g_hgvs']) {
-                // FIXME: You can actually compare the two values to see if this is a WROLLFORWARD or maybe delG to del or so. chrM is currently corrected to g. as well.
-                $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+                // FIXME: chrM is currently corrected to g. by VV.
+                // Check type of correction; silent, WCORRECTION, or WROLLFORWARD.
+                if (function_exists('lovd_getVariantInfo')) {
+                    // Use LOVD's lovd_getVariantInfo() to parse positions and type.
+                    $sDNAOri = substr($sVariant, strlen($sVariantNC) + 1);
+                    $aVariantOri = lovd_getVariantInfo($sDNAOri);
+                    $sDNACorrected = substr($aData['data']['DNA'], strlen($sVariantNC) + 1);
+                    $aVariantCorrected = lovd_getVariantInfo($sDNACorrected);
+                    // Check for g.1_1del to g.1del.
+                    $bRangeChanged = (substr_count($sDNAOri, '_') > substr_count($sDNACorrected, '_'));
+
+                    if ($aVariantOri == $aVariantCorrected && !$bRangeChanged) {
+                        // Positions and type are the same, small corrections like delG to del.
+                        // We let these pass silently.
+                    } elseif ($aVariantOri['type'] != $aVariantCorrected['type'] || $bRangeChanged) {
+                        // An insertion actually being a duplication.
+                        // A deletion-insertion which is actually something else.
+                        // A g.1_1del that should be g.1del.
+                        $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+                    } else {
+                        // Positions are different, but type is the same.
+                        // 3' forwarding of deletions, insertions, duplications
+                        //  and deletion-insertion events.
+                        $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
+                            (!substr_count($sDNAOri, '_')? ' has' : 's have') .
+                            ' been corrected.';
+                    }
+
+                } else {
+                    // Not running as an LOVD object, just complain here.
+                    $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+                }
             }
 
             // Any errors given?
@@ -454,7 +483,6 @@ class LOVD_VV
                                 }
                             }
                         }
-                        // FIXME: What to do with transcript_variant_error?
                         $aData['data']['transcript_mappings'][$sTranscript] = $aMapping;
                     }
 
