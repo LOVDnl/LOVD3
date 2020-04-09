@@ -344,19 +344,11 @@ class LOVD_VV
         // We want to map to transcripts also if we're asking for a liftover, and if we want protein prediction.
         $aOptions['map_to_transcripts'] = ($aOptions['map_to_transcripts'] || $aOptions['lift_over'] || $aOptions['predict_protein']);
 
-// NOTE: Getting g. mapping requires asking for c. mapping as well. Examples:
-// https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.48275363C%3EA/refseq/all/True/primary?content-type=application%2Fjson
-// vs intergenic:
-// https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.14445090C%3EG/refseq/all/True/primary?content-type=application%2Fjson
-
-// Internal server error:
-// https://www35.lamp.le.ac.uk/LOVD/lovd/hg19/NC_000017.10%3Ag.1069645_1279669dup/refseq/all/True/primary?content-type=application%2Fjson
-
         // Allow calling for any build, not just the one we are configured to use.
         // We always need to receive an NC anyway, so we can deduce the build (except for chrM).
-        // We can pull this out of the datebase, but I prefer to rely on an array rather
+        // We can pull this out of the database, but I prefer to rely on an array rather
         //  than a database, in case this object will ever be pulled out of LOVD.
-        $sVariantNC = substr($sVariant, 0, strpos($sVariant, ':'));
+        $sVariantNC = strstr($sVariant, ':', true);
         $sBuild = '';
         foreach ($_SETT['human_builds'] as $sCode => $aBuild) {
             if (isset($aBuild['ncbi_sequences'])) {
@@ -364,9 +356,11 @@ class LOVD_VV
                     // We pick the NCBI name here, because for chrM we actually
                     //  use GRCh37's NC_012920.1 instead of hg19's NC_001807.4.
                     $sBuild = $aBuild['ncbi_name'];
+                    break;
                 }
             }
         }
+        // If we didn't get the build right here, then the whole call will fail.
 
         // Transcript list should be a list, or 'all'.
         if (!$aOptions['select_transcripts']
@@ -436,7 +430,7 @@ class LOVD_VV
             // Copy the (corrected) DNA value.
             $aData['data']['DNA'] = $aJSON['g_hgvs'];
             // If description is given but different, then apparently there's been some kind of correction.
-            if ($aJSON['g_hgvs'] && $sVariant != $aJSON['g_hgvs']) {
+            if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
                 // FIXME: chrM is currently corrected to g. by VV.
                 // Check type of correction; silent, WCORRECTION, or WROLLFORWARD.
                 if (function_exists('lovd_getVariantInfo')) {
@@ -492,9 +486,6 @@ class LOVD_VV
                             'RNA' => (!$aOptions['predict_protein']? '' : 'r.(?)'),
                             'protein' => '',
                         );
-                        // FIXME: Handle gap_statement and gapped_alignment_warning differently?
-                        //  I think they're either both provided, or both not provided?
-                        //  (requires mapping to be requested) Concatenating them for now.
                         if ($aTranscript['gap_statement'] || $aTranscript['gapped_alignment_warning']) {
                             // Store this in warnings.
                             $sWarning = '';
