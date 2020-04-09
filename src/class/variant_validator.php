@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-04-07
+ * Modified    : 2020-04-09
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -123,6 +123,107 @@ class LOVD_VV
         }
         // Something went wrong...
         return false;
+    }
+
+
+
+
+
+    private function getRNAProteinPrediction (&$aMapping, $sTranscript = '')
+    {
+        // Function to predict the RNA change and to improve VV's protein prediction.
+        // $aMapping will be extended with 'RNA' and 'protein' if they don't already exist.
+        // $sTranscript is just used to check if this is a coding or non-coding transcript.
+
+        if (!is_array($aMapping) || !isset($aMapping['DNA'])) {
+            // Without DNA, we can do nothing.
+            return false;
+        }
+
+        if (!isset($aMapping['RNA'])) {
+            $aMapping['RNA'] = 'r.(?)';
+        }
+        if (!isset($aMapping['protein'])) {
+            $aMapping['protein'] = '';
+        }
+
+        // Check values, perhaps we can do better.
+        if (substr($aMapping['DNA'], -1) == '=') {
+            // DNA actually didn't change. Protein will indicate the same.
+            $aMapping['RNA'] = 'r.(=)';
+            // FIXME: VV returns p.(Ala86=) rather than p.(=); perhaps return r.(257=) instead of r.(=).
+            //  If you instead would like to make VV return p.(=), here is where you change this.
+            //  If you do, don't forget to check that you're on a coding transcript.
+            // For UTRs or p.Met1, a c.= returns a p.? (safe choice). I prefer a p.(=).
+            if ($aMapping['protein'] == 'p.?' || $aMapping['protein'] == 'p.(Met1?)') {
+                $aMapping['protein'] = 'p.(=)';
+            }
+
+        } elseif (function_exists('lovd_getVariantInfo')
+            && in_array($aMapping['protein'], array('', 'p.?', 'p.(=)'))) {
+            // lovd_getVariantInfo() is generally fast, so we don't have to worry about slowdowns.
+            // But we need to prevent the possible database query for 3' UTR variants,
+            //  because we don't even know if we have the transcript.
+            // Therefore, passing False as transcript ID.
+            $aVariant = lovd_getVariantInfo($aMapping['DNA'], false);
+            if ($aVariant) {
+                // We'd want to check this.
+                // Splicing.
+                if (($aVariant['position_start_intron'] && abs($aVariant['position_start_intron']) <= 5)
+                    || ($aVariant['position_end_intron'] && abs($aVariant['position_end_intron']) <= 5)
+                    || ($aVariant['position_start_intron'] && !$aVariant['position_end_intron'])
+                    || (!$aVariant['position_start_intron'] && $aVariant['position_end_intron'])) {
+                    $aVariant['RNA'] = 'r.spl?';
+                    $aVariant['protein'] = 'p.?';
+
+                } elseif ($aVariant['position_start_intron'] && $aVariant['position_end_intron']
+                    && abs($aVariant['position_start_intron']) > 5 && abs($aVariant['position_end_intron']) > 5
+                    && ($aVariant['position_start'] == $aVariant['position_end'] || $aVariant['position_start'] == ($aVariant['position_end'] + 1))) {
+                    // Deep intronic.
+                    $aMapping['RNA'] = 'r.(=)';
+                    $aMapping['protein'] = 'p.(=)';
+
+                } else {
+                    // No introns involved.
+                    if ($aVariant['position_start'] < 0 && $aVariant['position_end'] < 0) {
+                        // Variant is upstream.
+                        $aMapping['RNA'] = 'r.(?)';
+                        $aMapping['protein'] = 'p.(=)';
+
+                    } elseif ($aVariant['position_start'] < 0 && strpos($aMapping['DNA'], '*') !== false) {
+                        // Start is upstream, end is downstream.
+                        if ($aMapping['type'] == 'del') {
+                            $aMapping['RNA'] = 'r.0?';
+                            $aMapping['protein'] = 'p.0?';
+                        } else {
+                            $aMapping['RNA'] = 'r.?';
+                            $aMapping['protein'] = 'p.?';
+                        }
+
+                    } elseif (substr($aMapping['DNA'], 0, 3) == 'c.*' && ($aVariant['type'] == 'subst' || substr_count($aMapping['DNA'], '*') > 1)) {
+                        // Variant is downstream.
+                        $aMapping['RNA'] = 'r.(=)';
+                        $aMapping['protein'] = 'p.(=)';
+
+                    } elseif ($aVariant['type'] != 'subst' && $aMapping['protein'] != 'p.(=)') {
+                        // Deletion/insertion partially in the transcript, not predicted to do nothing.
+                        $aMapping['RNA'] = 'r.?';
+                        $aMapping['protein'] = 'p.?';
+
+                    } else {
+                        // Substitution on wobble base or so.
+                        $aMapping['RNA'] = 'r.(?)';
+                    }
+                }
+
+                // But wait, did we just fill in a protein field for a non-coding transcript?
+                if (substr($sTranscript, 1, 1) == 'R') {
+                    $aMapping['protein'] = '';
+                }
+            }
+        }
+
+        return true;
     }
 
 
@@ -410,78 +511,10 @@ class LOVD_VV
                         if ($aTranscript['p_hgvs_tlc']) {
                             $aMapping['protein'] = substr(strstr($aTranscript['p_hgvs_tlc'], ':'), 1);
                         }
-                        // Check values, perhaps we can do better.
-                        if ($aOptions['predict_protein'] && substr($aMapping['DNA'], -1) == '=') {
-                            // DNA actually didn't change. Protein will indicate the same.
-                            $aMapping['RNA'] = 'r.(=)';
-                            // FIXME: VV returns p.(Ala86=) rather than p.(=); perhaps return r.(257=) instead of r.(=).
-                            //  If you instead would like to make VV return p.(=), here is where you change this.
-                            //  If you do, don't forget to check that you're on a coding transcript.
-                            // For UTRs, a c.= returns a p.? (safe choice). I prefer a p.(=).
-                            if ($aMapping['protein'] == 'p.?') {
-                                $aMapping['protein'] = 'p.(=)';
-                            }
-                        } elseif ($aOptions['predict_protein'] && in_array($aMapping['protein'], array('', 'p.?', 'p.(=)'))) {
-                            // lovd_getVariantInfo() is generally fast, so we don't have to worry about slowdowns.
-                            // But we need to prevent the possible database query for 3' UTR variants,
-                            //  because we don't even know if we have the transcript.
-                            // Therefore, passing False as transcript ID.
-                            $aVariant = lovd_getVariantInfo($aMapping['DNA'], false);
-                            if ($aVariant) {
-                                // We'd want to check this.
-                                // Splicing.
-                                if (($aVariant['position_start_intron'] && abs($aVariant['position_start_intron']) <= 5)
-                                    || ($aVariant['position_end_intron'] && abs($aVariant['position_end_intron']) <= 5)
-                                    || ($aVariant['position_start_intron'] && !$aVariant['position_end_intron'])
-                                    || (!$aVariant['position_start_intron'] && $aVariant['position_end_intron'])) {
-                                    $aVariant['RNA'] = 'r.spl?';
-                                    $aVariant['protein'] = 'p.?';
 
-                                } elseif ($aVariant['position_start_intron'] && $aVariant['position_end_intron']
-                                    && abs($aVariant['position_start_intron']) > 5 && abs($aVariant['position_end_intron']) > 5
-                                    && ($aVariant['position_start'] == $aVariant['position_end'] || $aVariant['position_start'] == ($aVariant['position_end'] + 1))) {
-                                    // Deep intronic.
-                                    $aMapping['RNA'] = 'r.(=)';
-                                    $aMapping['protein'] = 'p.(=)';
-
-                                } else {
-                                    // No introns involved.
-                                    if ($aVariant['position_start'] < 0 && $aVariant['position_end'] < 0) {
-                                        // Variant is upstream.
-                                        $aMapping['RNA'] = 'r.(?)';
-                                        $aMapping['protein'] = 'p.(=)';
-
-                                    } elseif ($aVariant['position_start'] < 0 && strpos($aMapping['DNA'], '*') !== false) {
-                                        // Start is upstream, end is downstream.
-                                        if ($aMapping['type'] == 'del') {
-                                            $aMapping['RNA'] = 'r.0?';
-                                            $aMapping['protein'] = 'p.0?';
-                                        } else {
-                                            $aMapping['RNA'] = 'r.?';
-                                            $aMapping['protein'] = 'p.?';
-                                        }
-
-                                    } elseif (substr($aMapping['DNA'], 0, 3) == 'c.*' && ($aVariant['type'] == 'subst' || substr_count($aMapping['DNA'], '*') > 1)) {
-                                        // Variant is downstream.
-                                        $aMapping['RNA'] = 'r.(=)';
-                                        $aMapping['protein'] = 'p.(=)';
-
-                                    } elseif ($aVariant['type'] != 'subst' && $aMapping['protein'] != 'p.(=)') {
-                                        // Deletion/insertion partially in the transcript, not predicted to do nothing.
-                                        $aMapping['RNA'] = 'r.?';
-                                        $aMapping['protein'] = 'p.?';
-
-                                    } else {
-                                        // Substitution on wobble base or so.
-                                        $aMapping['RNA'] = 'r.(?)';
-                                    }
-                                }
-
-                                // But wait, did we just fill in a protein field for a non-coding transcript?
-                                if (substr($sTranscript, 1, 1) == 'R') {
-                                    $aMapping['protein'] = '';
-                                }
-                            }
+                        if ($aOptions['predict_protein']) {
+                            // Try to improve VV's predictions.
+                            $this->getRNAProteinPrediction($aMapping, $sTranscript);
                         }
                         $aData['data']['transcript_mappings'][$sTranscript] = $aMapping;
                     }
