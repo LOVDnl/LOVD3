@@ -30,6 +30,7 @@
 
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
+require ROOT_PATH . 'inc-lib-form.php'; // For lovd_setUpdatedDate().
 
 // We don't care about your session (in fact, it locks the whole LOVD if we keep this page running).
 session_write_close();
@@ -166,13 +167,24 @@ class LOVD_VVAnalyses {
     public function runAnalyses ()
     {
         // Runs the analyses, updates the stats that should have been printed already, and runs the fixes.
-        global $_DB;
+        global $_CONF, $_DB, $_SETT;
 
         // Indicate we're working.
         print('
       <SCRIPT type="text/javascript">
         $("#tr_stats th").html("Working on ...");
       </SCRIPT>');
+
+        // Load VV.
+        require ROOT_PATH . 'class/variant_validator.php';
+        $_VV = new LOVD_VV();
+        if (!$_VV->test()) {
+            print('
+      <SCRIPT type="text/javascript">
+        $("#tr_stats td").html("<B style=\"color : #FF0000;\">Failure testing VV API.</B>");
+      </SCRIPT>');
+            exit;
+        }
 
         // I'm not too happy making a eternal loop here, but I also don't want
         //  to retrieve all positions from the database.
@@ -216,8 +228,8 @@ class LOVD_VVAnalyses {
 
             // Fetch data for this position.
             $aVariants = $_DB->query('
-                SELECT vog.id, vog.`VariantOnGenome/DNA`, ' .
-                    (!$this->bDNA38? '' : 'vog.`VariantOnGenome/DNA/hg38`, ') .
+                SELECT vog.id, vog.statusid, vog.`VariantOnGenome/DNA` AS DNA, ' .
+                    (!$this->bDNA38? '' : 'vog.`VariantOnGenome/DNA/hg38` AS DNA38, ') .
                     'GROUP_CONCAT(vot.transcriptid, "||", t.id_ncbi, "||", IFNULL(vot.`VariantOnTranscript/DNA`, ""), "||", IFNULL(vot.`VariantOnTranscript/RNA`, ""), "||", IFNULL(vot.`VariantOnTranscript/Protein`, "") SEPARATOR ";;") AS __vots
                 FROM ' . TABLE_VARIANTS . ' AS vog
                     LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
@@ -258,9 +270,190 @@ class LOVD_VVAnalyses {
                 $this->updateStats();
                 usleep(500000); // FIXME: Remove later.
 
+                // FIXME: Use caching here.
+                // Call VV and get all information we need; mappings to
+                //  transcripts, protein predictions and even mappings to hg38
+                //  if we have that field.
+                $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA'];
+                $aVV = $_VV->verifyGenomic($sVariant,
+                    array(
+                        'map_to_transcripts' => true,
+                        'predict_protein' => true,
+                        'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
+                        'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
+                    ));
+
+                // Check result.
+                if (!$aVV) {
+                    // VV failed. Either we have a really shitty variant, or VV broke.
+                    // Nonetheless, it's easier to just continue.
+                    // Just give a notice about it, and continue.
+                    print('
+      <SCRIPT type="text/javascript">
+        $("#tr_stats td").html("<B style=\"color : #FF0000;\">VV failed on ' . $sVariant . '. Ignoring...</B>");
+      </SCRIPT>');
+                    flush();
+                    sleep(5); // To make it visible for a while.
+                    $this->nProgressCount ++; // To show progress.
+                    continue; // Then continue to the next variant.
+                }
+
+                // Do we have something to update?
+                $aUpdate = array();
+                $sPanic = ''; // Should we panic and just dump all our data?
+
+                // Clean genomic DNAs field, remove NC from it.
+                $aVV['data']['DNA_clean'] = substr(strstr($aVV['data']['DNA'], ':'), 1);
+                if ($this->bDNA38) {
+                    if (count($aVV['data']['genomic_mappings']['hg38']) == 1) {
+                        // We have a hg38 DNA column, and this variant has only one hg38 mapping.
+                        $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
+                    } else {
+                        $sPanic = 'None or multiple hg38 mappings given for variant.';
+                    }
+                }
+
+                // FIXME: We want to send emails to the users when we edit
+                //  something, right? I know the emailing code is horrible and
+                //  almost impossible to understand, but it would be good to see
+                //  how we can get that code to work for us.
+
+                // First, check NC description.
+                if ($aVariant['DNA'] != $aVV['data']['DNA_clean']) {
+                    // Genomic variant needs to be changed. That's OK, we know VV's
+                    //  prediction is correct, since we used this variant as input.
+                    $aUpdate['DNA'] = $aVV['data']['DNA_clean'];
+                }
+
+                // If we can, fill in or correct the hg38 prediction.
+                if ($this->bDNA38) {
+                    if (!$aVariant['DNA38']) {
+                        // We didn't have a hg38 description yet. Just fill it in.
+                        $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
+                    } elseif ($aVariant['DNA38'] != $aVV['data']['DNA38_clean']) {
+                        // HG38 genomic variant is different.
+                        // We can't assume here, that hg19 was the source.
+                        // Throw in the hg38 variant that we have, and check if
+                        //  it's mapping to the same variant that we have.
+                        // FIXME: STUB.
+
+
+                    }
+                }
+
+                // Check transcript mappings.
+                foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
+                    // Did VV give us this transcript? If not, we need to notify VV.
+                    // If they're missing a transcript from their database, they want to know.
+                    if (!isset($aVV['data']['transcript_mappings'][$sTranscript])) {
+                        // Check if we have reported it before.
+                        if (!$_DB->query('
+                                SELECT COUNT(*)
+                                FROM ' . TABLE_LOGS . '
+                                WHERE name = ? AND event = ? AND log LIKE ?',
+                                array('Error', 'VVMissingTranscript', '% ' . $sTranscript . '.'))->fetchColumn()) {
+                            lovd_writeLog('Error', 'VVMissingTranscript', 'Missing transcript when operating VV:verifyGenome(' . $sVariant . '): ' . $sTranscript . '.');
+                        }
+
+                        // We won't be able to check this VOT, we'll just assume it's OK.
+
+                    } else {
+                        // Check VOT.
+                        if (str_replace(array('(', ')'), '', $aVOT['DNA']) != $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
+                            // It's possible that this was just a bad Mutalyzer mapping.
+                            // It can also be that perhaps somebody messed up.
+                            // Map the given DNA field back to the genome, and
+                            //  check if that perhaps match what we have.
+                            // If so, we can safely replace this variant with VV's option.
+                            $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                            if ($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']] == $aVV['data']['DNA']) {
+                                // OK, so it was just bad mapping.
+                                if (!isset($aUpdate['transcripts'])) {
+                                    $aUpdate['transcripts'] = array();
+                                }
+                                if (!isset($aUpdate['transcripts'][$sTranscript])) {
+                                    $aUpdate['transcripts'][$sTranscript] = array();
+                                }
+                                $aUpdate['transcripts'][$sTranscript]['DNA'] = $aVV['data']['transcript_mappings'][$sTranscript]['DNA'];
+
+                                // Overwrite the RNA field if it's different and not so interesting.
+                                if ($aVOT['RNA'] != $aVV['data']['transcript_mappings'][$sTranscript]['RNA']) {
+                                    if (in_array($aVOT['RNA'], array('', 'r.(?)'))) {
+                                        $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVV['data']['transcript_mappings'][$sTranscript]['RNA'];
+                                    } else {
+                                        // We don't know what to do here.
+                                        $sPanic = 'cDNA and RNA are different, cDNA can be fixed, but I don\'t know what to do with the RNA field.';
+                                    }
+                                }
+
+                                // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
+                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVV['data']['transcript_mappings'][$sTranscript]['protein']) {
+                                    // We don't know what to do here.
+                                    $sPanic = 'cDNA and protein are different, cDNA can be fixed, but I don\'t know what to do with the protein field.';
+                                }
+
+                            } else {
+                                // No good, we don't know whether to trust the gDNA or the cDNA.
+                                $sPanic = 'gDNA and cDNA don\'t belong together, I don\'t know what to do now.';
+                            }
+                        }
+
+                        // We don't check RNA or protein if the DNA is the same. Or will we?
+                    }
+                }
+
+                if ($sPanic) {
+                    // List the issues we found.
+                    $aDiff = array(
+                        'panic' => $sPanic,
+                        $aVariant['DNA'] => $aVV['data']['DNA_clean'],
+                        'transcripts' => array(),
+                    );
+                    if ($this->bDNA38) {
+                        $aDiff[(!$aVariant['DNA38']? '(DNA38)' : $aVariant['DNA38'])] = $aVV['data']['genome_mappings']['hg38']['DNA'];
+                    }
+                    foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
+                        $aDiff['transcripts'][$sTranscript] = array(
+                            (!$aVOT['DNA']? '(DNA)' : $aVOT['DNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['DNA']),
+                            (!$aVOT['RNA']? '(RNA)' : $aVOT['RNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['RNA']),
+                            (!$aVOT['protein']? '(protein)' : $aVOT['protein']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['protein']),
+                        );
+                    }
+
+                    var_dump($aDiff);
+                    exit;
+                }
+
+                // Anything to update?
+                if ($aUpdate) {
+                    if (count($aUpdate) == 1 && key($aUpdate) == 'DNA38') {
+                        // We only have to update the hg38 value. We can do that without any issues and without sending any email.
+                        $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET `VariantOnGenome/DNA/hg38` = ? WHERE id = ?',
+                            array($aUpdate['DNA38'], $aVariant['id']));
+                        if ($aVariant['statusid'] >= STATUS_MARKED) {
+                            // Get gene, and have it marked as updated.
+                            $aGenes = $_DB->query('
+                                SELECT DISTINCT t.geneid
+                                FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                                    INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                                WHERE vot.id = ?',
+                                    array($aVariant['id']))->fetchAllColumn();
+                            lovd_setUpdatedDate($aGenes);
+                        }
+
+                    } else {
+                        // FIXME: STUB.
+                        var_dump(array_merge(array('Stub!' => 'Something to update!'), $aUpdate));
 
 
 
+
+
+
+
+                        exit;
+                    }
+                }
 
 
 
