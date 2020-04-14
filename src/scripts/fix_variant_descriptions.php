@@ -273,8 +273,8 @@ class LOVD_VVAnalyses {
                 // Call VV and get all information we need; mappings to
                 //  transcripts, protein predictions and even mappings to hg38
                 //  if we have that field.
-                if (!isset($this->aCache[$aVariant['DNA']])) {
-                    $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA'];
+                $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA'];
+                if (!isset($this->aCache[$sVariant])) {
                     $aVV = $_VV->verifyGenomic($sVariant,
                         array(
                             'map_to_transcripts' => true,
@@ -283,9 +283,9 @@ class LOVD_VVAnalyses {
                             'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
                         ));
                     // This also stores failures, so we won't repeat these.
-                    $this->aCache[$aVariant['DNA']] = $aVV;
+                    $this->aCache[$sVariant] = $aVV;
                 } else {
-                    $aVV = $this->aCache[$aVariant['DNA']];
+                    $aVV = $this->aCache[$sVariant];
                 }
 
                 // Check result.
@@ -340,9 +340,49 @@ class LOVD_VVAnalyses {
                         // We can't assume here, that hg19 was the source.
                         // Throw in the hg38 variant that we have, and check if
                         //  it's mapping to the same variant that we have.
-                        // FIXME: STUB.
+                        // If so, correct it.
+                        $sVariantHG38 = $_SETT['human_builds']['hg38']['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA38'];
+                        if (!isset($this->aCache[$sVariantHG38 . ':checkonly'])) {
+                            // The ":checkonly" suffix is because we're not running
+                            //  everything including the mapping. We're usually on a
+                            //  different chromosome so it should be OK, but if we're
+                            //  running chrM, then we're actually on the same chromosome.
+                            // Don't mix the full VV runs with the simple runs!
+                            $aVVHG38 = $_VV->verifyGenomic($sVariantHG38);
+                            // This also stores failures, so we won't repeat these.
+                            $this->aCache[$sVariantHG38 . ':checkonly'] = $aVVHG38;
+                        } else {
+                            $aVVHG38 = $this->aCache[$sVariantHG38 . ':checkonly'];
+                        }
 
+                        // Check result.
+                        if (!$aVVHG38) {
+                            // VV failed. Either we have a really shitty variant, or VV broke.
+                            // Nonetheless, it's easier to just continue.
+                            // Just give a notice about it, and continue.
+                            print('
+      <SCRIPT type="text/javascript">
+        $("#tr_stats td").html("<B style=\"color : #FF0000;\">VV failed on HG38 verification of ' . $sVariant . '. Ignoring...</B>");
+      </SCRIPT>');
+                            flush();
+                            sleep(5); // To make it visible for a while.
+                            // Silently ignore this. We ignore VV errors for variants, so why not for hg38 mappings?
 
+                        } else {
+                            // If the resulting variant is the same as what our
+                            //  hg19 already said the hg38 should be, correct it.
+
+                            // Clean genomic DNAs field, remove NC from it.
+                            $aVVHG38['data']['DNA_clean'] = substr(strstr($aVVHG38['data']['DNA'], ':'), 1);
+
+                            if ($aVV['data']['DNA38_clean'] == $aVVHG38['data']['DNA_clean']) {
+                                // It's actually the same variant! Just bad mapping.
+                                $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
+                            } else {
+                                // We don't know what's going on, panic for now.
+                                $sPanic = 'hg38 variant does not match the hg19 variant, nor does it normalize to the predicted hg38 variant. Now what?';
+                            }
+                        }
                     }
                 }
 
