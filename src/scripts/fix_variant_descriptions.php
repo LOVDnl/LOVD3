@@ -440,7 +440,14 @@ class LOVD_VVAnalyses {
                             // Map the given DNA field back to the genome, and
                             //  check if that perhaps match what we have.
                             // If so, we can safely replace this variant with VV's option.
-                            $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                            if (!isset($this->aCache[$sTranscript . ':' . $aVOT['DNA']])) {
+                                $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                                // This also stores failures, so we won't repeat these.
+                                $this->aCache[$sTranscript . ':' . $aVOT['DNA']] = $aVVVot;
+                            } else {
+                                $aVVVot = $this->aCache[$sTranscript . ':' . $aVOT['DNA']];
+                            }
+
                             if ($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']] == $aVV['data']['DNA']) {
                                 // OK, the genomic variants match, so it was just bad mapping.
                                 if (!isset($aUpdate['transcripts'])) {
