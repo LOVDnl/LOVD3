@@ -164,6 +164,36 @@ class LOVD_VVAnalyses {
 
 
 
+    protected function panic ($aVariant, $aVV, $sPanic)
+    {
+        // Bail out; we don't know how to handle this variant.
+        // Just dump the error to the screen and quit.
+
+        // List the issues we found.
+        $aDiff = array(
+            'panic' => $sPanic,
+            $aVariant['DNA'] => (!isset($aVV['data']['DNA_clean'])? '' : $aVV['data']['DNA_clean']),
+            'transcripts' => array(),
+        );
+        if ($this->bDNA38) {
+            $aDiff[(!$aVariant['DNA38']? '(DNA38)' : $aVariant['DNA38'])] =
+                (!isset($aVV['data']['genome_mappings']['hg38']['DNA'])? '' : $aVV['data']['genome_mappings']['hg38']['DNA']);
+        }
+        foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
+            $aDiff['transcripts'][$sTranscript] = array(
+                (!$aVOT['DNA']? '(DNA)' : $aVOT['DNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['DNA']),
+                (!$aVOT['RNA']? '(RNA)' : $aVOT['RNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['RNA']),
+                (!$aVOT['protein']? '(protein)' : $aVOT['protein']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['protein']),
+            );
+        }
+        $sDiff = print_r($aDiff, true);
+        die('<PRE>' . $sDiff . '</PRE>');
+    }
+
+
+
+
+
     public function runAnalyses ()
     {
         // Runs the analyses, updates the stats that should have been printed already, and runs the fixes.
@@ -314,7 +344,7 @@ class LOVD_VVAnalyses {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
                         $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
                     } else {
-                        $sPanic = 'None or multiple hg38 mappings given for variant.';
+                        $this->panic($aVariant, $aVV, 'None or multiple hg38 mappings given for variant.');
                     }
                 }
 
@@ -380,7 +410,7 @@ class LOVD_VVAnalyses {
                                 $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
                             } else {
                                 // We don't know what's going on, panic for now.
-                                $sPanic = 'hg38 variant does not match the hg19 variant, nor does it normalize to the predicted hg38 variant. Now what?';
+                                $this->panic($aVariant, $aVV, 'hg38 variant does not match the hg19 variant, nor does it normalize to the predicted hg38 variant. Now what?');
                             }
                         }
                     }
@@ -427,46 +457,24 @@ class LOVD_VVAnalyses {
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVV['data']['transcript_mappings'][$sTranscript]['RNA'];
                                     } else {
                                         // We don't know what to do here.
-                                        $sPanic = 'cDNA and RNA are different, cDNA can be fixed, but I don\'t know what to do with the RNA field.';
+                                        $this->panic($aVariant, $aVV, 'cDNA and RNA are different, cDNA can be fixed, but I don\'t know what to do with the RNA field.');
                                     }
                                 }
 
                                 // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVV['data']['transcript_mappings'][$sTranscript]['protein']) {
                                     // We don't know what to do here.
-                                    $sPanic = 'cDNA and protein are different, cDNA can be fixed, but I don\'t know what to do with the protein field.';
+                                    $this->panic($aVariant, $aVV, 'cDNA and protein are different, cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                 }
 
                             } else {
                                 // No good, we don't know whether to trust the gDNA or the cDNA.
-                                $sPanic = 'gDNA and cDNA don\'t belong together, I don\'t know what to do now.';
+                                $this->panic($aVariant, $aVV, 'gDNA and cDNA don\'t belong together, I don\'t know what to do now.');
                             }
                         }
 
                         // We don't check RNA or protein if the DNA is the same. Or will we?
                     }
-                }
-
-                if ($sPanic) {
-                    // List the issues we found.
-                    $aDiff = array(
-                        'panic' => $sPanic,
-                        $aVariant['DNA'] => $aVV['data']['DNA_clean'],
-                        'transcripts' => array(),
-                    );
-                    if ($this->bDNA38) {
-                        $aDiff[(!$aVariant['DNA38']? '(DNA38)' : $aVariant['DNA38'])] = $aVV['data']['genome_mappings']['hg38']['DNA'];
-                    }
-                    foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
-                        $aDiff['transcripts'][$sTranscript] = array(
-                            (!$aVOT['DNA']? '(DNA)' : $aVOT['DNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['DNA']),
-                            (!$aVOT['RNA']? '(RNA)' : $aVOT['RNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['RNA']),
-                            (!$aVOT['protein']? '(protein)' : $aVOT['protein']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['protein']),
-                        );
-                    }
-
-                    var_dump($aDiff);
-                    exit;
                 }
 
                 // Anything to update?
@@ -511,8 +519,6 @@ class LOVD_VVAnalyses {
                 If VOT cannot be verified (VV doesn't know the transcript), but everything else seems OK, then assume it's OK?
                 If VOTs are OK, but VOG should be changed, then just update it. We're talking about the same variant, so it's probably a mistake of the position converter.
                 It should probably email when we change things, so users are aware of them, and we have some kind of log of what has been changed. The really simple changes (adding hg38 or changing delG to del or so) we can just skip.
-                If any variant is fixed, or the hg38 is filled in, update the gene's timestamp.
-                If the hg38 doesn't match, check if the filled in hg38 will generate the same hg19 that we have and it corrected to our hg38. If so, overwrite.
                 Log problems nicely, or perhaps have this script send emails when problems are found?
                 */
 
