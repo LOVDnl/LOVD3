@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-04-10
+ * Modified    : 2020-04-14
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -268,20 +268,25 @@ class LOVD_VVAnalyses {
             foreach ($aVariants as $aVariant) {
                 // Update stats.
                 $this->updateStats();
-                usleep(500000); // FIXME: Remove later.
+                usleep(250000); // FIXME: Remove later.
 
-                // FIXME: Use caching here.
                 // Call VV and get all information we need; mappings to
                 //  transcripts, protein predictions and even mappings to hg38
                 //  if we have that field.
-                $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA'];
-                $aVV = $_VV->verifyGenomic($sVariant,
-                    array(
-                        'map_to_transcripts' => true,
-                        'predict_protein' => true,
-                        'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
-                        'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
-                    ));
+                if (!isset($this->aCache[$aVariant['DNA']])) {
+                    $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA'];
+                    $aVV = $_VV->verifyGenomic($sVariant,
+                        array(
+                            'map_to_transcripts' => true,
+                            'predict_protein' => true,
+                            'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
+                            'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
+                        ));
+                    // This also stores failures, so we won't repeat these.
+                    $this->aCache[$aVariant['DNA']] = $aVV;
+                } else {
+                    $aVV = $this->aCache[$aVariant['DNA']];
+                }
 
                 // Check result.
                 if (!$aVV) {
@@ -367,7 +372,7 @@ class LOVD_VVAnalyses {
                             // If so, we can safely replace this variant with VV's option.
                             $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
                             if ($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']] == $aVV['data']['DNA']) {
-                                // OK, so it was just bad mapping.
+                                // OK, the genomic variants match, so it was just bad mapping.
                                 if (!isset($aUpdate['transcripts'])) {
                                     $aUpdate['transcripts'] = array();
                                 }
@@ -430,16 +435,6 @@ class LOVD_VVAnalyses {
                         // We only have to update the hg38 value. We can do that without any issues and without sending any email.
                         $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET `VariantOnGenome/DNA/hg38` = ? WHERE id = ?',
                             array($aUpdate['DNA38'], $aVariant['id']));
-                        if ($aVariant['statusid'] >= STATUS_MARKED) {
-                            // Get gene, and have it marked as updated.
-                            $aGenes = $_DB->query('
-                                SELECT DISTINCT t.geneid
-                                FROM ' . TABLE_TRANSCRIPTS . ' AS t
-                                    INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-                                WHERE vot.id = ?',
-                                    array($aVariant['id']))->fetchAllColumn();
-                            lovd_setUpdatedDate($aGenes);
-                        }
 
                     } else {
                         // FIXME: STUB.
@@ -453,21 +448,29 @@ class LOVD_VVAnalyses {
 
                         exit;
                     }
+
+                    if ($aVariant['statusid'] >= STATUS_MARKED) {
+                        // Get gene, and have it marked as updated.
+                        $aGenes = $_DB->query('
+                                SELECT DISTINCT t.geneid
+                                FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                                    INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                                WHERE vot.id = ?',
+                            array($aVariant['id']))->fetchAllColumn();
+                        lovd_setUpdatedDate($aGenes);
+                    }
                 }
 
 
 
 //                exit;///////////////////////////////////////////////////////////////////////////
                 /*
-                If our genomic -> cDNA description is different than the existing cDNA description, we need to check if the given cDNA description perhaps normalizes to the correct cDNA description.
-                I don't want to create yet another cache, so run based on genomic location and cache in memory - relatively easy to pick up where we left, but still at least some caching; Do include a way to skip IDs from before $X to make sure we don't need to rerun on every single variant in the future?
                 Checks the VOG, and compares the generated VOG and all VOTs
-                Implement a cache in memory so repeated variants don't cause more VV calls, but check memory usage and clean cache when needed (array_shift()).
+                Check memory usage and clean cache when needed (array_shift()).
                 If any data is changed, fix the position fields as well.
-                If VOT cannot be verified (VV doesn't know the transcript), but everything else seems OK, then assume it's OK? Log transcript so I can ask Pete to check why they don't have it? I guess this important for us.
+                If VOT cannot be verified (VV doesn't know the transcript), but everything else seems OK, then assume it's OK?
                 If VOTs are OK, but VOG should be changed, then just update it. We're talking about the same variant, so it's probably a mistake of the position converter.
                 It should probably email when we change things, so users are aware of them, and we have some kind of log of what has been changed. The really simple changes (adding hg38 or changing delG to del or so) we can just skip.
-                Also fill in the hg38 if missing.
                 If any variant is fixed, or the hg38 is filled in, update the gene's timestamp.
                 If the hg38 doesn't match, check if the filled in hg38 will generate the same hg19 that we have and it corrected to our hg38. If so, overwrite.
                 Log problems nicely, or perhaps have this script send emails when problems are found?
@@ -479,7 +482,7 @@ class LOVD_VVAnalyses {
 
             // Done with this set of variants. Just increase the position by one, we'll see if we'll actually find something there.
             $this->nCurrentPosition ++;
-            usleep(500000); // Half a second. // FIXME: Check if we need to remove this later.
+            usleep(250000); // Half a second. // FIXME: Check if we need to remove this later.
         }
 
         // We'll never get here, this function just exit()s whenever it wants.
