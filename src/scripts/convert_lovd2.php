@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2019-08-08
- * For LOVD    : 3.0-22
+ * Modified    : 2020-01-30
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2014-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -71,6 +71,7 @@ $aFieldLinks = array(
     'Patient/Occurrence' =>             array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
     'Patient/Phenotype/Inheritance' =>  array('phenotype',  'Phenotype/Inheritance',        'lovd_convertInheritance'),
     'Patient/Mutation/Origin' =>        array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
+    'Patient/Variant_Origin' =>         array('vog',        'VariantOnGenome/Genetic_origin',   'lovd_convertOrigin'),
     'Patient/Origin/Ethnic' =>          array('individual', 'Individual/Origin/Population'),
     'Patient/Age' =>                    array('phenotype',  'Phenotype/Age'),
     'Patient/Phenotype/Age_exam' =>     array('phenotype',  'Phenotype/Age'),
@@ -102,6 +103,7 @@ $aFieldLinks = array(
 // will be preferred, so be careful to place more generic prefixes at the
 // bottom.
 $aCustomColLinks = array(
+    'Patient/Detection' =>  array('screening', 'Screening'),
     'Variant/Detection' =>  array('screening', 'Screening'),
     'Variant' =>            array('vot', 'VariantOnTranscript'),
     'Patient/Phenotype' =>  array('phenotype', 'Phenotype'),

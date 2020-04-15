@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-08-11
- * For LOVD    : 3.0-17
+ * Modified    : 2020-02-18
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -58,6 +59,8 @@ class AccessSharingSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
         // Create individual as first submitter.
         $this->driver->get(ROOT_URL . "/src/individuals?create");
         $this->enterValue(WebDriverBy::name("Individual/Lab_ID"), "dummy");
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="active_diseases[]"]/option[text()="Healthy/Control (Healthy individual / control)"]'));
+        $option->click();
         $createButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create individual information entry']"));
         $createButton->click();
 

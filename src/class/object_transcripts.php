@@ -42,8 +42,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Transcript extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Transcript extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Transcripts.
     var $sObject = 'Transcript';
 
 

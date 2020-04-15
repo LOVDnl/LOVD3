@@ -12,7 +12,7 @@ php:
 
 env:
   # Let Selenium use Firefox driver.
-  - LOVD_SELENIUM_DRIVER=firefox
+  # - LOVD_SELENIUM_DRIVER=firefox # Doesn't currently work anymore.
   # Let Selenium use Chrome driver.
   - LOVD_SELENIUM_DRIVER=chrome
 
@@ -57,6 +57,8 @@ before_script:
   - ./tests/travis/setup/setup_config.sh
   - ./tests/travis/setup/setup_selenium_server.sh
   - phpenv config-rm xdebug.ini
+  - firefox --version
+  - google-chrome --version
 
 script:
   # Use phpunit or vendor/bin/phpunit to start tests.

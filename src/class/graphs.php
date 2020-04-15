@@ -39,7 +39,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_Graphs {
+class LOVD_Graphs
+{
     // This class provides different methods for graphs implemented using Flot, a JS graph library with jQuery handlers.
 
 

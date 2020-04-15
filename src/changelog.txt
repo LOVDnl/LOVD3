@@ -5,13 +5,35 @@
  *************/
 
 /***************************
- * 3.0 Build 23
+ * 3.0 Build 24
  * 2020-??-??
  *********/
  * Added the summary annotation record feature; Curators and up may now store
    annotations to variants, independent of the observation. These annotations
    will show up for every observation of the variant. Examples of annotations
    are external IDs or information on the clinical significance of the variant.
+
+
+/***************************
+ * 3.0 Build 23 (tag:3.0-23)
+ * 2020-02-19
+ *********/
+ * Removed the reference field from the user data entry form.
+ * Fixed potential XSS risk in combination with the gene switcher.
+ * Fixed potential XSS risk in combination with the updater.
+ * Links to variant pages from the Individuals or Screenings detailed views,
+   were malformed and didn't fully work.
+ * Updated copyright notice in the page footer to 2020.
+ * Added some LOVD2 columns to the LOVD2 to LOVD3 converter script.
+ * Added timezone indicators to all printed timestamps in LOVD (currently: the
+   system's time zone).
+ * Opened up the variant Options menu for the public, to have links to the
+   genome browsers.
+ * Removed the WikiProfessional feature.
+ * Data owner information is now not only shown in the data listings, but also
+   on the data detailed views.
+ * Make adding a disease or phenotype to an individual mandatory for the data
+   entry forms as well as the submission API.
 
 
 /***************************

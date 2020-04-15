@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2018-03-09
- * For LOVD    : 3.0-21
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -458,7 +458,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'reference', 'username', 'password', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'created_date');
+            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'username', 'password', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'created_date');
 
             // Prepare values.
             if ($_POST['orcid_id'] != 'none') {
@@ -549,7 +549,6 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         'country_' => 'Country',
                         'email' => 'Email address',
                         'telephone' => 'Telephone',
-                        'reference' => 'Reference',
                         'username' => 'Username',
                         'password_1' => 'Password',
                         'allowed_ip' => 'Allowed IPs',
@@ -700,7 +699,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
         if (!lovd_error()) {
             // Fields to be used.
-            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'reference', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'edited_by', 'edited_date');
+            $aFields = array('name', 'institute', 'department', 'telephone', 'address', 'city', 'countryid', 'email', 'password_force_change', 'level', 'allowed_ip', 'login_attempts', 'edited_by', 'edited_date');
 
             // Prepare values.
             // In case the password is getting changed...

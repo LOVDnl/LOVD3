@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-25
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -40,7 +40,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_Template {
+class LOVD_Template
+{
     // This class provides the code necessary to view the headers and footers.
     // It's replacing inc-top.php, inc-top-clean.php, inc-bot.php, inc-bot-clean.php,
     //   and the lovd_printHeader() function from inc-lib-init.php.
@@ -72,7 +73,7 @@ class LOVD_Template {
     {
         // Builds up the menu array, to be used in the full text/html header.
         // Can't be in the constructor, because that one is called before we have $_SESSION.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         if (defined('NOT_INSTALLED') || (ROOT_PATH == '../' && substr(lovd_getProjectFile(), 0, 9) == '/install/')) {
             // In install directory.
@@ -87,7 +88,7 @@ class LOVD_Template {
                         'genes_' =>
                          array(
                              '/gene_panels' => array('menu_magnifying_glass.png', 'View all gene panels', 0),
-                             '/gene_panels?create' => array('plus.png', 'Create a new gene panel', LEVEL_SUBMITTER),
+                             '/gene_panels?create' => array('plus.png', 'Create a new gene panel', $_SETT['user_level_settings']['genepanels_create']),
                              'hr',
                              '/genes' => array('menu_magnifying_glass.png', 'View all genes', 0),
                              '/gene_statistics' => array('menu_magnifying_glass.png', 'View all gene statistics', 0),
@@ -353,7 +354,7 @@ class LOVD_Template {
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2019 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2020 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -604,7 +605,7 @@ function lovd_mapVariants ()
     function lovd_changeURL ()
     {
         // Replaces the gene in the current URL with the one selected.
-        var sURL = '<?php if (!empty($_SESSION['currdb'])) { echo $sGeneSwitchURL; } ?>';
+        var sURL = '<?php if (!empty($_SESSION['currdb'])) { echo addslashes($sGeneSwitchURL); } ?>';
         // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
         if (geneSwitcher['switchType'] === 'autocomplete') {
             document.location.href = sURL.replace('{{GENE}}', $('#select_gene_autocomplete').val());

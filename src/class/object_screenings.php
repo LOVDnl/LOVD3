@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,10 +42,10 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Screening extends LOVD_Custom {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Screening extends LOVD_Custom
+{
+    // This class extends the Custom class and it handles the Screenings.
     var $sObject = 'Screening';
-    var $bShared = false;
 
 
 
@@ -57,10 +57,9 @@ class LOVD_Screening extends LOVD_Custom {
         global $_AUTH, $_SETT;
 
         // SQL code for loading an entry for an edit form.
-        // FIXME; change owner to owned_by_ in the load entry query below.
         $this->sSQLLoadEntry = 'SELECT s.*, ' .
                                'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ";") AS _genes, ' .
-                               'uo.name AS owner ' .
+                               'uo.name AS owned_by_ ' .
                                'FROM ' . TABLE_SCREENINGS . ' AS s ' .
                                'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
                                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id) ' .
@@ -72,7 +71,7 @@ class LOVD_Screening extends LOVD_Custom {
                                            'i.statusid AS individual_statusid, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
                                            'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
-                                           'uo.name AS owned_by_, ' .
+                                           'uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
 
@@ -121,7 +120,7 @@ class LOVD_Screening extends LOVD_Custom {
                         'variants_found_' => 'Variants found?',
                         'owned_by_' => 'Owner name',
                         'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_date' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       ));
@@ -150,9 +149,6 @@ class LOVD_Screening extends LOVD_Custom {
                         'owned_by_' => array(
                                     'view' => array('Owner', 160),
                                     'db'   => array('uo.name', 'ASC', true)),
-                        'created_date' => array(
-                                    'view' => array('Date created', 130),
-                                    'db'   => array('s.created_date', 'ASC', true)),
                         'created_by' => array(
                                     'view' => false,
                                     'db'   => array('s.created_by', false, true)),

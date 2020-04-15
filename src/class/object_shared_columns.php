@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2018-01-26
- * For LOVD    : 3.0-21
+ * Modified    : 2020-02-04
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -40,8 +40,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_SharedColumn extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Column object.
+class LOVD_SharedColumn extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Shared Columns.
     var $sObject = 'Shared_Column';
     var $sTable  = 'TABLE_SHARED_COLS';
     var $aTableInfo = array(); // Info about the type of custom column (VOT or Phenotype).
@@ -115,9 +116,9 @@ class LOVD_SharedColumn extends LOVD_Object {
                         'public_view_' => 'Show to public',
                         'public_add_' => 'Show on submission form',
                         'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
+                        'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
+                        'edited_date_' => 'Date last edited',
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -283,7 +284,7 @@ class LOVD_SharedColumn extends LOVD_Object {
             // Remove unnecessary columns.
             if ($zData['edited_by'] == NULL) {
                 // Never been edited.
-                unset($this->aColumnsViewEntry['edited_by_'], $this->aColumnsViewEntry['edited_date']);
+                unset($this->aColumnsViewEntry['edited_by_'], $this->aColumnsViewEntry['edited_date_']);
             }
 
             // Remove columns based on form type?

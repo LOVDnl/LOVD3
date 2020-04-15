@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2019-10-31
- * For LOVD    : 3.0-23
+ * Modified    : 2020-02-25
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -74,7 +74,6 @@ $aTableSQL =
     countryid CHAR(2),
     email TEXT NOT NULL,
     email_confirmed BOOLEAN NOT NULL DEFAULT 0,
-    reference VARCHAR(50) NOT NULL DEFAULT "",
     username VARCHAR(50) NOT NULL,
     password CHAR(50) NOT NULL,
     password_autogen CHAR(50),
@@ -136,7 +135,6 @@ $aTableSQL =
     url_homepage VARCHAR(255) NOT NULL DEFAULT "",
     url_external TEXT,
     allow_download BOOLEAN NOT NULL DEFAULT 0,
-    allow_index_wiki BOOLEAN NOT NULL DEFAULT 0,
     id_hgnc INT(10) UNSIGNED' . (LOVD_plus? '' : ' NOT NULL') . ',
     id_entrez INT(10) UNSIGNED,
     id_omim INT(10) UNSIGNED,
@@ -665,7 +663,7 @@ $aTableSQL =
     proxy_port SMALLINT(5) UNSIGNED,
     proxy_username VARCHAR(255) NOT NULL DEFAULT "",
     proxy_password VARCHAR(255) NOT NULL DEFAULT "",
-    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg",
+    logo_uri VARCHAR(100) NOT NULL DEFAULT "gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg",
     mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://mutalyzer.nl/services",
     omim_apikey VARCHAR(40) NOT NULL DEFAULT "",
     send_stats BOOLEAN NOT NULL DEFAULT 1,

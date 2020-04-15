@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2019-11-20
- * For LOVD    : 3.0-23
+ * Modified    : 2020-02-25
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -149,7 +149,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-22b',
+                            'version' => '3.0-23b',
                           ),
                 'user_levels' =>
                      array(
@@ -164,8 +164,15 @@ $_SETT = array(
                 array(
                     // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
                     // has already been called for gene-specific overviews.
+                    // FIXME: Many more will follow. Better use 'object_action' naming convention.
                     'delete_individual' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
                     'delete_variant' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
+                    'genepanels_create' => LEVEL_MANAGER,
+                    'genepanels_delete' => LEVEL_ADMIN,
+                    'genepanels_edit' => LEVEL_MANAGER,
+                    'genepanels_genes_delete' => LEVEL_MANAGER,
+                    'genepanels_genes_edit' => LEVEL_ANALYZER,
+                    'genepanels_manage_genes' => LEVEL_MANAGER,
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
                     'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
@@ -272,7 +279,6 @@ $_SETT = array(
                 'upstream_URL' => 'http://www.LOVD.nl/',
                 'upstream_BTS_URL' => 'https://github.com/LOVDnl/LOVD3/issues/',
                 'upstream_BTS_URL_new_ticket' => 'https://github.com/LOVDnl/LOVD3/issues/new',
-                'wikiprofessional_iprange' => '131.174.88.0-255',
                 'list_sizes' =>
                      array(
                             10,
@@ -378,7 +384,7 @@ $_SETT = array(
                                                             '22' => 'NC_000022.10',
                                                             'X'  => 'NC_000023.10',
                                                             'Y'  => 'NC_000024.9',
-                                                            'M'  => 'NC_012920.1',
+                                                            'M'  => 'NC_012920.1', // Note that hg19 uses NC_012920!
                                                           ),
                                           ),
                             // http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/
@@ -665,7 +671,7 @@ if ($_INI['database']['driver'] == 'mysql') {
 
 
 
-ini_set('default_charset','UTF-8');
+@ini_set('default_charset','UTF-8');
 if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
@@ -734,8 +740,9 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
         define('NOT_INSTALLED', true);
     }
 
+    // phpunit check is necessary because our Travis tests load inc-init.php when we're not installed yet to get LOVD globals.
     // inc-js-submit-settings.php check is necessary because it gets included in the install directory.
-    if (dirname(lovd_getProjectFile()) != '/install' && lovd_getProjectFile() != '/inc-js-submit-settings.php') {
+    if (dirname(lovd_getProjectFile()) != '/install' && !in_array(lovd_getProjectFile(), array('phpunit', '/inc-js-submit-settings.php'))) {
         // We're not installing, so throwing an error.
 
         if (defined('NOT_INSTALLED')) {
@@ -765,10 +772,7 @@ if (get_magic_quotes_gpc()) {
 }
 
 // Use of SSL required?
-// FIXME:
-//// (SSL not required when exporting data to WikiProfessional because their scripts do not support it)
-//// (The UCSC also has issues with retrieving the BED files through SSL...)
-//if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/export_data.php' && !empty($_GET['format']) && $_GET['format'] == 'wiki') && !(substr(lovd_getProjectFile(), 0, 9) == '/api/rest' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
+// (The UCSC has issues with retrieving the BED files through SSL...)
 if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' && !empty($_GET['format']) && $_GET['format'] == 'text/bed')) {
     // We were enabled, when SSL was available. So I guess SSL is still available. If not, this line here would be a problem.
     // No, not sending any $_POST values either. Let's just assume no-one is working with LOVD when the ssl setting is activated.
@@ -778,11 +782,11 @@ if (!empty($_CONF['use_ssl']) && !SSL && !(lovd_getProjectFile() == '/api.php' &
 }
 
 // Session settings - use cookies.
-ini_set('session.use_cookies', 1);
-ini_set('session.use_only_cookies', 1);
+@ini_set('session.use_cookies', 1);
+@ini_set('session.use_only_cookies', 1);
 if (ini_get('session.cookie_path') == '/') {
     // Don't share cookies with other systems - set the cookie path!
-    ini_set('session.cookie_path', lovd_getInstallURL(false));
+    @ini_set('session.cookie_path', lovd_getInstallURL(false));
 }
 if (!empty($_STAT['signature'])) {
     // Set the session name to something unique, to prevent mixing cookies with other LOVDs on the same server.
@@ -790,7 +794,7 @@ if (!empty($_STAT['signature'])) {
 } else {
     $_SETT['cookie_id'] = md5($_INI['database']['database'] . $_INI['database']['table_prefix']);
 }
-session_name('PHPSESSID_' . $_SETT['cookie_id']);
+@session_name('PHPSESSID_' . $_SETT['cookie_id']);
 
 // Start sessions - use cookies.
 @session_start(); // On some Ubuntu distributions this can cause a distribution-specific error message when session cleanup is triggered.
@@ -819,14 +823,10 @@ if (!defined('NOT_INSTALLED')) {
     // FIXME: Running lovd_cleanDirName() on the entire URI causes it to run also on the arguments.
     //  If there are arguments with ../ in there, this will take effect and arguments or even the path itself is eaten.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
+    $sPath = strip_tags($sPath); // XSS tag removal on entire string (and no longer on individual parts).
     $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
     $_PE = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
-    // XSS check on the elements.
-    foreach ($_PE as $key => $val) {
-        if ($val !== strip_tags($val)) {
-            $_PE[$key] = '';
-        }
-    }
+
     if (isset($_SETT['objectid_length'][$_PE[0]]) && isset($_PE[1]) && ctype_digit($_PE[1])) {
         $_PE[1] = sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
     }
@@ -834,7 +834,7 @@ if (!defined('NOT_INSTALLED')) {
     define('PATH_COUNT', count($_PE)); // So you don't need !empty($_PE[1]) && ...
 
     // Define ACTION.
-    if ($_SERVER['QUERY_STRING'] && preg_match('/^(\w+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {
+    if ($_SERVER['QUERY_STRING'] && preg_match('/^([\w-]+)(&.*)?$/', $_SERVER['QUERY_STRING'], $aRegs)) {
         define('ACTION', $aRegs[1]);
     } else {
         define('ACTION', false);

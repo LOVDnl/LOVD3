@@ -127,8 +127,9 @@ $_SETT['disease_tissues'] = array(
 
 
 
-class LOVD_Disease extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Disease extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Diseases.
     var $sObject = 'Disease';
 
 

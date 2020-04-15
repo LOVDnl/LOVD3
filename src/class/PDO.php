@@ -38,7 +38,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_PDO extends PDO {
+class LOVD_PDO extends PDO
+{
     // This class provides a wrapper around PDO such that database errors are handled automatically by LOVD.
     // FIXME; lovd_queryDB() provided a $bDebug argument. How to implement that now?
     private $aLastError = array();

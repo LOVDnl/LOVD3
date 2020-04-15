@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-02-13
- * For LOVD    : 3.0-22
+ * Modified    : 2020-03-03
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -41,8 +41,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_User extends LOVD_Object {
-    // This class extends the basic Object class and it handles the User object.
+class LOVD_User extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Users.
     var $sObject = 'User';
 
 
@@ -116,7 +117,6 @@ class LOVD_User extends LOVD_Object {
                         'city' => 'City',
                         'country_' => 'Country',
                         'email' => array('Email address', LEVEL_CURATOR),
-                        'reference' => 'Reference',
                         'username' => array('Username', LEVEL_MANAGER),
                         'password_force_change_' => array('Force change password', LEVEL_MANAGER),
                         'phpsessid' => array('Session ID', LEVEL_MANAGER),
@@ -132,9 +132,9 @@ class LOVD_User extends LOVD_Object {
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
                         'status_' => array('Status', LEVEL_MANAGER),
                         'locked_' => array('Locked', LEVEL_MANAGER),
-                        'last_login' => array('Last login', LEVEL_MANAGER),
+                        'last_login_' => array('Last login', LEVEL_MANAGER),
                         'created_by_' => array('Created by', LEVEL_CURATOR),
-                        'created_date' => array('Date created', LEVEL_CURATOR),
+                        'created_date_' => array('Date created', LEVEL_CURATOR),
                         'edited_by_' => array('Last edited by', LEVEL_MANAGER),
                         'edited_date_' => array('Date last edited', LEVEL_MANAGER),
                       );
@@ -279,8 +279,7 @@ class LOVD_User extends LOVD_Object {
         if (!empty($aData['allowed_ip'])) {
             // This function will throw an error itself (second argument).
             $bIP = lovd_matchIPRange($aData['allowed_ip'], 'allowed_ip');
-
-            if (lovd_getProjectFile() == '/install/index.php' || (ACTION == 'edit' && $_PE[1] == $_AUTH['id'])) {
+            if (lovd_getProjectFile() == '/install/index.php' || ACTION == 'register' || (ACTION == 'edit' && $_PE[1] == $_AUTH['id'])) {
                 // Check given security IP range.
                 if ($bIP && !lovd_validateIP($aData['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     // This IP range is not allowing the current IP to connect. This ain't right.
@@ -374,7 +373,6 @@ class LOVD_User extends LOVD_Object {
                         'hr',
                         array('Country', '', 'select', 'countryid', 1, $aCountryList, true, false, false),
                         array('City', 'Please enter your city, even if it\'s included in your postal address, for sorting purposes.', 'text', 'city', 30),
-                        array('Reference (optional)', 'Your submissions will contain a reference to you in the format "Country:City" by default. You may change this to your preferred reference here.', 'text', 'reference', 30),
                         'hr',
                         'skip',
                         array('', '', 'print', '<B>Security</B>'),
@@ -425,6 +423,7 @@ class LOVD_User extends LOVD_Object {
                 unset($this->aFormData['change_self']);
             }
         }
+
         if (LOVD_plus && isset($this->aFormData['level'])) {
             $this->aFormData['level'][1] = ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Analyzers</B> can analyze individuals that are not analyzed yet by somebody else, but can not send variants for confirmation.<BR><B>Read-only</B> users can only see existing data in LOVD+, but can not start or edit any analyses or data.';
         }

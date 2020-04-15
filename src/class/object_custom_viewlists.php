@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2020-03-31
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,8 +42,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_CustomViewList extends LOVD_Object {
-    // This class extends the basic Object class and it handles pre-configured custom viewLists.
+class LOVD_CustomViewList extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the pre-configured Custom ViewLists.
     var $sObject = 'Custom_ViewList';
     var $nOtherID = 0; // Some objects (like DistanceToVar) need an additional ID.
     var $aColumns = array();
@@ -588,6 +589,10 @@ class LOVD_CustomViewList extends LOVD_Object {
                                             str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
                                             str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
                               ));
+                    if ($nKeyVOTUnique !== false) {
+                        // Unique view doesn't load these cols, so we can't show them even if users bypass the cols_to_hide.
+                        unset($this->aColumnsViewList['chromosome'], $this->aColumnsViewList['allele_']);
+                    }
                     if (empty($bLoadVOGEffect)) {
                         unset($this->aColumnsViewList['vog_effect']);
                     }
@@ -595,7 +600,14 @@ class LOVD_CustomViewList extends LOVD_Object {
                         // First data table in view.
                         $this->sSortDefault = 'VariantOnGenome/DNA';
                     }
-                    $this->sRowLink = 'variants/{{zData_vogid}}#{{zData_transcriptid}}';
+
+                    // Set RowLink. It depends on whether we have VOT=>VOG or VOG=>grouped VOT.
+                    if (array_search('VariantOnGenome', $aObjects) < array_search('VariantOnTranscript', $aObjects)) {
+                        // Object VOG is before object VOT; we don't have a transcript ID.
+                        $this->sRowLink = 'variants/{{zData_vogid}}';
+                    } else {
+                        $this->sRowLink = 'variants/{{zData_vogid}}#{{zData_transcriptid}}';
+                    }
                     break;
 
                 case 'VariantOnTranscript':
