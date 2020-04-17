@@ -1970,7 +1970,7 @@ class LOVD_Object
         // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to change.
         //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
         // $aData = Associative array with values to be inserted. Keys should equal database column names.
-        // $aFields = The keys of the associative array that will actually get inserted.
+        // $aFields = The keys of the associative array that will actually get updated.
         global $_DB;
 
         // Check to see if an ID has been passed and there is data to process.

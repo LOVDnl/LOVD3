@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2019-12-19
- * For LOVD    : 3.0-22
+ * Modified    : 2020-04-17
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -62,11 +62,12 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         global $_DB, $_SETT;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT vot.* ' .
-                               'FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
-                               'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
-                               'WHERE vot.id = ? ' .
-                               'AND t.geneid = ?';
+        $this->sSQLLoadEntry = '
+            SELECT vot.*
+            FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+            WHERE vot.id = ?' .
+            (!$sObjectID? '' : ' AND t.geneid = ?');
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vot.*, ' .
@@ -343,7 +344,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
         }
 
-        $q = $_DB->query($this->sSQLLoadEntry, array($nID, $this->sObjectID), false);
+        $q = $_DB->query($this->sSQLLoadEntry, array_merge(
+            array($nID),
+            (!$this->sObjectID? array() : array($this->sObjectID))), false);
         if ($q) {
             $z = $q->fetchAllAssoc();
         }
