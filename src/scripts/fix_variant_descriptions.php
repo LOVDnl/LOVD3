@@ -216,6 +216,15 @@ class LOVD_VVAnalyses {
             exit;
         }
 
+        // For running updates.
+        require ROOT_PATH . 'class/object_genome_variants.php';
+        require ROOT_PATH . 'class/object_transcript_variants.php';
+        $_DATA = array(
+            'Genome' => new LOVD_GenomeVariant(),
+            // Will contain an object per gene.
+            'Transcript' => array(),
+        );
+
         // I'm not too happy making a eternal loop here, but I also don't want
         //  to retrieve all positions from the database.
         // As long as I make sure the loop will quit, I should be fine.
@@ -240,7 +249,7 @@ class LOVD_VVAnalyses {
 
                 $sNextChromosome = key(array_slice($this->aChromosomes, $nNextKey, 1, true));
                 // Redirect the page. Since we've had output already, use the progress bar to do this.
-                $this->oBarTotal->redirectTo(CURRENT_PATH . '?run&chromosome=' . $sNextChromosome, 0);
+                $this->oBarTotal->redirectTo(lovd_getInstallURL() . CURRENT_PATH . '?run&chromosome=' . $sNextChromosome, 0);
                 exit;
             }
 
@@ -635,8 +644,9 @@ class LOVD_VVAnalyses {
                 if ($aUpdate) {
                     if (count($aUpdate) == 1 && key($aUpdate) == 'DNA38') {
                         // We only have to update the hg38 value. We can do that without any issues and without sending any email.
-                        $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET `VariantOnGenome/DNA/hg38` = ? WHERE id = ?',
-                            array($aUpdate['DNA38'], $aVariant['id']));
+                        $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                            'VariantOnGenome/DNA/hg38' => $aUpdate['DNA38'],
+                        ), array('VariantOnGenome/DNA/hg38'));
 
                     } else {
                         // FIXME: STUB.
@@ -682,7 +692,6 @@ class LOVD_VVAnalyses {
 
             // Done with this set of variants. Just increase the position by one, we'll see if we'll actually find something there.
             $this->nCurrentPosition ++;
-            usleep(250000); // Half a second. // FIXME: Check if we need to remove this later.
         }
 
         // We'll never get here, this function just exit()s whenever it wants.
