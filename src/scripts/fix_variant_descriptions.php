@@ -221,8 +221,7 @@ class LOVD_VVAnalyses {
         require ROOT_PATH . 'class/object_transcript_variants.php';
         $_DATA = array(
             'Genome' => new LOVD_GenomeVariant(),
-            // Will contain an object per gene.
-            'Transcript' => array(),
+            'Transcript' => NULL, // Will be reloaded for each variant we need to edit.
         );
 
         // I'm not too happy making a eternal loop here, but I also don't want
@@ -375,7 +374,7 @@ class LOVD_VVAnalyses {
                             }
 
                             // Check result.
-                            if (!$aVVVot) {
+                            if (!$aVVVot || $aVVVot['errors']) {
                                 // VV failed. Either we have a really shitty variant, or VV broke.
                                 // EREF *and* VOT fails. Just panic here.
                                 $this->panic($aVariant, $aVV, 'While handling EREF error, VV failed on VOT; this variant needs manual curation.');
@@ -561,7 +560,7 @@ class LOVD_VVAnalyses {
                         // If not, this is probably an import error where the wrong
                         //  transcript ID was selected. Yes, even if the chromosome is the same,
                         //  this might be the case. But we have to draw the line somewhere.
-                        if ($aVVVot) {
+                        if ($aVVVot && !$aVVVot['errors']) {
                             $sMappedRefSeq = strstr($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']], ':', true);
                             if ($sCurrentRefSeq != $sMappedRefSeq) {
                                 $this->panic($aVariant, $aVV, 'While handling missing transcript annotation, found that LOVD\'s mapping is on a transcript on a different chromosome (' . $sCurrentRefSeq . ' => ' . $sMappedRefSeq . ').');
@@ -649,16 +648,70 @@ class LOVD_VVAnalyses {
                         ), array('VariantOnGenome/DNA/hg38'));
 
                     } else {
-                        // FIXME: STUB.
-                        var_dump(array_merge(array('Stub!' => 'Something to update!'), $aUpdate));
+                        // Update the entry!
+                        // FIXME: For now, panic if we need to update both the VOG's
+                        //  DNA and VOT data, I want to check this first.
+                        if (!empty($aUpdate['DNA']) && !empty($aUpdate['transcripts'])) {
+                            $this->panic($aVariant, $aVV, 'FIXME: Update required for both VOG and VOT, please check. If this is OK, just disable this panic call.');
+                        }
 
+                        // We'll be emailing, so make sure we load the data as is for the email.
+                        $zData = $_DATA['Genome']->loadEntry($aVariant['id']);
 
+                        // Are genes involved as well?
+                        if ($aVariant['vots']) {
+                            // So, this will be annoying. I'd like to just have one object for all of this,
+                            //  but currently, VOT's loadAll() requires the variant's column set.
+                            // This in turn depends on the gene(s) the variant is linked to, and this can be multiple.
+                            // So, the object should be loaded for *every variant* that we update, not per gene.
+                            // We might still hack our way around this, for instance by loading the object
+                            //  once and then overwriting its column set to a basic default list.
+                            // This will however cause problems with the email script, which will then show empty fields.
+                            // To hell with it, I'll just load the object...
+                            $_DATA['Transcript'] = new LOVD_TranscriptVariant('', $aVariant['id']);
+                            $zData = array_merge($zData, $_DATA['Transcript']->loadAll($aVariant['id']));
+                        }
 
+                        // Build the POST array.
+                        $_POST = $zData;
+                        $aFieldsGenome = array();
+                        $aFieldsTranscripts = array();
 
+                        foreach ($aUpdate as $sField => $sValue) {
+                            switch ($sField) {
+                                case 'DNA':
+                                    // Genomic DNA updated.
+                                    $aFieldsGenome[] = 'VariantOnGenome/DNA';
+                                    $_POST['VariantOnGenome/DNA'] = $sValue;
+                                    // Also fix position fields.
+                                    $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+                                    if ($aResponse) {
+                                        $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type'));
+                                        list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                                            array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+                                        // No fallback. What could happen?
+                                    }
+                                    break;
+                                case 'DNA38':
+                                    // Genomic DNA on hg38 updated.
+                                    $aFieldsGenome[] = 'VariantOnGenome/DNA/hg38';
+                                    $_POST['VariantOnGenome/DNA/hg38'] = $sValue;
+                                    break;
+                                default:
+                                    // Unhandled field.
+                                    var_dump(array_merge(array('Stub!' => 'Something to update!'), $aUpdate));
+                                    $this->panic($aVariant, $aVV, 'While trying to update this variant, I realized I don\'t know how to handle the ' . $sField . ' field.');
+                            }
+                        }
 
+                        // Add the edited_* fields.
+                        $aFieldsGenome[] = 'edited_by';
+                        $aFieldsGenome[] = 'edited_date';
+                        $_POST['edited_by'] = 0;
+                        $_POST['edited_date'] = date('Y-m-d H:i:s');
 
-
-                        exit;
+                        // Run the update.
+                        $_DATA['Genome']->updateEntry($aVariant['id'], $_POST, $aFieldsGenome);
                     }
 
                     if ($aVariant['statusid'] >= STATUS_MARKED) {
