@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-04-14
+ * Modified    : 2020-04-17
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -303,7 +303,8 @@ class LOVD_VVAnalyses {
                 // Call VV and get all information we need; mappings to
                 //  transcripts, protein predictions and even mappings to hg38
                 //  if we have that field.
-                $sVariant = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA'];
+                $sCurrentRefSeq = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome];
+                $sVariant = $sCurrentRefSeq . ':' . $aVariant['DNA'];
                 if (!isset($this->aCache[$sVariant])) {
                     $aVV = $_VV->verifyGenomic($sVariant,
                         array(
@@ -335,7 +336,120 @@ class LOVD_VVAnalyses {
 
                 // Do we have something to update?
                 $aUpdate = array();
-                $sPanic = ''; // Should we panic and just dump all our data?
+
+
+
+                if ($aVV['errors']) {
+                    // Handle EREF errors and the like.
+                    if (isset($aVV['errors']['EREF'])) {
+                        // EREF error; the genomic variant can not be correct.
+                        // Loop the cDNA variants, if they are valid (all of them),
+                        //  and the cDNA variant(s) are on the same chromosome,
+                        //  then correct the genomic variant, it's probably wrong.
+                        // It couldn't have been the source, since it's not valid.
+                        // Anyway people will get an email when we change things,
+                        //  so it can always be reversed when it's wrong.
+
+                        // Collect alternative descriptions based on the VOTs.
+                        $aMappedAlternatives = array();
+
+                        foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
+                            // Because VV is in error, it didn't provide any mappings.
+                            // Just reverse the mapping, check if the result is on
+                            //  the same chromosome as the genomic input, and continue.
+                            if (!isset($this->aCache[$sTranscript . ':' . $aVOT['DNA']])) {
+                                $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                                // This also stores failures, so we won't repeat these.
+                                $this->aCache[$sTranscript . ':' . $aVOT['DNA']] = $aVVVot;
+                            } else {
+                                $aVVVot = $this->aCache[$sTranscript . ':' . $aVOT['DNA']];
+                            }
+
+                            // Check result.
+                            if (!$aVVVot) {
+                                // VV failed. Either we have a really shitty variant, or VV broke.
+                                // EREF *and* VOT fails. Just panic here.
+                                $this->panic($aVariant, $aVV, 'While handling EREF error, VV failed on VOT; this variant needs manual curation.');
+                            }
+
+                            // All we ask is that the transcript is found on the same chromosome.
+                            // If not, this is probably an import error where the wrong
+                            //  transcript ID was selected. Yes, even if the chromosome is the same,
+                            //  this might be the case. But we have to draw the line somewhere.
+                            $sMappedRefSeq = strstr($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']], ':', true);
+                            if ($sCurrentRefSeq != $sMappedRefSeq) {
+                                $this->panic($aVariant, $aVV, 'While handling EREF error, found that LOVD\'s mapping is on a transcript on a different chromosome (' . $sCurrentRefSeq . ' => ' . $sMappedRefSeq . ').');
+                            }
+
+                            // Store this mapping, so we can see if all VOTs agree.
+                            $aMappedAlternatives[] = substr(strstr($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']], ':'), 1);
+
+                            // Also check the VOT itself. Perhaps its DNA should be different.
+                            if ($aVOT['DNA'] != $aVVVot['data']['DNA']) {
+                                // Handle this update the same way you normally would, if there would have been no EREF.
+                                if (!isset($aUpdate['transcripts'])) {
+                                    $aUpdate['transcripts'] = array();
+                                }
+                                if (!isset($aUpdate['transcripts'][$sTranscript])) {
+                                    $aUpdate['transcripts'][$sTranscript] = array();
+                                }
+                                $aUpdate['transcripts'][$sTranscript]['DNA'] = $aVVVot['data']['DNA'];
+
+                                // Overwrite the RNA field if it's different and not so interesting.
+                                if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
+                                    if (in_array($aVOT['RNA'], array('', 'r.(?)'))) {
+                                        $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
+                                    } else {
+                                        // We don't know what to do here.
+                                        $this->panic($aVariant, $aVV, 'While handling EREF error, found that also cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                    }
+                                }
+
+                                // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
+                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVV['data']['protein']) {
+                                    // We don't know what to do here.
+                                    $this->panic($aVariant, $aVV, 'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                }
+                            }
+
+                            // We don't check RNA or protein if the DNA is the same. Or will we?
+
+                            // Store mapping for further processing.
+                            if (!isset($aVV['data']['genomic_mappings'])) {
+                                $aVV['data']['genomic_mappings'] = array(
+                                    'hg38' => array(),
+                                );
+                            }
+                            $aVV['data']['genomic_mappings']['hg38'][] = $aVVVot['data']['genomic_mappings']['hg38'];
+                            if (!isset($aVV['data']['transcript_mappings'])) {
+                                $aVV['data']['transcript_mappings'] = array();
+                            }
+                            $aVV['data']['transcript_mappings'][$sTranscript] =
+                                array_intersect_key($aVVVot['data'], array_flip(array('DNA', 'RNA', 'protein')));
+                        }
+
+                        // Check given alternatives; if it's one unique variant, we'll take that one.
+                        if (count(array_unique($aMappedAlternatives)) == 1) {
+                            // Only one genomic variant maps to the given VOTs.
+                            // We also checked if it's on the same chromosome, just accept it.
+                            $aUpdate['DNA'] = $aMappedAlternatives[0];
+                        } else {
+                            // No good, we don't know what to trust now.
+                            $this->panic($aVariant, $aVV, 'While handling an EREF error, found that LOVD\'s VOTs returned multiple options for the gDNA, I don\'t know what to do now.');
+                        }
+
+                        // Consider it handled.
+                        unset($aVV['errors']['EREF']);
+                        $aVV['data']['DNA'] = $sCurrentRefSeq . ':' . $aUpdate['DNA'];
+                    }
+
+                    if ($aVV['errors']) {
+                        // Unhandled errors. Reason to panic.
+                        $this->panic($aVariant, $aVV, 'Unhandled errors, I don\'t know how to handle this variant (' . implode(',', array_keys($aVV['errors'])) . ')');
+                    }
+                }
+
+
 
                 // Clean genomic DNAs field, remove NC from it.
                 $aVV['data']['DNA_clean'] = substr(strstr($aVV['data']['DNA'], ':'), 1);
