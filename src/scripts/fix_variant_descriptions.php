@@ -535,6 +535,31 @@ class LOVD_VVAnalyses {
                     // Did VV give us this transcript? If not, we need to notify VV.
                     // If they're missing a transcript from their database, they want to know.
                     if (!isset($aVV['data']['transcript_mappings'][$sTranscript])) {
+                        // VV didn't return this transcript.
+                        // This can also happen when our variant is just
+                        //  completely wrong and not even close to this transcript.
+                        // Therefore, test this transcript quickly.
+
+                        if (!isset($this->aCache[$sTranscript . ':' . $aVOT['DNA']])) {
+                            $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                            // This also stores failures, so we won't repeat these.
+                            $this->aCache[$sTranscript . ':' . $aVOT['DNA']] = $aVVVot;
+                        } else {
+                            $aVVVot = $this->aCache[$sTranscript . ':' . $aVOT['DNA']];
+                        }
+
+                        // If VV succeeded, check if the transcript is found on the same chromosome.
+                        // If not, this is probably an import error where the wrong
+                        //  transcript ID was selected. Yes, even if the chromosome is the same,
+                        //  this might be the case. But we have to draw the line somewhere.
+                        if ($aVVVot) {
+                            $sMappedRefSeq = strstr($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']], ':', true);
+                            if ($sCurrentRefSeq != $sMappedRefSeq) {
+                                $this->panic($aVariant, $aVV, 'While handling missing transcript annotation, found that LOVD\'s mapping is on a transcript on a different chromosome (' . $sCurrentRefSeq . ' => ' . $sMappedRefSeq . ').');
+                            }
+                        }
+
+                        // We don't care if VV failed or not. This transcript should be reported.
                         // Check if we have reported it before.
                         if (!$_DB->query('
                                 SELECT COUNT(*)
@@ -544,7 +569,7 @@ class LOVD_VVAnalyses {
                             lovd_writeLog('Error', 'VVMissingTranscript', 'Missing transcript when operating VV:verifyGenome(' . $sVariant . '): ' . $sTranscript . '.');
                         }
 
-                        // We won't be able to check this VOT, we'll just assume it's OK.
+                        // We won't be able to check this VOT, we'll silently leave it be.
 
                     } else {
                         // Check VOT.
@@ -562,6 +587,14 @@ class LOVD_VVAnalyses {
                                 $aVVVot = $this->aCache[$sTranscript . ':' . $aVOT['DNA']];
                             }
 
+                            // Check result.
+                            if (!$aVVVot) {
+                                // VV failed. Either we have a really shitty variant, or VV broke.
+                                // We skip failed VV calls for genomic variants silently,
+                                //  but it worked for this one, so the cDNA call should work as well.
+                                $this->panic($aVariant, $aVV, 'While investigating a VOT DNA mismatch, VV failed on the VOT variant; this variant needs manual curation.');
+                            }
+
                             if ($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']] == $aVV['data']['DNA']) {
                                 // OK, the genomic variants match, so it was just bad mapping.
                                 if (!isset($aUpdate['transcripts'])) {
@@ -570,22 +603,22 @@ class LOVD_VVAnalyses {
                                 if (!isset($aUpdate['transcripts'][$sTranscript])) {
                                     $aUpdate['transcripts'][$sTranscript] = array();
                                 }
-                                $aUpdate['transcripts'][$sTranscript]['DNA'] = $aVV['data']['transcript_mappings'][$sTranscript]['DNA'];
+                                $aUpdate['transcripts'][$sTranscript]['DNA'] = $aVVVot['data']['DNA'];
 
                                 // Overwrite the RNA field if it's different and not so interesting.
-                                if ($aVOT['RNA'] != $aVV['data']['transcript_mappings'][$sTranscript]['RNA']) {
+                                if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
                                     if (in_array($aVOT['RNA'], array('', 'r.(?)'))) {
-                                        $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVV['data']['transcript_mappings'][$sTranscript]['RNA'];
+                                        $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
                                     } else {
                                         // We don't know what to do here.
-                                        $this->panic($aVariant, $aVV, 'cDNA and RNA are different, cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                        $this->panic($aVariant, $aVV, 'cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
                                     }
                                 }
 
                                 // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
-                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVV['data']['transcript_mappings'][$sTranscript]['protein']) {
+                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVV['data']['protein']) {
                                     // We don't know what to do here.
-                                    $this->panic($aVariant, $aVV, 'cDNA and protein are different, cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                    $this->panic($aVariant, $aVV, 'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                 }
 
                             } else {
