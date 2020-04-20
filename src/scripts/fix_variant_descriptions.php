@@ -417,6 +417,8 @@ class LOVD_VVAnalyses {
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
                                     if (in_array($aVOT['RNA'], array('', 'r.(?)'))) {
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
+                                    } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
+                                        // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
                                         $this->panic($aVariant, $aVV, 'While handling EREF error, found that also cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
@@ -424,7 +426,7 @@ class LOVD_VVAnalyses {
                                 }
 
                                 // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
-                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVV['data']['protein']) {
+                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
                                     // We don't know what to do here.
                                     $this->panic($aVariant, $aVV, 'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                 }
@@ -627,6 +629,8 @@ class LOVD_VVAnalyses {
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
                                     if (in_array($aVOT['RNA'], array('', 'r.(?)'))) {
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
+                                    } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
+                                        // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
                                         $this->panic($aVariant, $aVV, 'cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
@@ -634,7 +638,7 @@ class LOVD_VVAnalyses {
                                 }
 
                                 // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
-                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVV['data']['protein']) {
+                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
                                     // We don't know what to do here.
                                     $this->panic($aVariant, $aVV, 'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                 }
