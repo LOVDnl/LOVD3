@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2018-01-19
- * For LOVD    : 3.0-21
+ * Modified    : 2020-04-20
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -33,6 +33,38 @@
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
+}
+
+
+
+
+
+function lovd_fixHGVS ($sVariant, $sType = 'g')
+{
+    // This function tries to recognize common errors in the HGVS nomenclature,
+    //  and fix the variants in such a way, that they will be recognizable and
+    //  usable.
+
+    if (!in_array($sType, array('g', 'c'))) {
+        $sType = 'g';
+    }
+
+    // Do a quick HGVS check.
+    if (lovd_getVariantInfo($sVariant, '', true)) {
+        // All good!
+        return $sVariant;
+    }
+
+    // Make sure we can use ctype_digit().
+    $sVariant = (string) $sVariant;
+
+    // Forgot a prefix?
+    if (ctype_digit($sVariant{0})) {
+        // Variant starts with a number. Try including a prefix.
+        return lovd_fixHGVS($sType . '.' . $sVariant, $sType);
+    }
+
+    return $sVariant;
 }
 
 
