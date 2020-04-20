@@ -153,7 +153,7 @@ class LOVD_VV
             $aMapping['RNA'] = 'r.(=)';
             // FIXME: VV returns p.(Ala86=) rather than p.(=); perhaps return r.(257=) instead of r.(=).
             //  If you instead would like to make VV return p.(=), here is where you change this.
-            //  If you do, don't forget to check that you're on a coding transcript.
+            //  If you do, don't forget to check whether you're on a coding transcript.
             // For UTRs or p.Met1, a c.= returns a p.? (safe choice). I prefer a p.(=).
             if ($aMapping['protein'] == 'p.?' || $aMapping['protein'] == 'p.(Met1?)') {
                 $aMapping['protein'] = 'p.(=)';
@@ -173,8 +173,8 @@ class LOVD_VV
                     || ($aVariant['position_end_intron'] && abs($aVariant['position_end_intron']) <= 5)
                     || ($aVariant['position_start_intron'] && !$aVariant['position_end_intron'])
                     || (!$aVariant['position_start_intron'] && $aVariant['position_end_intron'])) {
-                    $aVariant['RNA'] = 'r.spl?';
-                    $aVariant['protein'] = 'p.?';
+                    $aMapping['RNA'] = 'r.spl?';
+                    $aMapping['protein'] = 'p.?';
 
                 } elseif ($aVariant['position_start_intron'] && $aVariant['position_end_intron']
                     && abs($aVariant['position_start_intron']) > 5 && abs($aVariant['position_end_intron']) > 5
@@ -431,7 +431,6 @@ class LOVD_VV
             $aData['data']['DNA'] = $aJSON['g_hgvs'];
             // If description is given but different, then apparently there's been some kind of correction.
             if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
-                // FIXME: chrM is currently corrected to g. by VV.
                 // Check type of correction; silent, WCORRECTION, or WROLLFORWARD.
                 if (function_exists('lovd_getVariantInfo')) {
                     // Use LOVD's lovd_getVariantInfo() to parse positions and type.
