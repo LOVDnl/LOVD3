@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-04-17
+ * Modified    : 2020-04-22
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,6 +31,7 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 require ROOT_PATH . 'inc-lib-form.php'; // For lovd_setUpdatedDate().
+require ROOT_PATH . 'inc-lib-variants.php'; // For lovd_fixHGVS().
 
 // We don't care about your session (in fact, it locks the whole LOVD if we keep this page running).
 session_write_close();
@@ -312,7 +313,8 @@ class LOVD_VVAnalyses {
                 //  transcripts, protein predictions and even mappings to hg38
                 //  if we have that field.
                 $sCurrentRefSeq = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$this->sCurrentChromosome];
-                $sVariant = $sCurrentRefSeq . ':' . $aVariant['DNA'];
+                // Do a quick check with lovd_fixHGVS() on the variant's HGVS to prevent common errors.
+                $sVariant = $sCurrentRefSeq . ':' . lovd_fixHGVS($aVariant['DNA']);
                 if (!isset($this->aCache[$sVariant])) {
                     $aVV = $_VV->verifyGenomic($sVariant,
                         array(
@@ -349,7 +351,15 @@ class LOVD_VVAnalyses {
 
                 if ($aVV['errors']) {
                     // Handle EREF errors and the like.
-                    if (isset($aVV['errors']['EREF'])) {
+                    if (isset($aVV['errors']['ESYNTAX']) && strpos($aVariant['DNA'], '?') !== false) {
+                        // We received an ESYNTAX, but the variant has a question
+                        //  mark in there somewhere. Obviously, VV can't handle
+                        //  that, but we can't do anything with these variants
+                        //  either, so just skip them.
+                        $this->nProgressCount ++; // To show progress.
+                        continue; // Then continue to the next variant.
+
+                    } elseif (isset($aVV['errors']['EREF'])) {
                         // EREF error; the genomic variant can not be correct.
                         // Loop the cDNA variants, if they are valid (all of them),
                         //  and the cDNA variant(s) are on the same chromosome,
