@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-04-09
+ * Modified    : 2020-04-20
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,7 +72,7 @@ class LOVD_VV
         global $_CONF, $_SETT;
 
         // Build URL, regardless of how we'll connect to it.
-        $sURL = $this->sURL . $sMethod . '/' . implode('/', $aArgs) . '?content-type=application%2Fjson';
+        $sURL = $this->sURL . $sMethod . '/' . implode('/', array_map('rawurlencode', $aArgs)) . '?content-type=application%2Fjson';
         $sJSONResponse = '';
 
         if (function_exists('curl_init')) {
