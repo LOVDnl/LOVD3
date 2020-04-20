@@ -670,11 +670,6 @@ class LOVD_VVAnalyses {
 
                     } else {
                         // Update the entry!
-                        // FIXME: For now, panic if we need to update both the VOG's
-                        //  DNA and VOT data, I want to check this first.
-                        if (!empty($aUpdate['DNA']) && !empty($aUpdate['transcripts'])) {
-                            $this->panic($aVariant, $aVV, 'FIXME: Update required for both VOG and VOT, please check. If this is OK, just disable this panic call.');
-                        }
 
                         // We'll be emailing, so make sure we load the data as is for the email.
                         $zData = $_DATA['Genome']->loadEntry($aVariant['id']);
@@ -705,7 +700,7 @@ class LOVD_VVAnalyses {
                                     $aFieldsGenome[] = 'VariantOnGenome/DNA';
                                     $_POST['VariantOnGenome/DNA'] = $sValue;
                                     // Also fix position fields.
-                                    $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+                                    $aResponse = lovd_getVariantInfo($sValue);
                                     if ($aResponse) {
                                         $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type'));
                                         list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
@@ -717,6 +712,47 @@ class LOVD_VVAnalyses {
                                     // Genomic DNA on hg38 updated.
                                     $aFieldsGenome[] = 'VariantOnGenome/DNA/hg38';
                                     $_POST['VariantOnGenome/DNA/hg38'] = $sValue;
+                                    break;
+                                case 'transcripts':
+                                    // Something changed in (one of the) transcript mapping(s).
+                                    foreach ($sValue as $sTranscript => $aVOT) {
+                                        // We need the transcript's numerical ID to process the updates.
+                                        $nTranscriptID = $aVariant['vots'][$sTranscript]['transcriptid'];
+                                        foreach ($aVOT as $sField => $sValue) {
+                                            switch ($sField) {
+                                                case 'DNA':
+                                                    // VOT/DNA has been updated, also fix position fields.
+                                                    $aFieldsTranscripts[] = 'VariantOnTranscript/DNA';
+                                                    $_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] = $sValue;
+                                                    // Position fields, too!
+                                                    $aResponse = lovd_getVariantInfo($sValue);
+                                                    if ($aResponse) {
+                                                        $aFieldsTranscripts = array_merge($aFieldsTranscripts,
+                                                            array('position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'));
+                                                        $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
+                                                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
+                                                        $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
+                                                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
+                                                        // No fallback. What could happen?
+                                                    }
+                                                    break;
+                                                case 'RNA':
+                                                    // VOT/RNA has been updated.
+                                                    $aFieldsTranscripts[] = 'VariantOnTranscript/RNA';
+                                                    $_POST[$nTranscriptID . '_VariantOnTranscript/RNA'] = $sValue;
+                                                    break;
+                                                case 'protein':
+                                                    // VOT/Protein has been updated.
+                                                    $aFieldsTranscripts[] = 'VariantOnTranscript/Protein';
+                                                    $_POST[$nTranscriptID . '_VariantOnTranscript/Protein'] = $sValue;
+                                                    break;
+                                                default:
+                                                    // Unhandled field.
+                                                    var_dump(array_merge(array('Stub!' => 'Something to update!'), $aUpdate));
+                                                    $this->panic($aVariant, $aVV, 'While trying to update this variant, I realized I don\'t know how to handle the VOT/' . $sField . ' field.');
+                                            }
+                                        }
+                                    }
                                     break;
                                 default:
                                     // Unhandled field.
@@ -732,7 +768,31 @@ class LOVD_VVAnalyses {
                         $_POST['edited_date'] = date('Y-m-d H:i:s');
 
                         // Run the update.
+                        $_DB->beginTransaction();
                         $_DATA['Genome']->updateEntry($aVariant['id'], $_POST, $aFieldsGenome);
+
+                        if ($aFieldsTranscripts) {
+                            // We also have to update the VOT(s).
+                            $aFieldsTranscripts = array_unique($aFieldsTranscripts);
+
+                            // The updateAll() function is normally used with a per-gene array of fields
+                            //  that need to be edited. However, we don't have the gene symbol here.
+                            // If we don't pass $aFieldsTranscripts at all, and only pass an $_POST array
+                            //  with the fields that we need edited (with numeric transcript ID prefix),
+                            //  the function builds it's own list of fields to update.
+                            // As such, construct a new $_POST replacement.
+                            $aData = array();
+                            foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
+                                $nTranscriptID = $aVOT['transcriptid'];
+                                foreach ($aFieldsTranscripts as $sField) {
+                                    $sKey = $nTranscriptID . '_' . $sField;
+                                    $aData[$sKey] = $_POST[$sKey];
+                                }
+                            }
+
+                            $_DATA['Transcript']->updateAll($aVariant['id'], $aData);
+                        }
+                        $_DB->commit();
                     }
 
                     if ($aVariant['statusid'] >= STATUS_MARKED) {
