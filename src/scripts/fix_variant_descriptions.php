@@ -351,11 +351,13 @@ class LOVD_VVAnalyses {
 
                 if ($aVV['errors']) {
                     // Handle EREF errors and the like.
-                    if (isset($aVV['errors']['ESYNTAX']) && strpos($aVariant['DNA'], '?') !== false) {
-                        // We received an ESYNTAX, but the variant has a question
-                        //  mark in there somewhere. Obviously, VV can't handle
-                        //  that, but we can't do anything with these variants
-                        //  either, so just skip them.
+                    if (isset($aVV['errors']['ESYNTAX'])
+                        && preg_match('([?;]|ins\([0-9]+\)$)', $aVariant['DNA'])) {
+                        // We received an ESYNTAX, but the variant has a common
+                        //  problem that we, nor VV, can handle.
+                        // We can't do anything, so just skip them.
+                        // (variant with uncertain position, allele notation,
+                        //  insertion with only length mentioned)
                         $this->nProgressCount ++; // To show progress.
                         continue; // Then continue to the next variant.
 
@@ -387,7 +389,8 @@ class LOVD_VVAnalyses {
                             if (!$aVVVot || $aVVVot['errors']) {
                                 // VV failed. Either we have a really shitty variant, or VV broke.
                                 // EREF *and* VOT fails. Just panic here.
-                                $this->panic($aVariant, $aVV, 'While handling EREF error, VV failed on VOT; this variant needs manual curation.');
+                                $this->panic($aVariant, $aVV, 'While handling EREF error, VV failed on VOT' .
+                                    (empty($aVVVot['errors'])? '' : (isset($aVVVot['errors']['EREF'])? ' with another EREF' : ' ("' . implode('";"', $aVVVot['errors']) . '")')) . '; this variant needs manual curation.');
                             }
 
                             // All we ask is that the transcript is found on the same chromosome.
@@ -421,14 +424,16 @@ class LOVD_VVAnalyses {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
-                                        $this->panic($aVariant, $aVV, 'While handling EREF error, found that also cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                        // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
+                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'While handling EREF error, found that also cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
                                     }
                                 }
 
                                 // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
                                     // We don't know what to do here.
-                                    $this->panic($aVariant, $aVV, 'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                    // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
+                                    $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                 }
                             }
 
@@ -608,10 +613,12 @@ class LOVD_VVAnalyses {
                             }
 
                             // Check result.
-                            if (!$aVVVot) {
+                            if (!$aVVVot || $aVVVot['errors']) {
                                 // VV failed. Either we have a really shitty variant, or VV broke.
                                 // We skip failed VV calls for genomic variants silently,
                                 //  but it worked for this one, so the cDNA call should work as well.
+                                $this->panic($aVariant, $aVV, 'While investigating a VOT DNA mismatch, VV failed on the VOT variant' .
+                                    (empty($aVVVot['errors'])? '' : (isset($aVVVot['errors']['EREF'])? ' with an EREF' : ' ("' . implode('";"', $aVVVot['errors']) . '")')) . '; this variant needs manual curation.');
                                 $this->panic($aVariant, $aVV, 'While investigating a VOT DNA mismatch, VV failed on the VOT variant; this variant needs manual curation.');
                             }
 
@@ -744,11 +751,9 @@ class LOVD_VVAnalyses {
 
 //                exit;///////////////////////////////////////////////////////////////////////////
                 /*
-                Checks the VOG, and compares the generated VOG and all VOTs
+                // FIXME: TODO:
                 Check memory usage and clean cache when needed (array_shift()).
-                If any data is changed, fix the position fields as well.
                 If VOT cannot be verified (VV doesn't know the transcript), but everything else seems OK, then assume it's OK?
-                If VOTs are OK, but VOG should be changed, then just update it. We're talking about the same variant, so it's probably a mistake of the position converter.
                 It should probably email when we change things, so users are aware of them, and we have some kind of log of what has been changed. The really simple changes (adding hg38 or changing delG to del or so) we can just skip.
                 Log problems nicely, or perhaps have this script send emails when problems are found?
                 */
