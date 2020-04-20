@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-04-02
+ * Modified    : 2020-04-20
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -208,7 +208,7 @@ function lovd_convertBytesToHRSize ($nValue)
 {
     // This function takes integers and converts it to sizes like "128M".
 
-    if (!ctype_digit($nValue)) {
+    if (!ctype_digit($nValue) && !is_int($nValue)) {
         return false;
     }
 
@@ -776,7 +776,7 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
-function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
+function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bQuickCheck = false)
 {
     // Parses the variant, and returns position fields (2 for genomic variants,
     //  4 for cDNA variants) and variant type.
@@ -786,6 +786,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     // $sTranscriptID contains the internal ID or NCBI ID of the transcript that
     //  this variant is on, and is only needed for processing 3' UTR variants,
     //  like c.*10del, since we'll need to have the CDS stop value for that.
+    // $bQuickCheck contains a boolean that allows for using only part of this
+    //  function to just quickly check if the variant is HGVS or not.
     global $_DB;
 
     static $aTranscriptOffsets = array();
@@ -819,6 +821,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         //                                                        4 = End position, might be negative or in the 3' UTR.
         //                                                                    5 = End position intronic offset, if available.
         //                                                                                       6 = The variant, which we'll use to determine the type.
+        if ($bQuickCheck) {
+            return true;
+        }
 
         list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant) = $aRegs;
         if ($sPrefix != 'c' && $sPrefix != 'n') {
@@ -881,6 +886,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         //                                                                                                                                      8 = Latest end position, might be a question mark.
         //                                                                                                                                                     9 = Latest end position intronic offset, if available.
         //                                                                                                                                                                        10 = The variant, which we'll use to determine the type.
+        if ($bQuickCheck) {
+            return true;
+        }
 
         list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
 
