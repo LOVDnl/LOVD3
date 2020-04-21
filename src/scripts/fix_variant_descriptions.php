@@ -358,7 +358,7 @@ class LOVD_VVAnalyses {
                 if ($aVV['errors']) {
                     // Handle EREF errors and the like.
                     if (isset($aVV['errors']['ESYNTAX'])
-                        && preg_match('([?;]|ins\([0-9]+\)$)', $aVariant['DNA'])) {
+                        && preg_match('([?;]|ins\([0-9]+\)$|ins[0-9]+$|\([0-9]+_[0-9]+\))', $aVariant['DNA'])) {
                         // We received an ESYNTAX, but the variant has a common
                         //  problem that we, nor VV, can handle.
                         // We can't do anything, so just skip them.
@@ -424,7 +424,7 @@ class LOVD_VVAnalyses {
 
                                 // Overwrite the RNA field if it's different and not so interesting.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', 'r.(?)'))) {
+                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))) {
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
                                         // We ignore small differences, where maybe the RNA has been verified.
@@ -640,7 +640,7 @@ class LOVD_VVAnalyses {
 
                                 // Overwrite the RNA field if it's different and not so interesting.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', 'r.(?)'))) {
+                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))) {
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
                                         // We ignore small differences, where maybe the RNA has been verified.
