@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-04-20
+ * Modified    : 2020-04-21
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -776,7 +776,7 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
-function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bQuickCheck = false)
+function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = false)
 {
     // Parses the variant, and returns position fields (2 for genomic variants,
     //  4 for cDNA variants) and variant type.
@@ -786,8 +786,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bQuickCheck = fal
     // $sTranscriptID contains the internal ID or NCBI ID of the transcript that
     //  this variant is on, and is only needed for processing 3' UTR variants,
     //  like c.*10del, since we'll need to have the CDS stop value for that.
-    // $bQuickCheck contains a boolean that allows for using only part of this
-    //  function to just quickly check if the variant is HGVS or not.
+    // $bCheckHGVS contains a boolean that allows for using only part of this
+    //  function to just check if the variant is HGVS or not. It will in this
+    //  case be more stringent than the function normally is, checking the
+    //  variant further in details, but it will only return a boolean value.
     global $_DB;
 
     static $aTranscriptOffsets = array();
@@ -814,18 +816,52 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bQuickCheck = fal
     // Isolate the position(s) from the variant. We don't support combined variants.
     // We're not super picky, and would therefore approve of c.1_2A>C; we also
     //  don't check for the end of the variant, it may contain bases, or not.
-    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|del(ins)?|dup|inv|ins)/', $sVariant, $aRegs)) {
+    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
         //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                       2 = Start position, might be negative or in the 3' UTR.
         //                                   3 = Start position intronic offset, if available.
         //                                                        4 = End position, might be negative or in the 3' UTR.
         //                                                                    5 = End position intronic offset, if available.
         //                                                                                       6 = The variant, which we'll use to determine the type.
-        if ($bQuickCheck) {
+        //                                                                                                                            7 = The suffix.
+        list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant, $sSuffix) = $aRegs;
+
+        if ($bCheckHGVS) {
+            // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
+            if (strpos($sVariant, '>') !== false && $sEndPosition) {
+                // Substitutions are not allowed to have a range.
+                return false;
+            }
+
+            if ($sSuffix) {
+                // Suffix not allowed in some cases.
+                if (strpos($sVariant, '>') !== false || $sVariant == 'inv') {
+                    // No suffix allowed for substitutions or inversions.
+                    return false;
+                } elseif ($sVariant == 'con' && !preg_match('/^([NX][CMR]_[0-9]{6}\.[0-9]+:)?[0-9]+_[0-9]+$/', $sSuffix)) {
+                    // Gene conversions require position fields.
+                    return false;
+                } elseif (in_array($sVariant, array('del', 'dup')) && !preg_match('/^[ACTG]+$/', $sSuffix)) {
+                    // Only allow bases as suffix for deletions and duplications.
+                    return false;
+                } elseif ($sVariant == 'delins' && !preg_match('/^([ACTG]+|\([0-9]+\))$/', $sSuffix)) {
+                    // Only allow bases or length as suffix for deletion-insertion events.
+                    // Position ranges for deletion-insertions are actually conversions.
+                    return false;
+                } elseif ($sVariant == 'ins' && !preg_match('/^([ACTG]+|\([0-9]+\)|[0-9]+_[0-9]+|\[NC_[0-9]{6}\.[0-9]+:[0-9]+_[0-9]+\])$/', $sSuffix)) {
+                    // Supported are insertions with bases, length, or with position fields.
+                    return false;
+                }
+            } else {
+                // Suffix is required in some cases.
+                if (in_array($sVariant, array('con', 'delins', 'ins'))) {
+                    return false;
+                }
+            }
+
             return true;
         }
 
-        list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant) = $aRegs;
         if ($sPrefix != 'c' && $sPrefix != 'n') {
             if ($sStartPositionIntron || $sEndPositionIntron) {
                 // Anything not c. or n. is regarded genomic, having a max of 2 positions.
@@ -875,7 +911,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bQuickCheck = fal
 
     // If that didn't work, try matching variants with uncertain positions.
     // We're not super picky, and don't check the end of the variant.
-    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(del(ins)?|dup|inv|ins)/', $sVariant, $aRegs)) {
+    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
         //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                               2 = Earliest start position, might be a question mark.
         //                                              3 = Earlier start position intronic offset, if available.
@@ -886,11 +922,36 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bQuickCheck = fal
         //                                                                                                                                      8 = Latest end position, might be a question mark.
         //                                                                                                                                                     9 = Latest end position intronic offset, if available.
         //                                                                                                                                                                        10 = The variant, which we'll use to determine the type.
-        if ($bQuickCheck) {
+        //                                                                                                                                                                                                 11 = The suffix.
+        list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant, $sSuffix) = $aRegs;
+
+        if ($bCheckHGVS) {
+            // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
+            if ($sSuffix) {
+                // Suffix not allowed in some cases.
+                if (in_array($sVariant, array('del', 'dup', 'inv'))) {
+                    // No suffix allowed for uncertain deletions, duplications, or inversions.
+                    return false;
+                } elseif ($sVariant == 'con' && !preg_match('/^([NX][CMR]_[0-9]{6}\.[0-9]+:)?[0-9]+_[0-9]+$/', $sSuffix)) {
+                    // Gene conversions require position fields.
+                    return false;
+                } elseif ($sVariant == 'delins' && !preg_match('/^(\([0-9]+\))$/', $sSuffix)) {
+                    // Only allow length as suffix for deletion-insertion events.
+                    // Position ranges for deletion-insertions are actually conversions.
+                    return false;
+                } elseif ($sVariant == 'ins' && !preg_match('/^(\([0-9]+\)|[0-9]+_[0-9]+|\[NC_[0-9]{6}\.[0-9]+:[0-9]+_[0-9]+\])$/', $sSuffix)) {
+                    // Supported are insertions with length or with position fields.
+                    return false;
+                }
+            } else {
+                // Suffix is required in some cases.
+                if (in_array($sVariant, array('con', 'delins', 'ins'))) {
+                    return false;
+                }
+            }
+
             return true;
         }
-
-        list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
 
         // Always at least create the intron fields for c. and n. variants.
         if ($sPrefix == 'c' || $sPrefix == 'n') {
