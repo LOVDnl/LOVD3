@@ -810,7 +810,9 @@ class LOVD_VVAnalyses {
                                     INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
                                 WHERE vot.id = ?',
                             array($aVariant['id']))->fetchAllColumn();
-                        lovd_setUpdatedDate($aGenes);
+                        // Set second argument to false to let "LOVD" be marked
+                        //  as the updated_by, not the current user.
+                        lovd_setUpdatedDate($aGenes, false);
                     }
                 }
 
