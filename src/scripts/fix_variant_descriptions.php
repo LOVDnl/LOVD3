@@ -66,6 +66,8 @@ class LOVD_VVAnalyses {
     protected $nVariantsTotal = 0;      // Sum of $aChromosomes, total number of variants in the DB.
     protected $sCurrentChromosome = ''; // Which chromosome are we working on now?
     protected $nCurrentPosition = 0;    // What position are we working on now?
+    protected $nVariantsDone = 0;       // Number of variants done in *this* run.
+    protected $nVariantsUpdated = 0;    // Number of variants updated in *this* run.
     protected $aCache = array();        // Stores VV cache. Will be cleaned now and then when the memory usage is too high.
 
     // Numbers previously reported. If different from current values, we should update the stats.
@@ -188,7 +190,10 @@ class LOVD_VVAnalyses {
             );
         }
         $sDiff = print_r($aDiff, true);
-        die('<PRE>' . $sDiff . '</PRE>');
+        die('<PRE>' . $sDiff . '</PRE>
+      <SCRIPT type="text/javascript">
+        $("#tr_stats td img").remove();
+      </SCRIPT>');
     }
 
 
@@ -307,6 +312,7 @@ class LOVD_VVAnalyses {
             foreach ($aVariants as $aVariant) {
                 // Update stats.
                 $this->updateStats();
+                $this->nVariantsDone ++; // We'll only see this number the next update anyway.
                 usleep(250000); // FIXME: Remove later.
 
                 // Call VV and get all information we need; mappings to
@@ -793,6 +799,7 @@ class LOVD_VVAnalyses {
                             $_DATA['Transcript']->updateAll($aVariant['id'], $aData);
                         }
                         $_DB->commit();
+                        $this->nVariantsUpdated ++;
                     }
 
                     if ($aVariant['statusid'] >= STATUS_MARKED) {
@@ -917,11 +924,16 @@ class LOVD_VVAnalyses {
             $this->oBarChromosome->setProgress($this->nProgress*100);
             $this->nProgressReported = $this->nProgress;
         }
-        if ($this->nCurrentPosition != $this->nCurrentPositionReported) {
-            // We have no function for this, do it yourself.
+        if ($this->nProgressTotal != $this->nProgressTotalReported
+            || $this->nProgress != $this->nProgressReported
+            || $this->nCurrentPosition != $this->nCurrentPositionReported) {
+            // Update this status field whenever *something* changes.
             print('
       <SCRIPT type="text/javascript">
-        $("#tr_stats td").html("' . $this->sCurrentChromosome . ':' . $this->nCurrentPosition . '");
+        $("#tr_stats td").html("' . $this->sCurrentChromosome . ':' . $this->nCurrentPosition .
+                (!$this->nVariantsDone? '' : ' (checked ' . $this->nVariantsDone . ' variant' . ($this->nVariantsDone == 1? '' : 's') .
+                    (!$this->nVariantsUpdated? '' : ', updated ' . $this->nVariantsUpdated . ' variant' . ($this->nVariantsUpdated == 1? '' : 's')) . ')') .
+                ' <IMG src=\"gfx/lovd_loading.gif\" alt=\"\" width=\"13\" height=\"13\" style=\"float: right;\">");
       </SCRIPT>');
             $this->nCurrentPositionReported = $this->nCurrentPosition;
         }
