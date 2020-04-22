@@ -462,7 +462,8 @@ class LOVD_VVAnalyses {
                                         //  or when it mentioned splicing but the new description doesn't
                                         //  cover an intron anymore.
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
-                                    } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
+                                    } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
@@ -477,7 +478,8 @@ class LOVD_VVAnalyses {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  and when we have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
-                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])) {
+                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
+                                        || ($aVOT['protein'] == 'p.?' && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
@@ -716,7 +718,8 @@ class LOVD_VVAnalyses {
                                         //  or when it mentioned splicing but the new description doesn't
                                         //  cover an intron anymore.
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
-                                    } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
+                                    } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
@@ -731,7 +734,8 @@ class LOVD_VVAnalyses {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  and when we have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
-                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])) {
+                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
+                                        || ($aVOT['protein'] == 'p.?' && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
