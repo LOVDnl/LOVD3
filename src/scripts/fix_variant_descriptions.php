@@ -401,9 +401,34 @@ class LOVD_VVAnalyses {
                             // Check result.
                             if (!$aVVVot || $aVVVot['errors']) {
                                 // VV failed. Either we have a really shitty variant, or VV broke.
-                                // EREF *and* VOT fails. Just panic here.
-                                $this->panic($aVariant, $aVV, 'While handling EREF error, VV failed on VOT' .
-                                    (empty($aVVVot['errors'])? '' : (isset($aVVVot['errors']['EREF'])? ' with another EREF' : ' ("' . implode('";"', $aVVVot['errors']) . '")')) . '; this variant needs manual curation.');
+                                // EREF *and* VOT fails. Log if we understand what happened, panic otherwise.
+                                if ($this->bRemarks && isset($aVVVot['errors'])) {
+                                    // Don't double-mark, so check if it's marked first.
+                                    if (!$_DB->query('
+                                        SELECT COUNT(*)
+                                        FROM ' . TABLE_VARIANTS . '
+                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
+                                        array($aVariant['id'], '%[EREF/%'))->fetchColumn()) {
+                                        // Add the error, set variant as marked when already public.
+                                        // Assuming here that $aVVVot['errors'] has named keys.
+                                        $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                                            'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
+                                                'Variant Error [EREF/' . key($aVVVot['errors']) . ']: ' .
+                                                'This genomic variant does not match the reference sequence; ' .
+                                                'the transcript variant ' . (isset($aVVVot['errors']['EREF'])? 'does not match the reference sequence either' : 'also has an error') . '. ' .
+                                                'Please fix and then remove this error.'),
+                                            'statusid' => min($aVariant['statusid'], STATUS_MARKED),
+                                        ));
+                                    }
+                                    $this->nVariantsUpdated ++;
+                                    $this->nProgressCount ++;
+                                    continue 2; // On to the next variant. We ignore any other VOTs.
+
+                                } else {
+                                    // If we don't have the Remarks field active, or VV failed completely, panic anyway.
+                                    $this->panic($aVariant, $aVV, 'While handling EREF error, VV failed on VOT' .
+                                        (empty($aVVVot['errors'])? '' : (isset($aVVVot['errors']['EREF'])? ' with another EREF' : ' ("' . implode('";"', $aVVVot['errors']) . '")')) . '; this variant needs manual curation.');
+                                }
                             }
 
                             // All we ask is that the transcript is found on the same chromosome.
@@ -668,8 +693,8 @@ class LOVD_VVAnalyses {
                                 // No good, we don't know whether to trust the gDNA or the cDNA.
                                 // This happens now and then. We don't know what to do,
                                 //  so we'll just mark the variant and be done with it.
-                                // Don't double-mark, so check if it's marked first.
                                 if ($this->bRemarks) {
+                                    // Don't double-mark, so check if it's marked first.
                                     if (!$_DB->query('
                                         SELECT COUNT(*)
                                         FROM ' . TABLE_VARIANTS . '
