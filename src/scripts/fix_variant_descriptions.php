@@ -78,6 +78,7 @@ class LOVD_VVAnalyses {
     protected $nCurrentPositionReported = 0;
 
     protected $bDNA38 = false;          // Do we have the hg38 field active?
+    protected $bRemarks = false;        // Do we have the VOG/Remarks field available?
 
 
 
@@ -141,12 +142,17 @@ class LOVD_VVAnalyses {
         $("#VV_analyses").find("br").remove();
       </SCRIPT>' . "\n\n");
 
-        // Store if we have hg38 annotation or not (GV shared had a custom column for that).
-        $this->bDNA38 = (bool) $_DB->query('
+        // Check for custom columns we need; hg38 annotation (GV shared has a
+        //  custom column for that) and VOG/Remarks.
+        list($this->bDNA38, $this->bRemarks) = $_DB->query('
+            SELECT COUNT(*)
+            FROM ' . TABLE_ACTIVE_COLS . '
+            WHERE colid = ?
+            UNION ALL
             SELECT COUNT(*)
             FROM ' . TABLE_ACTIVE_COLS . '
             WHERE colid = ?',
-            array('VariantOnGenome/DNA/hg38'))->fetchColumn();
+            array('VariantOnGenome/DNA/hg38', 'VariantOnGenome/Remarks'))->fetchAllColumn();
 
         // Get proper progress count - how much is behind us already for this chromosome?
         $this->nProgressCount = $_DB->query('
@@ -274,6 +280,7 @@ class LOVD_VVAnalyses {
             $aVariants = $_DB->query('
                 SELECT vog.id, vog.statusid, vog.`VariantOnGenome/DNA` AS DNA, ' .
                     (!$this->bDNA38? '' : 'vog.`VariantOnGenome/DNA/hg38` AS DNA38, ') .
+                    (!$this->bRemarks? '' : 'vog.`VariantOnGenome/Remarks` AS remarks, ') .
                     'GROUP_CONCAT(vot.transcriptid, "||", t.id_ncbi, "||", IFNULL(vot.`VariantOnTranscript/DNA`, ""), "||", IFNULL(vot.`VariantOnTranscript/RNA`, ""), "||", IFNULL(vot.`VariantOnTranscript/Protein`, "") SEPARATOR ";;") AS __vots
                 FROM ' . TABLE_VARIANTS . ' AS vog
                     LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
@@ -659,7 +666,30 @@ class LOVD_VVAnalyses {
 
                             } else {
                                 // No good, we don't know whether to trust the gDNA or the cDNA.
-                                $this->panic($aVariant, $aVV, 'gDNA and cDNA don\'t belong together, I don\'t know what to do now.');
+                                // This happens now and then. We don't know what to do,
+                                //  so we'll just mark the variant and be done with it.
+                                // Don't double-mark, so check if it's marked first.
+                                if ($this->bRemarks) {
+                                    if (!$_DB->query('
+                                        SELECT COUNT(*)
+                                        FROM ' . TABLE_VARIANTS . '
+                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
+                                        array($aVariant['id'], '%[EMISMATCH]%'))->fetchColumn()) {
+                                        // Add the error, set variant as marked when already public.
+                                        $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                                            'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
+                                                'Variant Error [EMISMATCH]: This variant seems to mismatch; the genomic and the transcript variant seems to not belong together. Please fix and then remove this error.'),
+                                            'statusid' => min($aVariant['statusid'], STATUS_MARKED),
+                                        ));
+                                    }
+                                    $this->nVariantsUpdated ++;
+                                    $this->nProgressCount ++;
+                                    continue 2; // On to the next variant. We ignore any other VOTs.
+
+                                } else {
+                                    // If we don't have the Remarks field active, just panic anyway.
+                                    $this->panic($aVariant, $aVV, 'gDNA and cDNA don\'t belong together, I don\'t know what to do now.');
+                                }
                             }
                         }
 
