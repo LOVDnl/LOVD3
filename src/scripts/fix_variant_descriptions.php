@@ -454,9 +454,13 @@ class LOVD_VVAnalyses {
                                 }
                                 $aUpdate['transcripts'][$sTranscript]['DNA'] = $aVVVot['data']['DNA'];
 
-                                // Overwrite the RNA field if it's different and not so interesting.
+                                // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))) {
+                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVOT['DNA']) && !preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        // Overwrite the RNA field if it's different and not so interesting,
+                                        //  or when it mentioned splicing but the new description doesn't
+                                        //  cover an intron anymore.
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
                                         // We ignore small differences, where maybe the RNA has been verified.
@@ -467,11 +471,19 @@ class LOVD_VVAnalyses {
                                     }
                                 }
 
-                                // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
+                                // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    // We don't know what to do here.
-                                    // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                    $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                    if (in_array($aVOT['protein'], array('', 'p.?')) && preg_match('/[0-9]+/', $aVVVot['data']['protein'])) {
+                                        // Overwrite the protein field if it's different and not so interesting,
+                                        //  and when we have something better.
+                                        $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
+                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])) {
+                                        // We ignore small differences, where maybe the RNA has been verified.
+                                    } else {
+                                        // We don't know what to do here.
+                                        // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
+                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                    }
                                 }
                             }
 
@@ -669,9 +681,13 @@ class LOVD_VVAnalyses {
                                 }
                                 $aUpdate['transcripts'][$sTranscript]['DNA'] = $aVVVot['data']['DNA'];
 
-                                // Overwrite the RNA field if it's different and not so interesting.
+                                // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))) {
+                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVOT['DNA']) && !preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        // Overwrite the RNA field if it's different and not so interesting,
+                                        //  or when it mentioned splicing but the new description doesn't
+                                        //  cover an intron anymore.
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])) {
                                         // We ignore small differences, where maybe the RNA has been verified.
@@ -682,11 +698,19 @@ class LOVD_VVAnalyses {
                                     }
                                 }
 
-                                // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
+                                // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    // We don't know what to do here.
-                                    // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                    $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                    if (in_array($aVOT['protein'], array('', 'p.?')) && preg_match('/[0-9]+/', $aVVVot['data']['protein'])) {
+                                        // Overwrite the protein field if it's different and not so interesting,
+                                        //  and when we have something better.
+                                        $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
+                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])) {
+                                        // We ignore small differences, where maybe the RNA has been verified.
+                                    } else {
+                                        // We don't know what to do here.
+                                        // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
+                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                    }
                                 }
 
                             } else {
