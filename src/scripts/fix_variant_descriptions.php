@@ -358,7 +358,7 @@ class LOVD_VVAnalyses {
                 if ($aVV['errors']) {
                     // Handle EREF errors and the like.
                     if (isset($aVV['errors']['ESYNTAX'])
-                        && preg_match('([?;]|ins\([0-9]+\)$|ins[0-9]+$|\([0-9]+_[0-9]+\))', $aVariant['DNA'])) {
+                        && preg_match('([?;]|con|ins\([0-9]+\)$|ins[0-9]+$|\([0-9]+_[0-9]+\))', $sVariant)) {
                         // We received an ESYNTAX, but the variant has a common
                         //  problem that we, nor VV, can handle.
                         // We can't do anything, so just skip them.
@@ -625,7 +625,6 @@ class LOVD_VVAnalyses {
                                 //  but it worked for this one, so the cDNA call should work as well.
                                 $this->panic($aVariant, $aVV, 'While investigating a VOT DNA mismatch, VV failed on the VOT variant' .
                                     (empty($aVVVot['errors'])? '' : (isset($aVVVot['errors']['EREF'])? ' with an EREF' : ' ("' . implode('";"', $aVVVot['errors']) . '")')) . '; this variant needs manual curation.');
-                                $this->panic($aVariant, $aVV, 'While investigating a VOT DNA mismatch, VV failed on the VOT variant; this variant needs manual curation.');
                             }
 
                             if ($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']] == $aVV['data']['DNA']) {
@@ -646,14 +645,16 @@ class LOVD_VVAnalyses {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
-                                        $this->panic($aVariant, $aVV, 'cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                        // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
+                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
                                     }
                                 }
 
                                 // Right now, we don't overwrite the protein field. We just check if it's different, and panic if needed.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
                                     // We don't know what to do here.
-                                    $this->panic($aVariant, $aVV, 'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                    // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
+                                    $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                 }
 
                             } else {
@@ -672,7 +673,7 @@ class LOVD_VVAnalyses {
                         // We only have to update the hg38 value. We can do that without any issues and without sending any email.
                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
                             'VariantOnGenome/DNA/hg38' => $aUpdate['DNA38'],
-                        ), array('VariantOnGenome/DNA/hg38'));
+                        ));
 
                     } else {
                         // Update the entry!
