@@ -416,7 +416,7 @@ class LOVD_VVAnalyses {
                                                 'Variant Error [EREF/' . key($aVVVot['errors']) . ']: ' .
                                                 'This genomic variant does not match the reference sequence; ' .
                                                 'the transcript variant ' . (isset($aVVVot['errors']['EREF'])? 'does not match the reference sequence either' : 'also has an error') . '. ' .
-                                                'Please fix and then remove this error.'),
+                                                'Please fix this entry and then remove this message.'),
                                             'statusid' => min($aVariant['statusid'], STATUS_MARKED),
                                         ));
                                     }
@@ -667,8 +667,35 @@ class LOVD_VVAnalyses {
                                 // VV failed. Either we have a really shitty variant, or VV broke.
                                 // We skip failed VV calls for genomic variants silently,
                                 //  but it worked for this one, so the cDNA call should work as well.
-                                $this->panic($aVariant, $aVV, 'While investigating a VOT DNA mismatch, VV failed on the VOT variant' .
-                                    (empty($aVVVot['errors'])? '' : (isset($aVVVot['errors']['EREF'])? ' with an EREF' : ' ("' . implode('";"', $aVVVot['errors']) . '")')) . '; this variant needs manual curation.');
+                                // Log if we understand what happened, panic otherwise.
+                                if ($this->bRemarks && isset($aVVVot['errors'])) {
+                                    // Don't double-mark, so check if it's marked first.
+                                    if (!$_DB->query('
+                                        SELECT COUNT(*)
+                                        FROM ' . TABLE_VARIANTS . '
+                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
+                                        array($aVariant['id'], '%[EMISMATCH/%'))->fetchColumn()) {
+                                        // Add the error, set variant as marked when already public.
+                                        // Assuming here that $aVVVot['errors'] has named keys.
+                                        $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                                            'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
+                                                'Variant Error [EMISMATCH/' . key($aVVVot['errors']) . ']: ' .
+                                                'This transcript variant ' . (isset($aVVVot['errors']['EREF'])? 'does not match the reference sequence' : 'has an error') . '. ' .
+                                                'Please fix this entry and then remove this message.'),
+                                            'statusid' => min($aVariant['statusid'], STATUS_MARKED),
+                                        ));
+                                    }
+                                    $this->nVariantsUpdated ++;
+                                    $this->nProgressCount ++;
+                                    continue 2; // On to the next variant. We ignore any other VOTs.
+
+                                } else {
+                                    // If we don't have the Remarks field active, or VV failed completely, panic anyway.
+                                    $this->panic($aVariant, $aVV, 'While investigating a VOT DNA mismatch, VV failed on the VOT variant' .
+                                        (empty($aVVVot['errors'])? '' :
+                                            (isset($aVVVot['errors']['EREF']) || isset($aVVVot['errors']['ESYNTAX'])? ' with an ' . key($aVVVot['errors']) :
+                                                ' ("' . implode('";"', $aVVVot['errors']) . '")')) . '; this variant needs manual curation.');
+                                }
                             }
 
                             if ($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']] == $aVV['data']['DNA']) {
@@ -727,7 +754,8 @@ class LOVD_VVAnalyses {
                                         // Add the error, set variant as marked when already public.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
                                             'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
-                                                'Variant Error [EMISMATCH]: This variant seems to mismatch; the genomic and the transcript variant seems to not belong together. Please fix and then remove this error.'),
+                                                'Variant Error [EMISMATCH]: This variant seems to mismatch; the genomic and the transcript variant seems to not belong together. ' .
+                                                'Please fix this entry and then remove this message.'),
                                             'statusid' => min($aVariant['statusid'], STATUS_MARKED),
                                         ));
                                     }
