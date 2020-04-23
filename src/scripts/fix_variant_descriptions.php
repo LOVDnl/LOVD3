@@ -457,13 +457,14 @@ class LOVD_VVAnalyses {
                                 // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
                                     if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))
-                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVOT['DNA']) && !preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVOT['DNA'])
+                                            && !preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // Overwrite the RNA field if it's different and not so interesting,
                                         //  or when it mentioned splicing but the new description doesn't
                                         //  cover an intron anymore.
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
-                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
@@ -479,7 +480,7 @@ class LOVD_VVAnalyses {
                                         //  and when we have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
                                     } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
-                                        || ($aVOT['protein'] == 'p.?' && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        || ($aVOT['protein'] == 'p.?' && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
@@ -557,12 +558,12 @@ class LOVD_VVAnalyses {
                         // We didn't have a hg38 description yet. Just fill it in.
                         $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
                     } elseif ($aVariant['DNA38'] != $aVV['data']['DNA38_clean']) {
-                        // HG38 genomic variant is different.
+                        // hg38 genomic variant is different.
                         // We can't assume here, that hg19 was the source.
                         // Throw in the hg38 variant that we have, and check if
                         //  it's mapping to the same variant that we have.
                         // If so, correct it.
-                        $sVariantHG38 = $_SETT['human_builds']['hg38']['ncbi_sequences'][$this->sCurrentChromosome] . ':' . $aVariant['DNA38'];
+                        $sVariantHG38 = $_SETT['human_builds']['hg38']['ncbi_sequences'][$this->sCurrentChromosome] . ':' . lovd_fixHGVS($aVariant['DNA38']);
                         if (!isset($this->aCache[$sVariantHG38 . ':checkonly'])) {
                             // The ":checkonly" suffix is because we're not running
                             //  everything including the mapping. We're usually on a
@@ -583,11 +584,34 @@ class LOVD_VVAnalyses {
                             // Just give a notice about it, and continue.
                             print('
       <SCRIPT type="text/javascript">
-        $("#tr_stats td").html("<B style=\"color : #FF0000;\">VV failed on HG38 verification of ' . $sVariant . '. Ignoring...</B>");
+        $("#tr_stats td").html("<B style=\"color : #FF0000;\">VV failed on hg38 verification of ' . $sVariant . '. Ignoring...</B>");
       </SCRIPT>');
                             flush();
                             sleep(5); // To make it visible for a while.
                             // Silently ignore this. We ignore VV errors for variants, so why not for hg38 mappings?
+
+                        } elseif ($aVVHG38['errors']) {
+                            // Handle EREF errors and the like.
+                            // Ignoring ESYNTAX here because that should have
+                            //  been handled for the original variant already.
+                            if (isset($aVVHG38['errors']['EREF'])) {
+                                // EREF error; the genomic variant can not be correct.
+                                // If we get here, it means the hg19 variant
+                                //  wasn't in error, or could have been corrected
+                                //  using the cDNA variant. We cannot tell the
+                                //  difference anymore at this point.
+                                // Take the hg38 mapping from VV, it must be
+                                //  better than what we currently have.
+                                $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
+
+                                // Consider it handled.
+                                unset($aVVHG38['errors']['EREF']);
+                            }
+
+                            if ($aVVHG38['errors']) {
+                                // Unhandled errors. Reason to panic.
+                                $this->panic($aVariant, $aVV, 'Unhandled errors for hg38 verification, I don\'t know how to handle this variant (' . implode(',', array_keys($aVVHG38['errors'])) . ')');
+                            }
 
                         } else {
                             // If the resulting variant is the same as what our
@@ -713,13 +737,14 @@ class LOVD_VVAnalyses {
                                 // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
                                     if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))
-                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVOT['DNA']) && !preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVOT['DNA'])
+                                            && !preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // Overwrite the RNA field if it's different and not so interesting,
                                         //  or when it mentioned splicing but the new description doesn't
                                         //  cover an intron anymore.
                                         $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
-                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
@@ -735,7 +760,7 @@ class LOVD_VVAnalyses {
                                         //  and when we have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
                                     } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
-                                        || ($aVOT['protein'] == 'p.?' && preg_match('/[+-]/', $aVVVot['data']['DNA']))) {
+                                        || ($aVOT['protein'] == 'p.?' && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
                                         // We don't know what to do here.
