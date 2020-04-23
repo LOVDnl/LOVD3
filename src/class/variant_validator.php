@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-04-20
+ * Modified    : 2020-04-23
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -598,12 +598,17 @@ class LOVD_VV
         //  transcript variants. For genomic variants, we're much happier using
         //  the LOVD endpoint (verifyGenomic()), so just use this method only
         //  for transcript variants.
+        // For getting reference base verification, you'll need to pass the NC
+        //  as well, in the format NC_000001.10(NM_123456.1):c.100del.
+        // We don't want to add code to fetch the NC, since we don't want to use
+        //  the database backend here in case we're used as an external lib.
         global $_CONF, $_SETT;
 
         // Disallow NC variants. We should verifyGenomic() for these.
         // Supporting NCs using this function will just take a lot more code,
-        //  which wouldn't be useful. Fail hard, to teach users to not do this.
-        if (substr($sVariant, 0, 3) == 'NC_') {
+        //  which wouldn't be useful. Fail hard, to teach users to not do this,
+        //  but don't fail on NC_000001.10(NM_123456.1):c. variants.
+        if (preg_match('/^NC_[0-9]+\.[0-9]+:/', $sVariant)) {
             return false;
         }
 
@@ -725,6 +730,15 @@ class LOVD_VV
             //  possible array of NM mappings. However, since we sent only one
             //  NM, we end up with only one NM here.
             $aJSON = current($aJSON);
+
+            // Add a warning in case we submitted a intronic variant while not
+            //  using an NC reference sequence.
+            if (preg_match('/^N[MR]_.+[0-9]+[+-][0-9]+/', $sVariant)) {
+                $aData['warnings']['WINTRONICWITHOUTNC'] = 'Without using a genomic reference sequence, intronic bases can not be verified.' .
+                    (!isset($aJSON['genome_context_intronic_sequence']) || !isset($aJSON['submitted_variant'])? ''
+                        : ' Please consider passing the variant as ' .
+                        strstr($aJSON['genome_context_intronic_sequence'], ':', true) . strstr($aJSON['submitted_variant'], ':') . '.');
+            }
 
             // Copy the (corrected) DNA value.
             $aData['data']['DNA'] = $aJSON['hgvs_transcript_variant'];

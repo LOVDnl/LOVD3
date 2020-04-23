@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-04-22
+ * Modified    : 2020-04-23
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -391,7 +391,7 @@ class LOVD_VVAnalyses {
                             // Just reverse the mapping, check if the result is on
                             //  the same chromosome as the genomic input, and continue.
                             if (!isset($this->aCache[$sTranscript . ':' . $aVOT['DNA']])) {
-                                $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                                $aVVVot = $_VV->verifyVariant($sCurrentRefSeq . '(' . $sTranscript . '):' . $aVOT['DNA']);
                                 // This also stores failures, so we won't repeat these.
                                 $this->aCache[$sTranscript . ':' . $aVOT['DNA']] = $aVVVot;
                             } else {
@@ -618,7 +618,7 @@ class LOVD_VVAnalyses {
                         // Therefore, test this transcript quickly.
 
                         if (!isset($this->aCache[$sTranscript . ':' . $aVOT['DNA']])) {
-                            $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                            $aVVVot = $_VV->verifyVariant($sCurrentRefSeq . '(' . $sTranscript . '):' . $aVOT['DNA']);
                             // This also stores failures, so we won't repeat these.
                             $this->aCache[$sTranscript . ':' . $aVOT['DNA']] = $aVVVot;
                         } else {
@@ -657,7 +657,7 @@ class LOVD_VVAnalyses {
                             //  check if that perhaps match what we have.
                             // If so, we can safely replace this variant with VV's option.
                             if (!isset($this->aCache[$sTranscript . ':' . $aVOT['DNA']])) {
-                                $aVVVot = $_VV->verifyVariant($sTranscript . ':' . $aVOT['DNA']);
+                                $aVVVot = $_VV->verifyVariant($sCurrentRefSeq . '(' . $sTranscript . '):' . $aVOT['DNA']);
                                 // This also stores failures, so we won't repeat these.
                                 $this->aCache[$sTranscript . ':' . $aVOT['DNA']] = $aVVVot;
                             } else {
