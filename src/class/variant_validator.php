@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-04-23
+ * Modified    : 2020-04-24
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -699,6 +699,9 @@ class LOVD_VV
                             if (strpos($sError, 'Invalid genome build has been specified') !== false) {
                                 // EBUILD error.
                                 $aData['errors']['EBUILD'] = $sError;
+                            } elseif (strpos($sError, 'coordinates do not agree with the intron/exon boundaries') !== false) {
+                                // EINVALIDBOUNDARY error.
+                                $aData['errors']['EINVALIDBOUNDARY'] = $sError;
                             } elseif (strpos($sError, ' variant position that lies outside of the reference sequence') !== false
                                 || strpos($sError, 'Variant coordinate is out of the bound of CDS region') !== false) {
                                 // ERANGE error. VV doesn't auto-correct CDS positions outside of CDS, we will need to subtract the CDS length ourselves.
