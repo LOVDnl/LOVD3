@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-04-23
+ * Modified    : 2020-04-28
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -419,8 +419,8 @@ class LOVD_VVAnalyses {
                                                 'Please fix this entry and then remove this message.'),
                                             'statusid' => min($aVariant['statusid'], STATUS_MARKED),
                                         ));
+                                        $this->nVariantsUpdated ++;
                                     }
-                                    $this->nVariantsUpdated ++;
                                     $this->nProgressCount ++;
                                     continue 2; // On to the next variant. We ignore any other VOTs.
 
@@ -456,7 +456,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))
+                                    if (in_array($aVOT['RNA'], array('', '-', 'r.?', 'r.(?)'))
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVOT['DNA'])
                                             && !preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // Overwrite the RNA field if it's different and not so interesting,
@@ -469,7 +469,9 @@ class LOVD_VVAnalyses {
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'While handling EREF error, found that also cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                        $this->panic($aVariant, array_merge($aVV,
+                                            array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
+                                            'While handling EREF error, found that also cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
                                     }
                                 }
 
@@ -485,7 +487,9 @@ class LOVD_VVAnalyses {
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                        $this->panic($aVariant, array_merge($aVV,
+                                            array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
+                                            'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                     }
                                 }
                             }
@@ -674,7 +678,16 @@ class LOVD_VVAnalyses {
 
                     } else {
                         // Check VOT.
-                        if (str_replace(array('(', ')'), '', $aVOT['DNA']) != $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
+                        if (in_array($aVOT['DNA'], array('', '-', 'c.?'))
+                            && in_array($aVOT['protein'], array('', '-', 'p.?'))) {
+                            // The current VOT is pretty much bogus, just overwrite it.
+                            if (!isset($aUpdate['transcripts'])) {
+                                $aUpdate['transcripts'] = array();
+                            }
+                            // Overwrite the entire VOT.
+                            $aUpdate['transcripts'][$sTranscript] = $aVV['data']['transcript_mappings'][$sTranscript];
+
+                        } elseif (str_replace(array('(', ')'), '', $aVOT['DNA']) != $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
                             // It's possible that this was just a bad Mutalyzer mapping.
                             // It can also be that perhaps somebody messed up.
                             // Map the given DNA field back to the genome, and
@@ -710,8 +723,8 @@ class LOVD_VVAnalyses {
                                                 'Please fix this entry and then remove this message.'),
                                             'statusid' => min($aVariant['statusid'], STATUS_MARKED),
                                         ));
+                                        $this->nVariantsUpdated ++;
                                     }
-                                    $this->nVariantsUpdated ++;
                                     $this->nProgressCount ++;
                                     continue 2; // On to the next variant. We ignore any other VOTs.
 
@@ -736,7 +749,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', 'r.?', 'r.(?)'))
+                                    if (in_array($aVOT['RNA'], array('', '-', 'r.?', 'r.(?)'))
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVOT['DNA'])
                                             && !preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // Overwrite the RNA field if it's different and not so interesting,
@@ -749,7 +762,9 @@ class LOVD_VVAnalyses {
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                        $this->panic($aVariant, array_merge($aVV,
+                                            array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
+                                            'cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
                                     }
                                 }
 
@@ -765,7 +780,9 @@ class LOVD_VVAnalyses {
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV, array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))), 'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
+                                        $this->panic($aVariant, array_merge($aVV,
+                                            array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
+                                            'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                     }
                                 }
 
@@ -787,8 +804,8 @@ class LOVD_VVAnalyses {
                                                 'Please fix this entry and then remove this message.'),
                                             'statusid' => min($aVariant['statusid'], STATUS_MARKED),
                                         ));
+                                        $this->nVariantsUpdated ++;
                                     }
-                                    $this->nVariantsUpdated ++;
                                     $this->nProgressCount ++;
                                     continue 2; // On to the next variant. We ignore any other VOTs.
 
