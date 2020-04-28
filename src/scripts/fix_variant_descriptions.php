@@ -536,7 +536,8 @@ class LOVD_VVAnalyses {
                 // Clean genomic DNAs field, remove NC from it.
                 $aVV['data']['DNA_clean'] = substr(strstr($aVV['data']['DNA'], ':'), 1);
                 if ($this->bDNA38) {
-                    if (count($aVV['data']['genomic_mappings']['hg38']) == 1) {
+                    if (isset($aVV['data']['genomic_mappings']['hg38'])
+                        && count($aVV['data']['genomic_mappings']['hg38']) == 1) {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
                         $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
                     } else {
@@ -598,8 +599,9 @@ class LOVD_VVAnalyses {
                             // Handle EREF errors and the like.
                             // Ignoring ESYNTAX here because that should have
                             //  been handled for the original variant already.
-                            if (isset($aVVHG38['errors']['EREF'])) {
-                                // EREF error; the genomic variant can not be correct.
+                            if (isset($aVVHG38['errors']['ERANGE']) || isset($aVVHG38['errors']['EREF'])) {
+                                // ERANGE or EREF error; the genomic variant
+                                //  cannot be correct.
                                 // If we get here, it means the hg19 variant
                                 //  wasn't in error, or could have been corrected
                                 //  using the cDNA variant. We cannot tell the
@@ -609,6 +611,7 @@ class LOVD_VVAnalyses {
                                 $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
 
                                 // Consider it handled.
+                                unset($aVVHG38['errors']['ERANGE']);
                                 unset($aVVHG38['errors']['EREF']);
                             }
 
