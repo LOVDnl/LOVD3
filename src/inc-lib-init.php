@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-04-21
+ * Modified    : 2020-04-30
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -816,15 +816,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Isolate the position(s) from the variant. We don't support combined variants.
     // We're not super picky, and would therefore approve of c.1_2A>C; we also
     //  don't check for the end of the variant, it may contain bases, or not.
-    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
+    if (preg_match('/^([cgmn])\.(\()?([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|con|del(?:ins)?|dup|inv|ins)(.*)(?(2)\))/', $sVariant, $aRegs)) {
         //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
-        //                       2 = Start position, might be negative or in the 3' UTR.
-        //                                   3 = Start position intronic offset, if available.
-        //                                                        4 = End position, might be negative or in the 3' UTR.
-        //                                                                    5 = End position intronic offset, if available.
-        //                                                                                       6 = The variant, which we'll use to determine the type.
-        //                                                                                                                            7 = The suffix.
-        list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant, $sSuffix) = $aRegs;
+        //                       2 = Do we have an opening parenthesis?
+        //                            3 = Start position, might be negative or in the 3' UTR.
+        //                                        4 = Start position intronic offset, if available.
+        //                                                             5 = End position, might be negative or in the 3' UTR.
+        //                                                                         6 = End position intronic offset, if available.
+        //                                                                                            7 = The variant, which we'll use to determine the type.
+        //                                                                                                                                 8 = The suffix.
+        list(, $sPrefix,, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant, $sSuffix) = $aRegs;
 
         if ($bCheckHGVS) {
             // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
