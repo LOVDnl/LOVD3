@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-04-28
+ * Modified    : 2020-04-30
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -466,6 +466,11 @@ class LOVD_VVAnalyses {
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
+                                    } elseif (lovd_getVariantInfo(str_replace('r.', 'c.', $aVOT['RNA']), '', true)
+                                        || preg_match('/^r.\[[0-9]+/', $aVOT['RNA'])) {
+                                        // If the RNA variant looks like a full variant description,
+                                        //  the current value must be better (or at least more
+                                        //  specific) than what we have; keep it!
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
@@ -762,6 +767,11 @@ class LOVD_VVAnalyses {
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
+                                    } elseif (lovd_getVariantInfo(str_replace('r.', 'c.', $aVOT['RNA']), '', true)
+                                        || preg_match('/^r.\[[0-9]+/', $aVOT['RNA'])) {
+                                        // If the RNA variant looks like a full variant description,
+                                        //  the current value must be better (or at least more
+                                        //  specific) than what we have; keep it!
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
@@ -1092,7 +1102,8 @@ class LOVD_VVAnalyses {
         $("#tr_stats td").html("' . $this->sCurrentChromosome . ':' . $this->nCurrentPosition .
                 (!$this->nVariantsDone? '' : ' (checked ' . $this->nVariantsDone . ' variant' . ($this->nVariantsDone == 1? '' : 's') .
                     (!$this->nVariantsUpdated? '' : ', updated ' . $this->nVariantsUpdated . ' variant' . ($this->nVariantsUpdated == 1? '' : 's')) . ')') .
-                ' <IMG src=\"gfx/lovd_loading.gif\" alt=\"\" width=\"13\" height=\"13\" style=\"float: right;\">");
+                (ACTION != 'run'? '' : ' <IMG src=\"gfx/lovd_loading.gif\" alt=\"\" width=\"13\" height=\"13\" style=\"float: right;\">') .
+                '");
       </SCRIPT>');
             $this->nCurrentPositionReported = $this->nCurrentPosition;
         }
