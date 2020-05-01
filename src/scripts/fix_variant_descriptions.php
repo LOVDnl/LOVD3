@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-04-30
+ * Modified    : 2020-05-01
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -374,6 +374,28 @@ class LOVD_VVAnalyses {
                         $this->nProgressCount ++; // To show progress.
                         continue; // Then continue to the next variant.
 
+                    } elseif (isset($aVV['errors']['ESYNTAX']) && $this->bRemarks) {
+                        // Other ESYNTAX errors, we just report.
+                        // Don't double-mark, so check if it's marked first.
+                        if (!$_DB->query('
+                                        SELECT COUNT(*)
+                                        FROM ' . TABLE_VARIANTS . '
+                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
+                            array($aVariant['id'], '%[ESYNTAX]%'))->fetchColumn()) {
+                            // Add the error, set variant as marked when already public.
+                            // Assuming here that $aVVVot['errors'] has named keys.
+                            $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                                'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
+                                    'Variant Error [ESYNTAX]: ' .
+                                    'This genomic variant has an error (' . $aVV['errors']['ESYNTAX'] . '). ' .
+                                    'Please fix this entry and then remove this message.'),
+                                'statusid' => min($aVariant['statusid'], STATUS_MARKED),
+                            ));
+                            $this->nVariantsUpdated ++;
+                        }
+                        $this->nProgressCount ++; // To show progress.
+                        continue; // Then continue to the next variant.
+
                     } elseif (isset($aVV['errors']['EREF'])) {
                         // EREF error; the genomic variant can not be correct.
                         // Loop the cDNA variants, if they are valid (all of them),
@@ -456,7 +478,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', '-', 'r.?', 'r.(?)'))
+                                    if (in_array($aVOT['RNA'], array('', '-', 'r.?', 'r.(?)', 'r.(=)'))
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVOT['DNA'])
                                             && !preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // Overwrite the RNA field if it's different and not so interesting,
@@ -757,7 +779,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current RNA value with the new RNA prediction.
                                 if ($aVOT['RNA'] != $aVVVot['data']['RNA']) {
-                                    if (in_array($aVOT['RNA'], array('', '-', 'r.?', 'r.(?)'))
+                                    if (in_array($aVOT['RNA'], array('', '-', 'r.?', 'r.(?)', 'r.(=)'))
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVOT['DNA'])
                                             && !preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // Overwrite the RNA field if it's different and not so interesting,
