@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2020-04-21
+ * Modified    : 2020-05-01
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -68,6 +68,30 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)delins([0-9]+_[0-9]+)$/', $sVariant, $aRegs)) {
         // Return as a conversion.
         return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'con' . $aRegs[2]);
+    }
+
+    // Parentheses where they shouldn't belong?
+    // g.(1234_2345)del doesn't need those parentheses.
+    if (preg_match('/^([gm])\.\((\d+_\d+)\)(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
+        return lovd_fixHGVS($aRegs[1] . '.' . $aRegs[2] . $aRegs[3] . $aRegs[4]);
+    }
+
+    // Maybe positions are in wrong order?
+    $aVariantInfo = lovd_getVariantInfo($sVariant, '');
+    if (isset($aVariantInfo['warnings']['WPOSITIONSSWAPPED'])) {
+        // Swap positions in the description as well.
+        $sPositionStart = $aVariantInfo['position_start'] .
+            (!isset($aVariantInfo['position_start_intron'])? '' :
+                ($aVariantInfo['position_start_intron'] < 0? '' : '+') .
+                $aVariantInfo['position_start_intron']);
+        $sPositionEnd = $aVariantInfo['position_end'] .
+            (!isset($aVariantInfo['position_end_intron'])? '' :
+                ($aVariantInfo['position_end_intron'] < 0? '' : '+') .
+                $aVariantInfo['position_end_intron']);
+
+        return lovd_fixHGVS(str_replace(
+            $sPositionEnd . '_' . $sPositionStart,
+            $sPositionStart . '_' . $sPositionEnd, $sVariant));
     }
 
     return $sVariant;
