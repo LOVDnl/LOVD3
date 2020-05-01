@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-04-30
+ * Modified    : 2020-05-01
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -797,6 +797,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'position_start' => 0,
         'position_end' => 0,
         'type' => '',
+        'warnings' => array(),
     );
 
     // If given, check if we already know this transcript.
@@ -859,8 +860,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     return false;
                 }
             }
-
-            return true;
         }
 
         if ($sPrefix != 'c' && $sPrefix != 'n') {
@@ -950,8 +949,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     return false;
                 }
             }
-
-            return true;
         }
 
         // Always at least create the intron fields for c. and n. variants.
@@ -1062,6 +1059,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // If a variant is described poorly with a start > end, then we'll swap the positions so we will store them correctly.
     if ($aResponse['position_start'] > $aResponse['position_end']) {
+        // Don't do this if we're checking the HGVS.
+        if ($bCheckHGVS) {
+            return false;
+        } else {
+            $aResponse['warnings']['WPOSITIONSSWAPPED'] = 'Variant end position is higher than variant start position.';
+        }
+
         // There's many ways of doing this, but this method is the simplest to read.
         $nTmp = $aResponse['position_start'];
         $aResponse['position_start'] = $aResponse['position_end'];
@@ -1073,6 +1077,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['position_start_intron'] = $aResponse['position_end_intron'];
             $aResponse['position_end_intron'] = $nTmp;
         }
+    }
+
+    // End of all checks. If we only wanted to know about the HGVS, then quit.
+    if ($bCheckHGVS) {
+        return true;
     }
 
     // Variant type.
@@ -1113,8 +1122,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     if (isset($aMinMaxValues[$sPrefix])) {
         // If the min and max values are defined for this prefix, check the fields.
         foreach ($aMinMaxValues[$sPrefix] as $sField => $aMinMaxValue) {
+            $nOriValue = $aResponse[$sField];
             $aResponse[$sField] = max($aResponse[$sField], $aMinMaxValue[0]);
             $aResponse[$sField] = min($aResponse[$sField], $aMinMaxValue[1]);
+            if ($nOriValue != $aResponse[$sField]) {
+                if (!isset($aResponse['warnings']['WPOSITIONSLIMIT'])) {
+                    $aResponse['warnings']['WPOSITIONSLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sField . '.';
+                } else {
+                    // Append.
+                    $aResponse['warnings']['WPOSITIONSLIMIT'] =
+                        str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONSLIMIT'], '.')) . ', ' . $sField . '.';
+                }
+            }
         }
     }
 
