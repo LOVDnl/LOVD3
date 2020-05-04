@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-05-01
+ * Modified    : 2020-05-04
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -504,11 +504,11 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?')) && preg_match('/[0-9]+/', $aVVVot['data']['protein'])) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
-                                        //  and when we have something better.
+                                        //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
-                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
+                                    } elseif (str_replace('*', 'Ter', $aVOT['protein']) == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
                                         || ($aVOT['protein'] == 'p.?' && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
@@ -805,11 +805,11 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?')) && preg_match('/[0-9]+/', $aVVVot['data']['protein'])) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
-                                        //  and when we have something better.
+                                        //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
-                                    } elseif ($aVOT['protein'] == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
+                                    } elseif (str_replace('*', 'Ter', $aVOT['protein']) == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
                                         || ($aVOT['protein'] == 'p.?' && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } else {
