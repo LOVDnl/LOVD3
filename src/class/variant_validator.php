@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-04-24
+ * Modified    : 2020-05-06
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -389,7 +389,6 @@ class LOVD_VV
             $aData['errors'] = $aJSON['errors'];
             // Check the flag value.
             if ($aJSON['flag']) {
-                // Flag is empty even when giving a delG on a REF:C and on roll forward errors.
                 switch ($aJSON['flag']) {
                     case 'genomic_variant_warning':
                         if ($aJSON[$sVariant]['genomic_variant_error']) {
@@ -398,7 +397,10 @@ class LOVD_VV
                             // VV has declared their error messages are stable.
                             // This means we can parse them and rely on them not to change.
                             // Add error code if possible, so we won't have to parse the error message again somewhere.
-                            if (strpos($sError, 'is outside the boundaries of reference sequence') !== false) {
+                            if ($sError == 'Length implied by coordinates must equal sequence deletion length') {
+                                // EINCONSISTENTLENGTH error.
+                                $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
+                            } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false) {
                                 // ERANGE error.
                                 $aData['errors']['ERANGE'] = $sError;
                             } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
@@ -407,8 +409,7 @@ class LOVD_VV
                             } elseif (strpos($sError, 'is not associated with genome build') !== false) {
                                 // EREFSEQ error.
                                 $aData['errors']['EREFSEQ'] = $sError;
-                            } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1'
-                                || $sError == 'Length implied by coordinates must equal sequence deletion length') {
+                            } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
                                 // ESYNTAX error.
                                 $aData['errors']['ESYNTAX'] = $sError;
                             } else {
@@ -691,7 +692,10 @@ class LOVD_VV
                             //  errors here would be about the transcript we're
                             //  analyzing now, but since we don't support NCs,
                             //  we don't need to worry about that now.
-                            $sError = str_replace($sVariant . ': ', '', $sError);
+                            $sError = str_replace(
+                                array(
+                                    $sVariant . ': ',
+                                    str_replace(array(strstr($sVariant, '(', true), '(', ')'), '', $sVariant) . ': '), '', $sError);
 
                             // VV has declared their error messages are stable.
                             // This means we can parse them and rely on them not to change.
@@ -699,6 +703,9 @@ class LOVD_VV
                             if (strpos($sError, 'Invalid genome build has been specified') !== false) {
                                 // EBUILD error.
                                 $aData['errors']['EBUILD'] = $sError;
+                            } elseif ($sError == 'Length implied by coordinates must equal sequence deletion length') {
+                                // EINCONSISTENTLENGTH error.
+                                $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
                             } elseif (strpos($sError, 'coordinates do not agree with the intron/exon boundaries') !== false) {
                                 // EINVALIDBOUNDARY error.
                                 $aData['errors']['EINVALIDBOUNDARY'] = $sError;
@@ -712,8 +719,7 @@ class LOVD_VV
                             } elseif (strpos($sError, 'No transcript definition for') !== false) {
                                 // EREFSEQ error.
                                 $aData['errors']['EREFSEQ'] = $sError;
-                            } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1'
-                                || $sError == 'Length implied by coordinates must equal sequence deletion length') {
+                            } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
                                 // ESYNTAX error.
                                 $aData['errors']['ESYNTAX'] = $sError;
                             } else {
@@ -799,8 +805,16 @@ class LOVD_VV
             if ($aJSON['validation_warnings']) {
                 // Not a previously seen error, handled through the flag value.
                 // We'll assume a warning.
-                // FIXME: Value may need cleaning!
-                // FIXME: Does this ever happen?
+
+                // VV throws two warnings for del100 variants, because of the '100'.
+                if (($nKey = array_search('Trailing digits are not permitted in HGVS variant descriptions',
+                        $aJSON['validation_warnings'])) !== false) {
+                    // We silently skip these warnings.
+                    unset($aJSON['validation_warnings'][$nKey]);
+                    // Also unset the next line, which contains the link to the docs.
+                    unset($aJSON['validation_warnings'][$nKey + 1]);
+                }
+
                 $aData['warnings'][] = $aJSON['validation_warnings'];
             }
 
