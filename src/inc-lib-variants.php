@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2020-05-01
+ * Modified    : 2020-05-07
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -80,18 +80,30 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     $aVariantInfo = lovd_getVariantInfo($sVariant, '');
     if (isset($aVariantInfo['warnings']['WPOSITIONSSWAPPED'])) {
         // Swap positions in the description as well.
-        $sPositionStart = $aVariantInfo['position_start'] .
-            (!isset($aVariantInfo['position_start_intron'])? '' :
-                ($aVariantInfo['position_start_intron'] < 0? '' : '+') .
-                $aVariantInfo['position_start_intron']);
-        $sPositionEnd = $aVariantInfo['position_end'] .
-            (!isset($aVariantInfo['position_end_intron'])? '' :
-                ($aVariantInfo['position_end_intron'] < 0? '' : '+') .
-                $aVariantInfo['position_end_intron']);
+        if (preg_match('/\.(\()?([0-9?_*+-]+)(?(1)\))_(\()?([0-9?_*+-]+)(?(3)\))[A-Za-z]/', $sVariant, $aRegs)) {
+            // Precise swapping, supporting uncertain positions.
+            list(, $bStartParentheses, $sPositionStart, $bEndParentheses, $sPositionEnd) = $aRegs;
+            return lovd_fixHGVS(str_replace(
+                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')') . '_' .
+                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')'),
+                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')') . '_' .
+                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')'), $sVariant));
 
-        return lovd_fixHGVS(str_replace(
-            $sPositionEnd . '_' . $sPositionStart,
-            $sPositionStart . '_' . $sPositionEnd, $sVariant));
+        } else {
+            // Fallback, in case the match above fails. (can it?)
+            $sPositionStart = $aVariantInfo['position_start'] .
+                (!isset($aVariantInfo['position_start_intron'])? '' :
+                    ($aVariantInfo['position_start_intron'] < 0? '' : '+') .
+                    $aVariantInfo['position_start_intron']);
+            $sPositionEnd = $aVariantInfo['position_end'] .
+                (!isset($aVariantInfo['position_end_intron'])? '' :
+                    ($aVariantInfo['position_end_intron'] < 0? '' : '+') .
+                    $aVariantInfo['position_end_intron']);
+
+            return lovd_fixHGVS(str_replace(
+                $sPositionEnd . '_' . $sPositionStart,
+                $sPositionStart . '_' . $sPositionEnd, $sVariant));
+        }
     }
 
     return $sVariant;
