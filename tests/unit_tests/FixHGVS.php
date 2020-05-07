@@ -63,6 +63,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.200_100dup', 'g.100_200dup'),
             array('g.500_(100_200)del', 'g.(100_200)_500del'),
             array('g.(400_500)_100del', 'g.100_(400_500)del'),
+            // Correct RNA-like descriptions.
+            array('c.4780delinsgagagauu', 'c.4780delinsGAGAGATT'),
         );
     }
 }

@@ -106,6 +106,13 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         }
     }
 
+    // We also don't like bases in lowercase.
+    if (preg_match('/^(.+)([a-z]>[a-z])$/', $sVariant, $aRegs)
+        || preg_match('/^(.+ins)([a-z]+)$/', $sVariant, $aRegs)) {
+        // Also convert U to T, since lowercase bases may mean an RNA-based description.
+        return lovd_fixHGVS($aRegs[1] . strtoupper(str_replace('u', 't', $aRegs[2])));
+    }
+
     return $sVariant;
 }
 
