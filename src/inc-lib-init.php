@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-05-01
+ * Modified    : 2020-05-07
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -911,19 +911,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // If that didn't work, try matching variants with uncertain positions.
     // We're not super picky, and don't check the end of the variant.
-    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
+    } elseif (preg_match('/^([cgmn])\.(\()?([\-\*]?\d+|\?)([-+](?:\d+|\?))?(?(2)_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\))_(\()?([\-\*]?\d+|\?)([-+](?:\d+|\?))?(?(7)_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\))(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
         //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
-        //                               2 = Earliest start position, might be a question mark.
-        //                                              3 = Earlier start position intronic offset, if available.
-        //                                                                4 = Latest start position, might be a question mark.
-        //                                                                               5 = Latest start position intronic offset, if available.
-        //                                                                                                     6 = Earliest end position, might be a question mark.
-        //                                                                                                                    7 = Earliest end position intronic offset, if available.
-        //                                                                                                                                      8 = Latest end position, might be a question mark.
-        //                                                                                                                                                     9 = Latest end position intronic offset, if available.
-        //                                                                                                                                                                        10 = The variant, which we'll use to determine the type.
-        //                                                                                                                                                                                                 11 = The suffix.
-        list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant, $sSuffix) = $aRegs;
+        //                             2 = Check for opening parenthesis in start position (which triggers it to be a range).
+        //                                  3 = Earliest start position, might be a question mark.
+        //                                                 4 = Earlier start position intronic offset, if available.
+        //                                                                        5 = Latest start position, might be a question mark.
+        //                                                                                       6 = Latest start position intronic offset, if available.
+        //                                                                                                            7 = Check for opening parenthesis in end position (which triggers it to be a range).
+        //                                                                                                                 8 = Earliest end position, might be a question mark.
+        //                                                                                                                                9 = Earliest end position intronic offset, if available.
+        //                                                                                                                                                       10 = Latest end position, might be a question mark.
+        //                                                                                                                                                                      11 = Latest end position intronic offset, if available.
+        //                                                                                                                                                                                          12 = The variant, which we'll use to determine the type.
+        //                                                                                                                                                                                                                       13 = The suffix.
+        list(, $sPrefix,, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron,, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant, $sSuffix) = $aRegs;
 
         if ($bCheckHGVS) {
             // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
@@ -962,16 +964,17 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             } elseif (
                 (!ctype_digit($sStartPositionEarly) && $sStartPositionEarly != '?' ) ||
-                (!ctype_digit($sStartPositionLate) && $sStartPositionLate != '?') ||
+                (!ctype_digit($sStartPositionLate) && $sStartPositionLate != '?' && $sStartPositionLate) ||
                 (!ctype_digit($sEndPositionEarly) && $sEndPositionEarly != '?') ||
-                (!ctype_digit($sEndPositionLate) && $sEndPositionLate != '?')) {
+                (!ctype_digit($sEndPositionLate) && $sEndPositionLate != '?' && $sEndPositionLate)) {
                 // Non-numeric first character of the positions (- or *) is also impossible for genomic variants.
                 return false;
             }
         }
 
         // Convert 3' UTR notations into normal notations.
-        if ($sStartPositionEarly{0} == '*' || $sStartPositionLate{0} == '*' || $sEndPositionEarly{0} == '*' || $sEndPositionLate{0} == '*') {
+        if ($sStartPositionEarly{0} == '*' || ($sStartPositionLate && $sStartPositionLate{0} == '*')
+            || $sEndPositionEarly{0} == '*' || ($sEndPositionLate && $sEndPositionLate{0} == '*')) {
             // Check if a transcript ID has been provided.
             if ($sTranscriptID === '') {
                 // No, but we'll need it.
