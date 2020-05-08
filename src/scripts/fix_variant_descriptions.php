@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-05-07
+ * Modified    : 2020-05-08
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -670,8 +670,31 @@ class LOVD_VVAnalyses {
                                 // It's actually the same variant! Just bad mapping.
                                 $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
                             } else {
-                                // We don't know what's going on, panic for now.
-                                $this->panic($aVariant, $aVV, 'hg38 variant does not match the hg19 variant, nor does it normalize to the predicted hg38 variant. Now what?');
+                                // No good, we don't know whether to trust the hg19 or the hg38.
+                                // This happens now and then. We don't know what to do,
+                                //  so we'll just mark the variant and be done with it.
+                                if ($this->bRemarks) {
+                                    // Don't double-mark, so check if it's marked first.
+                                    if (!$_DB->query('
+                                        SELECT COUNT(*)
+                                        FROM ' . TABLE_VARIANTS . '
+                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
+                                        array($aVariant['id'], '%[EBUILDMISMATCH]%'))->fetchColumn()) {
+                                        // Add the error, set variant as marked when already public.
+                                        $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                                            'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
+                                                'Variant Error [EBUILDMISMATCH]: This variant seems to mismatch; the genomic variants on hg19 and hg38 seem to not belong together. ' .
+                                                'Please fix this entry and then remove this message.'),
+                                            'statusid' => min($aVariant['statusid'], STATUS_MARKED),
+                                        ));
+                                        $this->nVariantsUpdated ++;
+                                    }
+                                    $this->nProgressCount ++;
+                                    continue; // On to the next variant.
+                                } else {
+                                    // If we don't have the Remarks field active, just panic anyway.
+                                    $this->panic($aVariant, $aVV, 'hg38 variant does not match the hg19 variant, nor does it normalize to the predicted hg38 variant. Now what?');
+                                }
                             }
                         }
                     }
