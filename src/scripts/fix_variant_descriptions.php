@@ -402,8 +402,6 @@ class LOVD_VVAnalyses {
                         //  and the cDNA variant(s) are on the same chromosome,
                         //  then correct the genomic variant, it's probably wrong.
                         // It couldn't have been the source, since it's not valid.
-                        // Anyway people will get an email when we change things,
-                        //  so it can always be reversed when it's wrong.
 
                         // Collect alternative descriptions based on the VOTs.
                         $aMappedAlternatives = array();
@@ -583,11 +581,6 @@ class LOVD_VVAnalyses {
                         $this->panic($aVariant, $aVV, 'None or multiple hg38 mappings given for variant.');
                     }
                 }
-
-                // FIXME: We want to send emails to the users when we edit
-                //  something, right? I know the emailing code is horrible and
-                //  almost impossible to understand, but it would be good to see
-                //  how we can get that code to work for us.
 
                 // First, check NC description.
                 if ($aVariant['DNA'] != $aVV['data']['DNA_clean']) {
@@ -905,7 +898,7 @@ class LOVD_VVAnalyses {
                 // Anything to update?
                 if ($aUpdate) {
                     if (count($aUpdate) == 1 && key($aUpdate) == 'DNA38') {
-                        // We only have to update the hg38 value. We can do that without any issues and without sending any email.
+                        // We only have to update the hg38 value. We can do that without any issues.
                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
                             'VariantOnGenome/DNA/hg38' => $aUpdate['DNA38'],
                         ));
@@ -913,25 +906,19 @@ class LOVD_VVAnalyses {
                     } else {
                         // Update the entry!
 
-                        // We'll be emailing, so make sure we load the data as is for the email.
-                        $zData = $_DATA['Genome']->loadEntry($aVariant['id']);
-
                         // Are genes involved as well?
                         if ($aVariant['vots']) {
                             // So, this will be annoying. I'd like to just have one object for all of this,
-                            //  but currently, VOT's loadAll() requires the variant's column set.
+                            //  but VOT's updateAll() requires the variant's transcript set.
                             // This in turn depends on the gene(s) the variant is linked to, and this can be multiple.
                             // So, the object should be loaded for *every variant* that we update, not per gene.
                             // We might still hack our way around this, for instance by loading the object
-                            //  once and then overwriting its column set to a basic default list.
-                            // This will however cause problems with the email script, which will then show empty fields.
-                            // To hell with it, I'll just load the object...
+                            //  once and then overwriting its transcript set with the list we have here.
                             $_DATA['Transcript'] = new LOVD_TranscriptVariant('', $aVariant['id']);
-                            $zData = array_merge($zData, $_DATA['Transcript']->loadAll($aVariant['id']));
                         }
 
                         // Build the POST array.
-                        $_POST = $zData;
+                        $_POST = array();
                         $aFieldsGenome = array();
                         $aFieldsTranscripts = array();
 
@@ -1051,17 +1038,6 @@ class LOVD_VVAnalyses {
                         lovd_setUpdatedDate($aGenes, false);
                     }
                 }
-
-
-
-//                exit;///////////////////////////////////////////////////////////////////////////
-                /*
-                // FIXME: TODO:
-                Check memory usage and clean cache when needed (array_shift()).
-                If VOT cannot be verified (VV doesn't know the transcript), but everything else seems OK, then assume it's OK?
-                It should probably email when we change things, so users are aware of them, and we have some kind of log of what has been changed. The really simple changes (adding hg38 or changing delG to del or so) we can just skip.
-                Log problems nicely, or perhaps have this script send emails when problems are found?
-                */
 
                 // Increase progress count by one.
                 $this->nProgressCount ++;
