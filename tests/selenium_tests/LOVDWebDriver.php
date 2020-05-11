@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-26
- * Modified    : 2016-11-01
- * For LOVD    : 3.0-18
+ * Modified    : 2020-05-11
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -54,7 +55,7 @@ class LOVDWebDriver extends RemoteWebDriver {
 
         // Create a RefreshingWebElement and set resources needed to let the
         // element refresh in the future.
-        $element = new RefreshingWebElement($this->getExecuteMethod(), $raw_element['ELEMENT']);
+        $element = new RefreshingWebElement($this->getExecuteMethod(), current($raw_element));
         $element->setLocator($by);
         $element->setWebDriver($this);
         return $element;

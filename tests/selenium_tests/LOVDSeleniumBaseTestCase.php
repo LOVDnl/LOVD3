@@ -156,7 +156,7 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 
         // We're seeing a small number of failed logins, reasons unknown. Since
         //  we rely already on the login form to forward logged in users, we'll
-        //  just retry this function untill we've gotten in.
+        //  just retry this function until we've gotten in.
         $nSleepMax = 2000000; // Wait 2 seconds second in total.
         $nSlept = 0;
         $nSleepStep = 500000; // Sleep for half a second, each time.

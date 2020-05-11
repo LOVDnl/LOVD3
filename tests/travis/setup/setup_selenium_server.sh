@@ -7,7 +7,10 @@
 
 # Before changing any of these versions, ensure they are compatible with each other, and with your browser versions.
 seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar"
-chromeDriverURL="http://chromedriver.storage.googleapis.com/80.0.3987.106/chromedriver_linux64.zip"
+# Because we're using the latest stable Chrome, we need to use the latest stable Chrome driver.
+chromeDriverVersion=$(curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip"
+# https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html
 geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
 
 echo "Download Selenium"
