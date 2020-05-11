@@ -4,7 +4,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class admin_tests extends LOVDSeleniumWebdriverBaseTestCase
+class TravisTest extends LOVDSeleniumWebdriverBaseTestCase
 {
 
     public function testLoadPage()

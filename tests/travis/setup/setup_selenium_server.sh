@@ -1,13 +1,13 @@
 #!/bin/bash
 
-## This file is used in Travis CI.
-## In this file composer is used to install the dependencies defined in composer.json
-## Then the selenium server is downloaded and started.
-## When the selenium server is not started this script exits 1. And in Travis the tests will fail.
-serverUrl='http://127.0.0.1:4444'
+# This file is used in Travis CI.
+# It downloads the selenium server, the chrome driver and the gecko driver.
+# Selenium is then started and quickly tested.
+# When the selenium server is not started, this script returns a status of 1.
+
 # Before changing any of these versions, ensure they are compatible with each other, and with your browser versions.
 seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar"
-chromeDriverURL="http://chromedriver.storage.googleapis.com/79.0.3945.16/chromedriver_linux64.zip"
+chromeDriverURL="http://chromedriver.storage.googleapis.com/80.0.3987.106/chromedriver_linux64.zip"
 geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
 
 echo "Download Selenium"
@@ -55,7 +55,7 @@ java -Djava.net.preferIPv4Stack=true \
 sleep 3
 #cat /tmp/selenium.log
 
-wget --retry-connrefused --tries=10 --waitretry=3 --output-file=/dev/null ${serverUrl}/wd/hub/status -O /dev/null
+wget --retry-connrefused --tries=10 --waitretry=3 --output-file=/dev/null http://127.0.0.1:4444/wd/hub/status -O /dev/null
 if [ ! $? -eq 0 ]; then
     echo "Selenium Server not started --> EXIT!"
     echo "Selenium STDERR:"

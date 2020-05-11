@@ -42,9 +42,9 @@ sudo sed -i -e "s,ServerAdmin webmaster@localhost,ServerAdmin travis-ci@localhos
 sudo chmod -R +r /home/travis
 sudo find /home/travis -type d -exec chmod +x {} \;
 
-echo 'Install mail agent.'
-# Pass the -y flag to suppress interactive requests.
-sudo apt-get -q -y install exim4 apcupsd nmap
+#echo 'Install mail agent.'
+## Pass the -y flag to suppress interactive requests.
+#sudo apt-get -q -y install exim4 apcupsd nmap
 
 echo 'Restart apache2'
 sudo /etc/init.d/apache2 restart
