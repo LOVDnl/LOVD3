@@ -46,6 +46,7 @@ addons:
     - php-json
     - php-mbstring
     - php-mysql
+    - php-zip
     - exim4
 
 services:

@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-06-27
- * Modified    : 2017-12-08
- * For LOVD    : 3.0-21
+ * Modified    : 2020-05-11
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2017-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -100,7 +101,7 @@ class SubmissionApiSuccessTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Go to import page to schedule submitted submission for import.
         $this->driver->get(ROOT_URL . '/src/import?schedule');
-        $sFileTD = '//table[@class="data"][tbody/tr/th/text()="Files to be processed"]/tbody/tr/td';
+        $sFileTD = '//table[@class="data"][tbody/tr/th/text()="Files to be processed"]/tbody/tr[last()]/td';
         $this->driver->findElement(WebDriverBy::xpath($sFileTD))->click();
         $this->driver->findElement(WebDriverBy::xpath('//input[@type="submit"]'))->click();
         $oMsgLocator = WebDriverBy::xpath('//td[text()="Successfully scheduled 1 file for import."]');
