@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2016-07-12
- * For LOVD    : 3.0-17
+ * Modified    : 2020-05-11
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -28,70 +29,85 @@
  *
  *************/
 
-
-class LOVDScreenshotListener implements PHPUnit_Framework_TestListener {
+class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
+{
     // Takes a screenshot on failing tests.
     // Based on PHPUnit's Selenium2TestCase/ScreenshotListener.php
 
     protected $directory;
-    protected $screenshots;
 
-    public function __construct($directory=null)
+
+
+
+
+    public function __construct ($directory = null)
     {
         if (is_null($directory)) {
             $relDir = dirname(__FILE__) . '/../test_results/error_screenshots';
             $directory = realpath($relDir);
         }
         $this->directory = $directory;
-        $this->screenshots = array();
     }
 
-    public function addError(PHPUnit_Framework_Test $test, Exception $e, $time)
+
+
+
+
+    public function addError (PHPUnit_Framework_Test $test, Exception $e, $time)
     {
-        $this->storeAScreenshot($test);
+        $this->storeAScreenshot($test, $e);
     }
 
-    public function addFailure(PHPUnit_Framework_Test $test, PHPUnit_Framework_AssertionFailedError $e, $time)
+
+
+
+
+    public function addFailure (PHPUnit_Framework_Test $test, PHPUnit_Framework_AssertionFailedError $e, $time)
     {
-        $this->storeAScreenshot($test);
+        $this->storeAScreenshot($test, $e);
     }
 
-    private function storeAScreenshot(PHPUnit_Framework_Test $test)
+
+
+
+
+    private function storeAScreenshot (PHPUnit_Framework_Test $test, $e)
     {
+        // Store screenshot. Also try to print some information on the error.
+        // Unfortunately, we don't seem to have access to the precise location
+        //  in our code where the failure occured. Only PHP Unit knows this, and
+        //  they show it at the end of the test suite.
+
         if ($test instanceof LOVDSeleniumWebdriverBaseTestCase &&
             $test->driver instanceof \Facebook\WebDriver\Remote\RemoteWebDriver) {
+
+            fwrite(STDERR, PHP_EOL .
+                $e->getMessage() . PHP_EOL .
+                get_class($test) . '::' . $test->getName() . PHP_EOL);
+
             try {
-                $file = $this->directory . '/' . get_class($test) . '__' . $test->getName() . '__' . date('Y-m-d\TH-i-s') . '.png';
+                $file = $this->directory . '/' . date('Y-m-d\TH-i-s') . '__' . get_class($test) . '__' . $test->getName() . '.png';
                 $test->driver->takeScreenshot($file);
-                $this->screenshots[] = $file;
             } catch (Exception $e) {
-                $file = $this->directory . '/' . get_class($test) . '__' . $test->getName() . '__' . date('Y-m-d\TH-i-s') . '.txt';
+                $file = $this->directory . '/' . date('Y-m-d\TH-i-s') . '__' . get_class($test) . '__' . $test->getName() . '.txt';
                 file_put_contents($file, "Screenshot generation doesn't work." . PHP_EOL
                     . $e->getMessage() . PHP_EOL
                     . $e->getTraceAsString());
-                $this->screenshots[] = $file;
             }
         }
     }
 
 
-    public function endTestSuite(PHPUnit_Framework_TestSuite $suite)
-    {
-        // Print log of screenshots to stderr.
-        if (is_array($this->screenshots) && count($this->screenshots) > 0) {
-            fwrite(STDERR, ' Screenshots taken: ' . implode(' ', $this->screenshots));
-        }
-        // Always print a newline to make the output look consistent when
-        // STDOUT and STDERR are mingled (e.g. on Travis).
-        fwrite(STDERR, PHP_EOL);
-        $this->screenshots = array();
-    }
 
 
-    public function addIncompleteTest(PHPUnit_Framework_Test $test, Exception $e, $time) {}
-    public function addSkippedTest(PHPUnit_Framework_Test $test, Exception $e, $time) {}
-    public function addRiskyTest(PHPUnit_Framework_Test $test, Exception $e, $time) {}
-    public function startTest(PHPUnit_Framework_Test $test) {}
-    public function endTest(PHPUnit_Framework_Test $test, $time) {}
-    public function startTestSuite(PHPUnit_Framework_TestSuite $suite) {}
+
+    /*
+    public function endTestSuite (PHPUnit_Framework_TestSuite $suite) {}
+    public function addIncompleteTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
+    public function addSkippedTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
+    public function addRiskyTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
+    public function startTest (PHPUnit_Framework_Test $test) {}
+    public function endTest (PHPUnit_Framework_Test $test, $time) {}
+    public function startTestSuite (PHPUnit_Framework_TestSuite $suite) {}
+    */
 }
