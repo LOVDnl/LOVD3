@@ -101,7 +101,6 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
-    /*
     public function endTestSuite (PHPUnit_Framework_TestSuite $suite) {}
     public function addIncompleteTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
     public function addSkippedTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
@@ -109,5 +108,4 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
     public function startTest (PHPUnit_Framework_Test $test) {}
     public function endTest (PHPUnit_Framework_Test $test, $time) {}
     public function startTestSuite (PHPUnit_Framework_TestSuite $suite) {}
-    */
 }
