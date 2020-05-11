@@ -1,8 +1,9 @@
-<phpunit stopOnFailure="false" bootstrap="../phpunit_bootstrap.php">
+<phpunit stopOnFailure="true" bootstrap="../phpunit_bootstrap.php">
     <testsuites>
         <testsuite name="admin_tests">
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/login_as_admin.php</file>
+<!--
             <file>shared_tests/create_gene_IVD.php</file>
             <file>admin_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
@@ -37,7 +38,7 @@
             <file>shared_tests/test_submission_api_fail.php</file>
             <file>shared_tests/test_submission_api_success.php</file>
             <file>admin_tests/delete_gene_IVD.php</file>
-            <file>admin_tests/multi_value_search.php</file>
+            <file>admin_tests/multi_value_search.php</file>-->
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="authorization_tests">
