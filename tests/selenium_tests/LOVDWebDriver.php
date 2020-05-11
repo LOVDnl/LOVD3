@@ -31,6 +31,7 @@
 
 require_once 'RefreshingWebDriverElement.php';
 
+use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Remote\DriverCommand;
 use \Facebook\WebDriver\Remote\RemoteWebDriver;
 use \Facebook\WebDriver\WebDriverBy;
@@ -48,10 +49,23 @@ class LOVDWebDriver extends RemoteWebDriver {
         // This method is similar to RemoteWebDriver::findElement() but
         // returns an instance of RefreshingWebElement.
         $params = array('using' => $by->getMechanism(), 'value' => $by->getValue());
-        $raw_element = $this->execute(
-            DriverCommand::FIND_ELEMENT,
-            $params
-        );
+
+        // Try up to 1 second to find the element.
+        $t = microtime(true);
+        while ((microtime(true) - $t) < 1) {
+            try {
+                $raw_element = $this->execute(
+                    DriverCommand::FIND_ELEMENT,
+                    $params
+                );
+                break;
+            } catch (NoSuchElementException $e) {
+                usleep(100000);
+            }
+        }
+        if (!isset($raw_element)) {
+            throw $e;
+        }
 
         // Create a RefreshingWebElement and set resources needed to let the
         // element refresh in the future.
@@ -59,6 +73,31 @@ class LOVDWebDriver extends RemoteWebDriver {
         $element->setLocator($by);
         $element->setWebDriver($this);
         return $element;
+    }
+
+
+
+
+
+    public function findElements (WebDriverBy $by)
+    {
+        // This method is similar to RemoteWebDriver::findElements() but
+        //  it fixes the RemoteWebDriver's bug of using the wrong index.
+        // Undefined index: ELEMENT.
+        // Caused by using $raw_element['ELEMENT'], which doesn't exist.
+        $params = array('using' => $by->getMechanism(), 'value' => $by->getValue());
+
+        $raw_elements = $this->execute(
+            DriverCommand::FIND_ELEMENTS,
+            $params
+        );
+
+        $elements = array();
+        foreach ($raw_elements as $raw_element) {
+            $elements[] = $this->newElement(current($raw_element));
+        }
+
+        return $elements;
     }
 
 
