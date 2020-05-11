@@ -1,6 +1,6 @@
 {
     "require-dev": {
         "phpunit/phpunit": "5.*",
-        "php-webdriver/webdriver": "1.*"
+        "php-webdriver/webdriver": "1.7.*"
     }
 }
