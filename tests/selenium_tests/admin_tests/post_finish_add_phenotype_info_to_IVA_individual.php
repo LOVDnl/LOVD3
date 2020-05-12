@@ -8,9 +8,7 @@ class PostFinishAddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumWebdrive
 {
     public function testPostFinishAddPhenotypeInfoToIVAIndividual()
     {
-        $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
-        $element->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/IVD$/', $this->driver->getCurrentURL()));
+        $this->driver->get(ROOT_URL . '/src/individuals/IVD');
 //        $element = $this->driver->findElement(WebDriverBy::cssSelector("#00000002 > td.ordered"));
         $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='00000002']"));
         $element->click();
@@ -32,8 +30,6 @@ class PostFinishAddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumWebdrive
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("Phenotype"));
-
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/phenotypes\/0000000003$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/phenotypes/0000000'));
     }
 }

@@ -8,20 +8,12 @@ class AddSummaryVariantOnlyDescribedOnGenomicLevelTest extends LOVDSeleniumWebdr
 {
     public function testAddSummaryVariantOnlyDescribedOnGenomicLevel()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000168($|#)/', $this->driver->getCurrentURL()));
-
-        // Mouse hover over Submit tab, to make 'submit new data' link visible.
-        $tabElement = $this->driver->findElement(WebDriverBy::xpath("//img[@id='tab_submit']"));
-        $this->driver->getMouse()->mouseMove($tabElement->getCoordinates());
-
-        $element = $this->driver->findElement(WebDriverBy::linkText("Submit new data"));
-        $element->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/', $this->driver->getCurrentURL()));
+        $this->driver->get(ROOT_URL . '/src/submit');
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/', $this->getConfirmation()));
         $this->chooseOkOnNextConfirmation();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants?create'));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
         $this->driver->get(ROOT_URL . "/src/variants?create&reference=Genome");
@@ -47,9 +39,7 @@ class AddSummaryVariantOnlyDescribedOnGenomicLevelTest extends LOVDSeleniumWebdr
         $element->click();
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
-        // wait for page redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
-
-        $this->assertContains("/src/variants/0000000169", $this->driver->getCurrentURL());
+        // Wait for page redirect.
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants/0000000'));
     }
 }

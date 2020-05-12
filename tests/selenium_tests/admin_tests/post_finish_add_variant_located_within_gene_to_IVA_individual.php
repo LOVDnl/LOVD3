@@ -8,9 +8,7 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
 {
     public function testPostFinishAddVariantLocatedWithinTest()
     {
-        $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
-        $element->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/IVD$/', $this->driver->getCurrentURL()));
+        $this->driver->get(ROOT_URL . '/src/screenings/IVD');
 //        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
         $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='0000000002']"));
         $element->click();
@@ -69,8 +67,6 @@ class PostFinishAddVariantLocatedWithinTest extends LOVDSeleniumWebdriverBaseTes
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
-
-        $this->assertContains("/src/variants/0000000334", $this->driver->getCurrentURL());
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants/0000000'));
     }
 }

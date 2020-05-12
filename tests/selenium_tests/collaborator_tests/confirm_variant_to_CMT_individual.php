@@ -16,7 +16,7 @@ class ConfirmVariantToCMTIndividualTest extends LOVDSeleniumWebdriverBaseTestCas
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*Are you sure you are done with submitting the variants found with this screening[\s\S][\s\S]*$/', $this->getConfirmation()));
         $this->chooseOkOnNextConfirmation();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/individual\/00000001$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/submit/individual/00000001'));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
         
