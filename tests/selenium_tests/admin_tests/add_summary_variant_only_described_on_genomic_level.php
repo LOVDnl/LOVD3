@@ -8,7 +8,7 @@ class AddSummaryVariantOnlyDescribedOnGenomicLevelTest extends LOVDSeleniumWebdr
 {
     public function testAddSummaryVariantOnlyDescribedOnGenomicLevel()
     {
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000168$/', $this->driver->getCurrentURL()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000168($|#)/', $this->driver->getCurrentURL()));
 
         // Mouse hover over Submit tab, to make 'submit new data' link visible.
         $tabElement = $this->driver->findElement(WebDriverBy::xpath("//img[@id='tab_submit']"));

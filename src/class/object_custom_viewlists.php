@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2020-01-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-03-31
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -589,6 +589,10 @@ class LOVD_CustomViewList extends LOVD_Object
                                             str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
                                             str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
                               ));
+                    if ($nKeyVOTUnique !== false) {
+                        // Unique view doesn't load these cols, so we can't show them even if users bypass the cols_to_hide.
+                        unset($this->aColumnsViewList['chromosome'], $this->aColumnsViewList['allele_']);
+                    }
                     if (empty($bLoadVOGEffect)) {
                         unset($this->aColumnsViewList['vog_effect']);
                     }

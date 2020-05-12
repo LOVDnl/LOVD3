@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2019-08-21
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-06
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -142,10 +142,6 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         }
         $sData = serialize($aData);
         $sPOSTVars .= '&data=' . rawurlencode($sData);
-
-        // Send setting for wiki indexing.
-        $bAllowIndex = $_DB->query('SELECT MAX(allow_index_wiki) FROM ' . TABLE_GENES)->fetchColumn();
-        $sPOSTVars .= '&allow_index_wiki=' . (int) $bAllowIndex;
     }
 
     // Contact upstream.

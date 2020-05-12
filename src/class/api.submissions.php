@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2019-08-08
- * For LOVD    : 3.0-22
+ * Modified    : 2020-04-08
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -357,9 +357,8 @@ class LOVD_API_Submissions
             foreach ($aIndividual['phenotype'] as $aPhenotype) {
                 $aPhenotypes[strtolower($aPhenotype['@source'])][$aPhenotype['@accession']] = $aPhenotype['@term'];
             }
-            // If we have (HPO) phenotypes but no diseases, or if we have phenotypes
-            //  and more than one disease, we need to add 'unclassified'.
-            if ($aPhenotypes['hpo'] && count($aPhenotypes['omim']) != 1) {
+            // If we have (HPO) phenotypes but no diseases, we need to add 'unclassified'.
+            if ($aPhenotypes['hpo'] && !count($aPhenotypes['omim'])) {
                 if (!$nDiseaseIDUnclassified) {
                     // We didn't look for it yet. Find it, and if it's not there, create it.
                     $nDiseaseIDUnclassified = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ? AND name LIKE ?', array('?', '%unclassified%'))->fetchColumn();
@@ -369,6 +368,8 @@ class LOVD_API_Submissions
                         $aData['Diseases'][] = array('id' => $nDiseaseIDUnclassified, 'symbol' => '?', 'name' => 'Unclassified', 'id_omim' => '', 'created_by' => $this->zAuth['id']);
                     }
                 }
+                // Link individual to the disease.
+                $aData['Individuals_To_Diseases'][] = array('individualid' => $nIndividualID, 'diseaseid' => $nDiseaseIDUnclassified);
                 $nDiseaseIDForHPO = $nDiseaseIDUnclassified;
             }
 
@@ -398,8 +399,7 @@ class LOVD_API_Submissions
             }
 
             // Then, store phenotypes. Add to the first disease we have attached
-            //  to this individual. If there were multiple diseases, we already
-            //  handled that by added the "Unclassified" disease first.
+            //  to this individual.
             // All HPO phenotypes will be stored as one phenotype entry.
             if ($aPhenotypes['hpo']) {
                 $sPhenotype = '';
@@ -1076,7 +1076,7 @@ class LOVD_API_Submissions
                     }
                 }
             } else {
-                $aInput['lsdb']['individual'][$iIndividual]['phenotype'] = array();
+                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Missing required phenotype element.';
             }
 
 

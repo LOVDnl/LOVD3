@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2018-05-15
+ * Modified    : 2020-03-31
  * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -607,7 +607,7 @@ if ($_GET['step'] == 2) {
             // 2009-03-25; 2.0-17; adapted by Gerard to avoid notices
             $nGenomicNumberIntron = (array_key_exists(0, $aIntron)? strlen($aIntron[0]) : 0);
 
-            while (list($nIntron, $sIntron) = each($aIntron)) {
+            foreach ($aIntron as $nIntron => $sIntron) {
                 if (!$sIntron) {
                     // No intronic sequence. Wouldn't know why, but whatever.
                     continue;
