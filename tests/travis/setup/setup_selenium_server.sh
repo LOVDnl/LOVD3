@@ -53,7 +53,7 @@ echo "Starting Selenium"
 java -Djava.net.preferIPv4Stack=true \
     -Dwebdriver.chrome.driver=chromedriver \
     -Dwebdriver.gecko.driver=geckodriver \
-    -jar ${serverFile} -port 4444
+    -jar ${serverFile} -port 4444 \
     > /tmp/selenium.log 2> /tmp/selenium_error.log &
 sleep 3
 cat /tmp/selenium.log
