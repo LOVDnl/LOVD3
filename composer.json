@@ -1,4 +1,13 @@
 {
+    "_readme": [
+        "We're using quite an old PHPUnit version; 5.7 while 9 is already out.",
+        "PHPUnit 5.7 still supports PHP5; if we won't use that anymore, then we can go to 6.* or higher.",
+        "For PHPUnit versions and their supported PHP versions, check:",
+        "https://phpunit.de/supported-versions.html",
+
+        "PHP WebDriver 1.8.1 has a bug in which WebDriverBy::name() doesn't work anymore, see:",
+        "https://github.com/php-webdriver/php-webdriver/issues/774"
+    ],
     "require-dev": {
         "phpunit/phpunit": "5.*",
         "php-webdriver/webdriver": "1.7.*"

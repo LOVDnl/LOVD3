@@ -9,7 +9,7 @@ GLOB="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ `ls -1 ${GLOB}/test_results/error_screenshots/ | wc -l` -gt 0 ];
 then
   # There are error screenshots. Also check for errors in the logs.
-  tail -n 50 /var/log/apache2/error.log;
+  tail -n 50 /var/log/apache2/error.log | grep -v ':notice]';
 fi # We could put an else and nicely die with exit 0, but the code below doesn't error anymore when there are no files.
 
 

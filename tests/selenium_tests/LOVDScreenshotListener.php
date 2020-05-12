@@ -101,6 +101,9 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
+    // Really dumb, but since PHPUnit_Framework_TestListener doesn't
+    //  implement these, but does define them, we should implement them.
+    // Yes, it makes no sense.
     public function endTestSuite (PHPUnit_Framework_TestSuite $suite) {}
     public function addIncompleteTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
     public function addSkippedTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}

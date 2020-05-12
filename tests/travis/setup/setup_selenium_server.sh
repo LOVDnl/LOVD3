@@ -53,10 +53,10 @@ echo "Starting Selenium"
 java -Djava.net.preferIPv4Stack=true \
     -Dwebdriver.chrome.driver=chromedriver \
     -Dwebdriver.gecko.driver=geckodriver \
-    -jar ${serverFile} -port 4444 &
-#    > /tmp/selenium.log 2> /tmp/selenium_error.log &
+    -jar ${serverFile} -port 4444
+    > /tmp/selenium.log 2> /tmp/selenium_error.log &
 sleep 3
-#cat /tmp/selenium.log
+cat /tmp/selenium.log
 
 wget --retry-connrefused --tries=10 --waitretry=3 --output-file=/dev/null http://127.0.0.1:4444/wd/hub/status -O /dev/null
 if [ ! $? -eq 0 ]; then
