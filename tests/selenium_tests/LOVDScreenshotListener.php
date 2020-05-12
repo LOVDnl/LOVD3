@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2020-05-11
+ * Modified    : 2020-05-12
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -101,10 +101,23 @@ class LOVDScreenshotListener implements PHPUnit_Framework_TestListener
 
 
 
+    public function endTestSuite (PHPUnit_Framework_TestSuite $suite)
+    {
+        // Normally run at the end of the test suite, but PHPUnit decides that
+        //  every file in our suite is a suite in itself. So, this is run after
+        //  every file is complete, but it saves us from having to call it from
+        //  .travis.yml which makes it look like yet another test.
+        // Upload all the screenshots, if we have any.
+        system(dirname(__FILE__) . '/../upload_test_results.sh');
+    }
+
+
+
+
+
     // Really dumb, but since PHPUnit_Framework_TestListener doesn't
     //  implement these, but does define them, we should implement them.
     // Yes, it makes no sense.
-    public function endTestSuite (PHPUnit_Framework_TestSuite $suite) {}
     public function addIncompleteTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
     public function addSkippedTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}
     public function addRiskyTest (PHPUnit_Framework_Test $test, Exception $e, $time) {}

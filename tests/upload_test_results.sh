@@ -18,15 +18,20 @@ fi # We could put an else and nicely die with exit 0, but the code below doesn't
 for file in `ls -1 -t -r ${GLOB}/test_results/error_screenshots/ | grep -F .png`; do
     echo "Uploading file: ${file}";
 
-    # Upload to transfer.sh, this command will output the URL on which the
-    # uploaded file can be reached.
-    RETURN=`curl -s -H "Max-Days: 2" --upload-file "${GLOB}/test_results/error_screenshots/${file}" https://transfer.sh`;
-    echo $RETURN;
-    if [[ $RETURN == "Could not save metadata" ]];
+    # Transfer.sh is dead, again, so let's stop relying on it.
+    # It is open source, so we could try to set it up on one of our own servers, though?
+    # For now, upload to file.io.
+    # This command will output the URL on which the uploaded file can be reached.
+    RETURN=`curl -s -F "file=@${GLOB}/test_results/error_screenshots/${file}" https://file.io?expires=1w`;
+    if [[ $(echo $RETURN | cut -b 1) != '{' || $(echo $RETURN | jq .success) != 'true' ]];
     then
-        # Transfer.sh service often fails.
-        echo "Transfer.sh failed, emailing file...";
+        # file.io service failed.
+        echo "Upload failed, emailing file...";
         mutt -s "Travis failure" -a "${GLOB}/test_results/error_screenshots/${file}" -- I.F.A.C.Fokkema@LUMC.nl < <(echo "Travis run failed. Screenshot attached.")
+    else
+        echo $RETURN | jq -r .link;
+        echo -n 'Expires in ';
+        echo -n $RETURN | jq -r .expiry;
     fi
 
     rm -f "${GLOB}/test_results/error_screenshots/${file}"

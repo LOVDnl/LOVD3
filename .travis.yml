@@ -36,9 +36,7 @@ addons:
 #    sources:
 #      - google-chrome
     packages:
-    - mutt
-#    - chromium-browser=61.0.3163.100-0ubuntu0.14.04.1202
-#    - chromium-browser
+    - mutt # For mailing screenshots if uploading fails.
     - apache2
     - libapache2-mod-php
     - php-curl
@@ -46,8 +44,9 @@ addons:
     - php-json
     - php-mbstring
     - php-mysql
-    - php-zip
+    - php-zip # For uploading files.
     - exim4
+    - jq # For using file.io.
 
 services:
   - mysql
@@ -72,27 +71,17 @@ script:
   # Two test are done which are independent of LOVD.
   - vendor/bin/phpunit --configuration ./tests/selenium_tests/phpunit.xml ./tests/travis/tests/
 
-  # Run all test suites.
-  - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite collaborator_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite import_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite manager_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
-  - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
+  # Run all test suites, starting at the unit tests.
   - vendor/bin/phpunit -v --configuration ./tests/unit_tests/phpunit.xml
-  - ./tests/upload_test_results.sh
+  - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite collaborator_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite import_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite manager_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
 
 notifications:
   email:
