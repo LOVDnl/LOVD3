@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-05-12
+ * Modified    : 2020-05-13
  * For LOVD    : 3.0-24
  *
- * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -32,22 +32,38 @@
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
-use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class UninstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testUninstallLOVDTest()
+    protected function setUp ()
     {
-        $this->logout();
-        $this->login('admin', 'test1234');
+        // Test if we have what we need for this test. If not, skip this test.
+        parent::setUp();
+        $this->driver->get(ROOT_URL . '/src/uninstall');
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        if (preg_match('/LOVD was not installed yet/', $sBody)) {
+            $this->markTestSkipped('LOVD was not installed yet.');
+        }
+        if (preg_match('/To access this area/', $sBody)) {
+            // We're not admin nor manager.
+            $this->logout();
+            $this->login('admin', 'test1234');
+            print(PHP_EOL . 'Logged in as Admin to complete ' . get_class() . PHP_EOL);
+        }
+    }
 
-        $this->driver->get(ROOT_URL . "/src/uninstall");
+
+
+
+
+    public function test ()
+    {
+        $this->driver->get(ROOT_URL . '/src/uninstall');
         $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Next >>']"));
-        $element->click();
+        $this->submitForm('Next');
+
         $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Uninstall LOVD']"));
-        $element->click();
+        $this->submitForm('Uninstall LOVD');
         $this->assertEquals("LOVD successfully uninstalled!\nThank you for having used LOVD!",
             $this->driver->findElement(WebDriverBy::cssSelector("div[id=lovd__progress_message]"))->getText());
     }
