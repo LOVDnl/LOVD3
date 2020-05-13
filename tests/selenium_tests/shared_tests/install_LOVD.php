@@ -42,9 +42,11 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         // This is needed because test suites may be started when the previous
         //  one did not complete. However, test suites need to be independent
         //  so LOVD still needs to be freshly installed for this test suite.
-        getLOVDGlobals();
-        if (defined('NOT_INSTALLED')) {
-            // All good!
+        // NOTE: Do NOT use getLOVDGlobals() before LOVD is installed!
+        $this->driver->get(ROOT_URL . '/src/install');
+        $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
+        if (preg_match('/This installer will create/', $bodyElement->getText())) {
+            // Not installed already, all good!
             return true;
         }
 
