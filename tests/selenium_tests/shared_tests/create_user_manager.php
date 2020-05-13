@@ -1,12 +1,68 @@
 <?php
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2015-02-17
+ * Modified    : 2020-05-13
+ * For LOVD    : 3.0-24
+ *
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
-use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class CreateUserManagerTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testCreateUserManager()
+    protected function setUp ()
+    {
+        // Test if we have what we need for this test. If not, skip this test.
+        parent::setUp();
+        // Manager is user ID 2.
+        $this->driver->get(ROOT_URL . '/src/users/00002');
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        if (preg_match('/LOVD was not installed yet/', $sBody)) {
+            $this->markTestSkipped('LOVD was not installed yet.');
+        }
+        if (preg_match('/To access this area/', $sBody)) {
+            // We're not admin nor manager.
+            $this->logout();
+            $this->login('admin', 'test1234');
+            print(PHP_EOL . 'Logged in as Admin to complete ' . get_class() . PHP_EOL);
+            $this->driver->get(ROOT_URL . '/src/users/00002');
+            $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        }
+        if (!preg_match('/No such ID!/', $sBody)) {
+            $this->markTestSkipped('User was already created.');
+        }
+    }
+
+
+
+
+
+    public function test ()
     {
         $this->driver->get(ROOT_URL . "/src/users?create&no_orcid");
         $this->enterValue(WebDriverBy::name("name"), "Test Manager");
@@ -17,16 +73,12 @@ class CreateUserManagerTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue(WebDriverBy::name("username"), "manager");
         $this->enterValue(WebDriverBy::name("password_1"), "test1234");
         $this->enterValue(WebDriverBy::name("password_2"), "test1234");
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="countryid"]/option[text()="Netherlands"]'));
-        $option->click();
+        $this->selectValue('countryid', 'Netherlands');
         $this->enterValue(WebDriverBy::name("city"), "Leiden");
-//        $this->select(WebDriverBy::name("level"), "Manager");
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="level"]/option[text()="Manager"]'));
-        $option->click();
+        $this->selectValue('level', 'Manager');
         $this->unCheck(WebDriverBy::name("send_email"));
         $this->enterValue(WebDriverBy::name("password"), "test1234");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create user']"));
-        $element->click();
+        $this->submitForm('Create user');
         $this->assertEquals("Successfully created the user account!",
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
