@@ -7,7 +7,7 @@
  * Modified    : 2020-02-13
  * For LOVD    : 3.0-23
  *
- * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -29,12 +29,13 @@
  *
  *************/
 
-
 require_once 'LOVDWebDriver.php';
 
 use \Facebook\WebDriver\Chrome\ChromeOptions;
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
+
+
 
 
 

@@ -3,11 +3,11 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2016-10-26
+ * Created     : 2016-09-28
  * Modified    : 2020-05-11
  * For LOVD    : 3.0-24
  *
- * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -38,6 +38,9 @@ use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverElement;
 
 
+
+
+
 class LOVDWebDriver extends RemoteWebDriver {
     /**
      * Sub class of RemoteWebDriver. Overloading its findElement method
@@ -48,6 +51,7 @@ class LOVDWebDriver extends RemoteWebDriver {
     {
         // This method is similar to RemoteWebDriver::findElement() but
         // returns an instance of RefreshingWebElement.
+        // WARNING: This function is NOT compatible with WebDriver 1.8.
         $params = array('using' => $by->getMechanism(), 'value' => $by->getValue());
 
         // Try up to 1 second to find the element.
@@ -85,6 +89,7 @@ class LOVDWebDriver extends RemoteWebDriver {
         //  it fixes the RemoteWebDriver's bug of using the wrong index.
         // Undefined index: ELEMENT.
         // Caused by using $raw_element['ELEMENT'], which doesn't exist.
+        // WARNING: This function is NOT compatible with WebDriver 1.8.
         $params = array('using' => $by->getMechanism(), 'value' => $by->getValue());
 
         $raw_elements = $this->execute(
