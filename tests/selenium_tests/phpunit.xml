@@ -9,6 +9,7 @@
             <file>shared_tests/create_user_curator.php</file>
             <file>shared_tests/assign_curator_to_IVD.php</file>
             <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/assign_collaborator_to_IVD.php</file>
             <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_user_submitter.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
@@ -44,6 +45,8 @@
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="authorization_tests">
+            <!-- Break this up, and repeat the relevant tests at the end of
+                 the respective suites (admin, manager, curator, etc). -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
@@ -57,7 +60,7 @@
             <file>authorization_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file>
             <file>shared_tests/assign_curator_to_IVD.php</file>
-            <file>authorization_tests/make_user_collaborator_IVD.php</file>
+            <file>shared_tests/assign_collaborator_to_IVD.php</file>
             <file>authorization_tests/authorization.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
