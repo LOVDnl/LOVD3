@@ -1,12 +1,13 @@
 <phpunit stopOnFailure="true" bootstrap="../phpunit_bootstrap.php">
     <testsuites>
         <testsuite name="admin_tests">
+            <!-- All basic tests, run by an Administrator. -->
             <file>shared_tests/check_PHP_version.php</file>
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
-            <file>admin_tests/make_user_curator_IVD.php</file>
+            <file>shared_tests/assign_curator_to_IVD.php</file>
             <file>shared_tests/create_user_submitter.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
@@ -53,7 +54,7 @@
             <file>authorization_tests/add_screening_to_IVA_individual.php</file>
             <file>authorization_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file>
-            <file>authorization_tests/make_user_curator_IVD.php</file>
+            <file>shared_tests/assign_curator_to_IVD.php</file>
             <file>authorization_tests/make_user_collaborator_IVD.php</file>
             <file>authorization_tests/authorization.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
