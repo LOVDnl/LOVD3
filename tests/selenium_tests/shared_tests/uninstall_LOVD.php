@@ -68,3 +68,4 @@ class UninstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::cssSelector("div[id=lovd__progress_message]"))->getText());
     }
 }
+?>

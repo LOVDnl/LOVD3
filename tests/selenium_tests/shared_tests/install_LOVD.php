@@ -144,3 +144,4 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         setMutalyzerServiceURL('https://test.mutalyzer.nl/services');
     }
 }
+?>

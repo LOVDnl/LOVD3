@@ -77,3 +77,4 @@ class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
 }
+?>

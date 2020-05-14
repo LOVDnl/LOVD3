@@ -60,7 +60,7 @@ class SubmissionApiSuccessTest extends LOVDSeleniumWebdriverBaseTestCase
         $oTokenLocator = WebDriverBy::xpath('//div[@id="auth_token_dialog"]/pre');
         $sToken = $this->driver->findElement($oTokenLocator)->getText();
 
-        // Requite inc-init.php to get global settings array.
+        // Require inc-init.php to get global settings array.
         list(,$aStatus) = getLOVDGlobals();
         $sSubmissionFile = ROOT_PATH . '../tests/test_data_files/submission_api_request_content.json';
         $aSub = json_decode(file_get_contents($sSubmissionFile), true);

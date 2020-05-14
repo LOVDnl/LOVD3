@@ -72,3 +72,4 @@ class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
                 )) . PHP_EOL);
     }
 }
+?>

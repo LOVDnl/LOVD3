@@ -74,3 +74,4 @@ class AssignCuratorToIVDTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
+?>
