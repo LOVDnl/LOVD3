@@ -1,11 +1,18 @@
+# FIXME: Each dist only has packages for *one* PHP version for Apache.
+#        Even if they pre-install several versions, these are only CLI.
+#        Rebuild this matrix. Perhaps run tests in parallel to speed things up,
+#         or try to run on different dists. I didn't see it documented, but we can try.
+#        https://docs.travis-ci.com/user/speeding-up-the-build
+# FIXME: Rebuild this matrix.
+#        https://docs.travis-ci.com/user/customizing-the-build/#naming-jobs-within-matrices
+#        https://docs.travis-ci.com/user/build-matrix/
 language: php
 php:
-  # aliased to a recent 5.6.x version
-  #- 5.6
-  # aliased to a recent 7.1.x version
-  #- 7.1
-  # aliased to a recent 7.2.x version
-  - 7.2
+  # Xenial only comes with 7.0. Sure, Travis installed other PHP versions, but
+  #  only their CLI versions. Nice for testing PHPUnit but not for testing LOVD.
+  # We could maybe use php-fpm to fix that, but we require a lot of other packages:
+  # https://docs.travis-ci.com/user/languages/php/#apache--php
+  - 7.0
 
 env:
   # Let Selenium use Firefox driver.
@@ -13,16 +20,8 @@ env:
   # Let Selenium use Chrome driver.
   - LOVD_SELENIUM_DRIVER=chrome
 
-#matrix:
-#  exclude:
-#    # Exclude some combinations of php version and selenium driver.
-#    - php: 5.6
-#      env: LOVD_SELENIUM_DRIVER=chrome
-#    - php: 7.1
-#      env: LOVD_SELENIUM_DRIVER=firefox
-
 os: linux
-# xenial = 16.04 LTS. Next is bionic (18.04), which doesn't have any PHP5 versions anymore to test with (7.1 - 7.4).
+# xenial = 16.04 LTS. PHP 7.0. Next is bionic (18.04), with PHP 7.2.
 # xenial comes with Firefox 63.0.1 (use addons: firefox: "76.0" or so to upgrade), and MySQL 5.7.
 # xenial is the current default (2020-05-11) and probably will be for a while (2021?), Travis normally lags behind 3 years.
 dist: xenial
@@ -33,8 +32,6 @@ git:
 addons:
   chrome: stable
   apt:
-#    sources:
-#      - google-chrome
     packages:
     - mutt # For mailing screenshots if uploading fails.
     - apache2
@@ -53,7 +50,6 @@ services:
   - xvfb
 
 before_install:
-  - ./tests/travis/setup/setup_chrome.sh
   - ./tests/travis/setup/setup_mysql.sh
   - ./tests/travis/setup/setup_apache.sh --githubaccount=LOVDnl
   - ./tests/travis/setup/setup_php.sh
@@ -73,7 +69,7 @@ script:
 
   # Run all test suites, starting at the unit tests.
   - vendor/bin/phpunit -v --configuration ./tests/unit_tests/phpunit.xml
-  - vendor/bin/phpunit -v --testsuite admin_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite admin_tests
   - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite collaborator_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/selenium_tests/phpunit.xml
