@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-13
+ * Modified    : 2020-05-15
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -111,6 +111,12 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     {
         // Convenience function to let the webdriver type text $text in an
         // element specified by $locator.
+        // For even more convenience, $locator can also just be a string,
+        //  in which case we assume it's an element name.
+        if (is_string($locator)) {
+            $locator = WebDriverBy::name($locator);
+        }
+
         $element = $this->driver->findElement($locator);
 
         if ($element->getAttribute('type') == 'file') {
@@ -190,8 +196,8 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         }
 
         // We're now at the login form.
-        $this->enterValue(WebDriverBy::name('username'), $sUsername);
-        $this->enterValue(WebDriverBy::name('password'), $sPassword);
+        $this->enterValue('username', $sUsername);
+        $this->enterValue('password', $sPassword);
         $element = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Log in"]'));
         usleep(100000); // If not waiting at all, sometimes you're just not logged in, for some reason.
         $element->click();
@@ -290,6 +296,12 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     {
         // Set checkbox specified by $locator to 'checked' if $bSetChecked or
         // not 'checked' otherwise.
+        // For even more convenience, $locator can also just be a string,
+        //  in which case we assume it's an element name.
+        if (is_string($locator)) {
+            $locator = WebDriverBy::name($locator);
+        }
+
         $element = $this->driver->findElement($locator);
         $nCount = 0;
 
