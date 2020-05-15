@@ -4,7 +4,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class CreateUserSubmitterTest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateUserSubmitterNotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testCreateUserSubmitter()
     {
