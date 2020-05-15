@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-05-13
+ * Modified    : 2020-05-15
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -89,17 +89,17 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Fill out Administrator form.
         $this->assertContains('/src/install/?step=1', $this->driver->getCurrentURL());
-        $this->enterValue(WebDriverBy::name("name"), "LOVD3 Admin");
-        $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
-        $this->enterValue(WebDriverBy::name("department"), "Human Genetics");
-        $this->enterValue(WebDriverBy::name("address"), "Einthovenweg 20\n2333 ZC Leiden");
-        $this->enterValue(WebDriverBy::name("email"), "test@lovd.nl");
-        $this->enterValue(WebDriverBy::name("telephone"), "+31 (0)71 526 9438");
-        $this->enterValue(WebDriverBy::name("username"), "admin");
-        $this->enterValue(WebDriverBy::name("password_1"), "test1234");
-        $this->enterValue(WebDriverBy::name("password_2"), "test1234");
+        $this->enterValue('name', 'LOVD3 Admin');
+        $this->enterValue('institute', 'Leiden University Medical Center');
+        $this->enterValue('department', 'Human Genetics');
+        $this->enterValue('address', "Einthovenweg 20\n2333 ZC Leiden");
+        $this->enterValue('email', 'test@lovd.nl');
+        $this->enterValue('telephone', '+31 (0)71 526 9438');
+        $this->enterValue('username', 'admin');
+        $this->enterValue('password_1', 'test1234');
+        $this->enterValue('password_2', 'test1234');
         $this->selectValue('countryid', 'Netherlands');
-        $this->enterValue(WebDriverBy::name("city"), "Leiden");
+        $this->enterValue('city', 'Leiden');
         $this->submitForm('Continue');
 
         // Confirmation of account information, installing...
@@ -112,12 +112,12 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Fill out System Settings form.
         $this->assertContains('/src/install/?step=3', $this->driver->getCurrentURL());
-        $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
-        $this->enterValue(WebDriverBy::name("email_address"), "noreply@LOVD.nl");
+        $this->enterValue('institute', 'Leiden University Medical Center');
+        $this->enterValue('email_address', 'noreply@LOVD.nl');
         $this->selectValue('refseq_build', 'hg19');
-        $this->unCheck(WebDriverBy::name('send_stats'));
-        $this->unCheck(WebDriverBy::name('include_in_listing'));
-        $this->unCheck(WebDriverBy::name('lock_uninstall'));
+        $this->unCheck('send_stats');
+        $this->unCheck('include_in_listing');
+        $this->unCheck('lock_uninstall');
         $this->submitForm('Continue');
 
         // Settings stored.

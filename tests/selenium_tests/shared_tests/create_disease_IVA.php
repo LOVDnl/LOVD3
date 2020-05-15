@@ -60,9 +60,9 @@ class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
     public function test ()
     {
         $this->driver->get(ROOT_URL . "/src/diseases?create");
-        $this->enterValue(WebDriverBy::name('symbol'), 'IVA');
-        $this->enterValue(WebDriverBy::name('name'), 'isovaleric acidemia');
-        $this->enterValue(WebDriverBy::name('id_omim'), '243500');
+        $this->enterValue('symbol', 'IVA');
+        $this->enterValue('name', 'isovaleric acidemia');
+        $this->enterValue('id_omim', '243500');
         $this->selectValue('genes[]', 'IVD (isovaleryl-CoA dehydrogenase)');
         $this->submitForm('Create disease information entry');
         $this->assertEquals('Successfully created the disease information entry!',

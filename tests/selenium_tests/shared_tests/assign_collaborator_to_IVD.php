@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-14
+ * Modified    : 2020-05-15
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,7 +69,7 @@ class AssignCollaboratorToIVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $element = $this->driver->findElement(WebDriverBy::linkText("Test Collaborator"));
         $element->click();
         $this->unCheck(WebDriverBy::xpath('//td[contains(text(), "Test Collaborator")]/..//input[@name="allow_edit[]"]'));
-        $this->enterValue(WebDriverBy::name('password'), 'test1234');
+        $this->enterValue('password', 'test1234');
         $this->submitForm('Save curator list');
         $this->assertEquals('Successfully updated the curator list!',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
