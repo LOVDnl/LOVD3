@@ -5,6 +5,7 @@
             <file>shared_tests/check_PHP_version.php</file>
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
+            <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
             <file>shared_tests/assign_curator_to_IVD.php</file>
@@ -13,7 +14,6 @@
             <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_user_submitter.php</file>
             <!-- Currently rebuilding here -->
-            <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
             <file>admin_tests/create_individual_diagnosed_with_Healthy_Control.php</file>
             <file>admin_tests/add_phenotype_info_to_healthy_individual.php</file>
