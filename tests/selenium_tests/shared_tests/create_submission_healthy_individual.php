@@ -151,8 +151,7 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "A variant that is located within a gene")]'))->click();
         // We probably don't need to search for IVD, but we might as well.
-        $this->enterValue(WebDriverBy::name('search_id_'), 'IVD');
-        $this->driver->getKeyboard()->pressKey(WebDriverKeys::ENTER);
+        $this->enterValue(WebDriverBy::name('search_id_'), 'IVD' . WebDriverKeys::ENTER);
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="IVD"]/td[1]'))->click();
 
         $this->assertContains('/src/variants?create&reference=Transcript&geneid=IVD&target=0000', $this->driver->getCurrentURL());
