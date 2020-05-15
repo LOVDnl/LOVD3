@@ -19,7 +19,7 @@ class CreateIndividualDiagnosedWithIVATest extends LOVDSeleniumWebdriverBaseTest
         $this->enterValue(WebDriverBy::name("Individual/Remarks_Non_Public"), "Still no remarks");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="active_diseases[]"]/option[text()="IVA (isovaleric acidemia)"]'));
         $option->click();
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="Test Owner (#00006)"]'));
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[contains(text(), "Test Owner")]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="statusid"]/option[text()="Public"]'));
         $option->click();

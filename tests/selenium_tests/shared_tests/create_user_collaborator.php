@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2016-03-04
- * Modified    : 2020-05-13
+ * Created     : 2015-02-17
+ * Modified    : 2020-05-14
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,27 +33,23 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateUserCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        $this->driver->get(ROOT_URL . '/src/genes/IVD');
+        // Collaborator is user ID 4.
+        $this->driver->get(ROOT_URL . '/src/users/00004');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
-        if (!preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('Gene was already created.');
+        if (preg_match('/To access this area/', $sBody)) {
+            $this->markTestSkipped('User was not authorized.');
         }
-
-        // Requires having a Setup tab.
-        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
-            // We're not admin nor manager.
-            $this->logout();
-            $this->login('admin', 'test1234');
-            print(PHP_EOL . 'Logged in as Admin to complete ' . get_class() . PHP_EOL);
+        if (!preg_match('/No such ID!/', $sBody)) {
+            $this->markTestSkipped('User was already created.');
         }
     }
 
@@ -63,17 +59,22 @@ class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->driver->get(ROOT_URL . '/src/genes?create');
-        $this->waitForElement(WebDriverBy::name('hgnc_id'), 5);
-        $this->enterValue(WebDriverBy::name('hgnc_id'), 'IVD');
-        $this->submitForm('Continue');
-
-        $this->selectValue('active_transcripts[]', 'NM_002225.3');
-        $this->check(WebDriverBy::name('show_hgmd'));
-        $this->check(WebDriverBy::name('show_genecards'));
-        $this->check(WebDriverBy::name('show_genetests'));
-        $this->submitForm('Create gene information entry');
-        $this->assertEquals('Successfully created the gene information entry!',
+        $this->driver->get(ROOT_URL . "/src/users?create&no_orcid");
+        $this->enterValue(WebDriverBy::name("name"), "Test Collaborator");
+        $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
+        $this->enterValue(WebDriverBy::name("department"), "Human Genetics");
+        $this->enterValue(WebDriverBy::name("address"), "Einthovenweg 20\n2333 ZC Leiden");
+        $this->enterValue(WebDriverBy::name("email"), "collaborator@lovd.nl");
+        $this->enterValue(WebDriverBy::name("username"), "collaborator");
+        $this->enterValue(WebDriverBy::name("password_1"), "test1234");
+        $this->enterValue(WebDriverBy::name("password_2"), "test1234");
+        $this->selectValue('countryid', 'Netherlands');
+        $this->enterValue(WebDriverBy::name("city"), "Leiden");
+        $this->selectValue('level', 'Submitter');
+        $this->unCheck(WebDriverBy::name("send_email"));
+        $this->enterValue(WebDriverBy::name("password"), "test1234");
+        $this->submitForm('Create user');
+        $this->assertEquals("Successfully created the user account!",
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
 }

@@ -1,13 +1,18 @@
-<phpunit stopOnFailure="false" bootstrap="../phpunit_bootstrap.php">
+<phpunit stopOnFailure="true" bootstrap="../phpunit_bootstrap.php">
     <testsuites>
         <testsuite name="admin_tests">
+            <!-- All basic tests, run by an Administrator. -->
+            <file>shared_tests/check_PHP_version.php</file>
             <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/login_as_admin.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
-            <file>admin_tests/create_user_manager.php</file>
+            <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
-            <file>admin_tests/make_user_curator_IVD.php</file>
+            <file>shared_tests/assign_curator_to_IVD.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/assign_collaborator_to_IVD.php</file>
+            <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_user_submitter.php</file>
+            <!-- Currently rebuilding here -->
             <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
             <file>admin_tests/create_individual_diagnosed_with_Healthy_Control.php</file>
@@ -41,30 +46,32 @@
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="authorization_tests">
+            <!-- Break this up, and repeat the relevant tests at the end of
+                 the respective suites (admin, manager, curator, etc). -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
-            <file>authorization_tests/create_user_collaborator.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_user_submitter.php</file>
-            <file>authorization_tests/create_user_owner.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
             <file>authorization_tests/create_individual_diagnosed_with_IVA.php</file>
             <file>authorization_tests/add_screening_to_IVA_individual.php</file>
             <file>authorization_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file>
-            <file>authorization_tests/make_user_curator_IVD.php</file>
-            <file>authorization_tests/make_user_collaborator_IVD.php</file>
+            <file>shared_tests/assign_curator_to_IVD.php</file>
+            <file>shared_tests/assign_collaborator_to_IVD.php</file>
             <file>authorization_tests/authorization.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="collaborator_tests">
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_GJB.php</file>
-            <file>collaborator_tests/create_user_collaborator.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
             <file>shared_tests/make_user_collaborator_GJB.php</file>
             <file>collaborator_tests/login_as_collaborator.php</file>
-            <file>collaborator_tests/create_user_submitter.php</file>
+            <file>shared_tests/create_user_submitter_not_authorized.php</file>
             <file>collaborator_tests/create_disease_CMT.php</file>
             <file>collaborator_tests/create_individual_diagnosed_with_CMT.php</file>
             <file>collaborator_tests/add_phenotype_info_to_CMT_individual.php</file>
@@ -96,7 +103,7 @@
             <file>curator_tests/make_user_curator_GJB.php</file>
             <file>curator_tests/login_as_curator.php</file>
             <file>curator_tests/create_user_curator2.php</file>
-            <file>curator_tests/create_user_submitter.php</file>
+            <file>shared_tests/create_user_submitter_not_authorized.php</file>
             <file>curator_tests/create_disease_CMT.php</file>
             <file>curator_tests/create_individual_diagnosed_with_CMT.php</file>
             <file>curator_tests/add_phenotype_info_to_CMT_individual.php</file>
@@ -124,8 +131,8 @@
             <file>manager_tests/login_as_manager.php</file>
             <file>manager_tests/create_user_manager2.php</file>
             <file>manager_tests/create_gene_GJB.php</file>
-            <file>manager_tests/create_user_submitter.php</file>
             <file>shared_tests/create_user_curator.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
             <file>manager_tests/make_user_curator_GJB.php</file>
             <file>manager_tests/create_disease_CMT.php</file>
             <file>manager_tests/create_individual_diagnosed_with_CMT.php</file>
@@ -154,7 +161,6 @@
         </testsuite>
         <testsuite name="import_tests">
             <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/login_as_admin.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>import_tests/enable_gender_column.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
@@ -169,9 +175,9 @@
         <testsuite name="submitter_tests">
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_GJB.php</file>
-            <file>submitter_tests/create_user_submitter.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
             <file>submitter_tests/login_as_submitter.php</file>
-            <file>submitter_tests/create_user_submitter2.php</file>
+            <file>shared_tests/create_user_submitter_not_authorized.php</file>
             <file>submitter_tests/create_disease_CMT.php</file>
             <file>submitter_tests/create_individual_diagnosed_with_CMT.php</file>
             <file>submitter_tests/add_phenotype_info_to_CMT_individual.php</file>
@@ -203,12 +209,10 @@
         </testsuite>
         <testsuite name="find_replace_tests">
             <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/login_as_admin.php</file>
             <file>find_replace_tests/find_replace.php</file>
         </testsuite>
     </testsuites>
     <listeners>
         <listener class="LOVDScreenshotListener" file="LOVDScreenshotListener.php" />
     </listeners>
-
 </phpunit>

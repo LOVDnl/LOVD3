@@ -8,7 +8,7 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
 {
     public function testPostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividual()
     {
-        $this->driver->get(ROOT_URL . "/src/screenings/IVD");
+        $this->driver->get(ROOT_URL . '/src/screenings/IVD');
         $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/IVD$/', $this->driver->getCurrentURL()));
@@ -46,9 +46,7 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
         $element->click();
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
 
-        // wait for page redirect
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
-
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000333($|#)/', $this->driver->getCurrentURL()));
+        // Wait for page redirect.
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants/0000000'));
     }
 }

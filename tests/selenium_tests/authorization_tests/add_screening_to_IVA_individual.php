@@ -26,7 +26,7 @@ class AddScreeningToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="genes[]"]/option[text()="IVD (isovaleryl-CoA dehydrogenase)"]'));
         $option->click();
         $this->check(WebDriverBy::name("variants_found"));
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="Test Owner (#00006)"]'));
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[contains(text(), "Test Owner")]'));
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create screening information entry']"));
         $element->click();

@@ -3,11 +3,11 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2016-05-30
- * Modified    : 2019-09-04
- * For LOVD    : 3.0-22
+ * Created     : 2016-03-04
+ * Modified    : 2020-05-13
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -29,7 +29,6 @@
  *
  *************/
 
-
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
@@ -37,9 +36,37 @@ use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testInstallLOVD()
+    public function testIsLOVDUninstalled ()
     {
+        // Checks if we're currently installed. If so, uninstalls LOVD first.
+        // This is needed because test suites may be started when the previous
+        //  one did not complete. However, test suites need to be independent
+        //  so LOVD still needs to be freshly installed for this test suite.
+        // NOTE: Do NOT use getLOVDGlobals() before LOVD is installed!
+        $this->driver->get(ROOT_URL . '/src/install');
+        $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
+        if (preg_match('/This installer will create/', $bodyElement->getText())) {
+            // Not installed already, all good!
+            return true;
+        }
 
+        // OK, we're installed already. Uninstall first.
+        require_once dirname(__FILE__) . '/uninstall_LOVD.php';
+        $Test = new UninstallLOVDTest();
+        $Test->setUp(); // Make sure it gets the driver info.
+        $Test->test();
+        return true;
+    }
+
+
+
+
+
+    /**
+     * @depends testIsLOVDUninstalled
+     */
+    public function testInstallLOVD ()
+    {
         // Check if an XDebug session needs to be started, and if so, add the
         // XDebug get parameter.
         // Note: this has to be done once per session. Starting XDebug in
@@ -48,21 +75,20 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         //       point for most selenium tests.
         global $bXDebugStatus;
         if (XDEBUG_ENABLED && isset($bXDebugStatus) && !$bXDebugStatus) {
-            $this->driver->get(ROOT_URL . "/src/install/?XDEBUG_SESSION_START=test");
+            $this->driver->get(ROOT_URL . '/src/install?XDEBUG_SESSION_START=test');
             $bXDebugStatus = true;
         } else {
-            $this->driver->get(ROOT_URL . "/src/install");
+            $this->driver->get(ROOT_URL . '/src/install');
         }
 
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
-        $this->assertContains("install", $bodyElement->getText());
+        $this->assertContains('This installer will create', $bodyElement->getText());
 
-        // Start installation procedure
-        $startButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Start >>']"));
-        $startButton->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=1$/', $this->driver->getCurrentURL()));
+        // Start installation procedure.
+        $this->submitForm('Start');
 
-        // Fill out form
+        // Fill out Administrator form.
+        $this->assertContains('/src/install/?step=1', $this->driver->getCurrentURL());
         $this->enterValue(WebDriverBy::name("name"), "LOVD3 Admin");
         $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
         $this->enterValue(WebDriverBy::name("department"), "Human Genetics");
@@ -70,50 +96,45 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue(WebDriverBy::name("email"), "test@lovd.nl");
         $this->enterValue(WebDriverBy::name("telephone"), "+31 (0)71 526 9438");
         $this->enterValue(WebDriverBy::name("username"), "admin");
-
         $this->enterValue(WebDriverBy::name("password_1"), "test1234");
         $this->enterValue(WebDriverBy::name("password_2"), "test1234");
-
-        $countryOption = $this->driver->findElement(WebDriverBy::xpath('//select[@name="countryid"]/option[text()="Netherlands"]'));
-        $countryOption->click();
-
+        $this->selectValue('countryid', 'Netherlands');
         $this->enterValue(WebDriverBy::name("city"), "Leiden");
+        $this->submitForm('Continue');
 
-        // Click through next steps
-        $continueButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
-        $continueButton->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=1&sent=true$/', $this->driver->getCurrentURL()));
-        $nextButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Next >>']"));
-        $this->clickNoTimeout($nextButton);
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=2$/', $this->driver->getCurrentURL()));
-        $nextButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Next >>']"));
-        $nextButton->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=3$/', $this->driver->getCurrentURL()));
+        // Confirmation of account information, installing...
+        $this->assertContains('/src/install/?step=1&sent=true', $this->driver->getCurrentURL());
+        $this->submitForm('Next');
 
-        // Another form
+        // Installation complete.
+        $this->assertContains('/src/install/?step=2', $this->driver->getCurrentURL());
+        $this->submitForm('Next');
+
+        // Fill out System Settings form.
+        $this->assertContains('/src/install/?step=3', $this->driver->getCurrentURL());
         $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
         $this->enterValue(WebDriverBy::name("email_address"), "noreply@LOVD.nl");
-        $selectOption = $this->driver->findElement(WebDriverBy::xpath('//select[@name="refseq_build"]/option[text()="hg19 / GRCh37"]'));
-        $selectOption->click();
-        $sendstatsButton = $this->driver->findElement(WebDriverBy::name("send_stats"));
-        $sendstatsButton->click();
-        $includeButton = $this->driver->findElement(WebDriverBy::name("include_in_listing"));
-        $includeButton->click();
-        $lockCheckBox = $this->driver->findElement(WebDriverBy::name("lock_uninstall"));
-        $lockCheckBox->click();
+        $this->selectValue('refseq_build', 'hg19');
+        $this->unCheck(WebDriverBy::name('send_stats'));
+        $this->unCheck(WebDriverBy::name('include_in_listing'));
+        $this->unCheck(WebDriverBy::name('lock_uninstall'));
+        $this->submitForm('Continue');
 
-        $continueButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
-        $continueButton->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=3&sent=true$/', $this->driver->getCurrentURL()));
-        $nextButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Next >>']"));
-        $nextButton->click();
+        // Settings stored.
+        $this->assertContains('/src/install/?step=3&sent=true', $this->driver->getCurrentURL());
+        $this->submitForm('Next');
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/install\/[\s\S]step=4$/', $this->driver->getCurrentURL()));
-        $button = $this->driver->findElement(WebDriverBy::cssSelector("button"));
-        $button->click();
+        // Done!
+        $this->assertContains('/src/install/?step=4', $this->driver->getCurrentURL());
+        $this->clickButton('Continue to Setup area');
+
+        // LOVD Setup Area.
         $this->waitUntil(WebDriverExpectedCondition::titleContains("LOVD Setup"));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/setup[\s\S]newly_installed$/', $this->driver->getCurrentURL()));
+        $this->assertContains('/src/setup?newly_installed', $this->driver->getCurrentURL());
     }
+
+
+
 
 
     public static function tearDownAfterClass()
@@ -123,3 +144,4 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         setMutalyzerServiceURL('https://test.mutalyzer.nl/services');
     }
 }
+?>

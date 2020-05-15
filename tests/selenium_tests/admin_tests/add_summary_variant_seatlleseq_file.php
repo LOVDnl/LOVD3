@@ -3,12 +3,13 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2016
- * Modified    : 2016-07-13
- * For LOVD    : 3.0-17
+ * Created     : 2015-02-17
+ * Modified    : 2020-05-12
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -37,18 +38,12 @@ class AddSummaryVariantSeattleseqFileTest extends LOVDSeleniumWebdriverBaseTestC
 {
     public function testAddSummaryVariantSeattleseqFile()
     {
-        // Mouse hover over Submit tab, to make 'submit new data' link visible.
-        $tabElement = $this->driver->findElement(WebDriverBy::xpath("//img[@id='tab_submit']"));
-        $this->driver->getMouse()->mouseMove($tabElement->getCoordinates());
-
-        $element = $this->driver->findElement(WebDriverBy::linkText("Submit new data"));
-        $element->click();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/', $this->driver->getCurrentURL()));
+        $this->driver->get(ROOT_URL . '/src/submit');
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr[2]/td[2]/b"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*Please reconsider to submit individual data as well, as it makes the data you submit much more valuable![\s\S]*$/', $this->getConfirmation()));
         $this->chooseOkOnNextConfirmation();
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants[\s\S]create$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants?create'));
         $element = $this->driver->findElement(WebDriverBy::xpath("//tr[3]/td[2]/b"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/upload[\s\S]create$/', $this->driver->getCurrentURL()));

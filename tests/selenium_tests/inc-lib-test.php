@@ -7,7 +7,7 @@
  * Modified    : 2020-02-13
  * For LOVD    : 3.0-23
  *
- * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -29,12 +29,13 @@
  *
  *************/
 
-
 require_once 'LOVDWebDriver.php';
 
 use \Facebook\WebDriver\Chrome\ChromeOptions;
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
 use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
+
+
 
 
 
@@ -74,7 +75,8 @@ function getWebDriverInstance ()
             WEBDRIVER_MAX_WAIT_DEFAULT * 1000);
 
         // Set time for trying to access DOM elements
-        $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
+        // This keeps failing. No clue why. Both Chrome and FF don't like it, although Chrome seems to handle it on the Travis environment.
+        // $webDriver->manage()->timeouts()->implicitlyWait(WEBDRIVER_IMPLICIT_WAIT);
 
         if (isset($_INI['test']['xdebug_enabled']) && $_INI['test']['xdebug_enabled'] == 'true') {
             // Load page of target host. This is necessary to set a cookie.
@@ -98,7 +100,9 @@ function getWebDriverInstance ()
 function getLOVDGlobals()
 {
     // Get common global variables from the LOVD environment that LOVD usually
-    // generates in inc-init.php for a normal web request.
+    //  generates in inc-init.php for a normal web request.
+    // Run this ONLY when LOVD is installed; otherwise you'll get an incomplete
+    //  $status and you'll never be able to fill that properly again.
     static $db, $status;
     if (!isset($db)) {
         // Settings and constants to prevent notices when including inc-init.php.

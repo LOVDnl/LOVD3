@@ -12,7 +12,7 @@ class AddPhenotypeInfoToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestC
         $this->enterValue(WebDriverBy::name("Phenotype/Additional"), "Phenotype Details");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="Phenotype/Inheritance"]/option[text()="Unknown"]'));
         $option->click();
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[text()="Test Owner (#00006)"]'));
+        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="owned_by"]/option[contains(text(), "Test Owner")]'));
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create phenotype information entry']"));
         $element->click();
