@@ -13,15 +13,15 @@
             <file>shared_tests/assign_collaborator_to_IVD.php</file>
             <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_user_submitter.php</file>
+            <file>shared_tests/create_submission_healthy_individual.php</file>
             <!-- Currently rebuilding here -->
+            <file>admin_tests/add_summary_variant_seatlleseq_file.php</file>
+            <file>admin_tests/add_summary_variant_located_within_gene.php</file>
+            <file>admin_tests/add_summary_variant_only_described_on_genomic_level.php</file>
+            <file>admin_tests/add_summary_variant_vcf_file.php</file>
+            <!-- Don't do this one, you need to be submitter for this, add it there. -->
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
-            <file>admin_tests/create_individual_diagnosed_with_Healthy_Control.php</file>
-            <file>admin_tests/add_phenotype_info_to_healthy_individual.php</file>
-            <file>admin_tests/add_screening_to_healthy_individual.php</file>
-            <file>admin_tests/add_variant_located_within_gene_to_healthy_individual.php</file>
-            <file>admin_tests/add_seatlleseq_file_to_healthy_individual.php</file>
-            <file>admin_tests/add_variant_only_described_on_genomic_level_to_healthy_individual.php</file>
-            <file>admin_tests/finish_individual_diagnosed_healthy.php</file>
+            <!-- Add download test at the end of this suite, and then compare to some text file. -->
             <file>admin_tests/create_individual_diagnosed_with_IVA.php</file>
             <file>admin_tests/add_phenotype_info_to_IVA_individual.php</file>
             <file>admin_tests/add_screening_to_IVA_individual.php</file>
@@ -30,10 +30,6 @@
             <file>admin_tests/confirm_variant_to_IVA_individual.php</file>
             <file>admin_tests/add_vcf_file_to_IVA_individual.php</file>
             <file>admin_tests/finish_individual_diagnosed_with_IVA.php</file>
-            <file>admin_tests/add_summary_variant_located_within_gene.php</file>
-            <file>admin_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>admin_tests/add_summary_variant_seatlleseq_file.php</file>
-            <file>admin_tests/add_summary_variant_vcf_file.php</file>
             <file>admin_tests/post_finish_add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_screening_to_IVA_individual.php</file>

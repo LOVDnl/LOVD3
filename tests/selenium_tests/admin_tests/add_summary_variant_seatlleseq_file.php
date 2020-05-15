@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-12
+ * Modified    : 2020-05-15
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2016-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,7 +72,7 @@ class AddSummaryVariantSeattleseqFileTest extends LOVDSeleniumWebdriverBaseTestC
             sleep(1);
         }
 
-        $this->assertContains("138 variants were imported, 1 variant could not be imported.", $this->driver->findElement(WebDriverBy::id("lovd__progress_message"))->getText());
+        $this->assertEquals("138 variants were imported, 1 variant could not be imported.", $this->driver->findElement(WebDriverBy::id("lovd__progress_message"))->getText());
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
         $element->click();
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/', $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));

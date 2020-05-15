@@ -83,6 +83,8 @@ class AddVCFFileToIVAIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/genes/ARSD');
         $element = $this->driver->findElement(WebDriverBy::xpath('//tr[@class="data"]/td[text()="X"]'));
         $element->click();
+        // FIXME: This test makes no sense; it's testing for a variant from the SeattleSeq file.
+        // Unfortunately, the VCF file currently doesn't have unique variants, so we'll need to make that so.
         $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath('//td[text()="p.(Gln318His)"]')));
     }
 }
