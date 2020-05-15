@@ -11,7 +11,7 @@ class CreateIndividualDiagnosedWithCMTTest extends LOVDSeleniumWebdriverBaseTest
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
         $element->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/individuals?create'));
         $this->enterValue(WebDriverBy::name("Individual/Lab_ID"), "12345CMT");
         $this->enterValue(WebDriverBy::name("Individual/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("Individual/Remarks"), "No Remarks");
