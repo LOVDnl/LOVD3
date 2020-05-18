@@ -51,6 +51,18 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
+
+        // Check for the user ID. The user ID indicates its level; in Travis tests, our users are:
+        // 1 - Admin.
+        // 2 - Manager.
+        // 3 - Curator.
+        // 4 - Collaborator.
+        // 5 - Owner.
+        // 6 - Submitter.
+        // 7 - Colleague.
+        global $nUserID;
+        $sHref = $this->driver->findElement(WebDriverBy::xpath('//a[.="Your account"]'))->getAttribute('href');
+        list(,$nUserID) = explode('/', $sHref);
     }
 
 
@@ -62,6 +74,8 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testCreateIndividual ()
     {
+        global $nUserID;
+
         $this->driver->get(ROOT_URL . '/src/submit');
         // This test does not demand you're Curator or up.
         if ($this->isElementPresent(WebDriverBy::xpath('//table[@class="option"]'))) {
@@ -76,6 +90,15 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->enterValue('Individual/Lab_ID', '1234HealthyCtrl');
         $this->enterValue('Individual/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->selectValue('active_diseases[]', 'Healthy/Control (Healthy individual / control)');
+
+        // Check for the owner and status fields, if you're curator and up.
+        if ($nUserID <= 3) {
+            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->driver->findElement(WebDriverBy::name('statusid'));
+        } else {
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('statusid')));
+        }
         $this->submitForm('Create individual information entry');
 
         $this->assertEquals('Successfully created the individual information entry!',
@@ -92,12 +115,23 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddPhenotypeRecord ()
     {
+        global $nUserID;
+
         $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add phenotype information")]'))->click();
 
         $this->assertContains('/src/phenotypes?create&target=0000', $this->driver->getCurrentURL());
         $this->enterValue('Phenotype/Age', '35y');
+
+        // Check for the owner and status fields, if you're curator and up.
+        if ($nUserID <= 3) {
+            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->driver->findElement(WebDriverBy::name('statusid'));
+        } else {
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('statusid')));
+        }
         $this->submitForm('Create phenotype information entry');
 
         $this->assertEquals('Successfully created the phenotype entry!',
@@ -114,6 +148,8 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddScreening ()
     {
+        global $nUserID;
+
         $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant screening")]'))->click();
@@ -127,6 +163,13 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->selectValue('Screening/Technique[]', 'RT-PCR');
         $this->selectValue('genes[]', 'IVD');
         $this->check('variants_found');
+
+        // Check for the owner field, if you're curator and up.
+        if ($nUserID <= 3) {
+            $this->driver->findElement(WebDriverBy::name('owned_by'));
+        } else {
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
+        }
         $this->submitForm('Create screening information entry');
 
         $this->assertEquals('Successfully created the screening entry!',
@@ -143,6 +186,8 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddVariantWithinIVD ()
     {
+        global $nUserID;
+
         $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
@@ -170,13 +215,19 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
             WebDriverBy::name('VariantOnGenome/DNA'))->getAttribute('value'));
 
         $this->selectValue('00000001_effect_reported', 'Does not affect function');
-        // This test does not demand you're Curator or up.
-        if ($this->isElementPresent(WebDriverBy::name('00000001_effect_concluded'))) {
-            // Apparently, we are Curator or up.
-            $this->selectValue('00000001_effect_concluded', 'Does not affect function');
-        }
         $this->selectValue('allele', 'Paternal (confirmed)');
         $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
+
+        // Check for the effect_concluded, owner, and status fields, if you're curator and up.
+        if ($nUserID <= 3) {
+            $this->selectValue('00000001_effect_concluded', 'Does not affect function');
+            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->driver->findElement(WebDriverBy::name('statusid'));
+        } else {
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('00000001_effect_concluded')));
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('statusid')));
+        }
         $this->submitForm('Create variant entry');
 
         $this->assertEquals('Successfully created the variant entry!',
@@ -193,6 +244,8 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testAddVariantOnGenomicLevel ()
     {
+        global $nUserID;
+
         $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
@@ -208,10 +261,16 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->enterValue('VariantOnGenome/DNA', 'g.40702876G>T');
         $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->selectValue('effect_reported', 'Effect unknown');
-        // This test does not demand you're Curator or up.
-        if ($this->isElementPresent(WebDriverBy::name('effect_concluded'))) {
-            // Apparently, we are Curator or up.
+
+        // Check for the effect_concluded, owner, and status fields, if you're manager and up.
+        if ($nUserID <= 2) {
             $this->selectValue('effect_concluded', 'Effect unknown');
+            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->driver->findElement(WebDriverBy::name('statusid'));
+        } else {
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_concluded')));
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
+            $this->assertFalse($this->isElementPresent(WebDriverBy::name('statusid')));
         }
         $this->submitForm('Create variant entry');
 
