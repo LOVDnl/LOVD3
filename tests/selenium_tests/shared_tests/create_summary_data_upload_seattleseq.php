@@ -88,8 +88,6 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
         $this->selectValue('hg_build', 'hg19');
         $this->selectValue('dbSNP_column', 'VariantOnGenome/Reference');
         $this->selectValue('autocreate', 'Create genes and transcripts');
-        $this->selectValue('hg_build', 'hg19');
-        $this->selectValue('hg_build', 'hg19');
         $this->driver->findElement(WebDriverBy::name('owned_by'));
         $this->driver->findElement(WebDriverBy::name('statusid'));
         $this->submitForm('Upload SeattleSeq file');
@@ -104,3 +102,4 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/submit/finish/upload/'));
     }
 }
+?>

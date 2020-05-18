@@ -200,23 +200,15 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="IVD"]/td[1]'))->click();
 
         $this->assertContains('/src/variants?create&reference=Transcript&geneid=IVD&target=0000', $this->driver->getCurrentURL());
-        $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_reported')));
         $this->enterValue('00000001_VariantOnTranscript/Exon', '1');
         $this->enterValue('00000001_VariantOnTranscript/DNA', 'c.123A>T');
         $this->driver->findElement(WebDriverBy::cssSelector('button.mapVariant'))->click();
 
         // Wait until RNA description field is filled after AJAX request, and check all values.
-        $sRNALocator = '//input[@name="00000001_VariantOnTranscript/RNA"]';
-        $this->waitForElement(WebDriverBy::xpath($sRNALocator . '[contains(@value, "r.")]'));
-        $this->assertEquals('r.(=)', $this->driver->findElement(WebDriverBy::xpath($sRNALocator))->getAttribute('value'));
-        $this->assertEquals('p.(=)', $this->driver->findElement(
-            WebDriverBy::xpath('//input[@name="00000001_VariantOnTranscript/Protein"]'))->getAttribute('value'));
-        $this->assertEquals('g.40698142A>T', $this->driver->findElement(
-            WebDriverBy::name('VariantOnGenome/DNA'))->getAttribute('value'));
-
+        $this->waitForElement(WebDriverBy::xpath('//input[@name="00000001_VariantOnTranscript/RNA"][contains(@value, "r.")]'));
+        $this->assertValue('r.(=)', '00000001_VariantOnTranscript/RNA');
+        $this->assertValue('p.(=)', '00000001_VariantOnTranscript/Protein');
         $this->selectValue('00000001_effect_reported', 'Does not affect function');
-        $this->selectValue('allele', 'Paternal (confirmed)');
-        $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
 
         // Check for the effect_concluded, owner, and status fields, if you're curator and up.
         if ($nUserID <= 3) {
@@ -228,6 +220,12 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('statusid')));
         }
+
+        $this->selectValue('allele', 'Paternal (confirmed)');
+        $this->assertValue('g.40698142A>T', 'VariantOnGenome/DNA');
+        $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
+        $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_reported')));
+        $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_concluded')));
         $this->submitForm('Create variant entry');
 
         $this->assertEquals('Successfully created the variant entry!',

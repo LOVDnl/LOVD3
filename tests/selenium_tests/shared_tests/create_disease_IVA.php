@@ -69,3 +69,4 @@ class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
+?>

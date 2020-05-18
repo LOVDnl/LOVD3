@@ -90,7 +90,9 @@ class SubmissionApiSuccessTest extends LOVDSeleniumWebdriverBaseTestCase
         $sResult = file_get_contents(ROOT_URL . '/src/api/submissions', false, $context);
         $aResult = json_decode($sResult, true);
 
-        // Check for authentication error in message body.
+        // Check for errors, there should be none.
+        $this->assertEmpty(implode(';', $aResult['errors']));
+        // Check for confirmation.
         $this->assertContains('Data successfully scheduled', $aResult['messages'][0]);
 
         // Check for correct HTTP response code in returned headers.
