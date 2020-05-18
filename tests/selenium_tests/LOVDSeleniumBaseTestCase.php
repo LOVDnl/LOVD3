@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-15
+ * Modified    : 2020-05-18
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,6 +37,7 @@ use \Facebook\WebDriver\Exception\WebDriverException;
 use \Facebook\WebDriver\Remote\LocalFileDetector;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
+use \Facebook\WebDriver\WebDriverKeys;
 
 
 
@@ -145,7 +146,10 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         $this->waitUntil(function () use ($element, $sText) {
             $element->clear();
             $element->sendKeys($sText);
-            return $element->getAttribute('value') == $sText;
+            // If we have sent an Enter, this is not found back in the field,
+            //  and we get StaleElement Exceptions. Compensate with rtrim().
+            // WebDriverKeys::ENTER == U+E007; mb_ord(57351).
+            return ($element->getAttribute('value') == rtrim($sText, WebDriverKeys::ENTER));
         });
     }
 
