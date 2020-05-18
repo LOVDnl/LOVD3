@@ -15,8 +15,8 @@
             <file>shared_tests/create_user_submitter.php</file>
             <file>shared_tests/create_submission_healthy_individual.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq.php</file>
+            <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <!-- Currently rebuilding here -->
-            <file>admin_tests/add_summary_variant_located_within_gene.php</file>
             <file>admin_tests/add_summary_variant_only_described_on_genomic_level.php</file>
             <file>admin_tests/add_summary_variant_vcf_file.php</file>
             <!-- Don't do this one, you need to be submitter for this, add it there. -->
@@ -140,7 +140,7 @@
             <file>manager_tests/add_seatlleseq_file_to_CMT_individual.php</file>
             <file>manager_tests/add_vcf_file_to_CMT_individual.php</file>
             <file>manager_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>manager_tests/add_summary_variant_located_within_gene.php</file>
+            <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <file>manager_tests/add_summary_variant_only_described_on_genomic_level.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq.php</file>
             <file>manager_tests/add_summary_variant_vcf_file.php</file>

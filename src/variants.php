@@ -66,7 +66,15 @@ function lovd_getMaxVOTEffects ($sType, $zData = array())
     if (!$aEffects) {
         return false;
     }
-    return max($aEffects);
+
+    $nMax = max($aEffects);
+    // We cannot return "(Probably) does not affect function"
+    //  if one value is also "Not classified".
+    if ($nMax < 5 && in_array('0', $aEffects)) {
+        $nMax = 0;
+    }
+
+    return $nMax;
 }
 
 

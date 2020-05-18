@@ -54,6 +54,23 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 
 
 
+    protected function assertValue ($sValue, $locator)
+    {
+        // Convenience function to easily check an element's value.
+        // For even more convenience, $locator can also just be a string,
+        //  in which case we assume it's an element name.
+        if (is_string($locator)) {
+            $locator = WebDriverBy::name($locator);
+        }
+
+        $element = $this->driver->findElement($locator);
+        $this->assertEquals($sValue, $element->getAttribute('value'));
+    }
+
+
+
+
+
     protected function check ($locator)
     {
         $this->setCheckBoxValue($locator, true);
