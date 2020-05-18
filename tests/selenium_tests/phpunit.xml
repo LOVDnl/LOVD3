@@ -78,7 +78,7 @@
             <file>collaborator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
             <file>collaborator_tests/add_vcf_file_to_CMT_individual.php</file>
             <file>collaborator_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>collaborator_tests/add_summary_variant_located_within_gene.php</file>
+            <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <file>collaborator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <file>collaborator_tests/add_summary_variant_vcf_file.php</file>
@@ -184,7 +184,7 @@
             <file>submitter_tests/add_seatlleseq_file_to_CMT_individual.php</file>
             <file>submitter_tests/add_vcf_file_to_CMT_individual.php</file>
             <file>submitter_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>submitter_tests/add_summary_variant_located_within_gene.php</file>
+            <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <file>submitter_tests/add_summary_variant_only_described_on_genomic_level.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <file>submitter_tests/add_summary_variant_vcf_file.php</file>
