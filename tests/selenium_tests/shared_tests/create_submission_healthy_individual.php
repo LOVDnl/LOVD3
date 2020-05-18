@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-05-15
+ * Modified    : 2020-05-18
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -73,8 +73,8 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         }
 
         $this->assertContains('/src/individuals?create', $this->driver->getCurrentURL());
-        $this->enterValue(WebDriverBy::name('Individual/Lab_ID'), '1234HealthyCtrl');
-        $this->enterValue(WebDriverBy::name('Individual/Reference'), '{PMID:Fokkema et al (2011):21520333}');
+        $this->enterValue('Individual/Lab_ID', '1234HealthyCtrl');
+        $this->enterValue('Individual/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->selectValue('active_diseases[]', 'Healthy/Control (Healthy individual / control)');
         $this->submitForm('Create individual information entry');
 
@@ -97,7 +97,7 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
             '//table[@class="option"]//td[contains(., "I want to add phenotype information")]'))->click();
 
         $this->assertContains('/src/phenotypes?create&target=0000', $this->driver->getCurrentURL());
-        $this->enterValue(WebDriverBy::name('Phenotype/Age'), '35y');
+        $this->enterValue('Phenotype/Age', '35y');
         $this->submitForm('Create phenotype information entry');
 
         $this->assertEquals('Successfully created the phenotype entry!',
@@ -126,7 +126,7 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->selectValue('Screening/Technique[]', 'SEQ');
         $this->selectValue('Screening/Technique[]', 'RT-PCR');
         $this->selectValue('genes[]', 'IVD');
-        $this->check(WebDriverBy::name('variants_found'));
+        $this->check('variants_found');
         $this->submitForm('Create screening information entry');
 
         $this->assertEquals('Successfully created the screening entry!',
@@ -151,13 +151,13 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "A variant that is located within a gene")]'))->click();
         // We probably don't need to search for IVD, but we might as well.
-        $this->enterValue(WebDriverBy::name('search_id_'), 'IVD' . WebDriverKeys::ENTER);
+        $this->enterValue('search_id_', 'IVD' . WebDriverKeys::ENTER);
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="IVD"]/td[1]'))->click();
 
         $this->assertContains('/src/variants?create&reference=Transcript&geneid=IVD&target=0000', $this->driver->getCurrentURL());
         $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_reported')));
-        $this->enterValue(WebDriverBy::name('00000001_VariantOnTranscript/Exon'), '1');
-        $this->enterValue(WebDriverBy::name('00000001_VariantOnTranscript/DNA'), 'c.123A>T');
+        $this->enterValue('00000001_VariantOnTranscript/Exon', '1');
+        $this->enterValue('00000001_VariantOnTranscript/DNA', 'c.123A>T');
         $this->driver->findElement(WebDriverBy::cssSelector('button.mapVariant'))->click();
 
         // Wait until RNA description field is filled after AJAX request, and check all values.
@@ -176,7 +176,7 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
             $this->selectValue('00000001_effect_concluded', 'Does not affect function');
         }
         $this->selectValue('allele', 'Paternal (confirmed)');
-        $this->enterValue(WebDriverBy::name('VariantOnGenome/Reference'), '{PMID:Fokkema et al (2011):21520333}');
+        $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->submitForm('Create variant entry');
 
         $this->assertEquals('Successfully created the variant entry!',
@@ -205,8 +205,8 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         $this->assertFalse($this->isElementPresent(WebDriverBy::xpath('//input[contains(@name, "VariantOnTranscript/")]')));
         $this->selectValue('allele', 'Paternal (confirmed)');
         $this->selectValue('chromosome', '15');
-        $this->enterValue(WebDriverBy::name('VariantOnGenome/DNA'), 'g.40702876G>T');
-        $this->enterValue(WebDriverBy::name('VariantOnGenome/Reference'), '{PMID:Fokkema et al (2011):21520333}');
+        $this->enterValue('VariantOnGenome/DNA', 'g.40702876G>T');
+        $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->selectValue('effect_reported', 'Effect unknown');
         // This test does not demand you're Curator or up.
         if ($this->isElementPresent(WebDriverBy::name('effect_concluded'))) {
