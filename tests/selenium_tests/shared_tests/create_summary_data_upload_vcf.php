@@ -33,7 +33,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testSetUp ()
     {
@@ -71,7 +71,7 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
 
         $this->assertContains('/src/variants/upload?create', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="option"]//td[contains(., "I want to upload a SeattleSeq Annotation file")]'))->click();
+            '//table[@class="option"]//td[contains(., "I want to upload a Variant Call Format (VCF) file")]'))->click();
     }
 
 
@@ -83,23 +83,33 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testUploadFile ()
     {
-        $this->assertContains('/src/variants/upload?create&type=SeattleSeq', $this->driver->getCurrentURL());
-        $this->enterValue('variant_file', ROOT_PATH . '../tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt');
+        $this->assertContains('/src/variants/upload?create&type=VCF', $this->driver->getCurrentURL());
+        $this->enterValue('variant_file', ROOT_PATH . '../tests/test_data_files/ShortVCFfilev1.vcf');
         $this->selectValue('hg_build', 'hg19');
         $this->selectValue('dbSNP_column', 'VariantOnGenome/Reference');
-        $this->selectValue('autocreate', 'Create genes and transcripts');
+        $this->selectValue('genotype_field', 'Use Phred-scaled genotype likelihoods (PL)');
+        $this->check('allow_mapping');
+        $this->check('allow_create_genes');
         $this->driver->findElement(WebDriverBy::name('owned_by'));
         $this->driver->findElement(WebDriverBy::name('statusid'));
-        $this->submitForm('Upload SeattleSeq file');
-        $this->waitForElement(WebDriverBy::xpath('//input[contains(@value, "Continue")]'), 300);
+        $this->submitForm('Upload VCF file');
+        $this->waitForElement(WebDriverBy::xpath('//input[contains(@value, "Continue")]'), 5);
 
-        $this->assertEquals('138 variants were imported, 1 variant could not be imported.',
+        $this->assertEquals('25 variants were imported, 1 variant could not be imported.',
             $this->driver->findElement(WebDriverBy::id('lovd__progress_message'))->getText());
         $this->submitForm('Continue');
 
         $this->assertContains('/src/submit/finish/upload/', $this->driver->getCurrentURL());
         $this->assertContains('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
+
+        // Now map the variants. Note that tabs are replaced by spaces,
+        //  because we work with the browser's interpretation of the text.
+        do {
+            $this->driver->get(ROOT_URL . '/src/ajax/map_variants.php');
+        } while (substr($this->driver->findElement(WebDriverBy::tagName('body'))->getText(), 0, 5) != '0 99 ');
+        $this->assertEquals('0 99 Successfully mapped 25 variants',
+            $this->driver->findElement(WebDriverBy::tagName('body'))->getText());
     }
 }
 ?>
