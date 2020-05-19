@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-18
+ * Modified    : 2020-05-19
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -30,6 +30,7 @@
 
 require_once 'LOVDSeleniumBaseTestCase.php';
 
+use \Facebook\WebDriver\Exception\StaleElementReferenceException;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverKeys;
@@ -73,7 +74,10 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "A variant that is located within a gene")]'))->click();
         // We probably don't need to search for ARSD, but we might as well.
-        $this->enterValue('search_id_', 'ARSD' . WebDriverKeys::ENTER);
+        try {
+            // Travis' Chrome keeps failing here with a StaleElementReferenceException without refreshes.
+            $this->enterValue('search_id_', 'ARSD' . WebDriverKeys::ENTER);
+        } catch (StaleElementReferenceException $e) {}
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="ARSD"]/td[1]'))->click();
     }
 
