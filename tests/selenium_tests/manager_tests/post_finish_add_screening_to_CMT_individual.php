@@ -12,10 +12,8 @@ class PostFinishAddScreeningToCMTTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
         $this->assertContains("/src/variants/0000000332", $this->driver->getCurrentURL());
-        $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
-        $element->click();
 
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/individuals/GJB1'));
+        $this->driver->get(ROOT_URL . '/src/individuals/GJB1');
         $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));
         $element->click();
         
