@@ -33,7 +33,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class CreateCustomPhenotypeColumnTest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
