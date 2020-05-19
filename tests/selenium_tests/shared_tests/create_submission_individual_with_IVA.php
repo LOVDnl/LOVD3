@@ -127,7 +127,6 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
             '//table[@class="option"]//td[contains(., "I want to add phenotype information")]'))->click();
 
         $this->assertContains('/src/phenotypes?create&target=0000', $this->driver->getCurrentURL());
-        $this->enterValue('Phenotype/Age', '35y');
         $this->enterValue('Phenotype/Additional', 'Additional information.');
         $this->selectValue('Phenotype/Inheritance', 'Familial');
         $this->enterValue('Phenotype/Age/Diagnosis', '30y');

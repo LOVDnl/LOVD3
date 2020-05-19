@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-06-27
- * Modified    : 2020-05-11
+ * Modified    : 2020-05-19
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2017-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,6 +58,7 @@ class SubmissionApiSuccessTest extends LOVDSeleniumWebdriverBaseTestCase
         // Retrieve authentication token from page.
         $this->driver->findElement(WebDriverBy::xpath('//a[text()="Show / More information"]'))->click();
         $oTokenLocator = WebDriverBy::xpath('//div[@id="auth_token_dialog"]/pre');
+        $this->waitForElement($oTokenLocator);
         $sToken = $this->driver->findElement($oTokenLocator)->getText();
 
         // Require inc-init.php to get global settings array.
@@ -91,7 +92,7 @@ class SubmissionApiSuccessTest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         // Check for errors, there should be none.
-        $this->assertEmpty(implode(';', $aResult['errors']));
+        $this->assertEquals('', implode(';', $aResult['errors']));
         // Check for confirmation.
         $this->assertContains('Data successfully scheduled', $aResult['messages'][0]);
 
