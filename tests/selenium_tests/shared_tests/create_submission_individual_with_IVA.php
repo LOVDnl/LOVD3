@@ -35,7 +35,7 @@ use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 use \Facebook\WebDriver\WebDriverKeys;
 
-class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testSetUp ()
     {
@@ -48,6 +48,10 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         }
         if (preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Gene does not exist yet.');
+        }
+        $this->driver->get(ROOT_URL . '/src/diseases/IVA');
+        if (preg_match('/No such ID!/', $sBody)) {
+            $this->markTestSkipped('Disease does not exist yet.');
         }
         if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
@@ -88,9 +92,9 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
         }
 
         $this->assertContains('/src/individuals?create', $this->driver->getCurrentURL());
-        $this->enterValue('Individual/Lab_ID', '1234HealthyCtrl');
+        $this->enterValue('Individual/Lab_ID', '1234IVA');
         $this->enterValue('Individual/Reference', '{PMID:Fokkema et al (2011):21520333}');
-        $this->selectValue('active_diseases[]', 'Healthy/Control (Healthy individual / control)');
+        $this->selectValue('active_diseases[]', 'IVA (isovaleric acidemia)');
 
         // Check for the owner and status fields, if you're curator and up.
         if ($nUserID <= 3) {
@@ -124,6 +128,9 @@ class CreateSubmissionHealthyIndividualTest extends LOVDSeleniumWebdriverBaseTes
 
         $this->assertContains('/src/phenotypes?create&target=0000', $this->driver->getCurrentURL());
         $this->enterValue('Phenotype/Age', '35y');
+        $this->enterValue('Phenotype/Additional', 'Additional information.');
+        $this->selectValue('Phenotype/Inheritance', 'Familial');
+        $this->enterValue('Phenotype/Age/Diagnosis', '30y');
 
         // Check for the owner and status fields, if you're curator and up.
         if ($nUserID <= 3) {

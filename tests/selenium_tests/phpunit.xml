@@ -15,7 +15,7 @@
             <file>shared_tests/create_user_submitter.php</file>
             <file>shared_tests/create_custom_column_phenotype.php</file>
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
-            <file>shared_tests/create_submission_healthy_individual.php</file>
+            <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <file>shared_tests/create_summary_data_upload_vcf.php</file>
