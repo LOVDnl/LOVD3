@@ -30,10 +30,8 @@
 
 require_once 'LOVDSeleniumBaseTestCase.php';
 
-use \Facebook\WebDriver\Exception\StaleElementReferenceException;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
-use \Facebook\WebDriver\WebDriverKeys;
 
 class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestCase
 {
