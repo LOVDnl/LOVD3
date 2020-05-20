@@ -58,6 +58,34 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testSetUp
      */
+    public function testFailSubmitWrongLSDBID ()
+    {
+        $sResult = file_get_contents(
+            ROOT_URL . '/src/api/submissions', false, stream_context_create(
+                array(
+                    'http' => array(
+                        'method'  => 'POST',
+                        'header'  => 'Content-type: application/x-www-form-urlencoded',
+                        'content' => file_get_contents(
+                            ROOT_PATH . '../tests/test_data_files/submission_api_request_content.json'
+                        ),
+                        'ignore_errors' => true,
+                    ))));
+        $aResult = json_decode($sResult, true);
+
+        $this->assertContains('422 Unprocessable Entity', $http_response_header[0]);
+        $this->assertEquals(array(), $aResult['messages']);
+        $this->assertContains('VarioML error: LSDB ID in file does not match this LSDB.',
+            implode(';', $aResult['errors']));
+    }
+
+
+
+
+
+    /**
+     * @depends testSetUp
+     */
     public function testCreateToken ()
     {
         $this->driver->findElement(WebDriverBy::linkText('Your account'))->click();
