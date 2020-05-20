@@ -231,7 +231,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('statusid')));
         }
 
-        $this->selectValue('allele', 'Paternal (confirmed)');
+        $this->selectValue('allele', 'Maternal (confirmed)');
         $this->assertValue('g.40698142A>T', 'VariantOnGenome/DNA');
         $this->enterValue('VariantOnGenome/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_reported')));

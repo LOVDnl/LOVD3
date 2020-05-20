@@ -34,8 +34,6 @@
             <file>admin_tests/confirm_variant_to_IVA_individual.php</file>
             <file>admin_tests/add_vcf_file_to_IVA_individual.php</file>
             <file>admin_tests/finish_individual_diagnosed_with_IVA.php</file>
-            <file>admin_tests/post_finish_add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
-            <file>admin_tests/post_finish_add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>shared_tests/test_create_token.php</file>
             <file>shared_tests/test_submission_api_fail.php</file>
             <file>shared_tests/test_submission_api_success.php</file>

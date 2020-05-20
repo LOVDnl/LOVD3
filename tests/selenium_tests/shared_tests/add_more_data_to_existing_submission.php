@@ -114,6 +114,50 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
 
         $this->assertEquals('Successfully created the screening entry!',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
+        $this->waitForElement(WebDriverBy::xpath('//table[@class="option"]'));
+    }
+
+
+
+
+
+    /**
+     * @depends testAddScreening
+     */
+    public function testConfirmVariant ()
+    {
+        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
+
+        $this->assertContains('/src/variants?create&target=0000', $this->driver->getCurrentURL());
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="option"]//td[contains(., "Yes, I want to confirm variants found")]'))->click();
+
+        $this->assertRegExp('/\/src\/screenings\/[0-9]+\?confirmVariants$/', $this->driver->getCurrentURL());
+        $this->driver->findElement(WebDriverBy::xpath('//td[text()="?/?"]'))->click();
+        $this->submitForm('Save variant list');
+
+        $this->assertEquals('Successfully confirmed the variant entry!',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
+        $this->waitForElement(WebDriverBy::xpath('//table[@class="option"]'));
+    }
+
+
+
+
+
+    /**
+     * @depends testConfirmVariant
+     */
+    public function testFinishSubmission ()
+    {
+        $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="option"]//td[contains(., "I want to finish this submission")]'))->click();
+
+        $this->assertContains('Successfully processed your submission',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
 ?>
