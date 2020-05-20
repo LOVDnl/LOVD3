@@ -22,18 +22,9 @@
             <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <file>shared_tests/create_summary_data_upload_vcf.php</file>
             <!-- Currently rebuilding here -->
-            <file>admin_tests/add_summary_variant_only_described_on_genomic_level.php</file>
             <!-- Don't do this one, you need to be submitter for this, add it there. -->
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
             <!-- Add download test at the end of this suite, and then compare to some text file. -->
-            <file>admin_tests/create_individual_diagnosed_with_IVA.php</file>
-            <file>admin_tests/add_phenotype_info_to_IVA_individual.php</file>
-            <file>admin_tests/add_screening_to_IVA_individual.php</file>
-            <file>admin_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
-            <file>admin_tests/add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
-            <file>admin_tests/confirm_variant_to_IVA_individual.php</file>
-            <file>admin_tests/add_vcf_file_to_IVA_individual.php</file>
-            <file>admin_tests/finish_individual_diagnosed_with_IVA.php</file>
             <file>shared_tests/test_create_token.php</file>
             <file>shared_tests/test_submission_api_fail.php</file>
             <file>shared_tests/test_submission_api_success.php</file>

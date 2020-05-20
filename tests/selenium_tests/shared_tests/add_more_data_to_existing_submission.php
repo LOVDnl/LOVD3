@@ -158,6 +158,25 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
 
         $this->assertContains('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/screenings/0000'));
+    }
+
+
+
+
+
+    /**
+     * @depends testFinishSubmission
+     */
+    public function testAddVariantLink ()
+    {
+        // We really don't need to double-test everything. If the link is there,
+        //  and we get to the right page, we've tested enough.
+        $this->assertContains('/src/screenings/0000', $this->driver->getCurrentURL());
+        $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Screenings'))->click();
+        $this->driver->findElement(WebDriverBy::linkText('Add variant to screening'))->click();
+
+        $this->assertContains('/src/variants?create&target=0000', $this->driver->getCurrentURL());
     }
 }
 ?>
