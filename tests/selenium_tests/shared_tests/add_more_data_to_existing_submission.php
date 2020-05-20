@@ -89,6 +89,31 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         $this->assertContains('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/phenotypes/0000'));
+        $this->driver->findElement(WebDriverBy::xpath('//a[contains(@href, "individuals/0000")]'))->click();
+    }
+
+
+
+
+
+    /**
+     * @depends testAddPhenotypeRecord
+     */
+    public function testAddScreening ()
+    {
+        $this->assertContains('/src/individuals/0000', $this->driver->getCurrentURL());
+        $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Individuals'))->click();
+        $this->driver->findElement(WebDriverBy::linkText('Add screening to individual'))->click();
+
+        $this->assertContains('/src/screenings?create&target=0000', $this->driver->getCurrentURL());
+        $this->selectValue('Screening/Template[]', 'Protein');
+        $this->selectValue('Screening/Technique[]', 'Western');
+        $this->selectValue('genes[]', 'IVD');
+        $this->check('variants_found');
+        $this->submitForm('Create screening information entry');
+
+        $this->assertEquals('Successfully created the screening entry!',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
 ?>
