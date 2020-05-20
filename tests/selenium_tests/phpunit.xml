@@ -17,6 +17,7 @@
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
+            <file>shared_tests/add_more_data_to_existing_submission.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <file>shared_tests/create_summary_data_upload_vcf.php</file>
@@ -36,7 +37,6 @@
             <file>admin_tests/post_finish_add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_variant_located_within_gene_to_IVA_individual.php</file>
             <file>admin_tests/post_finish_add_screening_to_IVA_individual.php</file>
-            <file>admin_tests/post_finish_add_phenotype_info_to_IVA_individual.php</file>
             <file>shared_tests/test_create_token.php</file>
             <file>shared_tests/test_submission_api_fail.php</file>
             <file>shared_tests/test_submission_api_success.php</file>
