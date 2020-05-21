@@ -156,5 +156,48 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
             implode(';', $aResult['errors']));
         $this->assertContains('401 Unauthorized', $http_response_header[0]);
     }
+
+
+
+
+
+    /**
+     * @depends testCreateToken
+     */
+    public function testSubmitSuccessfully ($aVariables)
+    {
+        list($sLSDBID, $sToken) = $aVariables;
+
+        $sHref = $this->driver->findElement(WebDriverBy::xpath('//a[.="Your account"]'))->getAttribute('href');
+        $aHref = explode('/', $sHref);
+        $sUserID = array_pop($aHref);
+
+        $aSubmission = json_decode(file_get_contents(
+            ROOT_PATH . '../tests/test_data_files/submission_api_request_content.json'), true);
+        $aSubmission['lsdb']['@id'] = $sLSDBID;
+        foreach ($aSubmission['lsdb']['source']['contact']['db_xref'] as $nKey => $aDBXref) {
+            if ($aDBXref['@source'] == 'lovd') {
+                $aSubmission['lsdb']['source']['contact']['db_xref'][$nKey]['@accession'] = $sUserID;
+            } elseif ($aDBXref['@source'] == 'lovd_auth_token') {
+                $aSubmission['lsdb']['source']['contact']['db_xref'][$nKey]['@accession'] = $sToken;
+            }
+        }
+
+        $sResult = file_get_contents(
+            ROOT_URL . '/src/api/submissions', false, stream_context_create(
+            array(
+                'http' => array(
+                    'method'  => 'POST',
+                    'header'  => 'Content-type: application/x-www-form-urlencoded',
+                    'content' => json_encode($aSubmission),
+                    'ignore_errors' => true,
+                ))));
+        $aResult = json_decode($sResult, true);
+
+        $this->assertEquals(array(), $aResult['errors']);
+        $this->assertContains('Data successfully scheduled for import.',
+            implode(';', $aResult['messages']));
+        $this->assertContains('202 Accepted', $http_response_header[0]);
+    }
 }
 ?>
