@@ -188,7 +188,7 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     protected function isAlertPresent ()
     {
         try {
-            $this->driver->switchTo()->alert();
+            $this->driver->switchTo()->alert()->getText();
             return true;
         } catch (NoAlertOpenException $e) {
             return false;

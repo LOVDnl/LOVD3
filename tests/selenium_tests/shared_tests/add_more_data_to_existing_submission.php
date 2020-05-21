@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-05-20
+ * Modified    : 2020-05-21
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -136,6 +136,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         $this->driver->findElement(WebDriverBy::xpath('//td[text()="?/?"]'))->click();
         $this->submitForm('Save variant list');
 
+        $this->waitForElement(WebDriverBy::xpath('//table[@class="info"]//td[contains(text(), "Successfully")]'));
         $this->assertEquals('Successfully confirmed the variant entry!',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitForElement(WebDriverBy::xpath('//table[@class="option"]'));
