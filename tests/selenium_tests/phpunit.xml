@@ -22,12 +22,12 @@
             <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
             <file>shared_tests/create_summary_data_upload_vcf.php</file>
             <file>shared_tests/submission_API.php</file>
+            <file>admin_tests/multi_value_search.php</file>
             <!-- Currently rebuilding here -->
             <!-- Don't do this one, you need to be submitter for this, add it there. -->
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
             <!-- Add download test at the end of this suite, and then compare to some text file. -->
             <file>admin_tests/delete_gene_IVD.php</file>
-            <file>admin_tests/multi_value_search.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="authorization_tests">
