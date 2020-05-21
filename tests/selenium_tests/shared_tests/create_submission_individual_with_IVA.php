@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-05-19
+ * Modified    : 2020-05-21
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,9 +65,13 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         // 5 - Owner.
         // 6 - Submitter.
         // 7 - Colleague.
-        global $nUserID;
         $sHref = $this->driver->findElement(WebDriverBy::xpath('//a[.="Your account"]'))->getAttribute('href');
-        list(,$nUserID) = explode('/', $sHref);
+        // HREF was relative, but WebDriver returns it as absolute.
+        $aHref = explode('/', $sHref);
+        $nUserID = (int) array_pop($aHref);
+
+        // This is the only way PHPUnit allows us to share data between tests.
+        return $nUserID;
     }
 
 
@@ -77,10 +81,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     /**
      * @depends testSetUp
      */
-    public function testCreateIndividual ()
+    public function testCreateIndividual ($nUserID)
     {
-        global $nUserID;
-
         $this->driver->get(ROOT_URL . '/src/submit');
         // This test does not demand you're Curator or up.
         if ($this->isElementPresent(WebDriverBy::xpath('//table[@class="option"]'))) {
@@ -109,6 +111,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->assertEquals('Successfully created the individual information entry!',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitForElement(WebDriverBy::xpath('//table[@class="option"]'));
+
+        return $nUserID;
     }
 
 
@@ -118,10 +122,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     /**
      * @depends testCreateIndividual
      */
-    public function testAddPhenotypeRecord ()
+    public function testAddPhenotypeRecord ($nUserID)
     {
-        global $nUserID;
-
         $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add phenotype information")]'))->click();
@@ -144,6 +146,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->assertEquals('Successfully created the phenotype entry!',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitForElement(WebDriverBy::xpath('//table[@class="option"]'));
+
+        return $nUserID;
     }
 
 
@@ -153,10 +157,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     /**
      * @depends testAddPhenotypeRecord
      */
-    public function testAddScreening ()
+    public function testAddScreening ($nUserID)
     {
-        global $nUserID;
-
         $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant screening")]'))->click();
@@ -182,6 +184,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->assertEquals('Successfully created the screening entry!',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitForElement(WebDriverBy::xpath('//table[@class="option"]'));
+
+        return $nUserID;
     }
 
 
@@ -191,10 +195,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     /**
      * @depends testAddScreening
      */
-    public function testAddVariantWithinIVD ()
+    public function testAddVariantWithinIVD ($nUserID)
     {
-        global $nUserID;
-
         $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
@@ -241,6 +243,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->assertEquals('Successfully created the variant entry!',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitForElement(WebDriverBy::xpath('//table[@class="option"]'));
+
+        return $nUserID;
     }
 
 
@@ -250,10 +254,8 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     /**
      * @depends testAddVariantWithinIVD
      */
-    public function testAddVariantOnGenomicLevel ()
+    public function testAddVariantOnGenomicLevel ($nUserID)
     {
-        global $nUserID;
-
         $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
