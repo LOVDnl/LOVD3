@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-05-20
+ * Modified    : 2020-05-21
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -92,6 +92,13 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::linkText('Show / More information'))->click();
         $this->waitForElement(WebDriverBy::xpath('//button[.="Create new token"]'));
         $this->driver->findElement(WebDriverBy::xpath('//button[.="Create new token"]'))->click();
+
+        // Handle dialog, in case this test is repeated several times during testing.
+        if ($this->isAlertPresent()) {
+            $this->assertEquals('Are you sure you want to create a new token, invalidating the current token?',
+                $this->getConfirmation());
+            $this->chooseOkOnNextConfirmation();
+        }
 
         $this->waitForElement(WebDriverBy::name('auth_token_expires'));
         $this->driver->findElement(WebDriverBy::xpath('//button[.="Create new token"]'))->click();
