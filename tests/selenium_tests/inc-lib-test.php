@@ -103,6 +103,9 @@ function getLOVDGlobals()
     //  generates in inc-init.php for a normal web request.
     // Run this ONLY when LOVD is installed; otherwise you'll get an incomplete
     //  $status and you'll never be able to fill that properly again.
+    // FIXME: Retire this function if you can,
+    //  I don't like hacking into the LOVD instance like this.
+    //  There should be a way around using it.
     static $db, $status;
     if (!isset($db)) {
         // Settings and constants to prevent notices when including inc-init.php.

@@ -199,5 +199,50 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
             implode(';', $aResult['messages']));
         $this->assertContains('202 Accepted', $http_response_header[0]);
     }
+
+
+
+
+
+    /**
+     * @depends testSubmitSuccessfully
+     */
+    public function testScheduleSubmission ()
+    {
+        $this->driver->get(ROOT_URL . '/src/import?schedule');
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="data"][tbody/tr/th/text()="Files to be processed"]/tbody/tr[last()]/td'))->click();
+        $this->submitForm('Schedule for import');
+
+        // There can be multiple tables, so select the right one.
+        $this->assertEquals('Successfully scheduled 1 file for import.',
+            $this->driver->findElement(WebDriverBy::xpath('//table[@class="info"]//td[contains(text(), "Successfully")]'))->getText());
+    }
+
+
+
+
+
+    /**
+     * @depends testScheduleSubmission
+     */
+    public function testImportSubmission ()
+    {
+        $this->driver->get(ROOT_URL . '/src/import?autoupload_scheduled_file');
+        $this->assertContains('Success!', $this->driver->getPageSource());
+    }
+
+
+
+
+
+    /**
+     * @depends testImportSubmission
+     */
+    public function testVerifySubmission ()
+    {
+        $this->driver->get(ROOT_URL . '/src/variants/IVD');
+        $this->driver->findElement(WebDriverBy::xpath('//td[.="c.465+1G>A"]'));
+    }
 }
 ?>
