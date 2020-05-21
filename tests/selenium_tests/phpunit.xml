@@ -26,7 +26,6 @@
             <!-- Don't do this one, you need to be submitter for this, add it there. -->
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
             <!-- Add download test at the end of this suite, and then compare to some text file. -->
-            <file>shared_tests/test_submission_api_fail.php</file>
             <file>shared_tests/test_submission_api_success.php</file>
             <file>admin_tests/delete_gene_IVD.php</file>
             <file>admin_tests/multi_value_search.php</file>

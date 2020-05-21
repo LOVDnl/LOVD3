@@ -73,10 +73,10 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
                     ))));
         $aResult = json_decode($sResult, true);
 
-        $this->assertContains('422 Unprocessable Entity', $http_response_header[0]);
         $this->assertEquals(array(), $aResult['messages']);
         $this->assertContains('VarioML error: LSDB ID in file does not match this LSDB.',
             implode(';', $aResult['errors']));
+        $this->assertContains('422 Unprocessable Entity', $http_response_header[0]);
     }
 
 
@@ -104,6 +104,57 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::xpath('//button[.="Create new token"]'))->click();
 
         $this->waitForElement(WebDriverBy::xpath('//div[text()="Token created successfully!"]'));
+        $this->driver->findElement(WebDriverBy::xpath('//button[.="Back"]'))->click();
+
+        // Fetch and store the LOVD ID and the user's Token.
+        // The LOVD ID is shown only to the Admin. To make this test work
+        //  for any submitter, filter the ID out of the cookie data.
+        $sLSDBID = current(array_filter(array_map(
+            function ($oCookie)
+            {
+                list($sName, $sID) = explode('_', $oCookie->getName());
+                if ($sName == 'PHPSESSID') {
+                    return $sID;
+                } else {
+                    return false;
+                }
+            }, $this->driver->manage()->getCookies())));
+        $sToken = $this->driver->findElement(WebDriverBy::xpath('//div[@id="auth_token_dialog"]/pre'))->getText();
+
+        // This is the only way in which data can be shared between tests.
+        return array($sLSDBID, $sToken);
+    }
+
+
+
+
+
+    /**
+     * @depends testCreateToken
+     */
+    public function testFailSubmitAuthenticationDenied ($aVariables)
+    {
+        list($sLSDBID,) = $aVariables;
+
+        $aSubmission = json_decode(file_get_contents(
+            ROOT_PATH . '../tests/test_data_files/submission_api_request_content.json'), true);
+        $aSubmission['lsdb']['@id'] = $sLSDBID;
+
+        $sResult = file_get_contents(
+            ROOT_URL . '/src/api/submissions', false, stream_context_create(
+            array(
+                'http' => array(
+                    'method'  => 'POST',
+                    'header'  => 'Content-type: application/x-www-form-urlencoded',
+                    'content' => json_encode($aSubmission),
+                    'ignore_errors' => true,
+                ))));
+        $aResult = json_decode($sResult, true);
+
+        $this->assertEquals(array(), $aResult['messages']);
+        $this->assertContains('VarioML error: Authentication denied.',
+            implode(';', $aResult['errors']));
+        $this->assertContains('401 Unauthorized', $http_response_header[0]);
     }
 }
 ?>
