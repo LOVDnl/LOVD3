@@ -229,7 +229,7 @@
 ## Individuals ## Do not remove or alter this header ##
 ## Count = 2
 "{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"
-"00000001"	""	""	""	"1"	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"1234IVA"	"{PMID:Fokkema et al (2011):21520333}"	""	""
+"00000001"	""	""	""	"1"	"00005"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"1234IVA"	"{PMID:Fokkema et al (2011):21520333}"	""	""
 "00000002"	""	""	""	"1"	"00001"	"2"	"00001"	"0000-00-00 00:00:00"	""	""	"patient_ID"	""	""	""
 
 
@@ -243,7 +243,7 @@
 ## Phenotypes ## Do not remove or alter this header ##
 ## Count = 3
 "{{id}}"	"{{diseaseid}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Phenotype/Additional}}"	"{{Phenotype/Inheritance}}"	"{{Phenotype/Age}}"	"{{Phenotype/Age/Diagnosis}}"
-"0000000001"	"00001"	"00000001"	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"Additional information."	"Familial"	""	"30y"
+"0000000001"	"00001"	"00000001"	"00005"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"Additional information."	"Familial"	""	"30y"
 "0000000002"	"00001"	"00000001"	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"More additional information."	"Familial"	""	"30y"
 "0000000003"	"00002"	"00000002"	"00001"	"2"	"00001"	"0000-00-00 00:00:00"	""	""	"Phenotypic abnormality (HP:0000118)"	""	""	""
 
@@ -251,7 +251,7 @@
 ## Screenings ## Do not remove or alter this header ##
 ## Count = 3
 "{{id}}"	"{{individualid}}"	"{{variants_found}}"	"{{owned_by}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
-"0000000001"	"00000001"	"1"	"00001"	"00001"	"0000-00-00 00:00:00"	""	""	"RT-PCR;SEQ"	"DNA;RNA"
+"0000000001"	"00000001"	"1"	"00005"	"00001"	"0000-00-00 00:00:00"	""	""	"RT-PCR;SEQ"	"DNA;RNA"
 "0000000002"	"00000001"	"1"	"00001"	"00001"	"0000-00-00 00:00:00"	""	""	"Western"	"Protein"
 "0000000003"	"00000002"	"1"	"00001"	"00001"	"0000-00-00 00:00:00"	""	""	"SEQ;RT-PCR"	"DNA;RNA"
 
@@ -266,8 +266,8 @@
 ## Variants_On_Genome ## Do not remove or alter this header ##
 ## Count = 167
 "{{id}}"	"{{allele}}"	"{{effectid}}"	"{{chromosome}}"	"{{position_g_start}}"	"{{position_g_end}}"	"{{type}}"	"{{mapping_flags}}"	"{{average_frequency}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Reference}}"
-"0000000001"	"21"	"11"	"15"	"40698142"	"40698142"	"subst"	"0"	""	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"IVD_000001"	"g.40698142A>T"	"{PMID:Fokkema et al (2011):21520333}"
-"0000000002"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	"00001"	"0000-00-00 00:00:00"	"IVD_000002"	"g.40702876G>T"	"{PMID:Fokkema et al (2011):21520333}"
+"0000000001"	"21"	"11"	"15"	"40698142"	"40698142"	"subst"	"0"	""	"00005"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"IVD_000001"	"g.40698142A>T"	"{PMID:Fokkema et al (2011):21520333}"
+"0000000002"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00005"	"9"	"00001"	"0000-00-00 00:00:00"	"00001"	"0000-00-00 00:00:00"	"IVD_000002"	"g.40702876G>T"	"{PMID:Fokkema et al (2011):21520333}"
 "0000000003"	"0"	"00"	"X"	"2832742"	"2832742"	"subst"	"0"	""	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"ARSD_000001"	"g.2832742G>C"	"{dbSNP:rs211648}"
 "0000000004"	"0"	"00"	"X"	"2832771"	"2832771"	"subst"	"0"	""	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"ARSD_000002"	"g.2832771C>T"	"{dbSNP:rs78142040}"
 "0000000005"	"0"	"00"	"X"	"2832787"	"2832787"	"subst"	"0"	""	"00001"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"ARSD_000003"	"g.2832787A>G"	"{dbSNP:rs73632954}"

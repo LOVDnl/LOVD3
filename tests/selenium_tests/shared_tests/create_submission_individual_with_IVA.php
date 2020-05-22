@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-05-21
+ * Modified    : 2020-05-22
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,7 +100,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
 
         // Check for the owner and status fields, if you're curator and up.
         if ($nUserID <= 3) {
-            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->selectValue('owned_by', 'Test Owner (#00005)');
             $this->driver->findElement(WebDriverBy::name('statusid'));
         } else {
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
@@ -135,7 +135,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
 
         // Check for the owner and status fields, if you're curator and up.
         if ($nUserID <= 3) {
-            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->selectValue('owned_by', 'Test Owner (#00005)');
             $this->driver->findElement(WebDriverBy::name('statusid'));
         } else {
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
@@ -175,7 +175,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
 
         // Check for the owner field, if you're curator and up.
         if ($nUserID <= 3) {
-            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->selectValue('owned_by', 'Test Owner (#00005)');
         } else {
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('owned_by')));
         }
@@ -225,7 +225,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         // Check for the effect_concluded, owner, and status fields, if you're curator and up.
         if ($nUserID <= 3) {
             $this->selectValue('00000001_effect_concluded', 'Does not affect function');
-            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->selectValue('owned_by', 'Test Owner (#00005)');
             $this->driver->findElement(WebDriverBy::name('statusid'));
         } else {
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('00000001_effect_concluded')));
@@ -275,7 +275,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         // Check for the effect_concluded, owner, and status fields, if you're manager and up.
         if ($nUserID <= 2) {
             $this->selectValue('effect_concluded', 'Effect unknown');
-            $this->driver->findElement(WebDriverBy::name('owned_by'));
+            $this->selectValue('owned_by', 'Test Owner (#00005)');
             $this->driver->findElement(WebDriverBy::name('statusid'));
         } else {
             $this->assertFalse($this->isElementPresent(WebDriverBy::name('effect_concluded')));
