@@ -53,31 +53,5 @@ assert("lovd_isAuthorized('phenotype', '1', false) === false");
 assert("lovd_isAuthorized('variant', '1', false) === false");
 assert("lovd_isAuthorized('screening', '1', false) === false");
 
-// Assertions for OWNER
-$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 6')->fetchAssoc();
-$_CONF['allow_submitter_mods'] = 1;
-$_AUTH['curates'] = array();
-$_AUTH['collaborates'] = array();
-assert("lovd_isAuthorized('individual', '1', false) === 1");
-assert("lovd_isAuthorized('phenotype', '1', false) === 1");
-assert("lovd_isAuthorized('variant', '1', false) === 1");
-assert("lovd_isAuthorized('screening', '1', false) === 1");
-
-$_CONF['allow_submitter_mods'] = 0;
-assert("lovd_isAuthorized('individual', '1', false) === 0");
-assert("lovd_isAuthorized('phenotype', '1', false) === 0");
-assert("lovd_isAuthorized('variant', '1', false) === 0");
-assert("lovd_isAuthorized('screening', '1', false) === 0");
-
-// Assertions for false input
-assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('individual', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('phenotype', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('screening', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('variant', 'ASDFASDFASDF', false) === false");
-assert("lovd_isAuthorized('asdfasdf', '1', false) === false");
-
 die('Complete, all successful.');
 ?>
