@@ -40,20 +40,6 @@ require ROOT_PATH . 'inc-init.php';
 //   This function needs to be rewritten to match the contents of the database
 //   in the selenium tests. Then, then can be included in the selenium tests.
 
-// Assertions for COLLABORATOR.
-$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 4')->fetchAssoc();
-assert('!empty($_AUTH)');
-$_AUTH['collaborates'] = $_DB->query('SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = 4 AND allow_edit = 0')->fetchAssoc();
-$_AUTH['curates'] = array();
-assert('!empty($_AUTH["collaborates"])');
-assert("lovd_isAuthorized('gene', 'IVD', false) === 0");
-assert("lovd_isAuthorized('disease', '1', false) === 0");
-assert("lovd_isAuthorized('transcript', '1', false) === 0");
-assert("lovd_isAuthorized('individual', '1', false) === 0");
-assert("lovd_isAuthorized('phenotype', '1', false) === 0");
-assert("lovd_isAuthorized('variant', '1', false) === 0");
-assert("lovd_isAuthorized('screening', '1', false) === 0");
-
 // Assertions for SUBMITTER
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 5')->fetchAssoc();
 $_AUTH['curates'] = array();
