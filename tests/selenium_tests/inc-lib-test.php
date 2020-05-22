@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2020-02-13
+ * Modified    : 2020-05-21
  * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,8 +32,9 @@
 require_once 'LOVDWebDriver.php';
 
 use \Facebook\WebDriver\Chrome\ChromeOptions;
+use \Facebook\WebDriver\Firefox\FirefoxDriver;
+use \Facebook\WebDriver\Firefox\FirefoxProfile;
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
-use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
 
 
 
@@ -53,21 +54,24 @@ function getWebDriverInstance ()
         $capabilities = null;
 
         if ($driverType == 'chrome') {
-            // This is the documented way of starting the chromedriver, but it fails. (at least
-            // on my machine with version 2.23)
-            // putenv('webdriver.chrome.driver=/usr/share/chromedriver');
-            // $webDriver = ChromeDriver::start();
-
             // Start the chrome driver through the selenium server.
             fwrite(STDERR, 'Connecting to Chrome driver via Selenium at ' . $host . PHP_EOL);
             $options = new ChromeOptions();
             $options->addArguments(array('--no-sandbox'));
+            $options->setExperimentalOption('prefs', array(
+                'download.default_directory' => '/tmp/',
+            ));
             $capabilities = DesiredCapabilities::chrome();
             $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
         } else {
-            // Create Firefox webdriver
+            // Create Firefox webdriver.
             fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host . PHP_EOL);
-            $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
+            $profile = new FirefoxProfile();
+            $profile->setPreference('browser.download.folderList', 2);
+            $profile->setPreference('browser.download.dir', '/tmp/');
+            $profile->setPreference('browser.helperApps.neverAsk.saveToDisk', 'text/plain');
+            $capabilities = DesiredCapabilities::firefox();
+            $capabilities->setCapability(FirefoxDriver::PROFILE, $profile);
         }
 
         $webDriver = LOVDWebDriver::create($host, $capabilities,
