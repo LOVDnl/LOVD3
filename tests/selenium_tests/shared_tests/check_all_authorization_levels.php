@@ -114,6 +114,68 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(1, lovd_isAuthorized('variant', '3'), false);
         $this->assertEquals(1, lovd_isAuthorized('variant', '4'), false);
         $this->assertEquals(1, lovd_isAuthorized('variant', '5'), false);
+
+        return [$_CONF, $_DB];
+    }
+
+
+
+
+
+    /**
+     * @depends testAdminRights
+     */
+    public function testManagerRights ($aVariables)
+    {
+        // Global'ed because lovd_isAuthorized() needs them!
+        global $_AUTH, $_CONF, $_DB;
+        list($_CONF, $_DB) = $aVariables;
+
+        // In Travis tests, our users are:
+        // 1 - Admin.
+        // 2 - Manager.
+        // 3 - Curator.
+        // 4 - Collaborator.
+        // 5 - Owner.
+        // 6 - Submitter.
+        // 7 - Colleague.
+
+        // Assertions for MANAGER.
+        $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 2')->fetchAssoc();
+        $this->assertNotFalse($_AUTH);
+        $this->assertEquals(LEVEL_MANAGER, $_AUTH['level']);
+        $this->assertEquals(1, lovd_isAuthorized('user', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('gene', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('disease', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('transcript', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('individual', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('phenotype', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('screening', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('variant', 'does_not_exist'), false);
+        $this->assertEquals(1, lovd_isAuthorized('does_not_exist', 'does_not_exist'), false);
+
+        $this->assertEquals(false, lovd_isAuthorized('user', '1'), false);
+        $this->assertEquals(1, lovd_isAuthorized('user', '2'), false);
+        $this->assertEquals(1, lovd_isAuthorized('user', '3'), false);
+        $this->assertEquals(1, lovd_isAuthorized('user', '4'), false);
+        $this->assertEquals(1, lovd_isAuthorized('user', '5'), false);
+        $this->assertEquals(1, lovd_isAuthorized('user', '6'), false);
+        $this->assertEquals(1, lovd_isAuthorized('user', '7'), false);
+        $this->assertEquals(1, lovd_isAuthorized('gene', 'IVD'), false);
+        $this->assertEquals(1, lovd_isAuthorized('gene', 'ARSD'), false);
+        $this->assertEquals(1, lovd_isAuthorized('disease', '1'), false);
+        $this->assertEquals(1, lovd_isAuthorized('transcript', '1'), false);
+        $this->assertEquals(1, lovd_isAuthorized('transcript', '2'), false);
+        $this->assertEquals(1, lovd_isAuthorized('individual', '1'), false);
+        $this->assertEquals(1, lovd_isAuthorized('phenotype', '1'), false);
+        $this->assertEquals(1, lovd_isAuthorized('phenotype', '2'), false);
+        $this->assertEquals(1, lovd_isAuthorized('screening', '1'), false);
+        $this->assertEquals(1, lovd_isAuthorized('screening', '2'), false);
+        $this->assertEquals(1, lovd_isAuthorized('variant', '1'), false);
+        $this->assertEquals(1, lovd_isAuthorized('variant', '2'), false);
+        $this->assertEquals(1, lovd_isAuthorized('variant', '3'), false);
+        $this->assertEquals(1, lovd_isAuthorized('variant', '4'), false);
+        $this->assertEquals(1, lovd_isAuthorized('variant', '5'), false);
     }
 }
 ?>

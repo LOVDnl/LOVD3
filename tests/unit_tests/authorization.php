@@ -40,18 +40,6 @@ require ROOT_PATH . 'inc-init.php';
 //   This function needs to be rewritten to match the contents of the database
 //   in the selenium tests. Then, then can be included in the selenium tests.
 
-// Assertions for MANAGER.
-$_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 2')->fetchAssoc();
-assert('!empty($_AUTH)');
-assert("lovd_isAuthorized('gene', 'ASDFASDFASDF', false)");
-assert("lovd_isAuthorized('disease', 'ASDFASDFASDF', false)");
-assert("lovd_isAuthorized('transcript', 'ASDFASDFASDF', false)");
-assert("lovd_isAuthorized('variant', 'ASDFASDFASDF', false)");
-assert("lovd_isAuthorized('individual', 'ASDFASDFASDF', false)");
-assert("lovd_isAuthorized('phenotype', 'ASDFASDFASDF', false)");
-assert("lovd_isAuthorized('screening', 'ASDFASDFASDF', false)");
-assert("lovd_isAuthorized('asdfasdf', 'ASDFASDFASDF', false)");
-
 // Assertions for CURATORS.
 $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 3')->fetchAssoc();
 assert('!empty($_AUTH)');
