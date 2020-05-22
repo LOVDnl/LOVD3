@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-05-19
+ * Modified    : 2020-05-22
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,6 +82,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->getWindowHandles(),
             $aWindowHandlers
         ));
+        $this->assertNotEmpty($sPopupWindowHandler);
 
         // Data wizard.
         $this->driver->switchTo()->window($sPopupWindowHandler);
