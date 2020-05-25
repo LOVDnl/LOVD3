@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-05-21
+ * Modified    : 2020-05-25
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -107,9 +107,13 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::xpath('//button[.="Back"]'))->click();
 
         // Fetch and store the LOVD ID and the user's Token.
+        $sToken = $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@id="auth_token_dialog"]/pre'))->getText();
         // The LOVD ID is shown only to the Admin. To make this test work
         //  for any submitter, filter the ID out of the cookie data.
-        $sLSDBID = current(array_filter(array_map(
+        // This requires some more effort, because we have a mix of old and new
+        //  cookies. The difference shows when we log out and in again.
+        $aCurrentSessionIDs = array_filter(array_map(
             function ($oCookie)
             {
                 list($sName, $sID) = explode('_', $oCookie->getName());
@@ -118,8 +122,28 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
                 } else {
                     return false;
                 }
-            }, $this->driver->manage()->getCookies())));
-        $sToken = $this->driver->findElement(WebDriverBy::xpath('//div[@id="auth_token_dialog"]/pre'))->getText();
+            }, $this->driver->manage()->getCookies()));
+        // Trigger new cookie to be added.
+        $sCurrentUsername = $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="data"]//tr[th[text()="Username"]]/td'))->getText();
+        $this->logout();
+        $this->login($sCurrentUsername, 'test1234');
+        $aSessionIDs = array_filter(array_map(
+            function ($oCookie)
+            {
+                list($sName, $sID) = explode('_', $oCookie->getName());
+                if ($sName == 'PHPSESSID') {
+                    return $sID;
+                } else {
+                    return false;
+                }
+            }, $this->driver->manage()->getCookies()));
+        // array_diff() doesn't work here, since values will match. The number
+        //  of times we see these values, will not match.
+        foreach ($aCurrentSessionIDs as $sValue) {
+            unset($aSessionIDs[array_search($sValue, $aSessionIDs)]);
+        }
+        $sLSDBID = current($aSessionIDs);
 
         // This is the only way in which data can be shared between tests.
         return array($sLSDBID, $sToken);
