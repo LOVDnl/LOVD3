@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-22
- * Modified    : 2020-05-22
+ * Modified    : 2020-05-25
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,7 +69,9 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
             'QUERY_STRING' => '',
             'REQUEST_METHOD' => 'GET',
         ));
-        require_once ROOT_PATH . 'inc-init.php';
+        if (empty($_DB)) {
+            require ROOT_PATH . 'inc-init.php';
+        }
 
         // In Travis tests, our users are:
         // 1 - Admin.
