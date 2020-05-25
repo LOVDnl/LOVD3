@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2020-05-21
- * For LOVD    : 3.0-23
+ * Modified    : 2020-05-25
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -96,59 +96,4 @@ function getWebDriverInstance ()
     // Wrap the webdriver instance in a custom processor.
     return $webDriver;
 }
-
-
-
-
-
-function getLOVDGlobals()
-{
-    // Get common global variables from the LOVD environment that LOVD usually
-    //  generates in inc-init.php for a normal web request.
-    // Run this ONLY when LOVD is installed; otherwise you'll get an incomplete
-    //  $status and you'll never be able to fill that properly again.
-    // FIXME: Retire this function if you can,
-    //  I don't like hacking into the LOVD instance like this.
-    //  There should be a way around using it.
-    static $db, $status;
-    if (!isset($db)) {
-        // Settings and constants to prevent notices when including inc-init.php.
-        define('FORMAT_ALLOW_TEXTPLAIN', true);
-        $_GET['format'] = 'text/plain';
-        $_SERVER = array_merge($_SERVER, array(
-            'HTTP_HOST' => 'localhost',
-            'REQUEST_URI' => '/' . basename(__FILE__),
-            'QUERY_STRING' => '',
-            'REQUEST_METHOD' => 'GET',
-        ));
-        require_once ROOT_PATH . 'inc-init.php';
-
-        // Save interesting global variables.
-        $db = $_DB;
-        $status = $_STAT;
-    }
-    return array($db, $status);
-}
-
-
-
-
-
-function setMutalyzerServiceURL ($sURL)
-{
-    // Set the Mutalyzer URL in the database to the TEST server, as agreed with
-    //  the Mutalyzer team. This way, one test run of LOVD also tests their
-    //  update.
-    list($db,) = getLOVDGlobals();
-
-    if (defined('NOT_INSTALLED')) {
-        // Just return true here. Don't fail on not being able to set this URL.
-        return true;
-    }
-
-    $result = $db->query('UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url=?', array($sURL));
-
-    // Return true if query was executed successfully
-    return $result !== false;
-}
-
+?>

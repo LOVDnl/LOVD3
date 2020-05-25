@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-05-15
+ * Modified    : 2020-05-25
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,7 +42,6 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         // This is needed because test suites may be started when the previous
         //  one did not complete. However, test suites need to be independent
         //  so LOVD still needs to be freshly installed for this test suite.
-        // NOTE: Do NOT use getLOVDGlobals() before LOVD is installed!
         $this->driver->get(ROOT_URL . '/src/install');
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
         if (preg_match('/This installer will create/', $bodyElement->getText())) {
@@ -131,17 +130,6 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         // LOVD Setup Area.
         $this->waitUntil(WebDriverExpectedCondition::titleContains("LOVD Setup"));
         $this->assertContains('/src/setup?newly_installed', $this->driver->getCurrentURL());
-    }
-
-
-
-
-
-    public static function tearDownAfterClass()
-    {
-        // Set the Mutalyzer service URL that will be used in the rest of the
-        // test suite.
-        setMutalyzerServiceURL('https://test.mutalyzer.nl/services');
     }
 }
 ?>

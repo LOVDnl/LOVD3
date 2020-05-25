@@ -37,7 +37,6 @@ class CheckPHPVersionTest extends LOVDSeleniumWebdriverBaseTestCase
     protected function setUp()
     {
         // Test if we have what we need for this test. If not, skip this test.
-        // NOTE: Do NOT use getLOVDGlobals() before LOVD is installed!
         parent::setUp();
         $this->driver->get(ROOT_URL . '/src/install');
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
