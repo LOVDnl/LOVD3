@@ -63,8 +63,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         // 3 - Curator.
         // 4 - Collaborator.
         // 5 - Owner.
-        // 6 - Submitter.
-        // 7 - Colleague.
+        // 6 - Submitter (colleague).
         $sHref = $this->driver->findElement(WebDriverBy::xpath('//a[.="Your account"]'))->getAttribute('href');
         // HREF was relative, but WebDriver returns it as absolute.
         $aHref = explode('/', $sHref);

@@ -69,9 +69,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
             'QUERY_STRING' => '',
             'REQUEST_METHOD' => 'GET',
         ));
-        if (empty($_DB)) {
-            require ROOT_PATH . 'inc-init.php';
-        }
+        require_once ROOT_PATH . 'inc-init.php';
 
         // In Travis tests, our users are:
         // 1 - Admin.
@@ -79,8 +77,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         // 3 - Curator.
         // 4 - Collaborator.
         // 5 - Owner.
-        // 6 - Submitter.
-        // 7 - Colleague.
+        // 6 - Submitter (colleague).
 
         // Assertions for DATABASE ADMINISTRATOR.
         $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 1')->fetchAssoc();
@@ -142,8 +139,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         // 3 - Curator.
         // 4 - Collaborator.
         // 5 - Owner.
-        // 6 - Submitter.
-        // 7 - Colleague.
+        // 6 - Submitter (colleague).
 
         // Assertions for MANAGER.
         $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 2')->fetchAssoc();
@@ -205,8 +201,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         // 3 - Curator.
         // 4 - Collaborator.
         // 5 - Owner.
-        // 6 - Submitter.
-        // 7 - Colleague.
+        // 6 - Submitter (colleague).
 
         // Assertions for CURATOR.
         $_SESSION = array(
@@ -289,8 +284,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         // 3 - Curator.
         // 4 - Collaborator.
         // 5 - Owner.
-        // 6 - Submitter.
-        // 7 - Colleague.
+        // 6 - Submitter (colleague).
 
         // Assertions for COLLABORATOR.
         $_SESSION = array(
@@ -373,8 +367,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         // 3 - Curator.
         // 4 - Collaborator.
         // 5 - Owner.
-        // 6 - Submitter.
-        // 7 - Colleague.
+        // 6 - Submitter (colleague).
 
         // Assertions for OWNER.
         $_SESSION = array(
