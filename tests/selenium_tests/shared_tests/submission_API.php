@@ -123,27 +123,32 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
                     return false;
                 }
             }, $this->driver->manage()->getCookies()));
-        // Trigger new cookie to be added.
-        $sCurrentUsername = $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="data"]//tr[th[text()="Username"]]/td'))->getText();
-        $this->logout();
-        $this->login($sCurrentUsername, 'test1234');
-        $aSessionIDs = array_filter(array_map(
-            function ($oCookie)
-            {
-                list($sName, $sID) = explode('_', $oCookie->getName());
-                if ($sName == 'PHPSESSID') {
-                    return $sID;
-                } else {
-                    return false;
-                }
-            }, $this->driver->manage()->getCookies()));
-        // array_diff() doesn't work here, since values will match. The number
-        //  of times we see these values, will not match.
-        foreach ($aCurrentSessionIDs as $sValue) {
-            unset($aSessionIDs[array_search($sValue, $aSessionIDs)]);
+        if (count(array_unique($aCurrentSessionIDs)) == 1) {
+            // Life is simple, there is only one session ID...
+            $sLSDBID = current($aCurrentSessionIDs);
+        } else {
+            // Trigger new cookie to be added.
+            $sCurrentUsername = $this->driver->findElement(WebDriverBy::xpath(
+                '//table[@class="data"]//tr[th[text()="Username"]]/td'))->getText();
+            $this->logout();
+            $this->login($sCurrentUsername, 'test1234');
+            $aSessionIDs = array_filter(array_map(
+                function ($oCookie)
+                {
+                    list($sName, $sID) = explode('_', $oCookie->getName());
+                    if ($sName == 'PHPSESSID') {
+                        return $sID;
+                    } else {
+                        return false;
+                    }
+                }, $this->driver->manage()->getCookies()));
+            // array_diff() doesn't work here, since values will match. The number
+            //  of times we see these values, will not match.
+            foreach ($aCurrentSessionIDs as $sValue) {
+                unset($aSessionIDs[array_search($sValue, $aSessionIDs)]);
+            }
+            $sLSDBID = current($aSessionIDs);
         }
-        $sLSDBID = current($aSessionIDs);
 
         // This is the only way in which data can be shared between tests.
         return array($sLSDBID, $sToken);
