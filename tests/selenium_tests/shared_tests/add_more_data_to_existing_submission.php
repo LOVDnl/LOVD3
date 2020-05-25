@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-05-21
+ * Modified    : 2020-05-25
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,7 +62,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
     public function testFindIndividual ()
     {
         $this->driver->get(ROOT_URL . '/src/individuals');
-        $this->driver->findElement(WebDriverBy::xpath('//tr[td[text()="IVD"] and td[text()="IVA"]]'))->click();
+        $this->driver->findElement(WebDriverBy::xpath('//tr[td[text()="IVD"] and td[text()="IVA"]]/td[2]'))->click();
     }
 
 
