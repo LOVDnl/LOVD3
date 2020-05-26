@@ -61,7 +61,7 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/submit');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "No, I will only submit summary variant data")]'))->click();
-        $this->assertContains('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
+        $this->assertStringStartsWith('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants?create'));
@@ -69,7 +69,7 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to upload a file")]'))->click();
 
-        $this->assertContains('/src/variants/upload?create', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/variants/upload?create', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to upload a Variant Call Format (VCF) file")]'))->click();
     }
@@ -83,7 +83,7 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testUploadFile ()
     {
-        $this->assertContains('/src/variants/upload?create&type=VCF', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/variants/upload?create&type=VCF', $this->driver->getCurrentURL());
         $this->enterValue('variant_file', ROOT_PATH . '../tests/test_data_files/ShortVCFfilev1.vcf');
         $this->selectValue('hg_build', 'hg19');
         $this->selectValue('dbSNP_column', 'VariantOnGenome/Reference');
@@ -100,7 +100,7 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Continue');
 
         $this->assertContains('/src/submit/finish/upload/', $this->driver->getCurrentURL());
-        $this->assertContains('Successfully processed your submission',
+        $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
 
         // Now map the variants. Note that tabs are replaced by spaces,

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-05-22
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -92,7 +92,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
                 '//table[@class="option"]//td[contains(., "Yes, I want to submit")]'))->click();
         }
 
-        $this->assertContains('/src/individuals?create', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/individuals?create', $this->driver->getCurrentURL());
         $this->enterValue('Individual/Lab_ID', '1234IVA');
         $this->enterValue('Individual/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->selectValue('active_diseases[]', 'IVA (isovaleric acidemia)');
@@ -301,7 +301,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to finish this submission")]'))->click();
 
-        $this->assertContains('Successfully processed your submission',
+        $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/individuals/0000'));
     }

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-05-19
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -110,7 +110,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->enterValue('password', 'test1234');
         $this->submitForm('Edit variant entry');
 
-        $this->assertContains('Successfully processed your submission',
+        $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 
@@ -141,7 +141,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     {
         $this->assertRegExp('/\/src\/variants\/[0-9]+\?map$/', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath('//tr[td[contains(text(), "NM_002225.3")]]/td/a'))->click();
-        $this->assertContains('You are about to remove the variant description of transcript NM_002225.3 from this variant.',
+        $this->assertStringStartsWith('You are about to remove the variant description of transcript NM_002225.3 from this variant.',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
         $this->enterValue('password', 'test1234');

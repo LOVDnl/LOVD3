@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-05-25
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -87,7 +87,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Start');
 
         // Fill out Administrator form.
-        $this->assertContains('/src/install/?step=1', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=1', $this->driver->getCurrentURL());
         $this->enterValue('name', 'LOVD3 Admin');
         $this->enterValue('institute', 'Leiden University Medical Center');
         $this->enterValue('department', 'Human Genetics');
@@ -102,15 +102,15 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Continue');
 
         // Confirmation of account information, installing...
-        $this->assertContains('/src/install/?step=1&sent=true', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=1&sent=true', $this->driver->getCurrentURL());
         $this->submitForm('Next');
 
         // Installation complete.
-        $this->assertContains('/src/install/?step=2', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=2', $this->driver->getCurrentURL());
         $this->submitForm('Next');
 
         // Fill out System Settings form.
-        $this->assertContains('/src/install/?step=3', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=3', $this->driver->getCurrentURL());
         $this->enterValue('institute', 'Leiden University Medical Center');
         $this->enterValue('email_address', 'noreply@LOVD.nl');
         $this->selectValue('refseq_build', 'hg19');
@@ -120,16 +120,16 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Continue');
 
         // Settings stored.
-        $this->assertContains('/src/install/?step=3&sent=true', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=3&sent=true', $this->driver->getCurrentURL());
         $this->submitForm('Next');
 
         // Done!
-        $this->assertContains('/src/install/?step=4', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=4', $this->driver->getCurrentURL());
         $this->clickButton('Continue to Setup area');
 
         // LOVD Setup Area.
         $this->waitUntil(WebDriverExpectedCondition::titleContains("LOVD Setup"));
-        $this->assertContains('/src/setup?newly_installed', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/setup?newly_installed', $this->driver->getCurrentURL());
     }
 }
 ?>

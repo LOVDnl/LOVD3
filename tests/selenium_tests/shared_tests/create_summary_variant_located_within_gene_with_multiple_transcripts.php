@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-19
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,7 +66,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
         $this->driver->get(ROOT_URL . '/src/submit');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "No, I will only submit summary variant data")]'))->click();
-        $this->assertContains('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
+        $this->assertStringStartsWith('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants?create'));
@@ -90,7 +90,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
      */
     public function testCreateVariantWithinARSD ()
     {
-        $this->assertContains('/src/variants?create&reference=Transcript&geneid=ARSD', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/variants?create&reference=Transcript&geneid=ARSD', $this->driver->getCurrentURL());
         // We'll be using transcript IDs 2 and 3, while 4 and 5 will be ignored.
         $this->check('ignore_00000004');
         $this->check('ignore_00000005');
@@ -132,7 +132,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
         $this->driver->findElement(WebDriverBy::name('statusid'));
         $this->submitForm('Create variant entry');
 
-        $this->assertContains('Successfully processed your submission',
+        $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants/0000'));
     }

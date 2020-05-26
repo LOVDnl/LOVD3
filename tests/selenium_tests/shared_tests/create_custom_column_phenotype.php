@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-05-22
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -64,7 +64,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "Information on the phenotype")]'))->click();
 
-        $this->assertContains('/src/columns?create', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/columns?create', $this->driver->getCurrentURL());
         $this->enterValue('colid', 'Age/Diagnosis');
         $this->enterValue('head_column', 'Age of diagnosis');
         $this->enterValue('description_legend_short', 'The age at which the individual\'s diagnosis was confirmed, if known. 04y08m = 4 years and 8 months.');
@@ -100,7 +100,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Window closes, let's switch back.
         $this->driver->switchTo()->window($sMainWindowHandler);
-        $this->assertContains('/src/columns?create', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/columns?create', $this->driver->getCurrentURL());
         $this->assertValue('VARCHAR(12)', 'mysql_type');
         $this->assertValue('Age of diagnosis|The age at which the individual\'s diagnosis was confirmed, if known. Numbers lower than 10 should be prefixed by a zero and the field should always begin with years, to facilitate sorting on this column.|text|10', 'form_type');
         $this->unCheck('standard');

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-19
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -61,7 +61,7 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->get(ROOT_URL . '/src/submit');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "No, I will only submit summary variant data")]'))->click();
-        $this->assertContains('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
+        $this->assertStringStartsWith('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants?create'));
@@ -69,7 +69,7 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to upload a file")]'))->click();
 
-        $this->assertContains('/src/variants/upload?create', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/variants/upload?create', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to upload a SeattleSeq Annotation file")]'))->click();
     }
@@ -83,7 +83,7 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testUploadFile ()
     {
-        $this->assertContains('/src/variants/upload?create&type=SeattleSeq', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/variants/upload?create&type=SeattleSeq', $this->driver->getCurrentURL());
         $this->enterValue('variant_file', ROOT_PATH . '../tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt');
         $this->selectValue('hg_build', 'hg19');
         $this->selectValue('dbSNP_column', 'VariantOnGenome/Reference');
@@ -98,7 +98,7 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
         $this->submitForm('Continue');
 
         $this->assertContains('/src/submit/finish/upload/', $this->driver->getCurrentURL());
-        $this->assertContains('Successfully processed your submission',
+        $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }

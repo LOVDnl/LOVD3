@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-21
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -61,7 +61,7 @@ class DeleteGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Genes'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Delete gene entry'))->click();
 
-        $this->assertContains('/src/genes/IVD?delete', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/genes/IVD?delete', $this->driver->getCurrentURL());
         $this->enterValue('password', 'test1234');
         $this->submitForm('Delete gene information entry');
 

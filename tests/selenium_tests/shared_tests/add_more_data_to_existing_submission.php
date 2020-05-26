@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-05-25
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -84,7 +84,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         $this->enterValue('Phenotype/Age/Diagnosis', '30y');
         $this->submitForm('Create phenotype information entry');
 
-        $this->assertContains('Successfully processed your submission',
+        $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/phenotypes/0000'));
         $this->driver->findElement(WebDriverBy::xpath('//a[contains(@href, "individuals/0000")]'))->click();
@@ -155,7 +155,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to finish this submission")]'))->click();
 
-        $this->assertContains('Successfully processed your submission',
+        $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/screenings/0000'));
     }

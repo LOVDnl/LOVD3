@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-25
- * Modified    : 2020-05-25
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -61,7 +61,7 @@ class AssignColleagueToOwnerTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Users'))->click();
         $this->driver->findElement(WebDriverBy::partialLinkText('Share access'))->click();
 
-        $this->assertContains('/src/users/00005?share_access', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/users/00005?share_access', $this->driver->getCurrentURL());
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="00006"]/td[.="Test Submitter"]'))->click();
         $this->unCheck(WebDriverBy::xpath('//td[contains(text(), "Test Submitter")]/..//input[@name="allow_edit[]"]'));
         $this->enterValue('password', 'test1234');

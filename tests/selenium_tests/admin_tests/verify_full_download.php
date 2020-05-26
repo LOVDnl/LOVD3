@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-21
- * Modified    : 2020-05-22
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,17 +32,17 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class DownloadAllDataTest extends LOVDSeleniumWebdriverBaseTestCase
+class VerifyFullDownloadTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
         parent::setUp();
-        $this->driver->get(ROOT_URL . '/src/genes');
+        $this->driver->get(ROOT_URL . '/src/setup');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
-        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+        if (preg_match('/To access this area, you need at least/', $sBody)) {
             $this->markTestSkipped('User was not authorized.');
         }
     }
