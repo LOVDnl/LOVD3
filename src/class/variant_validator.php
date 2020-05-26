@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-05-06
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -330,6 +330,23 @@ class LOVD_VV
             $aOptions = array();
         }
 
+        // Don't send variants that are too big; VV can't currently handle them.
+        if (function_exists('lovd_getVariantInfo')) {
+            $aPositions = lovd_getVariantInfo(substr(strstr($sVariant, ':'), 1));
+            // These sizes are approximate and slightly on the safe side;
+            //  simple measurements have shown a maximum duplication size of
+            //  250KB, and a max deletion of 900KB, requiring a full minute.
+            // See: https://github.com/openvar/variantValidator/issues/151
+            if ($aPositions
+                && (($aPositions['type'] == 'dup' && ($aPositions['position_end'] - $aPositions['position_start']) > 200000)
+                    || (substr($aPositions['type'], 0, 3) == 'del' && ($aPositions['position_end'] - $aPositions['position_start']) > 800000))) {
+                // Variant too big, return error.
+                $aReturn = $this->aResponse;
+                $aReturn['errors']['ESIZETOOLARGE'] = 'This variant is currently too big to process. It will likely time out after a minute of waiting, so we won\'t send it to VariantValidator.';
+                return $aReturn;
+            }
+        }
+
         // Append defaults for any remaining options.
         $aOptions = array_replace(
             array(
@@ -417,7 +434,7 @@ class LOVD_VV
                                 $aData['errors'][] = $sError;
                             }
                             // When we have errors, we don't need 'data' filled in. Just return what I have.
-                            return ($aData);
+                            return $aData;
                         }
                         break;
                     default:
@@ -432,7 +449,7 @@ class LOVD_VV
             $aData['data']['DNA'] = $aJSON['g_hgvs'];
             // If description is given but different, then apparently there's been some kind of correction.
             if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
-                // Check type of correction; silent, WCORRECTION, or WROLLFORWARD.
+                // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
                 if (function_exists('lovd_getVariantInfo')) {
                     // Use LOVD's lovd_getVariantInfo() to parse positions and type.
                     $sDNAOri = substr($sVariant, strlen($sVariantNC) + 1);
@@ -728,7 +745,7 @@ class LOVD_VV
                             }
                         }
                         // When we have errors, we don't need 'data' filled in. Just return what I have.
-                        return ($aData);
+                        return $aData;
                     }
                     break;
                 // Handled all possible flags, no default needed.
@@ -753,7 +770,7 @@ class LOVD_VV
             $aData['data']['DNA'] = $aJSON['hgvs_transcript_variant'];
             // If description is given but different, then apparently there's been some kind of correction.
             if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
-                // Check type of correction; silent, WCORRECTION, or WROLLFORWARD.
+                // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
                 if (function_exists('lovd_getVariantInfo')) {
                     // Use LOVD's lovd_getVariantInfo() to parse positions and type.
                     $sDNAOri = substr(strstr($sVariant, ':'), 1);
