@@ -49,7 +49,6 @@
             <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file>
             <file>shared_tests/assign_curator_to_IVD.php</file>
             <file>shared_tests/assign_collaborator_to_IVD.php</file>
-            <file>authorization_tests/authorization.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="collaborator_tests">
