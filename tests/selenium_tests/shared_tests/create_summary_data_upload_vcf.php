@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-19
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -108,8 +108,14 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         do {
             $this->driver->get(ROOT_URL . '/src/ajax/map_variants.php');
         } while (substr($this->driver->findElement(WebDriverBy::tagName('body'))->getText(), 0, 5) != '0 99 ');
-        $this->assertEquals('0 99 Successfully mapped 25 variants',
-            $this->driver->findElement(WebDriverBy::tagName('body'))->getText());
+        // Travis sometimes reports a "There are no variants to map in the
+        //  database" instead of the expected "Successfully mapped 25 variants".
+        $this->assertContains(
+            $this->driver->findElement(WebDriverBy::tagName('body'))->getText(),
+            array(
+              '0 99 Successfully mapped 25 variants',
+              '0 99 There are no variants to map in the database',
+            ));
     }
 }
 ?>
