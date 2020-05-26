@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-13
+ * Modified    : 2020-05-21
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,11 +32,13 @@
 require_once 'inc-lib-test.php';
 require_once 'RefreshingWebDriverElement.php';
 
+use \Facebook\WebDriver\Exception\NoAlertOpenException;
 use \Facebook\WebDriver\Exception\NoSuchElementException;
 use \Facebook\WebDriver\Exception\WebDriverException;
 use \Facebook\WebDriver\Remote\LocalFileDetector;
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
+use \Facebook\WebDriver\WebDriverKeys;
 
 
 
@@ -48,6 +50,23 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 
     // public webdriver instance.
     public $driver;
+
+
+
+
+
+    protected function assertValue ($sValue, $locator)
+    {
+        // Convenience function to easily check an element's value.
+        // For even more convenience, $locator can also just be a string,
+        //  in which case we assume it's an element name.
+        if (is_string($locator)) {
+            $locator = WebDriverBy::name($locator);
+        }
+
+        $element = $this->driver->findElement($locator);
+        $this->assertEquals($sValue, $element->getAttribute('value'));
+    }
 
 
 
@@ -111,6 +130,12 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     {
         // Convenience function to let the webdriver type text $text in an
         // element specified by $locator.
+        // For even more convenience, $locator can also just be a string,
+        //  in which case we assume it's an element name.
+        if (is_string($locator)) {
+            $locator = WebDriverBy::name($locator);
+        }
+
         $element = $this->driver->findElement($locator);
 
         if ($element->getAttribute('type') == 'file') {
@@ -139,7 +164,10 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         $this->waitUntil(function () use ($element, $sText) {
             $element->clear();
             $element->sendKeys($sText);
-            return $element->getAttribute('value') == $sText;
+            // If we have sent an Enter, this is not found back in the field,
+            //  and we get StaleElement Exceptions. Compensate with rtrim().
+            // WebDriverKeys::ENTER == U+E007; mb_ord(57351).
+            return ($element->getAttribute('value') == rtrim($sText, WebDriverKeys::ENTER));
         });
     }
 
@@ -151,6 +179,20 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     {
         // Return text displayed by confirmation dialog box.
         return $this->driver->switchTo()->alert()->getText();
+    }
+
+
+
+
+
+    protected function isAlertPresent ()
+    {
+        try {
+            $this->driver->switchTo()->alert()->getText();
+            return true;
+        } catch (NoAlertOpenException $e) {
+            return false;
+        }
     }
 
 
@@ -190,8 +232,8 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
         }
 
         // We're now at the login form.
-        $this->enterValue(WebDriverBy::name('username'), $sUsername);
-        $this->enterValue(WebDriverBy::name('password'), $sPassword);
+        $this->enterValue('username', $sUsername);
+        $this->enterValue('password', $sPassword);
         $element = $this->driver->findElement(WebDriverBy::xpath('//input[@value="Log in"]'));
         usleep(100000); // If not waiting at all, sometimes you're just not logged in, for some reason.
         $element->click();
@@ -290,6 +332,12 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
     {
         // Set checkbox specified by $locator to 'checked' if $bSetChecked or
         // not 'checked' otherwise.
+        // For even more convenience, $locator can also just be a string,
+        //  in which case we assume it's an element name.
+        if (is_string($locator)) {
+            $locator = WebDriverBy::name($locator);
+        }
+
         $element = $this->driver->findElement($locator);
         $nCount = 0;
 

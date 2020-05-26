@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-28
- * Modified    : 2020-05-11
+ * Modified    : 2020-05-22
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,6 +46,26 @@ class LOVDWebDriver extends RemoteWebDriver {
      * Sub class of RemoteWebDriver. Overloading its findElement method
      * to make use of RefreshingWebDriverElement.
      */
+
+    public function execute ($command_name, $params = [])
+    {
+        // This WebDriver/GeckoDriver/Selenium combination is so confusing.
+        // The JSON-to-Web3C change is causing problems here, so I have to
+        //  overload the execute() function to fix issues. Once GeckoDriver (??)
+        //  is updated and fixed to work with Selenium properly, then we can
+        //  remove this.
+        if (getenv('LOVD_SELENIUM_DRIVER') == 'firefox'
+            && $command_name == 'switchToWindow') {
+            // FF needs "handle", while Chrome needs "name".
+            return parent::execute($command_name, ['handle' => $params['name']]);
+        } else {
+            return parent::execute($command_name, $params);
+        }
+    }
+
+
+
+
 
     public function findElement (WebDriverBy $by)
     {

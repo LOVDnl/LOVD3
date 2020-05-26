@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-15
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : M. Kroon <m.kroon@lumc.nl>
- *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -33,23 +32,22 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class CreateUserCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
+class DeleteGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // Collaborator is user ID 4.
-        $this->driver->get(ROOT_URL . '/src/users/00004');
+        $this->driver->get(ROOT_URL . '/src/genes/IVD');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
-        if (preg_match('/To access this area/', $sBody)) {
-            $this->markTestSkipped('User was not authorized.');
+        if (preg_match('/No such ID!/', $sBody)) {
+            $this->markTestSkipped('Gene does not exist yet.');
         }
-        if (!preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User was already created.');
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
@@ -59,23 +57,22 @@ class CreateUserCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->driver->get(ROOT_URL . "/src/users?create&no_orcid");
-        $this->enterValue('name', 'Test Collaborator');
-        $this->enterValue('institute', 'Leiden University Medical Center');
-        $this->enterValue('department', 'Human Genetics');
-        $this->enterValue('address', "Einthovenweg 20\n2333 ZC Leiden");
-        $this->enterValue('email', 'collaborator@lovd.nl');
-        $this->enterValue('username', 'collaborator');
-        $this->enterValue('password_1', 'test1234');
-        $this->enterValue('password_2', 'test1234');
-        $this->selectValue('countryid', 'Netherlands');
-        $this->enterValue('city', 'Leiden');
-        $this->selectValue('level', 'Submitter');
-        $this->unCheck('send_email');
+        $this->driver->get(ROOT_URL . '/src/genes/IVD');
+        $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Genes'))->click();
+        $this->driver->findElement(WebDriverBy::linkText('Delete gene entry'))->click();
+
+        $this->assertStringEndsWith('/src/genes/IVD?delete', $this->driver->getCurrentURL());
         $this->enterValue('password', 'test1234');
-        $this->submitForm('Create user');
-        $this->assertEquals("Successfully created the user account!",
-            $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        $this->submitForm('Delete gene information entry');
+
+        $this->assertRegExp('/^You are about to delete [0-9]+ transcript\(s\) and related information on [0-9]+ variant\(s\) on those transcripts. ' .
+            'Please fill in your password one more time to confirm the removal of gene IVD\./',
+            $this->driver->findElement(WebDriverBy::xpath('//table[@class="info"][2]'))->getText());
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Delete gene information entry');
+
+        $this->assertEquals('Successfully deleted the gene information entry!',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
 ?>

@@ -3,13 +3,12 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2015-02-17
- * Modified    : 2020-05-18
+ * Created     : 2020-05-19
+ * Modified    : 2020-05-19
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : M. Kroon <m.kroon@lumc.nl>
- *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -32,30 +31,26 @@
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class AssignCollaboratorToIVDTest extends LOVDSeleniumWebdriverBaseTestCase
+class EnableCustomColumnForIVATest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        $this->driver->get(ROOT_URL . '/src/genes/IVD');
+        $this->driver->get(ROOT_URL . '/src/columns/Phenotype/Age/Diagnosis');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
         if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('Gene does not exist yet.');
+            $this->markTestSkipped('Column does not exist yet.');
         }
 
-        // Collaborator is user ID 4.
-        $this->driver->get(ROOT_URL . '/src/users/00004');
-        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
-        if (preg_match('/To access this area/', $sBody)) {
+        // Requires having a Setup tab.
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
             $this->markTestSkipped('User was not authorized.');
-        }
-        if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User does not exist yet.');
         }
     }
 
@@ -65,13 +60,15 @@ class AssignCollaboratorToIVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->driver->get(ROOT_URL . "/src/genes/IVD?authorize");
-        $this->driver->findElement(WebDriverBy::linkText('Test Collaborator'))->click();
-        $this->unCheck(WebDriverBy::xpath('//td[contains(text(), "Test Collaborator")]/..//input[@name="allow_edit[]"]'));
+        $this->driver->get(ROOT_URL . '/src/columns/Phenotype/Age/Diagnosis?add');
+        $this->selectValue('target[]', 'IVA (isovaleric acidemia)');
         $this->enterValue('password', 'test1234');
-        $this->submitForm('Save curator list');
-        $this->assertEquals('Successfully updated the curator list!',
-            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
+        $this->submitForm('Add/enable custom data column');
+        $this->assertEquals('Successfully added column "Age of diagnosis"!',
+            $this->driver->findElement(WebDriverBy::id('lovd__progress_message_done'))->getText());
+
+        // Wait for page redirect.
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/columns/Phenotype'));
     }
 }
 ?>

@@ -11,14 +11,9 @@ class PostFinishAddScreeningToCMTTest extends LOVDSeleniumWebdriverBaseTestCase
         // Wait for redirect
         $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
-        $this->assertContains("/src/variants/0000000332", $this->driver->getCurrentURL());
-        $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
-        $element->click();
+        $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
 
-        // This sometimes fails on Travis. Didn't try locally. On the screenshot I see we're still at the previous page (variants/332).
-        // The individuals tab is visible in the screenshot.
-        // Add a waitUntil() might help, but seriously, the code above shouldn't be here.
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/GJB1$/', $this->driver->getCurrentURL()));
+        $this->driver->get(ROOT_URL . '/src/individuals/GJB1');
         $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));
         $element->click();
         

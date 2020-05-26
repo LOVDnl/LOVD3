@@ -19,8 +19,7 @@ class PostFinishAddPhenotypeInfoToCMTIndividualTest extends LOVDSeleniumWebdrive
         $allIndividualsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all individuals'));
         $allIndividualsLink->click();
 
-
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/individuals'));
         $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));
         $element->click();
         

@@ -14,8 +14,8 @@ class CreateGeneGJBTest extends LOVDSeleniumWebdriverBaseTestCase
 
         $element = $this->driver->findElement(WebDriverBy::linkText("Create a new gene entry"));
         $element->click();
-        
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/genes[\s\S]create$/',$this->driver->getCurrentURL()));
+
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/genes?create'));
         $this->enterValue(WebDriverBy::name("hgnc_id"), "GJB1");
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
         $element->click();

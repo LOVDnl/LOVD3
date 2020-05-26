@@ -19,7 +19,7 @@ class PostFinishAddVariantLocatedWithinGeneToCMTTest extends LOVDSeleniumWebdriv
         $allVariantsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all screenings'));
         $allVariantsLink->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/screenings'));
 //        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
         $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='0000000002']"));
         $element->click();

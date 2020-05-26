@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-07-13
- * Modified    : 2020-02-13
- * For LOVD    : 3.0-23
+ * Modified    : 2020-05-25
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -32,8 +32,9 @@
 require_once 'LOVDWebDriver.php';
 
 use \Facebook\WebDriver\Chrome\ChromeOptions;
+use \Facebook\WebDriver\Firefox\FirefoxDriver;
+use \Facebook\WebDriver\Firefox\FirefoxProfile;
 use \Facebook\WebDriver\Remote\DesiredCapabilities;
-use \Facebook\WebDriver\Remote\WebDriverCapabilityType;
 
 
 
@@ -53,21 +54,24 @@ function getWebDriverInstance ()
         $capabilities = null;
 
         if ($driverType == 'chrome') {
-            // This is the documented way of starting the chromedriver, but it fails. (at least
-            // on my machine with version 2.23)
-            // putenv('webdriver.chrome.driver=/usr/share/chromedriver');
-            // $webDriver = ChromeDriver::start();
-
             // Start the chrome driver through the selenium server.
             fwrite(STDERR, 'Connecting to Chrome driver via Selenium at ' . $host . PHP_EOL);
             $options = new ChromeOptions();
             $options->addArguments(array('--no-sandbox'));
+            $options->setExperimentalOption('prefs', array(
+                'download.default_directory' => '/tmp/',
+            ));
             $capabilities = DesiredCapabilities::chrome();
             $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
         } else {
-            // Create Firefox webdriver
+            // Create Firefox webdriver.
             fwrite(STDERR, 'Connecting to Firefox driver via Selenium at ' . $host . PHP_EOL);
-            $capabilities = array(WebDriverCapabilityType::BROWSER_NAME => 'firefox');
+            $profile = new FirefoxProfile();
+            $profile->setPreference('browser.download.folderList', 2);
+            $profile->setPreference('browser.download.dir', '/tmp/');
+            $profile->setPreference('browser.helperApps.neverAsk.saveToDisk', 'text/plain');
+            $capabilities = DesiredCapabilities::firefox();
+            $capabilities->setCapability(FirefoxDriver::PROFILE, $profile);
         }
 
         $webDriver = LOVDWebDriver::create($host, $capabilities,
@@ -92,56 +96,4 @@ function getWebDriverInstance ()
     // Wrap the webdriver instance in a custom processor.
     return $webDriver;
 }
-
-
-
-
-
-function getLOVDGlobals()
-{
-    // Get common global variables from the LOVD environment that LOVD usually
-    //  generates in inc-init.php for a normal web request.
-    // Run this ONLY when LOVD is installed; otherwise you'll get an incomplete
-    //  $status and you'll never be able to fill that properly again.
-    static $db, $status;
-    if (!isset($db)) {
-        // Settings and constants to prevent notices when including inc-init.php.
-        define('FORMAT_ALLOW_TEXTPLAIN', true);
-        $_GET['format'] = 'text/plain';
-        $_SERVER = array_merge($_SERVER, array(
-            'HTTP_HOST' => 'localhost',
-            'REQUEST_URI' => '/' . basename(__FILE__),
-            'QUERY_STRING' => '',
-            'REQUEST_METHOD' => 'GET',
-        ));
-        require_once ROOT_PATH . 'inc-init.php';
-
-        // Save interesting global variables.
-        $db = $_DB;
-        $status = $_STAT;
-    }
-    return array($db, $status);
-}
-
-
-
-
-
-function setMutalyzerServiceURL ($sURL)
-{
-    // Set the Mutalyzer URL in the database to the TEST server, as agreed with
-    //  the Mutalyzer team. This way, one test run of LOVD also tests their
-    //  update.
-    list($db,) = getLOVDGlobals();
-
-    if (defined('NOT_INSTALLED')) {
-        // Just return true here. Don't fail on not being able to set this URL.
-        return true;
-    }
-
-    $result = $db->query('UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url=?', array($sURL));
-
-    // Return true if query was executed successfully
-    return $result !== false;
-}
-
+?>

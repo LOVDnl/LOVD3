@@ -12,10 +12,8 @@ class PostFinishAddPhenotypeInfoToCMTTest extends LOVDSeleniumWebdriverBaseTestC
         $this->waitUntil(WebDriverExpectedCondition::titleContains("Submission of"));
 
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit\/screening\/0000000003$/', $this->driver->getCurrentURL()));
-        $element = $this->driver->findElement(WebDriverBy::id("tab_individuals"));
-        $element->click();
-        
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals\/GJB1$/', $this->driver->getCurrentURL()));
+
+        $this->driver->get(ROOT_URL . '/src/individuals/GJB1');
         $element = $this->driver->findElement(WebDriverBy::cssSelector("td.ordered"));
         $element->click();
         

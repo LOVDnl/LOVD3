@@ -1913,7 +1913,7 @@ function lovd_requireAUTH ($nLevel = 0)
     // Creates friendly output message if $_AUTH does not exist (or level too
     // low), and exits.
     // $_AUTH is for authorization; $_SETT is needed for the user levels.
-    global $_AUTH, $_DB, $_SETT, $_T;
+    global $_AUTH, $_SETT, $_T;
 
     $aKeys = array_keys($_SETT['user_levels']);
     if ($nLevel !== 0 && !in_array($nLevel, $aKeys)) {

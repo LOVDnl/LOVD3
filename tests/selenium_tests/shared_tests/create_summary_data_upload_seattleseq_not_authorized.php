@@ -9,6 +9,7 @@ class AddSummaryVariantSeatlleseqFileTest extends LOVDSeleniumWebdriverBaseTestC
     public function testAddSummaryVariantSeatlleseqFile()
     {
         $this->driver->get(ROOT_URL . "/src/variants/upload?create&type=SeattleSeq");
-        $this->assertEquals("To access this area, you need at least Curator clearance.", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        $this->assertContains('To access this area, you need at least Manager clearance.',
+            $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
 }

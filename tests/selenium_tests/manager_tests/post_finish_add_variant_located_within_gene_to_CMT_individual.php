@@ -11,11 +11,9 @@ class PostFinishAddVariantLocatedWithinGeneToCMTTest extends LOVDSeleniumWebdriv
         // Wait for redirect
         $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
-        $this->assertContains("/src/variants/0000000331", $this->driver->getCurrentURL());
-        $element = $this->driver->findElement(WebDriverBy::id("tab_screenings"));
-        $element->click();
+        $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings\/GJB1$/', $this->driver->getCurrentURL()));
+        $this->driver->get(ROOT_URL . '/src/screenings/GJB1');
 //        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
         $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='0000000002']"));
         $element->click();

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-05-13
+ * Modified    : 2020-05-26
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -42,7 +42,6 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         // This is needed because test suites may be started when the previous
         //  one did not complete. However, test suites need to be independent
         //  so LOVD still needs to be freshly installed for this test suite.
-        // NOTE: Do NOT use getLOVDGlobals() before LOVD is installed!
         $this->driver->get(ROOT_URL . '/src/install');
         $bodyElement = $this->driver->findElement(WebDriverBy::tagName('body'));
         if (preg_match('/This installer will create/', $bodyElement->getText())) {
@@ -88,60 +87,49 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Start');
 
         // Fill out Administrator form.
-        $this->assertContains('/src/install/?step=1', $this->driver->getCurrentURL());
-        $this->enterValue(WebDriverBy::name("name"), "LOVD3 Admin");
-        $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
-        $this->enterValue(WebDriverBy::name("department"), "Human Genetics");
-        $this->enterValue(WebDriverBy::name("address"), "Einthovenweg 20\n2333 ZC Leiden");
-        $this->enterValue(WebDriverBy::name("email"), "test@lovd.nl");
-        $this->enterValue(WebDriverBy::name("telephone"), "+31 (0)71 526 9438");
-        $this->enterValue(WebDriverBy::name("username"), "admin");
-        $this->enterValue(WebDriverBy::name("password_1"), "test1234");
-        $this->enterValue(WebDriverBy::name("password_2"), "test1234");
+        $this->assertStringEndsWith('/src/install/?step=1', $this->driver->getCurrentURL());
+        $this->enterValue('name', 'LOVD3 Admin');
+        $this->enterValue('institute', 'Leiden University Medical Center');
+        $this->enterValue('department', 'Human Genetics');
+        $this->enterValue('address', "Einthovenweg 20\n2333 ZC Leiden");
+        $this->enterValue('email', 'test@lovd.nl');
+        $this->enterValue('telephone', '+31 (0)71 526 9438');
+        $this->enterValue('username', 'admin');
+        $this->enterValue('password_1', 'test1234');
+        $this->enterValue('password_2', 'test1234');
         $this->selectValue('countryid', 'Netherlands');
-        $this->enterValue(WebDriverBy::name("city"), "Leiden");
+        $this->enterValue('city', 'Leiden');
         $this->submitForm('Continue');
 
         // Confirmation of account information, installing...
-        $this->assertContains('/src/install/?step=1&sent=true', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=1&sent=true', $this->driver->getCurrentURL());
         $this->submitForm('Next');
 
         // Installation complete.
-        $this->assertContains('/src/install/?step=2', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=2', $this->driver->getCurrentURL());
         $this->submitForm('Next');
 
         // Fill out System Settings form.
-        $this->assertContains('/src/install/?step=3', $this->driver->getCurrentURL());
-        $this->enterValue(WebDriverBy::name("institute"), "Leiden University Medical Center");
-        $this->enterValue(WebDriverBy::name("email_address"), "noreply@LOVD.nl");
+        $this->assertStringEndsWith('/src/install/?step=3', $this->driver->getCurrentURL());
+        $this->enterValue('institute', 'Leiden University Medical Center');
+        $this->enterValue('email_address', 'noreply@LOVD.nl');
         $this->selectValue('refseq_build', 'hg19');
-        $this->unCheck(WebDriverBy::name('send_stats'));
-        $this->unCheck(WebDriverBy::name('include_in_listing'));
-        $this->unCheck(WebDriverBy::name('lock_uninstall'));
+        $this->unCheck('send_stats');
+        $this->unCheck('include_in_listing');
+        $this->unCheck('lock_uninstall');
         $this->submitForm('Continue');
 
         // Settings stored.
-        $this->assertContains('/src/install/?step=3&sent=true', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=3&sent=true', $this->driver->getCurrentURL());
         $this->submitForm('Next');
 
         // Done!
-        $this->assertContains('/src/install/?step=4', $this->driver->getCurrentURL());
+        $this->assertStringEndsWith('/src/install/?step=4', $this->driver->getCurrentURL());
         $this->clickButton('Continue to Setup area');
 
         // LOVD Setup Area.
         $this->waitUntil(WebDriverExpectedCondition::titleContains("LOVD Setup"));
-        $this->assertContains('/src/setup?newly_installed', $this->driver->getCurrentURL());
-    }
-
-
-
-
-
-    public static function tearDownAfterClass()
-    {
-        // Set the Mutalyzer service URL that will be used in the rest of the
-        // test suite.
-        setMutalyzerServiceURL('https://test.mutalyzer.nl/services');
+        $this->assertStringEndsWith('/src/setup?newly_installed', $this->driver->getCurrentURL());
     }
 }
 ?>
