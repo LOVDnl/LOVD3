@@ -19,7 +19,7 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToCMTIndividualTest extends
         $allScreeningsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all screenings'));
         $allScreeningsLink->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/screenings$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/screenings'));
 //        $element = $this->driver->findElement(WebDriverBy::cssSelector("#0000000002 > td.ordered"));
         $element = $this->driver->findElement(WebDriverBy::xpath("//td[text()='0000000002']"));
         $element->click();
@@ -52,6 +52,5 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToCMTIndividualTest extends
 
         $this->assertTrue((bool)preg_match('/^Successfully processed your submission and sent an email notification to the relevant curator[\s\S]*$/',
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText()));
-
     }
 }

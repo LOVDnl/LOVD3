@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-27
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1412,9 +1412,8 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     case 'Individuals_To_Diseases':
                     case 'Screenings_To_Genes':
                     case 'Screenings_To_Variants':
-                        reset($aLine);
-                        list($sCol1, $nID1) = each($aLine);
-                        list($sCol2, $nID2) = each($aLine);
+                        list($sCol1, $sCol2) = array_keys($aLine);
+                        list($nID1, $nID2) = array_values($aLine);
                         if (isset($nID1) && isset($nID2)) {
                             $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . $sCol1 . ' = ? AND ' . $sCol2 . ' = ?', array($nID1, $nID2))->fetchAssoc();
                         }

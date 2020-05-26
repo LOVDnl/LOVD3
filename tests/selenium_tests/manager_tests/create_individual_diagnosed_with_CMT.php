@@ -11,7 +11,7 @@ class CreateIndividualDiagnosedWithCMTTest extends LOVDSeleniumWebdriverBaseTest
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
         $element->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/submit$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/submit'));
         $element = $this->driver->findElement(WebDriverBy::xpath("//div/table/tbody/tr/td/table/tbody/tr/td[2]/b"));
         $element->click();
 

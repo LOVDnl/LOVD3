@@ -14,7 +14,7 @@ class CurateSubmittedDataTest extends LOVDSeleniumWebdriverBaseTestCase
         $allVariantsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all genomic variants'));
         $allVariantsLink->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants'));
         $element = $this->driver->findElement(WebDriverBy::linkText("0000000001"));
         $element->click();
 
@@ -44,7 +44,7 @@ class CurateSubmittedDataTest extends LOVDSeleniumWebdriverBaseTestCase
         $allVariantsLink = $this->driver->findElement(WebDriverBy::partialLinkText('View all genomic variants'));
         $allVariantsLink->click();
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants$/', $this->driver->getCurrentURL()));
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants'));
         $element = $this->driver->findElement(WebDriverBy::linkText("0000000002"));
         $element->click();
 

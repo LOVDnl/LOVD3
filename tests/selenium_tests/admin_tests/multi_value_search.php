@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-10
- * Modified    : 2017-11-10
- * For LOVD    : 3.0-21
+ * Modified    : 2020-05-21
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -34,43 +35,59 @@ use \Facebook\WebDriver\WebDriverBy;
 
 class MultiValueSearchTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-
-    public function testMultiValueSearch()
+    protected function setUp ()
     {
-        // Test Multivalued search on the protein column of the unique variant
-        // viewlist of gene NOC2L.
+        parent::setUp();
+        $this->driver->get(ROOT_URL . '/src/genes/NOC2L');
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        if (preg_match('/LOVD was not installed yet/', $sBody)) {
+            $this->markTestSkipped('LOVD was not installed yet.');
+        }
+        if (preg_match('/No such ID!/', $sBody)) {
+            $this->markTestSkipped('Gene does not exist yet.');
+        }
+    }
 
-        $this->driver->get(ROOT_URL . "/src/variants/NOC2L/unique");
 
-        // Click on mutli value search menu option.
-        $gearOptionsLink = $this->driver->findElement(
-            WebDriverBy::id('viewlistOptionsButton_CustomVL_VOTunique_VOG_NOC2L'));
-        $gearOptionsLink->click();
-        $MVSMenuItem = $this->driver->findElement(
-            WebDriverBy::partialLinkText('Enable or disable filtering on multivalued'));
-        $MVSMenuItem->click();
 
-        // Click on overlay of protein column.
-        $nProteinColIndex = 7;
+
+
+    public function test ()
+    {
+        $this->driver->get(ROOT_URL . '/src/variants/NOC2L/unique');
+
+        // First, determine which field is the protein field.
+        $aColumns = $this->driver->findElements(
+            WebDriverBy::xpath('//table[@class="data"]/thead/tr/th'));
+        $iProteinColumn = false;
+        foreach ($aColumns as $nKey => $oColumn) {
+            if (trim($oColumn->getText()) == 'Protein') {
+                $iProteinColumn = ($nKey+1); // xpath starts counting at 1.
+            }
+        }
+        $this->assertNotFalse($iProteinColumn);
+
+        // Start the process.
+        $this->driver->findElement(WebDriverBy::id(
+            'viewlistOptionsButton_CustomVL_VOTunique_VOG_NOC2L'))->click();
+        $this->driver->findElement(WebDriverBy::linkText(
+            'Enable or disable filtering on multivalued rows'))->click();
 
         // Include explicit wait for overlay divs. Going directly to clicking sometimes
-        // results in a StaleElementReferenceException.
-        $this->waitUntil(function ($driver) use ($nProteinColIndex) {
-            $aOverlays = $driver->findElements(WebDriverBy::xpath('//div[@class="vl_overlay"]'));
-            return count($aOverlays) >= $nProteinColIndex;
+        //  results in a StaleElementReferenceException.
+        $this->waitUntil(function ($driver) use ($iProteinColumn) {
+            return (count($driver->findElements(WebDriverBy::xpath(
+                '//div[@class="vl_overlay"]'))) >= $iProteinColumn);
         });
-        $columnOverlay = $this->driver->findElement(
-            WebDriverBy::xpath('//div[@class="vl_overlay"][' . $nProteinColIndex . ']'));
-        $columnOverlay->click();
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@class="vl_overlay"][' . $iProteinColumn . ']'))->click();
 
         // Wait until the viewlist contains 2 rows (2 is the number of
-        // variants with >1 protein description).
+        //  variants with >1 protein description).
         $this->waitUntil(function ($driver) {
-            $aVLRows = $driver->findElements(
-                WebDriverBy::xpath('//table[@id="viewlistTable_CustomVL_VOTunique_VOG_NOC2L"]/tbody/tr'));
-            return count($aVLRows) == 2;
+            return (count($driver->findElements(
+                WebDriverBy::xpath('//table[@class="data"]/tbody/tr'))) == 2);
         });
     }
 }
-
-
+?>

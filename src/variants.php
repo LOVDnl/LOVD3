@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-03-09
+ * Modified    : 2020-05-18
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -66,7 +66,15 @@ function lovd_getMaxVOTEffects ($sType, $zData = array())
     if (!$aEffects) {
         return false;
     }
-    return max($aEffects);
+
+    $nMax = max($aEffects);
+    // We cannot return "(Probably) does not affect function"
+    //  if one value is also "Not classified".
+    if ($nMax < 5 && in_array('0', $aEffects)) {
+        $nMax = 0;
+    }
+
+    return $nMax;
 }
 
 
@@ -242,7 +250,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
             'SELECT t.id, t.id_ncbi
              FROM ' . TABLE_TRANSCRIPTS . ' AS t
                INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-             WHERE t.geneid = ?', array($sGene))->fetchAllCombine();
+             WHERE t.geneid = ? ORDER BY t.id_ncbi', array($sGene))->fetchAllCombine();
         $nTranscriptsWithVariants = count($aTranscriptsWithVariants);
 
         // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscriptsWithVariants.
@@ -278,7 +286,8 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
-    list($nTranscriptID, $sTranscript) = each($aTranscriptsWithVariants);
+    $nTranscriptID = key($aTranscriptsWithVariants);
+    $sTranscript = current($aTranscriptsWithVariants);
     if (!$nTranscripts) {
         $sMessage = 'No transcripts found for this gene.';
     } elseif (!$nTranscriptsWithVariants) {
@@ -315,7 +324,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $aVLOptions = array(
-            'cols_to_skip' => array('chromosome', 'allele_'),
+            'cols_to_skip' => array('chromosome', 'allele_'), // Enforced for unique view in the object.
             'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
             'find_and_replace' => !$bUnique,
             'multi_value_filter' => $bUnique,
@@ -561,11 +570,10 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     // don't have to duplicate this code for variants?create and variants/upload?create.
 
     // We don't want to show an error message about the screening if the user isn't allowed to come here.
-    // 2012-07-10; 3.0-beta-07; Submitters are no longer allowed to add variants without individual data.
-    if (!isset($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
-        lovd_requireAUTH(LEVEL_CURATOR);
-    }
-    lovd_requireAUTH(empty($_PE[1])? $_SETT['user_level_settings']['submit_new_data'] : LEVEL_MANAGER);
+    lovd_requireAUTH(
+        (!empty($_PE[1])? LEVEL_MANAGER :
+            (empty($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)? LEVEL_CURATOR :
+                $_SETT['user_level_settings']['submit_new_data'])));
 
     $bSubmit = false;
     if (isset($_GET['target'])) {
@@ -1299,12 +1307,14 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             $fInput = fopen($_FILES['variant_file']['tmp_name'], 'r');
             @set_time_limit(0);
 
-            // This will take some time, allow the user to browse in other tabs.
-            // FIXME; if the user finishes a screening submission in another tab while the upload
-            // is still working, a seperate e-mail about the upload will be sent once it has finished.
-            // So, other than that it results in two e-mails, it is working just fine actually.
-            // Though maybe we should block submit/finish until we're done here?
-            session_write_close();
+            if (empty($_INI['test'])) {
+                // This will take some time, allow the user to browse in other tabs.
+                // FIXME; if the user finishes a screening submission in another tab while the upload
+                // is still working, a seperate e-mail about the upload will be sent once it has finished.
+                // So, other than that it results in two e-mails, it is working just fine actually.
+                // Though maybe we should block submit/finish until we're done here?
+                session_write_close();
+            }
 
             $_DB->beginTransaction();
 
@@ -2179,11 +2189,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             $_BAR->setMessage('Committing changes to the database...');
             $_DB->commit();
 
-            // Done! Reopen the session. Don't show warnings; session_start() is not going
-            // to be able to send another cookie. But session data is written nonetheless.
-            // First commit, then restart session, otherwise two browser windows may be waiting
-            // for each other forever... one for the DB lock, the other for the session lock.
-            @session_start();
+            if (empty($_INI['test'])) {
+                // Done! Reopen the session. Don't show warnings; session_start() is not going
+                // to be able to send another cookie. But session data is written nonetheless.
+                // First commit, then restart session, otherwise two browser windows may be waiting
+                // for each other forever... one for the DB lock, the other for the session lock.
+                @session_start();
+            }
 
             // Turn on automatic mapping if it is enabled for the imported variants.
             if ($nMappingFlags & MAPPING_ALLOW) {

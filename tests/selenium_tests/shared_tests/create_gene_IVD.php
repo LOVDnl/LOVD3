@@ -1,45 +1,80 @@
 <?php
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2016-03-04
+ * Modified    : 2020-05-15
+ * For LOVD    : 3.0-24
+ *
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
-use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testCreateGeneIVD()
+    protected function setUp ()
     {
-        $this->driver->get(ROOT_URL . "/src/genes?create");
-        // We get too many random failures here, waiting for the HGNC ID field to appear. The waitUntil() just fails.
-        // $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::name("hgnc_id")));
-        // Facebook\WebDriver\Exception\NoSuchElementException: no such element: Unable to locate element: {"method":"name","selector":"hgnc_id"}
-        // This causes everything else to fail as well, and the whole Travis run is then useless.
-
-        // Try this instead. We do this in more places; probably we want to build a function around it.
-        for ($second = 0; ; $second++) {
-            if ($second >= 60) {
-                $this->fail('Timeout waiting for element to exist after ' . $second . ' seconds.');
-            }
-            try {
-                if ($this->isElementPresent(WebDriverBy::name('hgnc_id'))) {
-                    break;
-                }
-            } catch (Exception $e) {
-            }
-            sleep(1);
+        // Test if we have what we need for this test. If not, skip this test.
+        parent::setUp();
+        $this->driver->get(ROOT_URL . '/src/genes/IVD');
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        if (preg_match('/LOVD was not installed yet/', $sBody)) {
+            $this->markTestSkipped('LOVD was not installed yet.');
         }
-        $this->enterValue(WebDriverBy::name("hgnc_id"), "IVD");
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Continue »']"));
-        $element->click();
-        $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="active_transcripts[]"]/option[text()="transcript variant 1 (NM_002225.3)"]'));
-        $option->click();
-        $element = $this->driver->findElement(WebDriverBy::name("show_hgmd"));
-        $element->click();
-        $element = $this->driver->findElement(WebDriverBy::name("show_genecards"));
-        $element->click();
-        $element = $this->driver->findElement(WebDriverBy::name("show_genetests"));
-        $element->click();
-        $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create gene information entry']"));
-        $element->click();
-        $this->assertEquals("Successfully created the gene information entry!", $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
+        if (!preg_match('/No such ID!/', $sBody)) {
+            $this->markTestSkipped('Gene was already created.');
+        }
+
+        // Requires having a Setup tab.
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+            // We're not admin nor manager.
+            $this->logout();
+            $this->login('admin', 'test1234');
+            print(PHP_EOL . 'Logged in as Admin to complete ' . get_class() . PHP_EOL);
+        }
+    }
+
+
+
+
+
+    public function test ()
+    {
+        $this->driver->get(ROOT_URL . '/src/genes?create');
+        $this->waitForElement(WebDriverBy::name('hgnc_id'), 5);
+        $this->enterValue('hgnc_id', 'IVD');
+        $this->submitForm('Continue');
+
+        $this->selectValue('active_transcripts[]', 'NM_002225.3');
+        $this->check('show_hgmd');
+        $this->check('show_genecards');
+        $this->check('show_genetests');
+        $this->submitForm('Create gene information entry');
+        $this->assertEquals('Successfully created the gene information entry!',
+            $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
     }
 }
+?>
