@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-27
- * Modified    : 2016-10-31
- * For LOVD    : 3.0-18
+ * Modified    : 2020-05-27
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -80,6 +81,12 @@ class RefreshingWebElement extends RemoteWebElement {
             // Otherwise rethrow the unknown exception.
             throw $e;
         }
+    }
+
+
+    public function getAttribute ($sAttribute)
+    {
+        return $this->tryWithRefresh('getAttribute', array($sAttribute));
     }
 
 
