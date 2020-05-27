@@ -38,29 +38,8 @@
             <file>shared_tests/create_user_manager.php</file>
             <file>manager_tests/login_as_manager.php</file>
             <file>manager_tests/create_user_manager_not_authorized.php</file>
-            <file>manager_tests/create_gene_GJB.php</file>
             <file>shared_tests/create_user_curator.php</file>
             <file>shared_tests/create_user_submitter.php</file>
-            <file>manager_tests/make_user_curator_GJB.php</file>
-            <file>manager_tests/create_disease_CMT.php</file>
-            <file>manager_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>manager_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>manager_tests/add_screening_to_CMT_individual.php</file>
-            <file>manager_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>manager_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>manager_tests/confirm_variant_to_CMT_individual.php</file>
-            <file>manager_tests/add_seatlleseq_file_to_CMT_individual.php</file>
-            <file>manager_tests/add_vcf_file_to_CMT_individual.php</file>
-            <file>manager_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
-            <file>manager_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq.php</file>
-            <file>manager_tests/add_summary_variant_vcf_file.php</file>
-            <file>manager_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>manager_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>manager_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>manager_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
-            <file>manager_tests/delete_gene_GJB.php</file>
             <file>manager_tests/test_block_submitter_registration.php</file>
             <file>manager_tests/create_announcement_readonly.php</file>
             <file>manager_tests/test_read_only_state.php</file>
