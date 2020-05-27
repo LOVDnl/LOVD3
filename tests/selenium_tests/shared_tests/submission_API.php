@@ -144,6 +144,10 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
                         return false;
                     }
                 }, $this->driver->manage()->getCookies()));
+            fwrite(STDERR, PHP_EOL .
+                'DEBUG:' . PHP_EOL .
+                'IDs pre: ' . implode(';', $aCurrentSessionIDs) . PHP_EOL .
+                'IDs post: ' . implode(';', $aSessionIDs) . PHP_EOL);
             // array_diff() doesn't work here, since values will match. The number
             //  of times we see these values, will not match.
             foreach ($aCurrentSessionIDs as $sValue) {
@@ -185,7 +189,6 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['messages']);
-        // Failed asserting that 'VarioML error: LSDB ID in file does not match this LSDB.' contains "VarioML error: Authentication denied.".
         $this->assertContains('VarioML error: Authentication denied.',
             implode(';', $aResult['errors']));
         $this->assertStringEndsWith('401 Unauthorized', $http_response_header[0]);

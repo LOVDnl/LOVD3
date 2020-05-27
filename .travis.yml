@@ -70,11 +70,10 @@ script:
   # Run all test suites, starting at the unit tests.
   - vendor/bin/phpunit -v --configuration ./tests/unit_tests/phpunit.xml
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite admin_tests
-  - vendor/bin/phpunit -v --testsuite authorization_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite manager_tests
   - vendor/bin/phpunit -v --testsuite collaborator_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite curator_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite import_tests --configuration ./tests/selenium_tests/phpunit.xml
-  - vendor/bin/phpunit -v --testsuite manager_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
