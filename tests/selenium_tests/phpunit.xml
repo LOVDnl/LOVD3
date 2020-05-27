@@ -34,10 +34,10 @@
         <testsuite name="manager_tests">
             <!-- More basic tests, run by a Manager. -->
             <file>shared_tests/install_LOVD.php</file>
-            <!-- Currently rebuilding here -->
             <file>shared_tests/create_user_manager.php</file>
             <file>manager_tests/login_as_manager.php</file>
             <file>manager_tests/create_user_manager_not_authorized.php</file>
+            <!-- Currently rebuilding here -->
             <file>shared_tests/create_user_curator.php</file>
             <file>shared_tests/create_user_submitter.php</file>
             <file>manager_tests/test_block_submitter_registration.php</file>
