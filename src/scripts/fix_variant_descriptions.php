@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-05-08
+ * Modified    : 2020-05-27
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -363,8 +363,12 @@ class LOVD_VVAnalyses {
 
 
                 if ($aVV['errors']) {
-                    // Handle EREF errors and the like.
-                    if (isset($aVV['errors']['ESYNTAX'])
+                    // Handle errors (ESYNTAX, EREF and the like).
+                    if (isset($aVV['errors']['ESIZETOOLARGE'])) {
+                        // Variant is too big to be handled.
+                        $this->nProgressCount ++; // To show progress.
+                        continue;
+                    } elseif (isset($aVV['errors']['ESYNTAX'])
                         && preg_match('([?;]|con|ins\([0-9]+\)$|ins[0-9]+$|\([0-9]+_[0-9]+\))', $sVariant)) {
                         // We received an ESYNTAX, but the variant has a common
                         //  problem that we, nor VV, can handle.
@@ -374,20 +378,23 @@ class LOVD_VVAnalyses {
                         $this->nProgressCount ++; // To show progress.
                         continue; // Then continue to the next variant.
 
-                    } elseif (isset($aVV['errors']['ESYNTAX']) && $this->bRemarks) {
-                        // Other ESYNTAX errors, we just report.
+                    } elseif ($this->bRemarks
+                        && (isset($aVV['errors']['EINCONSISTENTLENGTH'])
+                            || isset($aVV['errors']['ESYNTAX']))) {
+                        // Other errors that we just report.
                         // Don't double-mark, so check if it's marked first.
+                        $sErrorCode = (isset($aVV['errors']['ESYNTAX'])? 'ESYNTAX' : 'EINCONSISTENTLENGTH');
                         if (!$_DB->query('
                                         SELECT COUNT(*)
                                         FROM ' . TABLE_VARIANTS . '
                                         WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                            array($aVariant['id'], '%[ESYNTAX]%'))->fetchColumn()) {
+                            array($aVariant['id'], '%[' . $sErrorCode . ']%'))->fetchColumn()) {
                             // Add the error, set variant as marked when already public.
                             // Assuming here that $aVVVot['errors'] has named keys.
                             $_DATA['Genome']->updateEntry($aVariant['id'], array(
                                 'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
-                                    'Variant Error [ESYNTAX]: ' .
-                                    'This genomic variant has an error (' . $aVV['errors']['ESYNTAX'] . '). ' .
+                                    'Variant Error [' . $sErrorCode . ']: ' .
+                                    'This genomic variant has an error (' . $aVV['errors'][$sErrorCode] . '). ' .
                                     'Please fix this entry and then remove this message.'),
                                 'statusid' => min($aVariant['statusid'], STATUS_MARKED),
                             ));
@@ -564,7 +571,7 @@ class LOVD_VVAnalyses {
 
                     if ($aVV['errors']) {
                         // Unhandled errors. Reason to panic.
-                        $this->panic($aVariant, $aVV, 'Unhandled errors, I don\'t know how to handle this variant (' . implode(',', array_keys($aVV['errors'])) . ')');
+                        $this->panic($aVariant, $aVV, 'Unhandled errors, I don\'t know how to handle this variant (' . implode(',', array_keys($aVV['errors'])) . '); [' . implode(';', $aVV['errors']) . '].');
                     }
                 }
 
