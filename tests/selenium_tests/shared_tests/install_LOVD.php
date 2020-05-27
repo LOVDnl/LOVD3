@@ -36,7 +36,7 @@ use \Facebook\WebDriver\WebDriverExpectedCondition;
 
 class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testIsLOVDUninstalled ()
+    public function testSetUp ()
     {
         // Checks if we're currently installed. If so, uninstalls LOVD first.
         // This is needed because test suites may be started when the previous
@@ -62,7 +62,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
 
     /**
-     * @depends testIsLOVDUninstalled
+     * @depends testSetUp
      */
     public function testInstallLOVD ()
     {
@@ -103,12 +103,30 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Confirmation of account information, installing...
         $this->assertStringEndsWith('/src/install/?step=1&sent=true', $this->driver->getCurrentURL());
+        // We'll need to clean the cookies, so we'll be able to get the LOVD's ID from there.
+        $aInitialSessionIDs = $this->getAllSessionIDs();
         $this->submitForm('Next');
 
         // Installation complete.
         $this->assertStringEndsWith('/src/install/?step=2', $this->driver->getCurrentURL());
+        $aSessionIDsInCommon = array_intersect($this->getAllSessionIDs(), $aInitialSessionIDs);
+        foreach ($aSessionIDsInCommon as $sSessionID) {
+            fwrite(STDERR, PHP_EOL .
+                'Deleting obsolete cookie ' . $sSessionID . PHP_EOL);
+            $this->driver->manage()->deleteCookieNamed('PHPSESSID_' . $sSessionID);
+        }
         $this->submitForm('Next');
+    }
 
+
+
+
+
+    /**
+     * @depends testInstallLOVD
+     */
+    public function testSetSettings ()
+    {
         // Fill out System Settings form.
         $this->assertStringEndsWith('/src/install/?step=3', $this->driver->getCurrentURL());
         $this->enterValue('institute', 'Leiden University Medical Center');

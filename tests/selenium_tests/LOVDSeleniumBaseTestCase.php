@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-21
+ * Modified    : 2020-05-27
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -169,6 +169,24 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
             // WebDriverKeys::ENTER == U+E007; mb_ord(57351).
             return ($element->getAttribute('value') == rtrim($sText, WebDriverKeys::ENTER));
         });
+    }
+
+
+
+
+
+    protected function getAllSessionIDs ()
+    {
+        return array_filter(array_map(
+            function ($oCookie)
+            {
+                list($sName, $sID) = explode('_', $oCookie->getName());
+                if ($sName == 'PHPSESSID') {
+                    return $sID;
+                } else {
+                    return false;
+                }
+            }, $this->driver->manage()->getCookies()));
     }
 
 
