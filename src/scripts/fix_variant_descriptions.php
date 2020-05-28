@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-05-27
+ * Modified    : 2020-05-28
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -344,17 +344,10 @@ class LOVD_VVAnalyses {
 
                 // Check result.
                 if (!$aVV) {
-                    // VV failed. Either we have a really shitty variant, or VV broke.
-                    // Nonetheless, it's easier to just continue.
-                    // Just give a notice about it, and continue.
-                    print('
-      <SCRIPT type="text/javascript">
-        $("#tr_stats td").html("<B style=\"color : #FF0000;\">VV failed on ' . $sVariant . '. Ignoring...</B>");
-      </SCRIPT>');
-                    flush();
-                    sleep(5); // To make it visible for a while.
-                    $this->nProgressCount ++; // To show progress.
-                    continue; // Then continue to the next variant.
+                    // VV failed. We already catch large variants that make VV
+                    //  time out, so perhaps it's a temporary error?
+                    // Just die() for now, keeping the stats visible.
+                    die('<B style="color : #FF0000;">VV failed on ' . $sVariant . '...</B>');
                 }
 
                 // Do we have something to update?
@@ -623,16 +616,10 @@ class LOVD_VVAnalyses {
 
                         // Check result.
                         if (!$aVVHG38) {
-                            // VV failed. Either we have a really shitty variant, or VV broke.
-                            // Nonetheless, it's easier to just continue.
-                            // Just give a notice about it, and continue.
-                            print('
-      <SCRIPT type="text/javascript">
-        $("#tr_stats td").html("<B style=\"color : #FF0000;\">VV failed on hg38 verification of ' . $sVariant . '. Ignoring...</B>");
-      </SCRIPT>');
-                            flush();
-                            sleep(5); // To make it visible for a while.
-                            // Silently ignore this. We ignore VV errors for variants, so why not for hg38 mappings?
+                            // VV failed. We already catch large variants that make VV
+                            //  time out, so perhaps it's a temporary error?
+                            // Just die() for now, keeping the stats visible.
+                            die('<B style="color : #FF0000;">VV failed on hg38 verification of ' . $sVariant . '...</B>');
 
                         } elseif ($aVVHG38['errors']) {
                             // Handle EREF errors and the like.
