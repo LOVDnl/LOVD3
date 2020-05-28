@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-06-23
- * Modified    : 2019-09-03
- * For LOVD    : 3.0-22
+ * Modified    : 2020-05-28
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -100,38 +100,38 @@ class FalseUpdatetImportTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Variants_On_Transcripts, line 78\): The field \'position_c_start\' must contain an integer, "abc" does not match\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Variants_On_Transcripts, line 80\): This line refers to a non-existing entry\. When the import mode is set to update, no new inserts can be done\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Error \(Screenings_To_Variants, line 86\): This line refers to a non-existing entry\. When the import mode is set to update, no new inserts can be done\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 8\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:07"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 8\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00000"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 8\): Edited date field is set by LOVD Value is currently empty and the value in the import file is "2015-06-02 15:42:07"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 9\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-12 15:33:25"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Genes, line 14\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:21"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Genes, line 14\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 8\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:07"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 8\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00000"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 8\): Edited date field is set by LOVD\. Value is currently empty and the value in the import file is "2015-06-02 15:42:07"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Columns, line 9\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-12 15:33:25"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Genes, line 14\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:21"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Genes, line 14\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Genes, line 14\): Updated date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:48"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 20\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:21"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 20\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 20\): Edited date field is set by LOVD Value is currently empty and the value in the import file is "2015-06-02 15:42:21"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 21\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-12 15:33:40"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 26\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 26\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 26\): Edited date field is set by LOVD Value is currently empty and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 27\): Created by field is set by LOVD Value is currently "00000" and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 27\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 28\): Created date field is set by LOVD Value is currently "[\s\S]*" and the value in the import file is "2015-06-03 10:29:37"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 28\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 28\): Edited date field is set by LOVD Value is currently empty and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 20\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:21"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 20\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 20\): Edited date field is set by LOVD\. Value is currently empty and the value in the import file is "2015-06-02 15:42:21"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Transcripts, line 21\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-12 15:33:40"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 26\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 26\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 26\): Edited date field is set by LOVD\. Value is currently empty and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 27\): Created by field is set by LOVD\. Value is currently "00000" and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 27\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 28\): Created date field is set by LOVD\. Value is currently "[\s\S]*" and the value in the import file is "2015-06-03 10:29:37"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 28\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Diseases, line 28\): Edited date field is set by LOVD\. Value is currently empty and the value in the import file is "2015-06-02 15:42:23"\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Warning: It is currently not possible to do an update on section Genes_To_Diseases via an import[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Individuals, line 39\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Individuals, line 39\): Edited date field is set by LOVD Value is currently empty and the value in the import file is "2015-06-03 11:30:26"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Individuals, line 39\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Individuals, line 39\): Edited date field is set by LOVD\. Value is currently empty and the value in the import file is "2015-06-03 11:30:26"\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Warning: It is currently not possible to do an update on section Individuals_To_Diseases via an import[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Phenotypes, line 54\): Created date field is set by LOVD Value is currently "2015-06-03 11:30:56" and the value in the import file is "2015-06-02 15:42:32"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Phenotypes, line 54\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Phenotypes, line 54\): Edited date field is set by LOVD Value is currently empty and the value in the import file is "2015-06-02 15:42:32"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Screenings, line 60\): Created date field is set by LOVD Value is currently "2015-06-03 11:31:03" and the value in the import file is "2015-06-02 15:42:37"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Screenings, line 60\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Screenings, line 60\): Edited date field is set by LOVD Value is currently empty and the value in the import file is "2015-06-02 15:42:37"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Phenotypes, line 54\): Created date field is set by LOVD\. Value is currently "2015-06-03 11:30:56" and the value in the import file is "2015-06-02 15:42:32"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Phenotypes, line 54\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Phenotypes, line 54\): Edited date field is set by LOVD\. Value is currently empty and the value in the import file is "2015-06-02 15:42:32"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Screenings, line 60\): Created date field is set by LOVD\. Value is currently "2015-06-03 11:31:03" and the value in the import file is "2015-06-02 15:42:37"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Screenings, line 60\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Screenings, line 60\): Edited date field is set by LOVD\. Value is currently empty and the value in the import file is "2015-06-02 15:42:37"\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Warning: It is currently not possible to do an update on section Screenings_To_Genes via an import[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Variants_On_Genome, line 72\): Created date field is set by LOVD Value is currently "2015-06-03 11:31:16" and the value in the import file is "2015-06-02 15:42:48"\.[\s\S]*$/', $bodyText));
-        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Variants_On_Genome, line 72\): Edited by field is set by LOVD Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Variants_On_Genome, line 72\): Created date field is set by LOVD\. Value is currently "2015-06-03 11:31:16" and the value in the import file is "2015-06-02 15:42:48"\.[\s\S]*$/', $bodyText));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*Warning \(Variants_On_Genome, line 72\): Edited by field is set by LOVD\. Value is currently empty and the value in the import file is "00001"\.[\s\S]*$/', $bodyText));
         $this->assertTrue((bool)preg_match('/^[\s\S]*Warning: It is currently not possible to do an update on section Screenings_To_Variants via an import[\s\S]*$/', $bodyText));
     }
 }
