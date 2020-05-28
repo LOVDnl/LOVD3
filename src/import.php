@@ -1418,7 +1418,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                             $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . $sCol1 . ' = ? AND ' . $sCol2 . ' = ?', array($nID1, $nID2))->fetchAssoc();
                         }
                         if (!$zData && !in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
-                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
+                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import.<BR>', 'done');
                             $nWarnings ++;
                             $aSectionsAlreadyWarnedFor[] = $sCurrentSection;
                         }
