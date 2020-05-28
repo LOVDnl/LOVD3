@@ -28,7 +28,7 @@
 ## Count = 2
 "{{geneid}}"	"{{diseaseid}}"
 "IVD"	"00001"
-"IVD"	"00002"
+#"IVD"	"00002"
 
 
 ## Individuals ## Do not remove or alter this header ##

@@ -14,13 +14,13 @@
 ## Diseases ## Do not remove or alter this header ##
 ## Count = 5
 "{{id}}"	"{{symbol}}"	"{{name}}"	"{{id_omim}}"
-"00004"	"ID"	"Import disease UPDATED name"	"123456"
+"00003"	"ID"	"Import disease UPDATED name"	"123456"
 
 
 ## Genes_To_Diseases ## Do not remove or alter this header ##
 ## Count = 4
 "{{geneid}}"	"{{diseaseid}}"
-"IVD"	"00004"
+"IVD"	"00003"
 
 
 ## Individuals ## Do not remove or alter this header ##
@@ -32,13 +32,13 @@
 ## Individuals_To_Diseases ## Do not remove or alter this header ##
 ## Count = 5
 "{{individualid}}"	"{{diseaseid}}"
-"00000005"	"00004"
+"00000005"	"00003"
 
 
 ## Phenotypes ## Do not remove or alter this header ##
 ## Count = 2
 "{{id}}"	"{{diseaseid}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"	"{{Phenotype/Additional}}"	"{{Phenotype/Inheritance}}"	"{{Phenotype/Age}}"
-"0000000002"	"00004"	"00000005"	"00001"	"9"	"import phenotype UPDATE information"	""	"9y"
+"0000000002"	"00003"	"00000005"	"00001"	"9"	"import phenotype UPDATE information"	""	"9y"
 
 
 ## Screenings ## Do not remove or alter this header ##
