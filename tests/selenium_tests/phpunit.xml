@@ -44,7 +44,6 @@
             <file>manager_tests/import_data_file_failed.php</file>
             <file>manager_tests/import_data_for_update_failed.php</file>
             <!-- Currently rebuilding here. -->
-            <file>import_tests/second_insert_import.php</file>
             <file>import_tests/update_import.php</file>
             <file>shared_tests/create_user_curator.php</file>
             <file>shared_tests/create_user_submitter.php</file>
