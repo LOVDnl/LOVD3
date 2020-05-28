@@ -32,7 +32,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class InsertImportTest extends LOVDSeleniumWebdriverBaseTestCase
+class ImportDataFileTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {

@@ -41,8 +41,8 @@
             <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/enable_custom_column_for_individuals.php</file>
             <file>manager_tests/import_data_file.php</file>
+            <file>manager_tests/import_data_file_failed.php</file>
             <!-- Currently rebuilding here. -->
-            <file>import_tests/false_insert_import.php</file>
             <file>import_tests/false_update_import.php</file>
             <file>import_tests/second_insert_import.php</file>
             <file>import_tests/update_import.php</file>
