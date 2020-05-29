@@ -571,6 +571,15 @@ class LOVD_VVAnalyses {
                 // Also panic when we have a warning, to make sure we catch everything.
                 unset($aVV['warnings']['WCORRECTED']);
                 unset($aVV['warnings']['WROLLFORWARD']);
+                if (isset($aVV['warnings']['WGAP'])) {
+                    // Ignore WGAP warnings when the predicted cDNA is the same as the current cDNA.
+                    $sTranscript = key($aVariant['vots']);
+                    if ($aVariant['vots'][$sTranscript]['DNA']
+                        == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
+                        // Match.
+                        unset($aVV['warnings']['WGAP']);
+                    }
+                }
                 if ($aVV['warnings']) {
                     $this->panic($aVariant, $aVV, 'Warnings found: {' .
                         implode(';',
