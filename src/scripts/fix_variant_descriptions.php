@@ -577,6 +577,16 @@ class LOVD_VVAnalyses {
                         && count($aVV['data']['genomic_mappings']['hg38']) == 1) {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
                         $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
+                    } elseif (empty($aVV['data']['genomic_mappings']['hg38'])
+                        && empty($aVV['data']['transcript_mappings'])
+                        && empty($aUpdate)) {
+                        // Variant has no hg38 mapping, no liftover, and we have nothing to update.
+                        // Probably the mapping isn't supported, because the variant partially lies outside of the transcript.
+                        // On 2020-05-29, that's still a known problem, and probably will be for a while.
+                        // https://github.com/openvar/variantValidator/issues/173
+                        // We've decided, for now, to skip these variants.
+                        $this->nProgressCount ++; // To show progress.
+                        continue; // Then continue to the next variant.
                     } else {
                         $this->panic($aVariant, $aVV, 'None or multiple hg38 mappings given for variant.');
                     }
