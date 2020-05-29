@@ -572,7 +572,11 @@ class LOVD_VVAnalyses {
                 unset($aVV['warnings']['WCORRECTED']);
                 unset($aVV['warnings']['WROLLFORWARD']);
                 if ($aVV['warnings']) {
-                    $this->panic($aVariant, $aVV, 'Warnings found:' . print_r($aVV['warnings'], true));
+                    $this->panic($aVariant, $aVV, 'Warnings found: {' .
+                        implode(';',
+                            array_map(function ($sKey, $sVal) {
+                                return $sKey . ':' . $sVal;
+                            }, array_keys($aVV['warnings']), $aVV['warnings'])) . '}.');
                 }
 
 
