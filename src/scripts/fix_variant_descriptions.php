@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-05-28
+ * Modified    : 2020-05-29
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -811,7 +811,7 @@ class LOVD_VVAnalyses {
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
-                                    } elseif (lovd_getVariantInfo(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.')), '', true)
+                                    } elseif (lovd_getVariantInfo(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.'), 'c'), '', true)
                                         || preg_match('/^r.\[[0-9]+/', $aVOT['RNA'])) {
                                         // If the RNA variant looks like a full variant description,
                                         //  the current value must be better (or at least more
