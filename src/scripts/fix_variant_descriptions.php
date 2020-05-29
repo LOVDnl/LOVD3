@@ -568,6 +568,13 @@ class LOVD_VVAnalyses {
                     }
                 }
 
+                // Also panic when we have a warning, to make sure we catch everything.
+                unset($aVV['warnings']['WCORRECTED']);
+                unset($aVV['warnings']['WROLLFORWARD']);
+                if ($aVV['warnings']) {
+                    $this->panic($aVariant, $aVV, 'Warnings found:' . print_r($aVV['warnings'], true));
+                }
+
 
 
                 // Clean genomic DNAs field, remove NC from it.
