@@ -438,6 +438,22 @@ class LOVD_VV
                             return $aData;
                         }
                         break;
+                    case 'porcessing_error': // Typo, still present in test instance 2020-06-02.
+                    case 'processing_error':
+                        // This happens, for instance, when we ask to select a
+                        //  transcript that this variant actually doesn't map on.
+                        // If that is the case, retry without this transcript.
+                        if (is_array($aOptions['select_transcripts'])
+                            && count($aOptions['select_transcripts'])) {
+                            $sTranscript = current($aOptions['select_transcripts']);
+                            if (!empty($aJSON[$sVariant]['hgvs_t_and_p'][$sTranscript]['transcript_variant_error'])) {
+                                // We selected a transcript and it's giving issues.
+                                array_shift($aOptions['select_transcripts']);
+                                return $this->verifyGenomic($sVariant, $aOptions);
+                            }
+                        }
+                        // No break; if we don't catch the error above here,
+                        //  we want the error below.
                     default:
                         // Unhandled flag. I know "processing_error" can be thrown, in theory.
                         $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
