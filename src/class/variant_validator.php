@@ -445,10 +445,15 @@ class LOVD_VV
                         // If that is the case, retry without this transcript.
                         if (is_array($aOptions['select_transcripts'])
                             && count($aOptions['select_transcripts'])) {
-                            $sTranscript = current($aOptions['select_transcripts']);
-                            if (!empty($aJSON[$sVariant]['hgvs_t_and_p'][$sTranscript]['transcript_variant_error'])) {
-                                // We selected a transcript and it's giving issues.
-                                array_shift($aOptions['select_transcripts']);
+                            $bRetry = false;
+                            foreach ($aOptions['select_transcripts'] as $nKey => $sTranscript) {
+                                if (!empty($aJSON[$sVariant]['hgvs_t_and_p'][$sTranscript]['transcript_variant_error'])) {
+                                    // We selected a transcript and it's giving issues.
+                                    unset($aOptions['select_transcripts'][$nKey]);
+                                    $bRetry = true;
+                                }
+                            }
+                            if ($bRetry) {
                                 return $this->verifyGenomic($sVariant, $aOptions);
                             }
                         }
