@@ -28,6 +28,17 @@
  *
  *************/
 
+// FIXME: We still get timeouts with large variants. The LOVD endpoint skips
+//  them, but VOTs fail; https://github.com/openvar/variantValidator/issues/151.
+// FIXME: VV currently doesn't handle variants that fall outside of the
+//  transcript; Mutalyzer used to support -5000 to +2000, so we have quite a few
+//  of such variants; https://github.com/openvar/variantValidator/issues/173.
+// FIXME: Uncertain DNA variants like c.(1234del) are currently not supported.
+//  See: https://github.com/openvar/variantValidator/issues/194.
+// FIXME: The RNA and protein handling part (EREF vs standard), have increased
+//  to have quite some overlap; fix that?
+// FIXME: Memory usage never gets high, so just remove that code and that bar?
+
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 require ROOT_PATH . 'inc-lib-form.php'; // For lovd_setUpdatedDate().
