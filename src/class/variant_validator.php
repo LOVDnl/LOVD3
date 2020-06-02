@@ -438,7 +438,8 @@ class LOVD_VV
                         }
                         break;
                     default:
-                        // FIXME: I think I'd like to save these. Perhaps log them? Can I otherwise get them from the code?
+                        // Unhandled flag. I know "processing_error" can be thrown, in theory.
+                        $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
                         break;
                 }
             }
