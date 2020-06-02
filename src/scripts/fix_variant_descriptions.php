@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-05-29
+ * Modified    : 2020-06-02
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -219,7 +219,9 @@ class LOVD_VVAnalyses {
 
         // Load VV.
         require ROOT_PATH . 'class/variant_validator.php';
-        $_VV = new LOVD_VV();
+        // Connect with the testing endpoint, as long as production VV doesn't
+        //  support the features yet that were built especially for LOVD.
+        $_VV = new LOVD_VV('https://www35.lamp.le.ac.uk/'); // PROD: ''; TEST: https://www35.lamp.le.ac.uk/.
         if (!$_VV->test()) {
             print('
       <SCRIPT type="text/javascript">
@@ -362,7 +364,7 @@ class LOVD_VVAnalyses {
                         $this->nProgressCount ++; // To show progress.
                         continue;
                     } elseif (isset($aVV['errors']['ESYNTAX'])
-                        && preg_match('(\^|[?;]|con|ins\([0-9]+\)$|ins[0-9]+$|\([0-9]+_[0-9]+\)|\[[0-9]+\]$)', $sVariant)) {
+                        && preg_match('(\^|[?;]|con|ins\([0-9]+\)$|ins[0-9]+$|ins\[N[CGM]|\([0-9]+_[0-9]+\)|\[[0-9]+\]$)', $sVariant)) {
                         // We received an ESYNTAX, but the variant has a common
                         //  problem that we, nor VV, can handle.
                         // We can't do anything, so just skip them.
