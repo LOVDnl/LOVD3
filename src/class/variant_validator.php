@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-05-26
+ * Modified    : 2020-06-02
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -727,8 +727,11 @@ class LOVD_VV
                                 // EINVALIDBOUNDARY error.
                                 $aData['errors']['EINVALIDBOUNDARY'] = $sError;
                             } elseif (strpos($sError, ' variant position that lies outside of the reference sequence') !== false
-                                || strpos($sError, 'Variant coordinate is out of the bound of CDS region') !== false) {
-                                // ERANGE error. VV doesn't auto-correct CDS positions outside of CDS, we will need to subtract the CDS length ourselves.
+                                || strpos($sError, 'Variant coordinate is out of the bound of CDS region') !== false
+                                || strpos($sError, 'The given coordinate is outside the bounds of the reference sequence') !== false) {
+                                // ERANGE error. VV throws a range of different messages, depending on using NC-notation or not,
+                                //  sending variants 5' or 3' of the transcript, or sending a CDS position that should be in the 3' UTR.
+                                // VV doesn't auto-correct CDS positions outside of CDS, we will need to subtract the CDS length ourselves.
                                 $aData['errors']['ERANGE'] = $sError;
                             } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
                                 // EREF error.
