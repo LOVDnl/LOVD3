@@ -40,6 +40,7 @@ class LOVD_VV
     // This class defines the LOVD VV object, handling all Variant Validator calls.
 
     public $sURL = 'https://rest.variantvalidator.org/'; // The URL of the VV endpoint.
+    // public $sURL = 'https://www35.lamp.le.ac.uk/'; // The URL of the VV testing endpoint.
     public $aResponse = array( // The standard response body.
         'data' => array(),
         'warnings' => array(),
@@ -861,6 +862,9 @@ class LOVD_VV
                 $aData['data'] = $aMapping;
             }
 
+            // FIXME: PAR region genes, like SHOX, provide X mappings in
+            //  primary_assembly_loci and Y mappings in alt_genomic_loci.
+            //  Parse them both and add them to the mappings? See VV's #178.
             // Mappings?
             $aData['data']['genomic_mappings'] = array();
 
