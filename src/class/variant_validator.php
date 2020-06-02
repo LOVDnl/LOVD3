@@ -742,6 +742,11 @@ class LOVD_VV
                             } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
                                 // ESYNTAX error.
                                 $aData['errors']['ESYNTAX'] = $sError;
+                            } elseif ($sError == 'Uncertain positions are not currently supported') {
+                                // EUNCERTAIN error.
+                                $aData['errors']['EUNCERTAIN'] = $sError;
+                                // FIXME: Asked already for having this in the LOVD endpoint as well - see #92.
+                                //  Currently throws an ESYNTAX there.
                             } else {
                                 // Unrecognized error.
                                 $aData['errors'][] = $sError;
