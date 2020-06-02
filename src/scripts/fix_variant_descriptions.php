@@ -762,16 +762,18 @@ class LOVD_VVAnalyses {
 
                     } else {
                         // Check VOT.
-                        if (in_array($aVOT['DNA'], array('', '-', 'c.?'))
-                            && in_array($aVOT['protein'], array('', '-', 'p.?'))) {
-                            // The current VOT is pretty much bogus, just overwrite it.
-                            if (!isset($aUpdate['transcripts'])) {
-                                $aUpdate['transcripts'] = array();
+                        // Check if the VOT's fields are perhaps empty; if so, replace them.
+                        foreach (array('DNA', 'RNA', 'protein') as $sField) {
+                            if (in_array($aVOT[$sField], array('', '-', 'c.?', 'r.?', 'p.?'))) {
+                                // The current field is pretty much bogus, just overwrite it.
+                                if (!isset($aUpdate['transcripts'])) {
+                                    $aUpdate['transcripts'] = array();
+                                }
+                                $aVOT[$sField] = $aUpdate['transcripts'][$sTranscript][$sField] =
+                                    $aVV['data']['transcript_mappings'][$sTranscript][$sField];
                             }
-                            // Overwrite the entire VOT.
-                            $aUpdate['transcripts'][$sTranscript] = $aVV['data']['transcript_mappings'][$sTranscript];
-
-                        } elseif (str_replace(array('(', ')'), '', $aVOT['DNA']) != $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
+                        }
+                        if (str_replace(array('(', ')'), '', $aVOT['DNA']) != $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
                             // It's possible that this was just a bad Mutalyzer mapping.
                             // It can also be that perhaps somebody messed up.
                             // Map the given DNA field back to the genome, and
