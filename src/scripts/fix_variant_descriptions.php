@@ -499,17 +499,18 @@ class LOVD_VVAnalyses {
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
-                                    } elseif (lovd_getVariantInfo(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.')), '', true)
-                                        || preg_match('/^r.\[[0-9]+/', $aVOT['RNA'])) {
+                                    } elseif (lovd_getVariantInfo(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.'), 'c'), '', true)
+                                        || preg_match('/^r\.\[[0-9]+/', $aVOT['RNA'])) {
                                         // If the RNA variant looks like a full variant description,
                                         //  the current value must be better (or at least more
                                         //  specific) than what we have; keep it!
                                     } else {
-                                        // We don't know what to do here.
-                                        // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV,
-                                            array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
-                                            'While handling EREF error, found that also cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                        // We don't really know what to do here.
+                                        // As a final resort, keep the RNA if it remotely looks
+                                        //  like a verified RNA description, overwrite it otherwise.
+                                        if (!preg_match('/^r\.[0-9]+/', $aVOT['RNA'])) {
+                                            $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
+                                        }
                                     }
                                 }
 
@@ -857,16 +858,17 @@ class LOVD_VVAnalyses {
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } elseif (lovd_getVariantInfo(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.'), 'c'), '', true)
-                                        || preg_match('/^r.\[[0-9]+/', $aVOT['RNA'])) {
+                                        || preg_match('/^r\.\[[0-9]+/', $aVOT['RNA'])) {
                                         // If the RNA variant looks like a full variant description,
                                         //  the current value must be better (or at least more
                                         //  specific) than what we have; keep it!
                                     } else {
-                                        // We don't know what to do here.
-                                        // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV,
-                                            array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
-                                            'cDNA and RNA are different; cDNA can be fixed, but I don\'t know what to do with the RNA field.');
+                                        // We don't really know what to do here.
+                                        // As a final resort, keep the RNA if it remotely looks
+                                        //  like a verified RNA description, overwrite it otherwise.
+                                        if (!preg_match('/^r\.[0-9]+/', $aVOT['RNA'])) {
+                                            $aUpdate['transcripts'][$sTranscript]['RNA'] = $aVVVot['data']['RNA'];
+                                        }
                                     }
                                 }
 
