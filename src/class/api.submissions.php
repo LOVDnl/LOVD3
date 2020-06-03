@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-04-08
+ * Modified    : 2020-06-03
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,6 +81,17 @@ class LOVD_API_Submissions
             'Not Known' => '50',
             'Causative' => '60',
             // 8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
+        ),
+        'pathogenicity_to_classification' => array(
+            'Unclassified' => 'unclassified',
+            'Non-pathogenic' => 'benign',
+            'Probably Not Pathogenic' => 'likely benign',
+            'Probably Pathogenic' => 'likely pathogenic',
+            'Pathogenic' => 'pathogenic',
+            'Not Known' => 'VUS',
+            'Causative' => 'association',
+            // FIXME: Information about disease inheritance (dominant, recessive) can be stored here, too.
+            // FIXME: Information about imprinting (maternal, paternal) can be stored here, too.
         ),
         '@template' => array(
             'DNA' => 'DNA',
@@ -228,7 +239,7 @@ class LOVD_API_Submissions
             // Try and take the default value from the selection options, if available.
             $sDefaultValue = '';
             $aOptions = explode("\r\n", $zColumn['select_options']);
-            foreach (array('Unknown', 'unknown', '?', '-') as $sValue) {
+            foreach (array('Unknown', 'unknown', '?', '-', 'unclassified') as $sValue) {
                 if (in_array($sValue, $aOptions)) {
                     $sDefaultValue = $sValue;
                     break;
@@ -466,6 +477,19 @@ class LOVD_API_Submissions
                     }
                 }
 
+                // Add Clinical Classification, if this column exists.
+                if (isset($aVOG['VariantOnGenome/ClinicalClassification'])
+                    || $this->addColumn('VariantOnGenome/ClinicalClassification')) {
+                    // We have a VariantOnGenome/ClinicalClassification column; fill it in, too.
+                    $aVOG['VariantOnGenome/ClinicalClassification'] =
+                        $this->aValueMappings['pathogenicity_to_classification'][
+                        $aVariant['pathogenicity'][0]['@term']];
+                    // Activate the method, too.
+                    if ($this->addColumn('VariantOnGenome/ClinicalClassification/Method')) {
+                        $aVOG['VariantOnGenome/ClinicalClassification/Method'] = '';
+                    }
+                }
+
                 // Check if the pathogenicity has a comment, that we need to process.
                 if (isset($aVariant['pathogenicity'][0]['comment'])) {
                     foreach ($aVariant['pathogenicity'][0]['comment'] as $aEntries) {
@@ -492,6 +516,27 @@ class LOVD_API_Submissions
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . ($nIndividualKey + 1) . ': Variant #' . ($nVariantKey + 1) . ': Pathogenicity: Comment(s) found, but this LOVD doesn\'t have the Remarks column activated. ' .
                                         'Remove your comment or ask the admin to enable the variant\'s Remarks column: ' . $_SETT['admin']['address_formatted'] . '.';
                                     return false;
+                                }
+
+                                // If we find something that looks like a classification method, store it.
+                                if (isset($aVOG['VariantOnGenome/ClinicalClassification/Method'])
+                                    && !$aVOG['VariantOnGenome/ClinicalClassification/Method']) {
+                                    // Isolate first word.
+                                    if (preg_match('/^([A-Za-z-]+)/', $sEntry, $aRegs)) {
+                                        $sWord = $aRegs[1];
+
+                                        if (!isset($aClassificationMethods)) {
+                                            $sClassificationMethods = $_DB->query('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?',
+                                                array('VariantOnGenome/ClinicalClassification/Method'))->fetchColumn();
+                                            $aClassificationMethods = explode("\r\n", $sClassificationMethods);
+                                            // Isolate only the option values.
+                                            $aClassificationMethods = preg_replace('/\s*(=.*)?$/', '', $aClassificationMethods);
+                                        }
+
+                                        if (in_array($sWord, $aClassificationMethods)) {
+                                            $aVOG['VariantOnGenome/ClinicalClassification/Method'] = $sWord;
+                                        }
+                                    }
                                 }
                             }
                         }
