@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2018-01-19
- * For LOVD    : 3.0-21
+ * Modified    : 2020-05-29
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -33,6 +33,87 @@
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
+}
+
+
+
+
+
+function lovd_fixHGVS ($sVariant, $sType = 'g')
+{
+    // This function tries to recognize common errors in the HGVS nomenclature,
+    //  and fix the variants in such a way, that they will be recognizable and
+    //  usable.
+
+    if (!in_array($sType, array('g', 'c'))) {
+        $sType = 'g';
+    }
+
+    // Do a quick HGVS check.
+    if (lovd_getVariantInfo($sVariant, '', true)) {
+        // All good!
+        return $sVariant;
+    }
+
+    // Make sure we can use ctype_digit().
+    $sVariant = (string) $sVariant;
+
+    // Forgot a prefix?
+    if (ctype_digit($sVariant{0})) {
+        // Variant starts with a number. Try including a prefix.
+        return lovd_fixHGVS($sType . '.' . $sVariant, $sType);
+    }
+
+    // Delins variants that should be conversions.
+    if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)delins([0-9+-]+_[0-9+-]+)$/', $sVariant, $aRegs)) {
+        // Return as a conversion.
+        return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'con' . $aRegs[2]);
+    }
+
+    // Parentheses where they shouldn't belong?
+    // g.(1234_2345)del doesn't need those parentheses.
+    if (preg_match('/^([gm])\.\((\d+_\d+)\)(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
+        return lovd_fixHGVS($aRegs[1] . '.' . $aRegs[2] . $aRegs[3] . $aRegs[4]);
+    }
+
+    // Maybe positions are in wrong order?
+    $aVariantInfo = lovd_getVariantInfo($sVariant, '');
+    if (isset($aVariantInfo['warnings']['WPOSITIONSSWAPPED'])) {
+        // Swap positions in the description as well.
+        if (preg_match('/\.(\()?([0-9?_*+-]+)(?(1)\))_(\()?([0-9?_*+-]+)(?(3)\))[A-Za-z]/', $sVariant, $aRegs)) {
+            // Precise swapping, supporting uncertain positions.
+            list(, $bStartParentheses, $sPositionStart, $bEndParentheses, $sPositionEnd) = $aRegs;
+            return lovd_fixHGVS(str_replace(
+                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')') . '_' .
+                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')'),
+                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')') . '_' .
+                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')'), $sVariant));
+
+        } else {
+            // Fallback, in case the match above fails. (can it?)
+            $sPositionStart = $aVariantInfo['position_start'] .
+                (!isset($aVariantInfo['position_start_intron'])? '' :
+                    ($aVariantInfo['position_start_intron'] < 0? '' : '+') .
+                    $aVariantInfo['position_start_intron']);
+            $sPositionEnd = $aVariantInfo['position_end'] .
+                (!isset($aVariantInfo['position_end_intron'])? '' :
+                    ($aVariantInfo['position_end_intron'] < 0? '' : '+') .
+                    $aVariantInfo['position_end_intron']);
+
+            return lovd_fixHGVS(str_replace(
+                $sPositionEnd . '_' . $sPositionStart,
+                $sPositionStart . '_' . $sPositionEnd, $sVariant));
+        }
+    }
+
+    // We also don't like bases in lowercase.
+    if (preg_match('/^(.+)([a-z]>[a-z])$/', $sVariant, $aRegs)
+        || preg_match('/^(.+ins)([a-z]+)$/', $sVariant, $aRegs)) {
+        // Also convert U to T, since lowercase bases may mean an RNA-based description.
+        return lovd_fixHGVS($aRegs[1] . strtoupper(str_replace('u', 't', $aRegs[2])));
+    }
+
+    return $sVariant;
 }
 
 

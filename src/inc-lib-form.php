@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-02-25
+ * Modified    : 2020-04-21
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -783,9 +783,11 @@ function lovd_sendMailFormatAddresses ($aRecipients, & $aEmailsUsed)
 
 
 
-function lovd_setUpdatedDate ($aGenes)
+function lovd_setUpdatedDate ($aGenes, $bAuth = true)
 {
     // Updates the updated_date field of the indicated gene.
+    // $bAuth allows you to control who gets marked as updated_by; the current
+    //  user (the default) or LOVD (pass false).
     global $_AUTH, $_DB;
 
     if (LOVD_plus) {
@@ -811,7 +813,11 @@ function lovd_setUpdatedDate ($aGenes)
     }
 
     // Just update the database and we'll see what happens.
-    $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = ?, updated_date = NOW() WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')', array_merge(array($_AUTH['id']), $aGenes), false);
+    $q = $_DB->query('
+        UPDATE ' . TABLE_GENES . '
+        SET updated_by = ?, updated_date = NOW()
+        WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')',
+        array_merge(array((!$bAuth? 0 : $_AUTH['id'])), $aGenes), false);
     return ($q->rowCount());
 }
 
