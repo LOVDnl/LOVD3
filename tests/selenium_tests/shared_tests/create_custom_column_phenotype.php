@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-05-26
+ * Modified    : 2020-06-03
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -105,6 +105,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertValue('Age of diagnosis|The age at which the individual\'s diagnosis was confirmed, if known. Numbers lower than 10 should be prefixed by a zero and the field should always begin with years, to facilitate sorting on this column.|text|10', 'form_type');
         $this->unCheck('standard');
         $this->enterValue('width', '100');
+        $this->assertEquals('(This is 100 pixels)', $this->driver->findElement(WebDriverBy::xpath('//span[contains(text(), "(This is")]'))->getText());
         $this->unCheck('mandatory');
         $this->check('public_view');
         $this->check('public_add');
