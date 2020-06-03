@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-02
+ * Modified    : 2020-06-03
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -192,6 +192,7 @@ class LOVD_VVAnalyses {
         // List the issues we found.
         $aDiff = array(
             'panic' => $sPanic,
+            'url' => '<A href="' . lovd_getInstallURL() . 'variants/' . $aVariant['id'] . '">' . $aVariant['id'] . '</A>',
             $aVariant['DNA'] => (!isset($aVV['data']['DNA_clean'])? '' : $aVV['data']['DNA_clean']),
             'transcripts' => array(),
         );
