@@ -74,4 +74,42 @@ class CreateAnnouncementMakingLOVDReadOnlyTest extends LOVDSeleniumWebdriverBase
             WebDriverBy::cssSelector('table[class=info]'))->getText());
         $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/announcements/0000'));
     }
+
+
+
+
+
+    /**
+     * @depends testCreateAnnouncementMakingLOVDReadOnly
+     */
+    public function testReadOnlyState ()
+    {
+        // Test that LOVD is in the read-only state.
+        // Just like the test blocking submitter registrations, I'd like to just
+        //  open a new incognito window. Unfortunately, that doesn't work yet.
+        $this->logout();
+
+        // There should be no link to register yourself.
+        $this->assertNotContains('Register as submitter',
+            $this->driver->findElement(WebDriverBy::xpath(
+                '//table[@class="logo"]//td[contains(., "LOVD v.3.0")]'))->getText());
+
+        $this->driver->get(ROOT_URL . '/src/login');
+        $this->assertEquals('This installation is currently configured to be read-only. Only Managers and higher level users can log in.',
+            $this->driver->findElement(WebDriverBy::xpath('//form[@id="login"]/preceding-sibling::table[@class="info"]'))->getText());
+
+        // Attempt to log in, should fail in a specific way.
+        foreach (array('submitter', 'curator') as $sUsername) {
+            $this->enterValue('username', $sUsername);
+            $this->enterValue('password', 'test1234');
+            $this->submitForm('Log in');
+
+            $this->assertEquals('This installation is currently configured to be read-only. Your user level is not sufficient to log in.',
+                $this->driver->findElement(WebDriverBy::cssSelector('div[class=err]'))->getText());
+        }
+
+        // Log back in, to leave the state in the way that we found it.
+        $this->login('manager', 'test1234');
+    }
 }
+?>
