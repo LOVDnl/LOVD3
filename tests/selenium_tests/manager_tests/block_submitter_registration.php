@@ -137,14 +137,16 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
         // Log out, and check if registration is allowed again.
         $this->logout();
 
-        // Find the link to register yourself.
-        $this->driver->findElement(WebDriverBy::xpath('//a/b[text()="Register as submitter"]'));
+        $this->assertContains('Register as submitter',
+            $this->driver->findElement(WebDriverBy::xpath(
+                '//table[@class="logo"]//td[contains(., "LOVD v.3.0")]'))->getText());
 
-        // Also verify the form still works.
+        // Also verify the form works again.
         $this->driver->get(ROOT_URL . '/src/users?register');
-        $this->driver->findElement(WebDriverBy::xpath('//input[contains(@value, "I don\'t have an ORCID ID")]'));
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="dataform"]//td[text()="Please enter your ORCID ID"]'));
 
-        // Log back in, future tests may need it.
+        // Log back in, to leave the state in the way that we found it.
         $this->login('manager', 'test1234');
     }
 }
