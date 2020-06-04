@@ -67,3 +67,4 @@ class ImportDataForUpdateTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::id('lovd_sql_progress_message_done'))->getText());
     }
 }
+?>

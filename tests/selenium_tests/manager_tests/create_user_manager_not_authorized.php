@@ -59,3 +59,4 @@ class CreateUserManagerNotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCa
             '//select[@name="level"]/option[text()="Manager"]')));
     }
 }
+?>

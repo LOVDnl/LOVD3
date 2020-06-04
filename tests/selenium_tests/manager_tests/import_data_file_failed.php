@@ -129,3 +129,4 @@ Warning: the following column has been ignored from the Variants_On_Genome data 
             $this->driver->findElement(WebDriverBy::xpath('//div[@class="err"]'))->getText());
     }
 }
+?>

@@ -150,3 +150,4 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->login('manager', 'test1234');
     }
 }
+?>

@@ -171,3 +171,4 @@ Warning: It is currently not possible to do an update on section Screenings_To_V
                 $this->driver->findElement(WebDriverBy::xpath('//div[@class="err"]'))->getText()));
     }
 }
+?>
