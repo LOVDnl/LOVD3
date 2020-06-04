@@ -74,20 +74,45 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testSetting ()
     {
+        // Instead of logging out and back in, open a new private window.
+        // FF needs Ctrl-Shift-P, Chrome needs Ctrl-Shift-N.
+        // Lots of methods have been documented on how to do this, but
+        //  nothing currently works.
+        // See https://github.com/php-webdriver/php-webdriver/issues/226
+        //  for an example on how it's documented to work.
+        // See https://github.com/php-webdriver/php-webdriver/issues/796
+        //  for my issue, indicating that none of the options work.
+        ////////////////////////////////////////////////////////////////////////
+        // $this->driver->sendKeys(
+        //     array(
+        //         WebDriverKeys::CONTROL,
+        //         WebDriverKeys::SHIFT,
+        //         (getenv('LOVD_SELENIUM_DRIVER') == 'firefox'? 'p' : 'n')
+        //     ));
+        ////////////////////////////////////////////////////////////////////////
+
         // Log out, then check if element is gone indeed.
         $this->logout();
 
-        // There should be no link to register yourself.
-        // First, I had this findElements(), but Chrome doesn't like that at all, and times out.
-        // Firefox anyway took quite some time, because of the timeout that we have set if elements are not found immediately (normally needed if pages load slowly).
-        // $this->assertFalse((bool) count($this->driver->findElements(WebDriverBy::xpath('//a/b[text()="Register as submitter"]'))));
-        // New attempt to test for absence of register link.
-        $this->assertFalse(strpos($this->driver->findElement(WebDriverBy::xpath('//table[@class="logo"]//td[3]'))->getText(), 'Register as submitter'));
+        $this->assertNotContains('Register as submitter',
+            $this->driver->findElement(WebDriverBy::xpath(
+                '//table[@class="logo"]//td[contains(., "LOVD v.3.0")]'))->getText());
 
         // Not only the link should be gone. Also the form should no longer work.
         $this->driver->get(ROOT_URL . '/src/users?register');
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="info"]//td[contains(text(), "Submitter registration is not active in this LOVD installation.")]'));
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="info"]//td[contains(text(), "Submitter registration is not active in this LOVD installation.")]'));
+    }
 
+
+
+
+
+    /**
+     * @depends testSetting
+     */
+    public function testTurnSettingOn ()
+    {
         // Then, log in as a manager again, and enable the feature again. Then test again.
         $this->login('manager', 'test1234');
 
