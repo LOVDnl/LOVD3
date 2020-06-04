@@ -48,7 +48,7 @@
             <file>manager_tests/import_data_for_update.php</file>
             <file>manager_tests/block_submitter_registration.php</file>
             <file>manager_tests/create_announcement_making_LOVD_readonly.php</file>
-            <!-- Currently rebuilding here. -->
+            <file>manager_tests/delete_announcement.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="collaborator_tests">
