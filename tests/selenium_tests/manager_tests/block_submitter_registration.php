@@ -113,16 +113,27 @@ class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testTurnSettingOn ()
     {
-        // Then, log in as a manager again, and enable the feature again. Then test again.
+        // Log in as a manager again, and enable the feature again.
         $this->login('manager', 'test1234');
 
-        // Change the setting back.
         $this->driver->get(ROOT_URL . '/src/settings?edit');
-        $this->setCheckBoxValue(WebDriverBy::name('allow_submitter_registration'), true);
-        $element = $this->driver->findElement(WebDriverBy::xpath('//input[@type="submit"]'));
-        $element->click();
+        $this->check('allow_submitter_registration');
+        $this->submitForm('Edit system settings');
         $this->chooseOkOnNextConfirmation();
+        $this->assertEquals('Successfully edited the system settings!',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/setup'));
+    }
 
+
+
+
+
+    /**
+     * @depends testTurnSettingOn
+     */
+    public function testSettingAgain ()
+    {
         // Log out, and check if registration is allowed again.
         $this->logout();
 
