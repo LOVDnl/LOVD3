@@ -39,15 +39,15 @@
             <file>manager_tests/create_user_manager_not_authorized.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
+            <file>shared_tests/create_user_curator.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
             <file>shared_tests/enable_custom_column_for_individuals.php</file>
             <file>manager_tests/import_data_file.php</file>
             <file>manager_tests/import_data_file_failed.php</file>
             <file>manager_tests/import_data_for_update_failed.php</file>
             <file>manager_tests/import_data_for_update.php</file>
             <!-- Currently rebuilding here. -->
-            <file>shared_tests/create_user_curator.php</file>
-            <file>shared_tests/create_user_submitter.php</file>
-            <file>manager_tests/test_block_submitter_registration.php</file>
+            <file>manager_tests/block_submitter_registration.php</file>
             <file>manager_tests/create_announcement_readonly.php</file>
             <file>manager_tests/test_read_only_state.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>

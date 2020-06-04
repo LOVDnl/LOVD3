@@ -1,30 +1,79 @@
 <?php
+/*******************************************************************************
+ *
+ * LEIDEN OPEN VARIATION DATABASE (LOVD)
+ *
+ * Created     : 2016-08-31
+ * Modified    : 2020-06-04
+ * For LOVD    : 3.0-24
+ *
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *
+ *
+ * This file is part of LOVD.
+ *
+ * LOVD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LOVD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *************/
+
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class TestBlockSubmitterRegistration extends LOVDSeleniumWebdriverBaseTestCase
+class BlockSubmitterRegistrationTest extends LOVDSeleniumWebdriverBaseTestCase
 {
-    public function testTestBlockSubmitterRegistration ()
+    public function testSetUp ()
     {
-        // Test that LOVD can block submitter registration.
-        // This test assumes that you're logged in as manager or admin, and it
-        //  will leave as a manager.
-
-        // First, set it to *NOT* allowed to register. Go to settings...
         $this->driver->get(ROOT_URL . '/src/settings?edit');
-
-        // Find the element that defines the setting.
-        $element = $this->driver->findElement(WebDriverBy::name('allow_submitter_registration'));
-        if ($element->getAttribute('checked')) {
-            // It's currently allowed. Turn it off!
-            $element->click();
-            $element = $this->driver->findElement(WebDriverBy::xpath('//input[@type="submit"]'));
-            $element->click();
-            $this->chooseOkOnNextConfirmation();
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        if (preg_match('/LOVD was not installed yet/', $sBody)) {
+            $this->markTestSkipped('LOVD was not installed yet.');
         }
+        if (preg_match('/To access this area, you need at least/', $sBody)) {
+            $this->markTestSkipped('User was not authorized.');
+        }
+    }
 
+
+
+
+
+    /**
+     * @depends testSetUp
+     */
+    public function testTurnSettingOff ()
+    {
+        $this->driver->get(ROOT_URL . '/src/settings?edit');
+        $this->unCheck('allow_submitter_registration');
+        $this->submitForm('Edit system settings');
+        $this->chooseOkOnNextConfirmation();
+        $this->assertEquals('Successfully edited the system settings!',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/setup'));
+    }
+
+
+
+
+
+    /**
+     * @depends testTurnSettingOff
+     */
+    public function testSetting ()
+    {
         // Log out, then check if element is gone indeed.
         $this->logout();
 
