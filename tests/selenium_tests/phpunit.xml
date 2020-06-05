@@ -58,6 +58,9 @@
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/create_user_curator.php</file>
             <file>shared_tests/assign_curator_to_IVD.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/create_user_owner.php</file>
+            <file>shared_tests/create_custom_column_phenotype.php</file>
             <!-- Currently rebuilding here. -->
             <file>curator_tests/login_as_curator.php</file>
             <file>curator_tests/create_user_curator2.php</file>
