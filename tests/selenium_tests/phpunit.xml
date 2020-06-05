@@ -51,6 +51,38 @@
             <file>manager_tests/delete_announcement.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
+        <testsuite name="curator_tests">
+            <!-- Submission and curation tests, run by a Curator. -->
+            <file>shared_tests/install_LOVD.php</file>
+            <!-- Currently rebuilding here. -->
+            <file>shared_tests/create_gene_GJB.php</file>
+            <file>shared_tests/create_user_manager.php</file>
+            <file>shared_tests/create_user_curator.php</file>
+            <file>curator_tests/make_user_curator_GJB.php</file>
+            <file>curator_tests/login_as_curator.php</file>
+            <file>curator_tests/create_user_curator2.php</file>
+            <file>shared_tests/create_user_submitter_not_authorized.php</file>
+            <file>curator_tests/create_disease_CMT.php</file>
+            <file>curator_tests/create_individual_diagnosed_with_CMT.php</file>
+            <file>curator_tests/add_phenotype_info_to_CMT_individual.php</file>
+            <file>curator_tests/add_screening_to_CMT_individual.php</file>
+            <file>curator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
+            <file>curator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
+            <file>curator_tests/confirm_variant_to_CMT_individual.php</file>
+            <file>curator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
+            <file>curator_tests/add_vcf_file_to_CMT_individual.php</file>
+            <file>curator_tests/finish_individual_diagnosed_with_CMT.php</file>
+            <file>curator_tests/add_summary_variant_located_within_gene.php</file>
+            <file>curator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
+            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
+            <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
+            <file>curator_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
+            <file>curator_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
+            <file>curator_tests/post_finish_add_screening_to_CMT_individual.php</file>
+            <file>curator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
+            <file>curator_tests/delete_gene_GJB.php</file>
+            <file>shared_tests/uninstall_LOVD.php</file>
+        </testsuite>
         <testsuite name="collaborator_tests">
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_GJB.php</file>
@@ -79,36 +111,6 @@
             <file>collaborator_tests/post_finish_add_screening_to_CMT_individual.php</file>
             <file>collaborator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
             <file>collaborator_tests/delete_gene_GJB.php</file>
-            <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="curator_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_gene_GJB.php</file>
-            <file>shared_tests/create_user_manager.php</file>
-            <file>shared_tests/create_user_curator.php</file>
-            <file>curator_tests/make_user_curator_GJB.php</file>
-            <file>curator_tests/login_as_curator.php</file>
-            <file>curator_tests/create_user_curator2.php</file>
-            <file>shared_tests/create_user_submitter_not_authorized.php</file>
-            <file>curator_tests/create_disease_CMT.php</file>
-            <file>curator_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>curator_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>curator_tests/add_screening_to_CMT_individual.php</file>
-            <file>curator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>curator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>curator_tests/confirm_variant_to_CMT_individual.php</file>
-            <file>curator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
-            <file>curator_tests/add_vcf_file_to_CMT_individual.php</file>
-            <file>curator_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>curator_tests/add_summary_variant_located_within_gene.php</file>
-            <file>curator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
-            <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
-            <file>curator_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>curator_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>curator_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>curator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
-            <file>curator_tests/delete_gene_GJB.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="submitter_tests">
