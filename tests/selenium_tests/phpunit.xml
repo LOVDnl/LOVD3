@@ -65,12 +65,8 @@
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
-            <!-- Currently rebuilding here. -->
-            <file>curator_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>curator_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>curator_tests/add_screening_to_CMT_individual.php</file>
-            <file>curator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>curator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
+            <file>shared_tests/create_submission_individual_with_IVA.php</file>
+            <!-- Currently rebuilding here.
             <file>curator_tests/confirm_variant_to_CMT_individual.php</file>
             <file>curator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
             <file>curator_tests/add_vcf_file_to_CMT_individual.php</file>
@@ -84,6 +80,7 @@
             <file>curator_tests/post_finish_add_screening_to_CMT_individual.php</file>
             <file>curator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
             <file>curator_tests/delete_gene_GJB.php</file>
+            -->
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="collaborator_tests">
