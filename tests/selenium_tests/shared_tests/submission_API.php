@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-05-26
+ * Modified    : 2020-05-27
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -113,16 +113,7 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         //  for any submitter, filter the ID out of the cookie data.
         // This requires some more effort, because we have a mix of old and new
         //  cookies. The difference shows when we log out and in again.
-        $aCurrentSessionIDs = array_filter(array_map(
-            function ($oCookie)
-            {
-                list($sName, $sID) = explode('_', $oCookie->getName());
-                if ($sName == 'PHPSESSID') {
-                    return $sID;
-                } else {
-                    return false;
-                }
-            }, $this->driver->manage()->getCookies()));
+        $aCurrentSessionIDs = $this->getAllSessionIDs();
         if (count(array_unique($aCurrentSessionIDs)) == 1) {
             // Life is simple, there is only one session ID...
             $sLSDBID = current($aCurrentSessionIDs);
@@ -134,16 +125,11 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
                 '//table[@class="data"]//tr[th[text()="Username"]]/td'))->getText();
             $this->logout();
             $this->login($sCurrentUsername, 'test1234');
-            $aSessionIDs = array_filter(array_map(
-                function ($oCookie)
-                {
-                    list($sName, $sID) = explode('_', $oCookie->getName());
-                    if ($sName == 'PHPSESSID') {
-                        return $sID;
-                    } else {
-                        return false;
-                    }
-                }, $this->driver->manage()->getCookies()));
+            $aSessionIDs = $this->getAllSessionIDs();
+            fwrite(STDERR, PHP_EOL .
+                'DEBUG:' . PHP_EOL .
+                'IDs pre: ' . implode(';', $aCurrentSessionIDs) . PHP_EOL .
+                'IDs post: ' . implode(';', $aSessionIDs) . PHP_EOL);
             // array_diff() doesn't work here, since values will match. The number
             //  of times we see these values, will not match.
             foreach ($aCurrentSessionIDs as $sValue) {
@@ -185,7 +171,6 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $aResult = json_decode($sResult, true);
 
         $this->assertEquals(array(), $aResult['messages']);
-        // Failed asserting that 'VarioML error: LSDB ID in file does not match this LSDB.' contains "VarioML error: Authentication denied.".
         $this->assertContains('VarioML error: Authentication denied.',
             implode(';', $aResult['errors']));
         $this->assertStringEndsWith('401 Unauthorized', $http_response_header[0]);

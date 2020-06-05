@@ -3,7 +3,7 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2015-02-17
+ * Created     : 2020-05-27
  * Modified    : 2020-05-27
  * For LOVD    : 3.0-24
  *
@@ -32,20 +32,21 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
+class DeleteDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
-        // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // Manager is user ID 2.
-        $this->driver->get(ROOT_URL . '/src/users/00002');
+        $this->driver->get(ROOT_URL . '/src/diseases/IVA');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
         if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User does not exist yet.');
+            $this->markTestSkipped('Disease does not exist yet.');
+        }
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
@@ -55,8 +56,22 @@ class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->logout();
-        $this->login('manager', 'test1234');
+        $this->driver->get(ROOT_URL . '/src/diseases/IVA');
+        $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Diseases'))->click();
+        $this->driver->findElement(WebDriverBy::linkText('Delete disease entry'))->click();
+
+        $this->assertRegExp('/\/src\/diseases\/[0-9]+\?delete$/', $this->driver->getCurrentURL());
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Delete disease information entry');
+
+        $this->assertRegExp('/^You are about to delete [0-9]+ phenotype\(s\). ' .
+            'Please fill in your password one more time to confirm the removal of disease [0-9]+\./',
+            $this->driver->findElement(WebDriverBy::xpath('//table[@class="info"][2]'))->getText());
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Delete disease information entry');
+
+        $this->assertEquals('Successfully deleted the disease information entry!',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
 ?>

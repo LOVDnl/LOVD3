@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2015-02-17
- * Modified    : 2020-05-27
+ * Created     : 2015-06-05
+ * Modified    : 2020-05-28
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,21 +31,24 @@
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverExpectedCondition;
 
-class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
+class EnableCustomColumnForIndividualsTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // Manager is user ID 2.
-        $this->driver->get(ROOT_URL . '/src/users/00002');
+        $this->driver->get(ROOT_URL . '/src/columns/Individual/Gender');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
         if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User does not exist yet.');
+            $this->markTestSkipped('Column does not exist yet.');
+        }
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
@@ -55,8 +58,18 @@ class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->logout();
-        $this->login('manager', 'test1234');
+        $this->driver->get(ROOT_URL . '/src/columns/Individual/Gender');
+        $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Columns'))->click();
+        $this->driver->findElement(WebDriverBy::linkText('Enable column'))->click();
+
+        $this->assertStringEndsWith('/src/columns/Individual/Gender?add', $this->driver->getCurrentURL());
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Add/enable custom data column');
+        $this->assertEquals('Successfully added column "Gender"!',
+            $this->driver->findElement(WebDriverBy::id('lovd__progress_message_done'))->getText());
+
+        // Wait for page redirect.
+        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/columns/Individual'));
     }
 }
 ?>

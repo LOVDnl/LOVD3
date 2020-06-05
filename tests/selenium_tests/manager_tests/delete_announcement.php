@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2015-02-17
- * Modified    : 2020-05-27
+ * Created     : 2020-06-04
+ * Modified    : 2020-06-04
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,20 +32,21 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
+class DeleteAnnouncementTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
-        // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // Manager is user ID 2.
-        $this->driver->get(ROOT_URL . '/src/users/00002');
+        $this->driver->get(ROOT_URL . '/src/announcements');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
-        if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User does not exist yet.');
+        if (preg_match('/No entries in the database yet!/', $sBody)) {
+            $this->markTestSkipped('Announcement does not exist yet.');
+        }
+        if (preg_match('/To access this area, you need at least/', $sBody)) {
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
@@ -55,8 +56,19 @@ class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->logout();
-        $this->login('manager', 'test1234');
+        $this->driver->get(ROOT_URL . '/src/announcements');
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="data"]/tbody/tr[last()]/td[1]'))->click();
+        $this->assertContains('/src/announcements/0000', $this->driver->getCurrentURL());
+        $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Announcements'))->click();
+        $this->driver->findElement(WebDriverBy::linkText('Delete announcement'))->click();
+
+        $this->assertRegExp('/\/src\/announcements\/[0-9]+\?delete$/', $this->driver->getCurrentURL());
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Delete announcement');
+
+        $this->assertEquals('Successfully deleted the announcement!',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
 ?>

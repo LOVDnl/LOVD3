@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2015-02-17
- * Modified    : 2020-05-27
+ * Created     : 2015-06-05
+ * Modified    : 2020-05-28
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,20 +32,21 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
+class ImportDataFileTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
-        // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // Manager is user ID 2.
-        $this->driver->get(ROOT_URL . '/src/users/00002');
+        $this->driver->get(ROOT_URL . '/src/genes/IVD');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
         if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User does not exist yet.');
+            $this->markTestSkipped('Gene does not exist yet.');
+        }
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
@@ -55,8 +56,13 @@ class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->logout();
-        $this->login('manager', 'test1234');
+        $this->driver->get(ROOT_URL . '/src/import');
+        $this->enterValue('import', ROOT_PATH . '../tests/test_data_files/ImportInsert.txt');
+        $this->selectValue('mode', 'Add only, treat all data as new');
+        $this->submitForm('Import file');
+
+        $this->assertEquals('Done importing!',
+            $this->driver->findElement(WebDriverBy::id('lovd_sql_progress_message_done'))->getText());
     }
 }
 ?>

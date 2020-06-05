@@ -32,20 +32,19 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateUserManagerNotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // Manager is user ID 2.
-        $this->driver->get(ROOT_URL . '/src/users/00002');
+        $this->driver->get(ROOT_URL . '/src/users?create');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
-        if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User does not exist yet.');
+        if (preg_match('/To access this area/', $sBody)) {
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
@@ -55,8 +54,9 @@ class LoginAsManagerTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->logout();
-        $this->login('manager', 'test1234');
+        $this->driver->get(ROOT_URL . '/src/users?create&no_orcid');
+        $this->assertFalse($this->isElementPresent(WebDriverBy::xpath(
+            '//select[@name="level"]/option[text()="Manager"]')));
     }
 }
 ?>
