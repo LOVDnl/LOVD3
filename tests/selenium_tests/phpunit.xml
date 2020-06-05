@@ -61,8 +61,8 @@
             <file>shared_tests/create_user_collaborator.php</file>
             <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_custom_column_phenotype.php</file>
-            <!-- Currently rebuilding here. -->
             <file>curator_tests/login_as_curator.php</file>
+            <!-- Currently rebuilding here. -->
             <file>curator_tests/create_user_curator2.php</file>
             <file>shared_tests/create_user_submitter_not_authorized.php</file>
             <file>curator_tests/create_disease_CMT.php</file>
