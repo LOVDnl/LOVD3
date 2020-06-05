@@ -4,12 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-15
+ * Modified    : 2020-06-05
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : M. Kroon <m.kroon@lumc.nl>
- *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -48,7 +47,7 @@ class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
         if (!preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Disease was already created.');
         }
-        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+        if (!$this->isElementPresent(WebDriverBy::id('tab_configuration'))) {
             $this->markTestSkipped('User was not authorized.');
         }
     }
