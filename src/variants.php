@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-05-18
+ * Modified    : 2020-06-05
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -583,7 +583,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
         $sMessage = '';
         if (!$z) {
             $sMessage = 'The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.';
-        } elseif (!lovd_isAuthorized('screening', $_GET['target'])) {
+        } elseif (!lovd_isAuthorized('screening', $_GET['target'], false)) {
             lovd_requireAUTH(LEVEL_OWNER);
         } elseif (!$z['variants_found']) {
             $sMessage = 'Cannot add variants to the given screening, because the value \'Have variants been found?\' is unchecked.';
