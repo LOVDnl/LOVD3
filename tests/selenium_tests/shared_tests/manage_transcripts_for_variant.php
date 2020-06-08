@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-05-26
+ * Modified    : 2020-06-08
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -51,9 +51,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!$this->isElementPresent(WebDriverBy::xpath('//td[contains(text(), "chr15_00000")]'))) {
             $this->markTestSkipped('Candidate variant does not exist yet.');
         }
-
-        // Requires having a Setup tab.
-        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+        if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
     }
