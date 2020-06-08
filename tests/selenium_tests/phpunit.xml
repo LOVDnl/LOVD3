@@ -68,13 +68,12 @@
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
+            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <!-- Currently rebuilding here.
-            <file>curator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
             <file>curator_tests/add_vcf_file_to_CMT_individual.php</file>
             <file>curator_tests/finish_individual_diagnosed_with_CMT.php</file>
             <file>curator_tests/add_summary_variant_located_within_gene.php</file>
             <file>curator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
             <file>curator_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
             <file>curator_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
