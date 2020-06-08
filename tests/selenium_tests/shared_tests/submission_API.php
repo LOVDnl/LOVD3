@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-05-27
+ * Modified    : 2020-06-08
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -117,8 +117,6 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
         if (count(array_unique($aCurrentSessionIDs)) == 1) {
             // Life is simple, there is only one session ID...
             $sLSDBID = current($aCurrentSessionIDs);
-            // Because we still sometimes fail to get an ID, print what we got.
-            fwrite(STDERR, PHP_EOL . 'Got LSDB ID out of one option: ' . $sLSDBID . PHP_EOL);
         } else {
             // Trigger new cookie to be added.
             $sCurrentUsername = $this->driver->findElement(WebDriverBy::xpath(
@@ -136,8 +134,6 @@ class SubmissionAPITest extends LOVDSeleniumWebdriverBaseTestCase
                 unset($aSessionIDs[array_search($sValue, $aSessionIDs)]);
             }
             $sLSDBID = current($aSessionIDs);
-            // Because we still sometimes fail to get an ID, print what we got.
-            fwrite(STDERR, PHP_EOL . 'Got LSDB ID out of array comparison: ' . $sLSDBID . PHP_EOL);
         }
 
         // This is the only way in which data can be shared between tests.
