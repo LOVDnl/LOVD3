@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-04-02
+ * Modified    : 2020-06-09
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -211,8 +211,6 @@ $_SETT = array(
                     array(
                             0 => 'Not classified', // Submitter cannot select this.
                             9 => 'Affects function',
-                            8 => 'Affects function, not associated with individual\'s disease phenotype',
-                            6 => 'Affects function, not associated with any known disease phenotype',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
@@ -223,8 +221,6 @@ $_SETT = array(
                             // The API requires different, concise but clear, values.
                             0 => 'notClassified',
                             9 => 'functionAffected',
-                            8 => 'notThisDisease',
-                            6 => 'notAnyDisease',
                             7 => 'functionProbablyAffected',
                             3 => 'functionProbablyNotAffected',
                             1 => 'functionNotAffected',
@@ -236,9 +232,7 @@ $_SETT = array(
                         1 => '-',   // Does not affect function
                         3 => '-?',  // Probably does not affect function
                         5 => '?',   // Effect unknown
-                        6 => '#',   // Variant affects function but was not associated with any known disease phenotype
                         7 => '+?',  // Probably affects function
-                        8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
                         9 => '+',   // Affects function
                     ),
                 'var_effect_default' => '00',
