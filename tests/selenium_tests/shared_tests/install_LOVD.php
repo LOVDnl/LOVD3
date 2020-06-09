@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-05-26
+ * Modified    : 2020-06-08
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -111,8 +111,6 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertStringEndsWith('/src/install/?step=2', $this->driver->getCurrentURL());
         $aSessionIDsInCommon = array_intersect($this->getAllSessionIDs(), $aInitialSessionIDs);
         foreach ($aSessionIDsInCommon as $sSessionID) {
-            fwrite(STDERR, PHP_EOL .
-                'Deleting obsolete cookie ' . $sSessionID . PHP_EOL);
             $this->driver->manage()->deleteCookieNamed('PHPSESSID_' . $sSessionID);
         }
         $this->submitForm('Next');

@@ -32,23 +32,16 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
+class CreateUserNotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
         // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // IVA is disease ID 1.
-        $this->driver->get(ROOT_URL . '/src/diseases/00001');
+        $this->driver->get(ROOT_URL . '/src/users?create');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
-        }
-        if (!preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('Disease was already created.');
-        }
-        if (!$this->isElementPresent(WebDriverBy::id('tab_configuration'))) {
-            $this->markTestSkipped('User was not authorized.');
         }
     }
 
@@ -58,14 +51,8 @@ class CreateDiseaseIVATest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->driver->get(ROOT_URL . "/src/diseases?create");
-        $this->enterValue('symbol', 'IVA');
-        $this->enterValue('name', 'isovaleric acidemia');
-        $this->enterValue('id_omim', '243500');
-        $this->selectValue('genes[]', 'IVD (isovaleryl-CoA dehydrogenase)');
-        $this->submitForm('Create disease information entry');
-        $this->assertEquals('Successfully created the disease information entry!',
+        $this->driver->get(ROOT_URL . '/src/users?create');
+        $this->assertEquals('To access this area, you need at least Manager clearance.',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
-?>

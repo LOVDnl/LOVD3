@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-05-26
+ * Modified    : 2020-06-09
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,12 +48,10 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->markTestSkipped('Gene does not exist yet.');
         }
         $this->driver->get(ROOT_URL . '/src/variants/chr15');
-        if (!$this->isElementPresent(WebDriverBy::xpath('//td[contains(text(), "chr15_00000")]'))) {
+        if (!$this->isElementPresent(WebDriverBy::xpath('//table[@class="data"]//tr[td and not(td[contains(text(), "IVD_")])]'))) {
             $this->markTestSkipped('Candidate variant does not exist yet.');
         }
-
-        // Requires having a Setup tab.
-        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+        if (!$this->isElementPresent(WebDriverBy::xpath('//a[contains(@href, "users/0000")]/b[text()="Your account"]'))) {
             $this->markTestSkipped('User was not authorized.');
         }
     }
@@ -68,7 +66,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testFindVariant()
     {
         $this->driver->get(ROOT_URL . '/src/variants/chr15');
-        $this->driver->findElement(WebDriverBy::xpath('//td[contains(text(), "chr15_00000")]'))->click();
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//tr[td and not(td[contains(text(), "IVD_")])]/td[2]'))->click();
 
         $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
         $this->assertEquals('No variants on transcripts found!',

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-05-19
+ * Modified    : 2020-06-05
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,9 +47,10 @@ class EnableCustomColumnForIVATest extends LOVDSeleniumWebdriverBaseTestCase
         if (preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Column does not exist yet.');
         }
-
-        // Requires having a Setup tab.
-        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+        if (preg_match('/Column activated for diseases IVA/', $sBody)) {
+            $this->markTestSkipped('Column was already activated.');
+        }
+        if (!$this->isElementPresent(WebDriverBy::id('tab_configuration'))) {
             $this->markTestSkipped('User was not authorized.');
         }
     }
@@ -60,7 +61,11 @@ class EnableCustomColumnForIVATest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->driver->get(ROOT_URL . '/src/columns/Phenotype/Age/Diagnosis?add');
+        $this->driver->get(ROOT_URL . '/src/columns/Phenotype/Age/Diagnosis');
+        $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Columns'))->click();
+        $this->driver->findElement(WebDriverBy::linkText('Enable column'))->click();
+
+        $this->assertStringEndsWith('/src/columns/Phenotype/Age/Diagnosis?add', $this->driver->getCurrentURL());
         $this->selectValue('target[]', 'IVA (isovaleric acidemia)');
         $this->enterValue('password', 'test1234');
         $this->submitForm('Add/enable custom data column');
