@@ -419,6 +419,28 @@ class LOVD_VVAnalyses {
                         //  then correct the genomic variant, it's probably wrong.
                         // It couldn't have been the source, since it's not valid.
 
+                        // If we don't have VOTS, there's nothing we can do now.
+                        if (empty($aVariant['vots']) && $this->bRemarks) {
+                            // Don't double-mark, so check if it's marked first.
+                            if (!$_DB->query('
+                                        SELECT COUNT(*)
+                                        FROM ' . TABLE_VARIANTS . '
+                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
+                                array($aVariant['id'], '%[EREF%'))->fetchColumn()) {
+                                // Add the error, set variant as marked when already public.
+                                $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                                    'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
+                                        'Variant Error [EREF]: ' .
+                                        'This genomic variant does not match the reference sequence. ' .
+                                         'Please fix this entry and then remove this message.'),
+                                    'statusid' => min($aVariant['statusid'], STATUS_MARKED),
+                                ));
+                                $this->nVariantsUpdated ++;
+                            }
+                            $this->nProgressCount ++;
+                            continue;
+                        }
+
                         // Collect alternative descriptions based on the VOTs.
                         $aMappedAlternatives = array();
 
