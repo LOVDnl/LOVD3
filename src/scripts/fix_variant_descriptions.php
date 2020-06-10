@@ -784,14 +784,23 @@ class LOVD_VVAnalyses {
                             }
                         }
 
-                        // We don't care if VV failed or not. This transcript should be reported.
-                        // Check if we have reported it before.
-                        if (!$_DB->query('
+                        // VV doesn't like variants outside of the transcript.
+                        // Mutalyzer used to give us mappings up to 5000 bases
+                        //  upstream, and 2000 bases downstream of the transcript.
+                        // We should only report missing hg19<->transcript mappings
+                        //  when we're sure we have a variant here that should
+                        //  work; ignore this otherwise.
+                        // https://github.com/openvar/variantValidator/issues/173
+                        if (!isset($aVVVot['errors']['ERANGE'])) {
+                            // This transcript should be reported.
+                            // Check if we have reported it before.
+                            if (!$_DB->query('
                                 SELECT COUNT(*)
                                 FROM ' . TABLE_LOGS . '
                                 WHERE name = ? AND event = ? AND log LIKE ?',
                                 array('Error', 'VVMissingTranscript', '% ' . $sTranscript . '.'))->fetchColumn()) {
-                            lovd_writeLog('Error', 'VVMissingTranscript', 'Missing transcript when operating VV:verifyGenome(' . $sVariant . '): ' . $sTranscript . '.');
+                                lovd_writeLog('Error', 'VVMissingTranscript', 'Missing transcript when operating VV:verifyGenome(' . $sVariant . '): ' . $sTranscript . '.');
+                            }
                         }
 
                         // We won't be able to check this VOT, we'll silently leave it be.
