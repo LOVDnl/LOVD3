@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-03
+ * Modified    : 2020-06-10
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -106,8 +106,9 @@ class LOVD_VVAnalyses {
             SELECT c.name, COUNT(*)
             FROM ' . TABLE_CHROMOSOMES . ' AS c
                 INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (c.name = vog.chromosome)
+            WHERE statusid > ?
             GROUP BY c.name
-            ORDER BY c.sort_id')->fetchAllCombine();
+            ORDER BY c.sort_id', array(STATUS_PENDING))->fetchAllCombine();
         // Take given chromosome if we have it in our list, or the first one otherwise.
         $this->sCurrentChromosome = (!isset($this->aChromosomes[$sCurrentChromosome])?
             key($this->aChromosomes) : $sCurrentChromosome);
@@ -169,8 +170,8 @@ class LOVD_VVAnalyses {
         $this->nProgressCount = $_DB->query('
                 SELECT COUNT(*)
                 FROM ' . TABLE_VARIANTS . '
-                WHERE chromosome = ? AND position_g_start < ?',
-            array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchColumn();
+                WHERE chromosome = ? AND position_g_start < ? AND statusid > ?',
+            array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchColumn();
 
         // We'll be sending a lot of updates, so stop all buffering.
         flush();
@@ -258,8 +259,8 @@ class LOVD_VVAnalyses {
             $nLeft = $_DB->query('
                 SELECT COUNT(*)
                 FROM ' . TABLE_VARIANTS . '
-                WHERE chromosome = ? AND position_g_start >= ?',
-                array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchColumn();
+                WHERE chromosome = ? AND position_g_start >= ? AND statusid > ?',
+                array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchColumn();
             if (!$nLeft) {
                 // We're done with this chromosome, move on to the next.
                 // We do so automatically, by redirecting. We don't care that the
@@ -282,9 +283,9 @@ class LOVD_VVAnalyses {
             $nNextPosition = $_DB->query('
                 SELECT position_g_start
                 FROM ' . TABLE_VARIANTS . '
-                WHERE chromosome = ? AND position_g_start >= ?
+                WHERE chromosome = ? AND position_g_start >= ? AND statusid > ?
                 ORDER BY chromosome, position_g_start LIMIT 1',
-                array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchColumn();
+                array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchColumn();
             // Check if we got a position, for the small chance that our last database entry suddenly just got removed...
             if ($nNextPosition) {
                 $this->nCurrentPosition = $nNextPosition;
@@ -299,8 +300,9 @@ class LOVD_VVAnalyses {
                 FROM ' . TABLE_VARIANTS . ' AS vog
                     LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
                     LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                WHERE vog.chromosome = ? AND vog.position_g_start = ? GROUP BY vog.id',
-                array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchAllAssoc();
+                WHERE vog.chromosome = ? AND vog.position_g_start = ? AND statusid > ?
+                GROUP BY vog.id',
+                array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchAllAssoc();
             // Explode vots, and explode transcriptid, DNA, RNA, protein.
             $aVariants = array_map(
                 function ($aVariant)
