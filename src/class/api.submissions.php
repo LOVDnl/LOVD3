@@ -80,7 +80,6 @@ class LOVD_API_Submissions
             'Pathogenic' => '90',
             'Not Known' => '50',
             'Causative' => '60',
-            // 8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
         ),
         'pathogenicity_to_classification' => array(
             'Unclassified' => 'unclassified',

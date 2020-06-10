@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-02-25
+ * Modified    : 2020-06-08
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -778,9 +778,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN allow_index_wiki',
                      'ALTER TABLE ' . TABLE_USERS . ' DROP COLUMN reference',
                  ),
-                 '3.0-24' => lovd_addConditionalSQL(
-                     'column_exists_has_no_key', array(TABLE_VARIANTS, 'VariantOnGenome/DBID'),
-                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (`VariantOnGenome/DBID`)'
+                 '3.0-24' => array_merge(
+                     lovd_addConditionalSQL(
+                        'column_exists_has_no_key', array(TABLE_VARIANTS, 'VariantOnGenome/DBID'),
+                         'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (`VariantOnGenome/DBID`)'
+                     ),
+                     array(
+                         'DELETE FROM ' . TABLE_EFFECT . ' WHERE id LIKE "6_" OR id LIKE "8_" OR id LIKE "_6" OR id LIKE "_8"',
+                     )
                  ),
              );
 
