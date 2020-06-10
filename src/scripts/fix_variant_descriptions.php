@@ -631,9 +631,8 @@ class LOVD_VVAnalyses {
 
                 // Clean genomic DNAs field, remove NC from it.
                 $aVV['data']['DNA_clean'] = substr(strstr($aVV['data']['DNA'], ':'), 1);
-                if ($this->bDNA38) {
-                    if (isset($aVV['data']['genomic_mappings']['hg38'])
-                        && count($aVV['data']['genomic_mappings']['hg38']) == 1) {
+                if ($this->bDNA38 && isset($aVV['data']['genomic_mappings']['hg38'])) {
+                    if (count($aVV['data']['genomic_mappings']['hg38']) == 1) {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
                         $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
                     } elseif (empty($aVV['data']['genomic_mappings']['hg38'])
@@ -647,7 +646,7 @@ class LOVD_VVAnalyses {
                         $this->nProgressCount ++; // To show progress.
                         continue; // Then continue to the next variant.
                     } else {
-                        $this->panic($aVariant, $aVV, 'None or multiple hg38 mappings given for variant.');
+                        $this->panic($aVariant, $aVV, 'Multiple hg38 mappings given for variant.');
                     }
                 }
 
