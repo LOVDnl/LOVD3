@@ -399,11 +399,7 @@ class LOVD_VVAnalyses {
                         // Other errors that we just report.
                         // Don't double-mark, so check if it's marked first.
                         $sErrorCode = (isset($aVV['errors']['ESYNTAX'])? 'ESYNTAX' : 'EINCONSISTENTLENGTH');
-                        if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                            array($aVariant['id'], '%[' . $sErrorCode . ']%'))->fetchColumn()) {
+                        if (strpos($aVariant['remarks'], '[' . $sErrorCode . ']') === false) {
                             // Add the error, set variant as marked when already public.
                             // Assuming here that $aVVVot['errors'] has named keys.
                             $_DATA['Genome']->updateEntry($aVariant['id'], array(
@@ -428,11 +424,7 @@ class LOVD_VVAnalyses {
                         // If we don't have VOTS, there's nothing we can do now.
                         if (empty($aVariant['vots']) && $this->bRemarks) {
                             // Don't double-mark, so check if it's marked first.
-                            if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                array($aVariant['id'], '%[EREF%'))->fetchColumn()) {
+                            if (strpos($aVariant['remarks'], '[EREF') === false) {
                                 // Add the error, set variant as marked when already public.
                                 $_DATA['Genome']->updateEntry($aVariant['id'], array(
                                     'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
@@ -468,11 +460,7 @@ class LOVD_VVAnalyses {
                                 // EREF *and* VOT fails. Log if we understand what happened, panic otherwise.
                                 if ($this->bRemarks && isset($aVVVot['errors'])) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EREF/%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EREF/') === false) {
                                         // Add the error, set variant as marked when already public.
                                         // Assuming here that $aVVVot['errors'] has named keys.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
@@ -727,11 +715,7 @@ class LOVD_VVAnalyses {
                                 //  so we'll just mark the variant and be done with it.
                                 if ($this->bRemarks) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EBUILDMISMATCH]%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EBUILDMISMATCH]') === false) {
                                         // Add the error, set variant as marked when already public.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
                                             'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
@@ -837,11 +821,7 @@ class LOVD_VVAnalyses {
                                 // Log if we understand what happened, panic otherwise.
                                 if ($this->bRemarks && isset($aVVVot['errors'])) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EMISMATCH/%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EMISMATCH/') === false) {
                                         // Add the error, set variant as marked when already public.
                                         // Assuming here that $aVVVot['errors'] has named keys.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
@@ -938,11 +918,7 @@ class LOVD_VVAnalyses {
                                 //  so we'll just mark the variant and be done with it.
                                 if ($this->bRemarks) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EMISMATCH]%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EMISMATCH') === false) {
                                         // Add the error, set variant as marked when already public.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
                                             'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
