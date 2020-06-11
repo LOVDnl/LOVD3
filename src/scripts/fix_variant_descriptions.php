@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-10
+ * Modified    : 2020-06-11
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -631,6 +631,7 @@ class LOVD_VVAnalyses {
 
                 // Clean genomic DNAs field, remove NC from it.
                 $aVV['data']['DNA_clean'] = substr(strstr($aVV['data']['DNA'], ':'), 1);
+                $aVV['data']['DNA38_clean'] = '';
                 if ($this->bDNA38 && isset($aVV['data']['genomic_mappings']['hg38'])) {
                     if (count($aVV['data']['genomic_mappings']['hg38']) == 1) {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
@@ -648,7 +649,7 @@ class LOVD_VVAnalyses {
                 }
 
                 // If we can, fill in or correct the hg38 prediction.
-                if ($this->bDNA38) {
+                if ($this->bDNA38 && $aVV['data']['DNA38_clean']) {
                     if (!$aVariant['DNA38']) {
                         // We didn't have a hg38 description yet. Just fill it in.
                         $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
