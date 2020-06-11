@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-06-02
+ * Modified    : 2020-06-11
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -185,8 +185,8 @@ class LOVD_VV
                     $aMapping['protein'] = 'p.(=)';
 
                 } else {
-                    // No introns involved.
-                    if ($aVariant['position_start'] < 0 && $aVariant['position_end'] < 0) {
+                    // No introns involved. Note, position fields are sorted.
+                    if ($aVariant['position_end'] < 0) {
                         // Variant is upstream.
                         $aMapping['RNA'] = 'r.(?)';
                         $aMapping['protein'] = 'p.(=)';
@@ -201,7 +201,9 @@ class LOVD_VV
                             $aMapping['protein'] = 'p.?';
                         }
 
-                    } elseif (substr($aMapping['DNA'], 0, 3) == 'c.*' && ($aVariant['type'] == 'subst' || substr_count($aMapping['DNA'], '*') > 1)) {
+                    } elseif (substr($aMapping['DNA'], 0, 3) == 'c.*'
+                        && ($aVariant['position_start'] == $aVariant['position_end']
+                            || substr_count($aMapping['DNA'], '*') > 1)) {
                         // Variant is downstream.
                         $aMapping['RNA'] = 'r.(=)';
                         $aMapping['protein'] = 'p.(=)';

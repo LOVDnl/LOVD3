@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-03
+ * Modified    : 2020-06-11
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -106,8 +106,9 @@ class LOVD_VVAnalyses {
             SELECT c.name, COUNT(*)
             FROM ' . TABLE_CHROMOSOMES . ' AS c
                 INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (c.name = vog.chromosome)
+            WHERE statusid > ?
             GROUP BY c.name
-            ORDER BY c.sort_id')->fetchAllCombine();
+            ORDER BY c.sort_id', array(STATUS_PENDING))->fetchAllCombine();
         // Take given chromosome if we have it in our list, or the first one otherwise.
         $this->sCurrentChromosome = (!isset($this->aChromosomes[$sCurrentChromosome])?
             key($this->aChromosomes) : $sCurrentChromosome);
@@ -169,8 +170,8 @@ class LOVD_VVAnalyses {
         $this->nProgressCount = $_DB->query('
                 SELECT COUNT(*)
                 FROM ' . TABLE_VARIANTS . '
-                WHERE chromosome = ? AND position_g_start < ?',
-            array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchColumn();
+                WHERE chromosome = ? AND position_g_start < ? AND statusid > ?',
+            array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchColumn();
 
         // We'll be sending a lot of updates, so stop all buffering.
         flush();
@@ -258,8 +259,8 @@ class LOVD_VVAnalyses {
             $nLeft = $_DB->query('
                 SELECT COUNT(*)
                 FROM ' . TABLE_VARIANTS . '
-                WHERE chromosome = ? AND position_g_start >= ?',
-                array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchColumn();
+                WHERE chromosome = ? AND position_g_start >= ? AND statusid > ?',
+                array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchColumn();
             if (!$nLeft) {
                 // We're done with this chromosome, move on to the next.
                 // We do so automatically, by redirecting. We don't care that the
@@ -282,9 +283,9 @@ class LOVD_VVAnalyses {
             $nNextPosition = $_DB->query('
                 SELECT position_g_start
                 FROM ' . TABLE_VARIANTS . '
-                WHERE chromosome = ? AND position_g_start >= ?
+                WHERE chromosome = ? AND position_g_start >= ? AND statusid > ?
                 ORDER BY chromosome, position_g_start LIMIT 1',
-                array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchColumn();
+                array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchColumn();
             // Check if we got a position, for the small chance that our last database entry suddenly just got removed...
             if ($nNextPosition) {
                 $this->nCurrentPosition = $nNextPosition;
@@ -299,8 +300,9 @@ class LOVD_VVAnalyses {
                 FROM ' . TABLE_VARIANTS . ' AS vog
                     LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
                     LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                WHERE vog.chromosome = ? AND vog.position_g_start = ? GROUP BY vog.id',
-                array($this->sCurrentChromosome, $this->nCurrentPosition))->fetchAllAssoc();
+                WHERE vog.chromosome = ? AND vog.position_g_start = ? AND statusid > ?
+                GROUP BY vog.id',
+                array($this->sCurrentChromosome, $this->nCurrentPosition, STATUS_PENDING))->fetchAllAssoc();
             // Explode vots, and explode transcriptid, DNA, RNA, protein.
             $aVariants = array_map(
                 function ($aVariant)
@@ -334,7 +336,8 @@ class LOVD_VVAnalyses {
                 // Update stats.
                 $this->updateStats();
                 $this->nVariantsDone ++; // We'll only see this number the next update anyway.
-                usleep(250000); // FIXME: Remove later.
+                usleep(100000); // FIXME: Remove later?
+                $bVKGL = ($this->bRemarks && substr($aVariant['remarks'], 0, 38) == 'VKGL data sharing initiative Nederland');
 
                 // Call VV and get all information we need; mappings to
                 //  transcripts, protein predictions and even mappings to hg38
@@ -343,13 +346,19 @@ class LOVD_VVAnalyses {
                 // Do a quick check with lovd_fixHGVS() on the variant's HGVS to prevent common errors.
                 $sVariant = $sCurrentRefSeq . ':' . lovd_fixHGVS($aVariant['DNA']);
                 if (!isset($this->aCache[$sVariant])) {
-                    $aVV = $_VV->verifyGenomic($sVariant,
-                        array(
-                            'map_to_transcripts' => true,
-                            'predict_protein' => true,
-                            'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
-                            'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
-                        ));
+                    // We do get random failures now and then; it's a common
+                    //  reason for the script to stop.
+                    // If we do get a failure, just try again.
+                    $aVV = false;
+                    for ($i = 0; (!$aVV && $i < 2); $i ++) {
+                        $aVV = $_VV->verifyGenomic($sVariant,
+                            array(
+                                'map_to_transcripts' => true,
+                                'predict_protein' => true,
+                                'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
+                                'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
+                            ));
+                    }
                     // This also stores failures, so we won't repeat these.
                     $this->aCache[$sVariant] = $aVV;
                 } else {
@@ -391,11 +400,7 @@ class LOVD_VVAnalyses {
                         // Other errors that we just report.
                         // Don't double-mark, so check if it's marked first.
                         $sErrorCode = (isset($aVV['errors']['ESYNTAX'])? 'ESYNTAX' : 'EINCONSISTENTLENGTH');
-                        if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                            array($aVariant['id'], '%[' . $sErrorCode . ']%'))->fetchColumn()) {
+                        if (strpos($aVariant['remarks'], '[' . $sErrorCode . ']') === false) {
                             // Add the error, set variant as marked when already public.
                             // Assuming here that $aVVVot['errors'] has named keys.
                             $_DATA['Genome']->updateEntry($aVariant['id'], array(
@@ -416,6 +421,24 @@ class LOVD_VVAnalyses {
                         //  and the cDNA variant(s) are on the same chromosome,
                         //  then correct the genomic variant, it's probably wrong.
                         // It couldn't have been the source, since it's not valid.
+
+                        // If we don't have VOTS, there's nothing we can do now.
+                        if (empty($aVariant['vots']) && $this->bRemarks) {
+                            // Don't double-mark, so check if it's marked first.
+                            if (strpos($aVariant['remarks'], '[EREF') === false) {
+                                // Add the error, set variant as marked when already public.
+                                $_DATA['Genome']->updateEntry($aVariant['id'], array(
+                                    'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
+                                        'Variant Error [EREF]: ' .
+                                        'This genomic variant does not match the reference sequence. ' .
+                                         'Please fix this entry and then remove this message.'),
+                                    'statusid' => min($aVariant['statusid'], STATUS_MARKED),
+                                ));
+                                $this->nVariantsUpdated ++;
+                            }
+                            $this->nProgressCount ++;
+                            continue;
+                        }
 
                         // Collect alternative descriptions based on the VOTs.
                         $aMappedAlternatives = array();
@@ -438,11 +461,7 @@ class LOVD_VVAnalyses {
                                 // EREF *and* VOT fails. Log if we understand what happened, panic otherwise.
                                 if ($this->bRemarks && isset($aVVVot['errors'])) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EREF/%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EREF/') === false) {
                                         // Add the error, set variant as marked when already public.
                                         // Assuming here that $aVVVot['errors'] has named keys.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
@@ -517,7 +536,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
@@ -607,23 +626,13 @@ class LOVD_VVAnalyses {
 
                 // Clean genomic DNAs field, remove NC from it.
                 $aVV['data']['DNA_clean'] = substr(strstr($aVV['data']['DNA'], ':'), 1);
-                if ($this->bDNA38) {
-                    if (isset($aVV['data']['genomic_mappings']['hg38'])
-                        && count($aVV['data']['genomic_mappings']['hg38']) == 1) {
+                $aVV['data']['DNA38_clean'] = '';
+                if ($this->bDNA38 && isset($aVV['data']['genomic_mappings']['hg38'])) {
+                    if (count($aVV['data']['genomic_mappings']['hg38']) == 1) {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
                         $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
-                    } elseif (empty($aVV['data']['genomic_mappings']['hg38'])
-                        && empty($aVV['data']['transcript_mappings'])
-                        && empty($aUpdate)) {
-                        // Variant has no hg38 mapping, no liftover, and we have nothing to update.
-                        // Probably the mapping isn't supported, because the variant partially lies outside of the transcript.
-                        // On 2020-05-29, that's still a known problem, and probably will be for a while.
-                        // https://github.com/openvar/variantValidator/issues/173
-                        // We've decided, for now, to skip these variants.
-                        $this->nProgressCount ++; // To show progress.
-                        continue; // Then continue to the next variant.
                     } else {
-                        $this->panic($aVariant, $aVV, 'None or multiple hg38 mappings given for variant.');
+                        $this->panic($aVariant, $aVV, 'Multiple hg38 mappings given for variant.');
                     }
                 }
 
@@ -635,7 +644,7 @@ class LOVD_VVAnalyses {
                 }
 
                 // If we can, fill in or correct the hg38 prediction.
-                if ($this->bDNA38) {
+                if ($this->bDNA38 && $aVV['data']['DNA38_clean']) {
                     if (!$aVariant['DNA38']) {
                         // We didn't have a hg38 description yet. Just fill it in.
                         $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
@@ -649,8 +658,8 @@ class LOVD_VVAnalyses {
                         if (!isset($this->aCache[$sVariantHG38 . ':checkonly'])) {
                             // The ":checkonly" suffix is because we're not running
                             //  everything including the mapping. We're usually on a
-                            //  different chromosome so it should be OK, but if we're
-                            //  running chrM, then we're actually on the same chromosome.
+                            //  different NC so it should be OK, but if we're
+                            //  running chrM, then we're actually on the same NC.
                             // Don't mix the full VV runs with the simple runs!
                             $aVVHG38 = $_VV->verifyGenomic($sVariantHG38);
                             // This also stores failures, so we won't repeat these.
@@ -707,11 +716,7 @@ class LOVD_VVAnalyses {
                                 //  so we'll just mark the variant and be done with it.
                                 if ($this->bRemarks) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EBUILDMISMATCH]%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EBUILDMISMATCH]') === false) {
                                         // Add the error, set variant as marked when already public.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
                                             'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
@@ -761,14 +766,23 @@ class LOVD_VVAnalyses {
                             }
                         }
 
-                        // We don't care if VV failed or not. This transcript should be reported.
-                        // Check if we have reported it before.
-                        if (!$_DB->query('
+                        // VV doesn't like variants outside of the transcript.
+                        // Mutalyzer used to give us mappings up to 5000 bases
+                        //  upstream, and 2000 bases downstream of the transcript.
+                        // We should only report missing hg19<->transcript mappings
+                        //  when we're sure we have a variant here that should
+                        //  work; ignore this otherwise.
+                        // https://github.com/openvar/variantValidator/issues/173
+                        if (!isset($aVVVot['errors']['ERANGE'])) {
+                            // This transcript should be reported.
+                            // Check if we have reported it before.
+                            if (!$_DB->query('
                                 SELECT COUNT(*)
                                 FROM ' . TABLE_LOGS . '
                                 WHERE name = ? AND event = ? AND log LIKE ?',
                                 array('Error', 'VVMissingTranscript', '% ' . $sTranscript . '.'))->fetchColumn()) {
-                            lovd_writeLog('Error', 'VVMissingTranscript', 'Missing transcript when operating VV:verifyGenome(' . $sVariant . '): ' . $sTranscript . '.');
+                                lovd_writeLog('Error', 'VVMissingTranscript', 'Missing transcript when operating VV:verifyGenome(' . $sVariant . '): ' . $sTranscript . '.');
+                            }
                         }
 
                         // We won't be able to check this VOT, we'll silently leave it be.
@@ -776,8 +790,13 @@ class LOVD_VVAnalyses {
                     } else {
                         // Check VOT.
                         // Check if the VOT's fields are perhaps empty; if so, replace them.
+                        // Also, save ourselves a whole lot of issues with the VKGL data.
+                        // All mappings are generated by Mutalyzer and never checked.
+                        // We get lots of EMISMATCH/EREF errors because the VOT variant
+                        //  is actually c.=, something Mutalyzer can't see.
                         foreach (array('DNA', 'RNA', 'protein') as $sField) {
-                            if (in_array($aVOT[$sField], array('', '-', 'c.?', 'r.?', 'p.?'))) {
+                            if (in_array($aVOT[$sField], array('', '-', 'c.?', 'r.?', 'p.?'))
+                                || ($bVKGL && $aVOT[$sField] != $aVV['data']['transcript_mappings'][$sTranscript][$sField])) {
                                 // The current field is pretty much bogus, just overwrite it.
                                 if (!isset($aUpdate['transcripts'])) {
                                     $aUpdate['transcripts'] = array();
@@ -808,11 +827,7 @@ class LOVD_VVAnalyses {
                                 // Log if we understand what happened, panic otherwise.
                                 if ($this->bRemarks && isset($aVVVot['errors'])) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EMISMATCH/%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EMISMATCH/') === false) {
                                         // Add the error, set variant as marked when already public.
                                         // Assuming here that $aVVVot['errors'] has named keys.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
@@ -875,7 +890,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
@@ -909,11 +924,7 @@ class LOVD_VVAnalyses {
                                 //  so we'll just mark the variant and be done with it.
                                 if ($this->bRemarks) {
                                     // Don't double-mark, so check if it's marked first.
-                                    if (!$_DB->query('
-                                        SELECT COUNT(*)
-                                        FROM ' . TABLE_VARIANTS . '
-                                        WHERE id = ? AND `VariantOnGenome/Remarks` LIKE ?',
-                                        array($aVariant['id'], '%[EMISMATCH]%'))->fetchColumn()) {
+                                    if (strpos($aVariant['remarks'], '[EMISMATCH') === false) {
                                         // Add the error, set variant as marked when already public.
                                         $_DATA['Genome']->updateEntry($aVariant['id'], array(
                                             'VariantOnGenome/Remarks' => ltrim($aVariant['remarks'] . "\r\n" .
