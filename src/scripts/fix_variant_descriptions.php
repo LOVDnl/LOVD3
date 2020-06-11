@@ -345,13 +345,19 @@ class LOVD_VVAnalyses {
                 // Do a quick check with lovd_fixHGVS() on the variant's HGVS to prevent common errors.
                 $sVariant = $sCurrentRefSeq . ':' . lovd_fixHGVS($aVariant['DNA']);
                 if (!isset($this->aCache[$sVariant])) {
-                    $aVV = $_VV->verifyGenomic($sVariant,
-                        array(
-                            'map_to_transcripts' => true,
-                            'predict_protein' => true,
-                            'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
-                            'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
-                        ));
+                    // We do get random failures now and then; it's a common
+                    //  reason for the script to stop.
+                    // If we do get a failure, just try again.
+                    $aVV = false;
+                    for ($i = 0; (!$aVV && $i < 2); $i ++) {
+                        $aVV = $_VV->verifyGenomic($sVariant,
+                            array(
+                                'map_to_transcripts' => true,
+                                'predict_protein' => true,
+                                'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
+                                'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
+                            ));
+                    }
                     // This also stores failures, so we won't repeat these.
                     $this->aCache[$sVariant] = $aVV;
                 } else {
