@@ -541,7 +541,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
@@ -663,8 +663,8 @@ class LOVD_VVAnalyses {
                         if (!isset($this->aCache[$sVariantHG38 . ':checkonly'])) {
                             // The ":checkonly" suffix is because we're not running
                             //  everything including the mapping. We're usually on a
-                            //  different chromosome so it should be OK, but if we're
-                            //  running chrM, then we're actually on the same chromosome.
+                            //  different NC so it should be OK, but if we're
+                            //  running chrM, then we're actually on the same NC.
                             // Don't mix the full VV runs with the simple runs!
                             $aVVHG38 = $_VV->verifyGenomic($sVariantHG38);
                             // This also stores failures, so we won't repeat these.
@@ -898,7 +898,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
