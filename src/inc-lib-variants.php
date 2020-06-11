@@ -67,6 +67,11 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         return lovd_fixHGVS($sType . $sVariant, $sType);
     }
 
+    // People sometimes leave spaces.
+    if (strpos($sVariant, ' ') !== false) {
+        return lovd_fixHGVS(preg_replace('/\s+/', '', $sVariant));
+    }
+
     // Delins variants that should be conversions.
     if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)delins([0-9+-]+_[0-9+-]+)$/', $sVariant, $aRegs)) {
         // Return as a conversion.
