@@ -56,3 +56,4 @@ class CreateUserNotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
+?>
