@@ -86,8 +86,8 @@
             <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_custom_column_phenotype.php</file>
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
-            <!-- Currently rebuilding here.
             <file>collaborator_tests/login_as_collaborator.php</file>
+            <!-- Currently rebuilding here.
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>collaborator_tests/create_individual_diagnosed_with_CMT.php</file>
             <file>collaborator_tests/add_phenotype_info_to_CMT_individual.php</file>
