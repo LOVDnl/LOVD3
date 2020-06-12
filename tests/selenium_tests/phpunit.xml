@@ -88,16 +88,11 @@
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
             <file>collaborator_tests/login_as_collaborator.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
+            <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <!-- Currently rebuilding here.
-            <file>collaborator_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>collaborator_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_screening_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
             <file>collaborator_tests/confirm_variant_to_CMT_individual.php</file>
             <file>collaborator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
             <file>collaborator_tests/add_vcf_file_to_CMT_individual.php</file>
-            <file>collaborator_tests/finish_individual_diagnosed_with_CMT.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <file>collaborator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
