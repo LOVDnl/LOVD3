@@ -79,9 +79,14 @@
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
-            <!-- Currently rebuilding here.
+            <file>shared_tests/create_user_manager.php</file>
+            <file>shared_tests/create_user_curator.php</file>
             <file>shared_tests/create_user_collaborator.php</file>
-            <file>shared_tests/make_user_collaborator_GJB.php</file>
+            <file>shared_tests/assign_collaborator_to_IVD.php</file>
+            <file>shared_tests/create_user_owner.php</file>
+            <file>shared_tests/create_custom_column_phenotype.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA.php</file>
+            <!-- Currently rebuilding here.
             <file>collaborator_tests/login_as_collaborator.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>collaborator_tests/create_individual_diagnosed_with_CMT.php</file>
