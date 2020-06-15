@@ -95,11 +95,6 @@
             <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <!-- Currently rebuilding here.
-            <file>collaborator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
-            <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
-            <file>shared_tests/login_as_admin.php</file>
-            <file>collaborator_tests/curate_submitted_data.php</file>
             <file>collaborator_tests/delete_gene_GJB.php</file>
             -->
             <file>shared_tests/uninstall_LOVD.php</file>
