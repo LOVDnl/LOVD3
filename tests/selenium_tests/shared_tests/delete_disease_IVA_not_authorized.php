@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2015-02-17
- * Modified    : 2020-06-12
+ * Created     : 2020-06-15
+ * Modified    : 2020-06-15
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,20 +32,18 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 
-class LoginAsCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
+class DeleteDiseaseIVANotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCase
 {
     protected function setUp ()
     {
-        // Test if we have what we need for this test. If not, skip this test.
         parent::setUp();
-        // Collaborator is user ID 4.
-        $this->driver->get(ROOT_URL . '/src/users/00004');
+        $this->driver->get(ROOT_URL . '/src/diseases/IVA');
         $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
         if (preg_match('/LOVD was not installed yet/', $sBody)) {
             $this->markTestSkipped('LOVD was not installed yet.');
         }
         if (preg_match('/No such ID!/', $sBody)) {
-            $this->markTestSkipped('User does not exist yet.');
+            $this->markTestSkipped('Disease does not exist yet.');
         }
     }
 
@@ -55,8 +53,13 @@ class LoginAsCollaboratorTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function test ()
     {
-        $this->logout();
-        $this->login('collaborator', 'test1234');
+        $this->driver->get(ROOT_URL . '/src/diseases/IVA');
+        $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Diseases')));
+
+        $this->driver->get($this->driver->getCurrentURL() . '?delete');
+        $this->assertRegExp('/\/src\/diseases\/[0-9]+\?delete$/', $this->driver->getCurrentURL());
+        $this->assertEquals('To access this area, you need at least Manager clearance.',
+            $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
 }
 ?>

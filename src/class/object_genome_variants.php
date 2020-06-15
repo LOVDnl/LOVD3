@@ -386,7 +386,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  on the genomic level will be determined by the "worst" effect on the
             //  transcript levels. Only if the currently set effect is non-concordant
             //  with the current effects on the transcripts and not set to
-            //  'not classifed' will the form field be shown, so that the user
+            //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectConcluded = false;
             $nVOGEffectConcluded = intval($zData['effectid']{1});
@@ -415,7 +415,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  on the genomic level will be determined by the "worst" effect on the
             //  transcript levels. Only if the currently set effect is non-concordant
             //  with the current effects on the transcripts and not set to
-            //  'not classifed' will the form field be shown, so that the user
+            //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectReported = false;
             $nVOGEffectReported = intval($zData['effectid']{0});

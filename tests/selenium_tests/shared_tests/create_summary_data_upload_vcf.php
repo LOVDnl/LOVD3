@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-26
+ * Modified    : 2020-06-12
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -107,7 +107,12 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         //  because we work with the browser's interpretation of the text.
         do {
             $this->driver->get(ROOT_URL . '/src/ajax/map_variants.php');
-        } while (substr($this->driver->findElement(WebDriverBy::tagName('body'))->getText(), 0, 5) != '0 99 ');
+            // We get failures sometimes in the download verification test,
+            //  because the mapping apparently did not complete.
+            // For now, log the output that we get. Maybe there's a pattern.
+            $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+            fwrite(STDERR, PHP_EOL . 'Mapping output: ' . $sBody . PHP_EOL);
+        } while (substr($sBody, 0, 5) != '0 99 ');
         // Travis sometimes reports a "There are no variants to map in the
         //  database" instead of the expected "Successfully mapped 25 variants".
         $this->assertContains(

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-22
- * Modified    : 2020-05-27
+ * Modified    : 2020-06-15
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -58,8 +58,11 @@ class CheckCustomLinks extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/variants');
 
         // Find a custom link, and move the mouse over it.
+        // We take the last custom link, because sometimes the first one(s)
+        //  are covered by a tab's dropdown menu that's somehow open.
         $oCustomLink = $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="data"]/tbody/tr/td/span[text()="dbSNP"]'));
+            '//table[@class="data"]/tbody/tr[td/span[text()="dbSNP"]][last()]/td/span[text()="dbSNP"]'));
+        $this->driver->scrollToElement($oCustomLink);
         $this->driver->getMouse()->mouseMove($oCustomLink->getCoordinates());
 
         // Now find the tooltip that should have shown.
