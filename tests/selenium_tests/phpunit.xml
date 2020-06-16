@@ -111,6 +111,8 @@
             <file>shared_tests/create_user_owner.php</file>
             <file>shared_tests/create_user_submitter.php</file>
             <file>shared_tests/assign_colleague_to_owner.php</file>
+            <file>shared_tests/create_custom_column_phenotype.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA.php</file>
             <!-- Currently rebuilding here.
             <file>submitter_tests/login_as_submitter.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
