@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-06-12
+ * Modified    : 2020-06-16
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -232,9 +232,12 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $bUnique = true;
     }
 
-    $qGene = $_DB->query('SELECT g.id, count(t.id) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' .
-                         TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid WHERE g.id = ?',
-                         array(rawurldecode($_PE[1])));
+    $qGene = $_DB->query('
+        SELECT g.id, COUNT(t.id)
+        FROM ' . TABLE_GENES . ' AS g
+          LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid
+        WHERE g.id = ?
+        GROUP BY g.id', array(rawurldecode($_PE[1])));
     list($sGene, $nTranscripts) = $qGene->fetchRow();
 
     if ($sGene) {
@@ -245,12 +248,15 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
             define('FORMAT_ALLOW_TEXTPLAIN', true);
         }
 
-        // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
+        // Overview is given per transcript. If there is only one, it will be mentioned.
+        // If there are more, you will be able to select which one you'd like to see.
         $aTranscriptsWithVariants = $_DB->query(
             'SELECT t.id, t.id_ncbi
              FROM ' . TABLE_TRANSCRIPTS . ' AS t
                INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-             WHERE t.geneid = ? ORDER BY t.id_ncbi', array($sGene))->fetchAllCombine();
+             WHERE t.geneid = ?
+             GROUP BY t.id
+             ORDER BY COUNT(vot.id) DESC, t.id ASC', array($sGene))->fetchAllCombine();
         $nTranscriptsWithVariants = count($aTranscriptsWithVariants);
 
         // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscriptsWithVariants.
@@ -570,6 +576,9 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     // don't have to duplicate this code for variants?create and variants/upload?create.
 
     // We don't want to show an error message about the screening if the user isn't allowed to come here.
+    // This will show a "View variants" title that makes no sense, but setting
+    //  PAGE_TITLE here already throws an error when LOVD tries to overwrite it.
+    // FIXME: Pass page title as an optional argument to this function?
     lovd_requireAUTH(
         (!empty($_PE[1])? LEVEL_MANAGER :
             (empty($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)? LEVEL_CURATOR :
