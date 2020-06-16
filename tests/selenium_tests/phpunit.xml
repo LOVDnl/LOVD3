@@ -99,8 +99,11 @@
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="submitter_tests">
+            <!-- Quick authorization and submission tests, run by a Submitter,
+                 as well as simple curation tests for a Curator. -->
             <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_gene_GJB.php</file>
+            <file>shared_tests/create_gene_IVD.php</file>
+            <!-- Currently rebuilding here.
             <file>shared_tests/create_user_submitter.php</file>
             <file>submitter_tests/login_as_submitter.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
@@ -125,6 +128,7 @@
             <file>submitter_tests/post_finish_add_screening_to_CMT_individual.php</file>
             <file>submitter_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
             <file>submitter_tests/delete_gene_GJB.php</file>
+            -->
             <!-- Fix and then enable this. -->
             <!--<file>shared_tests/convert_LOVD2_export_IVD.php</file>-->
             <file>shared_tests/uninstall_LOVD.php</file>
