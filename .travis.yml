@@ -73,7 +73,7 @@ script:
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite manager_tests
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite curator_tests
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite collaborator_tests
-  - vendor/bin/phpunit -v --testsuite submitter_tests --configuration ./tests/selenium_tests/phpunit.xml
+  - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite submitter_tests
   - vendor/bin/phpunit -v --testsuite access_sharing_tests --configuration ./tests/selenium_tests/phpunit.xml
   - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
 
