@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-15
+ * Modified    : 2020-06-17
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -46,12 +46,7 @@ class CreateUserManagerTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->markTestSkipped('LOVD was not installed yet.');
         }
         if (preg_match('/To access this area/', $sBody)) {
-            // We're not admin nor manager.
-            $this->logout();
-            $this->login('admin', 'test1234');
-            print(PHP_EOL . 'Logged in as Admin to complete ' . get_class() . PHP_EOL);
-            $this->driver->get(ROOT_URL . '/src/users/00002');
-            $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+            $this->markTestSkipped('User was not authorized.');
         }
         if (!preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('User was already created.');

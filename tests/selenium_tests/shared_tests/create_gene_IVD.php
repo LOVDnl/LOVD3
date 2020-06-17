@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-05-15
+ * Modified    : 2020-06-17
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,13 +47,8 @@ class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Gene was already created.');
         }
-
-        // Requires having a Setup tab.
         if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
-            // We're not admin nor manager.
-            $this->logout();
-            $this->login('admin', 'test1234');
-            print(PHP_EOL . 'Logged in as Admin to complete ' . get_class() . PHP_EOL);
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
