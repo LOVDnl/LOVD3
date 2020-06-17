@@ -67,14 +67,14 @@ class AccessSubmissionFromColleagueTest extends LOVDSeleniumWebdriverBaseTestCas
 
         // Individual.
         $this->assertContains('/src/individuals/0000', $this->driver->getCurrentURL());
-        $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Diseases')));
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="Pending"]'));
+        $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Individuals')));
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
         $this->driver->findElement(WebDriverBy::xpath('//div[contains(@id, "viewlistDiv_Phenotypes_for_I_VE_0000")]//td[text()="Pending"]'))->click();
 
         // Phenotype.
         $this->assertContains('/src/phenotypes/0000', $this->driver->getCurrentURL());
         $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Phenotypes')));
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="Pending"]'));
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
 
         $this->driver->get($sSubmissionURL);
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="viewlistDiv_Screenings_for_I_VE"]//td'))->click();
@@ -82,21 +82,21 @@ class AccessSubmissionFromColleagueTest extends LOVDSeleniumWebdriverBaseTestCas
         // Screening.
         $this->assertContains('/src/screenings/0000', $this->driver->getCurrentURL());
         $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Screenings')));
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="(Pending)"]'));
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="(Pending)"]'));
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="viewlistDiv_CustomVL_VOT_for_S_VE"]//td[text()="Pending"]'))->click();
 
         // Variant, through Screening.
         $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="(Pending)"]'));
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="Pending"]'));
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="(Pending)"]'));
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
 
         $this->driver->get($sSubmissionURL);
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="viewlistDiv_CustomVL_VOT_for_I_VE"]//td[text()="Pending"]'))->click();
 
         // Variant, through Individual.
         $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="(Pending)"]'));
-        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td/span[text()="Pending"]'));
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="(Pending)"]'));
+        $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
     }
 }
 ?>

@@ -112,7 +112,8 @@
         </testsuite>
         <testsuite name="submitter_tests">
             <!-- Submitter tests; authorization, submission, access sharing,
-                 simple curation by a Curator. -->
+                 simple curation by a Curator.
+                 Takes ~3 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
@@ -141,9 +142,9 @@
             <file>shared_tests/create_summary_variant_on_genomic_level_not_authorized.php</file>
             <file>shared_tests/login_as_submitter.php</file>
             <file>shared_tests/access_submission_from_colleague.php</file>
+            <file>shared_tests/login_as_curator.php</file>
+            <file>shared_tests/curate_submission_step_by_step.php</file>
             <!-- Currently rebuilding here.
-            <file>shared_tests/login_as_admin.php</file>
-            <file>submitter_tests/curate_submitted_data.php</file>
             <file>submitter_tests/delete_gene_GJB.php</file>
             -->
             <!-- Fix and then enable this. -->
