@@ -132,8 +132,9 @@
             <file>shared_tests/create_custom_column_not_authorized.php</file>
             <file>shared_tests/enable_custom_column_for_IVA_not_authorized.php</file>
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
+            <file>shared_tests/manage_transcripts_for_variant.php</file>
+            <file>shared_tests/add_more_data_to_existing_submission.php</file>
             <!-- Currently rebuilding here.
-            <file>submitter_tests/confirm_variant_to_CMT_individual.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <file>submitter_tests/add_summary_variant_only_described_on_genomic_level.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
@@ -141,10 +142,6 @@
             <file>shared_tests/login_as_submitter.php</file>
             <file>shared_tests/login_as_admin.php</file>
             <file>submitter_tests/curate_submitted_data.php</file>
-            <file>submitter_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>submitter_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>submitter_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>submitter_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
             <file>submitter_tests/delete_gene_GJB.php</file>
             -->
             <!-- Fix and then enable this. -->
