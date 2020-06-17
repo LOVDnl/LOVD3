@@ -1,7 +1,8 @@
 <phpunit stopOnFailure="true" bootstrap="../phpunit_bootstrap.php">
     <testsuites>
         <testsuite name="admin_tests">
-            <!-- All basic tests, run by an Administrator. -->
+            <!-- Administrator tests; nearly all basic functionality.
+                 Takes ~5 minutes. -->
             <file>shared_tests/check_PHP_version.php</file>
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
@@ -32,7 +33,8 @@
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="manager_tests">
-            <!-- More basic tests, run by a Manager. -->
+            <!-- Manager tests; import, system settings, announcements.
+                 Takes ~1.5 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
             <file>shared_tests/login_as_manager.php</file>
@@ -52,7 +54,8 @@
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="curator_tests">
-            <!-- Submission and curation tests, run by a Curator. -->
+            <!-- Curator tests; authorization, disease settings, submission.
+                 Takes ~2.5 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
@@ -76,7 +79,8 @@
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="collaborator_tests">
-            <!-- Quick authorization and submission tests, run by a Collaborator. -->
+            <!-- Collaborator tests; authorization, submission.
+                 Takes ~2.5 minutes.-->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
@@ -89,6 +93,7 @@
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
             <file>shared_tests/login_as_collaborator.php</file>
             <file>shared_tests/create_gene_not_authorized.php</file>
+            <file>shared_tests/create_disease_not_authorized.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
@@ -101,8 +106,8 @@
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="submitter_tests">
-            <!-- Quick authorization and submission tests, run by a Submitter,
-                 as well as simple curation tests for a Curator. -->
+            <!-- Submitter tests; authorization, submission, access sharing,
+                 simple curation by a Curator. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
@@ -117,6 +122,7 @@
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
             <file>shared_tests/login_as_owner.php</file>
             <file>shared_tests/create_gene_not_authorized.php</file>
+            <file>shared_tests/create_disease_not_authorized.php</file>
             <!-- Currently rebuilding here.
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>submitter_tests/create_individual_diagnosed_with_CMT.php</file>
