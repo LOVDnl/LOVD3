@@ -139,20 +139,15 @@
             <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_on_genomic_level_not_authorized.php</file>
-            <!-- Currently rebuilding here.
             <file>shared_tests/login_as_submitter.php</file>
+            <file>shared_tests/access_submission_from_colleague.php</file>
+            <!-- Currently rebuilding here.
             <file>shared_tests/login_as_admin.php</file>
             <file>submitter_tests/curate_submitted_data.php</file>
             <file>submitter_tests/delete_gene_GJB.php</file>
             -->
             <!-- Fix and then enable this. -->
             <!--<file>shared_tests/convert_LOVD2_export_IVD.php</file>-->
-            <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="access_sharing_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_users_submitter.php</file>
-            <file>access_sharing_tests/access_sharing_submitter.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="find_replace_tests">
