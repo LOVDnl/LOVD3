@@ -68,6 +68,7 @@
             <file>shared_tests/create_gene_not_authorized.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
+            <file>shared_tests/create_custom_column_not_authorized.php</file>
             <file>shared_tests/enable_custom_column_for_IVA.php</file>
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
@@ -96,6 +97,7 @@
             <file>shared_tests/create_disease_not_authorized.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>shared_tests/assign_curator_to_IVD_not_authorized.php</file>
+            <file>shared_tests/create_custom_column_not_authorized.php</file>
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
@@ -126,6 +128,7 @@
             <file>shared_tests/create_disease_not_authorized.php</file>
             <file>shared_tests/create_user_not_authorized.php</file>
             <file>shared_tests/assign_curator_to_IVD_not_authorized.php</file>
+            <file>shared_tests/create_custom_column_not_authorized.php</file>
             <!-- Currently rebuilding here.
             <file>submitter_tests/create_individual_diagnosed_with_CMT.php</file>
             <file>submitter_tests/add_phenotype_info_to_CMT_individual.php</file>
