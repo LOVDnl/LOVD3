@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2020-01-30
- * For LOVD    : 3.0-23
+ * Modified    : 2020-06-18
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2014-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -277,8 +277,8 @@ function lovd_convertCuratorID ($nLOVD2UserID)
         return $sFixedCuratorID;
     }
     // Last resort is to return the original ID.
-    $_WARNINGS[] = 'Warning: unknown user ID for curator: "' . $nLOVD2UserID . '" (no ' .
-        'fixed ID set and ID is not in translation table)';
+    $_WARNINGS[] = 'Warning: Unknown user ID for curator: "' . $nLOVD2UserID .
+        '" (no fixed ID set and ID is not in translation table).';
     return $nLOVD2UserID;
 }
 
@@ -459,8 +459,8 @@ function lovd_convertSubmitterID ($nLOVD2UserID)
         return $sFixedSubmitterID;
     }
     // Last resort is to return the original ID.
-    $_WARNINGS[] = 'Warning: unknown user ID for submitter: "' . $nLOVD2UserID . '" (no ' .
-        'fixed ID set and ID is not in translation table)';
+    $_WARNINGS[] = 'Warning: Unknown user ID for submitter: "' . $nLOVD2UserID .
+        '" (no fixed ID set and ID is not in translation table).';
     return $nLOVD2UserID;
 }
 
@@ -598,6 +598,8 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             }
 
             // Check if field is manually linked in $aFieldLinks.
+            // FIXME: This doesn't mean the column is actually active!
+            //  It just means we know where it maps.
             if (isset($aFieldLinks[$sHeader])) {
                 // Use output header linked in $aFieldLinks.
                 list($sSection, $sHeaderOut) = $aFieldLinks[$sHeader];
@@ -607,7 +609,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 
             // Check if header occurs as a literal DB field.
             foreach ($aSectionIDs as $sSection) {
-                if (isset($aSections[$sSection]['db_fields'])  &&
+                if (isset($aSections[$sSection]['db_fields']) &&
                     in_array($sHeader, $aSections[$sSection]['db_fields'])) {
                     $aOutputHeaders[$sSection][$i] = $sHeader;
                     continue 2;
@@ -616,14 +618,17 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
 
             // Try to link custom columns.
             if (strpos($sHeader, '/') !== false) {
-                // Try to find default custom column translation.
+                // Try to find default custom column translation, based on the category name.
                 foreach ($aCustomColLinks as $sPrefix => $aCustomColDefault) {
                     if (strpos($sHeader, $sPrefix) === 0) {
                         list($sSection, $sPrefixOut) = $aCustomColDefault;
                         $sHeaderOut = str_replace($sPrefix, $sPrefixOut, $sHeader);
                         $aOutputHeaders[$sSection][$i] = $sHeaderOut;
+                        // FIXME: This throws an error also when the column does exist, but isn't active.
+                        //  This is inconsistent with two blocks up, where columns in $aFieldLinks are
+                        //  always accepted even if they're not active.
                         if (!in_array($sHeaderOut, $aSections[$sSection]['db_fields'])) {
-                            $_WARNINGS[] = 'Warning: linked "' . $sHeader . '" to non-existing ' .
+                            $_WARNINGS[] = 'Warning: Linked "' . $sHeader . '" to non-existing ' .
                                            'column "' . $sHeaderOut . '" in output section "' .
                                            $aSections[$sSection]['output_header'] . '"';
                         }
@@ -647,7 +652,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
             }
 
             // Could not link input header intelligently.
-            $_WARNINGS[] = 'Warning: could not link field "' . $sHeader . '"';
+            $_WARNINGS[] = 'Warning: Could not link field "' . $sHeader . '". Consider renaming it to match an LOVD3 column name.';
         }
 
         // Handle special case effectid: if this field exists for VOG, also
@@ -688,10 +693,15 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                     if (!is_null($prevKey)) {
                         $sPrevField = is_int($prevKey)? $aMatches[1][$prevKey] : $prevKey;
                         $sCurrField = is_int($sKey)? $aMatches[1][$sKey] : $sKey;
-                        $_WARNINGS[] = 'Warning: output field ' . $sSection . ':' . $sDupHeader
-                                       . ' is linked to both ' . $sPrevField . ' and ' .
-                                       $sCurrField . '. Values for ' . $sCurrField . ' may ' .
-                                       'get lost when ' . $sPrevField . ' is non-empty';
+                        if ($sPrevField == $sCurrField) {
+                            // Repeated field names in the input file.
+                            $_WARNINGS[] = 'Warning: Field ' . $sPrevField . ' is repeated in the input file.' .
+                                ' This may result in values getting lost.';
+                        } else {
+                            $_WARNINGS[] = 'Warning: output field ' . $sSection . ':' . $sDupHeader .
+                                ' is linked to both ' . $sPrevField . ' and ' . $sCurrField . '.' .
+                                ' Values for ' . $sCurrField . ' may get lost when ' . $sPrevField . ' is non-empty.';
+                        }
                     }
                     $prevKey = $sKey;
                 }
@@ -747,9 +757,9 @@ function lovd_getRecordForHeaders ($aOutputHeaders, $aRecord, $aSection = null)
             if (!isset($aNewRecord[$sHeader]) || $aNewRecord[$sHeader] === '') {
                 $aNewRecord[$sHeader] = $aRecord[$nInputIdx];
             } else if ($aRecord[$nInputIdx] !== '') {
-                $_WARNINGS[] = 'Warning: doubly-linked field already has a value "' .
-                               $aNewRecord[$sHeader] . '", alternate value will get lost: "' .
-                               $aRecord[$nInputIdx] . '"';
+                $_WARNINGS[] = 'Warning: Field with multiple mappings ' . $sHeader .
+                    ' already has value "' . $aNewRecord[$sHeader] . '",' .
+                    ' alternate value will get lost: "' . $aRecord[$nInputIdx] . '".';
             }
         } else {
             // Leave non-linked fields empty for now. These are probably
