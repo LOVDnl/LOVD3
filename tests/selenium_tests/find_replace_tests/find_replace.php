@@ -96,6 +96,22 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testSetUp
      */
+    public function testVariantIDColumn ()
+    {
+        // Fail to perform F&R on the Variant ID column.
+        $this->openFRMenuForCol('Variant ID');
+        $this->assertEquals('This column is not available.',
+            $this->getConfirmation());
+        $this->chooseOkOnNextConfirmation();
+    }
+
+
+
+
+
+    /**
+     * @depends testVariantIDColumn
+     */
     public function testFindReplace()
     {
         // Go to variant overview
