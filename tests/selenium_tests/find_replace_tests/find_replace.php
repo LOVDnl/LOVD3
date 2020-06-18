@@ -99,6 +99,7 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testVariantIDColumn ()
     {
         // Fail to perform F&R on the Variant ID column.
+        $this->driver->get(ROOT_URL . '/src/variants');
         $this->openFRMenuForCol('Variant ID');
         $this->assertEquals('This column is not available.',
             $this->getConfirmation());
@@ -112,22 +113,27 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testVariantIDColumn
      */
+    public function testCancel ()
+    {
+        // Open F&R for the Reference column, and cancel.
+        $this->driver->get(ROOT_URL . '/src/variants');
+        $this->openFRMenuForCol('Reference');
+        $this->driver->findElement(WebDriverBy::id('FRCancel_VOG'))->click();
+        $this->waitUntil(WebDriverExpectedCondition::invisibilityOfElementLocated(
+            WebDriverBy::id('FRCancel_VOG')));
+    }
+
+
+
+
+
+    /**
+     * @depends testCancel
+     */
     public function testFindReplace()
     {
         // Go to variant overview
         $this->driver->get(ROOT_URL . '/src/variants');
-
-        // Open find and replace for Reference col.
-        $this->openFRMenuForCol(6);
-
-        // Click cancel button.
-        sleep(1);
-        $cancelButton = $this->driver->findElement(WebDriverBy::id('FRCancel_VOG'));
-        $cancelButton->click();
-
-        // Check if cancel button is hidden together with FR options menu by javascript.
-        $this->waitUntil(WebDriverExpectedCondition::invisibilityOfElementLocated(
-                WebDriverBy::id('FRCancel_VOG')));
 
         // Open find and replace for Reference col.
         $this->openFRMenuForCol(6);
