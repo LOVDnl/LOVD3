@@ -47,8 +47,6 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
         if (!preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Column was already created.');
         }
-
-        // Requires having a Setup tab.
         if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
             $this->markTestSkipped('User was not authorized.');
         }
