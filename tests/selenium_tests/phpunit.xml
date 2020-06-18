@@ -143,11 +143,10 @@
             <file>shared_tests/login_as_submitter.php</file>
             <file>shared_tests/access_submission_from_colleague.php</file>
             <file>shared_tests/convert_LOVD2_export_IVD.php</file>
+            <file>shared_tests/delete_gene_IVD_not_authorized.php</file>
+            <file>shared_tests/delete_disease_IVA_not_authorized.php</file>
             <file>shared_tests/login_as_curator.php</file>
             <file>shared_tests/curate_submission_step_by_step.php</file>
-            <!-- Currently rebuilding here.
-            <file>submitter_tests/delete_gene_GJB.php</file>
-            -->
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="find_replace_tests">
