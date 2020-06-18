@@ -65,15 +65,39 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
 
 
-    public function testFindReplace()
+    public function testSetUp ()
     {
         // Upload variant data.
         $this->driver->get(ROOT_URL . '/src/variants/upload?create&type=VCF');
         $this->enterValue(WebDriverBy::name("variant_file"), ROOT_PATH .
-                "../tests/test_data_files/ShortVCFfilev1.vcf");
+            "../tests/test_data_files/ShortVCFfilev1.vcf");
         $uploadButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Upload VCF file']"));
         $uploadButton->click();
 
+        // A normal setUp() runs for every test in this file. We only need this once,
+        //  so we disguise this setUp() as a test that we depend on just once.
+        $this->driver->get(ROOT_URL . '/src/variants');
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        if (preg_match('/LOVD was not installed yet/', $sBody)) {
+            $this->markTestSkipped('LOVD was not installed yet.');
+        }
+        if (!preg_match('/167 entries on 2 pages/', $sBody)) {
+            $this->markTestSkipped('Not all variants are in place for this test.');
+        }
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+            $this->markTestSkipped('User was not authorized.');
+        }
+    }
+
+
+
+
+
+    /**
+     * @depends testSetUp
+     */
+    public function testFindReplace()
+    {
         // Go to variant overview
         $this->driver->get(ROOT_URL . '/src/variants');
 
