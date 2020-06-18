@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2016-10-26
- * For LOVD    : 3.0-17
+ * Modified    : 2020-06-18
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -29,7 +29,6 @@
  *
  *************/
 
-
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
@@ -38,6 +37,33 @@ use \Facebook\WebDriver\Exception\StaleElementReferenceException;
 
 class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 {
+    function openFRMenuForCol ($Col)
+    {
+        // Open the Find & Replace menu for the specified column.
+        // $Col can either be a number specifying the column index [1..n] (not recommended)
+        //  or the header of the column that should be clicked.
+        $this->driver->findElement(WebDriverBy::id('viewlistOptionsButton_VOG'))->click();
+        $this->driver->findElement(WebDriverBy::partialLinkText('Find and replace text in column'))->click();
+
+        if (ctype_digit($Col) || is_int($Col)) {
+            $sLocator = '//div[@class="vl_overlay"][' . $Col . ']';
+        } else {
+            // XPath doesn't accept "Variant ID", only that it contains
+            //  "Variant" and that it contains "ID".
+            $sLocator = '//table[@class="data"]//th[contains(., "' .
+                implode('") and contains(., "', explode(' ', $Col)) . '")]';
+        }
+
+        $this->driver->getMouse()->click(
+            $this->driver->findElement(WebDriverBy::xpath($sLocator))->getCoordinates());
+
+        // Wait a second to handle click event properly and let the tooltip disappear.
+        sleep(1);
+    }
+
+
+
+
 
     public function testFindReplace()
     {
@@ -171,32 +197,5 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(
             WebDriverBy::xpath('//td[text()="prefixnewvalue"]')));
-    }
-
-
-    function openFRMenuForCol($nCol) {
-        // Open the find & replace menu for the specified column index
-        // (numbered 1..n from left to right)
-
-        $gearOptionsLink = $this->driver->findElement(
-                WebDriverBy::id('viewlistOptionsButton_VOG'));
-        $gearOptionsLink->click();
-
-        $FRMenuItem = $this->driver->findElement(
-                WebDriverBy::partialLinkText('Find and replace text in column'));
-        $FRMenuItem->click();
-
-        // Include explicit wait for overlay divs. Going directly to clicking sometimes
-        // results in a StaleElementReferenceException.
-        $this->waitUntil(function ($driver) use ($nCol) {
-            $aOverlays = $driver->findElements(WebDriverBy::xpath('//div[@class="vl_overlay"]'));
-            return count($aOverlays) >= $nCol;
-        });
-        $columnOverlay = $this->driver->findElement(
-                WebDriverBy::xpath('//div[@class="vl_overlay"][' . $nCol . ']'));
-        $columnOverlay->click();
-
-        // Wait a second to handle click event properly and let tooltip disappear.
-        sleep(1);
     }
 }
