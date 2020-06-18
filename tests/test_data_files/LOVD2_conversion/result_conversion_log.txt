@@ -1,0 +1,9 @@
+Warning: Field Variant/Frequency is repeated in the input file. This may result in values getting lost.
+Warning: Field Variant/Location is repeated in the input file. This may result in values getting lost.
+Warning: Unknown user ID for curator: "1" (no fixed ID set and ID is not in translation table).
+Warning: Unknown user ID for curator: "1" (no fixed ID set and ID is not in translation table).
+Warning: Unknown user ID for submitter: "1" (no fixed ID set and ID is not in translation table).
+Warning: Field with multiple mappings VariantOnTranscript/Domain already has value "Exon", alternate value will get lost: "location1".
+Warning: Unknown user ID for curator: "1" (no fixed ID set and ID is not in translation table).
+Warning: Unknown user ID for curator: "1" (no fixed ID set and ID is not in translation table).
+Warning: Field with multiple mappings VariantOnTranscript/Domain already has value "Exon", alternate value will get lost: "location2".
