@@ -221,34 +221,37 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testEditReferenceWithFilter
      */
-    public function testFindReplace()
+    public function testEditReferenceAddPrefixWithFilter ()
     {
-        // Go to variant overview
+        // Perform F&R on the Reference column, and add a prefix to some fields.
         $this->driver->get(ROOT_URL . '/src/variants');
+        $this->openFRMenuForCol('Reference');
+        $this->assertEquals('Reference', $this->driver->findElement(
+            WebDriverBy::id('viewlistFRColDisplay_VOG'))->getText());
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//input[@name="FRMatchType_VOG" and @value="2"]'))->click();
+        $this->enterValue('FRReplace_VOG', 'First ');
+        $this->enterValue('search_VariantOnGenome/Reference', 'Author');
+        $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'))->click();
 
-        // Open find and replace for Reference col.
-        $this->openFRMenuForCol(6);
+        // Click on tooltip to close it.
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@class="ui-tooltip-content" and text()="Preview changes (55 rows affected)"]'))->click();
 
-        $matchBeginningRadio = $this->driver->findElement(WebDriverBy::xpath(
-            '//input[@name="FRMatchType_VOG" and @value="2"]'));
-        $matchBeginningRadio->click();
-        $this->enterValue(WebDriverBy::name('FRReplace_VOG'), 'prefix');
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Submit');
 
-        // Find empty string at beginning of field and insert prefix string.
-        $previewButton = $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'));
-        $previewButton->click();
-
-        // Click on tooltip to close it
-        $previewTooltip = $this->driver->findElement(WebDriverBy::xpath(
-            '//div[@class="ui-tooltip-content" and text()="Preview changes (15 rows affected)"]'));
-        $previewTooltip->click();
-
-        $this->enterValue(WebDriverBy::xpath('//input[@type="password"]'), 'test1234');
-        $submitButton = $this->driver->findElement(WebDriverBy::id('FRSubmit_VOG'));
-        $submitButton->click();
+        // Check that filter has effect (otherwise 167 records are modified).
+        $this->assertEquals('You are about to modify 55 records. Do you wish to continue?',
+            $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
 
-        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(
-            WebDriverBy::xpath('//td[text()="prefixnewvalue"]')));
+        $this->waitForElement(WebDriverBy::xpath(
+            '//table[@class="info" and contains(., "Find & Replace applied to column")]'));
+        $this->waitForElement(WebDriverBy::xpath(
+            '//table[@class="data"]//td[text()="First Author (2020)"]'));
+        $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="data"]//td[text()="First Author, submitted"]'));
     }
 }
+?>
