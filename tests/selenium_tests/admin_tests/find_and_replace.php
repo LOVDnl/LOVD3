@@ -33,6 +33,7 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
+use \Facebook\WebDriver\WebDriverKeys;
 
 class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 {
@@ -199,8 +200,7 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
             '//table[@class="data"]//td[text()="Author (2020)"]'));
 
         // Remove filter.
-        $this->enterValue('search_id_', '');
-        $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'))->click();
+        $this->enterValue('search_id_', WebDriverKeys::ENTER);
 
         // The previous value should also still be there, in IDs <= 100.
         $this->waitForElement(WebDriverBy::xpath(
