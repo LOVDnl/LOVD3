@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-07
- * Modified    : 2020-06-18
+ * Modified    : 2020-06-19
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,46 +130,47 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testCancel
      */
+    public function testAddReferenceIfEmpty ()
+    {
+        // Perform F&R on the Reference column, and fill in a new value for all empty fields.
+        $this->driver->get(ROOT_URL . '/src/variants');
+        $this->openFRMenuForCol('Reference');
+        $this->assertEquals('Reference', $this->driver->findElement(
+            WebDriverBy::id('viewlistFRColDisplay_VOG'))->getText());
+        $this->enterValue('FRReplace_VOG', 'Author, submitted');
+        $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'))->click();
+
+        // Click on header to close tooltip.
+        $oPreviewTooltip = $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@class="ui-tooltip-content" and contains(., "Preview changes")]'));
+        $this->driver->findElement(WebDriverBy::xpath('//h2[contains(., "LOVD")]'))->click();
+        $this->waitUntil(WebDriverExpectedCondition::stalenessOf($oPreviewTooltip));
+
+        $this->assertEquals('Reference (PREVIEW)', $this->driver->findElement(
+            WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'))->getText());
+        $this->assertEquals(29, count(
+            $this->driver->findElements(WebDriverBy::xpath('//td[text()="Author, submitted"]'))));
+
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Submit');
+        $this->chooseOkOnNextConfirmation();
+        $this->waitForElement(WebDriverBy::xpath(
+            '//table[@class="info" and contains(., "Find & Replace applied to column")]'));
+        $this->waitForElement(WebDriverBy::xpath(
+            '//table[@class="data"]//td[text()="Author, submitted"]'));
+    }
+
+
+
+
+
+    /**
+     * @depends testAddReferenceIfEmpty
+     */
     public function testFindReplace()
     {
         // Go to variant overview
         $this->driver->get(ROOT_URL . '/src/variants');
-
-        // Open find and replace for Reference col.
-        $this->openFRMenuForCol(6);
-
-        $columnReference = $this->driver->findElement(WebDriverBy::id('viewlistFRColDisplay_VOG'));
-        $this->assertEquals($columnReference->getText(), 'Reference');
-
-        $this->enterValue(WebDriverBy::name('FRReplace_VOG'), 'newvalue');
-
-        $previewButton = $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'));
-        $previewButton->click();
-
-        // Click on header to close tooltip.
-        $previewTooltip = $this->driver->findElement(WebDriverBy::xpath(
-            '//div[@class="ui-tooltip-content" and contains(., "Preview changes")]'));
-        $mainHeader = $this->driver->findElement(WebDriverBy::xpath('//h2[contains(., "LOVD")]'));
-        $mainHeader->click();
-
-        // Check if tooltip is closed.
-        $this->waitUntil(WebDriverExpectedCondition::stalenessOf($previewTooltip));
-
-        $this->assertContains($this->driver->findElement(
-            WebDriverBy::xpath('//th[@data-fieldname="VariantOnGenome/Reference_FR"]'))->getText(), 'Reference (PREVIEW)');
-
-        $aNewValueElements = $this->driver->findElements(WebDriverBy::xpath('//td[text()="newvalue"]'));
-        $this->assertEquals(count($aNewValueElements), 25);
-
-        $this->enterValue(WebDriverBy::xpath('//input[@type="password"]'), 'test1234');
-        $submitButton = $this->driver->findElement(WebDriverBy::id('FRSubmit_VOG'));
-        $submitButton->click();
-
-        $this->chooseOkOnNextConfirmation();
-
-        // Wait for refresh of viewlist with string "newvalue" in 6th column (Reference).
-        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(
-            WebDriverBy::xpath('//table[@id="viewlistTable_VOG"]/tbody/tr/td[position()=6 and text()="newvalue"]')));
 
         // Open find & replace menu for field "DNA change (genomic) (hg19)"
         $this->openFRMenuForCol(5);
