@@ -1,11 +1,3 @@
-# FIXME: Each dist only has packages for *one* PHP version for Apache.
-#        Even if they pre-install several versions, these are only CLI.
-#        Rebuild this matrix. Perhaps run tests in parallel to speed things up,
-#         or try to run on different dists. I didn't see it documented, but we can try.
-#        https://docs.travis-ci.com/user/speeding-up-the-build
-# FIXME: Rebuild this matrix.
-#        https://docs.travis-ci.com/user/customizing-the-build/#naming-jobs-within-matrices
-#        https://docs.travis-ci.com/user/build-matrix/
 language: php
 php:
   # Xenial only comes with 7.0. Sure, Travis installed other PHP versions, but
@@ -74,7 +66,6 @@ script:
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite curator_tests
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite collaborator_tests
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite submitter_tests
-  - vendor/bin/phpunit -v --testsuite find_replace_tests --configuration ./tests/selenium_tests/phpunit.xml
 
 notifications:
   email:
