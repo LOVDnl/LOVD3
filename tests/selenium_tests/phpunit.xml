@@ -26,6 +26,7 @@
             <file>shared_tests/submission_API.php</file>
             <file>admin_tests/verify_full_download.php</file>
             <file>admin_tests/multi_value_search.php</file>
+            <file>admin_tests/find_and_replace.php</file>
             <file>shared_tests/check_all_authorization_levels.php</file>
             <file>shared_tests/check_custom_links.php</file>
             <file>shared_tests/delete_gene_IVD.php</file>
@@ -148,10 +149,6 @@
             <file>shared_tests/login_as_curator.php</file>
             <file>shared_tests/curate_submission_step_by_step.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="find_replace_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>find_replace_tests/find_replace.php</file>
         </testsuite>
     </testsuites>
     <listeners>

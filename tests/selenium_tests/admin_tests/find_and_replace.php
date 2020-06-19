@@ -66,13 +66,6 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
     public function testSetUp ()
     {
-        // Upload variant data.
-        $this->driver->get(ROOT_URL . '/src/variants/upload?create&type=VCF');
-        $this->enterValue(WebDriverBy::name("variant_file"), ROOT_PATH .
-            "../tests/test_data_files/ShortVCFfilev1.vcf");
-        $uploadButton = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Upload VCF file']"));
-        $uploadButton->click();
-
         // A normal setUp() runs for every test in this file. We only need this once,
         //  so we disguise this setUp() as a test that we depend on just once.
         $this->driver->get(ROOT_URL . '/src/variants');
