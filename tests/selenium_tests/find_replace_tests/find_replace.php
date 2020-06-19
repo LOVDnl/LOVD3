@@ -33,7 +33,6 @@ require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
 use \Facebook\WebDriver\WebDriverExpectedCondition;
-use \Facebook\WebDriver\Exception\StaleElementReferenceException;
 
 class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
 {
@@ -167,58 +166,65 @@ class FindReplaceTest extends LOVDSeleniumWebdriverBaseTestCase
     /**
      * @depends testAddReferenceIfEmpty
      */
+    public function testEditReferenceWithFilter ()
+    {
+        // Perform F&R on the Reference column, and replace part of some fields.
+        $this->driver->get(ROOT_URL . '/src/variants');
+        $this->openFRMenuForCol('Reference');
+        $this->assertEquals('Reference', $this->driver->findElement(
+            WebDriverBy::id('viewlistFRColDisplay_VOG'))->getText());
+        $this->enterValue('FRSearch_VOG', ', submitted');
+        $this->enterValue('FRReplace_VOG', ' (2020)');
+        $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'))->click();
+
+        // Click on tooltip to close it.
+        $oPreviewTooltip = $this->driver->findElement(WebDriverBy::xpath(
+            '//div[@class="ui-tooltip-content" and contains(., "Preview changes")]'));
+        $oPreviewTooltip->click();
+        $this->waitUntil(WebDriverExpectedCondition::stalenessOf($oPreviewTooltip));
+
+        // Filter on 'Variant ID' > 100 during preview.
+        $this->enterValue('search_id_', '>100');
+        $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'))->click();
+
+        // Variant ID 150 should now show, it used to be on the second page.
+        $this->waitForElement(WebDriverBy::xpath('//table[@class="data"]//tr[@id="0000000150"]'));
+        $this->assertEquals(30, count(
+            $this->driver->findElements(WebDriverBy::xpath('//td[text()="Author (2020)"]'))));
+
+        $this->enterValue('password', 'test1234');
+        $this->submitForm('Submit');
+
+        // Check that filter has effect (otherwise 55 records are modified).
+        $this->assertEquals('You are about to modify 30 records. Do you wish to continue?',
+            $this->getConfirmation());
+        $this->chooseOkOnNextConfirmation();
+
+        $this->waitForElement(WebDriverBy::xpath(
+            '//table[@class="info" and contains(., "Find & Replace applied to column")]'));
+        $this->waitForElement(WebDriverBy::xpath(
+            '//table[@class="data"]//td[text()="Author (2020)"]'));
+
+        // Remove filter.
+        $this->enterValue('search_id_', '');
+        $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'))->click();
+
+        // The previous value should also still be there, in IDs <= 100.
+        $this->waitForElement(WebDriverBy::xpath(
+            '//table[@class="data"]//td[text()="Author, submitted"]'));
+    }
+
+
+
+
+
+    /**
+     * @depends testEditReferenceWithFilter
+     */
     public function testFindReplace()
     {
         // Go to variant overview
         $this->driver->get(ROOT_URL . '/src/variants');
-
-        // Open find & replace menu for field "DNA change (genomic) (hg19)"
-        $this->openFRMenuForCol(5);
-
-        // Set search field to 'C' and preview.
-        $this->enterValue(WebDriverBy::name('FRSearch_VOG'), 'C');
-        $previewButton = $this->driver->findElement(WebDriverBy::id('FRPreview_VOG'));
-        $previewButton->click();
-
-        // Click on tooltip to close it
-        $previewTooltip = $this->driver->findElement(WebDriverBy::xpath(
-            '//div[@class="ui-tooltip-content" and text()="Preview changes (14 rows affected)"]'));
-        $previewTooltip->click();
-
-        // Filter on 'Variant ID' > 10 during preview.
-        $sSearchIDSelector = WebDriverBy::name('search_id_');
-        $this->enterValue($sSearchIDSelector, '>10');
-        $searchIDElement = $this->driver->findElement($sSearchIDSelector);
-        // Use json_decode to send enter key to browser.
-        $searchIDElement->sendKeys(json_decode('"\uE007"'));
-
-        // Check that viewlist is refreshed. (id='0000000004' should be filtered)
-        $this->waitUntil(function ($driver) {
-            $vlTable = $driver->findElement(WebDriverBy::id('viewlistTable_VOG'));
-            // Avoid checking text exactly during refresh.
-            try {
-                $sTableText = $vlTable->getText();
-            } catch (StaleElementReferenceException $e) {
-                // try again next poll
-                return false;
-            }
-            return strpos($sTableText, '0000000004') === false;
-        });
-
-        // Submit find & replace
-        $this->enterValue(WebDriverBy::xpath('//input[@type="password"]'), 'test1234');
-        $submitButton = $this->driver->findElement(WebDriverBy::id('FRSubmit_VOG'));
-        $submitButton->click();
-
-        // Check that filter has effect (otherwise 14 records are modified).
-        $alertText = $this->driver->switchTo()->alert()->getText();
-        $this->assertContains('You are about to modify 9 records', $alertText);
-
-        $this->chooseOkOnNextConfirmation();
-
-        // Wait until viewlist is refreshed.
-        $this->waitUntil(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath(
-            '//td[@valign="middle" and contains(., "Find & Replace applied to column")]')));
 
         // Open find and replace for Reference col.
         $this->openFRMenuForCol(6);
