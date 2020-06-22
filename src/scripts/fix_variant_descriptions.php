@@ -386,12 +386,13 @@ class LOVD_VVAnalyses {
                         $this->nProgressCount ++; // To show progress.
                         continue;
                     } elseif (isset($aVV['errors']['ESYNTAX'])
-                        && preg_match('(\^|[?;]|con|ins\([0-9]+\)$|ins[0-9]+$|ins\[N[CGM]|\([0-9]+_[0-9]+\)|\[[0-9]+\]$)', $sVariant)) {
+                        && preg_match('(\^|\||[?;]|con|ins\([0-9]+\)$|ins[0-9]+$|ins\[N[CGM]|\([0-9]+_[0-9]+\)|\[[0-9]+\]$)', $sVariant)) {
                         // We received an ESYNTAX, but the variant has a common
                         //  problem that we, nor VV, can handle.
                         // We can't do anything, so just skip them.
-                        // (variant with uncertain position, allele notation,
-                        //  insertion with only length mentioned)
+                        // (variant^variant, methylation, variant with uncertain
+                        //  position, allele notation, conversion, insertion
+                        //  with only length or other refseq mentioned)
                         $this->nProgressCount ++; // To show progress.
                         continue; // Then continue to the next variant.
 
