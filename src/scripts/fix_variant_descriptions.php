@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-11
+ * Modified    : 2020-06-22
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -350,7 +350,8 @@ class LOVD_VVAnalyses {
                     //  reason for the script to stop.
                     // If we do get a failure, just try again.
                     $aVV = false;
-                    for ($i = 0; (!$aVV && $i < 2); $i ++) {
+                    for ($i = 0; (!$aVV && $i < 5); $i ++) {
+                        sleep($i); // Sleep on second or later try.
                         $aVV = $_VV->verifyGenomic($sVariant,
                             array(
                                 'map_to_transcripts' => true,
