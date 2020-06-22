@@ -563,6 +563,8 @@ class LOVD_VVAnalyses {
                                         // We have similar protein values. We already know the cDNA changed.
                                         // VV probably knows better because of the updated cDNA.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
+                                    } elseif ($aVOT['protein'] == 'p.(=)' && preg_match('/[0-9]+[+-][0-9]+dup/', $aVOT['DNA'])) {
+                                        // Intronic dups sometimes have a p.(=) while VV produces a p.?. We trust the submitter knew better.
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
@@ -917,6 +919,8 @@ class LOVD_VVAnalyses {
                                         // We have similar protein values. We already know the cDNA changed.
                                         // VV probably knows better because of the updated cDNA.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
+                                    } elseif ($aVOT['protein'] == 'p.(=)' && preg_match('/[0-9]+[+-][0-9]+dup/', $aVOT['DNA'])) {
+                                        // Intronic dups sometimes have a p.(=) while VV produces a p.?. We trust the submitter knew better.
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
