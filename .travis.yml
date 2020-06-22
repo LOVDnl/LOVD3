@@ -54,11 +54,6 @@ before_script:
 
 script:
   # Use vendor/bin/phpunit to start tests.
-
-  # This is a travis test. This tests if travis is working as expected.
-  # Two test are done which are independent of LOVD.
-  - vendor/bin/phpunit --configuration ./tests/selenium_tests/phpunit.xml ./tests/travis/tests/
-
   # Run all test suites, starting at the unit tests.
   - vendor/bin/phpunit -v --configuration ./tests/unit_tests/phpunit.xml
   - vendor/bin/phpunit -v --configuration ./tests/selenium_tests/phpunit.xml --testsuite admin_tests
