@@ -339,6 +339,12 @@ class LOVD_VVAnalyses {
                 usleep(100000); // FIXME: Remove later?
                 $bVKGL = ($this->bRemarks && substr($aVariant['remarks'], 0, 38) == 'VKGL data sharing initiative Nederland');
 
+                // Skip variants that have already been checked and marked with an error.
+                if (strpos($aVariant['remarks'], 'Variant Error [E') === false) {
+                    $this->nProgressCount++;
+                    continue;
+                }
+
                 // Call VV and get all information we need; mappings to
                 //  transcripts, protein predictions and even mappings to hg38
                 //  if we have that field.
