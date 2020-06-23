@@ -643,7 +643,20 @@ class LOVD_VVAnalyses {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
                         $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
                     } else {
-                        $this->panic($aVariant, $aVV, 'Multiple hg38 mappings given for variant.');
+                        // If we're selecting the transcripts that LOVD uses, we
+                        //  not only speed up the process, but also influence
+                        //  the liftover. So this error usually happens when our
+                        //  transcripts don't work because we're mapped too far
+                        //  away from them.
+                        // Example: NC_000008.10:g.32159191G>C (our mappings fail)
+                        // Example: NC_000001.10:g.19975658C>T (here, our two transcripts actually work)
+                        //    Idem: NC_000002.11:g.128407597G>A
+                        // FIXME: Skipping this error for now; it happens quite
+                        //  frequently, and we anyway currently don't know what
+                        //  to pick. We can work on that, removing transcripts
+                        //  for which we don't trust the VCF fields or that are
+                        //  mapping the variant deep intronic.
+                        // $this->panic($aVariant, $aVV, 'Multiple hg38 mappings given for variant.');
                     }
                 }
 
