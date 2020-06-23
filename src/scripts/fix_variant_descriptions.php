@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-22
+ * Modified    : 2020-06-23
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -568,7 +568,7 @@ class LOVD_VVAnalyses {
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV,
+                                        $this->panic($aVariant, array_merge_recursive($aVV,
                                             array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
                                             'While handling EREF error, found that also cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                     }
@@ -625,8 +625,9 @@ class LOVD_VVAnalyses {
                     }
                 }
                 if ($aVV['warnings']) {
-                    $this->panic($aVariant, $aVV, 'Warnings found: {' .
-                        implode(';',
+                    $this->panic($aVariant, array_merge_recursive($aVV,
+                        array('data' => array('DNA_clean' => substr(strstr($aVV['data']['DNA'], ':'), 1)))),
+                        'Warnings found: {' . implode(';',
                             array_map(function ($sKey, $sVal) {
                                 return $sKey . ':' . $sVal;
                             }, array_keys($aVV['warnings']), $aVV['warnings'])) . '}.');
@@ -924,7 +925,7 @@ class LOVD_VVAnalyses {
                                     } else {
                                         // We don't know what to do here.
                                         // Merge $aVV with $aVVVot's data, so we can see what VV's suggestion is for the DNA, RNA and protein.
-                                        $this->panic($aVariant, array_merge($aVV,
+                                        $this->panic($aVariant, array_merge_recursive($aVV,
                                             array('data' => array('transcript_mappings' => array($sTranscript => $aVVVot['data'])))),
                                             'cDNA and protein are different; cDNA can be fixed, but I don\'t know what to do with the protein field.');
                                     }
