@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-23
+ * Modified    : 2020-06-24
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -362,7 +362,15 @@ class LOVD_VVAnalyses {
                             array(
                                 'map_to_transcripts' => true,
                                 'predict_protein' => true,
-                                'select_transcripts' => array_keys($aVariant['vots']), // Restrict transcripts to speed up liftover.
+                                // Restrict transcripts to speed up liftover,
+                                //  but only when we don't have already a lot.
+                                // Sending too many transcripts, often not
+                                //  mapped by VV anyway, will just trigger a
+                                //  processing_error, and make the call take
+                                //  forever or even fail.
+                                // See their #204 for more details.
+                                'select_transcripts' => (count($aVariant['vots']) > 5?
+                                    array() : array_keys($aVariant['vots'])),
                                 'lift_over' => ($_CONF['refseq_build'] == 'hg19' && $this->bDNA38),
                             ));
                     }
