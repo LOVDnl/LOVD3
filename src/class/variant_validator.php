@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-06-23
+ * Modified    : 2020-06-24
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -441,6 +441,7 @@ class LOVD_VV
                         }
                         break;
                     case 'porcessing_error': // Typo, still present in test instance 2020-06-02.
+                        $aJSON['flag'] = 'processing_error';
                     case 'processing_error':
                         // This happens, for instance, when we ask to select a
                         //  transcript that this variant actually doesn't map on.
@@ -472,9 +473,17 @@ class LOVD_VV
                         // No break; if we don't catch the error above here,
                         //  we want the error below.
                     default:
-                        // Unhandled flag. I know "processing_error" can be thrown, in theory.
-                        // FIXME: NC_000007.13:g.50468071G>A throws one, and has 10 failing transcripts. I guess sometimes you can't go around this.
-                        $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
+                        // Unhandled flag. "processing_error" can still be
+                        //  thrown, if all transcripts fail.
+                        // FIXME: NC_000003.11:g.169482398_169482471del   fails.
+                        // FIXME: NC_000007.13:g.50468071G>A throws one, and has
+                        //  10 failing transcripts. I guess sometimes you can't
+                        //  go around this.
+                        if ($aJSON['flag'] == 'processing_error') {
+                            $aData['warnings']['WFLAG'] = 'VV Flag not handled: ' . $aJSON['flag'] . '. This happens when UTA passes transcripts that VV cannot map to.';
+                        } else {
+                            $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
+                        }
                         break;
                 }
             }
