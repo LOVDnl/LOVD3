@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-06-11
+ * Modified    : 2020-06-24
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -441,29 +441,49 @@ class LOVD_VV
                         }
                         break;
                     case 'porcessing_error': // Typo, still present in test instance 2020-06-02.
+                        $aJSON['flag'] = 'processing_error';
                     case 'processing_error':
                         // This happens, for instance, when we ask to select a
                         //  transcript that this variant actually doesn't map on.
-                        // If that is the case, retry without this transcript.
+                        // Also, sometimes VV (well, UTA) gives us a transcript
+                        //  voluntarily, but VV can't map our variant with it.
+                        $aFailingTranscripts = array();
+                        foreach ($aJSON[$sVariant]['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
+                            if (!empty($aTranscript['transcript_variant_error'])) {
+                                $aFailingTranscripts[] = $sTranscript;
+                            }
+                        }
+
+                        // If not all our transcripts failed, just remove the ones that did.
+                        if (count($aFailingTranscripts) < count($aJSON[$sVariant]['hgvs_t_and_p'])) {
+                            foreach ($aFailingTranscripts as $sTranscript) {
+                                unset($aJSON[$sVariant]['hgvs_t_and_p'][$sTranscript]);
+                            }
+                            // Continue.
+                            break;
+                        }
+
+                        // If we have selected transcripts, they all failed.
+                        // If that is the case, retry without selecting any.
                         if (is_array($aOptions['select_transcripts'])
                             && count($aOptions['select_transcripts'])) {
-                            $bRetry = false;
-                            foreach ($aOptions['select_transcripts'] as $nKey => $sTranscript) {
-                                if (!empty($aJSON[$sVariant]['hgvs_t_and_p'][$sTranscript]['transcript_variant_error'])) {
-                                    // We selected a transcript and it's giving issues.
-                                    unset($aOptions['select_transcripts'][$nKey]);
-                                    $bRetry = true;
-                                }
-                            }
-                            if ($bRetry) {
-                                return $this->verifyGenomic($sVariant, $aOptions);
-                            }
+                            unset($aOptions['select_transcripts']);
+                            return $this->verifyGenomic($sVariant, $aOptions);
                         }
                         // No break; if we don't catch the error above here,
                         //  we want the error below.
                     default:
-                        // Unhandled flag. I know "processing_error" can be thrown, in theory.
-                        $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
+                        // Unhandled flag. "processing_error" can still be
+                        //  thrown, if all transcripts fail.
+                        // FIXME: NC_000003.11:g.169482398_169482471del   fails.
+                        // FIXME: NC_000007.13:g.50468071G>A throws one, and has
+                        //  10 failing transcripts. I guess sometimes you can't
+                        //  go around this.
+                        if ($aJSON['flag'] == 'processing_error') {
+                            $aData['warnings']['WFLAG'] = 'VV Flag not handled: ' . $aJSON['flag'] . '. This happens when UTA passes transcripts that VV cannot map to.';
+                        } else {
+                            $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
+                        }
                         break;
                 }
             }
