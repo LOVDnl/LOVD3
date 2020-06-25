@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-24
+ * Modified    : 2020-06-25
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -340,7 +340,7 @@ class LOVD_VVAnalyses {
                 $bVKGL = ($this->bRemarks && substr($aVariant['remarks'], 0, 38) == 'VKGL data sharing initiative Nederland');
 
                 // Skip variants that have already been checked and marked with an error.
-                if (strpos($aVariant['remarks'], 'Variant Error [E') === false) {
+                if (strpos($aVariant['remarks'], 'Variant Error [E') !== false) {
                     $this->nProgressCount++;
                     continue;
                 }
