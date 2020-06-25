@@ -208,6 +208,15 @@ class LOVD_VVAnalyses {
                 (!$aVOT['protein']? '(protein)' : $aVOT['protein']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['protein']),
             );
         }
+        // Because of using array_merge_recursive() to merge $aVV and $aVVVOT,
+        //  we might have ended up with arrays.
+        foreach ($aDiff['transcripts'] as $sTranscript => $aTranscript) {
+            foreach (array('DNA', 'RNA', 'protein') as $sField) {
+                if (is_array($aTranscript[$sField]) && count(array_unique($aTranscript[$sField])) == 1) {
+                    $aDiff['transcripts'][$sTranscript][$sField] = $aTranscript[$sField][0];
+                }
+            }
+        }
         $sDiff = print_r($aDiff, true);
         die('<PRE>' . $sDiff . '</PRE>
       <SCRIPT type="text/javascript">
