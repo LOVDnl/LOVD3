@@ -201,21 +201,21 @@ class LOVD_VVAnalyses {
             $aDiff[(!$aVariant['DNA38']? '(DNA38)' : $aVariant['DNA38'])] =
                 (!isset($aVV['data']['genome_mappings']['hg38']['DNA'])? '' : $aVV['data']['genome_mappings']['hg38']['DNA']);
         }
+        // Because of using array_merge_recursive() to merge $aVV and $aVVVOT,
+        //  we may have ended up with arrays.
+        foreach ($aVV['data']['transcript_mappings'] as $sTranscript => $aTranscript) {
+            foreach (array('DNA', 'RNA', 'protein') as $sField) {
+                if (is_array($aTranscript[$sField]) && count(array_unique($aTranscript[$sField])) == 1) {
+                    $aVV['data']['transcript_mappings'][$sTranscript][$sField] = $aTranscript[$sField][0];
+                }
+            }
+        }
         foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
             $aDiff['transcripts'][$sTranscript] = array(
                 (!$aVOT['DNA']? '(DNA)' : $aVOT['DNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['DNA']),
                 (!$aVOT['RNA']? '(RNA)' : $aVOT['RNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['RNA']),
                 (!$aVOT['protein']? '(protein)' : $aVOT['protein']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['protein']),
             );
-        }
-        // Because of using array_merge_recursive() to merge $aVV and $aVVVOT,
-        //  we might have ended up with arrays.
-        foreach ($aDiff['transcripts'] as $sTranscript => $aTranscript) {
-            foreach (array('DNA', 'RNA', 'protein') as $sField) {
-                if (is_array($aTranscript[$sField]) && count(array_unique($aTranscript[$sField])) == 1) {
-                    $aDiff['transcripts'][$sTranscript][$sField] = $aTranscript[$sField][0];
-                }
-            }
         }
         $sDiff = print_r($aDiff, true);
         die('<PRE>' . $sDiff . '</PRE>
