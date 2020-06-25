@@ -624,11 +624,13 @@ class LOVD_VVAnalyses {
                 unset($aVV['warnings']['WCORRECTED']);
                 unset($aVV['warnings']['WROLLFORWARD']);
                 if (isset($aVV['warnings']['WGAP'])) {
-                    // Ignore WGAP warnings when the predicted cDNA is the same as the current cDNA.
+                    // Ignore WGAP warnings when the predicted cDNA is the same
+                    //  as the current cDNA, or when the predicted cDNA is WT.
                     $sTranscript = key($aVariant['vots']);
                     if ($aVariant['vots'][$sTranscript]['DNA']
-                        == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
-                        // Match.
+                        == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']
+                        || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '=') {
+                        // Match, or WT.
                         unset($aVV['warnings']['WGAP']);
                     }
                 }
