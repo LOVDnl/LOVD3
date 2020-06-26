@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-24
+ * Modified    : 2020-06-25
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -201,6 +201,15 @@ class LOVD_VVAnalyses {
             $aDiff[(!$aVariant['DNA38']? '(DNA38)' : $aVariant['DNA38'])] =
                 (!isset($aVV['data']['genome_mappings']['hg38']['DNA'])? '' : $aVV['data']['genome_mappings']['hg38']['DNA']);
         }
+        // Because of using array_merge_recursive() to merge $aVV and $aVVVOT,
+        //  we may have ended up with arrays.
+        foreach ($aVV['data']['transcript_mappings'] as $sTranscript => $aTranscript) {
+            foreach (array('DNA', 'RNA', 'protein') as $sField) {
+                if (is_array($aTranscript[$sField]) && count(array_unique($aTranscript[$sField])) == 1) {
+                    $aVV['data']['transcript_mappings'][$sTranscript][$sField] = $aTranscript[$sField][0];
+                }
+            }
+        }
         foreach ($aVariant['vots'] as $sTranscript => $aVOT) {
             $aDiff['transcripts'][$sTranscript] = array(
                 (!$aVOT['DNA']? '(DNA)' : $aVOT['DNA']) => (!isset($aVV['data']['transcript_mappings'][$sTranscript])? '' : $aVV['data']['transcript_mappings'][$sTranscript]['DNA']),
@@ -340,7 +349,7 @@ class LOVD_VVAnalyses {
                 $bVKGL = ($this->bRemarks && substr($aVariant['remarks'], 0, 38) == 'VKGL data sharing initiative Nederland');
 
                 // Skip variants that have already been checked and marked with an error.
-                if (strpos($aVariant['remarks'], 'Variant Error [E') === false) {
+                if (strpos($aVariant['remarks'], 'Variant Error [E') !== false) {
                     $this->nProgressCount++;
                     continue;
                 }
@@ -624,11 +633,13 @@ class LOVD_VVAnalyses {
                 unset($aVV['warnings']['WCORRECTED']);
                 unset($aVV['warnings']['WROLLFORWARD']);
                 if (isset($aVV['warnings']['WGAP'])) {
-                    // Ignore WGAP warnings when the predicted cDNA is the same as the current cDNA.
+                    // Ignore WGAP warnings when the predicted cDNA is the same
+                    //  as the current cDNA, or when the predicted cDNA is WT.
                     $sTranscript = key($aVariant['vots']);
                     if ($aVariant['vots'][$sTranscript]['DNA']
-                        == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']) {
-                        // Match.
+                        == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']
+                        || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '=') {
+                        // Match, or WT.
                         unset($aVV['warnings']['WGAP']);
                     }
                 }
