@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-07-07
+ * Modified    : 2020-07-08
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -442,7 +442,12 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                             $nFrequency += $aEmail['frequency'];
                             $nConfidence = max($nConfidence, $aEmail['confidence']);
                         }
-                        if ($nFrequency >= 10 || $nConfidence >= 75) {
+                        // If we only have this score because of the username, remove the scores.
+                        if ($nFrequency == $aStopSpamResponse['username']['frequency']
+                            && $nConfidence == $aStopSpamResponse['username']['confidence']) {
+                            $nFrequency = $nConfidence = 0;
+                        }
+                        if ($nFrequency >= 25 || $nConfidence >= 75) {
                             lovd_writeLog('Event', LOG_EVENT, 'User registration blocked based on frequency (' . $nFrequency . ') and confidence (' . $nConfidence . ') in spam database: ' . $_SERVER['REMOTE_ADDR'] . ', ' . str_replace("\r\n", ';', $_POST['email']) . ', ' . $_POST['username']);
                             lovd_errorAdd('', 'Your registration has been blocked based on suspicion of spamming. If you feel this is an error, please contact us.');
                             $_POST = array('orcid' => 'none'); // Empty all fields (except for the orcid_id, to prevent notices).
