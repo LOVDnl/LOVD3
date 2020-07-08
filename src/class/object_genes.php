@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-02-06
- * For LOVD    : 3.0-23
+ * Modified    : 2020-07-08
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -531,8 +531,15 @@ class LOVD_Gene extends LOVD_Object
             }
 
             if (isset($zData['reference'])) {
-                // FIXME; Isn't it better to take the PubMed custom link from the database? If it ever gets edited, this one should be edited, too.
-                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="https://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+                $aCustomLinks = $_DB->query('
+                    SELECT pattern_text, replace_text
+                    FROM ' . TABLE_LINKS . ' WHERE name = ?',
+                    array('PubMed'))->fetchAllAssoc();
+                foreach ($aCustomLinks as $aLink) {
+                    $sRegexpPattern = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '([^:]*)', $aLink['pattern_text'])) . '/';
+                    $sReplaceText = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+                    $zData['reference'] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData['reference']);
+                }
             }
 
             if ($_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
