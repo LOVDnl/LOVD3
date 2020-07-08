@@ -379,6 +379,18 @@ class LOVD_Gene extends LOVD_Object
                                  1 => 'Right'
                                     );
 
+        // Custom links for the Reference field.
+        $aCustomLinks = $_DB->query('
+                    SELECT name, pattern_text, description
+                    FROM ' . TABLE_LINKS . ' WHERE name = ?',
+            array('PubMed'))->fetchAllAssoc();
+        $sCustomLinks = '';
+        foreach ($aCustomLinks as $aLink) {
+            $sToolTip = str_replace(array("\r\n", "\r", "\n"), '<BR>', 'Click to insert:<BR>' . $aLink['pattern_text'] . '<BR><BR>' . addslashes(htmlspecialchars($aLink['description'])));
+            $sCustomLinks .= ($sCustomLinks? ', ' : '') . '<A href="#" onmouseover="lovd_showToolTip(\'' . $sToolTip . '\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'' . $aLink['pattern_text'] . '\'); return false">' . $aLink['name'] . '</A>';
+        }
+        $sCustomLinks = '(Active custom link' . (count($aCustomLinks) == 1? '' : 's') . ' : ' . $sCustomLinks . ')';
+
         // Array which will make up the form table.
         $this->aFormData =
                  array(
@@ -432,7 +444,7 @@ class LOVD_Gene extends LOVD_Object
                         array('', '', 'note', 'You can use the following fields to customize the gene\'s LOVD gene homepage.'),
                         'hr',
                         array('Citation reference(s)', '', 'textarea', 'reference', 30, 3),
-                        array('', '', 'note', '(Active custom link : <A href="#" onmouseover="lovd_showToolTip(\'Click to insert:<BR>{PMID:[1]:[2]}<BR><BR>Links to abstracts in the PubMed database.<BR>[1] = The name of the author(s).<BR>[2] = The PubMed ID.\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'{PMID:[1]:[2]}\'); return false">Pubmed</A>)'),
+                        array('', '', 'note', $sCustomLinks),
                         array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, false, false, false),
                         array('', '', 'note', 'If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.'),
                         array('Text for own disclaimer<BR>(HTML enabled)', '', 'textarea', 'disclaimer_text', 55, 3),
