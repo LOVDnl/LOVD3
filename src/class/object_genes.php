@@ -382,8 +382,8 @@ class LOVD_Gene extends LOVD_Object
         // Custom links for the Reference field.
         $aCustomLinks = $_DB->query('
                     SELECT name, pattern_text, description
-                    FROM ' . TABLE_LINKS . ' WHERE name = ?',
-            array('PubMed'))->fetchAllAssoc();
+                    FROM ' . TABLE_LINKS . ' WHERE name IN (?, ?)',
+            array('PubMed', 'DOI'))->fetchAllAssoc();
         $sCustomLinks = '';
         foreach ($aCustomLinks as $aLink) {
             $sToolTip = str_replace(array("\r\n", "\r", "\n"), '<BR>', 'Click to insert:<BR>' . $aLink['pattern_text'] . '<BR><BR>' . addslashes(htmlspecialchars($aLink['description'])));
@@ -545,8 +545,8 @@ class LOVD_Gene extends LOVD_Object
             if (isset($zData['reference'])) {
                 $aCustomLinks = $_DB->query('
                     SELECT pattern_text, replace_text
-                    FROM ' . TABLE_LINKS . ' WHERE name = ?',
-                    array('PubMed'))->fetchAllAssoc();
+                    FROM ' . TABLE_LINKS . ' WHERE name IN (?, ?)',
+                    array('PubMed', 'DOI'))->fetchAllAssoc();
                 foreach ($aCustomLinks as $aLink) {
                     $sRegexpPattern = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '([^:]*)', $aLink['pattern_text'])) . '/';
                     $sReplaceText = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
