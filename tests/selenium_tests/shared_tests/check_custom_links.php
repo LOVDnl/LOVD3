@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-22
- * Modified    : 2020-06-15
+ * Modified    : 2020-07-09
  * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -81,7 +81,7 @@ class CheckCustomLinks extends LOVDSeleniumWebdriverBaseTestCase
 
         // Now find the tooltip that should have shown.
         $sToolTipLinkText = $this->driver->findElement(WebDriverBy::xpath('//div[@id="tooltip"]/a'))->getText();
-        $this->assertStringStartsWith('https://www.ncbi.nlm.nih.gov/pubmed/', $sToolTipLinkText);
+        $this->assertStringStartsWith('https://pubmed.ncbi.nlm.nih.gov/', $sToolTipLinkText);
     }
 }
 ?>

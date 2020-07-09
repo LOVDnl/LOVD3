@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-02-06
- * For LOVD    : 3.0-23
+ * Modified    : 2020-07-08
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -379,6 +379,18 @@ class LOVD_Gene extends LOVD_Object
                                  1 => 'Right'
                                     );
 
+        // Custom links for the Reference field.
+        $aCustomLinks = $_DB->query('
+                    SELECT name, pattern_text, description
+                    FROM ' . TABLE_LINKS . ' WHERE name IN (?, ?)',
+            array('PubMed', 'DOI'))->fetchAllAssoc();
+        $sCustomLinks = '';
+        foreach ($aCustomLinks as $aLink) {
+            $sToolTip = str_replace(array("\r\n", "\r", "\n"), '<BR>', 'Click to insert:<BR>' . $aLink['pattern_text'] . '<BR><BR>' . addslashes(htmlspecialchars($aLink['description'])));
+            $sCustomLinks .= ($sCustomLinks? ', ' : '') . '<A href="#" onmouseover="lovd_showToolTip(\'' . $sToolTip . '\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'' . $aLink['pattern_text'] . '\'); return false">' . $aLink['name'] . '</A>';
+        }
+        $sCustomLinks = '(Active custom link' . (count($aCustomLinks) == 1? '' : 's') . ' : ' . $sCustomLinks . ')';
+
         // Array which will make up the form table.
         $this->aFormData =
                  array(
@@ -432,7 +444,7 @@ class LOVD_Gene extends LOVD_Object
                         array('', '', 'note', 'You can use the following fields to customize the gene\'s LOVD gene homepage.'),
                         'hr',
                         array('Citation reference(s)', '', 'textarea', 'reference', 30, 3),
-                        array('', '', 'note', '(Active custom link : <A href="#" onmouseover="lovd_showToolTip(\'Click to insert:<BR>{PMID:[1]:[2]}<BR><BR>Links to abstracts in the PubMed database.<BR>[1] = The name of the author(s).<BR>[2] = The PubMed ID.\');" onmouseout="lovd_hideToolTip();" onclick="lovd_insertCustomLink(this, \'{PMID:[1]:[2]}\'); return false">Pubmed</A>)'),
+                        array('', '', 'note', $sCustomLinks),
                         array('Include disclaimer', '', 'select', 'disclaimer', 1, $aSelectDisclaimer, false, false, false),
                         array('', '', 'note', 'If you want a disclaimer added to the gene\'s LOVD gene homepage, select your preferred option here.'),
                         array('Text for own disclaimer<BR>(HTML enabled)', '', 'textarea', 'disclaimer_text', 55, 3),
@@ -531,8 +543,15 @@ class LOVD_Gene extends LOVD_Object
             }
 
             if (isset($zData['reference'])) {
-                // FIXME; Isn't it better to take the PubMed custom link from the database? If it ever gets edited, this one should be edited, too.
-                $zData['reference'] = preg_replace('/\{PMID:(.*):(.*)\}/U', '<A href="https://www.ncbi.nlm.nih.gov/pubmed/$2" target="_blank">$1</A>', $zData['reference']);
+                $aCustomLinks = $_DB->query('
+                    SELECT pattern_text, replace_text
+                    FROM ' . TABLE_LINKS . ' WHERE name IN (?, ?)',
+                    array('PubMed', 'DOI'))->fetchAllAssoc();
+                foreach ($aCustomLinks as $aLink) {
+                    $sRegexpPattern = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '([^:]*)', $aLink['pattern_text'])) . '/';
+                    $sReplaceText = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);
+                    $zData['reference'] = preg_replace($sRegexpPattern . 'U', $sReplaceText, $zData['reference']);
+                }
             }
 
             if ($_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
