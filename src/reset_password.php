@@ -53,9 +53,18 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
         lovd_errorClean();
 
         // Find account.
-        $zData = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?', array($_POST['username']))->fetchAssoc();
-        if (!$zData) {
-            // If username does not exist, we don't want to let the user know. So this message in entire incorrect.
+        $zData = array($_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?',
+            array($_POST['username']))->fetchAssoc());
+        if ($zData == array(false)) {
+            $zData = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE email = ?',
+                array($_POST['username']))->fetchAllAssoc();
+            if (!$zData) {
+                $zData = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE email REGEXP ?',
+                    array('(^|\r\n)' . $_POST['username'] . '(\r\n|$)'))->fetchAllAssoc();
+            }
+        }
+        if (!$zData || $zData == array(false)) {
+            // If username does not exist, we don't want to let the user know. So this message is entirely incorrect.
             $_T->printHeader();
             $_T->printTitle();
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for non-existent account ' . $_POST['username']);
@@ -64,7 +73,13 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                   '      If you don\'t receive this email, it is possible that the username you entered is not correct. Please double-check it. Another possibility is that you registered at a different LOVD installation. Accounts are not shared between different LOVD installations, so please double-check where you are registered.<BR><BR>' . "\n\n");
             $_T->printFooter();
             exit;
+
+        } elseif (count($zData) > 1) {
+            // If email address given links to multiple account, we don't want to unlock them all.
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password with email address matching multiple accounts: ' . $_POST['username']);
+            lovd_errorAdd('username', 'This email address links to multiple accounts. Please provide the username of the account you wish to reset.');
         }
+        $zData = $zData[0];
 
         if (!lovd_error()) {
             // Found account... unlock and generate new passwd.
@@ -147,7 +162,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     $_T->printHeader();
     $_T->printTitle();
 
-    print('      If you forgot your password, please fill in your username here. If an account exists that matches this information, a new random password will be generated and emailed to the known email address. You need this new password to unlock your account and choose a new password.<BR>' . "\n" .
+    print('      If you forgot your password, please fill in your username or email address here. If an account exists that matches this information, a new random password will be generated and emailed to the known email address. You need this new password to unlock your account and choose a new password.<BR>' . "\n" .
           '      <BR>' . "\n\n");
 
     lovd_errorPrint();
