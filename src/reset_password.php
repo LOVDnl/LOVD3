@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2018-01-19
- * For LOVD    : 3.0-21
+ * Modified    : 2020-07-10
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -61,7 +61,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for non-existent account ' . $_POST['username']);
             print('      If you entered the username correctly, we have successfully reset your password.<BR>' . "\n" .
                   '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
-                  '      If you don\'t receive this email, it is possible that the username you entered is not correct. Please double-check it.<BR><BR>' . "\n\n");
+                  '      If you don\'t receive this email, it is possible that the username you entered is not correct. Please double-check it. Another possibility is that you registered at a different LOVD installation. Accounts are not shared between different LOVD installations, so please double-check where you are registered.<BR><BR>' . "\n\n");
             $_T->printFooter();
             exit;
         }
@@ -155,7 +155,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     $_T->printHeader();
     $_T->printTitle();
 
-    print('      If you forgot your password, please fill in your username here. A new random password will be generated and emailed to the known email address. You need this new password to unlock your account and choose a new password.<BR>' . "\n" .
+    print('      If you forgot your password, please fill in your username here. If an account exists that matches this information, a new random password will be generated and emailed to the known email address. You need this new password to unlock your account and choose a new password.<BR>' . "\n" .
           '      <BR>' . "\n\n");
 
     lovd_errorPrint();
@@ -167,7 +167,6 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     $aForm = array(
                     array('POST', '', '', '', '30%', '20', '70%'),
                     array('Username', '', 'text', 'username', 20),
-                    'skip',
                     array('', '', 'submit', 'Reset password'),
                   );
     lovd_viewForm($aForm);
