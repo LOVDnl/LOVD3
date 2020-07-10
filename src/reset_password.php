@@ -89,13 +89,6 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
 
             // Send email confirmation.
-
-            // For submitters, we need to take the FIRST email address only.
-            if (isset($zData['submitterid'])) {
-                $aEmail = explode("\r\n", trim($zData['email']));
-                $zData['email'] = $aEmail[0];
-            }
-
             $aTo = array(array($zData['name'], $zData['email']));
 
             $sMessage = 'Dear ' . $zData['name'] . ',' . "\n\n" .
@@ -146,7 +139,6 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
         } else {
             unset($_POST['username']);
-            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for denied account ' . $_POST['username']);
         }
     }
 
