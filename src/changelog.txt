@@ -5,6 +5,44 @@
  *************/
 
 /***************************
+ * 3.0 Build 24 (tag:3.0-24)
+ * 2020-07-13
+ *********/
+ * Fixed bug; The entered IP value to restrict an account was not validated when
+   registering a new submitter account.
+ * Added new features to allow Curators and up to more quickly curate new data;
+   the "Curate (publish) selected entries" feature and the "Publish (curate)
+   entire submission" feature.
+   Closes #225: "Allow multiple entries to be published (curated) at the same
+   time".
+ * Fixed bug; The JSON variant API wasn't selecting data properly.
+ * APIs and views now sort transcripts based on the number of variants they
+   contain.
+   Closes #420: "API not returning EXT2 result for primary transcript that is
+   present in UI".
+ * Fixed notices and deprecated function calls.
+ * Improved handling of OMIM IDs and HPO terms in submission API.
+ * Rebuilt all automated tests.
+   Closes #113: "Improve tests to be less cluttered".
+   Closes #284: "Upgrade Travis environment and simplify setup".
+ * Created an object for communicating to the Variant Validator service, and
+   created a variant verification script. The variant verification script checks
+   all variants in the database using the Variant Validator service.
+ * Added support for clinical classification columns in the submission API.
+   These columns will become the new defaults to store clinical classification.
+ * Removed additional variant effect values that were added in 3.0-20. They will
+   be replaced by the new clinical classification columns.
+ * Fixed bug; When creating or editing a custom column, the example width bar
+   didn't change anymore when you set the column's width.
+ * Fixed bug; The registration spam filter rejected too many real registrations.
+   Closes #428: "Spam registration filter is too strict".
+ * Fixed several issues with custom links.
+   Closes #430: "Custom links on the gene homepage are hard coded".
+ * Improved the "forgot my password" feature.
+   Closes #432: "Improve the 'forgot my password' feature".
+
+
+/***************************
  * 3.0 Build 23 (tag:3.0-23)
  * 2020-02-19
  *********/
