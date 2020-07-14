@@ -643,6 +643,15 @@ class LOVD_VVAnalyses {
                         unset($aVV['warnings']['WGAP']);
                     }
                 }
+                if (isset($aVV['warnings']['WFLAG'])) {
+                    // Ignore WFLAG warnings for flag=processing_error, this
+                    //  happens whenever UTA suggests a transcript that VV
+                    //  cannot map to, which happens plenty.
+                    if (strpos($aVV['warnings']['WFLAG'], 'VV Flag not handled: processing_error.') === 0) {
+                        $aVariant['vots'] = array();
+                        unset($aVV['warnings']['WFLAG']);
+                    }
+                }
                 if ($aVV['warnings']) {
                     $this->panic($aVariant, array_merge_recursive($aVV,
                         array('data' => array('DNA_clean' => substr(strstr($aVV['data']['DNA'], ':'), 1)))),
