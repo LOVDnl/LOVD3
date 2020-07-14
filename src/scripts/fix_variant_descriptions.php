@@ -199,7 +199,11 @@ class LOVD_VVAnalyses {
         );
         if ($this->bDNA38) {
             $aDiff[(!$aVariant['DNA38']? '(DNA38)' : $aVariant['DNA38'])] =
-                (!isset($aVV['data']['genome_mappings']['hg38']['DNA'])? '' : $aVV['data']['genome_mappings']['hg38']['DNA']);
+                (isset($aVV['data']['DNA38_clean'])? $aVV['data']['DNA38_clean'] :
+                    (!isset($aVV['data']['genomic_mappings']['hg38'])? '' :
+                        (count($aVV['data']['genomic_mappings']['hg38']) == 1?
+                            substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1) :
+                            $aVV['data']['genomic_mappings']['hg38'])));
         }
         // Because of using array_merge_recursive() to merge $aVV and $aVVVOT,
         //  we may have ended up with arrays.
