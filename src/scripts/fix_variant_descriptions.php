@@ -565,7 +565,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)', 'p.(fs*)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
@@ -952,7 +952,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)', 'p.(fs*)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
