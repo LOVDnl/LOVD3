@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-07-14
+ * Modified    : 2020-07-15
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -639,8 +639,14 @@ class LOVD_VVAnalyses {
                 if (isset($aVV['warnings']['WGAP'])) {
                     // Ignore WGAP warnings when the predicted cDNA is the same
                     //  as the current cDNA, or when the predicted cDNA is WT.
-                    $sTranscript = key($aVariant['vots']);
-                    if ($aVariant['vots'][$sTranscript]['DNA']
+                    $sTranscript = current(
+                        array_intersect(
+                            array_keys($aVariant['vots']),
+                            array_keys($aVV['data']['transcript_mappings'])
+                        )
+                    );
+                    if (!$sTranscript
+                        || $aVariant['vots'][$sTranscript]['DNA']
                         == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']
                         || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '=') {
                         // Match, or WT.
