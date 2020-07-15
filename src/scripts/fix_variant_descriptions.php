@@ -707,7 +707,7 @@ class LOVD_VVAnalyses {
 
                 // If we can, fill in or correct the hg38 prediction.
                 if ($this->bDNA38 && $aVV['data']['DNA38_clean']) {
-                    if (!$aVariant['DNA38']) {
+                    if (!$aVariant['DNA38'] || $aVariant['DNA38'] == 'g.?') {
                         // We didn't have a hg38 description yet. Just fill it in.
                         $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
                     } elseif ($aVariant['DNA38'] != $aVV['data']['DNA38_clean']) {
