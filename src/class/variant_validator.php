@@ -475,6 +475,9 @@ class LOVD_VV
                     default:
                         // Unhandled flag. "processing_error" can still be
                         //  thrown, if all transcripts fail.
+                        // FIXME: I've seen "submission_warning" when submitting
+                        //  NC_000011.9:g.2018812_2024740|lom; it got split in
+                        //  two (see #206) and "lom" threw a submission_warning.
                         // FIXME: NC_000003.11:g.169482398_169482471del   fails.
                         // FIXME: NC_000007.13:g.50468071G>A throws one, and has
                         //  10 failing transcripts. I guess sometimes you can't
@@ -599,7 +602,17 @@ class LOVD_VV
             return $aData;
 
         } else {
-            // Failure.
+            // Failure. This happens when VV fails hard or if we can't find our
+            //  input back in the output. This happened with #206; |lom variants
+            //  are split into two variants; the location and "lom".
+            // Catch the methylation-related variants and provide some output.
+            if (strpos($sVariant, '|') !== false) {
+                // VV failed because of #206.
+                $aData = $this->aResponse;
+                $aData['errors']['ESYNTAX'] = 'Methylation variants are currently not supported.';
+                return $aData;
+            }
+
             return false;
         }
     }
