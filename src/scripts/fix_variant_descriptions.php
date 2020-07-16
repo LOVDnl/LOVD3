@@ -639,13 +639,16 @@ class LOVD_VVAnalyses {
                 if (isset($aVV['warnings']['WGAP'])) {
                     // Ignore WGAP warnings when the predicted cDNA is the same
                     //  as the current cDNA, or when the predicted cDNA is WT.
+                    // Also, all VKGL variants will just be overwritten as we
+                    //  know they are detected on the genome.
                     $sTranscript = current(
                         array_intersect(
                             array_keys($aVariant['vots']),
                             array_keys($aVV['data']['transcript_mappings'])
                         )
                     );
-                    if (!$sTranscript
+                    if ($bVKGL
+                        || !$sTranscript
                         || $aVariant['vots'][$sTranscript]['DNA']
                         == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']
                         || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '=') {
