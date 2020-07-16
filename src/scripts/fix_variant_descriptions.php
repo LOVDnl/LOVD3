@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-07-15
+ * Modified    : 2020-07-16
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1071,7 +1071,7 @@ class LOVD_VVAnalyses {
                                                     $aFieldsTranscripts[] = 'VariantOnTranscript/DNA';
                                                     $_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] = $sValue;
                                                     // Position fields, too!
-                                                    $aResponse = lovd_getVariantInfo($sValue);
+                                                    $aResponse = lovd_getVariantInfo($sValue, $sTranscript);
                                                     if ($aResponse) {
                                                         $aFieldsTranscripts = array_merge($aFieldsTranscripts,
                                                             array('position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'));
@@ -1132,7 +1132,43 @@ class LOVD_VVAnalyses {
                                 $nTranscriptID = $aVOT['transcriptid'];
                                 foreach ($aFieldsTranscripts as $sField) {
                                     $sKey = $nTranscriptID . '_' . $sField;
-                                    $aData[$sKey] = $_POST[$sKey];
+                                    // If $_POST doesn't contain this field, it's
+                                    //  because we either didn't need to update it,
+                                    //  or because VV didn't come up with this transcript.
+                                    // Don't overwrite data with nothing!!!
+                                    if (isset($_POST[$sKey])) {
+                                        $aData[$sKey] = $_POST[$sKey];
+                                    } else {
+                                        // We should take the original data!
+                                        // Generate the position fields, too!
+                                        if (!isset($aVOT['position_c_start'])) {
+                                            $aResponse = lovd_getVariantInfo($aVOT['DNA'], $sTranscript);
+                                            if ($aResponse) {
+                                                $aVOT['position_c_start'] = $aResponse['position_start'];
+                                                $aVOT['position_c_start_intron'] = $aResponse['position_start_intron'];
+                                                $aVOT['position_c_end'] = $aResponse['position_end'];
+                                                $aVOT['position_c_end_intron'] = $aResponse['position_end_intron'];
+                                                // No fallback. What could happen?
+                                            }
+                                        }
+                                        switch ($sField) {
+                                            case 'VariantOnTranscript/DNA':
+                                                $aData[$sKey] = $aVOT['DNA'];
+                                                break;
+                                            case 'position_c_start':
+                                            case 'position_c_start_intron':
+                                            case 'position_c_end':
+                                            case 'position_c_end_intron':
+                                                $aData[$sKey] = $aVOT[$sField];
+                                                break;
+                                            case 'VariantOnTranscript/RNA':
+                                                $aData[$sKey] = $aVOT['RNA'];
+                                                break;
+                                            case 'VariantOnTranscript/Protein':
+                                                $aData[$sKey] = $aVOT['protein'];
+                                                break;
+                                        }
+                                    }
                                 }
                             }
 
