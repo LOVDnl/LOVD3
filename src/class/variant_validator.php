@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-06-24
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-16
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -179,7 +179,8 @@ class LOVD_VV
 
                 } elseif ($aVariant['position_start_intron'] && $aVariant['position_end_intron']
                     && abs($aVariant['position_start_intron']) > 5 && abs($aVariant['position_end_intron']) > 5
-                    && ($aVariant['position_start'] == $aVariant['position_end'] || $aVariant['position_start'] == ($aVariant['position_end'] + 1))) {
+                    && ($aVariant['position_start'] == $aVariant['position_end']
+                        || ($aVariant['position_start'] + 1) == $aVariant['position_end'])) {
                     // Deep intronic.
                     $aMapping['RNA'] = 'r.(=)';
                     $aMapping['protein'] = 'p.(=)';
