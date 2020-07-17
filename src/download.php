@@ -156,7 +156,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
 
     } elseif ($_PE[1] == 'all' && $_PE[2] == 'mine' && PATH_COUNT == 3) {
         // Own data.
-        $sFileName = 'owned_data';
+        $sFileName = 'owned_data_' . $_AUTH['id'];
         $sHeader = 'Owned data';
         $sFilter = 'owner';
         $ID = $_AUTH['id'];
@@ -173,7 +173,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
 
     } elseif ($_PE[1] == 'all' && $_PE[2] == 'user' && PATH_COUNT == 4 && ctype_digit($_PE[3])) {
         // Data owned by other.
-        $sFileName = 'owned_data';
+        $sFileName = 'owned_data_' . $_PE[3];
         $sHeader = 'Owned data';
         $sFilter = 'owner';
         $ID = $_PE[3];
