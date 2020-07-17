@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2020-02-25
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-17
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -99,7 +99,7 @@ if (ACTION || PATH_COUNT < 2) {
 
 
 
-if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'user')))) ||
+if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'mine', 'submission', 'user')))) ||
     ($_PE[1] == 'columns' && PATH_COUNT <= 3) ||
     ($_PE[1] == 'diseases' && PATH_COUNT == 2) ||
     ($_PE[1] == 'genes' && PATH_COUNT == 2) ||
@@ -107,6 +107,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     // URL: /download/all
     // URL: /download/all/gene/IVD
     // URL: /download/all/mine
+    // URL: /download/all/submission/00000001
     // URL: /download/all/user/00001
     // URL: /download/columns
     // URL: /download/columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
@@ -133,7 +134,8 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sFileName = 'full_download';
         $sHeader = 'Full data';
         lovd_requireAuth(LEVEL_MANAGER);
-    } elseif ($_PE[1] == 'all' && $_PE[2] == 'gene'  && PATH_COUNT == 4 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[3]))) {
+
+    } elseif ($_PE[1] == 'all' && $_PE[2] == 'gene' && PATH_COUNT == 4 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[3]))) {
         // Gene database contents.
         $sFileName = 'full_download_' . $_PE[3];
         $sHeader = 'Full data';
@@ -151,6 +153,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'to see non-public data.' . "\r\n");
             }
         }
+
     } elseif ($_PE[1] == 'all' && $_PE[2] == 'mine' && PATH_COUNT == 3) {
         // Own data.
         $sFileName = 'owned_data';
@@ -158,6 +161,16 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sFilter = 'owner';
         $ID = $_AUTH['id'];
         lovd_requireAuth();
+
+    } elseif ($_PE[1] == 'all' && $_PE[2] == 'submission' && PATH_COUNT == 4 && ctype_digit($_PE[3])) {
+        // Data from a single submission.
+        $sFileName = 'submission_' . $_PE[3];
+        $sHeader = 'Full data';
+        $sFilter = 'individual';
+        $ID = $_PE[3];
+        lovd_isAuthorized('individual', $_PE[3]);
+        lovd_requireAuth(LEVEL_OWNER);
+
     } elseif ($_PE[1] == 'all' && $_PE[2] == 'user' && PATH_COUNT == 4 && ctype_digit($_PE[3])) {
         // Data owned by other.
         $sFileName = 'owned_data';
@@ -171,6 +184,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         $sFileName = 'custom_columns';
         $sHeader = 'Custom column';
         lovd_requireAuth(LEVEL_MANAGER);
+
     } elseif ($_PE[1] == 'columns' && in_array($_PE[2], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
         // FIXME; Is there a better way checking if it's a valid category?
         // Category given.
@@ -209,7 +223,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     print('### LOVD-version ' . lovd_calculateVersion($_SETT['system']['version']) . ' ### ' . $sHeader . ' download ### To import, do not remove or alter this header ###' . "\r\n");
     if ($sFilter == 'owner') {
         print('## Filter: (created_by = ' . $ID . ' || owned_by = ' . $ID . ')' . "\r\n");
-    } elseif (in_array($sFilter, array('category', 'gene', 'genepanel', 'gene_public'))) {
+    } elseif (in_array($sFilter, array('category', 'gene', 'genepanel', 'gene_public', 'individual'))) {
         print('## Filter: (' . $sFilter . ' = ' . $ID . ')' . "\r\n");
     }
     print('# charset = UTF-8' . "\r\n\r\n");
@@ -427,6 +441,62 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     $aObjects[$sObject]['hide_columns'][] = $aHiddenCol['id'];
                 }
             }
+
+        } elseif ($sFilter == 'individual') {
+            // Remove objects that we're not interested in.
+            unset($aObjects['Columns'], $aObjects['Gen2Dis']);
+            // Change the order of filtering.
+            $aObjectsToBeFiltered =
+                array(
+                    'Individuals',
+                    'Ind2Dis',
+                    'Phenotypes',
+                    'Diseases',
+                    'Screenings',
+                    'Scr2Gene',
+                    'Scr2Var',
+                    'Variants',
+                    'Variants_On_Transcripts',
+                    'Transcripts',
+                    'Genes',
+                );
+            $aObjects['Individuals']['filters']['id'] = $ID;
+            $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
+            $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid';
+            $aObjects['Phenotypes']['filters']['individualid'] = $ID;
+            $aObjects['Phenotypes']['filter_other']['Diseases']['id'] = 'diseaseid';
+            $aObjects['Diseases']['comments'][] = 'For reference only, not part of the selected data set';
+            $aObjects['Diseases']['settings'][] = 'ignore_for_import';
+            $aObjects['Diseases']['hide_columns'] =
+                array(
+                    'created_by', 'created_date', 'edited_by', 'edited_date',
+                );
+            $aObjects['Screenings']['filters']['individualid'] = $ID;
+            $aObjects['Screenings']['filter_other']['Scr2Gene']['screeningid'] = 'id';
+            $aObjects['Screenings']['filter_other']['Scr2Var']['screeningid'] = 'id';
+            $aObjects['Scr2Gene']['filter_other']['Genes']['id'] = 'geneid';
+            $aObjects['Scr2Var']['filter_other']['Variants']['id'] = 'variantid';
+            $aObjects['Variants']['filter_other']['Variants_On_Transcripts']['id'] = 'id';
+            $aObjects['Variants_On_Transcripts']['filter_other']['Transcripts']['id'] = 'transcriptid';
+            $aObjects['Transcripts']['comments'][] = 'For reference only, not part of the selected data set';
+            $aObjects['Transcripts']['settings'][] = 'ignore_for_import';
+            $aObjects['Transcripts']['filter_other']['Genes']['id'] = 'geneid';
+            $aObjects['Transcripts']['hide_columns'] =
+                array(
+                    'id_mutalyzer', 'position_c_mrna_start', 'position_c_mrna_end', 'position_c_cds_end',
+                    'position_g_mrna_start', 'position_g_mrna_end', 'created_by', 'created_date', 'edited_by',
+                    'edited_date',
+                );
+            $aObjects['Genes']['comments'][] = 'For reference only, not part of the selected data set';
+            $aObjects['Genes']['settings'][] = 'ignore_for_import';
+            $aObjects['Genes']['hide_columns'] =
+                array(
+                    'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage', 'url_external',
+                    'allow_download', 'show_hgmd', 'show_genecards', 'show_genetests',
+                    'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer', 'disclaimer_text',
+                    'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
+                    'edited_by', 'edited_date', 'updated_by', 'updated_date',
+                );
         }
 
     } elseif ($_PE[1] == 'columns') {
