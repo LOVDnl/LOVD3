@@ -586,6 +586,11 @@ foreach ($aObjectsToBeFiltered as $sObject) {
     $aObjects[$sObject]['args']  = $aArgs;
 
     // If prefetch is requested, request data right here. We will then loop through the results to create the filters for the other objects.
+    // FIXME: Prefetching is slow and memory intensive. It would be way more efficient
+    //  to build the query such that we prefetch the filters instead of the data.
+    //  When downloading my data, to display the genes I need to prefetch VOG, VOT, and transcripts.
+    //  I could also fetch the IDs in VOT from my own VOGs, then get all
+    //   transcript IDs from all VOT IDs, then get all gene IDs.
     if ($aSettings['prefetch'] || count($aSettings['filter_other'])) {
         $aObjects[$sObject]['data'] = $_DB->query($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
 
