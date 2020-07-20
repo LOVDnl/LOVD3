@@ -1,4 +1,4 @@
-### LOVD-version 3000-230 ### Full data download ### To import, do not remove or alter this header ###
+### LOVD-version ????-??? ### Full data download ### To import, do not remove or alter this header ###
 # charset = UTF-8
 
 ## Columns ## Do not remove or alter this header ##
