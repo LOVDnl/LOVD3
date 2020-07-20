@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2020-07-17
+ * Modified    : 2020-07-20
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -35,7 +35,7 @@ define('ROOT_PATH', './');
 require ROOT_PATH . 'inc-init.php';
 set_time_limit(60*5); // Very large, but not infinite.
 
-//header('Content-type: text/plain; charset=UTF-8');
+
 
 
 
@@ -268,16 +268,15 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
 
         // Apply filters and filter order, for user-specific download.
         if ($sFilter == 'owner') {
-            // In user-specific download, we don't care about the relationship between genes and diseases.
-            // (Genes will be shown if its transcripts are shown, Diseases will be shown if its individuals are shown)
-            unset($aObjects['Gen2Dis']);
-            // Change the order of filtering, so we can filter the data that's just for reference last.
+            // Remove objects that we're not interested in.
+            unset($aObjects['Columns'], $aObjects['Gen2Dis']);
+            // Change the order of filtering.
             $aObjectsToBeFiltered =
                 array(
                     'Individuals',
                     'Ind2Dis',
-                    'Diseases',
                     'Phenotypes',
+                    'Diseases',
                     'Screenings',
                     'Scr2Gene',
                     'Variants',
@@ -286,17 +285,17 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'Genes',
                     'Scr2Var',
                 );
-            unset($aObjects['Columns']); // Custom columns don't matter when it's about somebody's data only.
             $aObjects['Individuals']['filters']['owner'] = $ID;
             $aObjects['Individuals']['filter_other']['Ind2Dis']['individualid'] = 'id';
             $aObjects['Ind2Dis']['filter_other']['Diseases']['id'] = 'diseaseid';
+            $aObjects['Phenotypes']['filters']['owner'] = $ID;
+            $aObjects['Phenotypes']['filter_other']['Diseases']['id'] = 'diseaseid';
             $aObjects['Diseases']['comments'][] = 'For reference only, not part of the selected data set';
             $aObjects['Diseases']['settings'][] = 'ignore_for_import';
             $aObjects['Diseases']['hide_columns'] =
                 array(
                     'created_by', 'created_date', 'edited_by', 'edited_date',
                 );
-            $aObjects['Phenotypes']['filters']['owner'] = $ID;
             $aObjects['Screenings']['filters']['owner'] = $ID;
             $aObjects['Screenings']['filter_other']['Scr2Gene']['screeningid'] = 'id';
             $aObjects['Screenings']['filter_other']['Scr2Var']['screeningid'] = 'id';
