@@ -862,9 +862,10 @@ class LOVD_VVAnalyses {
                         // We get lots of EMISMATCH/EREF errors because the VOT variant
                         //  is actually c.=, something Mutalyzer can't see.
                         foreach (array('DNA', 'RNA', 'protein') as $sField) {
-                            if (in_array($aVOT[$sField], array('', '-', 'c.?', 'r.?', 'p.?'))
-                                || ($bVKGL && $aVOT[$sField] != $aVV['data']['transcript_mappings'][$sTranscript][$sField])) {
-                                // The current field is pretty much bogus, just overwrite it.
+                            if ($aVOT[$sField] != $aVV['data']['transcript_mappings'][$sTranscript][$sField]
+                                && ($bVKGL || in_array($aVOT[$sField], array('', '-', 'c.?', 'r.?', 'p.?')))) {
+                                // Overwrite VOT data if this is a VKGL entry,
+                                //  or if the current field is pretty much bogus.
                                 if (!isset($aUpdate['transcripts'])) {
                                     $aUpdate['transcripts'] = array();
                                 }
