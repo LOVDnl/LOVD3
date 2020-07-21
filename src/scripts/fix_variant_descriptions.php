@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-07-16
+ * Modified    : 2020-07-21
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -38,6 +38,7 @@
 // FIXME: The RNA and protein handling part (EREF vs standard), have increased
 //  to have quite some overlap; fix that?
 // FIXME: Memory usage never gets high, so just remove that code and that bar?
+// FIXME: Also check RNA and protein descriptions when the cDNA is OK!
 
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
@@ -651,7 +652,8 @@ class LOVD_VVAnalyses {
                         || !$sTranscript
                         || $aVariant['vots'][$sTranscript]['DNA']
                         == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']
-                        || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '=') {
+                        || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '='
+                        || strpos($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], '>') !== false) {
                         // Match, or WT.
                         unset($aVV['warnings']['WGAP']);
                     }
