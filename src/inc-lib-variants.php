@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2020-06-11
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-16
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -82,6 +82,12 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     // g.(1234_2345)del doesn't need those parentheses.
     if (preg_match('/^([gm])\.\((\d+_\d+)\)(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
         return lovd_fixHGVS($aRegs[1] . '.' . $aRegs[2] . $aRegs[3] . $aRegs[4]);
+    }
+
+    // Too many prefixes due to copy/paste errors?
+    // g.12345_g.23456del to g.12345_23456del.
+    if (substr_count($sVariant, $sType . '.') > 1) {
+        return lovd_fixHGVS($sType . '.' . str_replace($sType . '.', '', $sVariant));
     }
 
     // Maybe positions are in wrong order?

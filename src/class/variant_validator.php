@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-06-24
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-16
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -179,7 +179,8 @@ class LOVD_VV
 
                 } elseif ($aVariant['position_start_intron'] && $aVariant['position_end_intron']
                     && abs($aVariant['position_start_intron']) > 5 && abs($aVariant['position_end_intron']) > 5
-                    && ($aVariant['position_start'] == $aVariant['position_end'] || $aVariant['position_start'] == ($aVariant['position_end'] + 1))) {
+                    && ($aVariant['position_start'] == $aVariant['position_end']
+                        || ($aVariant['position_start'] + 1) == $aVariant['position_end'])) {
                     // Deep intronic.
                     $aMapping['RNA'] = 'r.(=)';
                     $aMapping['protein'] = 'p.(=)';
@@ -475,6 +476,9 @@ class LOVD_VV
                     default:
                         // Unhandled flag. "processing_error" can still be
                         //  thrown, if all transcripts fail.
+                        // FIXME: I've seen "submission_warning" when submitting
+                        //  NC_000011.9:g.2018812_2024740|lom; it got split in
+                        //  two (see #206) and "lom" threw a submission_warning.
                         // FIXME: NC_000003.11:g.169482398_169482471del   fails.
                         // FIXME: NC_000007.13:g.50468071G>A throws one, and has
                         //  10 failing transcripts. I guess sometimes you can't
@@ -599,7 +603,17 @@ class LOVD_VV
             return $aData;
 
         } else {
-            // Failure.
+            // Failure. This happens when VV fails hard or if we can't find our
+            //  input back in the output. This happened with #206; |lom variants
+            //  are split into two variants; the location and "lom".
+            // Catch the methylation-related variants and provide some output.
+            if (strpos($sVariant, '|') !== false) {
+                // VV failed because of #206.
+                $aData = $this->aResponse;
+                $aData['errors']['ESYNTAX'] = 'Methylation variants are currently not supported.';
+                return $aData;
+            }
+
             return false;
         }
     }
