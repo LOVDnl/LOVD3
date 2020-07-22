@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-07-13
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-22
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -847,6 +847,7 @@ if (!defined('NOT_INSTALLED')) {
     // Define constant for request method.
     define($_SERVER['REQUEST_METHOD'], true);
     @define('GET', false);
+    @define('HEAD', false);
     @define('POST', false);
     @define('PUT', false);
     @define('DELETE', false);
