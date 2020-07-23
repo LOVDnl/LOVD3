@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-07-23
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -662,23 +662,23 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     'options' =>
                          array(
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Individual\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'Individual\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the individual, not related to disease</B>, not changing over time, such as date of birth',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Phenotype\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'Phenotype\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the phenotype, related to disease</B>, possibly changing over time, such as blood pressure',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Screening\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'Screening\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the detection of new variants</B>, such as detection technique or laboratory conditions',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'VariantOnGenome\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'VariantOnGenome\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the variant(s) found, in general or on the genomic level</B>, such as restriction site change',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'VariantOnTranscript\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'VariantOnTranscript\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the variant(s) found, specific for the transcript level</B>, such as predicted effect on protein level',
                                   ),
                               ),
@@ -1185,7 +1185,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 <SCRIPT type="text/javascript">
 function lovd_checkSubmittedForm ()
 {
-    if ($('input[name="mysql_type"]').attr('value') != '<?php echo $zData['mysql_type'] ?>') {
+    if ($('input[name="mysql_type"]').val() != '<?php echo $zData['mysql_type'] ?>') {
         return window.confirm('<?php echo $sJSMessage ?>');
     }
 }
