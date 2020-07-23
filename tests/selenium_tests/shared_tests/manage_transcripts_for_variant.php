@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-06-15
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-23
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -104,7 +104,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
     {
         $this->waitUntil(WebDriverExpectedCondition::urlMatches('/\/src\/variants\/[0-9]+\?edit\#[0-9]+$/'));
         $this->driver->findElement(WebDriverBy::cssSelector('button.proteinChange'))->click();
-        $this->waitForElement(WebDriverBy::xpath('//input[contains(@name, "_VariantOnTranscript/RNA")][contains(@value, "r.")]'));
+        $this->waitForValueContains(WebDriverBy::xpath('//input[contains(@name, "_VariantOnTranscript/RNA")]'), 'r.');
         $this->enterValue('password', 'test1234');
         $this->submitForm('Edit variant entry');
 
