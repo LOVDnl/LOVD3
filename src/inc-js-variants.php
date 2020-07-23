@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-07-23
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -237,7 +237,7 @@ function lovd_convertPosition (oElement)
                                 var oInput = $('#variantForm input[id_ncbi="' + aVariant[1] + '"]');
                                 if (oInput[0] != undefined) {
                                     // If the transcript returned by mutalyzer is present in the form, fill in the respons from mutalyzer.
-                                    oInput.attr('value', aVariant[2]);
+                                    oInput.val(aVariant[2]);
                                     oInput.siblings('img:first').attr({
                                         src: 'gfx/check.png',
                                         alt: 'Valid HGVS syntax!',
@@ -253,7 +253,7 @@ function lovd_convertPosition (oElement)
                                         lovd_getProteinChange(oProtein);
                                     } else {
                                         // Transcript is disabled, empty the protein field.
-                                        oProtein.attr('value', '');
+                                        oProtein.val('');
                                     }
                                 }
                             }
@@ -266,7 +266,7 @@ function lovd_convertPosition (oElement)
                         var aVariant = /:([gm]\..+)$/.exec(sData);
                         if (aVariant != null) {
                             var oInput = $('#variantForm input[name="VariantOnGenome/DNA"]');
-                            oInput.attr('value', aVariant[1]);
+                            oInput.val(aVariant[1]);
                             oInput.siblings('img:first').attr({
                                 src: 'gfx/check.png',
                                 alt: 'Valid HGVS syntax!',
@@ -319,7 +319,7 @@ function lovd_getProteinChange (oElement)
     // Function that can predict a protein description of a variant based on a transcript DNA field.
 
     var oThisProtein = $(oElement).parent().find('input:first');
-    $(oThisProtein).attr('value', '');
+    $(oThisProtein).val('');
     $(oThisProtein).removeClass();
     $(oThisProtein).siblings('img:first').attr({
         src: 'gfx/lovd_loading.gif',
@@ -330,7 +330,7 @@ function lovd_getProteinChange (oElement)
     var nTranscriptID = $(oThisProtein).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>);
     var oThisDNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/DNA"]');
     var oThisRNA = $(oElement).parent().parent().siblings().find('input[name="' + nTranscriptID + '_VariantOnTranscript/RNA"]');
-    $(oThisRNA).attr('value', '');
+    $(oThisRNA).val('');
     $(oThisRNA).removeClass();
 
     $.get('ajax/check_variant.php', { reference: aUDrefseqs[aTranscripts[nTranscriptID][1]],
@@ -447,8 +447,8 @@ function lovd_getProteinChange (oElement)
                             title: 'Prediction OK! Click to see result on Mutalyzer.'
                         }).show();
                     }
-                    $(oThisRNA).attr('value', aData['predict']['RNA']);
-                    $(oThisProtein).attr('value', aData['predict']['protein']);
+                    $(oThisRNA).val(aData['predict']['RNA']);
+                    $(oThisProtein).val(aData['predict']['protein']);
                     lovd_highlightInput(oThisRNA);
                     lovd_highlightInput(oThisProtein);
 

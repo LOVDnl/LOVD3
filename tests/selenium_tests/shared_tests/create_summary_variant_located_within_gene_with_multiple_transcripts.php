@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-26
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-23
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -105,8 +105,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
         $this->driver->findElement(WebDriverBy::cssSelector('button.mapVariant'))->click();
 
         // Wait until RNA description field is filled after AJAX request, and check all values.
-        $this->waitForElement(WebDriverBy::xpath(
-            '//input[@name="00000002_VariantOnTranscript/RNA"][contains(@value, "r.")]'));
+        $this->waitForValueContains('00000002_VariantOnTranscript/RNA', 'r.');
         $this->assertValue('r.(?)', '00000002_VariantOnTranscript/RNA');
         $this->assertValue('p.(His367Leu)', '00000002_VariantOnTranscript/Protein');
         $this->selectValue('00000002_effect_reported', 'Effect unknown');
@@ -114,8 +113,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
 
         // Fill in XM_005274514.1 transcript (ID #00000003).
         $this->enterValue('00000003_VariantOnTranscript/Exon', '6i');
-        $this->waitForElement(WebDriverBy::xpath(
-            '//input[@name="00000003_VariantOnTranscript/RNA"][contains(@value, "r.")]'));
+        $this->waitForValueContains('00000003_VariantOnTranscript/RNA', 'r.');
         $this->assertValue('c.1001-715A>T', '00000003_VariantOnTranscript/DNA');
         $this->assertValue('r.(=)', '00000003_VariantOnTranscript/RNA');
         $this->assertValue('p.(=)', '00000003_VariantOnTranscript/Protein');

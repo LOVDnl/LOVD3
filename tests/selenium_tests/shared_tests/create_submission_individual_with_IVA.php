@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-05-26
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-23
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -216,7 +216,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::cssSelector('button.mapVariant'))->click();
 
         // Wait until RNA description field is filled after AJAX request, and check all values.
-        $this->waitForElement(WebDriverBy::xpath('//input[@name="00000001_VariantOnTranscript/RNA"][contains(@value, "r.")]'));
+        $this->waitForValueContains('00000001_VariantOnTranscript/RNA', 'r.');
         $this->assertValue('r.(=)', '00000001_VariantOnTranscript/RNA');
         $this->assertValue('p.(=)', '00000001_VariantOnTranscript/Protein');
         $this->selectValue('00000001_effect_reported', 'Does not affect function');
