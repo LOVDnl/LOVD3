@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2020-06-18
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-24
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2014-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -52,6 +52,7 @@ $aFieldLinks = array(
     // This field maps to either VOT/Published_as or VOG/Published_as (handled later specifically).
     'Variant/DNA_published' =>          array('vot',        'VariantOnTranscript/Published_as'),
     'Variant/DBID' =>                   array('vog',        'VariantOnGenome/DBID',         'lovd_convertDBID'),
+    'Variant/DbSNP' =>                  array('vog',        'VariantOnGenome/DbSNP',        'lovd_convertDbSNP'),
     'Variant/Restriction_site' =>       array('vog',        'VariantOnGenome/Restriction_site'),
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
     'Variant/Origin' =>                 array('vog',        'VariantOnGenome/Genetic_origin', 'lovd_convertOrigin'),
@@ -298,6 +299,21 @@ function lovd_convertDBID ($sLOVD2DBID)
         return join('_', $aChunks);
     }
     return $sLOVD2DBID;
+}
+
+
+
+
+
+function lovd_convertDbSNP ($sLOVD2DbSNP)
+{
+    // Returns an LOVD3-formatted DbSNP field for the given $sLOVD2DbSNP field.
+
+    if (preg_match('/^\{dbSNP(rs[0-9]+)\}$/', $sLOVD2DbSNP, $aRegs)) {
+        return ($aRegs[1]);
+    } else {
+        return $sLOVD2DbSNP;
+    }
 }
 
 
