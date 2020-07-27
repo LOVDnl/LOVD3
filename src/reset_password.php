@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2020-07-10
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-27
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -101,7 +101,8 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             // Update database.
             $_DB->query('UPDATE ' . TABLE_USERS . ' SET password_autogen = MD5(?) WHERE username = ?', array($sPasswd, $_POST['username']));
 
-            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' . $_POST['username']);
+            lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') successfully reset password for account ' .
+                $_POST['username'] . ($_POST['username'] == $zData['username']? '' : ' (' . $zData['username'] . ')'));
 
             // Send email confirmation.
             $aTo = array(array($zData['name'], $zData['email']));
