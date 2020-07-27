@@ -108,9 +108,15 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $aTo = array(array($zData['name'], $zData['email']));
 
             $sMessage = 'Dear ' . $zData['name'] . ',' . "\n\n" .
-                        'Your password from your LOVD account has been reset, as requested. Your new, randomly generated, password can be found below. Please log in to LOVD and choose a new password.' . "\n\n" .
-                        'Below is a copy of your updated account information.' . "\n\n" .
-                        'If you did not request a new password, you can disregard this message. Your old password will continue to function normally. However, you may then want to report this email to the Database administrator ' . $_SETT['admin']['name'] . ', email: ' . str_replace(array("\r\n", "\r", "\n"), ' or ', trim($_SETT['admin']['email'])) . ', who can investigate possible misuse of the system.' . "\n\n";
+                        'Your password from your LOVD account has been reset, as requested. ' .
+                        'Your username and your new, randomly generated, password can be found below. ' .
+                        'Please log in to LOVD and choose a new password.' . "\n\n" .
+                        'If you did not request a new password, you can disregard this message. ' .
+                        'Your old password will continue to function normally. ' .
+                        'However, you may then want to report this email to the Database administrator ' .
+                            $_SETT['admin']['name'] . ', email: ' . str_replace(array("\r\n", "\r", "\n"),
+                                ' or ', trim($_SETT['admin']['email'])) .
+                            ', who can investigate possible misuse of the system.' . "\n\n";
 
             // Add the location of the database, so that the user can just click the link.
             if ($_CONF['location_url']) {
@@ -121,9 +127,10 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                          '    LOVD ' . $_SETT['system']['version'] . ' system at ' . $_CONF['institute'] . "\n\n";
 
             // Array containing the unlock code field.
-            $a['password_autogen'] = $sPasswd;
+            $zData['password_autogen'] = $sPasswd;
             $aMailFields = array(
-                            'a',
+                            'zData',
+                            'username' => 'Your username',
                             'password_autogen' => 'New password / unlocking code',
                            );
 
