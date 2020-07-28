@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 // Check for basic format.
-if (!ACTION || !in_array(ACTION, array('fromVL'))) {
+if (!ACTION || !in_array(ACTION, array('fromVL', 'process'))) {
     die('alert("Error while sending data.");');
 }
 
@@ -86,7 +86,7 @@ function lovd_showMergeDialog ($aJob)
         count(current($aJob['objects'])) <= 1) {
         // Something's wrong with this job.
         die('
-        $("#merge_set_dialog").html("Did not recognize the job. This may be a bug in LOVD; please report.").dialog({buttons: $.extend({}, oButtonClose)});');
+        $("#merge_set_dialog").html("Did not recognize the job. This may be a bug in LOVD; please report.").dialog({buttons: oButtonClose});');
     }
 
     // Store data in SESSION. I don't really want to POST it over.
@@ -170,5 +170,132 @@ if (ACTION == 'fromVL' && GET && !empty($_GET['vlid'])) {
     // Open dialog, and list the data types.
     lovd_showMergeDialog($aJob);
     exit;
+}
+
+
+
+
+
+if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
+    // URL: /ajax/merge_entries.php?process&workid=1583341843.3402
+    // Process work as stored in $_SESSION.
+    // We do this in two steps to get confirmation and to prevent CSRF.
+
+    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] != $_SESSION['csrf_tokens']['merge_entries']) {
+        die('alert("Error while sending data, possible security risk. Try reloading the page, and loading the form again.");');
+    }
+
+    if (!isset($_SESSION['work'][CURRENT_PATH][$_GET['workid']])) {
+        die('alert("Work ID not found. This may be a bug in LOVD; please report.");');
+    } elseif (empty($_SESSION['work'][CURRENT_PATH][$_GET['workid']]['job'])
+        || empty($_SESSION['work'][CURRENT_PATH][$_GET['workid']]['job']['objects'])) {
+        die('alert("Found nothing to do?");');
+    }
+
+    define('LOG_EVENT', 'MergeEntries');
+
+    // For lovd_setUpdatedDate().
+    require ROOT_PATH . 'inc-lib-form.php';
+
+    $aJob = $_SESSION['work'][CURRENT_PATH][$_GET['workid']]['job'];
+
+    // To prevent race condition, first start
+    //  a transaction before we check the entries.
+    $_DB->beginTransaction();
+
+    foreach ($aJob['objects'] as $sObjectType => $aObjects) {
+        $nMergedID = current($aObjects);
+        $aMergedData = array();
+        $aUpdatedFields = array();
+        $aConflictingFields = array();
+
+        // Object IDs have already been sorted.
+        foreach ($aObjects as $nKey => $nObjectID) {
+            // Loop through the records and compare them. There should be no
+            //  conflicts, if we want to merge them.
+
+            // First check if we're authorized at all on this entry.
+            if (!lovd_isAuthorized(rtrim($sObjectType, 's'), $nObjectID, false)) {
+                // Oops, no, we're not. This should not really be possible, since the menu should be turned off if
+                //  you're not authorized. So this suggests foul play. But either way, block this.
+                print('
+                $("#merge_set_dialog").html("You are not authorized to merge these entries.").dialog({buttons: oButtonClose});');
+                exit;
+            }
+
+            switch ($sObjectType) {
+                case 'individuals':
+                    $zData = $_DB->query('
+                        SELECT i.*, GROUP_CONCAT(i2d.diseaseid ORDER BY i2d.diseaseid SEPARATOR ";") AS diseaseids
+                        FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
+                        WHERE i.id = ?', array($nObjectID))->fetchAssoc();
+                    if ($zData['statusid'] >= STATUS_MARKED) {
+                        // Collect genes that will be affected.
+                        $aGenes = $_DB->query('
+                            SELECT DISTINCT t.geneid
+                            FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                              LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
+                              LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                              LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                            WHERE s.individualid = ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED))->fetchAllColumn();
+                    }
+                    break;
+
+                default:
+                    die('alert("Unhandled object type ' . $sObjectType . '.");');
+            }
+
+            if (!$nKey) {
+                $aMergedData = $zData;
+
+            } else {
+                // Loop $zData looking for conflicts, reasons to not merge.
+                foreach ($zData as $sCol => $sValue) {
+                    switch ($sCol) {
+                        case 'id':
+                            // Of course this is different. Ignore.
+                            break;
+                        case 'created_by':
+                            if ($zData['created_date'] < $aMergedData['created_date']) {
+                                $aMergedData[$sCol] = $zData[$sCol];
+                                $aUpdatedFields[] = $sCol;
+                            }
+                            break;
+                        case 'created_date':
+                            if ($zData[$sCol] < $aMergedData[$sCol]) {
+                                $aMergedData[$sCol] = $zData[$sCol];
+                                $aUpdatedFields[] = $sCol;
+                            }
+                            break;
+                        case 'edited_by':
+                            if ($aMergedData[$sCol] != $_AUTH['id']) {
+                                $aMergedData[$sCol] = $_AUTH['id'];
+                                $aUpdatedFields[] = $sCol;
+                            }
+                            break;
+                        case 'edited_date':
+                            $aMergedData[$sCol] = date('Y-m-d H:i:s');
+                            $aUpdatedFields[] = $sCol;
+                            break;
+                        case 'statusid':
+                            if ($aMergedData[$sCol] < $zData[$sCol]) {
+                                $aMergedData[$sCol] = $zData[$sCol];
+                                $aUpdatedFields[] = $sCol;
+                            }
+                            break;
+                        default:
+                            if ($zData[$sCol] && !$aMergedData[$sCol]) {
+                                $aMergedData[$sCol] = $zData[$sCol];
+                                $aUpdatedFields[] = $sCol;
+                            } elseif ($zData[$sCol] && $aMergedData[$sCol] != $zData[$sCol]) {
+                                // Data conflict.
+                                $aConflictingFields[] = $sCol;
+                            } // Else, data is the same or $zData[$sCol] is empty; do nothing.
+                    }
+                }
+            }
+        }
+    }
 }
 ?>
