@@ -69,4 +69,46 @@ var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 $aObjectTypes = array(
     'individuals',
 );
+
+
+
+
+
+if (ACTION == 'fromVL' && GET && !empty($_GET['vlid'])) {
+    // URL: /ajax/merge_entries.php?fromVL&vlid=Individuals
+    // Fetch object IDs, and call the curation process.
+
+    if (!isset($_SESSION['viewlists'][$_GET['vlid']])) {
+        die('$("#merge_set_dialog").html("Data listing not found. Please try to reload the page and try again.");');
+    } elseif (empty($_SESSION['viewlists'][$_GET['vlid']]['options']['merge_set'])) {
+        die('$("#merge_set_dialog").html("Data listing does not allow curation of a set.");');
+    } elseif (empty($_SESSION['viewlists'][$_GET['vlid']]['checked'])) {
+        die('$("#merge_set_dialog").html("No entries selected yet to curate.");');
+    }
+
+    // Determine type.
+    $sObjectType = '';
+    if (!empty($_SESSION['viewlists'][$_GET['vlid']]['row_link'])) {
+        $sObjectType = substr($_SESSION['viewlists'][$_GET['vlid']]['row_link'], 0, strpos($_SESSION['viewlists'][$_GET['vlid']]['row_link'], '/'));
+    }
+    if (!in_array($sObjectType, $aObjectTypes)) {
+        die('
+        $("#merge_set_dialog").html("Did not recognize object type. This may be a bug in LOVD; please report.");');
+    }
+
+    $aValues = array_values($_SESSION['viewlists'][$_GET['vlid']]['checked']);
+    sort($aValues);
+    $aJob = array(
+        'objects' => array(
+            $sObjectType => $aValues,
+        ),
+        'post_action' => array(
+            'go_to' => lovd_getInstallURL() . $sObjectType . '/' . $aValues[0],
+        ),
+    );
+
+    // Open dialog, and list the data types.
+    lovd_showMergeDialog($aJob);
+    exit;
+}
 ?>
