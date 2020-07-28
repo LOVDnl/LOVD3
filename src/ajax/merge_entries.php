@@ -60,6 +60,7 @@ if (!$("#merge_set_dialog").hasClass("ui-dialog-content") || !$("#merge_set_dial
 
 // Set JS variables and objects.
 print('
+var oButtonCancel = {"Cancel":function () { $(this).dialog("close"); }};
 var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 
 
@@ -69,6 +70,65 @@ var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 $aObjectTypes = array(
     'individuals',
 );
+
+
+
+
+
+function lovd_showMergeDialog ($aJob)
+{
+    // Receives the job, shows the dialog, creates the form to call the process.
+    // If we would only use GET here without confirmation, CSRF would be
+    //  possible. Also, GET shouldn't be used for data manipulation.
+
+    if (!isset($aJob['objects'])
+        || count($aJob['objects']) > 1 ||
+        count(current($aJob['objects'])) <= 1) {
+        // Something's wrong with this job.
+        die('
+        $("#merge_set_dialog").html("Did not recognize the job. This may be a bug in LOVD; please report.").dialog({buttons: $.extend({}, oButtonClose)});');
+    }
+
+    // Store data in SESSION. I don't really want to POST it over.
+    if (!isset($_SESSION['work'][CURRENT_PATH])) {
+        $_SESSION['work'][CURRENT_PATH] = array();
+    }
+
+    // Clean up old work IDs...
+    while (count($_SESSION['work'][CURRENT_PATH]) >= 5) {
+        unset($_SESSION['work'][CURRENT_PATH][min(array_keys($_SESSION['work'][CURRENT_PATH]))]);
+    }
+
+    // Generate an unique workID that is sortable.
+    $nWorkID = (string) microtime(true);
+    $_SESSION['work'][CURRENT_PATH][$nWorkID]['job'] = $aJob;
+
+    $_SESSION['csrf_tokens']['merge_entries'] = md5(uniqid());
+    $sDialog = str_replace(
+        '{{CSRF_TOKEN}}',
+        $_SESSION['csrf_tokens']['merge_entries'],
+        '<FORM id=\'merge_entries_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>' .
+        'Please confirm merging the following ' . count(current($aJob['objects'])) . ' entries.</FORM><BR><TABLE>');
+
+    foreach ($aJob['objects'] as $sObjectType => $aObjects) {
+        $sDialog .= '<TR><TD valign=top rowspan=' . count($aObjects) . '><B>' . $sObjectType . '</B></TD>';
+        foreach ($aObjects as $nKey => $nObjectID) {
+            $sDialog .= (!$nKey? '' : '<TR>') .
+                '<TD valign=top>#' . $nObjectID . '</TD></TR>';
+        }
+    }
+    $sDialog .= '</TABLE><BR><BR>';
+
+    // Display the form, and put the right buttons in place.
+    print('
+    $("#merge_set_dialog").html("' . $sDialog . '");
+
+    // Select the right buttons.
+    var oButtonMerge = {"Merge entries":function () { $.post("' . CURRENT_PATH . '?process&workid=' . $nWorkID . '", $("#merge_entries_form").serialize()); }};
+    $("#merge_set_dialog").dialog({buttons: $.extend({}, oButtonMerge, oButtonCancel)});
+    ');
+    exit;
+}
 
 
 
