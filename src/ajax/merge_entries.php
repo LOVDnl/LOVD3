@@ -69,6 +69,7 @@ var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 // Allowed types.
 $aObjectTypes = array(
     'individuals',
+    'screenings',
 );
 
 
@@ -295,6 +296,62 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                     }
                 }
             }
+        }
+
+        if (!$aConflictingFields) {
+            // Update data, including foreign keys.
+            foreach ($aObjects as $nKey => $nObjectID) {
+                if (!$nKey) {
+                    // The first entry is just being updated.
+                    $aUpdatedFields = array_unique($aUpdatedFields);
+                    if ($aUpdatedFields) {
+                        $sColumns = implode(', ', array_map(function ($sColumn) {
+                            return '`' . $sColumn . '` = ?';
+                        }, $aUpdatedFields));
+                        $aValues = array();
+                        foreach ($aUpdatedFields as $sColumn) {
+                            $aValues[] = $aMergedData[$sColumn];
+                        }
+                        $aValues[] = $nMergedID;
+                        $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET ' . $sColumns . ' WHERE id = ?', $aValues);
+                    }
+
+                } else {
+                    switch ($sObjectType) {
+                        case 'individuals':
+                            // Move over phenotype entries and screenings.
+                            $_DB->query('UPDATE ' . TABLE_PHENOTYPES . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
+                            $_DB->query('UPDATE ' . TABLE_SCREENINGS . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
+                            // Delete IND2DIS entries, we already compared them.
+                            $_DB->query('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ?', array($nObjectID));
+                            // Move parent or panel ID references.
+                            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET fatherid = ? WHERE fatherid = ?', array($nMergedID, $nObjectID));
+                            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET motherid = ? WHERE motherid = ?', array($nMergedID, $nObjectID));
+                            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET panelid = ? WHERE panelid = ?', array($nMergedID, $nObjectID));
+                            $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nObjectID));
+                            lovd_writeLog('Event', LOG_EVENT, 'Merged ' . rtrim($sObjectType, 's') . ' entry #' . $nObjectID . ' into entry #' . $nMergedID);
+                            break;
+                    }
+                }
+            }
+
+            if ($aMergedData['statusid'] >= STATUS_MARKED && $aGenes) {
+                lovd_setUpdatedDate($aGenes);
+            }
+            $_DB->commit();
+
+            // Update the display.
+            print('
+            $("#merge_set_dialog").html("Successfully merged entries!").dialog({buttons: oButtonClose});');
+
+        } else {
+            // Conflicts, can't merge entries.
+            $_DB->rollBack();
+
+            $aConflictingFields = array_unique($aConflictingFields);
+            print('
+            $("#merge_set_dialog").html("Entries can not be merged because of conflicting values in the following field(s):<BR>' .
+                implode('<BR>', $aConflictingFields) . '<BR><BR>Resolve these conflicting values first, then try again.").dialog({buttons: oButtonClose});');
         }
     }
 }
