@@ -137,14 +137,14 @@ function lovd_showMergeDialog ($aJob)
 
 if (ACTION == 'fromVL' && GET && !empty($_GET['vlid'])) {
     // URL: /ajax/merge_entries.php?fromVL&vlid=Individuals
-    // Fetch object IDs, and call the curation process.
+    // Fetch object IDs, and call the merging process.
 
     if (!isset($_SESSION['viewlists'][$_GET['vlid']])) {
         die('$("#merge_set_dialog").html("Data listing not found. Please try to reload the page and try again.");');
     } elseif (empty($_SESSION['viewlists'][$_GET['vlid']]['options']['merge_set'])) {
-        die('$("#merge_set_dialog").html("Data listing does not allow curation of a set.");');
+        die('$("#merge_set_dialog").html("Data listing does not allow merging entries.");');
     } elseif (empty($_SESSION['viewlists'][$_GET['vlid']]['checked'])) {
-        die('$("#merge_set_dialog").html("No entries selected yet to curate.");');
+        die('$("#merge_set_dialog").html("No entries selected yet to merge.");');
     }
 
     // Determine type.
@@ -358,8 +358,12 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
             $aConflictingFields = array_unique($aConflictingFields);
             print('
             $("#merge_set_dialog").html("Entries can not be merged because of conflicting values in the following field(s):<BR>' .
-                implode('<BR>', $aConflictingFields) . '<BR><BR>Resolve these conflicting values first, then try again.").dialog({buttons: oButtonClose});');
+                '- ' . implode('<BR>- ', $aConflictingFields) . '<BR><BR>Resolve these conflicting values first, then try again.").dialog({buttons: oButtonClose});');
         }
     }
+
+    // Clear the data.
+    unset($_SESSION['work'][CURRENT_PATH][$_GET['workid']]);
+    exit;
 }
 ?>
