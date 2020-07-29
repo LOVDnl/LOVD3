@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-07-28
- * Modified    : 2020-07-28
+ * Modified    : 2020-07-29
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -278,6 +278,13 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                         case 'edited_date':
                             $aMergedData[$sCol] = date('Y-m-d H:i:s');
                             $aUpdatedFields[] = $sCol;
+                            break;
+                        case 'diseaseids':
+                            // We won't just update this; any difference
+                            //  is regarded a conflict.
+                            if ($aMergedData[$sCol] !== $zData[$sCol]) {
+                                $aConflictingFields[] = $sCol;
+                            }
                             break;
                         case 'statusid':
                             if ($aMergedData[$sCol] < $zData[$sCol]) {
