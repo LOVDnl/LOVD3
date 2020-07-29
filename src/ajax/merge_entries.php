@@ -212,6 +212,18 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
         $aUpdatedFields = array();
         $aConflictingFields = array();
 
+        // If only one of the objects is public, then all genes attached to all
+        //  entries should have set their updated_date to NOW().
+        $aGenes = array();
+        switch ($sObjectType) {
+            case 'individuals':
+                $nMaxStatus = $_DB->query('
+                    SELECT MAX(statusid)
+                    FROM ' . constant('TABLE_' . strtoupper($sObjectType)) . '
+                    WHERE id IN (?' . str_repeat(', ?', count($aObjects) - 1) . ')', $aObjects)->fetchColumn();
+                break;
+        }
+
         // Object IDs have already been sorted.
         foreach ($aObjects as $nKey => $nObjectID) {
             // Loop through the records and compare them. There should be no
@@ -232,16 +244,19 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                         SELECT i.*, GROUP_CONCAT(i2d.diseaseid ORDER BY i2d.diseaseid SEPARATOR ";") AS diseaseids
                         FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                         WHERE i.id = ?', array($nObjectID))->fetchAssoc();
-                    if ($zData['statusid'] >= STATUS_MARKED) {
+                    if ($nMaxStatus >= STATUS_MARKED) {
                         // Collect genes that will be affected.
-                        $aGenes = $_DB->query('
-                            SELECT DISTINCT t.geneid
-                            FROM ' . TABLE_TRANSCRIPTS . ' AS t
-                              LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-                              LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
-                              LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
-                              LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
-                            WHERE s.individualid = ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED))->fetchAllColumn();
+                        $aGenes = array_unique(
+                            array_merge(
+                                $aGenes,
+                                $_DB->query('
+                                    SELECT DISTINCT t.geneid
+                                    FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                                      LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
+                                      LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                                      LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                                    WHERE s.individualid = ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED))->fetchAllColumn()));
                     }
                     break;
 
