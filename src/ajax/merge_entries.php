@@ -164,6 +164,8 @@ if (ACTION == 'fromVL' && GET && !empty($_GET['vlid'])) {
             $sObjectType => $aValues,
         ),
         'post_action' => array(
+            'uncheck_VL' => $_GET['vlid'],
+            'reload_VL' => $_GET['vlid'],
             'go_to' => lovd_getInstallURL() . $sObjectType . '/' . $aValues[0],
         ),
     );
@@ -350,6 +352,37 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
             // Update the display.
             print('
             $("#merge_set_dialog").html("Successfully merged entries!").dialog({buttons: oButtonClose});');
+
+            // Anything more that we're supposed to do?
+            if (!empty($aJob['post_action'])) {
+                foreach ($aJob['post_action'] as $sAction => $sArg) {
+                    switch ($sAction) {
+                        case 'go_to':
+                            // Redirect to another page.
+                            print('
+                            $("#merge_set_dialog").on("dialogclose", function(event, ui) { window.location.href = "' . $sArg . '"; });');
+                            break;
+                        case 'reload_page':
+                            // Reload the entire page.
+                            print('
+                            $("#merge_set_dialog").on("dialogclose", function(event, ui) { window.location.href = window.location; });');
+                            break;
+                        case 'reload_VL':
+                            // Reload the VL.
+                            print('
+                            lovd_AJAX_viewListSubmit("' . $sArg . '");');
+                            break;
+                        case 'uncheck_VL':
+                            // Deselect all checkboxes.
+                            print('
+                            check_list["' . $sArg . '"] = "none";');
+                            break;
+                        default:
+                            print('
+                            $("#merge_set_dialog").append("<BR>Unknown post action ' . htmlspecialchars($sAction) . '");');
+                    }
+                }
+            }
 
         } else {
             // Conflicts, can't merge entries.
