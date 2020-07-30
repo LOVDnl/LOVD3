@@ -328,6 +328,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                             $aUpdatedFields[] = $sCol;
                             break;
                         case 'diseaseids':
+                        case 'variants_found':
                             // We won't just update this; any difference
                             //  is regarded a conflict.
                             if ($aMergedData[$sCol] !== $zData[$sCol]) {
@@ -338,6 +339,22 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                             if ($aMergedData[$sCol] < $zData[$sCol]) {
                                 $aMergedData[$sCol] = $zData[$sCol];
                                 $aUpdatedFields[] = $sCol;
+                            }
+                            break;
+                        case 'Screening/Template':
+                        case 'Screening/Technique':
+                            // Merge these entries; we're not so strict here.
+                            if ($aMergedData[$sCol] != $zData[$sCol]) {
+                                $sMerged = implode(';',
+                                    // array_unique() also sorts the array.
+                                    array_unique(
+                                        array_merge(
+                                            explode(';', $aMergedData[$sCol]),
+                                            explode(';', $zData[$sCol]))));
+                                if ($aMergedData[$sCol] != $sMerged) {
+                                    $aMergedData[$sCol] = $sMerged;
+                                    $aUpdatedFields[] = $sCol;
+                                }
                             }
                             break;
                         default:
