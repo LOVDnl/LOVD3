@@ -401,6 +401,28 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                             $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nObjectID));
                             lovd_writeLog('Event', LOG_EVENT, 'Merged ' . rtrim($sObjectType, 's') . ' entry #' . $nObjectID . ' into entry #' . $nMergedID);
                             break;
+
+                        case 'screenings':
+                            // Move over genes and variants.
+                            // To prevent duplicate key errors, remove the links that $nMergedID already has.
+                            // This query won't let you make a delete when you also use the same table
+                            //  as a SELECT, so we have to add an additional layer to confuse MySQL.
+                            $_DB->query('DELETE FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ? AND geneid IN (
+                                SELECT geneid FROM (
+                                    SELECT geneid FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?)A)', array($nObjectID, $nMergedID));
+                            $_DB->query('UPDATE ' . TABLE_SCR2GENE . ' SET screeningid = ? WHERE screeningid = ?', array($nMergedID, $nObjectID));
+                            // This query won't let you make a delete when you also use the same table
+                            //  as a SELECT, so we have to add an additional layer to confuse MySQL.
+                            $_DB->query('DELETE FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (
+                                SELECT variantid FROM (
+                                    SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?)A)', array($nObjectID, $nMergedID));
+                            $_DB->query('UPDATE ' . TABLE_SCR2VAR . ' SET screeningid = ? WHERE screeningid = ?', array($nMergedID, $nObjectID));
+                            $_DB->query('DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nObjectID));
+                            lovd_writeLog('Event', LOG_EVENT, 'Merged ' . rtrim($sObjectType, 's') . ' entry #' . $nObjectID . ' into entry #' . $nMergedID);
+                            break;
+
+                        default:
+                            die('alert("Unhandled object type ' . $sObjectType . '.");');
                     }
                 }
             }
