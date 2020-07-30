@@ -166,9 +166,12 @@ if (ACTION == 'fromVL' && GET && !empty($_GET['vlid'])) {
         'post_action' => array(
             'uncheck_VL' => $_GET['vlid'],
             'reload_VL' => $_GET['vlid'],
-            'go_to' => lovd_getInstallURL() . $sObjectType . '/' . $aValues[0],
         ),
     );
+
+    if ($sObjectType == 'individuals') {
+        $aJob['post_action']['go_to'] = lovd_getInstallURL() . $sObjectType . '/' . $aValues[0];
+    }
 
     // Open dialog, and list the data types.
     lovd_showMergeDialog($aJob);
@@ -216,7 +219,15 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
         //  entries should have set their updated_date to NOW().
         $aGenes = array();
         switch ($sObjectType) {
-            case 'individuals':
+            case 'screenings':
+                $nMaxStatus = $_DB->query('
+                    SELECT MAX(i.statusid)
+                    FROM ' . TABLE_SCREENINGS . ' AS s
+                      INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id)
+                    WHERE s.id IN (?' . str_repeat(', ?', count($aObjects) - 1) . ')', $aObjects)->fetchColumn();
+                break;
+
+            default:
                 $nMaxStatus = $_DB->query('
                     SELECT MAX(statusid)
                     FROM ' . constant('TABLE_' . strtoupper($sObjectType)) . '
@@ -257,6 +268,26 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                                       LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
                                       LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
                                     WHERE s.individualid = ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED))->fetchAllColumn()));
+                    }
+                    break;
+
+                case 'screenings':
+                    $zData = $_DB->query('
+                        SELECT s.*
+                        FROM ' . TABLE_SCREENINGS . ' AS s
+                        WHERE s.id = ?', array($nObjectID))->fetchAssoc();
+                    if ($nMaxStatus >= STATUS_MARKED) {
+                        // Collect genes that will be affected.
+                        $aGenes = array_unique(
+                            array_merge(
+                                $aGenes,
+                                $_DB->query('
+                                    SELECT DISTINCT t.geneid
+                                    FROM ' . TABLE_TRANSCRIPTS . ' AS t
+                                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
+                                      LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id)
+                                      LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                                    WHERE s2v.screeningid = ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED))->fetchAllColumn()));
                     }
                     break;
 
