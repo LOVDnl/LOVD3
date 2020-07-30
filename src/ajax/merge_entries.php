@@ -427,7 +427,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                 }
             }
 
-            if ($aMergedData['statusid'] >= STATUS_MARKED && $aGenes) {
+            if ($nMaxStatus >= STATUS_MARKED && $aGenes) {
                 lovd_setUpdatedDate($aGenes);
             }
             $_DB->commit();
