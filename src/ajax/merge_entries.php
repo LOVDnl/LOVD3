@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-07-28
- * Modified    : 2020-07-29
+ * Modified    : 2020-07-30
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -343,15 +343,13 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                 } else {
                     switch ($sObjectType) {
                         case 'individuals':
-                            // Move over phenotype entries and screenings.
+                            // Move over phenotype entries, screenings, parent links, and panel ID references.
                             $_DB->query('UPDATE ' . TABLE_PHENOTYPES . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
                             $_DB->query('UPDATE ' . TABLE_SCREENINGS . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
-                            // Delete IND2DIS entries, we already compared them.
-                            $_DB->query('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ?', array($nObjectID));
-                            // Move parent or panel ID references.
                             $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET fatherid = ? WHERE fatherid = ?', array($nMergedID, $nObjectID));
                             $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET motherid = ? WHERE motherid = ?', array($nMergedID, $nObjectID));
                             $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET panelid = ? WHERE panelid = ?', array($nMergedID, $nObjectID));
+                            // This also deletes the IND2DIS entries.
                             $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nObjectID));
                             lovd_writeLog('Event', LOG_EVENT, 'Merged ' . rtrim($sObjectType, 's') . ' entry #' . $nObjectID . ' into entry #' . $nMergedID);
                             break;
@@ -405,7 +403,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
 
             $aConflictingFields = array_unique($aConflictingFields);
             print('
-            $("#merge_set_dialog").html("Entries can not be merged because of conflicting values in the following field(s):<BR>' .
+            $("#merge_set_dialog").html("Entries can not be merged because of conflicting values in the following field' . (count($aConflictingFields) == 1? '' : 's') . ':<BR>' .
                 '- ' . implode('<BR>- ', $aConflictingFields) . '<BR><BR>Resolve these conflicting values first, then try again.").dialog({buttons: oButtonClose});');
         }
     }
