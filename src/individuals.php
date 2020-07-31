@@ -116,13 +116,21 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             WHERE name = ? AND event = ? AND log LIKE ?',
                 array('Event', 'MergeEntries', 'Merged individual entry #' . $nID . ' into %'))->fetchColumn();
         if ($nNewID) {
-            header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nNewID);
+            // HTTP 301 Moved Permanently.
+            header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nNewID . '?&redirected_after_merge', true, 301);
             exit;
         }
     }
 
     $_T->printHeader();
     $_T->printTitle();
+
+    if (isset($_GET['redirected_after_merge'])) {
+        // We got redirected after using an ID that got merged into this entry.
+        lovd_showInfoTable(
+            'Please note that you got redirected after using an Individual ID that no longer exists,' .
+            ' because that entry got merged into this entry.', 'warning');
+    }
 
     // Load appropriate user level for this individual.
     lovd_isAuthorized('individual', $nID);
