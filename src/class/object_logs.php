@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2020-03-09
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-30
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -136,6 +136,9 @@ class LOVD_Log extends LOVD_Object
             case 'CuratorSort':
                 $zData['entry'] = preg_replace('/the ([A-Z][A-Za-z0-9-]+) gene/', 'the <A href="genes/$1">$1</A> gene', $zData['entry']);
                 $zData['entry'] = preg_replace('/#([0-9]+)\s/', '#<A href="users/$1">$1</A> ', $zData['entry']);
+                break;
+            case 'MergeEntries':
+                $zData['entry'] = preg_replace('/(Merged (individual|screening) entry #(?:[0-9]+) into entry #)([0-9]+)$/', '$1<A href="${2}s/$3">$3</A>', $zData['entry']);
                 break;
             case 'GeneCreate':
             case 'GeneEdit':

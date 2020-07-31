@@ -882,7 +882,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                 $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
             }
 
-            // This also deletes the entries in TABLE_SCR2GENES and TABLE_SCR2VAR.
+            // This also deletes the entries in TABLE_SCR2GENE and TABLE_SCR2VAR.
             $_DATA->deleteEntry($nID);
 
             if ($aGenes) {

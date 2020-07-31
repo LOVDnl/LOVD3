@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2020-07-17
+ * Modified    : 2020-07-30
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -84,6 +84,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         'find_and_replace' => true,
         'curate_set' => true,
+        'merge_set' => true,
     );
     $_DATA->viewList('Individuals', $aVLOptions);
 
@@ -101,8 +102,35 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'Individual #' . $nID);
+
+    // Before we start the template here, do a quick check if this entry exists.
+    // This is non-standard, we normally rely on viewEntry() to sort that out.
+    // But this individual may have been merged, after sending the submission
+    //  confirmation email. Check the logs if that is the case, and forward.
+    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
+            array($nID))->fetchColumn()) {
+        // Entry doesn't exist. Can we find a merge log entry?
+        $nNewID = $_DB->query('
+            SELECT RIGHT(log, ' . $_SETT['objectid_length'][$_PE[0]] . ')
+            FROM ' . TABLE_LOGS . '
+            WHERE name = ? AND event = ? AND log LIKE ?',
+                array('Event', 'MergeEntries', 'Merged individual entry #' . $nID . ' into %'))->fetchColumn();
+        if ($nNewID) {
+            // HTTP 301 Moved Permanently.
+            header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nNewID . '?&redirected_after_merge', true, 301);
+            exit;
+        }
+    }
+
     $_T->printHeader();
     $_T->printTitle();
+
+    if (isset($_GET['redirected_after_merge'])) {
+        // We got redirected after using an ID that got merged into this entry.
+        lovd_showInfoTable(
+            'Please note that you got redirected after using an Individual ID that no longer exists,' .
+            ' because that entry got merged into this entry.', 'warning');
+    }
 
     // Load appropriate user level for this individual.
     lovd_isAuthorized('individual', $nID);
@@ -174,6 +202,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             'track_history' => false,
             'show_navigation' => false,
             'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'merge_set' => true,
         );
         // This ViewList ID is checked in ajax/viewlist.php. Don't just change it.
         $_DATA->viewList('Screenings_for_I_VE', $aScreeningVLOptions);
@@ -536,7 +565,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             // FIXME: All of this doesn't look right. We should first check which genes are linked to the *public variants*, if we're deleting them OR if this Ind is public.
             //  Only then can you delete the variants when requested. Now it's the other way around, and the selection isn't done right.
             // Query text.
-            // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENES.
+            // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENE.
             $_DB->beginTransaction();
             if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
                 $aOutput = $_DB->query('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ?', array($nID))->fetchAllColumn();
