@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2020-07-29
+ * Modified    : 2020-07-30
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -102,6 +102,25 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $nID = sprintf('%08d', $_PE[1]);
     define('PAGE_TITLE', 'Individual #' . $nID);
+
+    // Before we start the template here, do a quick check if this entry exists.
+    // This is non-standard, we normally rely on viewEntry() to sort that out.
+    // But this individual may have been merged, after sending the submission
+    //  confirmation email. Check the logs if that is the case, and forward.
+    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
+            array($nID))->fetchColumn()) {
+        // Entry doesn't exist. Can we find a merge log entry?
+        $nNewID = $_DB->query('
+            SELECT RIGHT(log, ' . $_SETT['objectid_length'][$_PE[0]] . ')
+            FROM ' . TABLE_LOGS . '
+            WHERE name = ? AND event = ? AND log LIKE ?',
+                array('Event', 'MergeEntries', 'Merged individual entry #' . $nID . ' into %'))->fetchColumn();
+        if ($nNewID) {
+            header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nNewID);
+            exit;
+        }
+    }
+
     $_T->printHeader();
     $_T->printTitle();
 
