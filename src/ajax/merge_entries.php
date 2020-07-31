@@ -385,7 +385,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                             $aValues[] = $aMergedData[$sColumn];
                         }
                         $aValues[] = $nMergedID;
-                        $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET ' . $sColumns . ' WHERE id = ?', $aValues);
+                        $_DB->query('UPDATE ' . constant('TABLE_' . strtoupper($sObjectType)) . ' SET ' . $sColumns . ' WHERE id = ?', $aValues);
                     }
 
                 } else {
