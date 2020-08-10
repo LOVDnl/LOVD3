@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-07-16
+ * Modified    : 2020-08-10
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -817,7 +817,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Isolate the position(s) from the variant. We don't support combined variants.
     // We're not super picky, and would therefore approve of c.1_2A>C; we also
     //  don't check for the end of the variant, it may contain bases, or not.
-    if (preg_match('/^([cgmn])\.(\()?([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|con|del(?:ins)?|dup|inv|ins|\|(?:gom|lom|met=))(.*)(?(2)\))/', $sVariant, $aRegs)) {
+    if (preg_match('/^([cgmn])\.(\()?([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|con|del(?:ins)?|dup|inv|ins|\|(?:gom|lom|met=)|=)(.*)(?(2)\))/', $sVariant, $aRegs)) {
         //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
         //                       2 = Do we have an opening parenthesis?
         //                            3 = Start position, might be negative or in the 3' UTR.
@@ -837,8 +837,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             if ($sSuffix) {
                 // Suffix not allowed in some cases.
-                if (strpos($sVariant, '>') !== false || $sVariant == 'inv' || substr($sVariant, 0, 1) == '|') {
-                    // No suffix allowed for substitutions or inversions.
+                if (strpos($sVariant, '>') !== false || $sVariant == 'inv' || substr($sVariant, 0, 1) == '|' || $sVariant == '=') {
+                    // No suffix allowed for substitutions, inversions, methylation or WT calls.
                     return false;
                 } elseif ($sVariant == 'con' && !preg_match('/^([NX][CMR]_[0-9]{6}\.[0-9]+:)?([0-9]+|[0-9]+[+-][0-9]+)_([0-9]+|[0-9]+[+-][0-9]+)$/', $sSuffix)) {
                     // Gene conversions require position fields.
