@@ -107,8 +107,8 @@ if (!ACTION && !empty($_GET['select_db'])) {
 
 if (!ACTION && (empty($_PE[1]) ||
         preg_match('/^(chr[0-9A-Z]{1,2})(?::([0-9]+)-([0-9]+))?$/', $_PE[1], $aRegionArgs))) {
-    // URL: /variants
-    // URL: /variants/chrX
+    // URL: /variants
+    // URL: /variants/chrX
     // URL: /variants/chr3:20-200000
     // View all genomic variant entries, optionally restricted by chromosome.
 
@@ -191,7 +191,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
 
 
 if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
-    // URL: /variants/upload/123451234567890
+    // URL: /variants/upload/123451234567890
     // View all genomic variant entries that were submitted in the given upload.
 
     $nID = sprintf('%015d', $_PE[2]);
@@ -354,7 +354,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /variants/0000000001
+    // URL: /variants/0000000001
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -640,7 +640,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('LOG_EVENT', 'VariantCreate');
 
     if (!isset($_GET['reference'])) {
-        // URL: /variants?create
+        // URL: /variants?create
         // Select whether you want to create a variant on the genome or on a transcript.
         define('PAGE_TITLE', 'Create a new variant entry');
         $_T->printHeader();
@@ -980,7 +980,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     // We already called lovd_requireAUTH(LEVEL_MANAGER).
 
     if (!isset($_GET['type'])) {
-        // URL: /variants/upload?create
+        // URL: /variants/upload?create
         // Select whether you want to upload a VCF or SeattleSeq file.
 
         define('PAGE_TITLE', 'Upload variant data');
@@ -2383,8 +2383,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'publish')) && !LOVD_plus) {
-    // URL: /variants/0000000001?edit
-    // URL: /variants/0000000001?publish
+    // URL: /variants/0000000001?edit
+    // URL: /variants/0000000001?publish
     // Edit an entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -2724,7 +2724,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /variants/0000000001?delete
+    // URL: /variants/0000000001?delete
     // Drop specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -2817,7 +2817,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
-    // URL: /variants/0000000001?search_global
+    // URL: /variants/0000000001?search_global
     // Search an entry in other public LOVDs.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -2896,8 +2896,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_non-preferred_transcripts', 'map'))) {
-    // URL: /variants/0000000001?delete_non-preferred_transcripts
-    // URL: /variants/0000000001?map
+    // URL: /variants/0000000001?delete_non-preferred_transcripts
+    // URL: /variants/0000000001?map
     // Map a variant to additional transcripts, or remove transcripts from the variant.
 
     $nID = sprintf('%010d', $_PE[1]);

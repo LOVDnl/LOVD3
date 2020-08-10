@@ -45,7 +45,7 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 if (PATH_COUNT == 1 && ACTION == 'edit') {
-    // URL: /settings?edit
+    // URL: /settings?edit
     // Edit system settings.
 
     define('PAGE_TITLE', 'Edit system settings');

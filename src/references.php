@@ -53,8 +53,8 @@ $sReference = implode('/', array_slice($aPathElements, 1));
 
 
 if (!ACTION && (!$sReference || strpos($sReference, ':') === false)) {
-    // URL: /references
-    // URL: /references/DMD
+    // URL: /references
+    // URL: /references/DMD
     // View all entries (optionally restricted by gene).
 
     // STUB.
@@ -66,10 +66,10 @@ if (!ACTION && (!$sReference || strpos($sReference, ':') === false)) {
 
 
 if (PATH_COUNT >= 2 && (substr($sReference, 0, 4) == 'DOI:' || substr($sReference, 0, 5) == 'PMID:')) {
-    // URL: /references/DOI:.....
-    // URL: /references/DOI:...../image
-    // URL: /references/PMID:.....
-    // URL: /references/PMID:...../image
+    // URL: /references/DOI:.....
+    // URL: /references/DOI:...../image
+    // URL: /references/PMID:.....
+    // URL: /references/PMID:...../image
     // View specific DOI or PMID.
 
     if (substr($sReference, 0, 4) == 'DOI:') {

@@ -1413,7 +1413,7 @@
    older than 3.0-beta-06 or newer.
  * Fixed bug; Wrong DBIDs were predicted because of a bug introduced in r221
    (3.0-beta-08) that should have prevented exactly that.
- * The 'Human-readable reference sequence location' field on the gene data entry
+ * The 'Human-readable reference sequence location' field on the gene data entry
    form now also allows local URLs.
  * Links to the reference sequences from the gene homepage are now opened in a
    new window.

@@ -44,7 +44,7 @@ if ($_AUTH) {
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /links
+    // URL: /links
     // View all entries.
 
     define('PAGE_TITLE', 'Custom links');
@@ -67,7 +67,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /links/001
+    // URL: /links/001
     // View specific entry.
 
     $nID = sprintf('%03d', $_PE[1]);
@@ -98,7 +98,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create') {
-    // URL: /links?create
+    // URL: /links?create
     // Create a new entry.
 
     define('PAGE_TITLE', 'Create a new custom link');
@@ -206,7 +206,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
-    // URL: /links/001?edit
+    // URL: /links/001?edit
     // Edit specific entry.
 
     $nID = sprintf('%03d', $_PE[1]);
@@ -339,7 +339,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /links/001?delete
+    // URL: /links/001?delete
     // Delete specific entry.
 
     $nID = sprintf('%03d', $_PE[1]);

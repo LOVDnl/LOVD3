@@ -43,8 +43,8 @@ if ($_AUTH) {
 
 
 if (PATH_COUNT < 3 && !ACTION) {
-    // URL: /columns
-    // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
+    // URL: /columns
+    // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
     // View all columns.
 
     if (!empty($_PE[1])) {
@@ -109,8 +109,8 @@ if (PATH_COUNT < 3 && !ACTION) {
 
 
 if (PATH_COUNT > 2 && !ACTION) {
-    // URL: /columns/VariantOnGenome/DNA
-    // URL: /columns/Phenotype/Blood_pressure/Systolic
+    // URL: /columns/VariantOnGenome/DNA
+    // URL: /columns/Phenotype/Blood_pressure/Systolic
     // View specific column.
 
     $aCol = $_PE;
@@ -152,7 +152,7 @@ if (PATH_COUNT > 2 && !ACTION) {
 
 
 if (PATH_COUNT == 2 && ACTION == 'order') {
-    // URL: /columns/Individual?order
+    // URL: /columns/Individual?order
     // Change in what order the columns will be shown in a viewList/viewEntry.
 
     $sCategory = $_PE[1];
@@ -252,7 +252,7 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
 
 
 if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
-    // URL: /columns?data_type_wizard
+    // URL: /columns?data_type_wizard
     // Show form type forms and send info back.
 
     define('TAB_SELECTED', 'setup');
@@ -640,7 +640,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create') {
-    // URL: /columns?create
+    // URL: /columns?create
     // Create a new column.
 
     define('TAB_SELECTED', 'setup');
@@ -826,8 +826,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 if (PATH_COUNT > 2 && ACTION == 'edit') {
-    // URL: /columns/VariantOnGenome/DNA?edit
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?edit
+    // URL: /columns/VariantOnGenome/DNA?edit
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?edit
     // Edit specific column.
 
     define('TAB_SELECTED', 'setup');
@@ -1369,8 +1369,8 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 if (PATH_COUNT > 2 && ACTION == 'add') {
-    // URL: /columns/VariantOnGenome/DNA?add
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?add
+    // URL: /columns/VariantOnGenome/DNA?add
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?add
     // Add specific column to the data table, and enable.
 
     $aCol = $_PE;
@@ -1748,8 +1748,8 @@ if (!isset($_GET['in_window'])) {
 
 
 if (PATH_COUNT > 2 && ACTION == 'remove') {
-    // URL: /columns/VariantOnGenome/DNA?remove
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?remove
+    // URL: /columns/VariantOnGenome/DNA?remove
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?remove
     // Disable specific custom column.
 
     $aCol = $_PE;
@@ -2093,8 +2093,8 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
 
 if (PATH_COUNT > 2 && ACTION == 'delete') {
-    // URL: /columns/VariantOnGenome/DNA?delete
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
+    // URL: /columns/VariantOnGenome/DNA?delete
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
     // Drop specific custom column.
 
     define('TAB_SELECTED', 'setup');

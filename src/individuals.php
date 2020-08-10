@@ -44,8 +44,8 @@ if ($_AUTH) {
 
 
 if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) {
-    // URL: /individuals
-    // URL: /individuals/DMD
+    // URL: /individuals
+    // URL: /individuals/DMD
     // View all entries.
 
     if (!empty($_PE[1])) {
@@ -97,7 +97,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /individuals/00000001
+    // URL: /individuals/00000001
     // View specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);
@@ -230,7 +230,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create') {
-    // URL: /individuals?create
+    // URL: /individuals?create
     // Create a new entry.
 
     define('PAGE_TITLE', 'Create a new individual information entry');
@@ -344,8 +344,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'publish'))) {
-    // URL: /individuals/00000001?edit
-    // URL: /individuals/00000001?publish
+    // URL: /individuals/00000001?edit
+    // URL: /individuals/00000001?publish
     // Edit an entry.
 
     $nID = sprintf('%08d', $_PE[1]);
@@ -532,7 +532,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /individuals/00000001?delete
+    // URL: /individuals/00000001?delete
     // Drop specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);

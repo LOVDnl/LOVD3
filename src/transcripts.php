@@ -44,8 +44,8 @@ if ($_AUTH) {
 
 
 if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])))) {
-    // URL: /transcripts
-    // URL: /transcripts/DMD
+    // URL: /transcripts
+    // URL: /transcripts/DMD
     // View all entries.
 
     if (empty($_PE[1])) {
@@ -83,7 +83,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldec
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /transcripts/00001
+    // URL: /transcripts/00001
     // View specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);
@@ -126,7 +126,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /transcripts/NM_004006.2
+    // URL: /transcripts/NM_004006.2
     // Try to find a transcripts by its NCBI ID and forward.
     // When we have multiple hits, refer to listView.
 
@@ -535,7 +535,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /transcripts/00001?delete
+    // URL: /transcripts/00001?delete
     // Drop specific entry.
 
     $nID = sprintf('%08d', $_PE[1]);

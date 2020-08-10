@@ -45,7 +45,7 @@ if ($_AUTH) {
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /users
+    // URL: /users
     // View all entries.
 
     // Managers are allowed to download this list...
@@ -74,7 +74,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /users/00001
+    // URL: /users/00001
     // View specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -166,7 +166,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
-    // URL: /users?create
+    // URL: /users?create
     // URL: /users?register
     // Create a new user, or self-register a new submitter.
 
@@ -665,7 +665,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
-    // URL: /users/00001?edit
+    // URL: /users/00001?edit
     // Edit specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -782,7 +782,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
-    // URL: /users/00001?change_password
+    // URL: /users/00001?change_password
     // Change a user's password.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -881,7 +881,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /users/00001?delete
+    // URL: /users/00001?delete
     // Delete a specific user.
 
     $nID = sprintf('%05d', $_PE[1]);
