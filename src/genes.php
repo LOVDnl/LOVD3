@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-02-06
- * For LOVD    : 3.0-23
+ * Modified    : 2020-08-10
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -956,7 +956,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                 foreach ($aDone as $sSection => $n) {
                     $sMessage .= (!$sMessage? '' : ', ') . $n . ' ' . $sSection;
                 }
-                $sMessage = 'deleted ' . preg_replace('/, ([^,]+)/', " and $1", $sMessage);
+                $sMessage = 'deleted ' . preg_replace('/, ([^,]+)$/', ", and $1", $sMessage);
             } else {
                 $sMessage = 'no data to delete';
             }

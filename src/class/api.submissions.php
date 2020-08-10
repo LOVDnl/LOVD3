@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-06-03
- * For LOVD    : 3.0-24
+ * Modified    : 2020-08-10
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1680,7 +1680,7 @@ class LOVD_API_Submissions
                 $sMessage .= (!$sMessage ? '' : ', ') . $n . ' ' . $sObject;
             }
         }
-        $sMessage = preg_replace('/, ([^,]+)/', " and $1", $sMessage);
+        $sMessage = preg_replace('/, ([^,]+)$/', ", and $1", $sMessage);
         lovd_writeLog('Event', 'API:SubmissionCreate', 'Created LOVD import file ' . $sFileName . ' using LOVD API v' . $this->API->nVersion . ' (' . $sMessage . ')', $this->zAuth['id']);
 
         $nBytes = filesize($_INI['paths']['data_files'] . '/' . $sFileName);
