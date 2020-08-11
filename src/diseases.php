@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2019-08-27
- * For LOVD    : 3.0-22
+ * Modified    : 2020-08-11
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -155,7 +155,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($sID))->fetchAllColumn();
     $n = count($aDiseases);
     if (!$n) {
@@ -644,7 +644,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
     $sUnit = 'disease';
     $sCategory = 'Phenotype';
 
-    $sParentID = rawurldecode($_PE[1]);
+    $sParentID = $_PE[1];
     $aCol = $_PE;
     unset($aCol[0], $aCol[1], $aCol[2]); // 'diseases/00001/columns';
     $sColumnID = implode('/', $aCol);

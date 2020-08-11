@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-08-10
+ * Modified    : 2020-08-11
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -182,11 +182,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && !ACTION) {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && !ACTION) {
     // URL: /genes/DMD
     // View specific entry.
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     define('PAGE_TITLE', $sID . ' gene homepage');
     $_T->printHeader();
     $_T->printTitle();
@@ -659,11 +659,11 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && ACTION == 'edit') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION == 'edit') {
     // URL: /genes/DMD?edit
     // Edit an entry.
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     define('PAGE_TITLE', 'Edit gene information entry');
     define('LOG_EVENT', 'GeneEdit');
 
@@ -843,11 +843,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && ACTION == 'empty') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION == 'empty') {
     // URL: /genes/DMD?empty
     // Empty the gene database (delete all variants and associated data).
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     define('PAGE_TITLE', 'Empty ' . $sID . ' gene database');
     define('LOG_EVENT', 'GeneEmpty');
     $_T->printHeader();
@@ -1007,11 +1007,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && ACTION == 'delete') {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION == 'delete') {
     // URL: /genes/DMD?delete
     // Drop specific entry.
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     define('PAGE_TITLE', 'Delete gene information entry ' . $sID);
     define('LOG_EVENT', 'GeneDelete');
 
@@ -1115,11 +1115,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && !ACTION) {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
     // URL: /genes/DMD/columns
     // View enabled columns for this gene.
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     define('PAGE_TITLE', 'Enabled custom data columns for gene ' . $sID);
     $_T->printHeader();
     $_T->printTitle();
@@ -1145,7 +1145,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && !ACTION) {
+if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
     // URL: /genes/DMD/columns/DNA
     // URL: /genes/DMD/columns/GVS/Function
     // View specific enabled column for this gene.
@@ -1153,7 +1153,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])
     $sUnit = 'gene';
     $sCategory = 'VariantOnTranscript';
 
-    $sParentID = rawurldecode($_PE[1]);
+    $sParentID = $_PE[1];
     $aCol = $_PE;
     unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
     $sColumnID = implode('/', $aCol);
@@ -1185,7 +1185,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])
 
 
 
-if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && ACTION == 'edit') {
+if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] == 'columns' && ACTION == 'edit') {
     // URL: /genes/DMD/columns/DNA?edit
     // URL: /genes/DMD/columns/GVS/Function?edit
     // Edit specific enabled column for this gene.
@@ -1193,7 +1193,7 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])
     $sUnit = 'gene';
     $sCategory = 'VariantOnTranscript';
 
-    $sParentID = rawurldecode($_PE[1]);
+    $sParentID = $_PE[1];
     $aCol = $_PE;
     unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
     $sColumnID = implode('/', $aCol);
@@ -1290,11 +1290,11 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'columns' && ACTION == 'order') {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] == 'columns' && ACTION == 'order') {
     // URL: /genes/DMD/columns?order
     // Change order of enabled columns for this gene.
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     define('PAGE_TITLE', 'Change order of enabled custom data columns for gene ' . $sID);
     define('LOG_EVENT', 'ColumnOrder');
     $_T->printHeader();
@@ -1383,11 +1383,11 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && $_PE[2] == 'graphs' && !ACTION) {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] == 'graphs' && !ACTION) {
     // URL: /genes/DMD/graphs
     // Show different graphs about this gene; variant type (DNA, RNA & Protein level), ...
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
     define('PAGE_TITLE', 'Graphs &amp; statistics on gene ' . $sID);
     $_T->printHeader();
     $_T->printTitle();
@@ -1503,12 +1503,12 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
 
 
-if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1])) && in_array(ACTION, array('authorize', 'sortCurators'))) {
+if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array(ACTION, array('authorize', 'sortCurators'))) {
     // URL: /genes/DMD?authorize
     // URL: /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
-    $sID = rawurldecode($_PE[1]);
+    $sID = $_PE[1];
 
     // 2015-07-22; 3.0-14; Drop usage of CURRENT_PATH in favor of fixed $sID which may have a gene symbol with incorrect case.
     // Now fix possible issues with capitalization. inc-init.php does this for $_SESSION['currdb'], but we're using $sID.
