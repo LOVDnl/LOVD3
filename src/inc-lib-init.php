@@ -670,6 +670,23 @@ function lovd_getColumnType ($sTable, $sCol)
 
 
 
+function lovd_getCurrentID ()
+{
+    // Gets the ID for the current page, formats it, and returns it.
+    // E.g. /individuals/1 => 00000001.
+    global $_PE, $_SETT;
+
+    if ($_PE[0] == 'genes') {
+        return $_PE[1];
+    } else {
+        return sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
+    }
+}
+
+
+
+
+
 function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
 {
     // Retrieves URL for external source and returns it, including the ID.
