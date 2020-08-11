@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-08-10
+ * Modified    : 2020-08-11
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -806,7 +806,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             array($sTranscriptID, $sTranscriptID))->fetchColumn();
         if (!$aTranscriptOffsets[$sTranscriptID]) {
             // Transcript not configured correctly.
-            return false;
+            // Don't die here; we might not even need these positions. We'll die later if we do.
+            $sTranscriptID = '';
         }
     } elseif ($sTranscriptID === false) {
         // If the transcript ID is passed as false, we are asked to ignore not having the transcript.
