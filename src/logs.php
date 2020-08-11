@@ -39,7 +39,7 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-// URL: /logs
+// URL: /logs
 // View all log entries.
 
 define('PAGE_TITLE', 'System log entries');

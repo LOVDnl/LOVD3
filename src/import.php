@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2020-05-28
- * For LOVD    : 3.0-24
+ * Modified    : 2020-08-10
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -45,7 +45,7 @@ if (LOVD_plus) {
 
 
 if (ACTION == 'schedule' && PATH_COUNT == 1) {
-    // URL: /import?schedule
+    // URL: /import?schedule
     // Schedule files for import.
     define('LOG_EVENT', 'ImportSchedule');
     define('PAGE_TITLE', 'Schedule files for import');
@@ -414,7 +414,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
 
 
 if (ACTION == 'download_scheduled_file' && PATH_COUNT == 1 && !empty($_GET['file'])) {
-    // URL: /import?download_scheduled_file&file=LOVD_API_submission_00001_2017-11-01_13:47:02.955519.lovd
+    // URL: /import?download_scheduled_file&file=LOVD_API_submission_00001_2017-11-01_13:47:02.955519.lovd
     // Download files from data directory.
     // This code could go into download.php, but that's currently quite specific
     //  for LOVD data, generated out of the database.
@@ -450,7 +450,7 @@ if (ACTION == 'download_scheduled_file' && PATH_COUNT == 1 && !empty($_GET['file
 
 
 if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
-    // URL: /import?autoupload_scheduled_file
+    // URL: /import?autoupload_scheduled_file
     // This URL forces FORMAT to be text/plain.
     // All unneeded output will be prevented.
     define('FORMAT_ALLOW_TEXTPLAIN', true); // To allow automatic data loading.
@@ -2843,7 +2843,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     foreach ($aDone as $sSection => $n) {
                         $sMessage .= (!$sMessage? '' : ', ') . $n . ' ' . $sSection;
                     }
-                    $sMessage = preg_replace('/, ([^,]+)/', " and $1", $sMessage);
+                    $sMessage = preg_replace('/, ([^,]+)$/', ", and $1", $sMessage);
                 } else {
                     $sMessage = 'new links only';
                 }

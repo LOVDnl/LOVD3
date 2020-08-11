@@ -45,7 +45,7 @@ if ($_AUTH) {
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /diseases
+    // URL: /diseases
     // View all entries.
 
     // Check if we are looking for diseases associated with the currently selected gene.
@@ -85,7 +85,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /diseases/00001
+    // URL: /diseases/00001
     // View specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -151,7 +151,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /diseases/DMD
+    // URL: /diseases/DMD
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
 
@@ -178,7 +178,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create') {
-    // URL: /diseases?create
+    // URL: /diseases?create
     // Create a new entry.
 
     define('PAGE_TITLE', 'Create a new disease information entry');
@@ -304,7 +304,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
-    // URL: /diseases/00001?edit
+    // URL: /diseases/00001?edit
     // Edit a specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -438,7 +438,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /diseases/00001?delete
+    // URL: /diseases/00001?delete
     // Delete specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -567,7 +567,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
 
 if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
-    // URL: /diseases/00001/columns
+    // URL: /diseases/00001/columns
     // View enabled columns for this disease.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -597,8 +597,8 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) 
 
 
 if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
-    // URL: /diseases/00001/columns/IQ
-    // URL: /diseases/00001/columns/Blood_pressure/Systolic
+    // URL: /diseases/00001/columns/IQ
+    // URL: /diseases/00001/columns/Blood_pressure/Systolic
     // View specific enabled column for this disease.
 
     $sUnit = 'disease';
@@ -637,8 +637,8 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
 
 
 if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 'edit') {
-    // URL: /diseases/00001/columns/IQ?edit
-    // URL: /diseases/00001/columns/Blood_pressure/Systolic?edit
+    // URL: /diseases/00001/columns/IQ?edit
+    // URL: /diseases/00001/columns/Blood_pressure/Systolic?edit
     // View specific enabled column for this disease.
 
     $sUnit = 'disease';
@@ -742,7 +742,7 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
 
 
 if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 'order') {
-    // URL: /diseases/00001/columns?order
+    // URL: /diseases/00001/columns?order
     // Change order of enabled columns for this disease.
 
     $nID = sprintf('%05d', $_PE[1]);

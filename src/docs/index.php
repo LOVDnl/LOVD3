@@ -37,7 +37,7 @@ require ROOT_PATH . 'inc-init.php';
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /docs
+    // URL: /docs
     // Provide link to PDF and HTML file.
 
     define('PAGE_TITLE', 'LOVD' . (LOVD_plus? '+' : ' 3.0') . ' documentation');

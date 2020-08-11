@@ -44,8 +44,8 @@ if ($_AUTH) {
 
 
 if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) {
-    // URL: /screenings
-    // URL: /screenings/DMD
+    // URL: /screenings
+    // URL: /screenings/DMD
     // View all entries.
 
     if (!empty($_PE[1])) {
@@ -92,7 +92,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /screenings/0000000001
+    // URL: /screenings/0000000001
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -158,7 +158,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_digit($_GET['target'])) {
-    // URL: /screenings?create
+    // URL: /screenings?create
     // Create a new entry.
 
     define('LOG_EVENT', 'ScreeningCreate');
@@ -315,7 +315,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
-    // URL: /screenings/0000000001?edit
+    // URL: /screenings/0000000001?edit
     // Edit an entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -495,7 +495,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
-    // URL: /screenings/0000000001?confirmVariants
+    // URL: /screenings/0000000001?confirmVariants
     // Confirm existing variant entries within the same individual.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -667,7 +667,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
-    // URL: /screenings/0000000001?removeVariants
+    // URL: /screenings/0000000001?removeVariants
     // Remove variants from a screening entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -828,7 +828,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /screenings/0000000001?delete
+    // URL: /screenings/0000000001?delete
     // Drop specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);

@@ -43,7 +43,7 @@ if ($_AUTH) {
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /announcements
+    // URL: /announcements
     // View all entries.
 
     define('PAGE_TITLE', 'System announcements');
@@ -66,7 +66,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /announcements/00001
+    // URL: /announcements/00001
     // View specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -98,7 +98,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create') {
-    // URL: /announcements?create
+    // URL: /announcements?create
     // URL: /announcements?register
     // Create a new announcement.
 
@@ -193,7 +193,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
-    // URL: /announcements/00001?edit
+    // URL: /announcements/00001?edit
     // Edit specific entry.
 
     $nID = sprintf('%05d', $_PE[1]);
@@ -286,7 +286,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /announcements/00001?delete
+    // URL: /announcements/00001?delete
     // Delete a specific announcement.
 
     $nID = sprintf('%05d', $_PE[1]);

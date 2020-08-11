@@ -44,7 +44,7 @@ if ($_AUTH) {
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /phenotypes
+    // URL: /phenotypes
     // Not supported, forward user to disease-specific overview.
     header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/disease?search_phenotypes=' . urlencode('!0'));
     exit;
@@ -55,7 +55,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 
 if (PATH_COUNT == 2 && $_PE[1] == 'disease' && !ACTION) {
-    // URL: /phenotypes/disease
+    // URL: /phenotypes/disease
     // Present users the list of diseases to choose from, to view the phenotype entries for this disease.
 
     define('PAGE_TITLE', 'Select a disease to view all phenotype entries');
@@ -77,7 +77,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'disease' && !ACTION) {
 
 
 if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) {
-    // URL: /phenotypes/disease/00001
+    // URL: /phenotypes/disease/00001
     // View all phenotype entries for a certain disease.
 
     $nDiseaseID = sprintf('%05d', $_PE[2]);
@@ -107,7 +107,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) 
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /phenotypes/0000000001
+    // URL: /phenotypes/0000000001
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -147,7 +147,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_digit($_GET['target'])) {
-    // URL: /phenotypes?create&target=00000001
+    // URL: /phenotypes?create&target=00000001
     // Create a new entry.
 
     // FIXME; ik vind nog steeds dat vooral het begin van deze code nog enigszins rommelig is.
@@ -356,8 +356,8 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'publish'))) {
-    // URL: /phenotypes/0000000001?edit
-    // URL: /phenotypes/0000000001?publish
+    // URL: /phenotypes/0000000001?edit
+    // URL: /phenotypes/0000000001?publish
     // Edit an entry.
 
     $nID = sprintf('%010d', $_PE[1]);
@@ -504,7 +504,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /phenotypes/0000000001?delete
+    // URL: /phenotypes/0000000001?delete
     // Drop specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);

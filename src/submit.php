@@ -81,7 +81,7 @@ function lovd_prepareSubmitData ($sDataType, $aData) {
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /submit
+    // URL: /submit
     // Submission process
 
     // 2012-07-10; 3.0-beta-07; Submitters are no longer allowed to add variants without individual data.

@@ -110,7 +110,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
     // URL: /download/all/submission/00000001
     // URL: /download/all/user/00001
     // URL: /download/columns
-    // URL: /download/columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
+    // URL: /download/columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
     // URL: /download/diseases
     // URL: /download/genes
     // URL: /download/gene_panels/00001
