@@ -691,16 +691,29 @@ function lovd_getCurrentPageTitle()
 {
     // Generates the current page's title, fetching more information from the
     //  database, if necessary.
-    global $_PE;
+    global $_DB, $_PE;
 
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
     // Capitalize the first letter, trim off the last 's' from the data object.
     $sTitle = ucfirst($sTitle . substr($_PE[0], 0, -1));
 
+    $ID = lovd_getCurrentID();
     if (PATH_COUNT > 1 && in_array(ACTION, ['', 'edit', 'delete'])) {
         // We're accessing just one entry.
-        $sTitle .= ' #' . lovd_getCurrentID();
+        $sTitle .= ' #' . $ID;
+    }
+
+    // Add details, if available.
+    switch ($_PE[0]) {
+        case 'transcripts':
+            list($sNCBI, $sGene) =
+                $_DB->query('
+                    SELECT id_ncbi, geneid
+                    FROM ' . TABLE_TRANSCRIPTS . '
+                    WHERE id = ?', array($ID))->fetchRow();
+            $sTitle .= ' (' . $sNCBI . ', ' . $sGene . ' gene)';
+            break;
     }
 
     return $sTitle;

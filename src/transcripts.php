@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-08-11
+ * Modified    : 2020-08-12
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,7 +55,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]))
         $_GET['search_geneid'] = '="' . $sGene . '"';
         lovd_isAuthorized('gene', $sGene);
     }
-    define('PAGE_TITLE', 'All transcripts' . ($sGene? ' of gene ' . $sGene : ''));
+    define('PAGE_TITLE', 'All transcripts' . (!$sGene? '' : ' active for the ' . $sGene . ' gene'));
     $_T->printHeader();
     $_T->printTitle();
     if ($sGene) {
@@ -83,11 +83,11 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]))
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
-    // URL: /transcripts/00001
+    // URL: /transcripts/00000001
     // View specific entry.
 
-    $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'Transcript #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -134,7 +134,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     if ($nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchColumn()) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
     } else {
-        define('PAGE_TITLE', 'Transcript');
+        define('PAGE_TITLE', 'Transcript ' . $sID);
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
@@ -159,7 +159,7 @@ if (ACTION == 'create') {
 
     // If no gene given, ask for it and forward user.
     if (!isset($_PE[1])) {
-        define('PAGE_TITLE', 'Add transcript to a gene');
+        define('PAGE_TITLE', 'Add transcript entry to a gene');
 
         // Is user authorized in any gene?
         lovd_isAuthorized('gene', $_AUTH['curates']);
@@ -198,7 +198,7 @@ if (ACTION == 'create') {
 
     // Gene given, check validity.
     $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
-    define('PAGE_TITLE', 'Add transcript to gene ' . $sGene);
+    define('PAGE_TITLE', 'Add transcript entry to ' . (!$sGene? 'a' : ' the ' . $sGene) . ' gene');
     $sPath = CURRENT_PATH . '?' . ACTION;
     $sPathBase = $_PE[0] . '?' . ACTION;
     if (!$sGene) {
@@ -447,11 +447,11 @@ if (ACTION == 'create') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
-    // URL: /transcripts/00001?edit
+    // URL: /transcripts/00000001?edit
     // Edit a transcript
 
-    $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'Edit transcript #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'TranscriptEdit');
 
     // Load appropriate user level for this transcript.
@@ -535,11 +535,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
 
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
-    // URL: /transcripts/00001?delete
+    // URL: /transcripts/00000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'Delete transcript information entry #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'TranscriptDelete');
 
     // Load appropriate user level for this transcript.
