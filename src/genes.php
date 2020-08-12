@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-08-11
+ * Modified    : 2020-08-12
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -169,7 +169,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     if ($sID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($_PE[1]))->fetchColumn()) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
     } else {
-        define('PAGE_TITLE', 'Genes with HGNC ID #' . $_PE[1]);
+        define('PAGE_TITLE', 'Gene with HGNC ID #' . $_PE[1]);
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('Gene not found!', 'stop');
@@ -186,8 +186,8 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && !ACTION)
     // URL: /genes/DMD
     // View specific entry.
 
-    $sID = $_PE[1];
-    define('PAGE_TITLE', $sID . ' gene homepage');
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'The ' . $sID . ' gene homepage');
     $_T->printHeader();
     $_T->printTitle();
     lovd_printGeneHeader();
@@ -261,7 +261,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /genes?create
     // Create a new entry.
 
-    define('PAGE_TITLE', 'Create a new gene information entry');
+    define('PAGE_TITLE', 'Create a new gene entry');
     define('LOG_EVENT', 'GeneCreate');
 
     // Require manager clearance.
@@ -663,8 +663,8 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     // URL: /genes/DMD?edit
     // Edit an entry.
 
-    $sID = $_PE[1];
-    define('PAGE_TITLE', 'Edit gene information entry');
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'Edit the ' . $sID . ' gene entry');
     define('LOG_EVENT', 'GeneEdit');
 
     // Load appropriate user level for this gene.
@@ -847,8 +847,8 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     // URL: /genes/DMD?empty
     // Empty the gene database (delete all variants and associated data).
 
-    $sID = $_PE[1];
-    define('PAGE_TITLE', 'Empty ' . $sID . ' gene database');
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'Empty the ' . $sID . ' gene database');
     define('LOG_EVENT', 'GeneEmpty');
     $_T->printHeader();
     $_T->printTitle();
@@ -1011,8 +1011,8 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     // URL: /genes/DMD?delete
     // Drop specific entry.
 
-    $sID = $_PE[1];
-    define('PAGE_TITLE', 'Delete gene information entry ' . $sID);
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'Delete the ' . $sID . ' gene entry');
     define('LOG_EVENT', 'GeneDelete');
 
     // Require manager clearance.
@@ -1119,8 +1119,8 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
     // URL: /genes/DMD/columns
     // View enabled columns for this gene.
 
-    $sID = $_PE[1];
-    define('PAGE_TITLE', 'Enabled custom data columns for gene ' . $sID);
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'Custom data columns enabled for the ' . $sID . ' gene');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1153,11 +1153,11 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] =
     $sUnit = 'gene';
     $sCategory = 'VariantOnTranscript';
 
-    $sParentID = $_PE[1];
+    $sParentID = lovd_getCurrentID();
     $aCol = $_PE;
     unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
     $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' ' . $sParentID);
+    define('PAGE_TITLE', 'Settings for the ' . $sColumnID . ' custom data column enabled for the ' . $sParentID . ' ' . $sUnit);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1193,11 +1193,11 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] =
     $sUnit = 'gene';
     $sCategory = 'VariantOnTranscript';
 
-    $sParentID = $_PE[1];
+    $sParentID = lovd_getCurrentID();
     $aCol = $_PE;
     unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
     $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Edit settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' ' . $sParentID);
+    define('PAGE_TITLE', 'Edit settings for the ' . $sColumnID . ' custom data column enabled for the ' . $sParentID . ' ' . $sUnit);
     define('LOG_EVENT', 'SharedColEdit');
 
     // Load appropriate user level for this gene.
@@ -1294,8 +1294,8 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
     // URL: /genes/DMD/columns?order
     // Change order of enabled columns for this gene.
 
-    $sID = $_PE[1];
-    define('PAGE_TITLE', 'Change order of enabled custom data columns for gene ' . $sID);
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'Change order of custom data columns enabled for the ' . $sID . ' gene');
     define('LOG_EVENT', 'ColumnOrder');
     $_T->printHeader();
     $_T->printTitle();
@@ -1387,8 +1387,8 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
     // URL: /genes/DMD/graphs
     // Show different graphs about this gene; variant type (DNA, RNA & Protein level), ...
 
-    $sID = $_PE[1];
-    define('PAGE_TITLE', 'Graphs &amp; statistics on gene ' . $sID);
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'Graphs and statistics for the ' . $sID . ' gene');
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1508,7 +1508,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
     // URL: /genes/DMD?sortCurators
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
-    $sID = $_PE[1];
+    $sID = lovd_getCurrentID();
 
     // 2015-07-22; 3.0-14; Drop usage of CURRENT_PATH in favor of fixed $sID which may have a gene symbol with incorrect case.
     // Now fix possible issues with capitalization. inc-init.php does this for $_SESSION['currdb'], but we're using $sID.
