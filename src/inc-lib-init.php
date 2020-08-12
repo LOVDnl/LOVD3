@@ -676,10 +676,13 @@ function lovd_getCurrentID ()
     // E.g. /individuals/1 => 00000001.
     global $_PE, $_SETT;
 
-    if ($_PE[0] == 'genes') {
-        return $_PE[1];
-    } else {
+    if (PATH_COUNT < 2) {
+        // No ID in the URL.
+        return false;
+    } elseif (isset($_SETT['objectid_length'][$_PE[0]])) {
         return sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
+    } else {
+        return $_PE[1];
     }
 }
 
@@ -699,9 +702,11 @@ function lovd_getCurrentPageTitle()
     $sTitle = ucfirst($sTitle . substr($_PE[0], 0, -1));
 
     $ID = lovd_getCurrentID();
-    if (PATH_COUNT > 1 && in_array(ACTION, ['', 'edit', 'delete'])) {
+    if ($ID) {
         // We're accessing just one entry.
         $sTitle .= ' #' . $ID;
+    } else {
+        return $sTitle;
     }
 
     // Add details, if available.
