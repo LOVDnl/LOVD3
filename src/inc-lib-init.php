@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-08-12
+ * Modified    : 2020-08-13
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -694,7 +694,7 @@ function lovd_getCurrentPageTitle()
 {
     // Generates the current page's title, fetching more information from the
     //  database, if necessary.
-    global $_DB, $_PE;
+    global $_CONF, $_DB, $_PE;
 
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
@@ -718,6 +718,29 @@ function lovd_getCurrentPageTitle()
                     FROM ' . TABLE_TRANSCRIPTS . '
                     WHERE id = ?', array($ID))->fetchRow();
             $sTitle .= ' (' . $sNCBI . ', ' . $sGene . ' gene)';
+            break;
+        case 'variants':
+            // Get VOG description and VOT description on the most used transcript.
+            // We have to take the status into account, so that we won't disclose
+            //  information when people try random IDs!
+            // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
+            $bIsAuthorized = (lovd_isAuthorized('variant', $ID, false) !== false);
+            list($sVOG, $sVOT) =
+                $_DB->query('
+                    SELECT CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, ":", vog.`VariantOnGenome/DNA`) AS VOG_DNA,
+                        CONCAT(t.geneid, "(", t.id_ncbi, "):", vot.`VariantOnTranscript/DNA`) AS VOT_DNA
+                    FROM ' . TABLE_VARIANTS . ' AS vog
+                      INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
+                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
+                      LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot.transcriptid)
+                    WHERE vog.id = ? AND (? = 1 OR vog.statusid >= ?)
+                    GROUP BY vog.id, vot.transcriptid
+                    ORDER BY COUNT(vot_count.id) DESC, t.id ASC',
+                        array($ID, $bIsAuthorized, STATUS_MARKED))->fetchRow();
+            if ($sVOG) {
+                $sTitle .= ' (' . $sVOG . (!$sVOT? '' : ', ' . $sVOT) . ')';
+            }
             break;
     }
 
