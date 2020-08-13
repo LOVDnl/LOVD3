@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2020-08-11
+ * Modified    : 2020-08-13
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -100,8 +100,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /individuals/00000001
     // View specific entry.
 
-    $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'Individual #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
     // Before we start the template here, do a quick check if this entry exists.
     // This is non-standard, we normally rely on viewEntry() to sort that out.
@@ -146,7 +146,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             if ($zData['statusid'] < STATUS_OK) {
                 $aNavigation[CURRENT_PATH . '?publish']          = array('check.png', ($zData['statusid'] == STATUS_MARKED? 'Remove mark from' : 'Publish (curate)') . ' individual entry', 1);
             }
-            $aNavigation['javascript:$.get(\'ajax/curate_set.php?bySubmission&id=' . $_PE[1] . '\').fail(function(){alert(\'Request failed. Please try again.\');});'] = array('check.png', 'Publish (curate) entire submission', 1);
+            $aNavigation['javascript:$.get(\'ajax/curate_set.php?bySubmission&id=' . $nID . '\').fail(function(){alert(\'Request failed. Please try again.\');});'] = array('check.png', 'Publish (curate) entire submission', 1);
         }
         // You can only add phenotype information to this individual, when there are phenotype columns enabled.
         if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID))->fetchColumn()) {
@@ -233,7 +233,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /individuals?create
     // Create a new entry.
 
-    define('PAGE_TITLE', 'Create a new individual information entry');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'IndividualCreate');
 
     lovd_isAuthorized('gene', $_AUTH['curates']);
@@ -348,8 +348,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     // URL: /individuals/00000001?publish
     // Edit an entry.
 
-    $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'Edit individual #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'IndividualEdit');
 
     // Load appropriate user level for this individual.
@@ -535,8 +535,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /individuals/00000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'Delete individual information entry ' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'IndividualDelete');
 
     // FIXME: What if individual also contains other user's data?
