@@ -262,10 +262,7 @@ class LOVD_Template
         }
 
         if (!defined('PAGE_TITLE')) {
-            $sFile = substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1); // Isolate "genes" out of "/genes.php".
-            if (array_key_exists($sFile, $this->aMenu)) {
-                define('PAGE_TITLE', $this->aMenu[$sFile]);
-            }
+            define('PAGE_TITLE', lovd_getCurrentPageTitle());
         }
 
         return true;

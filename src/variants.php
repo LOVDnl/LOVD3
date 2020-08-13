@@ -575,10 +575,6 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     // Detect whether a valid target screening is given. We do this here so we
     // don't have to duplicate this code for variants?create and variants/upload?create.
 
-    // We don't want to show an error message about the screening if the user isn't allowed to come here.
-    // This will show a "View variants" title that makes no sense, but setting
-    //  PAGE_TITLE here already throws an error when LOVD tries to overwrite it.
-    // FIXME: Pass page title as an optional argument to this function?
     lovd_requireAUTH(
         (!empty($_PE[1])? LEVEL_MANAGER :
             (empty($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)? LEVEL_CURATOR :

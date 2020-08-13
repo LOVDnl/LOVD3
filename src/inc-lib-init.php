@@ -698,8 +698,14 @@ function lovd_getCurrentPageTitle()
 
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
+    if (ACTION == 'create') {
+        $sTitle .= 'a new ';
+    }
     // Capitalize the first letter, trim off the last 's' from the data object.
     $sTitle = ucfirst($sTitle . substr($_PE[0], 0, -1));
+    if (ACTION == 'create') {
+        $sTitle .= ' entry';
+    }
 
     $ID = lovd_getCurrentID();
     if ($ID) {
