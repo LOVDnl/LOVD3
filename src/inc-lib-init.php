@@ -676,14 +676,14 @@ function lovd_getCurrentID ()
     // E.g. /individuals/1 => 00000001.
     global $_PE, $_SETT;
 
-    if (PATH_COUNT < 2) {
-        // No ID in the URL.
-        return false;
-    } elseif (isset($_SETT['objectid_length'][$_PE[0]])) {
-        return sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
-    } else {
-        return $_PE[1];
+    if (PATH_COUNT >= 2) {
+        if (isset($_SETT['objectid_length'][$_PE[0]]) && ctype_digit($_PE[1])) {
+            return sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
+        } elseif ($_PE[0] == 'genes') {
+            return $_PE[1];
+        }
     }
+    return false;
 }
 
 
