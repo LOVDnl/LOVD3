@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-08-11
+ * Modified    : 2020-08-13
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -110,7 +110,7 @@ if (!ACTION && (empty($_PE[1]) ||
     // URL: /variants
     // URL: /variants/chrX
     // URL: /variants/chr3:20-200000
-    // View all genomic variant entries, optionally restricted by chromosome.
+    // View all variant entries on the genome level, optionally restricted by chromosome.
 
     // Managers are allowed to download this list...
     if ($_AUTH['level'] >= LEVEL_MANAGER) {
@@ -120,7 +120,7 @@ if (!ACTION && (empty($_PE[1]) ||
     require_once ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $aColsToHide = array('allele_');
-    $sTitle = 'All genomic variants';
+    $sTitle = 'All variants';
 
     // Set conditions on viewlist if a region is specified (e.g. chr3:20-200000)
     if (isset($aRegionArgs)) {
@@ -192,10 +192,10 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
 
 if (PATH_COUNT == 3 && $_PE[1] == 'upload' && ctype_digit($_PE[2]) && !ACTION) {
     // URL: /variants/upload/123451234567890
-    // View all genomic variant entries that were submitted in the given upload.
+    // View all variant entries on the genome level that were submitted in the given upload.
 
     $nID = sprintf('%015d', $_PE[2]);
-    define('PAGE_TITLE', 'Genomic variants from upload #' . $nID);
+    define('PAGE_TITLE', 'All variants from upload #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -358,7 +358,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'Genomic variant #' . $nID);
+    define('PAGE_TITLE', 'Variant #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
 
