@@ -280,10 +280,10 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
     }
 
     if ($bUnique) {
-        define('PAGE_TITLE', 'Unique variants in gene ' . $sGene);
+        define('PAGE_TITLE', 'Unique variants in the ' . $sGene . ' gene');
         $sViewListID = 'CustomVL_VOTunique_VOG_' . $sGene;
     } else {
-        define('PAGE_TITLE', 'All transcript variants in gene ' . $sGene);
+        define('PAGE_TITLE', 'All variants in the ' . $sGene . ' gene');
         $sViewListID = 'CustomVL_VOT_VOG_' . $sGene;
     }
     $_T->printHeader();
@@ -357,8 +357,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /variants/0000000001
     // View specific entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'Variant #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -594,7 +594,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
             $sMessage = 'Cannot add variants to the given screening, because the value \'Have variants been found?\' is unchecked.';
         }
         if ($sMessage) {
-            define('PAGE_TITLE', (empty($_PE[1])? 'Create a new variant entry' : 'Upload variant data'));
+            define('PAGE_TITLE', (empty($_PE[1])? lovd_getCurrentPageTitle() : 'Upload variant data'));
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable($sMessage, 'stop');
@@ -638,7 +638,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     if (!isset($_GET['reference'])) {
         // URL: /variants?create
         // Select whether you want to create a variant on the genome or on a transcript.
-        define('PAGE_TITLE', 'Create a new variant entry');
+        define('PAGE_TITLE', lovd_getCurrentPageTitle());
         $_T->printHeader();
         $_T->printTitle();
 
@@ -714,17 +714,17 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         // On purpose not checking for format of $_GET['geneid']. If it's not right, we'll automatically get to the error message below.
         $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_GET['geneid']))->fetchColumn();
         if (!$sGene) {
-            define('PAGE_TITLE', 'Create a new variant entry');
+            define('PAGE_TITLE', lovd_getCurrentPageTitle());
             $_T->printHeader();
             $_T->printTitle();
             lovd_showInfoTable('The gene symbol given is not valid, please go to the create variant page and select the desired gene entry.', 'warning');
             $_T->printFooter();
             exit;
         } else {
-            define('PAGE_TITLE', 'Create a new variant entry for gene ' . $sGene);
+            define('PAGE_TITLE', lovd_getCurrentPageTitle() . ' for gene ' . $sGene);
         }
     } else {
-        define('PAGE_TITLE', 'Create a new variant entry');
+        define('PAGE_TITLE', lovd_getCurrentPageTitle());
     }
 
     if (isset($sGene)) {
@@ -2383,8 +2383,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     // URL: /variants/0000000001?publish
     // Edit an entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'Edit variant entry #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantEdit');
 
     lovd_isAuthorized('variant', $nID);
@@ -2723,8 +2723,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /variants/0000000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'Delete variant entry #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantDelete');
 
     lovd_isAuthorized('variant', $nID);
@@ -2816,8 +2816,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
     // URL: /variants/0000000001?search_global
     // Search an entry in other public LOVDs.
 
-    $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'Search other public LOVDs for variant #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantGlobalSearch');
     $_T->printHeader(false);
     $_T->printTitle();
@@ -2896,8 +2896,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
     // URL: /variants/0000000001?map
     // Map a variant to additional transcripts, or remove transcripts from the variant.
 
-    $nID = sprintf('%010d', $_PE[1]);
-    define('PAGE_TITLE', 'Map variant entry #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantMap');
 
     // Require manager clearance.

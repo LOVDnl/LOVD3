@@ -696,10 +696,16 @@ function lovd_getCurrentPageTitle()
     //  database, if necessary.
     global $_CONF, $_DB, $_PE;
 
+    $ID = lovd_getCurrentID();
+
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
     if (ACTION == 'create') {
         $sTitle .= 'a new ';
+    } elseif (ACTION == 'search_global') {
+        $sTitle = 'Search other public LOVDs for ';
+    } elseif (strpos(ACTION, '_') !== false) {
+        $sTitle = str_replace('_', ' ', $sTitle) . (!$ID? '' : 'for ');
     }
     // Capitalize the first letter, trim off the last 's' from the data object.
     $sTitle = ucfirst($sTitle . substr($_PE[0], 0, -1));
@@ -707,7 +713,6 @@ function lovd_getCurrentPageTitle()
         $sTitle .= ' entry';
     }
 
-    $ID = lovd_getCurrentID();
     if ($ID) {
         // We're accessing just one entry.
         $sTitle .= ' #' . $ID;
