@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-08-14
+ * Modified    : 2020-08-24
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -723,11 +723,12 @@ function lovd_getCurrentPageTitle ()
     // Add details, if available.
     switch ($_PE[0]) {
         case 'diseases':
-            $sName = $_DB->query('
-                SELECT IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")"))
+            list($sName, $nOMIM) = $_DB->query('
+                SELECT IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")), id_omim
                 FROM ' . TABLE_DISEASES . '
-                WHERE id = ?', array($ID))->fetchColumn();
-            $sTitle .= ' (' . $sName . ')';
+                WHERE id = ?', array($ID))->fetchRow();
+            $sTitle .= ' (' . $sName .
+                (!$nOMIM? '' : ', OMIM:' . $nOMIM) . ')';
             break;
         case 'transcripts':
             list($sNCBI, $sGene) =
