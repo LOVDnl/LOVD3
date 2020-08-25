@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-08-12
+ * Modified    : 2020-08-25
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1120,7 +1120,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
     // View enabled columns for this gene.
 
     $sID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Custom data columns enabled for the ' . $sID . ' gene');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1154,10 +1154,8 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] =
     $sCategory = 'VariantOnTranscript';
 
     $sParentID = lovd_getCurrentID();
-    $aCol = $_PE;
-    unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
-    $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Settings for the ' . $sColumnID . ' custom data column enabled for the ' . $sParentID . ' ' . $sUnit);
+    $sColumnID = implode('/', array_slice($_PE, 3));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -1194,10 +1192,8 @@ if (PATH_COUNT > 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] =
     $sCategory = 'VariantOnTranscript';
 
     $sParentID = lovd_getCurrentID();
-    $aCol = $_PE;
-    unset($aCol[0], $aCol[1], $aCol[2]); // 'genes/DMD/columns';
-    $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Edit settings for the ' . $sColumnID . ' custom data column enabled for the ' . $sParentID . ' ' . $sUnit);
+    $sColumnID = implode('/', array_slice($_PE, 3));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'SharedColEdit');
 
     // Load appropriate user level for this gene.
@@ -1295,7 +1291,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
     // Change order of enabled columns for this gene.
 
     $sID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Change order of custom data columns enabled for the ' . $sID . ' gene');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColumnOrder');
     $_T->printHeader();
     $_T->printTitle();

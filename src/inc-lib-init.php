@@ -729,7 +729,11 @@ function lovd_getCurrentPageTitle ()
 
     if ($ID) {
         // We're accessing just one entry.
-        $sTitle .= ' #' . $ID;
+        if ($_PE[0] == 'genes') {
+            $sTitle = preg_replace('/gene$/', ' the ' . $ID . ' gene', $sTitle);
+        } else {
+            $sTitle .= ' #' . $ID;
+        }
     } else {
         return $sTitle;
     }
