@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2020-08-13
+ * Modified    : 2020-08-25
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -570,7 +570,7 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) 
     // View enabled columns for this disease.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Custom data columns enabled for disease #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -604,10 +604,8 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
     $sCategory = 'Phenotype';
 
     $sParentID = lovd_getCurrentID();
-    $aCol = $_PE;
-    unset($aCol[0], $aCol[1], $aCol[2]); // 'diseases/00001/columns';
-    $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Settings for the ' . $sColumnID . ' custom data column enabled for ' . $sUnit . ' #' . $sParentID);
+    $sColumnID = implode('/', array_slice($_PE, 3));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -644,10 +642,8 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
     $sCategory = 'Phenotype';
 
     $sParentID = lovd_getCurrentID();
-    $aCol = $_PE;
-    unset($aCol[0], $aCol[1], $aCol[2]); // 'diseases/00001/columns';
-    $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Edit settings for the ' . $sColumnID . ' custom data column enabled for ' . $sUnit . ' #' . $sParentID);
+    $sColumnID = implode('/', array_slice($_PE, 3));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'SharedColEdit');
 
     // Load appropriate user level for this gene.
@@ -745,7 +741,7 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION ==
     // Change order of enabled columns for this disease.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Change order of custom data columns enabled for disease #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColumnOrder');
     $_T->printHeader();
     $_T->printTitle();
