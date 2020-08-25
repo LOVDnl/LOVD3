@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-08-24
+ * Modified    : 2020-08-25
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -702,11 +702,25 @@ function lovd_getCurrentPageTitle ()
     $sTitle = ltrim(ACTION . ' ');
     if (ACTION == 'create') {
         $sTitle .= 'a new ';
+    } elseif (ACTION == 'order') {
+        $sTitle = 'Change order of ';
     } elseif (ACTION == 'search_global') {
         $sTitle = 'Search other public LOVDs for ';
     } elseif (strpos(ACTION, '_') !== false) {
         $sTitle = str_replace('_', ' ', $sTitle) . (!$ID? '' : 'for ');
     }
+
+    // Custom column settings for genes and diseases.
+    if (in_array($_PE[0], array('diseases', 'genes')) && PATH_COUNT >= 3 && $_PE[2] == 'columns') {
+        if (PATH_COUNT == 3) {
+            // View or resort column list.
+            $sTitle .= 'custom data columns enabled for ';
+        } else {
+            $sColumnID = implode('/', array_slice($_PE, 3));
+            $sTitle .= 'settings for the &quot;' . $sColumnID . '&quot; custom data column enabled for ';
+        }
+    }
+
     // Capitalize the first letter, trim off the last 's' from the data object.
     $sTitle = ucfirst($sTitle . substr($_PE[0], 0, -1));
     if (ACTION == 'create') {
