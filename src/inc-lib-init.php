@@ -700,12 +700,18 @@ function lovd_getCurrentPageTitle ()
 
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
-    if (ACTION == 'create') {
+    if (ACTION == 'authorize') {
+        $sTitle = 'Authorize curators for ';
+    } elseif (ACTION == 'create') {
         $sTitle .= 'a new ';
     } elseif (ACTION == 'order') {
         $sTitle = 'Change order of ';
     } elseif (ACTION == 'search_global') {
         $sTitle = 'Search other public LOVDs for ';
+    } elseif (ACTION == 'sortCurators') {
+        // FIXME: If this were "sort_curators", the code one block down
+        //  would have handled it perfectly well.
+        $sTitle = 'Sort curators for ';
     } elseif (strpos(ACTION, '_') !== false) {
         $sTitle = str_replace('_', ' ', $sTitle) . (!$ID? '' : 'for ');
     }

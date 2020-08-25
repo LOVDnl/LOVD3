@@ -261,7 +261,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /genes?create
     // Create a new entry.
 
-    define('PAGE_TITLE', 'Create a new gene entry');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'GeneCreate');
 
     // Require manager clearance.
@@ -664,7 +664,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     // Edit an entry.
 
     $sID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Edit the ' . $sID . ' gene entry');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'GeneEdit');
 
     // Load appropriate user level for this gene.
@@ -848,7 +848,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     // Empty the gene database (delete all variants and associated data).
 
     $sID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Empty the ' . $sID . ' gene database');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle() . ' database');
     define('LOG_EVENT', 'GeneEmpty');
     $_T->printHeader();
     $_T->printTitle();
@@ -1012,7 +1012,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     // Drop specific entry.
 
     $sID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Delete the ' . $sID . ' gene entry');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'GeneDelete');
 
     // Require manager clearance.
@@ -1505,12 +1505,12 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
     // Authorize users to be curators or collaborators for this gene, and/or define the order in which they're shown.
 
     $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
     // 2015-07-22; 3.0-14; Drop usage of CURRENT_PATH in favor of fixed $sID which may have a gene symbol with incorrect case.
     // Now fix possible issues with capitalization. inc-init.php does this for $_SESSION['currdb'], but we're using $sID.
     $sVerifiedID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sID))->fetchColumn();
     if (!$sVerifiedID) {
-        define('PAGE_TITLE', 'Manage curators for the ' . $sID . ' gene');
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
@@ -1528,13 +1528,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
     }
 
     if (ACTION == 'authorize') {
-        define('PAGE_TITLE', 'Authorize curators for the ' . $sID . ' gene');
         define('LOG_EVENT', 'CuratorAuthorize');
 
         // Require manager clearance.
         lovd_requireAUTH(LEVEL_MANAGER);
     } else {
-        define('PAGE_TITLE', 'Sort curators for the ' . $sID . ' gene');
         define('LOG_EVENT', 'CuratorSort');
 
         // Require manager clearance.
