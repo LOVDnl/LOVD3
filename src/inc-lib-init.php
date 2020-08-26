@@ -735,6 +735,17 @@ function lovd_getCurrentPageTitle ()
     $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
     if (ACTION == 'create') {
         $sTitle .= ' entry';
+        // For a target?
+        if (isset($_GET['target'])) {
+            // $_GET['target'] should be checked already when we get here,
+            //  but we take no chances.
+            $ID = htmlspecialchars($_GET['target']);
+            switch ($sObject) {
+                case 'phenotypes':
+                    $sTitle .= ' for individual';
+                    break;
+            }
+        }
     }
 
     // Phenotype listings for diseases.

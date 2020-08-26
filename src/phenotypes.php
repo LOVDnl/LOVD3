@@ -157,7 +157,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
 
     lovd_requireAUTH($_SETT['user_level_settings']['submit_new_data']);
 
-    $_GET['target'] = sprintf('%08d', $_GET['target']);
+    $_GET['target'] = sprintf('%0' . $_SETT['objectid_length']['individuals'] . 'd', $_GET['target']);
     $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
     if (!$z) {
         define('PAGE_TITLE', lovd_getCurrentPageTitle());
@@ -170,14 +170,14 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         lovd_requireAUTH(LEVEL_OWNER);
     }
     $_POST['individualid'] = $_GET['target'];
-    define('PAGE_TITLE', lovd_getCurrentPageTitle() . ' for individual #' . $_GET['target']);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
     require ROOT_PATH . 'inc-lib-form.php';
     lovd_errorClean();
 
     if (!empty($_GET['diseaseid'])) {
         if (ctype_digit($_GET['diseaseid'])) {
-            $_POST['diseaseid'] = sprintf('%05d', $_GET['diseaseid']);
+            $_POST['diseaseid'] = sprintf('%0' . $_SETT['objectid_length']['diseases'] . 'd', $_GET['diseaseid']);
             // Check if there are phenotype columns enabled for this disease & check if the $_POST['diseaseid'] is actually linked to this individual.
             if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid']))->fetchColumn()) {
                 lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease id or no phenotype columns have been enabled for this disease.');
