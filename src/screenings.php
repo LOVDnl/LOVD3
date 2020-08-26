@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2020-08-11
+ * Modified    : 2020-08-26
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -95,7 +95,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /screenings/0000000001
     // View specific entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Screening #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -318,7 +318,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /screenings/0000000001?edit
     // Edit an entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Edit an screening information entry');
     define('LOG_EVENT', 'ScreeningEdit');
 
@@ -498,7 +498,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     // URL: /screenings/0000000001?confirmVariants
     // Confirm existing variant entries within the same individual.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Confirm variant entries with screening #' . $nID);
     define('LOG_EVENT', 'VariantConfirm');
 
@@ -670,7 +670,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     // URL: /screenings/0000000001?removeVariants
     // Remove variants from a screening entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Remove variant entries from screening #' . $nID);
     define('LOG_EVENT', 'VariantRemove');
 
@@ -831,7 +831,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /screenings/0000000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
     define('LOG_EVENT', 'ScreeningDelete');
 
@@ -951,5 +951,4 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $_T->printFooter();
     exit;
 }
-
 ?>
