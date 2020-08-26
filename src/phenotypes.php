@@ -81,7 +81,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) 
     // View all phenotype entries for a certain disease.
 
     $nDiseaseID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Phenotypes for disease #' . $nDiseaseID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -111,7 +111,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Phenotype #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -160,7 +160,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
     $_GET['target'] = sprintf('%08d', $_GET['target']);
     $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
     if (!$z) {
-        define('PAGE_TITLE', 'Create a new phenotype entry');
+        define('PAGE_TITLE', lovd_getCurrentPageTitle());
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add phenotype" button.', 'stop');
@@ -170,7 +170,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         lovd_requireAUTH(LEVEL_OWNER);
     }
     $_POST['individualid'] = $_GET['target'];
-    define('PAGE_TITLE', 'Create a new phenotype information entry for individual #' . $_GET['target']);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle() . ' for individual #' . $_GET['target']);
 
     require ROOT_PATH . 'inc-lib-form.php';
     lovd_errorClean();
@@ -361,7 +361,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     // Edit an entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Edit phenotype #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'PhenotypeEdit');
 
     // Load appropriate user level for this phenotype entry.
@@ -508,7 +508,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Drop specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Delete phenotype #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'PhenotypeDelete');
 
     // FIXME; hier moet een goede controle komen, wanneer lager is toegestaan.

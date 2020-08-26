@@ -700,6 +700,7 @@ function lovd_getCurrentPageTitle ()
     global $_CONF, $_DB, $_PE;
 
     $ID = lovd_getCurrentID();
+    $sObject = $_PE[0];
 
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
@@ -720,7 +721,7 @@ function lovd_getCurrentPageTitle ()
     }
 
     // Custom column settings for genes and diseases.
-    if (in_array($_PE[0], array('diseases', 'genes')) && PATH_COUNT >= 3 && $_PE[2] == 'columns') {
+    if (in_array($sObject, array('diseases', 'genes')) && PATH_COUNT >= 3 && $_PE[2] == 'columns') {
         if (PATH_COUNT == 3) {
             // View or resort column list.
             $sTitle .= 'custom data columns enabled for ';
@@ -731,14 +732,20 @@ function lovd_getCurrentPageTitle ()
     }
 
     // Capitalize the first letter, trim off the last 's' from the data object.
-    $sTitle = ucfirst($sTitle . substr($_PE[0], 0, -1));
+    $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
     if (ACTION == 'create') {
         $sTitle .= ' entry';
     }
 
+    // Phenotype listings for diseases.
+    if ($sObject == 'phenotypes' && PATH_COUNT == 3 && $_PE[1] == 'disease') {
+        $sTitle .= 's for disease ';
+        $sObject = 'diseases';
+    }
+
     if ($ID) {
         // We're accessing just one entry.
-        if ($_PE[0] == 'genes') {
+        if ($sObject == 'genes') {
             $sTitle = preg_replace('/gene$/', ' the ' . $ID . ' gene', $sTitle);
         } else {
             $sTitle .= ' #' . $ID;
@@ -748,7 +755,7 @@ function lovd_getCurrentPageTitle ()
     }
 
     // Add details, if available.
-    switch ($_PE[0]) {
+    switch ($sObject) {
         case 'diseases':
             list($sName, $nOMIM) = $_DB->query('
                 SELECT IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")), id_omim
