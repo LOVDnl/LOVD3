@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2020-03-25
- * For LOVD    : 3.0-24
+ * Modified    : 2020-08-26
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -80,7 +80,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'disease' && ctype_digit($_PE[2]) && !ACTION) 
     // URL: /phenotypes/disease/00001
     // View all phenotype entries for a certain disease.
 
-    $nDiseaseID = sprintf('%05d', $_PE[2]);
+    $nDiseaseID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Phenotypes for disease #' . $nDiseaseID);
     $_T->printHeader();
     $_T->printTitle();
@@ -110,7 +110,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /phenotypes/0000000001
     // View specific entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Phenotype #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -360,7 +360,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     // URL: /phenotypes/0000000001?publish
     // Edit an entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Edit phenotype #' . $nID);
     define('LOG_EVENT', 'PhenotypeEdit');
 
@@ -507,7 +507,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /phenotypes/0000000001?delete
     // Drop specific entry.
 
-    $nID = sprintf('%010d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Delete phenotype #' . $nID);
     define('LOG_EVENT', 'PhenotypeDelete');
 
