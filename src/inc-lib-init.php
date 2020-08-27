@@ -797,6 +797,24 @@ function lovd_getCurrentPageTitle ()
                 $sTitle .= ' (' . $sNCBI . ', ' . $sGene . ' gene)';
             }
             break;
+        case 'users':
+            // We have to take the user's level into account, so that we won't
+            //  disclose information when people try random IDs!
+            // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
+            $bIsAuthorized = (lovd_isAuthorized('variant', $ID, false) !== false);
+            if ($bIsAuthorized) {
+                list($sName, $sCity, $sCountry) =
+                    $_DB->query('
+                    SELECT u.name, u.city, c.name
+                    FROM ' . TABLE_USERS . ' AS u
+                      LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)
+                    WHERE u.id = ?',
+                        array($ID))->fetchRow();
+                if ($sName) {
+                    $sTitle .= ' (' . $sName . ', ' . $sCity . (!$sCountry? '' : ', ' . $sCountry) . ')';
+                }
+            }
+            break;
         case 'variants':
             // Get VOG description and VOT description on the most used transcript.
             // We have to take the status into account, so that we won't disclose
