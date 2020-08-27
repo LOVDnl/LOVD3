@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-08-26
+ * Modified    : 2020-08-27
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -706,12 +706,16 @@ function lovd_getCurrentPageTitle ()
     $sTitle = ltrim(ACTION . ' ');
     if (ACTION == 'authorize') {
         $sTitle = 'Authorize curators for ';
+    } elseif (ACTION == 'confirmVariants') {
+        $sTitle = 'Confirm variant entries with ';
     } elseif (ACTION == 'create') {
         $sTitle .= 'a new ';
     } elseif (ACTION == 'order') {
         $sTitle = 'Change order of ';
     } elseif (ACTION == 'search_global') {
         $sTitle = 'Search other public LOVDs for ';
+    } elseif (ACTION == 'removeVariants') {
+        $sTitle = 'Remove variant entries from ';
     } elseif (ACTION == 'sortCurators') {
         // FIXME: If this were "sort_curators", the code one block down
         //  would have handled it perfectly well.
@@ -742,6 +746,7 @@ function lovd_getCurrentPageTitle ()
             $ID = htmlspecialchars($_GET['target']);
             switch ($sObject) {
                 case 'phenotypes':
+                case 'screenings':
                     $sTitle .= ' for individual';
                     break;
             }

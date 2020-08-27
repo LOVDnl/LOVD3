@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2020-08-26
+ * Modified    : 2020-08-27
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -96,7 +96,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Screening #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -165,10 +165,10 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
 
     lovd_requireAUTH($_SETT['user_level_settings']['submit_new_data']);
 
-    $_GET['target'] = sprintf('%08d', $_GET['target']);
+    $_GET['target'] = sprintf('%0' . $_SETT['objectid_length']['individuals'] . 'd', $_GET['target']);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
     if (!$z) {
-        define('PAGE_TITLE', 'Create a new screening entry');
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('The individual ID given is not valid, please go to the desired individual entry and click on the "Add screening" button.', 'stop');
@@ -178,7 +178,6 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
         lovd_requireAUTH(LEVEL_OWNER);
     }
     $_POST['individualid'] = $_GET['target'];
-    define('PAGE_TITLE', 'Create a new screening information entry for individual #' . $_GET['target']);
 
     lovd_isAuthorized('gene', $_AUTH['curates']);
 
@@ -319,7 +318,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // Edit an entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Edit an screening information entry');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ScreeningEdit');
 
     // Load appropriate user level for this screening entry.
@@ -499,7 +498,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     // Confirm existing variant entries within the same individual.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Confirm variant entries with screening #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantConfirm');
 
     $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
@@ -671,7 +670,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     // Remove variants from a screening entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Remove variant entries from screening #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantRemove');
 
     $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
@@ -832,7 +831,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Drop specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Delete screening information entry ' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ScreeningDelete');
 
     lovd_isAuthorized('screening', $nID);
