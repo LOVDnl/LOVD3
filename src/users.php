@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-07-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-08-27
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -77,7 +77,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /users/00001
     // View specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'User account #' . $nID);
     $_T->printHeader();
     $_T->printTitle();
@@ -668,7 +668,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /users/00001?edit
     // Edit specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Edit user account #' . $nID);
     define('LOG_EVENT', 'UserEdit');
 
@@ -785,7 +785,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     // URL: /users/00001?change_password
     // Change a user's password.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Change password for user account #' . $nID);
     define('LOG_EVENT', 'UserResetPassword');
 
@@ -884,7 +884,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /users/00001?delete
     // Delete a specific user.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Delete user account #' . $nID);
     define('LOG_EVENT', 'UserDelete');
 
@@ -1055,7 +1055,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // URL: /users/00001?boot
     // Throw a user out of the system.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Boot user #' . $nID);
     define('LOG_EVENT', 'UserBoot');
 
@@ -1096,7 +1096,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     // URL: /users/00001?unlock
     // Lock / unlock a user.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', ucfirst(ACTION) . ' user account #' . $nID);
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
 
@@ -1142,7 +1142,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     // URL: /users/00001?submissions
     // Manage unfinished submissions
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Manage unfinished submissions for user #' . $nID);
 
     $_T->printHeader();
@@ -1224,7 +1224,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // URL: /users/00001?share_access
     // Let the user share access to his objects to other users.
 
-    $nID = sprintf('%05d', $_PE[1]);
+    $nID = lovd_getCurrentID();
     define('PAGE_TITLE', 'Sharing access');
     define('LOG_EVENT', 'ShareAccess');
 
