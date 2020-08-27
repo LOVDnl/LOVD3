@@ -1142,6 +1142,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     $_T->printHeader();
     $_T->printTitle();
 
+    $zData = $_DB->query('SELECT id, saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    if (!$zData) {
+        // Wrong ID, apparently.
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
+
     if ($_AUTH && $_AUTH['id'] == $nID) {
         // Require submitter clearance.
         lovd_requireAUTH();
@@ -1154,7 +1162,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         lovd_showInfoTable('Below are lists of this user\'s unfinished submissions', 'information');
     }
 
-    $zData = $_DB->query('SELECT saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID), false)->fetchAssoc();
     if (!empty($zData['saved_work'])) {
         $zData['saved_work'] = unserialize($zData['saved_work']);
     } else {
@@ -1229,15 +1236,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $bAllowGrantEdit = true;
     $sUserListID = 'user_share_access_' . $nID;
 
-    // Get the current user's full name to use in interface/e-mail.
-    $sNameQuery = 'SELECT
-                     u.name,
-                     u.level,
-                     u.institute,
-                     u.email
-                   FROM ' . TABLE_USERS . ' AS u
-                   WHERE u.id = ?';
-    $zData = $_DB->query($sNameQuery, array($nID))->fetchAssoc();
+    $zData = $_DB->query('
+        SELECT name, level, institute, email
+        FROM ' . TABLE_USERS . '
+        WHERE id = ?', array($nID))->fetchAssoc();
+
+    if (!$zData) {
+        // Wrong ID, apparently.
+        $_T->printHeader();
+        $_T->printTitle();
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
 
     // Require special clearance, if user is not editing himself.
     // Necessary level depends on level of user. Special case.
