@@ -720,6 +720,8 @@ function lovd_getCurrentPageTitle ()
         // FIXME: If this were "sort_curators", the code one block down
         //  would have handled it perfectly well.
         $sTitle = 'Sort curators for ';
+    } elseif (ACTION == 'submissions') {
+        $sTitle = 'Manage unfinished submissions for ';
     } elseif (strpos(ACTION, '_') !== false) {
         $sTitle = str_replace('_', ' ', $sTitle) . (!$ID? '' : 'for ');
     }
@@ -737,7 +739,10 @@ function lovd_getCurrentPageTitle ()
 
     // Capitalize the first letter, trim off the last 's' from the data object.
     $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
-    if (ACTION == 'create') {
+
+    if ($sObject == 'users' && ACTION != 'boot') {
+        $sTitle .= ' account';
+    } elseif (ACTION == 'create') {
         $sTitle .= ' entry';
         // For a target?
         if (isset($_GET['target'])) {

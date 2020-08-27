@@ -78,7 +78,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'User account #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -172,7 +172,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
     if (ACTION == 'create') {
-        define('PAGE_TITLE', 'Create a new user account');
+        define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
         // Require manager clearance.
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -669,7 +669,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // Edit specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Edit user account #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserEdit');
 
     // Require valid user.
@@ -786,7 +786,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     // Change a user's password.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Change password for user account #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserResetPassword');
 
     // Require valid user.
@@ -885,7 +885,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Delete a specific user.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Delete user account #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserDelete');
 
     lovd_requireAUTH(LEVEL_MANAGER);
@@ -1056,7 +1056,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // Throw a user out of the system.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Boot user #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserBoot');
 
     // Require manager clearance.
@@ -1097,7 +1097,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     // Lock / unlock a user.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', ucfirst(ACTION) . ' user account #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
 
     // Require manager clearance.
@@ -1143,7 +1143,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     // Manage unfinished submissions
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Manage unfinished submissions for user #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
     $_T->printHeader();
     $_T->printTitle();
@@ -1225,7 +1225,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Let the user share access to his objects to other users.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Sharing access');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ShareAccess');
 
     require_once ROOT_PATH . 'class/object_users.php';
