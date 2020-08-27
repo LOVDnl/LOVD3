@@ -782,8 +782,10 @@ function lovd_getCurrentPageTitle ()
                 SELECT IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")), id_omim
                 FROM ' . TABLE_DISEASES . '
                 WHERE id = ?', array($ID))->fetchRow();
-            $sTitle .= ' (' . $sName .
-                (!$nOMIM? '' : ', OMIM:' . $nOMIM) . ')';
+            if ($sName) {
+                $sTitle .= ' (' . $sName .
+                    (!$nOMIM? '' : ', OMIM:' . $nOMIM) . ')';
+            }
             break;
         case 'transcripts':
             list($sNCBI, $sGene) =
@@ -791,7 +793,9 @@ function lovd_getCurrentPageTitle ()
                     SELECT id_ncbi, geneid
                     FROM ' . TABLE_TRANSCRIPTS . '
                     WHERE id = ?', array($ID))->fetchRow();
-            $sTitle .= ' (' . $sNCBI . ', ' . $sGene . ' gene)';
+            if ($sNCBI) {
+                $sTitle .= ' (' . $sNCBI . ', ' . $sGene . ' gene)';
+            }
             break;
         case 'variants':
             // Get VOG description and VOT description on the most used transcript.
