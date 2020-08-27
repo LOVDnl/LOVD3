@@ -40,6 +40,10 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
+if (PATH_COUNT >= 2 && $_PE[1] == '00000') {
+    exit; // Block access to the LOVD account with ID = 0.
+}
+
 
 
 
@@ -90,9 +94,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // Those levels will see more fields of the given user.
     lovd_isAuthorized('gene', $_AUTH['curates']);
 
-    if ($nID == '00000') {
-        $nID = -1;
-    } elseif ($nID == $_AUTH['id'] && $_AUTH['level'] == LEVEL_SUBMITTER && isset($_GET['new_submitter'])) {
+    if ($nID == $_AUTH['id'] && $_AUTH['level'] == LEVEL_SUBMITTER && isset($_GET['new_submitter'])) {
         // Newly registered? Explain where to submit.
         lovd_showDialog('dialog_new_submitter', 'Now that you\'ve registered', 'Now that you\'ve registered, you can submit new variant data to this database.<BR>You can do so, by clicking the Submit menu tab just above this message.',
             'information', array('position' => '{my:"left top",at:"left bottom",of:"#tab_submit"}', 'buttons' => '{"Go there now":function(){window.location.href="' . lovd_getInstallURL() . 'submit";},"Close":function(){$(this).dialog("close");}}'));
@@ -1062,10 +1064,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    if ($nID == '00000') {
-        $nID = -1; // Block access to the LOVD account with ID = 0.
-    }
-
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
@@ -1102,10 +1100,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
-
-    if ($nID == '00000') {
-        $nID = -1; // Block access to the LOVD account with ID = 0.
-    }
 
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
