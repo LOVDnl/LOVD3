@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-08-27
+ * Modified    : 2020-08-28
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -690,7 +690,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
         // FIXME: This function and its use is a bit messy.
         lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' .
                                   $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
             'Not allowed to edit this user. This event has been logged.');
         exit;
     }
@@ -806,7 +805,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
         // This is a hack-attempt.
         // FIXME: This function and its use is a bit messy.
         lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
             'Not allowed to edit this user. This event has been logged.');
         exit;
     }
@@ -903,7 +901,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         // This is a hack-attempt.
         // FIXME: This function and its use is a bit messy.
         lovd_showPageAccessDenied('Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
             'Not allowed to delete this user. This event has been logged.');
         exit;
     }
@@ -1068,7 +1065,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
+        lovd_showPageAccessDenied(null, 'No such ID!');
         exit;
     }
 
@@ -1105,7 +1102,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
+        lovd_showPageAccessDenied(null, 'No such ID!');
         exit;
 
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
@@ -1257,7 +1254,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         // FIXME: This function and its use is a bit messy.
         lovd_showPageAccessDenied('Tried to share access of user ID ' . $nID . ' (' .
             $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
             'Not allowed to edit this user. This event has been logged.');
         exit;
     }
