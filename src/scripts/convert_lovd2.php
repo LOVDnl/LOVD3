@@ -52,7 +52,7 @@ $aFieldLinks = array(
     // This field maps to either VOT/Published_as or VOG/Published_as (handled later specifically).
     'Variant/DNA_published' =>          array('vot',        'VariantOnTranscript/Published_as'),
     'Variant/DBID' =>                   array('vog',        'VariantOnGenome/DBID',         'lovd_convertDBID'),
-    'Variant/DbSNP' =>                  array('vog',        'VariantOnGenome/DbSNP',        'lovd_convertDbSNP'),
+    'Variant/DbSNP' =>                  array('vog',        'VariantOnGenome/dbSNP',        'lovd_convertDbSNP'),
     'Variant/Restriction_site' =>       array('vog',        'VariantOnGenome/Restriction_site'),
     'Variant/Remarks' =>                array('vog',        'VariantOnGenome/Remarks'),
     'Variant/Origin' =>                 array('vog',        'VariantOnGenome/Genetic_origin', 'lovd_convertOrigin'),
