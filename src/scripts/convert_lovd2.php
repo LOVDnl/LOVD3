@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2020-07-24
+ * Modified    : 2020-09-10
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2014-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -981,11 +981,30 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $aDisease = lovd_getRecordForHeaders($aOutputHeaders['disease'], $aRecord,
             $aSections['disease']);
         if (!empty($aDisease['name'])) {
-            list($aDisease['id'], $bCreateNewDisease) = lovd_getDiseaseID($aDisease['name']);
-            if ($bCreateNewDisease && $aDisease['id'] !== false) {
-                // New disease, create an output record for it.
-                $aDiseases[] = $aDisease;
+            // An individual can have multiple diseases. LOVD2 separates them by
+            //  a semicolon. Split name on semicolon and process separately.
+            $aDiseaseNames = array_map('trim', explode(';', $aDisease['name']));
+
+            // Rebuild $aDisease.
+            // Store the fields because $aDisease may contain more. We know it's
+            //  'symbol' and that it's empty, but let's stay flexible.
+            $aDiseaseFields = array_keys($aDisease);
+            $aDisease = array();
+            foreach ($aDiseaseNames as $sDiseaseName) {
+                $aThisDisease = array_fill_keys($aDiseaseFields, '');
+                $aThisDisease['name'] = $sDiseaseName;
+                list($aThisDisease['id'], $bCreateNewDisease) = lovd_getDiseaseID($sDiseaseName);
+                $aDisease[] = $aThisDisease;
+
+                if ($bCreateNewDisease && $aThisDisease['id'] !== false) {
+                    // New disease, create an output record for it.
+                    $aDiseases[] = $aThisDisease;
+                }
             }
+
+        } else {
+            // To always make it an array.
+            $aDisease = array($aDisease);
         }
 
         // Handle individual-specific data (individual, screening, phenotype, etc.).
@@ -1068,7 +1087,8 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 }
                 if (!$bEmptyPhenotype) {
                     $aPhenotype['id'] = lovd_autoIncPhenotypeID();
-                    $aPhenotype['diseaseid'] = $aDisease['id'];
+                    // We link the phenotype data to the first disease, if it's a set.
+                    $aPhenotype['diseaseid'] = $aDisease[0]['id'];
                     $aPhenotype['individualid'] = $aIndividual['id'];
                     $aPhenotype['statusid'] = $aIndividual['statusid'];
                     $aPhenotype['owned_by'] = $aIndividual['owned_by'];
@@ -1082,8 +1102,11 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
                 // Create individuals2diseases record.
                 $aIndividuals2Disease = lovd_getRecordForHeaders($aOutputHeaders['i2d'], $aRecord);
                 $aIndividuals2Disease['individualid'] = $aIndividual['id'];
-                $aIndividuals2Disease['diseaseid'] = $aDisease['id'];
-                $aIndividuals2Diseases[] = $aIndividuals2Disease;
+                foreach ($aDisease as $aThisDisease) {
+                    $aIndividuals2Diseases[] = array_merge(
+                        $aIndividuals2Disease,
+                        array('diseaseid' => $aThisDisease['id']));
+                }
             }
 
             // Create screening2variant record.
