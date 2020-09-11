@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2020-07-23
+ * Modified    : 2020-09-11
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -114,7 +114,7 @@ if (PATH_COUNT > 2 && !ACTION) {
     // View specific column.
 
     $sColumnID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
     $_T->printHeader();
     $_T->printTitle();
@@ -833,7 +833,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     $sColumnID = lovd_getCurrentID();
     $sCategory = $_PE[1];
 
-    define('PAGE_TITLE', 'Edit custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColEdit');
 
     // Require manager clearance.
@@ -1372,7 +1372,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     $sColumnID = lovd_getCurrentID();
     $sCategory = $_PE[1];
 
-    define('PAGE_TITLE', 'Add/enable custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColAdd');
 
     // Require form & column functions.
@@ -1749,7 +1749,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     $sColumnID = lovd_getCurrentID();
     $sCategory = $_PE[1];
 
-    define('PAGE_TITLE', 'Remove custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColRemove');
 
     // Require form & column functions.
@@ -2118,7 +2118,7 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
 
-    define('PAGE_TITLE', 'Delete custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColDelete');
 
     lovd_requireAUTH(LEVEL_MANAGER);
