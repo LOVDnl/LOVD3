@@ -685,10 +685,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' .
-                                  $_SETT['user_levels'][$zData['level']] . ')',
-            'Not allowed to edit this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -799,9 +799,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
-            'Not allowed to edit this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -893,9 +894,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     if ($zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
-            'Not allowed to delete this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -1239,10 +1241,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to share access of user ID ' . $nID . ' (' .
-            $_SETT['user_levels'][$zData['level']] . ')',
-            'Not allowed to edit this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to share access of user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
