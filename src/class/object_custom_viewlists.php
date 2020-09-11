@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2020-06-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-10
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -337,7 +337,9 @@ class LOVD_CustomViewList extends LOVD_Object
                                       'vot.position_c_end, vot.position_c_end_intron';
                     // To group variants together that belong together (regardless of minor textual differences, we replace parentheses, remove the "c.", and trim for question marks.
                     // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
-                    $aSQL['SELECT'] .= ', TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change' .
+                    // Note that the CONCAT() is needed for the grouping to work in large databases. I can't find any real explanation but the shared DMD didn't group well at all without this CONCAT() in place.
+                    //  Somehow, the TRIM may leave some kind of trace that prevents MySQL to group. When searching on the set and the size decreases (search on DBID, id), the grouping artefact disappears as well.
+                    $aSQL['SELECT'] .= ', CONCAT("c.", TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", "")))) AS vot_clean_dna_change' .
                                        ', GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect' .
                                        ', GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_' .
                                        ', GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, IF(IFNULL(uo.department, "") = "", "-", uo.department), IF(IFNULL(uo.countryid, "") = "", "-", uo.countryid)) SEPARATOR ";;") AS __owner';
@@ -632,7 +634,7 @@ class LOVD_CustomViewList extends LOVD_Object
                                         'db'   => array('vot.position_c_end_intron', 'ASC', true)),
                                 'vot_clean_dna_change' => array(
                                         'view' => false,
-                                        'db'   => array('TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", "")))', 'ASC', 'TEXT')),
+                                        'db'   => array('CONCAT("c.", TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))))', 'ASC', 'TEXT')),
                                 'genes' => array(
                                         'view' => array('Gene', 100),
                                         'db'   => array('t.geneid', 'ASC', true)),
