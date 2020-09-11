@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-07-22
+ * Modified    : 2020-09-11
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -830,6 +830,9 @@ if (!defined('NOT_INSTALLED')) {
 
     if (isset($_SETT['objectid_length'][$_PE[0]]) && isset($_PE[1]) && ctype_digit($_PE[1])) {
         $_PE[1] = sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
+    } elseif (isset($_PE[2]) && $_PE[0] == 'phenotypes' && $_PE[1] == 'disease') {
+        // Disease-specific list of phenotypes; /phenotypes/disease/00001.
+        $_PE[2] = sprintf('%0' . $_SETT['objectid_length'][$_PE[1] . 's'] . 'd', $_PE[2]);
     }
     define('CURRENT_PATH', implode('/', $_PE));
     define('PATH_COUNT', count($_PE)); // So you don't need !empty($_PE[1]) && ...
