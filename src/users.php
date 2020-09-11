@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-08-28
+ * Modified    : 2020-09-11
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -579,8 +579,6 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
             }
 
             // Thank the user...
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully created '  . (ACTION == 'create'? 'the user' : 'your') . ' account!' .
                     (!$bMail? '' : '<BR>We\'ve sent '  . (ACTION == 'create'? 'the user' : 'you') . ' an email containing '  . (ACTION == 'create'? 'the' : 'your') . ' account information.'), 'success');
             if ($bMail === false) {
@@ -725,8 +723,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the user account!', 'success');
 
             // Change password, if requested.
@@ -833,8 +829,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully changed the password!', 'success');
 
             // Change password, if requested.
@@ -960,8 +954,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                     // Thank the user...
                     header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
-                    $_T->printHeader();
-                    $_T->printTitle();
                     lovd_showInfoTable('Successfully deleted the user account!', 'success');
 
                     $_T->printFooter();
@@ -1064,8 +1056,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied(null, 'No such ID!');
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -1101,14 +1093,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied(null, 'No such ID!');
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
         exit;
 
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
         // Can't unlock someone that is not locked or lock someone that is already locked.
-        $_T->printHeader();
-        $_T->printTitle();
         lovd_showInfoTable('User is already ' . ACTION . 'ed!', 'stop');
         $_T->printFooter();
         exit;
@@ -1240,8 +1230,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
 
     if (!$zData) {
         // Wrong ID, apparently.
-        $_T->printHeader();
-        $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
         $_T->printFooter();
         exit;
@@ -1298,12 +1286,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
             // Confirmation page and redirect.
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
 
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully updated sharing permissions!', 'success');
-
             $_T->printFooter();
             exit;
+
         } else {
             // Because we're sending the data back to the form, I need to unset the password fields!
             unset($_POST['password']);

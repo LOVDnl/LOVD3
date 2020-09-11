@@ -2313,6 +2313,8 @@ function lovd_showDialog ($sID, $sTitle, $sMessage, $sType = 'information', $aSe
 
 function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%', $sHref = '', $bBR = true)
 {
+    global $_T;
+
     $aTypes =
              array(
                     'information' => 'Information',
@@ -2345,6 +2347,12 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
                   $sSeparatorLine . (!$bBR? '' : "\n") . "\n");
             break;
         default:
+            // Print the template header and title, in case it hasn't been done yet.
+            $_T->printHeader(); // Already makes sure that it doesn't get repeated.
+            if (defined('PAGE_TITLE')) {
+                $_T->printTitle(); // The same title will never be printed twice.
+            }
+
             print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
                   '        <TR>' . "\n" .
                   '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
