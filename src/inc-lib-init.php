@@ -679,6 +679,9 @@ function lovd_getCurrentID ()
     if (PATH_COUNT == 3 && $_PE[0] == 'phenotypes' && $_PE[1] == 'disease') {
         // Disease-specific list of phenotypes; /phenotypes/disease/00001.
         return $_PE[2];
+    } elseif (PATH_COUNT >= 2 && $_PE[0] == 'columns') {
+        // For columns, the ID al all of $_PE.
+        return implode('/', array_slice($_PE, 1));
     } elseif (PATH_COUNT >= 2) {
         return $_PE[1]; // 0-padding has already been done in inc-init.php.
     }
