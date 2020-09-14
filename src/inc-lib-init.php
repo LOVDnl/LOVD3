@@ -740,6 +740,8 @@ function lovd_getCurrentPageTitle ()
     // Object name changes for columns and links.
     if ($sObject == 'columns') {
         $sTitle .= 'custom data ';
+    } elseif ($sObject == 'links') {
+        $sTitle .= 'custom ';
     }
 
     // Capitalize the first letter, trim off the last 's' from the data object.
@@ -798,6 +800,11 @@ function lovd_getCurrentPageTitle ()
                 $sTitle .= ' (' . $sName .
                     (!$nOMIM? '' : ', OMIM:' . $nOMIM) . ')';
             }
+            break;
+        case 'links':
+            $sName = $_DB->query('SELECT name FROM ' . TABLE_LINKS . '
+                WHERE id = ?', array($ID))->fetchColumn();
+            $sTitle .= ' (' . $sName . ')';
             break;
         case 'transcripts':
             list($sNCBI, $sGene) =
