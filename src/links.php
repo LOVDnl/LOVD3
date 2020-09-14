@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2020-09-11
+ * Modified    : 2020-09-14
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -71,7 +71,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // View specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Custom link #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -101,7 +101,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /links?create
     // Create a new entry.
 
-    define('PAGE_TITLE', 'Create a new custom link');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'LinkCreate');
 
     // Require manager clearance.
@@ -210,7 +210,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // Edit specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Edit custom link #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'LinkEdit');
 
     // Require manager clearance.
@@ -343,7 +343,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Delete specific entry.
 
     $nID = lovd_getCurrentID();
-    define('PAGE_TITLE', 'Delete custom link #' . $nID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'LinkDelete');
 
     // Require manager clearance.
