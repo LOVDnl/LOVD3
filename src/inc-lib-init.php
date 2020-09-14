@@ -737,13 +737,15 @@ function lovd_getCurrentPageTitle ()
             $sTitle .= 'settings for the &quot;' . $sColumnID . '&quot; custom data column enabled for ';
         }
     }
+    // Object name changes for columns and links.
+    if ($sObject == 'columns') {
+        $sTitle .= 'custom data ';
+    }
 
     // Capitalize the first letter, trim off the last 's' from the data object.
     $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
 
-    if ($sObject == 'columns') {
-        $sTitle = ucfirst(str_ireplace('col', 'custom data col', $sTitle));
-    } elseif ($sObject == 'users' && ACTION != 'boot') {
+    if ($sObject == 'users' && ACTION != 'boot') {
         $sTitle .= ' account';
     } elseif (ACTION == 'create') {
         $sTitle .= ' entry';
@@ -782,6 +784,11 @@ function lovd_getCurrentPageTitle ()
 
     // Add details, if available.
     switch ($sObject) {
+        case 'columns':
+            $sHeader = $_DB->query('SELECT head_column FROM ' . TABLE_COLS . '
+                WHERE id = ?', array($ID))->fetchColumn();
+            $sTitle .= ' (' . $sHeader . ')';
+            break;
         case 'diseases':
             list($sName, $nOMIM) = $_DB->query('
                 SELECT IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")), id_omim
