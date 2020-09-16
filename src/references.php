@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2019-07-31
- * For LOVD    : 3.0-22
+ * Modified    : 2020-09-16
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -38,15 +38,9 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-$aPathElements = $_PE; // We'll manipulate $aPathElements, so making a copy from $_PE.
 // Check if last element is image.
-if ($bImage = (end($aPathElements) == 'image')) {
-    // Set $bImage variable and remove last element. So we can do an implode.
-    array_pop($aPathElements);
-}
-
-// Implode elements 1 up to the end, this is because DOI: can have slashes (/).
-$sReference = implode('/', array_slice($aPathElements, 1));
+$bImage = (end($_PE) == 'image');
+$sReference = lovd_getCurrentID();
 
 
 
