@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-09-14
+ * Modified    : 2020-09-17
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2338,7 +2338,7 @@ function lovd_showDialog ($sID, $sTitle, $sMessage, $sType = 'information', $aSe
 
 
 
-function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%', $sHref = '', $bBR = true)
+function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%', $sHref = '', $bBR = true, $bTitle = true)
 {
     global $_T;
 
@@ -2376,7 +2376,7 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
         default:
             // Print the template header and title, in case it hasn't been done yet.
             $_T->printHeader(); // Already makes sure that it doesn't get repeated.
-            if (defined('PAGE_TITLE')) {
+            if (defined('PAGE_TITLE') && $bTitle) {
                 $_T->printTitle(); // The same title will never be printed twice.
             }
 

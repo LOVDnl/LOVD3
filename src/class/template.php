@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-08-13
+ * Modified    : 2020-09-17
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -259,10 +259,6 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/gene_panels?create']);
             unset($this->aMenu['genes_'][0]);
             unset($this->aMenu['genes_']['/gene_statistics']);
-        }
-
-        if (!defined('PAGE_TITLE')) {
-            define('PAGE_TITLE', lovd_getCurrentPageTitle());
         }
 
         return true;
@@ -630,7 +626,7 @@ if ($qAnnouncements) {
     $zAnnouncements = array();
 }
 foreach ($zAnnouncements as $zAnnouncement) {
-    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? '' : 'announcements/' . $zAnnouncement['id']), false);
+    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? '' : 'announcements/' . $zAnnouncement['id']), false, false);
 }
 ?>
 
