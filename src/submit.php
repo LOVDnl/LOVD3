@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-09-17
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -121,7 +121,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
 
     lovd_requireAUTH(LEVEL_SUBMITTER);
 
-    $nID = sprintf('%08d', $_PE[2]);
+    $nID = sprintf('%0' . $_SETT['objectid_length'][$_PE[1] . 's'] . 'd', $_PE[2]);
 
     $zData = $_DB->query('SELECT * FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!isset($_AUTH['saved_work']['submissions']['individual'][$nID])) {
@@ -279,7 +279,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && $_PE[3
     // URL: /submit/individual/00000001/screenings
     // Let submitter select screening to add variant to.
 
-    $nID = sprintf('%08d', $_PE[2]);
+    $nID = sprintf('%0' . $_SETT['objectid_length'][$_PE[1] . 's'] . 'd', $_PE[2]);
     define('PAGE_TITLE', 'Select screening to add variant to');
     $_T->printHeader();
     $_T->printTitle();
@@ -318,7 +318,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'screening' && ctype_digit($_PE[2]) && !ACTION
 
     lovd_requireAUTH(LEVEL_SUBMITTER);
 
-    $nID = sprintf('%010d', $_PE[2]);
+    $nID = sprintf('%0' . $_SETT['objectid_length'][$_PE[1] . 's'] . 'd', $_PE[2]);
 
     $zData = $_DB->query('SELECT * FROM ' . TABLE_SCREENINGS . ' WHERE id = ? AND created_by = ?', array($nID, $_AUTH['id']))->fetchAssoc();
     if (empty($zData)) {
@@ -432,32 +432,6 @@ if (PATH_COUNT == 3 && $_PE[1] == 'screening' && ctype_digit($_PE[2]) && !ACTION
 
 
 
-if (PATH_COUNT == 3 && $_PE[1] == 'review' && ctype_digit($_PE[2]) && !ACTION) {
-    // URL: /submit/review
-    // Review your unfinished submission
-    exit;
-    define('LOG_EVENT', 'SubmitScreening');
-
-    lovd_requireAUTH(LEVEL_SUBMITTER);
-
-    $nID = sprintf('%010d', $_PE[2]);
-
-    $zData = $_DB->query('SELECT * FROM ' . TABLE_SCREENINGS . ' WHERE id = ? AND created_by = ?', array($nID, $_AUTH['id']))->fetchAssoc();
-    if (empty($zData)) {
-        define('PAGE_TITLE', 'Submit');
-        $_T->printHeader();
-        $_T->printTitle();
-        lovd_showInfoTable('No such ID!', 'stop');
-        $_T->printFooter();
-        exit;
-    }
-    exit;
-}
-
-
-
-
-
 if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individual', 'screening', 'variant', 'phenotype', 'upload', 'confirmedVariants')) && ctype_digit($_PE[3])) {
     // URL: /submit/finish/(variant|individual|screening|phenotype|upload|confirmedVariants)/00000001
     // URL: /submit/finish/(variant|individual|screening|phenotype)/00000001?edit
@@ -472,14 +446,14 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
         case 'individual':
             $sURI = 'individuals/';
             $sTitle = 'an individual';
-            $nID = sprintf('%08d', $_PE[3]);
+            $nID = sprintf('%0' . $_SETT['objectid_length'][$_PE[2] . 's'] . 'd', $_PE[3]);
             $zData = $_DB->query('SELECT i.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT i2d.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.id = ? AND i.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY i.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('individual', $nID);
             break;
         case 'confirmedVariants':
             $sURI = 'screenings/';
             $sTitle = 'confirmed variants';
-            $nID = sprintf('%010d', $_PE[3]);
+            $nID = sprintf('%0' . $_SETT['objectid_length']['screenings'] . 'd', $_PE[3]);
             $aConfirmedVariants = $_SESSION['work']['submits']['confirmedVariants'][$nID];
             $zData = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($aConfirmedVariants) - 1) . ') ORDER BY t.geneid ASC', $aConfirmedVariants)->fetchAllColumn();
             $zData = array('geneids' => implode(';', $zData));
@@ -488,21 +462,21 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
         case 'screening':
             $sURI = 'screenings/';
             $sTitle = 'a screening';
-            $nID = sprintf('%010d', $_PE[3]);
+            $nID = sprintf('%0' . $_SETT['objectid_length'][$_PE[2] . 's'] . 'd', $_PE[3]);
             $zData = $_DB->query('SELECT s.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE s.id = ? AND s.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY s.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('screening', $nID);
             break;
         case 'variant':
             $sURI = 'variants/';
             $sTitle = 'a variant';
-            $nID = sprintf('%010d', $_PE[3]);
+            $nID = sprintf('%0' . $_SETT['objectid_length'][$_PE[2] . 's'] . 'd', $_PE[3]);
             $zData = $_DB->query('SELECT v.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids FROM ' . TABLE_VARIANTS . ' AS v LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (v.id = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE v.id = ? AND v.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY v.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('variant', $nID);
             break;
         case 'phenotype':
             $sURI = 'phenotypes/';
             $sTitle = 'a phenotype';
-            $nID = sprintf('%010d', $_PE[3]);
+            $nID = sprintf('%0' . $_SETT['objectid_length'][$_PE[2] . 's'] . 'd', $_PE[3]);
             $zData = $_DB->query('SELECT p.id, GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS geneids, GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS diseaseids FROM ' . TABLE_PHENOTYPES . ' AS p LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s USING (individualid) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (s2v.variantid = vot.id) LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE p.id = ? AND p.' . (ACTION != 'edit'? 'created' : 'edited') . '_by = ? GROUP BY p.id', array($nID, $_AUTH['id']))->fetchAssoc();
             lovd_isAuthorized('phenotype', $nID);
             break;
