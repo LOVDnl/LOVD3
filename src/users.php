@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-07-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-11
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -38,6 +38,10 @@ require ROOT_PATH . 'inc-lib-users.php';
 if ($_AUTH) {
     // If authorized, check for updates.
     require ROOT_PATH . 'inc-upgrade.php';
+}
+
+if (PATH_COUNT >= 2 && $_PE[1] == '00000') {
+    exit; // Block access to the LOVD account with ID = 0.
 }
 
 
@@ -77,8 +81,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /users/00001
     // View specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'User account #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -90,9 +94,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // Those levels will see more fields of the given user.
     lovd_isAuthorized('gene', $_AUTH['curates']);
 
-    if ($nID == '00000') {
-        $nID = -1;
-    } elseif ($nID == $_AUTH['id'] && $_AUTH['level'] == LEVEL_SUBMITTER && isset($_GET['new_submitter'])) {
+    if ($nID == $_AUTH['id'] && $_AUTH['level'] == LEVEL_SUBMITTER && isset($_GET['new_submitter'])) {
         // Newly registered? Explain where to submit.
         lovd_showDialog('dialog_new_submitter', 'Now that you\'ve registered', 'Now that you\'ve registered, you can submit new variant data to this database.<BR>You can do so, by clicking the Submit menu tab just above this message.',
             'information', array('position' => '{my:"left top",at:"left bottom",of:"#tab_submit"}', 'buttons' => '{"Go there now":function(){window.location.href="' . lovd_getInstallURL() . 'submit";},"Close":function(){$(this).dialog("close");}}'));
@@ -172,7 +174,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
     if (ACTION == 'create') {
-        define('PAGE_TITLE', 'Create a new user account');
+        define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
         // Require manager clearance.
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -577,8 +579,6 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
             }
 
             // Thank the user...
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully created '  . (ACTION == 'create'? 'the user' : 'your') . ' account!' .
                     (!$bMail? '' : '<BR>We\'ve sent '  . (ACTION == 'create'? 'the user' : 'you') . ' an email containing '  . (ACTION == 'create'? 'the' : 'your') . ' account information.'), 'success');
             if ($bMail === false) {
@@ -668,8 +668,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /users/00001?edit
     // Edit specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Edit user account #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserEdit');
 
     // Require valid user.
@@ -685,11 +685,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' .
-                                  $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
-            'Not allowed to edit this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -724,8 +723,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully edited the user account!', 'success');
 
             // Change password, if requested.
@@ -785,8 +782,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     // URL: /users/00001?change_password
     // Change a user's password.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Change password for user account #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserResetPassword');
 
     // Require valid user.
@@ -802,10 +799,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
-            'Not allowed to edit this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to edit user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -833,8 +830,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH);
 
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully changed the password!', 'success');
 
             // Change password, if requested.
@@ -884,8 +879,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /users/00001?delete
     // Delete a specific user.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Delete user account #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserDelete');
 
     lovd_requireAUTH(LEVEL_MANAGER);
@@ -899,10 +894,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     if ($zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
-            'Not allowed to delete this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to delete user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to delete this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -961,8 +956,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                     // Thank the user...
                     header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
 
-                    $_T->printHeader();
-                    $_T->printTitle();
                     lovd_showInfoTable('Successfully deleted the user account!', 'success');
 
                     $_T->printFooter();
@@ -1055,22 +1048,18 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // URL: /users/00001?boot
     // Throw a user out of the system.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Boot user #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'UserBoot');
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    if ($nID == '00000') {
-        $nID = -1; // Block access to the LOVD account with ID = 0.
-    }
-
     $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -1096,28 +1085,22 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     // URL: /users/00001?unlock
     // Lock / unlock a user.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', ucfirst(ACTION) . ' user account #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'User' . ucfirst(ACTION));
 
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    if ($nID == '00000') {
-        $nID = -1; // Block access to the LOVD account with ID = 0.
-    }
-
     $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied(null, PAGE_TITLE, 'No such ID!');
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
         exit;
 
     } elseif (($zData['locked'] && ACTION == 'lock') || (!$zData['locked'] && ACTION == 'unlock')) {
         // Can't unlock someone that is not locked or lock someone that is already locked.
-        $_T->printHeader();
-        $_T->printTitle();
         lovd_showInfoTable('User is already ' . ACTION . 'ed!', 'stop');
         $_T->printFooter();
         exit;
@@ -1142,11 +1125,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     // URL: /users/00001?submissions
     // Manage unfinished submissions
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Manage unfinished submissions for user #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
     $_T->printHeader();
     $_T->printTitle();
+
+    $zData = $_DB->query('SELECT id, saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    if (!$zData) {
+        // Wrong ID, apparently.
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
 
     if ($_AUTH && $_AUTH['id'] == $nID) {
         // Require submitter clearance.
@@ -1160,7 +1151,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         lovd_showInfoTable('Below are lists of this user\'s unfinished submissions', 'information');
     }
 
-    $zData = $_DB->query('SELECT saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID), false)->fetchAssoc();
     if (!empty($zData['saved_work'])) {
         $zData['saved_work'] = unserialize($zData['saved_work']);
     } else {
@@ -1224,8 +1214,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // URL: /users/00001?share_access
     // Let the user share access to his objects to other users.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Sharing access');
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ShareAccess');
 
     require_once ROOT_PATH . 'class/object_users.php';
@@ -1235,25 +1225,26 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $bAllowGrantEdit = true;
     $sUserListID = 'user_share_access_' . $nID;
 
-    // Get the current user's full name to use in interface/e-mail.
-    $sNameQuery = 'SELECT
-                     u.name,
-                     u.level,
-                     u.institute,
-                     u.email
-                   FROM ' . TABLE_USERS . ' AS u
-                   WHERE u.id = ?';
-    $zData = $_DB->query($sNameQuery, array($nID))->fetchAssoc();
+    $zData = $_DB->query('
+        SELECT name, level, institute, email
+        FROM ' . TABLE_USERS . '
+        WHERE id = ?', array($nID))->fetchAssoc();
+
+    if (!$zData) {
+        // Wrong ID, apparently.
+        lovd_showInfoTable('No such ID!', 'stop');
+        $_T->printFooter();
+        exit;
+    }
 
     // Require special clearance, if user is not editing himself.
     // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // This is a hack-attempt.
-        // FIXME: This function and its use is a bit messy.
-        lovd_showPageAccessDenied('Tried to share access of user ID ' . $nID . ' (' .
-            $_SETT['user_levels'][$zData['level']] . ')',
-            PAGE_TITLE,
-            'Not allowed to edit this user. This event has been logged.');
+        lovd_writeLog('Error', 'HackAttempt',
+            'Tried to share access of user ID ' . $nID . ' (' . $_SETT['user_levels'][$zData['level']] . ')');
+        lovd_showInfoTable('Not allowed to edit this user. This event has been logged.', 'stop');
+        $_T->printFooter();
         exit;
     }
 
@@ -1297,12 +1288,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
             // Confirmation page and redirect.
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
 
-            $_T->printHeader();
-            $_T->printTitle();
             lovd_showInfoTable('Successfully updated sharing permissions!', 'success');
-
             $_T->printFooter();
             exit;
+
         } else {
             // Because we're sending the data back to the form, I need to unset the password fields!
             unset($_POST['password']);

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2019-08-27
- * For LOVD    : 3.0-22
+ * Modified    : 2020-08-25
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -88,8 +88,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /diseases/00001
     // View specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Disease #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -155,11 +155,10 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
 
-    $sID = rawurldecode($_PE[1]);
-    $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($sID))->fetchAllColumn();
+    $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($_PE[1]))->fetchAllColumn();
     $n = count($aDiseases);
     if (!$n) {
-        define('PAGE_TITLE', 'Disease');
+        define('PAGE_TITLE', 'Disease with abbreviation ' . $_PE[1]);
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
@@ -168,7 +167,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $aDiseases[0]);
     } else {
         // Multiple hits. Forward to exact match search.
-        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '?search_symbol=%3D%22' . rawurlencode($sID) . '%22');
+        header('Location: ' . lovd_getInstallURL() . $_PE[0] . '?search_symbol=%3D%22' . rawurlencode($_PE[1]) . '%22');
     }
     exit;
 }
@@ -181,7 +180,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     // URL: /diseases?create
     // Create a new entry.
 
-    define('PAGE_TITLE', 'Create a new disease information entry');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'DiseaseCreate');
 
     // Require curator clearance.
@@ -307,8 +306,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     // URL: /diseases/00001?edit
     // Edit a specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Edit disease information entry #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'DiseaseEdit');
 
     if ($nID == '00000') {
@@ -441,8 +440,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // URL: /diseases/00001?delete
     // Delete specific entry.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Delete disease information entry #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'DiseaseDelete');
 
     if ($nID == '00000') {
@@ -570,8 +569,8 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) 
     // URL: /diseases/00001/columns
     // View enabled columns for this disease.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Enabled custom data columns for disease #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -604,11 +603,9 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && !ACTION) {
     $sUnit = 'disease';
     $sCategory = 'Phenotype';
 
-    $sParentID = $_PE[1];
-    $aCol = $_PE;
-    unset($aCol[0], $aCol[1], $aCol[2]); // 'diseases/00001/columns';
-    $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' #' . $sParentID);
+    $sParentID = lovd_getCurrentID();
+    $sColumnID = implode('/', array_slice($_PE, 3));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -644,11 +641,9 @@ if (PATH_COUNT > 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION == 
     $sUnit = 'disease';
     $sCategory = 'Phenotype';
 
-    $sParentID = rawurldecode($_PE[1]);
-    $aCol = $_PE;
-    unset($aCol[0], $aCol[1], $aCol[2]); // 'diseases/00001/columns';
-    $sColumnID = implode('/', $aCol);
-    define('PAGE_TITLE', 'Edit settings for custom data column ' . $sColumnID . ' for ' . $sUnit . ' #' . $sParentID);
+    $sParentID = lovd_getCurrentID();
+    $sColumnID = implode('/', array_slice($_PE, 3));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'SharedColEdit');
 
     // Load appropriate user level for this gene.
@@ -745,8 +740,8 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION ==
     // URL: /diseases/00001/columns?order
     // Change order of enabled columns for this disease.
 
-    $nID = sprintf('%05d', $_PE[1]);
-    define('PAGE_TITLE', 'Change order of enabled custom data columns for disease #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColumnOrder');
     $_T->printHeader();
     $_T->printTitle();

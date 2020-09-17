@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-05
- * Modified    : 2020-06-16
- * For LOVD    : 3.0-24
+ * Modified    : 2020-08-11
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -53,7 +53,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         FROM ' . TABLE_GENES . ' AS g
           LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid
         WHERE g.id = ?
-        GROUP BY g.id', array(rawurldecode($_PE[1])));
+        GROUP BY g.id', array($_PE[1]));
     list($sGene, $nTranscripts) = $qGene->fetchRow();
 
     if ($sGene) {

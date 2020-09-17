@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-02-25
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-17
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -106,7 +106,7 @@ class LOVD_Template
                         'variants' => 'View variants',
                         'variants_' =>
                          array(
-                                '' => array('menu_magnifying_glass.png', 'View all genomic variants', 0),
+                                '' => array('menu_magnifying_glass.png', 'View all variants', 0),
                                 '/variants/in_gene' => array('menu_magnifying_glass.png', 'View all variants affecting transcripts', 0),
                              'hr',
                                 '/variants/' . $_SESSION['currdb'] . '/unique' => array('menu_magnifying_glass.png', 'View unique variants in gene ' . $_SESSION['currdb'], 0),
@@ -259,13 +259,6 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/gene_panels?create']);
             unset($this->aMenu['genes_'][0]);
             unset($this->aMenu['genes_']['/gene_statistics']);
-        }
-
-        if (!defined('PAGE_TITLE')) {
-            $sFile = substr(lovd_getProjectFile(), 1, strrpos(lovd_getProjectFile(), '.') - 1); // Isolate "genes" out of "/genes.php".
-            if (array_key_exists($sFile, $this->aMenu)) {
-                define('PAGE_TITLE', $this->aMenu[$sFile]);
-            }
         }
 
         return true;
@@ -633,7 +626,7 @@ if ($qAnnouncements) {
     $zAnnouncements = array();
 }
 foreach ($zAnnouncements as $zAnnouncement) {
-    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? '' : 'announcements/' . $zAnnouncement['id']), false);
+    lovd_showInfoTable($zAnnouncement['announcement'], $zAnnouncement['type'], '100%', (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? '' : 'announcements/' . $zAnnouncement['id']), false, false);
 }
 ?>
 

@@ -47,8 +47,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1])) {
 
     // FIXME; should check for the existence of the correct needed custom columns.
 
-    $nID = sprintf('%08d', $_PE[1]);
-    define('PAGE_TITLE', 'Pedigree for individual #' . $nID);
+    $nID = lovd_getCurrentID();
+    define('PAGE_TITLE', 'Pedigree for individual #' . $nID); // FIXME: If ever actually released - use lovd_getCurrentPageTitle().
     $_T->printHeader(false);
     $_T->printTitle();
 
@@ -61,3 +61,4 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1])) {
     $_T->printFooter();
     exit;
 }
+?>

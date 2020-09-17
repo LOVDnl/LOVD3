@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-08-11
+ * Modified    : 2020-09-17
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -664,6 +664,206 @@ function lovd_getColumnType ($sTable, $sCol)
         }
     }
     return false;
+}
+
+
+
+
+
+function lovd_getCurrentID ()
+{
+    // Gets the ID for the current page, formats it, and returns it.
+    // E.g. /individuals/1 => 00000001.
+    global $_PE;
+
+    if (PATH_COUNT == 3 && $_PE[0] == 'phenotypes' && $_PE[1] == 'disease') {
+        // Disease-specific list of phenotypes; /phenotypes/disease/00001.
+        return $_PE[2];
+    } elseif (PATH_COUNT >= 2 && in_array($_PE[0], array('columns', 'references'))) {
+        // For columns and references, the ID al all of $_PE.
+        $sID = implode('/', array_slice($_PE, 1));
+        if ($_PE[0] == 'references') {
+            $sID = preg_replace('/\/image$/', '', $sID);
+        }
+        return $sID;
+    } elseif (PATH_COUNT >= 2) {
+        return $_PE[1]; // 0-padding has already been done in inc-init.php.
+    }
+    return false;
+}
+
+
+
+
+
+function lovd_getCurrentPageTitle ()
+{
+    // Generates the current page's title, fetching more information from the
+    //  database, if necessary.
+    global $_CONF, $_DB, $_PE;
+
+    $ID = lovd_getCurrentID();
+    $sObject = $_PE[0];
+
+    // Start with the action, if any exists.
+    $sTitle = ltrim(ACTION . ' ');
+    if (ACTION == 'add') {
+        $sTitle = 'Add/enable ';
+    } elseif (ACTION == 'authorize') {
+        $sTitle = 'Authorize curators for ';
+    } elseif (ACTION == 'confirmVariants') {
+        $sTitle = 'Confirm variant entries with ';
+    } elseif (ACTION == 'create') {
+        $sTitle .= 'a new ';
+    } elseif (ACTION == 'order') {
+        $sTitle = 'Change order of ';
+    } elseif (ACTION == 'search_global') {
+        $sTitle = 'Search other public LOVDs for ';
+    } elseif (ACTION == 'removeVariants') {
+        $sTitle = 'Remove variant entries from ';
+    } elseif (ACTION == 'sortCurators') {
+        // FIXME: If this were "sort_curators", the code one block down
+        //  would have handled it perfectly well.
+        $sTitle = 'Sort curators for ';
+    } elseif (ACTION == 'submissions') {
+        $sTitle = 'Manage unfinished submissions for ';
+    } elseif (strpos(ACTION, '_') !== false) {
+        $sTitle = str_replace('_', ' ', $sTitle) . (!$ID? '' : 'for ');
+    }
+
+    // Custom column settings for genes and diseases.
+    if (in_array($sObject, array('diseases', 'genes')) && PATH_COUNT >= 3 && $_PE[2] == 'columns') {
+        if (PATH_COUNT == 3) {
+            // View or resort column list.
+            $sTitle .= 'custom data columns enabled for ';
+        } else {
+            $sColumnID = implode('/', array_slice($_PE, 3));
+            $sTitle .= 'settings for the &quot;' . $sColumnID . '&quot; custom data column enabled for ';
+        }
+    }
+    // Object name changes for columns and links.
+    if ($sObject == 'columns') {
+        $sTitle .= 'custom data ';
+    } elseif ($sObject == 'links') {
+        $sTitle .= 'custom ';
+    }
+
+    // Capitalize the first letter, trim off the last 's' from the data object.
+    $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
+
+    if ($sObject == 'users' && ACTION != 'boot') {
+        $sTitle .= ' account';
+    } elseif (ACTION == 'create') {
+        $sTitle .= ' entry';
+        // For a target?
+        if (isset($_GET['target'])) {
+            // $_GET['target'] should be checked already when we get here,
+            //  but we take no chances.
+            $ID = htmlspecialchars($_GET['target']);
+            switch ($sObject) {
+                case 'phenotypes':
+                case 'screenings':
+                    $sTitle .= ' for individual';
+                    break;
+            }
+        }
+    }
+
+    // Phenotype listings for diseases.
+    if ($sObject == 'phenotypes' && PATH_COUNT == 3 && $_PE[1] == 'disease') {
+        $sTitle .= 's for disease ';
+        $sObject = 'diseases';
+    }
+
+    if ($ID) {
+        // We're accessing just one entry.
+        if ($sObject == 'genes') {
+            $sTitle = preg_replace('/gene$/', ' the ' . $ID . ' gene', $sTitle);
+        } elseif ($sObject == 'columns') {
+            $sTitle .= ' ' . $ID;
+        } else {
+            $sTitle .= ' #' . $ID;
+        }
+    } else {
+        return $sTitle;
+    }
+
+    // Add details, if available.
+    switch ($sObject) {
+        case 'columns':
+            $sHeader = $_DB->query('SELECT head_column FROM ' . TABLE_COLS . '
+                WHERE id = ?', array($ID))->fetchColumn();
+            $sTitle .= ' (' . $sHeader . ')';
+            break;
+        case 'diseases':
+            list($sName, $nOMIM) = $_DB->query('
+                SELECT IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")), id_omim
+                FROM ' . TABLE_DISEASES . '
+                WHERE id = ?', array($ID))->fetchRow();
+            if ($sName) {
+                $sTitle .= ' (' . $sName .
+                    (!$nOMIM? '' : ', OMIM:' . $nOMIM) . ')';
+            }
+            break;
+        case 'links':
+            $sName = $_DB->query('SELECT name FROM ' . TABLE_LINKS . '
+                WHERE id = ?', array($ID))->fetchColumn();
+            $sTitle .= ' (' . $sName . ')';
+            break;
+        case 'transcripts':
+            list($sNCBI, $sGene) =
+                $_DB->query('
+                    SELECT id_ncbi, geneid
+                    FROM ' . TABLE_TRANSCRIPTS . '
+                    WHERE id = ?', array($ID))->fetchRow();
+            if ($sNCBI) {
+                $sTitle .= ' (' . $sNCBI . ', ' . $sGene . ' gene)';
+            }
+            break;
+        case 'users':
+            // We have to take the user's level into account, so that we won't
+            //  disclose information when people try random IDs!
+            // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
+            $bIsAuthorized = (lovd_isAuthorized('variant', $ID, false) !== false);
+            if ($bIsAuthorized) {
+                list($sName, $sCity, $sCountry) =
+                    $_DB->query('
+                    SELECT u.name, u.city, c.name
+                    FROM ' . TABLE_USERS . ' AS u
+                      LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)
+                    WHERE u.id = ?',
+                        array($ID))->fetchRow();
+                if ($sName) {
+                    $sTitle .= ' (' . $sName . ', ' . $sCity . (!$sCountry? '' : ', ' . $sCountry) . ')';
+                }
+            }
+            break;
+        case 'variants':
+            // Get VOG description and VOT description on the most used transcript.
+            // We have to take the status into account, so that we won't disclose
+            //  information when people try random IDs!
+            // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
+            $bIsAuthorized = (lovd_isAuthorized('variant', $ID, false) !== false);
+            list($sVOG, $sVOT) =
+                $_DB->query('
+                    SELECT CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, ":", vog.`VariantOnGenome/DNA`) AS VOG_DNA,
+                        CONCAT(t.geneid, "(", t.id_ncbi, "):", vot.`VariantOnTranscript/DNA`) AS VOT_DNA
+                    FROM ' . TABLE_VARIANTS . ' AS vog
+                      INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
+                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
+                      LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot.transcriptid)
+                    WHERE vog.id = ? AND (? = 1 OR vog.statusid >= ?)
+                    GROUP BY vog.id, vot.transcriptid
+                    ORDER BY COUNT(vot_count.id) DESC, t.id ASC',
+                        array($ID, $bIsAuthorized, STATUS_MARKED))->fetchRow();
+            if ($sVOG) {
+                $sTitle .= ' (' . $sVOG . (!$sVOT? '' : ', ' . $sVOT) . ')';
+            }
+            break;
+    }
+
+    return $sTitle;
 }
 
 
@@ -2138,8 +2338,10 @@ function lovd_showDialog ($sID, $sTitle, $sMessage, $sType = 'information', $aSe
 
 
 
-function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%', $sHref = '', $bBR = true)
+function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%', $sHref = '', $bBR = true, $bTitle = true)
 {
+    global $_T;
+
     $aTypes =
              array(
                     'information' => 'Information',
@@ -2172,6 +2374,12 @@ function lovd_showInfoTable ($sMessage, $sType = 'information', $sWidth = '100%'
                   $sSeparatorLine . (!$bBR? '' : "\n") . "\n");
             break;
         default:
+            // Print the template header and title, in case it hasn't been done yet.
+            $_T->printHeader(); // Already makes sure that it doesn't get repeated.
+            if (defined('PAGE_TITLE') && $bTitle) {
+                $_T->printTitle(); // The same title will never be printed twice.
+            }
+
             print('      <TABLE border="0" cellpadding="2" cellspacing="0" width="' . $sWidth . '" class="info"' . (!empty($sHref)? ' style="cursor : pointer;" onclick="' . (preg_match('/[ ;"\'=()]/', $sHref)? $sHref : 'window.location.href=\'' . $sHref . '\';') . '"': '') . '>' . "\n" .
                   '        <TR>' . "\n" .
                   '          <TD valign="top" align="center" width="40"><IMG src="gfx/lovd_' . $sType . '.png" alt="' . $aTypes[$sType] . '" title="' . $aTypes[$sType] . '" width="32" height="32" style="margin : 4px;"></TD>' . "\n" .
