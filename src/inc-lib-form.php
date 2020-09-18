@@ -392,6 +392,7 @@ function lovd_fetchDBID ($aData)
     if (!isset($aData['aTranscripts'])) {
         $aData['aTranscripts'] = array();
     }
+    $aGenes = array();
     $aTranscriptVariants = array();
     foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
         // Check for non-empty VariantOnTranscript/DNA fields.
@@ -447,7 +448,9 @@ function lovd_fetchDBID ($aData)
         foreach($aDBIDOptions as $sDBIDoption) {
             // Loop through all the options returned from the database and decide which option to take.
             preg_match('/^((.+)_(\d{6}))$/', $sDBID, $aMatches);
-            list($sDBIDnew, $sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[1], $aMatches[2], $aMatches[3]);
+            //              2 = chr## or gene
+            //                   3 = the actual ID.
+            list($sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[2], $aMatches[3]);
 
             if (preg_match('/^(.+)_(\d{6})$/', $sDBIDoption, $aMatches)) {
                 list($sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
