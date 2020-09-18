@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-04-21
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-18
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -491,9 +491,22 @@ function lovd_fetchDBID ($aData)
                 // Update the cache!
                 $aDBIDsSeen[$aData['chromosome']] = $sSymbol . '_' . sprintf('%06d', ($nDBIDnewNumber - 1));
             } else {
-                // 2013-02-28; 3.0-03; By using INNER JOIN to VOT and T and placing a WHERE on t.geneid we sped up this query from 0.45s to 0.00s when having 1M variants.
+                // We used to speed up this query by joining to VOT and T and
+                //  placing a WHERE on t.geneid. However, this assumes that all
+                //  variants with gene-based DBIDs still have VOTs on that gene.
+                // This wasn't always the case in our database as transcripts
+                //  were sometimes removed and added with time in between them,
+                //  and variants were imported and given DBIDs already in use.
+                // So, we now speed up this query by adding an additional WHERE
+                //  on the chromosome. It provides a small speedup, while the
+                //  risk of missing variants is very small (they have to be on
+                //  a different chromosome).
                 $sSymbol = $aGenes[0];
-                $nDBIDnewNumber = $_DB->query('SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ? AND `VariantOnGenome/DBID` REGEXP ?', array($sSymbol, '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
+                $nDBIDnewNumber = $_DB->query('
+                    SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1
+                    FROM ' . TABLE_VARIANTS . '
+                    WHERE chromosome = ? AND `VariantOnGenome/DBID` REGEXP ?',
+                        array($aData['chromosome'], '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
             }
             $sDBID = $sSymbol . '_' . sprintf('%06d', $nDBIDnewNumber);
         }
