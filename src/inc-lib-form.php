@@ -460,11 +460,15 @@ function lovd_fetchDBID ($aData)
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
                     // If the symbol of the option is the same, but the number is lower (not including 000000), take it.
                     $sDBID = $sDBIDoption;
-                } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDoptionSymbol, $aGenes)) {
-                    // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
-                    $sDBID = $sDBIDoption;
                 } elseif (substr($sDBIDnewSymbol, 0, 3) == 'chr' && substr($sDBIDoptionSymbol, 0, 3) != 'chr') {
                     // If the symbol of the option is not a chromosome, but the current DBID is, take it.
+                    $sDBID = $sDBIDoption;
+                } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDoptionSymbol, $aGenes)
+                    && (!in_array($sDBIDnewSymbol, $aGenes)
+                        || ($sDBIDoptionNumber != '000000' && $sDBIDnewNumber == '000000')
+                        || $sDBIDoptionNumber < $sDBIDnewNumber)) {
+                    // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
+                    // (but only if the currently selected DBID is *not* in the gene list or if we can pick a non 000000 ID, or if the option's number is lower)
                     $sDBID = $sDBIDoption;
                 }
             }
