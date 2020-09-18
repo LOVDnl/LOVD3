@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-08-10
+ * Modified    : 2020-08-18
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -74,19 +74,31 @@ class LOVD_API_Submissions
         ),
         'pathogenicity' => array(
             // 'Unclassified' => '00', // Not allowed for submission.
+            'Benign' => '10',
             'Non-pathogenic' => '10',
+            'Likely benign' => '30',
             'Probably Not Pathogenic' => '30',
+            'VUS' => '50',
+            'Likely Pathogenic' => '70',
             'Probably Pathogenic' => '70',
             'Pathogenic' => '90',
+            'Causative' => '90',
+            'Conflicting' => '50',
+            'Unknown' => '50',
             'Not Known' => '50',
-            'Causative' => '60',
         ),
         'pathogenicity_to_classification' => array(
             'Unclassified' => 'unclassified',
+            'Benign' => 'benign',
             'Non-pathogenic' => 'benign',
+            'Likely benign' => 'likely benign',
             'Probably Not Pathogenic' => 'likely benign',
+            'VUS' => 'VUS',
+            'Likely Pathogenic' => 'likely pathogenic',
             'Probably Pathogenic' => 'likely pathogenic',
             'Pathogenic' => 'pathogenic',
+            'Conflicting' => 'conflicting',
+            'Unknown' => 'VUS',
             'Not Known' => 'VUS',
             'Causative' => 'association',
             // FIXME: Information about disease inheritance (dominant, recessive) can be stored here, too.
