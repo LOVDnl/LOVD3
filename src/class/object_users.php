@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-03-03
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-22
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -122,6 +122,7 @@ class LOVD_User extends LOVD_Object
                         'phpsessid' => array('Session ID', LEVEL_MANAGER),
                         'auth_token_' => array('API token', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
                         'auth_token_expires_' => array('API token expiration', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'api_settings' => array('API settings', LEVEL_MANAGER),
                         'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
@@ -490,10 +491,13 @@ class LOVD_User extends LOVD_Object
             // Submissions...
             if (lovd_isAuthorized('user', $zData['id']) === false) {
                 // Not authorized to view hidden data for this user; so we're not manager and we're not viewing ourselves. Nevermind then.
-                unset($this->aColumnsViewEntry['entries_owned_by_'],
-                      $this->aColumnsViewEntry['entries_created_by_'],
-                      $this->aColumnsViewEntry['auth_token_'],
-                      $this->aColumnsViewEntry['auth_token_expires_']);
+                unset(
+                    $this->aColumnsViewEntry['entries_owned_by_'],
+                    $this->aColumnsViewEntry['entries_created_by_'],
+                    $this->aColumnsViewEntry['auth_token_'],
+                    $this->aColumnsViewEntry['auth_token_expires_'],
+                    $this->aColumnsViewEntry['api_settings']
+                );
             } else {
                 // Either we're viewing ourselves, or we're manager or up.
 
