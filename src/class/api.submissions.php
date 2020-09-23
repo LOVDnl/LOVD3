@@ -40,6 +40,7 @@ class LOVD_API_Submissions
     // This class defines the LOVD API object handling submissions.
 
     private $API;                     // The API object.
+    private $bFullSubmission = true;  // Full submissions include case data.
     private $nMaxPOSTSize = 1048576;  // The maximum POST size allowed (1MB).
     private $zAuth = array();         // User uploading the data.
 
@@ -355,101 +356,108 @@ class LOVD_API_Submissions
         // Loop VarioML data, fill in $aData array.
         foreach ($aInput['lsdb']['individual'] as $nIndividualKey => $aIndividual) {
             $nIndividualID = $nIndividualKey + 1;
-            $aData['Individuals'][$nIndividualKey] = array_fill_keys($this->aObjects['Individuals'], ''); // Instantiate all columns.
 
-            // Apply defaults, only for columns mandatory in this LOVD instance.
-            // This function will try and get the default values from LOVD itself.
-            $this->addMandatoryDefaultValues('Individuals', $aData['Individuals'][$nIndividualKey]);
-
-            // Map the data.
-            $aData['Individuals'][$nIndividualKey]['id'] = $nIndividualID;
-            $aData['Individuals'][$nIndividualKey]['panel_size'] = 1; // Defaults to one individual.
-            $aData['Individuals'][$nIndividualKey]['owned_by'] = $this->zAuth['id'];
-            $aData['Individuals'][$nIndividualKey]['statusid'] = STATUS_PENDING;
-            $aData['Individuals'][$nIndividualKey]['created_by'] = $this->zAuth['id'];
-            $aData['Individuals'][$nIndividualKey]['Individual/Lab_ID'] = $aIndividual['@id'];
-            $aData['Individuals'][$nIndividualKey]['Individual/Gender'] = (!isset($aIndividual['gender'])? '' : $this->aValueMappings['gender'][$aIndividual['gender']['@code']]);
-
-
-
-            // Phenotypes; can be both HPO and OMIM entries.
-            $nDiseaseIDForHPO = 0; // The disease ID to which HPO terms will be added.
-            // Split based on source.
-            $aPhenotypes = array('hpo' => array(), 'omim' => array());
-            foreach ($aIndividual['phenotype'] as $aPhenotype) {
-                $aPhenotypes[strtolower($aPhenotype['@source'])][$aPhenotype['@accession']] = $aPhenotype['@term'];
-            }
-            // If we have (HPO) phenotypes but no diseases, we need to add 'unclassified'.
-            if ($aPhenotypes['hpo'] && !count($aPhenotypes['omim'])) {
-                if (!$nDiseaseIDUnclassified) {
-                    // We didn't look for it yet. Find it, and if it's not there, create it.
-                    $nDiseaseIDUnclassified = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ? AND name LIKE ?', array('?', '%unclassified%'))->fetchColumn();
-                    if ($nDiseaseIDUnclassified === false) {
-                        // Have the "unclassified" disease created, then.
-                        $nDiseaseIDUnclassified = count($aData['Diseases']) + 1;
-                        $aData['Diseases'][] = array('id' => $nDiseaseIDUnclassified, 'symbol' => '?', 'name' => 'Unclassified', 'id_omim' => '', 'created_by' => $this->zAuth['id']);
-                    }
-                }
-                // Link individual to the disease.
-                $aData['Individuals_To_Diseases'][] = array('individualid' => $nIndividualID, 'diseaseid' => $nDiseaseIDUnclassified);
-                $nDiseaseIDForHPO = $nDiseaseIDUnclassified;
-            }
-
-            // First handle the diseases.
-            foreach ($aPhenotypes['omim'] as $nAccession => $sTerm) {
-                // We focus on the OMIM ID and use the term
-                //  only when we can't match on the OMIM ID.
-                // We can just put it in the file and have LOVD match it, but
-                //  LOVD will always issue a warning, and I want to prevent that.
-                if (!isset($aDiseases[$nAccession])) {
-                    $nDiseaseID = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ? OR (id_omim IS NULL AND name = ?)', array($nAccession, $sTerm))->fetchColumn();
-                    if (!$nDiseaseID) {
-                        // Disease is not yet in the database. Have it created.
-                        $nDiseaseID = count($aData['Diseases']) + 1;
-                        // If the term looks like an abbreviation, use that, otherwise use "-".
-                        $sSymbol = (preg_match('/^[A-Z0-9-]+$/', $sTerm)? $sTerm : '-');
-                        $aData['Diseases'][] = array('id' => $nDiseaseID, 'symbol' => $sSymbol, 'name' => $sTerm, 'id_omim' => $nAccession, 'created_by' => $this->zAuth['id']);
-                    }
-                    $aDiseases[$nAccession] = $nDiseaseID;
-                }
-                // Link individual to the disease.
-                $aData['Individuals_To_Diseases'][] = array('individualid' => $nIndividualID, 'diseaseid' => $aDiseases[$nAccession]);
-                // Also, take individual's first disease, and select it for HPO terms to be added to.
-                if (!$nDiseaseIDForHPO) {
-                    $nDiseaseIDForHPO = $aDiseases[$nAccession];
-                }
-            }
-
-            // Then, store phenotypes. Add to the first disease we have attached
-            //  to this individual.
-            // All HPO phenotypes will be stored as one phenotype entry.
-            if ($aPhenotypes['hpo']) {
-                $sPhenotype = '';
-                foreach ($aPhenotypes['hpo'] as $nAccession => $sTerm) {
-                    $sPhenotype .= (!$sPhenotype ? '' : '; ') . $sTerm . ' (HP:' . $nAccession . ')';
-                }
-                // We're assuming here, that the Phenotype/Additional column is
-                //  active. It's an LOVD-standard custom column added to new
-                //  diseases by default.
-                $aPhenotype = array_fill_keys($this->aObjects['Phenotypes'], ''); // Instantiate all columns.
-                $nPhenotypeID = count($aData['Phenotypes']) + 1;
+            // Store the individual only when we actually have data.
+            // Submissions can contain only variant data.
+            if ($this->bFullSubmission) {
+                $aData['Individuals'][$nIndividualKey] = array_fill_keys($this->aObjects['Individuals'], ''); // Instantiate all columns.
 
                 // Apply defaults, only for columns mandatory in this LOVD instance.
                 // This function will try and get the default values from LOVD itself.
-                $this->addMandatoryDefaultValues('Phenotypes', $aPhenotype);
+                $this->addMandatoryDefaultValues('Individuals', $aData['Individuals'][$nIndividualKey]);
 
-                $aData['Phenotypes'][] = array_merge(
-                    $aPhenotype,
-                    array(
-                        'id' => $nPhenotypeID,
-                        'diseaseid' => $nDiseaseIDForHPO,
-                        'individualid' => $nIndividualID,
-                        'owned_by' => $this->zAuth['id'],
-                        'statusid' => STATUS_PENDING,
-                        'created_by' => $this->zAuth['id'],
-                        'Phenotype/Additional' => $sPhenotype,
-                    )
-                );
+                // Map the data.
+                $aData['Individuals'][$nIndividualKey]['id'] = $nIndividualID;
+                $aData['Individuals'][$nIndividualKey]['panel_size'] = 1; // Defaults to one individual.
+                $aData['Individuals'][$nIndividualKey]['owned_by'] = $this->zAuth['id'];
+                $aData['Individuals'][$nIndividualKey]['statusid'] = STATUS_PENDING;
+                $aData['Individuals'][$nIndividualKey]['created_by'] = $this->zAuth['id'];
+                $aData['Individuals'][$nIndividualKey]['Individual/Lab_ID'] = $aIndividual['@id'];
+                $aData['Individuals'][$nIndividualKey]['Individual/Gender'] = (!isset($aIndividual['gender']) ? '' : $this->aValueMappings['gender'][$aIndividual['gender']['@code']]);
+            }
+
+
+
+            if ($this->bFullSubmission && !empty($aIndividual['phenotype'])) {
+                // Phenotypes; can be both HPO and OMIM entries.
+                $nDiseaseIDForHPO = 0; // The disease ID to which HPO terms will be added.
+                // Split based on source.
+                $aPhenotypes = array('hpo' => array(), 'omim' => array());
+                foreach ($aIndividual['phenotype'] as $aPhenotype) {
+                    $aPhenotypes[strtolower($aPhenotype['@source'])][$aPhenotype['@accession']] = $aPhenotype['@term'];
+                }
+                // If we have (HPO) phenotypes but no diseases, we need to add 'unclassified'.
+                if ($aPhenotypes['hpo'] && !count($aPhenotypes['omim'])) {
+                    if (!$nDiseaseIDUnclassified) {
+                        // We didn't look for it yet. Find it, and if it's not there, create it.
+                        $nDiseaseIDUnclassified = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ? AND name LIKE ?', array('?', '%unclassified%'))->fetchColumn();
+                        if ($nDiseaseIDUnclassified === false) {
+                            // Have the "unclassified" disease created, then.
+                            $nDiseaseIDUnclassified = count($aData['Diseases']) + 1;
+                            $aData['Diseases'][] = array('id' => $nDiseaseIDUnclassified, 'symbol' => '?', 'name' => 'Unclassified', 'id_omim' => '', 'created_by' => $this->zAuth['id']);
+                        }
+                    }
+                    // Link individual to the disease.
+                    $aData['Individuals_To_Diseases'][] = array('individualid' => $nIndividualID, 'diseaseid' => $nDiseaseIDUnclassified);
+                    $nDiseaseIDForHPO = $nDiseaseIDUnclassified;
+                }
+
+                // First handle the diseases.
+                foreach ($aPhenotypes['omim'] as $nAccession => $sTerm) {
+                    // We focus on the OMIM ID and use the term
+                    //  only when we can't match on the OMIM ID.
+                    // We can just put it in the file and have LOVD match it, but
+                    //  LOVD will always issue a warning, and I want to prevent that.
+                    if (!isset($aDiseases[$nAccession])) {
+                        $nDiseaseID = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ? OR (id_omim IS NULL AND name = ?)', array($nAccession, $sTerm))->fetchColumn();
+                        if (!$nDiseaseID) {
+                            // Disease is not yet in the database. Have it created.
+                            $nDiseaseID = count($aData['Diseases']) + 1;
+                            // If the term looks like an abbreviation, use that, otherwise use "-".
+                            $sSymbol = (preg_match('/^[A-Z0-9-]+$/', $sTerm) ? $sTerm : '-');
+                            $aData['Diseases'][] = array('id' => $nDiseaseID, 'symbol' => $sSymbol, 'name' => $sTerm, 'id_omim' => $nAccession, 'created_by' => $this->zAuth['id']);
+                        }
+                        $aDiseases[$nAccession] = $nDiseaseID;
+                    }
+                    // Link individual to the disease.
+                    $aData['Individuals_To_Diseases'][] = array('individualid' => $nIndividualID, 'diseaseid' => $aDiseases[$nAccession]);
+                    // Also, take individual's first disease, and select it for HPO terms to be added to.
+                    if (!$nDiseaseIDForHPO) {
+                        $nDiseaseIDForHPO = $aDiseases[$nAccession];
+                    }
+                }
+
+                // Then, store phenotypes. Add to the first disease we have attached
+                //  to this individual.
+                // All HPO phenotypes will be stored as one phenotype entry.
+                if ($aPhenotypes['hpo']) {
+                    $sPhenotype = '';
+                    foreach ($aPhenotypes['hpo'] as $nAccession => $sTerm) {
+                        $sPhenotype .= (!$sPhenotype ? '' : '; ') . $sTerm . ' (HP:' . $nAccession . ')';
+                    }
+                    // We're assuming here, that the Phenotype/Additional column is
+                    //  active. It's an LOVD-standard custom column added to new
+                    //  diseases by default.
+                    $aPhenotype = array_fill_keys($this->aObjects['Phenotypes'], ''); // Instantiate all columns.
+                    $nPhenotypeID = count($aData['Phenotypes']) + 1;
+
+                    // Apply defaults, only for columns mandatory in this LOVD instance.
+                    // This function will try and get the default values from LOVD itself.
+                    $this->addMandatoryDefaultValues('Phenotypes', $aPhenotype);
+
+                    $aData['Phenotypes'][] = array_merge(
+                        $aPhenotype,
+                        array(
+                            'id' => $nPhenotypeID,
+                            'diseaseid' => $nDiseaseIDForHPO,
+                            'individualid' => $nIndividualID,
+                            'owned_by' => $this->zAuth['id'],
+                            'statusid' => STATUS_PENDING,
+                            'created_by' => $this->zAuth['id'],
+                            'Phenotype/Additional' => $sPhenotype,
+                        )
+                    );
+                }
             }
 
 
@@ -660,67 +668,69 @@ class LOVD_API_Submissions
                     }
                 }
 
-                // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
-                $aTemplates = array();
-                $aTechniques = array();
-                foreach ($aVariant['variant_detection'] as $aScreening) {
-                    $aTemplates[] = $aScreening['@template'];
-                    $aTechniques = array_merge($aTechniques, explode(';', $aScreening['@technique']));
-                }
+                if ($this->bFullSubmission && !empty($aVariant['variant_detection'])) {
+                    // Build the screening. There can be multiple. We choose to, instead of thinking of something real fancy, to just drop everything in one screening.
+                    $aTemplates = array();
+                    $aTechniques = array();
+                    foreach ($aVariant['variant_detection'] as $aScreening) {
+                        $aTemplates[] = $aScreening['@template'];
+                        $aTechniques = array_merge($aTechniques, explode(';', $aScreening['@technique']));
+                    }
 
-                $aScreening = array_fill_keys($this->aObjects['Screenings'], ''); // Instantiate all columns.
-                $nScreeningID = count($aData['Screenings']) + 1;
+                    $aScreening = array_fill_keys($this->aObjects['Screenings'], ''); // Instantiate all columns.
+                    $nScreeningID = count($aData['Screenings']) + 1;
 
-                // Apply defaults, only for columns mandatory in this LOVD instance.
-                // This function will try and get the default values from LOVD itself.
-                $this->addMandatoryDefaultValues('Screenings', $aScreening);
+                    // Apply defaults, only for columns mandatory in this LOVD instance.
+                    // This function will try and get the default values from LOVD itself.
+                    $this->addMandatoryDefaultValues('Screenings', $aScreening);
 
-                // Before we add this screening to the list of screenings, let's see if we're not duplicating screenings.
-                // When sending in multiple variants per individual, we'd be repeating the screening information for every variant.
-                // Loop the list of screenings. If we find the same one, don't duplicate it.
-                $aScreening = array_merge(
-                    $aScreening,
-                    array(
-                        'id' => $nScreeningID,
-                        'individualid' => $nIndividualID,
-                        'variants_found' => 1,
-                        'owned_by' => $this->zAuth['id'],
-                        'created_by' => $this->zAuth['id'],
-                        'Screening/Template' => implode(';', array_unique($aTemplates)),
-                        'Screening/Technique' => implode(';', array_unique($aTechniques)),
-                    )
-                );
-                $bScreeningIsNew = true;
-                foreach ($aData['Screenings'] as $aProcessedScreening) {
-                    foreach ($aProcessedScreening as $sKey => $sValue) {
-                        // We could just do $a == $b, but the 'id' key will always be different.
-                        // So, just compare key by key, ignoring the 'id' key.
-                        if ($sKey != 'id' && $sValue != $aScreening[$sKey]) {
-                            // Found a difference.
-                            // Continue to the next screening.
-                            continue 2;
+                    // Before we add this screening to the list of screenings, let's see if we're not duplicating screenings.
+                    // When sending in multiple variants per individual, we'd be repeating the screening information for every variant.
+                    // Loop the list of screenings. If we find the same one, don't duplicate it.
+                    $aScreening = array_merge(
+                        $aScreening,
+                        array(
+                            'id' => $nScreeningID,
+                            'individualid' => $nIndividualID,
+                            'variants_found' => 1,
+                            'owned_by' => $this->zAuth['id'],
+                            'created_by' => $this->zAuth['id'],
+                            'Screening/Template' => implode(';', array_unique($aTemplates)),
+                            'Screening/Technique' => implode(';', array_unique($aTechniques)),
+                        )
+                    );
+                    $bScreeningIsNew = true;
+                    foreach ($aData['Screenings'] as $aProcessedScreening) {
+                        foreach ($aProcessedScreening as $sKey => $sValue) {
+                            // We could just do $a == $b, but the 'id' key will always be different.
+                            // So, just compare key by key, ignoring the 'id' key.
+                            if ($sKey != 'id' && $sValue != $aScreening[$sKey]) {
+                                // Found a difference.
+                                // Continue to the next screening.
+                                continue 2;
+                            }
+                        }
+
+                        // When we get here, no differences were found. Just one more thing to check.
+                        if (array_keys($aProcessedScreening) == array_keys($aScreening)) {
+                            // Yup, all fields match.
+                            // The screening we see in the data is the same as this one that we previously saw.
+                            $nScreeningID = $aProcessedScreening['id'];
+                            $bScreeningIsNew = false;
+                            break;
                         }
                     }
 
-                    // When we get here, no differences were found. Just one more thing to check.
-                    if (array_keys($aProcessedScreening) == array_keys($aScreening)) {
-                        // Yup, all fields match.
-                        // The screening we see in the data is the same as this one that we previously saw.
-                        $nScreeningID = $aProcessedScreening['id'];
-                        $bScreeningIsNew = false;
-                        break;
+                    if ($bScreeningIsNew) {
+                        // We didn't find a screening that was the same.
+                        $aData['Screenings'][] = $aScreening;
                     }
-                }
 
-                if ($bScreeningIsNew) {
-                    // We didn't find a screening that was the same.
-                    $aData['Screenings'][] = $aScreening;
+                    $aData['Screenings_To_Variants'][] = array(
+                        'screeningid' => $nScreeningID,
+                        'variantid' => $nVariantID,
+                    );
                 }
-
-                $aData['Screenings_To_Variants'][] = array(
-                    'screeningid' => $nScreeningID,
-                    'variantid' => $nVariantID,
-                );
 
 
 
@@ -1074,14 +1084,41 @@ class LOVD_API_Submissions
             return false;
         }
 
-
+        // An authenticated user may have the permission to just submit variants.
+        if (!($aAPISettings = @json_decode($this->zAuth['api_settings'], true))) {
+            $aAPISettings = array();
+        }
+        $bAllowedVariantOnly = (!empty($aAPISettings['allow_variant-only_submissions']));
 
         // Do we have data at all?
         if (!isset($aInput['lsdb']['individual']) || !$aInput['lsdb']['individual']) {
-            $this->API->aResponse['errors'][] = 'VarioML error: Individual element not found, or no individuals. ' .
-                'Your submission must include at least one individual data entry.';
-            $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
-            return false;
+            if ($bAllowedVariantOnly) {
+                // This user is allowed to submit only variants. If that is also missing, still throw an error.
+                if (empty($aInput['lsdb']['variant'])) {
+                    $this->API->aResponse['errors'][] = 'VarioML error: Individual element not found, or no individuals. ' .
+                        'Variant element not found, or no variants. ' .
+                        'Your submission must include at least one individual or variant data entry.';
+                    $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                    return false;
+                } else {
+                    // This user is allowed to send only variants, and we have this indeed.
+                    // However, to keep the code clean and consistent, I'll need to reconstruct the "normal" data structure.
+                    $aInput['lsdb']['individual'] = array(
+                        array(
+                            'variant' => $aInput['lsdb']['variant'],
+                        ),
+                    );
+                    unset($aInput['lsdb']['variant']);
+                    $this->bFullSubmission = false;
+                }
+
+            } else {
+                // This user is only allowed to send full submissions, but we have no individuals.
+                $this->API->aResponse['errors'][] = 'VarioML error: Individual element not found, or no individuals. ' .
+                    'Your submission must include at least one individual data entry.';
+                $this->API->nHTTPStatus = 422; // Send 422 Unprocessable Entity.
+                return false;
+            }
         }
 
         // Fetch and store variant detection techniques.
@@ -1098,7 +1135,8 @@ class LOVD_API_Submissions
             $nIndividual = $iIndividual + 1; // We start counting at 1, like most humans do.
 
             // Required elements.
-            foreach (array('@id', 'variant') as $sRequiredElement) {
+            $aRequired = ($this->bFullSubmission? array('@id', 'variant') : array('variant'));
+            foreach ($aRequired as $sRequiredElement) {
                 if (!isset($aIndividual[$sRequiredElement]) || !$aIndividual[$sRequiredElement]) {
                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Missing required ' . $sRequiredElement . ' element.';
                 }
@@ -1131,7 +1169,7 @@ class LOVD_API_Submissions
                         }
                     }
                 }
-            } else {
+            } elseif ($this->bFullSubmission) {
                 $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Missing required phenotype element.';
             }
 
@@ -1143,7 +1181,11 @@ class LOVD_API_Submissions
                     $nVariant = $iVariant + 1; // We start counting at 1, like most humans do.
 
                     // Required elements.
-                    foreach (array('@copy_count', '@type', 'ref_seq', 'name', 'pathogenicity', 'variant_detection') as $sRequiredElement) {
+                    $aRequired = array('@copy_count', '@type', 'ref_seq', 'name', 'pathogenicity');
+                    if ($this->bFullSubmission) {
+                        $aRequired[] = 'variant_detection';
+                    }
+                    foreach ($aRequired as $sRequiredElement) {
                         if (!isset($aVariant[$sRequiredElement]) || !$aVariant[$sRequiredElement]) {
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Missing required ' . $sRequiredElement . ' element.';
                         }
