@@ -81,7 +81,7 @@ $aFields = array(
         'Auto-schedule API submissions?',
         'Note that you\'ll need to configure automatic import of scheduled files to actually automatically process these submissions.',
     ),
-    'Process_as_public' => array(
+    'process_as_public' => array(
         'Process data directly as Public?',
         'Normally, new submissions are set to Pending, until a Curator publishes them. This setting will directly publish new API submissions from this user when they are processed.'
     ),

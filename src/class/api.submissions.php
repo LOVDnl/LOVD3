@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-08-18
+ * Modified    : 2020-09-23
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,6 +40,7 @@ class LOVD_API_Submissions
     // This class defines the LOVD API object handling submissions.
 
     private $API;                     // The API object.
+    private $aAPISettings = array();  // The user's API settings.
     private $bFullSubmission = true;  // Full submissions include case data.
     private $nMaxPOSTSize = 1048576;  // The maximum POST size allowed (1MB).
     private $zAuth = array();         // User uploading the data.
@@ -347,6 +348,8 @@ class LOVD_API_Submissions
         static $aDiseases = array();
         // Array of transcripts we have already seen.
         static $aTranscripts = array();
+        // Which status will the new entries get?
+        $nStatusID = (empty($this->aAPISettings['process_as_public'])? STATUS_PENDING : STATUS_MARKED);
 
         // To make sure we can actually import the result, we should check for columns that are mandatory, but not currently supported.
         // We should try and give those defaults. First, identify these columns.
@@ -370,7 +373,7 @@ class LOVD_API_Submissions
                 $aData['Individuals'][$nIndividualKey]['id'] = $nIndividualID;
                 $aData['Individuals'][$nIndividualKey]['panel_size'] = 1; // Defaults to one individual.
                 $aData['Individuals'][$nIndividualKey]['owned_by'] = $this->zAuth['id'];
-                $aData['Individuals'][$nIndividualKey]['statusid'] = STATUS_PENDING;
+                $aData['Individuals'][$nIndividualKey]['statusid'] = $nStatusID;
                 $aData['Individuals'][$nIndividualKey]['created_by'] = $this->zAuth['id'];
                 $aData['Individuals'][$nIndividualKey]['Individual/Lab_ID'] = $aIndividual['@id'];
                 $aData['Individuals'][$nIndividualKey]['Individual/Gender'] = (!isset($aIndividual['gender']) ? '' : $this->aValueMappings['gender'][$aIndividual['gender']['@code']]);
@@ -452,7 +455,7 @@ class LOVD_API_Submissions
                             'diseaseid' => $nDiseaseIDForHPO,
                             'individualid' => $nIndividualID,
                             'owned_by' => $this->zAuth['id'],
-                            'statusid' => STATUS_PENDING,
+                            'statusid' => $nStatusID,
                             'created_by' => $this->zAuth['id'],
                             'Phenotype/Additional' => $sPhenotype,
                         )
@@ -478,7 +481,7 @@ class LOVD_API_Submissions
                 $aVOG['effectid'] = $this->aValueMappings['pathogenicity'][$aVariant['pathogenicity'][0]['@term']];
                 $aVOG['chromosome'] = array_search($aVariant['ref_seq']['@accession'], $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
                 $aVOG['owned_by'] = $this->zAuth['id'];
-                $aVOG['statusid'] = STATUS_PENDING;
+                $aVOG['statusid'] = $nStatusID;
                 $aVOG['created_by'] = $this->zAuth['id'];
                 $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
 
@@ -1085,10 +1088,10 @@ class LOVD_API_Submissions
         }
 
         // An authenticated user may have the permission to just submit variants.
-        if (!($aAPISettings = @json_decode($this->zAuth['api_settings'], true))) {
-            $aAPISettings = array();
+        if (!($this->aAPISettings = @json_decode($this->zAuth['api_settings'], true))) {
+            $this->aAPISettings = array();
         }
-        $bAllowedVariantOnly = (!empty($aAPISettings['allow_variant-only_submissions']));
+        $bAllowedVariantOnly = (!empty($this->aAPISettings['allow_variant-only_submissions']));
 
         // Do we have data at all?
         if (!isset($aInput['lsdb']['individual']) || !$aInput['lsdb']['individual']) {
