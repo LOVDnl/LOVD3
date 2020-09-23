@@ -1669,7 +1669,7 @@ class LOVD_API_Submissions
         //  of that string to a .json file.
         // Calling this function assumes the input is a properly verified LOVD
         //  database array.
-        global $_INI, $_SETT;
+        global $_DB, $_INI, $_SETT;
 
         // Assuming this file is unique, since we're including the microseconds.
         $sFileName = 'LOVD_API_submission_' . $this->zAuth['id'] . '_' . date('Y-m-d_H:i:s') . substr(microtime(), 1, 7) . '.lovd';
@@ -1717,6 +1717,16 @@ class LOVD_API_Submissions
         }
         fclose($f);
 
+        // Should we auto-schedule the file, too?
+        $bScheduled = false;
+        if (!empty($this->aAPISettings['auto-schedule_submissions'])) {
+            // Yep, schedule it!
+            $bScheduled = $_DB->query('
+                INSERT IGNORE INTO ' . TABLE_SCHEDULED_IMPORTS . '
+                  (filename, scheduled_by, scheduled_date) VALUES
+                  (?, 0, NOW())', array($sFileName))->rowCount();
+        }
+
         // Store the JSON too, if we have the data.
         if ($sJSON) {
             $sFileNameJSON = preg_replace('/.lovd$/', '.json', $sFileName);
@@ -1738,10 +1748,18 @@ class LOVD_API_Submissions
             }
         }
         $sMessage = preg_replace('/, ([^,]+)$/', ", and $1", $sMessage);
-        lovd_writeLog('Event', 'API:SubmissionCreate', 'Created LOVD import file ' . $sFileName . ' using LOVD API v' . $this->API->nVersion . ' (' . $sMessage . ')', $this->zAuth['id']);
+        lovd_writeLog(
+            'Event',
+            'API:SubmissionCreate',
+            'Created LOVD import file ' . $sFileName . ' using LOVD API v' . $this->API->nVersion .
+                ' (' . $sMessage . ')' .
+                (!$bScheduled? '' : ' (auto-scheduled)') .
+                (empty($this->aAPISettings['process_as_public'])? '' : ' (auto-published)'), $this->zAuth['id']);
 
         $nBytes = filesize($_INI['paths']['data_files'] . '/' . $sFileName);
-        $this->API->aResponse['messages'][] = 'Data successfully scheduled for import. Data file name: ' . $sFileName . '. File size: ' . $nBytes . ' bytes.';
+        // Write "scheduled" when the file is scheduled or when users are using V1 of the API (I didn't want to change the output just like that).
+        // Write "stored" when the file is not auto-scheduled and users are using versions higher than V1.
+        $this->API->aResponse['messages'][] = 'Data successfully ' . ($bScheduled || $this->API->nVersion == 1? 'scheduled' : 'stored') . ' for import. Data file name: ' . $sFileName . '. File size: ' . $nBytes . ' bytes.';
         $this->API->nHTTPStatus = 202; // Send 202 Accepted.
 
         return true;
