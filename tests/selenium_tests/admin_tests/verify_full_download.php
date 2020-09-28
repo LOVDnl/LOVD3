@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-21
- * Modified    : 2020-07-20
+ * Modified    : 2020-09-28
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -94,7 +94,7 @@ class VerifyFullDownloadTest extends LOVDSeleniumWebdriverBaseTestCase
         // Now compare the two files.
         $this->assertEquals(
             file_get_contents(ROOT_PATH . '../tests/test_data_files/AdminTestSuiteResult.txt'),
-            preg_replace('/^### LOVD-version [0-9]{4}-[0-9]{3} /', '### LOVD-version ????-??? ',
+            preg_replace('/^### LOVD-version [0-9]{4}-[0-9a-z]{3} /', '### LOVD-version ????-??? ',
                 preg_replace('/\b[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\b/', '0000-00-00 00:00:00', file_get_contents('/tmp/' . $sDownloadFile)))
         );
     }
