@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2020-08-10
+ * Modified    : 2020-09-23
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2348,7 +2348,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
             //  that all data is attached to an individual.
             $sSQL = '';
             $aIDs = array();
-            if (count($aParsed['Individuals']['data'])) {
+            if (!empty($aParsed['Individuals']['data'])) {
                 // Individuals were submitted.
                 // Collect genes and the individual IDs.
                 // If no genes are available, we'll email the managers.
@@ -2367,7 +2367,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                    AND s.individualid IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
                                  GROUP BY t.geneid
                                  ORDER BY t.geneid';
-            } elseif (count($aParsed['Variants_On_Genome']['data'])) {
+            } elseif (!empty($aParsed['Variants_On_Genome']['data'])) {
                 // We have separate variants instead.
                 // Collect genes and the variant IDs.
                 // If no genes are available, we'll email the managers.

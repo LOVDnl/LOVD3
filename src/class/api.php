@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-07-22
+ * Modified    : 2020-09-23
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,7 +40,7 @@ class LOVD_API
     // This class defines the LOVD API object, handling URL parsing and general
     //  handling of headers.
 
-    public $nVersion = 1;     // The API version. 0 for the LOVD2-style API. Higher versions are for the LOVD3-style REST API.
+    public $nVersion = 2;     // The API version. 0 for the LOVD2-style API. Higher versions are for the LOVD3-style REST API.
     public $sMethod = '';     // The used method (GET, POST, PUT, DELETE).
     public $sResource = '';   // The requested resource.
     public $nID = '';         // The ID of the requested resource.
