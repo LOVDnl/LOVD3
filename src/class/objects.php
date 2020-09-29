@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-09-22
+ * Modified    : 2020-09-29
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1850,10 +1850,23 @@ class LOVD_Object
                                     break;
                                 default:
                                     if (preg_match('/^!?"?([^"]+)"?$/', $sTerm, $aMatches)) {
+                                        // ASDF, !ASDF, "ASDF", !"ASDF".
+                                        // Added support for ^term and term$, ^term$ being the same as ="term".
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? 'NOT ' : '') . 'LIKE';
+                                        $sTerm = ltrim($sTerm, '!');
+                                        $sPrefix = $sSuffix = '%';
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == 'NOT LIKE'? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
-                                        $aArguments[$CLAUSE][] = '%' . $aMatches[1] . '%';
+                                        if (substr($sTerm, 0, 1) == '^') {
+                                            $sPrefix = '';
+                                            $aMatches[1] = substr($aMatches[1], 1);
+                                        }
+                                        if (substr($sTerm, -1) == '$') {
+                                            $sSuffix = '';
+                                            $aMatches[1] = substr($aMatches[1], 0, -1);
+                                        }
+                                        $aArguments[$CLAUSE][] = $sPrefix . $aMatches[1] . $sSuffix;
                                     } elseif (preg_match('/^!?=""$/', $sTerm)) {
+                                        // ="", !="".
                                         $bNot = (substr($sTerm, 0, 1) == '!');
                                         if ($bNot) {
                                             $$CLAUSE .= '(' . $aCol['db'][0] . ' != "" AND ' . $aCol['db'][0] . ' IS NOT NULL)';
@@ -1861,6 +1874,7 @@ class LOVD_Object
                                             $$CLAUSE .= '(' . $aCol['db'][0] . ' = "" OR ' . $aCol['db'][0] . ' IS NULL)';
                                         }
                                     } elseif (preg_match('/^!?="([^"]*)"$/', $sTerm, $aMatches)) {
+                                        // ="ASDF", !="ASDF".
                                         $sOperator = (substr($sTerm, 0, 1) == '!'? '!=' : '=');
                                         $$CLAUSE .= '(' . $aCol['db'][0] . ' ' . $sOperator . ' ?' . ($sOperator == '!='? ' OR ' . $aCol['db'][0] . ' IS NULL)' : ')');
                                         // 2013-07-25; 3.0-07; When not using LIKE, undo escaping done by lovd_escapeSearchTerm().
