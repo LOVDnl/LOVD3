@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-09-22
- * Modified    : 2020-09-23
+ * Modified    : 2020-09-29
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -159,7 +159,7 @@ if (ACTION == 'edit' && POST) {
         die('alert("Failed to edit settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been edited and stored successfully!
-    lovd_writeLog('Event', 'APISettingsEdit', 'Successfully edited API settings (' . implode(', ', array_keys($aSettings)) . ') for user #' . $nID);
+    lovd_writeLog('Event', 'APISettingsEdit', 'Successfully set API settings to [' . implode(', ', array_keys($aSettings)) . '] for user #' . $nID);
 
     // Display the form, and put the right buttons in place.
     print('
