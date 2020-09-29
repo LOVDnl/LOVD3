@@ -137,6 +137,7 @@ All list views have search fields which can be used to search data.
 You can search for a complete word or you can search for a part of a search term.
 For example, when you search for ``AAM'' in the Symbol field of the genes listing,
  LOVD will not only find genes starting with ``AAM'', but also containing ``AAM'', like ``DAAM1'' and ``DAAM2''.
+To search for prefixes or suffixes, see the table further below.
 
 \begin{figure}[ht]
   \begin{shaded}
@@ -154,30 +155,38 @@ The up and down arrows next to the column name indicate the current sorting dire
 When sorting on any field other than the default, LOVD will sort secondarily on the default sort column.
 \vskip \baselineskip
 
-LOVD allows boolean search terms, meaning you can construct complex queries with AND, OR and NOT logic.
-Typing a space between search terms is treated as AND.
-OR is indicated with a pipe '|' with no spaces around it and NOT is indicated by an exclamation mark '!',
+LOVD allows boolean search terms, meaning you can construct complex queries with
+ \texttt{AND}, \texttt{OR} and \texttt{NOT} logic.
+Typing a space between search terms is treated as \texttt{AND}.
+\texttt{OR} is indicated with a pipe `|' with no spaces around it and
+ \texttt{NOT} is indicated by an exclamation mark `!',
  not followed by a space.
 If you enclose two or more words in double quotes,
  LOVD will search for the combination of those words only exactly in the order you specify.
 Note that search terms are case-insensitive and that wildcards such as * are treated as normal text!
 
 \noindent
-You can use different operators to specify your search request:\\
+You can use different operators to specify your search request:
+\vskip \baselineskip
+\noindent
 \begin{tabular}{>{\bfseries}p{2.3cm} p{2.3cm} p{11.1cm}}
-  Operator & \textbf{Example} & \textbf{Description}\\ \hline \hline
-  space & AM DA & This gives results where both AM and DA are occuring.\\ \hline
-  | & AM|DA & This gives results where either AM or DA occurs.\\ \hline
-  ="" & ="AM" & Returns results which exactly matches AM.\\ \hline
-  ! & !AM & Returns results which does not contain AM.\\ \hline
-  !="" & !="AM" & Returns results which does not exactly match AM.\\ \hline
-  > & >23 & Filter for values higher than 23 (numeric and date columns).\\ \hline
-  < & <23 & Filter for values lower than 23 (numeric and date columns).\\ \hline
+  Operator & \textbf{Example} & \textbf{Matches}\\ \hline \hline
+  space & AM DA & Results where both `AM' and `DA' are occuring.\\ \hline
+  | & AM|DA & Results where either `AM' or `DA' occurs.\\ \hline
+  \^{} & \^{}AM & Results which start with `AM' (prefix search).\\ \hline % I don't like \textasciicircum in this case.
+  \$ & AM\$ & Results which end with `AM' (suffix search).\\ \hline
+  ="" & ="AM" & Results which exactly match `AM' (exact search).\\ \hline
+  ! & !AM & Results which do not contain `AM'.\\ \hline
+  !="" & !="AM" & Results which do not exactly match `AM'.\\ \hline
+  > & >23 & Values higher than 23 (numeric and date columns).\\ \hline
+  < & <23 & Values lower than 23 (numeric and date columns).\\ \hline
 \end{tabular}
 \vskip \baselineskip
 
 \noindent
-Some more advanced examples:\\
+Some more advanced examples:
+\vskip \baselineskip
+\noindent
 \begin{tabular}{>{\bfseries}p{5.4cm} p{10.7cm}}
   Asian & Shows ``Asian'', but also ``Caucasian'' entries.\\ \hline
   Asian !Caucasian & Shows ``Asian'', but no ``Caucasian'' entries.\\ \hline
