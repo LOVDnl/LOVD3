@@ -852,7 +852,7 @@ function lovd_getCurrentPageTitle ()
                       INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
                       LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
                       LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot.transcriptid)
+                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot_count.transcriptid)
                     WHERE vog.id = ? AND (? = 1 OR vog.statusid >= ?)
                     GROUP BY vog.id, vot.transcriptid
                     ORDER BY COUNT(vot_count.id) DESC, t.id ASC',
