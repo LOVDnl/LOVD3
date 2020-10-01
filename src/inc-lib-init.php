@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-09-17
+ * Modified    : 2020-10-01
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2054,7 +2054,7 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
         }
 
         // If we're connecting through a proxy, we need to set some additional information.
-        if ($_CONF['proxy_host']) {
+        if (!empty($_CONF['proxy_host'])) {
             $aOptions['http']['proxy'] = 'tcp://' . $_CONF['proxy_host'] . ':' . $_CONF['proxy_port'];
             $aOptions['http']['request_fulluri'] = true;
         }
