@@ -183,10 +183,6 @@ class LOVD_SystemSetting extends LOVD_Object
         }
 
         // Prevent notices.
-        $_POST['api_feed_history'] = 0;
-        $_POST['allow_count_hidden_entries'] = 0;
-        $_POST['use_versioning'] = 0;
-
         if (LOVD_plus) {
             $_POST['logo_uri'] = 'LOVD_plus_logo145x50';
             $_POST['send_stats'] = 0;
