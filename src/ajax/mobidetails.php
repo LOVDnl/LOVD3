@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 // Check for basic format.
-if (!POST || PATH_COUNT != 3 || !ctype_digit($_PE[2]) || !in_array(ACTION, array('check'))) {
+if (!POST || PATH_COUNT != 3 || !ctype_digit($_PE[2]) || !in_array(ACTION, array('check', 'confirm'))) {
     // Note that we require POST to prevent search engines from using this script.
     die('alert("Error while sending data.");');
 }
@@ -84,7 +84,7 @@ $sFormConfirmation = '<FORM id=\'mobidetails_confirm_form\'><INPUT type=\'hidden
 print('
 var oButtonCancel = {"Cancel":function () { $(this).dialog("close"); }};
 var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
-var oButtonFormConfirm = {"Confirm annotation request":function () { $.post("' . CURRENT_PATH . '?confirm", $("#mobidetails_confirm_form").serialize()); }};
+var oButtonFormConfirm = {"Confirm annotation request":function () { $.post("' . CURRENT_PATH . '?confirm", $("#mobidetails_confirm_form").serialize()); $("#mobidetails_dialog").html("Please wait...<BR><IMG src=\'gfx/ajax_loading.gif\' alt=\'Please wait...\' width=\'100\' height=\'100\'>"); $("#mobidetails_dialog").dialog({buttons: $.extend({}, oButtonCancel)}); }};
 
 
 ');
@@ -110,7 +110,7 @@ if (ACTION == 'check') {
     $aJSON = false;
     $aJSONResponse = lovd_php_file('https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/exists/' . rawurlencode($sVOG));
     if ($aJSONResponse !== false) {
-        $aJSON = json_decode(implode("\n", $aJSONResponse), true);
+        $aJSON = json_decode(implode('', $aJSONResponse), true);
     }
 
     if (!empty($aJSON['mobidetails_id']) && !empty($aJSON['url'])) {
@@ -131,6 +131,56 @@ if (ACTION == 'check') {
 
     // Select the right buttons.
     $("#mobidetails_dialog").dialog({buttons: $.extend({}, oButtonFormConfirm, oButtonCancel)});
+    ');
+    exit;
+}
+
+
+
+
+
+if (ACTION == 'confirm' && POST) {
+    // Process confirmation form.
+    // We do this in two steps to prevent CSRF.
+
+    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] != $_SESSION['csrf_tokens']['mobidetails_confirm']) {
+        die('alert("Error while sending data, possible security risk. Try reloading the page, and loading the form again.");');
+    }
+
+    // Send variant to MobiDetails. This can take a while.
+    $aJSON = false;
+    $aJSONResponse = lovd_php_file(
+        'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create',
+        false,
+        'caller=cli&variant_chgvs=' . rawurlencode($sVOT) . '&api_key=' . $_CONF['md_apikey'],
+        array(
+            'Accept: application/json',
+        ));
+    if ($aJSONResponse !== false) {
+        $aJSON = json_decode(implode('', $aJSONResponse), true);
+    }
+
+    if (!empty($aJSON['mobidetails_id']) && !empty($aJSON['url'])) {
+        // Success! Open a new window to it.
+        print('
+        // Close dialog.
+        $("#mobidetails_dialog").dialog("close");
+        // Open window.
+        lovd_openWindow("' . $aJSON['url'] . '", "MobiDetails_' . $aJSON['mobidetails_id'] . '", 1000, 800);
+        ');
+        exit;
+    }
+
+    // If we're here, something went wrong.
+    // Display the error, with just a close button.
+    print('
+    $("#mobidetails_dialog").html("Error while requesting MobiDetails to annotate this variant.<BR>' .
+        implode('', array_map(function ($sKey, $sVal) {
+            return $sKey . ': ' . $sVal . '<BR>';
+        }, array_keys($aJSON), array_values($aJSON))) . '");
+    
+    // Select the right buttons.
+    $("#mobidetails_dialog").dialog({buttons: oButtonClose}); 
     ');
     exit;
 }
