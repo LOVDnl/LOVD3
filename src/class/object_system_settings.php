@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2020-10-01
+ * Modified    : 2020-10-02
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -129,29 +129,25 @@ class LOVD_SystemSetting extends LOVD_Object
 
         // MD key must work.
         if (!empty($aData['md_apikey'])) {
-            // Test it by submitting a fake variant.
             $aResponse = lovd_php_file(
-                'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create',
+                'https://mobidetails.iurc.montp.inserm.fr/MD/api/service/check_api_key',
                 false,
-                'caller=cli&variant_chgvs=api_key_test&api_key=' . $aData['md_apikey'],
+                'api_key=' . $aData['md_apikey'],
                 array(
                     'Accept: application/json',
                 ));
-            if (!$aResponse) {
+            if ($aResponse) {
+                $aResponse = json_decode(implode('', $aResponse), true);
+            }
+            if (!$aResponse || !isset($aResponse['api_key_pass_check']) || !isset($aResponse['api_key_status'])) {
                 lovd_errorAdd('md_apikey', 'While testing the given MobiDetails API key, got an error from MobiDetails.');
             } else {
-                $aResponse = json_decode(implode('', $aResponse), true);
-                if (!empty($aResponse['mobidetails_error'])) {
-                    if (substr($aResponse['mobidetails_error'], 0, 15) == 'Malformed query') {
-                        // This error is because of the fake variant we sent, the API key is accepted.
-                        // All good!
-                    } else {
-                        // API key error, or something else.
-                        lovd_errorAdd('md_apikey', 'While testing the given MobiDetails API key, got &quot;' . $aResponse['mobidetails_error'] . '&quot; from MobiDetails.');
-                    }
-                } else {
-                    // No error? That's weird, we should always have an error.
-                    lovd_errorAdd('md_apikey', 'While testing the given MobiDetails API key, got an unexpected &quot;' . implode(',', array_keys($aResponse)) . '&quot; from MobiDetails.');
+                if ($aResponse['api_key_pass_check'] === false) {
+                    // API key error.
+                    lovd_errorAdd('md_apikey', 'MobiDetails indicates that this API key is invalid.');
+                } elseif ($aResponse['api_key_status'] != 'active') {
+                    // That's weird, key expired maybe?
+                    lovd_errorAdd('md_apikey', 'MobiDetails indicates the status of this API key is &quot;' . $aResponse['api_key_status'] . '&quot;.');
                 }
             }
         }
