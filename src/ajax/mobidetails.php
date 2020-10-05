@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2020-10-01
+ * Modified    : 2020-10-05
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,6 +79,7 @@ if (!$("#mobidetails_dialog").hasClass("ui-dialog-content") || !$("#mobidetails_
 ');
 
 $sFormConfirmation = '<FORM id=\'mobidetails_confirm_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>MobiDetails has not seen this variant before and still needs to generate the annotation. This may take a while. Confirm you want this variant annotated by MobiDetails by clicking the button below.<BR><BR></FORM>';
+$sFormConfirmationNoKey = 'MobiDetails has not seen this variant before and still needs to generate the annotation. However, this LOVD instance doesn\'t have an MobiDetails API key configured yet, so it can not send the variant to MobiDetails. Please contact the Curator and ask to have an MobiDetails API key registered in the LOVD System Settings.<BR><BR>';
 
 // Set JS variables and objects.
 print('
@@ -125,13 +126,23 @@ if (ACTION == 'check') {
     }
 
     // If we're here, the variant doesn't exist yet.
-    // Display the form, and put the right buttons in place.
-    print('
-    $("#mobidetails_dialog").html("' . $sFormConfirmation . '<BR>");
+    if ($_CONF['md_apikey']) {
+        // Display the form, and put the right buttons in place.
+        print('
+        $("#mobidetails_dialog").html("' . $sFormConfirmation . '<BR>");
 
-    // Select the right buttons.
-    $("#mobidetails_dialog").dialog({buttons: $.extend({}, oButtonFormConfirm, oButtonCancel)});
-    ');
+        // Select the right buttons.
+        $("#mobidetails_dialog").dialog({buttons: $.extend({}, oButtonFormConfirm, oButtonCancel)});
+        ');
+    } else {
+        // Ask the user to contact the LOVD team.
+        print('
+        $("#mobidetails_dialog").html("' . $sFormConfirmationNoKey . '<BR>");
+
+        // Select the right buttons.
+        $("#mobidetails_dialog").dialog({buttons: $.extend({}, oButtonClose)});
+        ');
+    }
     exit;
 }
 
