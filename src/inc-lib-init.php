@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-09-17
+ * Modified    : 2020-10-01
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -852,7 +852,7 @@ function lovd_getCurrentPageTitle ()
                       INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
                       LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
                       LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot.transcriptid)
+                      LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot_count.transcriptid)
                     WHERE vog.id = ? AND (? = 1 OR vog.statusid >= ?)
                     GROUP BY vog.id, vot.transcriptid
                     ORDER BY COUNT(vot_count.id) DESC, t.id ASC',
@@ -2054,7 +2054,7 @@ function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHe
         }
 
         // If we're connecting through a proxy, we need to set some additional information.
-        if ($_CONF['proxy_host']) {
+        if (!empty($_CONF['proxy_host'])) {
             $aOptions['http']['proxy'] = 'tcp://' . $_CONF['proxy_host'] . ':' . $_CONF['proxy_port'];
             $aOptions['http']['request_fulluri'] = true;
         }

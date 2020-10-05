@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2019-08-29
- * For LOVD    : 3.0-22
+ * Modified    : 2020-10-02
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -127,6 +127,31 @@ class LOVD_SystemSetting extends LOVD_Object
             lovd_errorAdd('proxy_host', 'Please also fill in a correct host name of the proxy server, if you wish to use one.');
         }
 
+        // MD key must work.
+        if (!empty($aData['md_apikey'])) {
+            $aResponse = lovd_php_file(
+                'https://mobidetails.iurc.montp.inserm.fr/MD/api/service/check_api_key',
+                false,
+                'api_key=' . $aData['md_apikey'],
+                array(
+                    'Accept: application/json',
+                ));
+            if ($aResponse) {
+                $aResponse = json_decode(implode('', $aResponse), true);
+            }
+            if (!$aResponse || !isset($aResponse['api_key_pass_check']) || !isset($aResponse['api_key_status'])) {
+                lovd_errorAdd('md_apikey', 'While testing the given MobiDetails API key, got an error from MobiDetails.');
+            } else {
+                if ($aResponse['api_key_pass_check'] === false) {
+                    // API key error.
+                    lovd_errorAdd('md_apikey', 'MobiDetails indicates that this API key is invalid.');
+                } elseif ($aResponse['api_key_status'] != 'active') {
+                    // That's weird, key expired maybe?
+                    lovd_errorAdd('md_apikey', 'MobiDetails indicates the status of this API key is &quot;' . $aResponse['api_key_status'] . '&quot;.');
+                }
+            }
+        }
+
         // Custom logo must exist.
         if (!empty($aData['logo_uri'])) {
             // Determine if file can be read and is an image or not.
@@ -154,10 +179,6 @@ class LOVD_SystemSetting extends LOVD_Object
         }
 
         // Prevent notices.
-        $_POST['api_feed_history'] = 0;
-        $_POST['allow_count_hidden_entries'] = 0;
-        $_POST['use_versioning'] = 0;
-
         if (LOVD_plus) {
             $_POST['logo_uri'] = 'LOVD_plus_logo145x50';
             $_POST['send_stats'] = 0;
@@ -221,6 +242,10 @@ class LOVD_SystemSetting extends LOVD_Object
                         array('', '', 'note', 'The following two fields only apply if the proxy server requires authentication.'),
                         array('Proxy server username', 'In case the proxy server requires authentication, please enter the required username here.', 'text', 'proxy_username', 20),
                         array('Proxy server password', 'In case the proxy server requires authentication, please enter the required password here.', 'password', 'proxy_password', 20, true),
+                        'skip',
+                        array('', '', 'print', 'API keys'),
+                        array('MobiDetails API key', '', 'text', 'md_apikey', 40),
+                        array('', '', 'note', 'LOVD allows looking up variants in <A href="https://mobidetails.iurc.montp.inserm.fr/MD" target="_blank">MobiDetails</A>, an online DNA variant annotation and interpretation platform. To submit variants to MobiDetails, you need an API key. You can register for one <A href="https://mobidetails.iurc.montp.inserm.fr/MD/auth/register" target="_blank">here</A>.'),
                         'hr',
                         'skip',
                         'skip',

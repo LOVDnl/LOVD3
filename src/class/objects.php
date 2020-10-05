@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-09-29
+ * Modified    : 2020-10-01
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1297,7 +1297,7 @@ class LOVD_Object
 
 
 
-    function insertEntry ($aData, $aFields = array())
+    function insertEntry ($aData, $aFields = array(), $bHalt = true)
     {
         // Inserts data in $aData into the database, using only fields defined in $aFields.
         // $aData = Associative array with values to be inserted. Keys should equal database column names.
@@ -1347,7 +1347,10 @@ class LOVD_Object
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::insertEntry()');
         }
-        $q = $_DB->query($sSQL, $aSQL, true, true);
+        $q = $_DB->query($sSQL, $aSQL, $bHalt, true);
+        if (!$bHalt && $q === false) {
+            return false;
+        }
 
         $nID = $_DB->lastInsertId(); // Will not return an ID for linking tables.
         if ($nID && substr(lovd_getColumnType(constant($this->sTable), 'id'), 0, 3) == 'INT') {

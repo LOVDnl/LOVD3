@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-09-22
+ * Modified    : 2020-09-30
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -790,7 +790,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  ),
                  '3.0-24b' => array(
                      'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN api_settings TEXT AFTER auth_token_expires',
-                 )
+                 ),
+                 '3.0-24c' => array(
+                     'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN md_apikey VARCHAR(50) NOT NULL DEFAULT "" AFTER mutalyzer_soap_url',
+                 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
