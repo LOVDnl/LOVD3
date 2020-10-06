@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2020-10-05
+ * Modified    : 2020-10-06
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -120,7 +120,7 @@ if (ACTION == 'check') {
         // Close dialog.
         $("#mobidetails_dialog").dialog("close");
         // Open window.
-        lovd_openWindow("' . $aJSON['url'] . '", "MobiDetails_' . $aJSON['mobidetails_id'] . '", 1000, 800);
+        lovd_openWindow("' . $aJSON['url'] . '", "_blank");
         ');
         exit;
     }
@@ -177,7 +177,7 @@ if (ACTION == 'confirm' && POST) {
         // Close dialog.
         $("#mobidetails_dialog").dialog("close");
         // Open window.
-        lovd_openWindow("' . $aJSON['url'] . '", "MobiDetails_' . $aJSON['mobidetails_id'] . '", 1000, 800);
+        lovd_openWindow("' . $aJSON['url'] . '", "_blank");
         ');
         exit;
     }
