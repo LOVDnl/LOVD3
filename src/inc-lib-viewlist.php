@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2020-03-24
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-06
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -80,6 +80,10 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
                         $sFormattedExpression .= 'Does not contain ' . trim($sORExpression, '!=');
                     } elseif ($sORExpression{0} == '=') {
                         $sFormattedExpression .= 'Exactly matches ' . trim($sORExpression, '="');
+                    } elseif ($sORExpression{0} == '^') {
+                        $sFormattedExpression .= 'Starts with ' . ltrim($sORExpression, '^');
+                    } elseif (substr($sORExpression, -1) == '$') {
+                        $sFormattedExpression .= 'Ends with ' . rtrim($sORExpression, '$');
                     } else {
                         $sFormattedExpression .= 'Contains ' . $sORExpression;
                     }
