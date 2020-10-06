@@ -74,7 +74,11 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
         foreach ($aORExpressions as $nORIndex => $sORExpression) {
             switch ($sColumnType) {
                 case 'TEXT':
-                    if (substr($sORExpression, 0, 2) == '!=') {
+                    if ($sORExpression == '!=""') {
+                        $sFormattedExpression .= 'Is not empty';
+                    } elseif ($sORExpression == '=""') {
+                        $sFormattedExpression .= 'Is empty';
+                    } elseif (substr($sORExpression, 0, 2) == '!=') {
                         $sFormattedExpression .= 'Does not exactly match ' . trim($sORExpression, '!="');
                     } elseif ($sORExpression{0} == '!') {
                         $sFormattedExpression .= 'Does not contain ' . trim($sORExpression, '!=');
