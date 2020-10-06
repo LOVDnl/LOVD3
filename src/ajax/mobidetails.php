@@ -78,8 +78,8 @@ if (!$("#mobidetails_dialog").hasClass("ui-dialog-content") || !$("#mobidetails_
 
 ');
 
-$sFormConfirmation = '<FORM id=\'mobidetails_confirm_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'>MobiDetails has not seen this variant before and still needs to generate the annotation. This may take a while. Confirm you want this variant annotated by MobiDetails by clicking the button below.<BR><BR></FORM>';
-$sFormConfirmationNoKey = 'MobiDetails has not seen this variant before and still needs to generate the annotation. However, this LOVD instance doesn\'t have an MobiDetails API key configured yet, so it can not send the variant to MobiDetails. Please contact the Curator and ask to have an MobiDetails API key registered in the LOVD System Settings.<BR><BR>';
+$sFormConfirmation = '<FORM id=\'mobidetails_confirm_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'><A href=\'https://mobidetails.iurc.montp.inserm.fr/MD\' target=\'_blank\'>MobiDetails</A> is an annotation platform dedicated to the interpretation of DNA variants. MobiDetails has not seen this variant before and still needs to generate the annotation. This may take a while. Confirm you want this variant annotated by MobiDetails by clicking the button below.<BR><BR></FORM>';
+$sFormConfirmationNoKey = '<A href=\'https://mobidetails.iurc.montp.inserm.fr/MD\' target=\'_blank\'>MobiDetails</A> is an annotation platform dedicated to the interpretation of DNA variants. MobiDetails has not seen this variant before and still needs to generate the annotation. However, this LOVD instance doesn\'t have an MobiDetails API key configured yet, so it can not send the variant to MobiDetails. Please contact the Curator and ask to have an MobiDetails API key registered in the LOVD System Settings.<BR><BR>';
 
 // Set JS variables and objects.
 print('
