@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-07-23
+ * Modified    : 2020-10-06
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -443,6 +443,30 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 
 
 
+    protected function waitForURLContains ($sValue, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
+    {
+        // Convenience function to let the webdriver wait for a standard amount
+        //  of time for the URL to contain a certain value.
+        return $this->waitUntil(
+            WebDriverExpectedCondition::urlContains($sValue), $nTimeOut);
+    }
+
+
+
+
+
+    protected function waitForURLEndsWith ($sValue, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
+    {
+        // Convenience function to let the webdriver wait for a standard amount
+        //  of time for the URL to end with a certain value.
+        return $this->waitUntil(
+            WebDriverExpectedCondition::urlMatches('/' . preg_quote($sValue, '/') . '$/'), $nTimeOut);
+    }
+
+
+
+
+
     protected function waitForValueContains ($oElement, $sValue, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
     {
         // Convenience function to let the webdriver wait for a standard amount
@@ -467,3 +491,4 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
                             ->until($condition);
     }
 }
+?>
