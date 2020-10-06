@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-07-23
+ * Modified    : 2020-10-06
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -92,7 +92,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
                 '//table[@class="option"]//td[contains(., "Yes, I want to submit")]'))->click();
         }
 
-        $this->assertStringEndsWith('/src/individuals?create', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/individuals?create');
         $this->enterValue('Individual/Lab_ID', '1234IVA');
         $this->enterValue('Individual/Reference', '{PMID:Fokkema et al (2011):21520333}');
         $this->selectValue('active_diseases[]', 'IVA (isovaleric acidemia)');
@@ -127,7 +127,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add phenotype information")]'))->click();
 
-        $this->assertContains('/src/phenotypes?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/phenotypes?create&target=0000');
         $this->enterValue('Phenotype/Additional', 'Additional information.');
         $this->selectValue('Phenotype/Inheritance', 'Familial');
         $this->enterValue('Phenotype/Age/Diagnosis', '30y');
@@ -162,7 +162,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant screening")]'))->click();
 
-        $this->assertContains('/src/screenings?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/screenings?create&target=0000');
         // selectValue() allows for multiple selection.
         $this->selectValue('Screening/Template[]', 'DNA');
         $this->selectValue('Screening/Template[]', 'RNA (cDNA)');
@@ -200,7 +200,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
 
-        $this->assertContains('/src/variants?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants?create&target=0000');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "A variant that is located within a gene")]'))->click();
         // We probably don't need to search for IVD, but we might as well.
@@ -210,7 +210,7 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         } catch (StaleElementReferenceException $e) {}
         $this->driver->findElement(WebDriverBy::xpath('//tr[@id="IVD"]/td[1]'))->click();
 
-        $this->assertContains('/src/variants?create&reference=Transcript&geneid=IVD&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants?create&reference=Transcript&geneid=IVD&target=0000');
         $this->enterValue('00000001_VariantOnTranscript/Exon', '1');
         $this->enterValue('00000001_VariantOnTranscript/DNA', 'c.123A>T');
         $this->driver->findElement(WebDriverBy::cssSelector('button.mapVariant'))->click();
@@ -259,11 +259,11 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
 
-        $this->assertContains('/src/variants?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants?create&target=0000');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "A variant that was only described on genomic level")]'))->click();
 
-        $this->assertContains('/src/variants?create&reference=Genome&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants?create&reference=Genome&target=0000');
         $this->assertFalse($this->isElementPresent(WebDriverBy::xpath('//input[contains(@name, "VariantOnTranscript/")]')));
         $this->selectValue('allele', 'Paternal (confirmed)');
         $this->selectValue('chromosome', '15');
@@ -301,9 +301,10 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to finish this submission")]'))->click();
 
+        $this->waitForURLContains('/src/submit/finish/individual/0000');
         $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/individuals/0000'));
+        $this->waitForURLContains('/src/individuals/0000');
     }
 }
 ?>
