@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-06-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-07
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -87,7 +87,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Start');
 
         // Fill out Administrator form.
-        $this->assertStringEndsWith('/src/install/?step=1', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/install/?step=1');
         $this->enterValue('name', 'LOVD3 Admin');
         $this->enterValue('institute', 'Leiden University Medical Center');
         $this->enterValue('department', 'Human Genetics');
@@ -102,13 +102,13 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Continue');
 
         // Confirmation of account information, installing...
-        $this->assertStringEndsWith('/src/install/?step=1&sent=true', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/install/?step=1&sent=true');
         // We'll need to clean the cookies, so we'll be able to get the LOVD's ID from there.
         $aInitialSessionIDs = $this->getAllSessionIDs();
         $this->submitForm('Next');
 
         // Installation complete.
-        $this->assertStringEndsWith('/src/install/?step=2', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/install/?step=2');
         $aSessionIDsInCommon = array_intersect($this->getAllSessionIDs(), $aInitialSessionIDs);
         foreach ($aSessionIDsInCommon as $sSessionID) {
             $this->driver->manage()->deleteCookieNamed('PHPSESSID_' . $sSessionID);
@@ -126,7 +126,7 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testSetSettings ()
     {
         // Fill out System Settings form.
-        $this->assertStringEndsWith('/src/install/?step=3', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/install/?step=3');
         $this->enterValue('institute', 'Leiden University Medical Center');
         $this->enterValue('email_address', 'noreply@LOVD.nl');
         $this->selectValue('refseq_build', 'hg19');
@@ -136,16 +136,15 @@ class InstallLOVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->submitForm('Continue');
 
         // Settings stored.
-        $this->assertStringEndsWith('/src/install/?step=3&sent=true', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/install/?step=3&sent=true');
         $this->submitForm('Next');
 
         // Done!
-        $this->assertStringEndsWith('/src/install/?step=4', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/install/?step=4');
         $this->clickButton('Continue to Setup area');
 
         // LOVD Setup Area.
-        $this->waitUntil(WebDriverExpectedCondition::titleContains("LOVD Setup"));
-        $this->assertStringEndsWith('/src/setup?newly_installed', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/setup?newly_installed');
     }
 }
 ?>
