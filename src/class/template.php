@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-09-17
+ * Modified    : 2020-10-07
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -281,6 +281,7 @@ class LOVD_Template
 
         $this->bBotIncluded = true;
         switch (FORMAT) {
+            case 'application/json':
             case 'text/plain':
                 return false;
             case 'text/html':
@@ -473,6 +474,8 @@ function lovd_mapVariants ()
         $this->bFull = ($bFull && !isset($_GET['in_window']));
         $this->bTopIncluded = true;
         switch (FORMAT) {
+            case 'application/json':
+                return false;
             case 'text/plain':
                 if (!defined('FORMAT_ALLOW_TEXTPLAIN')) {
                     die('text/plain not allowed here');
@@ -902,6 +905,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         }
 
         switch (FORMAT) {
+            case 'application/json':
             case 'text/plain':
                 return false;
             case 'text/html':
