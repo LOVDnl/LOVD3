@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-10-01
+ * Modified    : 2020-10-07
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -355,7 +355,9 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     if ($_T->bBotIncluded) {
         print('<BR>' . "\n\n");
     }
-    $sMessage = htmlspecialchars($sMessage);
+    if (FORMAT == 'text/html') {
+        $sMessage = htmlspecialchars($sMessage);
+    }
 
     // A LOVD-Lib or Query error is always an LOVD bug! (unless MySQL went down)
     if ($sError == 'LOVD-Lib' || ($sError == 'Query' && strpos($sMessage, 'You have an error in your SQL syntax'))) {
@@ -364,12 +366,33 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
     }
 
     // Display error.
-    print("\n" . '
+    switch (FORMAT) {
+        case 'application/json':
+            print(
+                json_encode(
+                    array(
+                        'version' => '',
+                        'messages' => array(),
+                        'warnings' => array(),
+                        'errors' => array(
+                            'Error: ' . $sError . ($bLog? ' (Logged)' : '') . "\n" . $sMessage,
+                        ),
+                        'data' => array(),
+                    )));
+            break;
+        case 'text/plain':
+            print('Error: ' . $sError . ($bLog? ' (Logged)' : '') . "\n" . $sMessage . "\n");
+            break;
+        case 'text/html':
+        default:
+            print("\n" . '
       <TABLE border="0" cellpadding="0" cellspacing="0" align="center" width="900" class="error">
         <TR>
           <TH>Error: ' . $sError . ($bLog? ' (Logged)' : '') . '</TH></TR>
         <TR>
           <TD>' . str_replace(array("\n", "\t"), array('<BR>', '&nbsp;&nbsp;&nbsp;&nbsp;'), $sMessage) . '</TD></TR></TABLE>' . "\n\n");
+            break;
+    }
 
     // If fatal, get bottom and exit.
     if ($_T->bBotIncluded) {
