@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-07-23
+ * Modified    : 2020-10-08
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -69,7 +69,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
         $this->assertStringStartsWith('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants?create'));
+        $this->waitForURLEndsWith('/src/variants?create');
 
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "A variant that is located within a gene")]'))->click();
@@ -90,7 +90,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
      */
     public function testCreateVariantWithinARSD ()
     {
-        $this->assertStringEndsWith('/src/variants?create&reference=Transcript&geneid=ARSD', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/variants?create&reference=Transcript&geneid=ARSD');
         // We'll be using transcript IDs 2 and 3, while 4 and 5 will be ignored.
         $this->check('ignore_00000004');
         $this->check('ignore_00000005');
@@ -132,7 +132,7 @@ class CreateSummaryVariantLocatedWithinGeneWithMultipleTranscriptsTest extends L
 
         $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants/0000'));
+        $this->waitForURLContains('/src/variants/0000');
     }
 
 
