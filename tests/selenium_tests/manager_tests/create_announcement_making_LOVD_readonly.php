@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-08-30
- * Modified    : 2020-06-04
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-08
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -72,7 +72,7 @@ class CreateAnnouncementMakingLOVDReadOnlyTest extends LOVDSeleniumWebdriverBase
             $this->driver->findElement(WebDriverBy::xpath('//table[@class="info" and contains(., "Success")]'))->getText());
         $this->assertEquals($sAnnouncement, $this->driver->findElement(
             WebDriverBy::cssSelector('table[class=info]'))->getText());
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/announcements/0000'));
+        $this->waitForURLContains('/src/announcements/0000');
     }
 
 
