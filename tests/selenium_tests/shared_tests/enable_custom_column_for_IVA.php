@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-06-05
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-07
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -65,7 +65,7 @@ class EnableCustomColumnForIVATest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Columns'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Enable column'))->click();
 
-        $this->assertStringEndsWith('/src/columns/Phenotype/Age/Diagnosis?add', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/columns/Phenotype/Age/Diagnosis?add');
         $this->selectValue('target[]', 'IVA (isovaleric acidemia)');
         $this->enterValue('password', 'test1234');
         $this->submitForm('Add/enable custom data column');
@@ -73,7 +73,7 @@ class EnableCustomColumnForIVATest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::id('lovd__progress_message_done'))->getText());
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/columns/Phenotype'));
+        $this->waitForURLEndsWith('/src/columns/Phenotype');
     }
 }
 ?>

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-06-03
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-07
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -62,7 +62,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "Information on the phenotype")]'))->click();
 
-        $this->assertStringEndsWith('/src/columns?create', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/columns?create');
         $this->enterValue('colid', 'Age/Diagnosis');
         $this->enterValue('head_column', 'Age of diagnosis');
         $this->enterValue('description_legend_short', 'The age at which the individual\'s diagnosis was confirmed, if known. 04y08m = 4 years and 8 months.');
@@ -113,7 +113,7 @@ class CreateCustomColumnPhenotypeTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/columns/Phenotype/Age/Diagnosis'));
+        $this->waitForURLEndsWith('/src/columns/Phenotype/Age/Diagnosis');
     }
 }
 ?>

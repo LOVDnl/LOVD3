@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-20
- * Modified    : 2020-06-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-08
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -74,11 +74,11 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
      */
     public function testAddPhenotypeRecord ()
     {
-        $this->assertContains('/src/individuals/0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/individuals/0000');
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Individuals'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Add phenotype information to individual'))->click();
 
-        $this->assertContains('/src/phenotypes?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/phenotypes?create&target=0000');
         $this->enterValue('Phenotype/Additional', 'More additional information.');
         $this->selectValue('Phenotype/Inheritance', 'Familial');
         $this->enterValue('Phenotype/Age/Diagnosis', '30y');
@@ -86,7 +86,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
 
         $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/phenotypes/0000'));
+        $this->waitForURLContains('/src/phenotypes/0000');
         $this->driver->findElement(WebDriverBy::xpath('//a[contains(@href, "individuals/0000")]'))->click();
     }
 
@@ -99,11 +99,11 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
      */
     public function testAddScreening ()
     {
-        $this->assertContains('/src/individuals/0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/individuals/0000');
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Individuals'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Add screening to individual'))->click();
 
-        $this->assertContains('/src/screenings?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/screenings?create&target=0000');
         $this->selectValue('Screening/Template[]', 'Protein');
         $this->selectValue('Screening/Technique[]', 'Western');
         $this->selectValue('genes[]', 'IVD');
@@ -128,11 +128,11 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
 
-        $this->assertContains('/src/variants?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants?create&target=0000');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "Yes, I want to confirm variants found")]'))->click();
 
-        $this->assertRegExp('/\/src\/screenings\/[0-9]+\?confirmVariants$/', $this->driver->getCurrentURL());
+        $this->waitForURLRegExp('/\/src\/screenings\/[0-9]+\?confirmVariants$/');
         $this->driver->findElement(WebDriverBy::xpath('//td[contains(text(), "?/")]'))->click();
         $this->submitForm('Save variant list');
 
@@ -157,7 +157,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
 
         $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/screenings/0000'));
+        $this->waitForURLContains('/src/screenings/0000');
     }
 
 
@@ -175,7 +175,7 @@ class AddMoreDataToExistingSubmissionTest extends LOVDSeleniumWebdriverBaseTestC
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Screenings'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Add variant to screening'))->click();
 
-        $this->assertContains('/src/variants?create&target=0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants?create&target=0000');
     }
 }
 ?>

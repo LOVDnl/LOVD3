@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-06-05
- * Modified    : 2020-05-28
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-08
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -62,14 +62,14 @@ class EnableCustomColumnForIndividualsTest extends LOVDSeleniumWebdriverBaseTest
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Columns'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Enable column'))->click();
 
-        $this->assertStringEndsWith('/src/columns/Individual/Gender?add', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/columns/Individual/Gender?add');
         $this->enterValue('password', 'test1234');
         $this->submitForm('Add/enable custom data column');
         $this->assertEquals('Successfully added column "Gender"!',
             $this->driver->findElement(WebDriverBy::id('lovd__progress_message_done'))->getText());
 
         // Wait for page redirect.
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/columns/Individual'));
+        $this->waitForURLEndsWith('/src/columns/Individual');
     }
 }
 ?>

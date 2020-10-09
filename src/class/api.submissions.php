@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-09-23
+ * Modified    : 2020-10-07
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1443,8 +1443,8 @@ class LOVD_API_Submissions
                                         } else {
                                             // Store the gene, and check if it exists.
                                             $aGenes[$iVariantLevel2] = $aVariantLevel2['gene']['@accession'];
-                                            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?',
-                                                array($aVariantLevel2['gene']['@accession']))->fetchColumn()) {
+                                            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?',
+                                                array($aVariantLevel2['gene']['@accession'], $aVariantLevel2['gene']['@accession']))->fetchColumn()) {
                                                 // Gene exists.
                                                 $aGenesExisting[$iVariantLevel2] = $aVariantLevel2['gene']['@accession'];
                                             }
@@ -1476,10 +1476,19 @@ class LOVD_API_Submissions
 
                                                     // But also check gene. If we have a gene from the JSON file, and we have
                                                     //  that in the database, then it must match this transcript.
-                                                    if (isset($aVariantLevel2['gene']['@accession'])
-                                                        && $aVariantLevel2['gene']['@accession'] != $sTranscriptGene) {
-                                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': ' .
-                                                            'Gene source (' . $aVariantLevel2['gene']['@accession'] . ') mismatches with gene (' . $sTranscriptGene . ') attached to given RefSeq accession (' . $aVariantLevel2['ref_seq']['@accession'] . ').';
+                                                    if (isset($aVariantLevel2['gene']['@accession'])) {
+                                                        if (ctype_digit($aVariantLevel2['gene']['@accession'])) {
+                                                            $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?',
+                                                                array($aVariantLevel2['gene']['@accession']))->fetchColumn();
+                                                            if ($sGene) {
+                                                                $aVariantLevel2['gene']['@accession'] = $sGene;
+                                                            }
+                                                        }
+                                                        if ($aVariantLevel2['gene']['@accession'] != $sTranscriptGene) {
+                                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': ' .
+                                                                'Gene source (' . $aVariantLevel2['gene']['@accession'] . ') mismatches with gene (' . $sTranscriptGene . ') attached to given RefSeq accession (' . $aVariantLevel2['ref_seq']['@accession'] . ').' .
+                                                                ($this->API->nVersion == 1? '' : ' To prevent problems with renamed gene symbols, you can also provide the numeric HGNC ID in the @accession field.');
+                                                        }
                                                     }
                                                 }
                                             }

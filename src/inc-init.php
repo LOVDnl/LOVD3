@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-09-30
+ * Modified    : 2020-10-07
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -87,8 +87,17 @@ $_SERVER['SCRIPT_NAME'] = lovd_cleanDirName(str_replace('\\', '/', $_SERVER['SCR
 // Our output formats: text/html by default.
 $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
 if (lovd_getProjectFile() == '/api.php') {
-    $aFormats[] = 'application/json';
-    $aFormats[] = 'text/bed';
+    // The REST API has JSON as an *optional* format,
+    //  for the new API it's the *default*.
+    if (strpos($_SERVER['REQUEST_URI'], '/rest') !== false) {
+        // REST API.
+        $aFormats[] = 'application/json';
+        $aFormats[] = 'text/bed';
+    } else {
+        // New API.
+        array_unshift($aFormats, 'application/json');
+    }
+
 } elseif (lovd_getProjectFile() == '/import.php' && substr($_SERVER['QUERY_STRING'], 0, 25) == 'autoupload_scheduled_file') {
     // Set format to text/plain only when none is requested.
     if (empty($_GET['format']) || !in_array($_GET['format'], $aFormats)) {
