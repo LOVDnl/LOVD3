@@ -167,31 +167,45 @@ Note that search terms are case-insensitive and that wildcards such as * are tre
 
 \noindent
 You can use different operators to specify your search request:
-\vskip \baselineskip
+\vskip 0.5\baselineskip % This page is too crammed but if I don't do this, everything below goes to hell.
 \noindent
-\begin{tabular}{>{\bfseries}p{2.3cm} p{2.3cm} p{11.1cm}}
+\begin{tabular}{>{\bfseries}p{2.5cm} p{2.6cm} p{10.6cm}}
   Operator & \textbf{Example} & \textbf{Matches}\\ \hline \hline
-  space & AM DA & Results where both `AM' and `DA' are occuring.\\ \hline
-  | & AM|DA & Results where either `AM' or `DA' occurs.\\ \hline
-  \^{} & \^{}AM & Results which start with `AM' (prefix search).\\ \hline % I don't like \textasciicircum in this case.
-  \$ & AM\$ & Results which end with `AM' (suffix search).\\ \hline
-  ="" & ="AM" & Results which exactly match `AM' (exact search).\\ \hline
-  ! & !AM & Results which do not contain `AM'.\\ \hline
-  !="" & !="AM" & Results which do not exactly match `AM'.\\ \hline
-  > & >23 & Values higher than 23 (numeric and date columns).\\ \hline
-  < & <23 & Values lower than 23 (numeric and date columns).\\ \hline
+  & Arg & Results containing `Arg'.\\ \hline
+  space & Arg Ser & Results containing both `Arg' and `Ser'.\\ \hline
+  | & Arg|Ser & Results containing `Arg' or `Ser'.\\ \hline
+  ! & !fs & Results not containing `fs'.\\ \hline
+  \^{} & \^{}p.(Arg & Results beginning with `p.(Arg' (prefix search).\\ \hline % I didn't like \textasciicircum.
+  \$ & Ser)\$ & Results ending with `Ser)' (suffix search).\\ \hline
+  ="" & ="" & Results with this field empty.\\ \hline
+  ="" & ="p.0" & Results exactly matching `p.0' (exact search).\\ \hline
+  !="" & !="" & Results with this field not empty.\\ \hline
+  !="" & !="p.0" & Results not exactly matching `p.0'.\\ \hline
+  combination & *|Ter !fs & Results containing `*' or `Ter' but not containing `fs'.\\ \hline
+  < & <2020 & Values before 2020 (date fields).\\ \hline
+  <= & <=2020-06 & Values on or before June, 2020 (date fields).\\ \hline
+  > & >2020-06 & Values after June, 2020 (date fields).\\ \hline
+  >= & >=2020-06-15 & Values on or after June 15th, 2020 (date fields).\\ \hline
+%  combination & 2019|2020 <2020-03 & Values in 2019 or 2020, and before March, 2020 (date fields).\\ \hline % Sorry, no space for this.
+  combination & >2009 <2020 & Values from 2010 to 2019 (date fields).\\ \hline
+  & 23 & Values exactly matching 23 (numeric fields).\\ \hline
+  < & <23 & Values lower than 23 (numeric fields).\\ \hline
+  <= & <=23 & Values lower than, or equal to, 23 (numeric fields).\\ \hline
+  > & >23 & Values higher than 23 (numeric fields).\\ \hline
+  >= & >=23 & Values higher than, or equal to, 23 (numeric fields).\\ \hline
+  combination & >=20 <30 !23 & Values from 20 to 29, but not equal to 23 (numeric fields).\\ \hline
 \end{tabular}
 \vskip \baselineskip
 
 \noindent
 Some more advanced examples:
-\vskip \baselineskip
+\vskip 0.5\baselineskip % This page is too crammed but if I don't do this, everything below goes to hell.
 \noindent
-\begin{tabular}{>{\bfseries}p{5.4cm} p{10.7cm}}
-  Asian & Shows ``Asian'', but also ``Caucasian'' entries.\\ \hline
-  Asian !Caucasian & Shows ``Asian'', but no ``Caucasian'' entries.\\ \hline
-  Asian|African !Caucasian & Shows ``Asian'' or ``African'', but no ``Caucasian'' entries.\\ \hline
-  "South Asian" & Shows ``South Asian'', but no ``South East Asian'' entries.\\ \hline
+\begin{tabular}{>{\bfseries}p{5.3cm} p{10.8cm}}
+  Asian & Results containing `Asian', but also containing `Caucasian'.\\ \hline
+  Asian !Caucasian & Results containing `Asian', but not containing `Caucasian'.\\ \hline
+  Asian|African !Caucasian & Results containing `Asian' or `African', but not `Caucasian'.\\ \hline
+  "South Asian" & Results containing `South Asian', but not `South East Asian'.\\ \hline
 \end{tabular}
 
 
@@ -236,7 +250,7 @@ When a gene is selected (shown in the page header), the default page of the gene
 
 
 \section{Transcripts}
-\begin{wrapfigure}[5]{l}{7cm} % Wrap for 5 lines.
+\begin{wrapfigure}[5]{r}{7cm} % Wrap for 5 lines.
   \vspace{-25pt}
   \begin{shaded}
     \frame{\includegraphics[width=0.95\linewidth]{transcript_menu.png}}
@@ -247,7 +261,7 @@ When a gene is selected (shown in the page header), the default page of the gene
 When no gene is selected, the default page of the transcripts tab shows all transcripts.
 When a gene is selected (shown in the page header),
  the default page of the transcripts tab shows all transcripts of the selected gene.
-\clearpage
+\vskip 2\baselineskip
 
 \begin{description}
   \item [View all transcripts] \hfill \\
@@ -425,7 +439,7 @@ When a gene is selected (shown in the page header),
 
 
 \section{Screenings}
-\begin{wrapfigure}[9]{l}{7cm}
+\begin{wrapfigure}[8]{r}{7cm}
   \vspace{-25pt}
   \begin{shaded}
     \frame{\includegraphics[width=0.95\linewidth]{screening_menu.png}}
@@ -436,12 +450,15 @@ When a gene is selected (shown in the page header),
 When no gene is selected, the default page of the screenings tab shows all screenings.
 When a gene is selected (shown in the page header),
  the default page of the screenings tab shows all screenings that screened for variants in the selected gene.
-\clearpage
 
 \begin{description}
   \item [View all screenings] \hfill \\
   This view shows all the screenings in the database.
   You can click on a screening to view its details.
+\end{description}
+% You need an empty line here, otherwise LaTeX breaks. But I need to separate these lists to fix the crazy wrapping.
+
+\begin{description}
   \item [View all screenings for a gene] \hfill \\
   This view displays all screenings that screened for variants in the currently selected gene.
   You can click on a screening to view its details.

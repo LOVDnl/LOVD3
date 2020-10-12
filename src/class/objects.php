@@ -2757,8 +2757,8 @@ class LOVD_Object
             <TR>
               <TH>=&quot;&quot;</TH>
               <TD>Text</TD>
-              <TD>=&quot;p.0?&quot;</TD>
-              <TD>all entries exactly matching \'p.0?\'</TD></TR>
+              <TD>=&quot;p.0&quot;</TD>
+              <TD>all entries exactly matching \'p.0\'</TD></TR>
             <TR>
               <TH>!=&quot;&quot;</TH>
               <TD>Text</TD>
@@ -2767,7 +2767,7 @@ class LOVD_Object
             <TR>
               <TH>!=&quot;&quot;</TH>
               <TD>Text</TD>
-              <TD>!=&quot;p.0?&quot;</TD>
+              <TD>!=&quot;p.0&quot;</TD>
               <TD>all entries not exactly matching \'p.0?\'</TD></TR>
             <TR>
               <TH>combination</TH>
