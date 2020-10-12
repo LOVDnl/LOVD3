@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2020-10-06
+ * Modified    : 2020-10-12
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -161,9 +161,9 @@ if (ACTION == 'confirm' && POST) {
     // Send variant to MobiDetails. This can take a while.
     $aJSON = false;
     $aJSONResponse = lovd_php_file(
-        'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create',
+        'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create_g',
         false,
-        'caller=cli&variant_chgvs=' . rawurlencode($sVOT) . '&api_key=' . $_CONF['md_apikey'],
+        'caller=cli&variant_ghgvs=' . rawurlencode($sVOG) . '&gene_hgnc=' . strchr($sVOT, ':', true) . '&api_key=' . $_CONF['md_apikey'],
         array(
             'Accept: application/json',
         ));
