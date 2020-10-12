@@ -47,14 +47,15 @@ $nID = sprintf('%0' . $_SETT['objectid_length']['variants'] . 'd', $_PE[2]);
 //  information when people try random IDs!
 // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
 $bIsAuthorized = (lovd_isAuthorized('variant', $nID, false) !== false);
-list($sVOG, $sVOT) =
+list($sVOG, $nHGNCID) =
     $_DB->query('
         SELECT CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, ":", vog.`VariantOnGenome/DNA`) AS VOG_DNA,
-            CONCAT(t.id_ncbi, ":", vot.`VariantOnTranscript/DNA`) AS VOT_DNA
+            g.id_hgnc AS HGNC
         FROM ' . TABLE_VARIANTS . ' AS vog
           INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
           INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
           INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+          INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id)
           INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot_count.transcriptid)
         WHERE vog.id = ? AND (? = 1 OR vog.statusid >= ?)
         GROUP BY vog.id, vot.transcriptid
@@ -163,7 +164,7 @@ if (ACTION == 'confirm' && POST) {
     $aJSONResponse = lovd_php_file(
         'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create_g',
         false,
-        'caller=cli&variant_ghgvs=' . rawurlencode($sVOG) . '&gene_hgnc=' . strchr($sVOT, ':', true) . '&api_key=' . $_CONF['md_apikey'],
+        'caller=cli&variant_ghgvs=' . rawurlencode($sVOG) . '&gene_hgnc=' . $nHGNCID . '&api_key=' . $_CONF['md_apikey'],
         array(
             'Accept: application/json',
         ));
