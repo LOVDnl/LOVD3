@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2020-10-06
+ * Modified    : 2020-10-12
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -224,7 +224,7 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bTrueTotal = true, $bSor
     // Put a button here that shows the full legend, if it's available for this VL. We don't know that here, so we use JS to show it if necessary.
     if ($bLegend) {
         print("\n" .
-              '          <TD><B onclick="lovd_showLegend(\'' . $sViewListID . '\');" title="Click here to see the full legend of this data table." class="legend">Legend</B>&nbsp;&nbsp;</TD>');
+              '          <TD><B onclick="lovd_showDialog(\'viewlistLegend_' . $sViewListID . '\');" title="Click here to see the full legend of this data table." class="legend">Legend</B>&nbsp;&nbsp;</TD>');
     }
 
     if ($nPages > 1) {

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-10-12
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -397,11 +397,11 @@ function lovd_AJAX_viewListUpdateEntriesString (sViewListID)
 
 
 
-function lovd_showLegend (sViewListID)
+function lovd_showDialog (sDialogID)
 {
     // Opens a jQuery Dialog containing a ViewList's full legend.
 
-    $("#viewlistLegend_" + sViewListID).dialog({draggable:false,resizable:false,minWidth:800,modal:true,show:"fade",closeOnEscape:true});
+    $("#" + sDialogID).dialog({draggable:false,resizable:false,minWidth:800,modal:true,show:"fade",closeOnEscape:true});
 }
 
 
