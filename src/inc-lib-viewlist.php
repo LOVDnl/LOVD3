@@ -227,6 +227,9 @@ function lovd_pagesplitShowNav ($sViewListID, $nTotal, $bTrueTotal = true, $bSor
               '          <TD><B onclick="lovd_showDialog(\'viewlistLegend_' . $sViewListID . '\');" title="Click here to see the full legend of this data table." class="legend">Legend</B>&nbsp;&nbsp;</TD>');
     }
 
+    print("\n" .
+          '          <TD><B onclick="lovd_showDialog(\'viewlistHowToQuery\');" title="Click here to see how to query data tables in LOVD." class="legend">How to query</B>&nbsp;&nbsp;</TD>');
+
     if ($nPages > 1) {
         // First printed page number.
         $nFirstPage = $_GET['page'] - $nShownPages;

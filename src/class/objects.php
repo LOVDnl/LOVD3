@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-10-01
+ * Modified    : 2020-10-12
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2699,6 +2699,187 @@ class LOVD_Object
                     }
                 }
                 print('      </DIV>' . "\n\n");
+
+                // Add an info DIV about how to query. Print it only once.
+                if (!defined('PrintedViewListHowToQuery')) {
+                    define('PrintedViewListHowToQuery', true);
+                    print('
+        <DIV id="viewlistHowToQuery" title="How to query this table" style="display : none;">
+          <H2 class="LOVD">How to query this table</H2>
+          All list views have search fields which can be used to search data.
+          You can search for a complete word or you can search for a part of a search term.
+          If you enclose two or more words in double quotes, LOVD will search for the combination of those words only exactly in the order you specify.
+          Note that search terms are case-insensitive and that wildcards such as * are treated as normal text!
+          For all options, like &quot;and&quot;, &quot;or&quot;, and &quot;not&quot; searches, or searching for prefixes or suffixes, see the table below.<BR>
+          <BR>
+
+          <TABLE cellspacing="0" width="750">
+            <TR>
+              <TH style="border-bottom: 1px solid black;">Operator</TH>
+              <TH style="border-bottom: 1px solid black;">Column type</TH>
+              <TH style="border-bottom: 1px solid black;">Example</TH>
+              <TH style="border-bottom: 1px solid black;">Matches</TH></TR>
+            <TR>
+              <TH>&nbsp;</TH>
+              <TD>Text</TD>
+              <TD>Arg</TD>
+              <TD>all entries containing \'Arg\'</TD></TR>
+            <TR>
+              <TH>space</TH>
+              <TD>Text</TD>
+              <TD>Arg Ser</TD>
+              <TD>all entries containing \'Arg\' and \'Ser\'</TD></TR>
+            <TR>
+              <TH>|</TH>
+              <TD>Text</TD>
+              <TD>Arg|Ser</TD>
+              <TD>all entries containing \'Arg\' or \'Ser\'</TD></TR>
+            <TR>
+              <TH>!</TH>
+              <TD>Text</TD>
+              <TD>!fs</TD>
+              <TD>all entries not containing \'fs\'</TD></TR>
+            <TR>
+              <TH>^</TH>
+              <TD>Text</TD>
+              <TD>^p.(Arg</TD>
+              <TD>all entries beginning with \'p.(Arg\'</TD></TR>
+            <TR>
+              <TH>$</TH>
+              <TD>Text</TD>
+              <TD>Ser)$</TD>
+              <TD>all entries ending with \'Ser)\'</TD></TR>
+            <TR>
+              <TH>=&quot;&quot;</TH>
+              <TD>Text</TD>
+              <TD>=&quot;&quot;</TD>
+              <TD>all entries with this field empty</TD></TR>
+            <TR>
+              <TH>=&quot;&quot;</TH>
+              <TD>Text</TD>
+              <TD>=&quot;p.0?&quot;</TD>
+              <TD>all entries exactly matching \'p.0?\'</TD></TR>
+            <TR>
+              <TH>!=&quot;&quot;</TH>
+              <TD>Text</TD>
+              <TD>!=&quot;&quot;</TD>
+              <TD>all entries with this field not empty</TD></TR>
+            <TR>
+              <TH>!=&quot;&quot;</TH>
+              <TD>Text</TD>
+              <TD>!=&quot;p.0?&quot;</TD>
+              <TD>all entries not exactly matching \'p.0?\'</TD></TR>
+            <TR>
+              <TH>combination</TH>
+              <TD>Text</TD>
+              <TD>*|Ter !fs</TD>
+              <TD>all entries containing \'*\' or \'Ter\' but not containing \'fs\'</TD></TR>
+            <TR>
+              <TH style="border-top: 1px solid black;"></TH>
+              <TD style="border-top: 1px solid black;">Date</TD>
+              <TD style="border-top: 1px solid black;">2020</TD>
+              <TD style="border-top: 1px solid black;">all entries matching the year 2020</TD></TR>
+            <TR>
+              <TH>|</TH>
+              <TD>Date</TD>
+              <TD>2020-03|2020-04</TD>
+              <TD>all entries matching March or April, 2020</TD></TR>
+            <TR>
+              <TH>!</TH>
+              <TD>Date</TD>
+              <TD>!2020-03</TD>
+              <TD>all entries not matching March, 2020</TD></TR>
+            <TR>
+              <TH>&lt;</TH>
+              <TD>Date</TD>
+              <TD>&lt;2020</TD>
+              <TD>all entries before the year 2020</TD></TR>
+            <TR>
+              <TH>&lt;=</TH>
+              <TD>Date</TD>
+              <TD>&lt;=2020-06</TD>
+              <TD>all entries in or before June, 2020</TD></TR>
+            <TR>
+              <TH>&gt;</TH>
+              <TD>Date</TD>
+              <TD>&gt;2020-06</TD>
+              <TD>all entries after June, 2020</TD></TR>
+            <TR>
+              <TH>&gt;=</TH>
+              <TD>Date</TD>
+              <TD>&gt;=2020-06-15</TD>
+              <TD>all entries on or after June 15th, 2020</TD></TR>
+            <TR>
+              <TH>combination</TH>
+              <TD>Date</TD>
+              <TD>2019|2020 &lt;2020-03</TD>
+              <TD>all entries in 2019 or 2020, and before March, 2020</TD></TR>
+            <TR>
+              <TH style="border-top: 1px solid black;"></TH>
+              <TD style="border-top: 1px solid black;">Numeric</TD>
+              <TD style="border-top: 1px solid black;">23</TD>
+              <TD style="border-top: 1px solid black;">all entries exactly matching 23</TD></TR>
+            <TR>
+              <TH>|</TH>
+              <TD>Numeric</TD>
+              <TD>23|24</TD>
+              <TD>all entries exactly matching 23 or 24</TD></TR>
+            <TR>
+              <TH>!</TH>
+              <TD>Numeric</TD>
+              <TD>!23</TD>
+              <TD>all entries not exactly matching 23</TD></TR>
+            <TR>
+              <TH>&lt;</TH>
+              <TD>Numeric</TD>
+              <TD>&lt;23</TD>
+              <TD>all entries lower than 23</TD></TR>
+            <TR>
+              <TH>&lt;=</TH>
+              <TD>Numeric</TD>
+              <TD>&lt;=23</TD>
+              <TD>all entries lower than, or equal to, 23</TD></TR>
+            <TR>
+              <TH>&gt;</TH>
+              <TD>Numeric</TD>
+              <TD>&gt;23</TD>
+              <TD>all entries higher than 23</TD></TR>
+            <TR>
+              <TH>&gt;=</TH>
+              <TD>Numeric</TD>
+              <TD>&gt;=23</TD>
+              <TD>all entries higher than, or equal to, 23</TD></TR>
+            <TR>
+              <TH>combination</TH>
+              <TD>Numeric</TD>
+              <TD>&gt;=20 &lt;30 !23</TD>
+              <TD>all entries with values from 20 to 29, but not equal to 23</TD></TR></TABLE><BR><BR>
+
+          Some more advanced examples:<BR><BR>
+          <TABLE cellspacing="0" width="750">
+            <TR>
+              <TH style="border-bottom: 1px solid black;">Example</TH>
+              <TH style="border-bottom: 1px solid black;">Matches</TH></TR>
+            <TR>
+              <TH>Asian</TH>
+              <TD>all entries containing \'Asian\', \'asian\', including \'Caucasian\', \'caucasian\', etc.</TD></TR>
+            <TR>
+              <TH>Asian !Caucasian</TH>
+              <TD>all entries containing \'Asian\' but not containing \'Caucasian\'</TD></TR>
+            <TR>
+              <TH>Asian|African !Caucasian</TH>
+              <TD>all entries containing \'Asian\' or \'African\', but not containing \'Caucasian\'</TD></TR>
+            <TR>
+              <TH>&quot;South Asian&quot;</TH>
+              <TD>all entries containing \'South Asian\', but not containing \'South East Asian\'</TD></TR></TABLE><BR><BR>
+
+          To sort on a certain column, click on the column header or on the arrows.
+          If that column is already selected to sort on, the sort order will be swapped.
+          The column currently sorted on has a darker blue background color than the other columns.
+          The up and down arrows next to the column name indicate the current sorting direction.
+          When sorting on any field other than the default, LOVD will sort secondarily on the default sort column.
+        </DIV>' . "\n\n");
+                }
 
                 if ($aOptions['show_navigation']) {
                     lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
