@@ -679,7 +679,7 @@ class LOVD_VV
         //  as well, in the format NC_000001.10(NM_123456.1):c.100del.
         // We don't want to add code to fetch the NC, since we don't want to use
         //  the database backend here in case we're used as an external lib.
-        global $_CONF, $_SETT;
+        global $_CONF, $_DB, $_SETT;
 
         // Disallow NC variants. We should verifyGenomic() for these.
         // Supporting NCs using this function will just take a lot more code,
@@ -733,6 +733,43 @@ class LOVD_VV
             if ($sCode == $sBuild && isset($aBuild['ncbi_sequences'])) {
                 $sBuild = $aBuild['ncbi_name'];
                 break;
+            }
+        }
+
+        // Strip the NC off of the variant unless this variant is intronic or
+        //  outside of the transcript's boundaries.
+        // See https://github.com/openvar/variantValidator/issues/218.
+        // When the sequence in the NC and the NM mismatch, we'll get an error,
+        //  so dump the NC unless necessary (variants outside of the NM sequence).
+        if (preg_match('/^(NC_0000[0-9]{2}\.[0-9]{1,2})\(([NX][MR]_[0-9]+\.[0-9]+)\):/', $sVariant, $aRegs)) {
+            list(, $sRefSeqNC, $sRefSeqNM) = $aRegs;
+            $sVariantShort = substr(strstr($sVariant, ':'), 1);
+            $bKeepNC = false;
+            if (function_exists('lovd_getVariantInfo') && isset($_DB)) {
+                // Check for intronic and positions outside of the mRNA.
+
+                // Fetch transcript positions from the database.
+                $aTranscript = $_DB->query('
+                    SELECT position_c_mrna_start, position_c_mrna_end
+                    FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?',
+                    array($sRefSeqNM))->fetchAssoc();
+                $aVariant = lovd_getVariantInfo($sVariantShort, $sRefSeqNM);
+
+                $bKeepNC = (!empty($aVariant['position_start_intron'])
+                    || !empty($aVariant['position_end_intron'])
+                    || $aVariant['position_start'] < $aTranscript['position_c_mrna_start']
+                    || $aVariant['position_end'] > $aTranscript['position_c_mrna_end']);
+
+            } else {
+                // Just a quick simple check; keeping the NC for all intronic
+                //  or non-CDS changes. We don't know how long the UTR is, so
+                //  we'll just assume everything outside of the CDS is outside
+                //  of the transcript's boundaries.
+                $bKeepNC = preg_match('/[-+*]/', $sVariantShort);
+            }
+
+            if (!$bKeepNC) {
+                $sVariant = $sRefSeqNM . ':' . $sVariantShort;
             }
         }
 
