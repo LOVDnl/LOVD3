@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-07-16
+ * Modified    : 2020-10-14
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -703,12 +703,26 @@ class LOVD_VV
             $aOptions);
 
         // We only need a genome build to resolve intronic variants.
-        // The VV endpoint only throws a warning when an invalid build has been
-        //  passed, but does continue. Try $_CONF, but be OK with it not there.
-        if (isset($_CONF['refseq_build'])) {
-            $sBuild = $_CONF['refseq_build'];
-        } else {
-            $sBuild = 'hg38';
+        $sBuild = '';
+
+        // Try the variant, first.
+        if (preg_match('/^NC_0000[0-9]{2}\.[0-9]{1,2}\(/', $sVariant)) {
+            $sRefSeq = strstr($sVariant, '(', true);
+            foreach ($_SETT['human_builds'] as $sCode => $aBuild) {
+                if (isset($aBuild['ncbi_sequences']) && in_array($sRefSeq, $aBuild['ncbi_sequences'])) {
+                    $sBuild = $sCode;
+                    break;
+                }
+            }
+        }
+        if (!$sBuild) {
+            // The VV endpoint only throws a warning when an invalid build has been
+            //  passed, but does continue. Try $_CONF, but be OK with it not there.
+            if (isset($_CONF['refseq_build'])) {
+                $sBuild = $_CONF['refseq_build'];
+            } else {
+                $sBuild = 'hg38';
+            }
         }
 
         // We pick the NCBI name here, because for chrM we actually
