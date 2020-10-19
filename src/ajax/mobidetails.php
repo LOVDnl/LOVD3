@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2020-10-12
+ * Modified    : 2020-10-19
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,7 +59,7 @@ list($sVOG, $nHGNCID) =
           INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot_count.transcriptid)
         WHERE vog.id = ? AND (? = 1 OR vog.statusid >= ?)
         GROUP BY vog.id, vot.transcriptid
-        ORDER BY COUNT(vot_count.id) DESC, t.id ASC',
+        ORDER BY (vot.`VariantOnTranscript/DNA` REGEXP "[*+-]") ASC, COUNT(vot_count.id) DESC, t.id ASC',
         array($nID, $bIsAuthorized, STATUS_MARKED))->fetchRow();
 if (!$sVOG) {
     // Variant doesn't exist, isn't public, or has no VOT.
