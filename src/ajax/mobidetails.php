@@ -62,11 +62,12 @@ list($sVOG, $nHGNCID) =
         ORDER BY (vot.`VariantOnTranscript/DNA` REGEXP "[*+-]") ASC,
         LEAST(
           IF(vot.position_c_start < 0, -vot.position_c_start,
-            IF(vot.position_c_start > t.position_c_cds_end, vot.position_c_start - t.position_c_cds_end,
-              IFNULL(vot.position_c_start_intron, 0))),
+            IF(vot.position_c_start > t.position_c_cds_end, vot.position_c_start - t.position_c_cds_end, 0)),
           IF(vot.position_c_end < 0, -vot.position_c_end,
-            IF(vot.position_c_end > t.position_c_cds_end, vot.position_c_end - t.position_c_cds_end,
-              IFNULL(vot.position_c_end_intron, 0)))) ASC,
+            IF(vot.position_c_end > t.position_c_cds_end, vot.position_c_end - t.position_c_cds_end, 0))) ASC,
+        LEAST(
+          IFNULL(ABS(vot.position_c_start_intron), 0),
+          IFNULL(ABS(vot.position_c_end_intron), 0)) ASC,
         COUNT(vot_count.id) DESC, t.id ASC',
         array($nID, $bIsAuthorized, STATUS_MARKED))->fetchRow();
 if (!$sVOG) {
