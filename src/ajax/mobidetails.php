@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2020-10-06
+ * Modified    : 2020-10-20
  * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -47,18 +47,28 @@ $nID = sprintf('%0' . $_SETT['objectid_length']['variants'] . 'd', $_PE[2]);
 //  information when people try random IDs!
 // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
 $bIsAuthorized = (lovd_isAuthorized('variant', $nID, false) !== false);
-list($sVOG, $sVOT) =
+list($sVOG, $nHGNCID) =
     $_DB->query('
         SELECT CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, ":", vog.`VariantOnGenome/DNA`) AS VOG_DNA,
-            CONCAT(t.id_ncbi, ":", vot.`VariantOnTranscript/DNA`) AS VOT_DNA
+            g.id_hgnc AS HGNC
         FROM ' . TABLE_VARIANTS . ' AS vog
           INNER JOIN ' . TABLE_CHROMOSOMES . ' AS c ON (vog.chromosome = c.name)
           INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
           INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+          INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id)
           INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot_count ON (t.id = vot_count.transcriptid)
         WHERE vog.id = ? AND (? = 1 OR vog.statusid >= ?)
         GROUP BY vog.id, vot.transcriptid
-        ORDER BY COUNT(vot_count.id) DESC, t.id ASC',
+        ORDER BY (vot.`VariantOnTranscript/DNA` REGEXP "[*+-]") ASC,
+        LEAST(
+          IF(vot.position_c_start < 0, -vot.position_c_start,
+            IF(vot.position_c_start > t.position_c_cds_end, vot.position_c_start - t.position_c_cds_end, 0)),
+          IF(vot.position_c_end < 0, -vot.position_c_end,
+            IF(vot.position_c_end > t.position_c_cds_end, vot.position_c_end - t.position_c_cds_end, 0))) ASC,
+        LEAST(
+          IFNULL(ABS(vot.position_c_start_intron), 0),
+          IFNULL(ABS(vot.position_c_end_intron), 0)) ASC,
+        COUNT(vot_count.id) DESC, t.id ASC',
         array($nID, $bIsAuthorized, STATUS_MARKED))->fetchRow();
 if (!$sVOG) {
     // Variant doesn't exist, isn't public, or has no VOT.
@@ -161,9 +171,9 @@ if (ACTION == 'confirm' && POST) {
     // Send variant to MobiDetails. This can take a while.
     $aJSON = false;
     $aJSONResponse = lovd_php_file(
-        'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create',
+        'https://mobidetails.iurc.montp.inserm.fr/MD/api/variant/create_g',
         false,
-        'caller=cli&variant_chgvs=' . rawurlencode($sVOT) . '&api_key=' . $_CONF['md_apikey'],
+        'caller=cli&variant_ghgvs=' . rawurlencode($sVOG) . '&gene_hgnc=' . $nHGNCID . '&api_key=' . $_CONF['md_apikey'],
         array(
             'Accept: application/json',
         ));

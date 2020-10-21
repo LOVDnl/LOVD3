@@ -467,6 +467,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aNavigation['javascript:lovd_openWindow(\'http://genome.ucsc.edu/cgi-bin/hgTracks?clade=mammal&amp;org=Human&amp;db=' . $_CONF['refseq_build'] . '&amp;position=chr' . $zData['chromosome'] . ':' . ($zData['position_g_start'] - $lMargin) . '-' . ($zData['position_g_end'] + $lMargin) . '&amp;width=800&amp;ruler=full&amp;ccdsGene=full\', \'variant_UCSC\', 1000, 500);'] = array('menu_magnifying_glass.png', 'View location in UCSC genome browser', 1);
         $sURLEnsembl = 'http://' . ($_CONF['refseq_build'] == 'hg18'? 'may2009.archive' : ($_CONF['refseq_build'] == 'hg19'? 'grch37' : 'www')) . '.ensembl.org/Homo_sapiens/Location/View?r=' . $zData['chromosome'] . ':' . ($zData['position_g_start'] - $lMargin) . '-' . ($zData['position_g_end'] + $lMargin);
         $aNavigation['javascript:lovd_openWindow(\'' . $sURLEnsembl . '\', \'variant_Ensembl\', 1000, 500);'] = array('menu_magnifying_glass.png', 'View location in Ensembl genome browser', 1);
+        // Link to MobiDetails, but only if this variant has a gene. We'll know that only a few lines later when we load the VOT object.
+        // To prevent yet another query, handled this with JS further below.
         $aNavigation['javascript:$.post(\'ajax/mobidetails.php/' . $nID . '?check\').fail(function(){alert(\'Error while preparing to check MobiDetails.\');});'] = array('menu_mobidetails.png', 'View variant in MobiDetails', 1);
     }
     lovd_showJGNavigation($aNavigation, 'Variants');
@@ -510,6 +512,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             // If there is only one row of VOT, then trigger click on the first row so that the details of that transcript is displayed.
             if ($('#viewlistTable_<?php echo $sViewListID; ?> tr').length === 2) { // Table heading + first row.
                 $('#viewlistTable_<?php echo $sViewListID; ?> tr')[1].click();
+            }
+
+            // Disable link to MD when there is no VOT.
+            if (<?php echo count($_DATA->aTranscripts); ?> < 1) {
+                // Add disabled class.
+                sLink = $('#viewentryMenu_Variants').children(':contains("MobiDetails")').children().html();
+                $('#viewentryMenu_Variants').children(':contains("MobiDetails")').addClass('disabled');
+                $('#viewentryMenu_Variants').children(':contains("MobiDetails")').html(sLink);
             }
         });
 
