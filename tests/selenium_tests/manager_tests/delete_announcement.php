@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-06-04
- * Modified    : 2020-06-04
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-08
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -59,11 +59,12 @@ class DeleteAnnouncementTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/announcements');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="data"]/tbody/tr[last()]/td[1]'))->click();
-        $this->assertContains('/src/announcements/0000', $this->driver->getCurrentURL());
+
+        $this->waitForURLContains('/src/announcements/0000');
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Announcements'))->click();
         $this->driver->findElement(WebDriverBy::linkText('Delete announcement'))->click();
 
-        $this->assertRegExp('/\/src\/announcements\/[0-9]+\?delete$/', $this->driver->getCurrentURL());
+        $this->waitForURLRegExp('/\/src\/announcements\/[0-9]+\?delete$/');
         $this->enterValue('password', 'test1234');
         $this->submitForm('Delete announcement');
 

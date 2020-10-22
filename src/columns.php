@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-09-11
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -43,8 +43,8 @@ if ($_AUTH) {
 
 
 if (PATH_COUNT < 3 && !ACTION) {
-    // URL: /columns
-    // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
+    // URL: /columns
+    // URL: /columns/(VariantOnGenome|VariantOnTranscript|Individual|...)
     // View all columns.
 
     if (!empty($_PE[1])) {
@@ -109,15 +109,13 @@ if (PATH_COUNT < 3 && !ACTION) {
 
 
 if (PATH_COUNT > 2 && !ACTION) {
-    // URL: /columns/VariantOnGenome/DNA
-    // URL: /columns/Phenotype/Blood_pressure/Systolic
+    // URL: /columns/VariantOnGenome/DNA
+    // URL: /columns/Phenotype/Blood_pressure/Systolic
     // View specific column.
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
+    $sColumnID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
 
-    define('PAGE_TITLE', 'Custom data column ' . $sColumnID);
     $_T->printHeader();
     $_T->printTitle();
 
@@ -152,10 +150,10 @@ if (PATH_COUNT > 2 && !ACTION) {
 
 
 if (PATH_COUNT == 2 && ACTION == 'order') {
-    // URL: /columns/Individual?order
+    // URL: /columns/Individual?order
     // Change in what order the columns will be shown in a viewList/viewEntry.
 
-    $sCategory = $_PE[1];
+    $sCategory = lovd_getCurrentID();
 
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if (!$aTableInfo) {
@@ -252,7 +250,7 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
 
 
 if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
-    // URL: /columns?data_type_wizard
+    // URL: /columns?data_type_wizard
     // Show form type forms and send info back.
 
     define('TAB_SELECTED', 'setup');
@@ -640,7 +638,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
 
 
 if (PATH_COUNT == 1 && ACTION == 'create') {
-    // URL: /columns?create
+    // URL: /columns?create
     // Create a new column.
 
     define('TAB_SELECTED', 'setup');
@@ -662,23 +660,23 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     'options' =>
                          array(
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Individual\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'Individual\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the individual, not related to disease</B>, not changing over time, such as date of birth',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Phenotype\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'Phenotype\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the phenotype, related to disease</B>, possibly changing over time, such as blood pressure',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'Screening\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'Screening\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the detection of new variants</B>, such as detection technique or laboratory conditions',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'VariantOnGenome\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'VariantOnGenome\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the variant(s) found, in general or on the genomic level</B>, such as restriction site change',
                                   ),
                              array(
-                                    'onclick'     => 'javascript:$(\'#optionForm input\').attr(\'value\', \'VariantOnTranscript\'); $(\'#optionForm\').submit();',
+                                    'onclick'     => 'javascript:$(\'#optionForm input\').val(\'VariantOnTranscript\'); $(\'#optionForm\').submit();',
                                     'option_text' => '<B>Information on the variant(s) found, specific for the transcript level</B>, such as predicted effect on protein level',
                                   ),
                               ),
@@ -826,18 +824,16 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
 
 if (PATH_COUNT > 2 && ACTION == 'edit') {
-    // URL: /columns/VariantOnGenome/DNA?edit
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?edit
+    // URL: /columns/VariantOnGenome/DNA?edit
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?edit
     // Edit specific column.
 
     define('TAB_SELECTED', 'setup');
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = substr($sColumnID, 0, strpos($sColumnID, '/'));
+    $sColumnID = lovd_getCurrentID();
+    $sCategory = $_PE[1];
 
-    define('PAGE_TITLE', 'Edit custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColEdit');
 
     // Require manager clearance.
@@ -1185,7 +1181,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 <SCRIPT type="text/javascript">
 function lovd_checkSubmittedForm ()
 {
-    if ($('input[name="mysql_type"]').attr('value') != '<?php echo $zData['mysql_type'] ?>') {
+    if ($('input[name="mysql_type"]').val() != '<?php echo $zData['mysql_type'] ?>') {
         return window.confirm('<?php echo $sJSMessage ?>');
     }
 }
@@ -1200,185 +1196,15 @@ function lovd_checkSubmittedForm ()
 
 
 
-/*******************************************************************************
-if ($_GET['action'] == 'edit_colid' && !empty($_GET['edit_colid'])) {
-    // Edit specific custom colid.
-
-    define('TAB_SELECTED', 'setup');
-
-// Require manager clearance.
-lovd_requireAUTH(LEVEL_MANAGER);
-
-    $zData = $_DB>query('SELECT * FROM ' . TABLE_COLS . ' WHERE created_by != 0 AND colid = "' . $_GET['edit_colid'] . '"')->fetchAssoc();
-    if (!$zData) {
-        // Wrong ID, apparently.
-        $_T->printHeader();
-        $_T->printTitle('LOVD Setup - Manage custom column defaults');
-        lovd_showInfoTable('No such ID!', 'stop');
-        $_T->printFooter();
-        exit;
-    }
-
-    $bSelected = true;
-    if (substr($zData['colid'], 0, 7) == 'Variant') {
-        // Check genes to find if column is active.
-        $aGenes = lovd_getGeneList();
-        foreach ($aGenes as $sSymbol) {
-            $bSelected = $_DB->query('SELECT colid FROM ' . TABLEPREFIX . '_' . $sSymbol . '_columns WHERE colid = "' . $zData['colid'] . '"')->fetchColumn();
-            if ($bSelected) {
-                // Column present in this gene.
-                break;
-            }
-        }
-    } elseif (substr($zData['colid'], 0, 7) == 'Patient') {
-        // Patient column.
-        $bSelected = $_DB->query('SELECT colid FROM ' . TABLE_PATIENTS_COLS . ' WHERE colid = "' . $zData['colid'] . '"')->fetchColumn();
-    }
-
-    if (!$zData['created_by'] || $bSelected) {
-        $_T->printHeader();
-        $_T->printTitle('LOVD Setup - Manage custom column defaults');
-        lovd_showInfoTable('Column has been selected, cannot be renamed!', 'stop');
-        $_T->printFooter();
-        exit;
-    }
-
-    // Require form functions.
-    require ROOT_PATH . 'inc-lib-form.php';
-
-    if (isset($_GET['sent'])) {
-        lovd_errorClean();
-
-        // Mandatory fields.
-        $aCheck =
-                 array(
-                        'col_cat' => 'Category',
-                        'colid' => 'Column ID',
-                        'password' => 'Enter your password for authorization',
-                      );
-
-        foreach ($aCheck as $key => $val) {
-            if (empty($_POST[$key])) {
-                lovd_errorAdd($key, 'Please fill in the \'' . $val . '\' field.');
-            }
-        }
-
-        // ColID format.
-        if ($_POST['colid'] && !preg_match('/^[A-Za-z0-9_]+(\/[A-Za-z0-9_]+)*$/', $_POST['colid'])) {
-            lovd_errorAdd('colid', 'The column ID is not of the correct format. It can contain only letters, numbers and underscores. Subcategories must be devided by a slash (/).');
-        }
-
-        // ColID must not exist in the database.
-        if ($_POST['col_cat'] && $_POST['colid'] && $_POST['col_cat'] . '/' . $_POST['colid'] != $zData['colid']) {
-            $n = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE colid = "' . $_POST['col_cat'] . '/' . $_POST['colid'] . '"')->fetchColumn();
-            if ($n) {
-                lovd_errorAdd('colid', 'There is already a ' . $_POST['col_cat'] . ' column with this column ID. Please choose another one.');
-            }
-        }
-
-        // User had to enter his/her password for authorization.
-        if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
-        }
-
-        if (!lovd_error()) {
-            // Query text.
-            $_POST['colid'] = $_POST['col_cat'] . '/' . $_POST['colid'];
-            $sQ = 'UPDATE ' . TABLE_COLS . ' SET colid = "' . $_POST['colid'] . '", edited_by = "' . $_AUTH['id'] . '", edited_date = NOW() WHERE colid = "' . $zData['colid'] . '"';
-            $q = $_DB->query($sQ);
-            if (!$q) {
-                $sError = $_DB->formatError(); // Save the mysql_error before it disappears.
-                $_T->printHeader();
-                $_T->printTitle('LOVD Setup - Manage custom column defaults');
-                lovd_dbFout('ColEditColID', $sQ, $sError);
-            }
-
-            // Write to log...
-            lovd_writeLog('MySQL:Event', 'ColEditColID', $_AUTH['username'] . ' (' . $_DB->quote($_AUTH['name']) . ') successfully changed column ID ' . $zData['colid'] . ' to ' . $_POST['colid']);
-
-            // 2008-12-03; 2.0-15; Update links (whether they exist or not)
-            $sQ = 'UPDATE ' . TABLE_COLS2LINKS . ' SET colid="' . $_POST['colid'] . '" WHERE colid="' . $zData['colid'] . '"';
-            $q = $_DB->query($sQ);
-            if (!$q) {
-                // Silent error.
-                lovd_writeLog('MySQL:Error', 'ColEdit', 'Custom links could not be updated for ' . $_POST['colid']);
-            } else {
-                lovd_writeLog('MySQL:Event', 'ColEdit', 'Custom links successfully updated for ' . $_POST['colid']);
-            }
-
-            // Thank the user...
-            header('Refresh: 3; url=' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?action=view&view=' . rawurlencode($_POST['colid']));
-
-            $_T->printHeader();
-            $_T->printTitle('LOVD Setup - Manage custom column defaults');
-            print('      Successfully changed column ID \'' . $zData['colid'] . '\' to \'' . $_POST['colid'] . '\'!<BR><BR>' . "\n\n");
-
-            $_T->printFooter();
-            exit;
-
-        } else {
-            // Errors, so the whole lot returns to the form.
-            lovd_magicUnquoteAll();
-
-            // Because we're sending the data back to the form, I need to unset the password fields!
-            unset($_POST['password']);
-        }
-
-    } else {
-        foreach ($zData as $key => $val) {
-            if (!isset($_POST[$key]) || !$_POST[$key]) {
-                $_POST[$key] = $val;
-            }
-        }
-        list($_POST['col_cat'], $_POST['colid']) = explode('/', $_POST['colid'], 2);
-        $_POST['password'] = '';
-    }
-
-
-
-    $_T->printHeader();
-    $_T->printTitle('LOVD Setup - Manage custom column defaults');
-
-    lovd_errorPrint();
-
-    // Table.
-    print('      <FORM action="' . $_SERVER['PHP_SELF'] . '?action=' . $_GET['action'] . '&amp;edit_colid=' . rawurlencode($zData['colid']) . '&amp;sent=true" method="post">' . "\n");
-
-    // Array which will make up the form table.
-    $aForm = array(
-                    array('POST', '', '', '50%', '50%'),
-                    array('Category', 'select', 'col_cat', 1, array('Patient' => 'Patient', 'Variant' => 'Variant'), true, false, false),
-                    array('Column ID', 'text', 'colid', 30),
-                    array('', 'print', '<SPAN class="form_note">This ID must be unique and may contain only letters, numbers and underscores. Subcategories must be divided by a slash (/), such as \'Phenotype/Disease\'.<BR>Do NOT add \'Patient/\' or \'Variant/\' here.</SPAN>'),
-                    'skip',
-                    array('Enter your password for authorization', 'password', 'password', 20),
-                    array('', 'submit', 'Edit column ID'),
-                  );
-    $_MODULES->processForm('SetupColumnsGlobalEdit', $aForm);
-    lovd_viewForm($aForm);
-
-    print('</FORM>' . "\n\n");
-
-    $_T->printFooter();
-    exit;
-}
-*///////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 if (PATH_COUNT > 2 && ACTION == 'add') {
-    // URL: /columns/VariantOnGenome/DNA?add
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?add
+    // URL: /columns/VariantOnGenome/DNA?add
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?add
     // Add specific column to the data table, and enable.
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = $aCol[1];
+    $sColumnID = lovd_getCurrentID();
+    $sCategory = $_PE[1];
 
-    define('PAGE_TITLE', 'Add/enable custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColAdd');
 
     // Require form & column functions.
@@ -1748,16 +1574,14 @@ if (!isset($_GET['in_window'])) {
 
 
 if (PATH_COUNT > 2 && ACTION == 'remove') {
-    // URL: /columns/VariantOnGenome/DNA?remove
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?remove
+    // URL: /columns/VariantOnGenome/DNA?remove
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?remove
     // Disable specific custom column.
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = $aCol[1];
+    $sColumnID = lovd_getCurrentID();
+    $sCategory = $_PE[1];
 
-    define('PAGE_TITLE', 'Remove custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColRemove');
 
     // Require form & column functions.
@@ -2093,16 +1917,14 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
 
 if (PATH_COUNT > 2 && ACTION == 'delete') {
-    // URL: /columns/VariantOnGenome/DNA?delete
-    // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
+    // URL: /columns/VariantOnGenome/DNA?delete
+    // URL: /columns/Phenotype/Blood_pressure/Systolic?delete
     // Drop specific custom column.
 
     define('TAB_SELECTED', 'setup');
 
-    $aCol = $_PE;
-    unset($aCol[0]); // 'columns';
-    $sColumnID = implode('/', $aCol);
-    $sCategory = $aCol[1];
+    $sColumnID = lovd_getCurrentID();
+    $sCategory = $_PE[1];
 
     $zData = $_DB->query('SELECT c.id, c.hgvs, c.head_column, ac.colid, c.created_by FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
 
@@ -2128,7 +1950,7 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
 
-    define('PAGE_TITLE', 'Delete custom data column ' . $sColumnID);
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'ColDelete');
 
     lovd_requireAUTH(LEVEL_MANAGER);

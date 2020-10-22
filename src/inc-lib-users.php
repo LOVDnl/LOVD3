@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2019-07-25
- * For LOVD    : 3.0-22
+ * Modified    : 2020-09-11
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2014-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -343,28 +343,4 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
     $sMessage .= "\n";
     lovd_writeLog('Event', LOG_EVENT, $sMessage);
 }
-
-
-
-
-
-function lovd_showPageAccessDenied ($sLogMessage = null, $sPageTitle = 'Access denied',
-                                    $sInfoText = 'You do not have access to this content.')
-{
-    // Show a page saying access denied.
-    global $_T;
-
-    $_T->printHeader();
-
-    if (!is_null($sPageTitle)) {
-        $_T->printTitle($sPageTitle);
-    } else {
-        $_T->printTitle();
-    }
-
-    if (!is_null($sLogMessage)) {
-        lovd_writeLog('Error', 'HackAttempt', $sLogMessage);
-    }
-    lovd_showInfoTable($sInfoText, 'stop');
-    $_T->printFooter();
-}
+?>

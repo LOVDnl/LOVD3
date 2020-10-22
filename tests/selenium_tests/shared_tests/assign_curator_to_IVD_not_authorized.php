@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-06-17
- * Modified    : 2020-06-17
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-09
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -55,7 +55,7 @@ class AssignCuratorToIVDNotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestC
     {
         $this->driver->get(ROOT_URL . '/src/genes/IVD?authorize');
         // Not being authorized should get you forwarded.
-        $this->assertStringEndsWith('/src/genes/IVD?sortCurators', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/genes/IVD?sortCurators');
         $this->assertEquals('To access this area, you need at least Curator clearance.',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }

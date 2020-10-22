@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-27
- * Modified    : 2020-02-17
- * For LOVD    : 3.0-23
+ * Modified    : 2020-10-22
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -37,7 +37,7 @@ require ROOT_PATH . 'inc-init.php';
 
 
 if (PATH_COUNT == 1 && !ACTION) {
-    // URL: /docs
+    // URL: /docs
     // Provide link to PDF and HTML file.
 
     define('PAGE_TITLE', 'LOVD' . (LOVD_plus? '+' : ' 3.0') . ' documentation');
@@ -51,7 +51,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     } else {
         print('      The LOVD 3.0 documentation is continuously being updated.<BR>Currently available is the LOVD 3.0 user manual, in PDF and HTML formats.<BR>' .
               '      <UL>' . "\n" .
-              '        <LI>LOVD manual 3.0-23 (<A href="docs/LOVD_manual_3.0.pdf" target="_blank"><B>PDF</B>, 88 pages, 1.5Mb</A>) (<A href="docs/manual.html" target="_blank"><B>HTML</B>, single file, 5.0Mb</A>) - last updated February 17th 2020</LI></UL>' . "\n\n");
+              '        <LI>LOVD manual 3.0-25 (<A href="docs/LOVD_manual_3.0.pdf" target="_blank"><B>PDF</B>, 88 pages, 1.5Mb</A>) (<A href="docs/manual.html" target="_blank"><B>HTML</B>, single file, 4.9Mb</A>) - last updated October 12th 2020</LI></UL>' . "\n\n");
     }
 
     $_T->printFooter();

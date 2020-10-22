@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-06-17
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-20
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -62,6 +62,7 @@ class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->waitForElement(WebDriverBy::name('hgnc_id'), 5);
         $this->enterValue('hgnc_id', 'IVD');
         $this->submitForm('Continue');
+        $this->waitForElement(WebDriverBy::xpath('//select[@name="active_transcripts[]"]'));
 
         $this->selectValue('active_transcripts[]', 'NM_002225.3');
         $this->check('show_hgmd');

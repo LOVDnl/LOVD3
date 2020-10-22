@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-20
- * Modified    : 2013-01-23
- * For LOVD    : 3.0-02
+ * Modified    : 2020-10-06
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -34,7 +34,9 @@ header('Expires: ' . date('r', time()+(180*60)));
 function lovd_openWindow (var_dest, var_name, var_width, var_height, varPosX, varPosY)
 {
     // Load function to open up new windows.
-    var_name = 'LOVD_<?php echo time(); ?>_' + var_name;
+    if (var_name != '_blank') {
+        var_name = 'LOVD_<?php echo time(); ?>_' + var_name;
+    }
     if (!var_width) {
         var var_width = screen.width / 2;
     }
@@ -47,5 +49,9 @@ function lovd_openWindow (var_dest, var_name, var_width, var_height, varPosX, va
     if (!varPosY) {
         var varPosY = 50;
     }
-    return window.open(var_dest, var_name, 'width=' + var_width + ',height=' + var_height + ',left=' + varPosX + ',top=' + varPosY + ',scrollbars=1');
+    if (var_name == '_blank') {
+        return window.open(var_dest, var_name);
+    } else {
+        return window.open(var_dest, var_name, 'width=' + var_width + ',height=' + var_height + ',left=' + varPosX + ',top=' + varPosY + ',scrollbars=1');
+    }
 }

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2020-03-09
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-29
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -137,6 +137,9 @@ class LOVD_Log extends LOVD_Object
                 $zData['entry'] = preg_replace('/the ([A-Z][A-Za-z0-9-]+) gene/', 'the <A href="genes/$1">$1</A> gene', $zData['entry']);
                 $zData['entry'] = preg_replace('/#([0-9]+)\s/', '#<A href="users/$1">$1</A> ', $zData['entry']);
                 break;
+            case 'MergeEntries':
+                $zData['entry'] = preg_replace('/(Merged (individual|screening) entry #(?:[0-9]+) into entry #)([0-9]+)$/', '$1<A href="${2}s/$3">$3</A>', $zData['entry']);
+                break;
             case 'GeneCreate':
             case 'GeneEdit':
             case 'GeneEmpty':
@@ -174,6 +177,9 @@ class LOVD_Log extends LOVD_Object
             case 'ShareAccess':
                 $zData['entry'] = preg_replace('/(user) (#)?([0-9]+)/', '$1 $2<A href="users/$3">$3</A>', $zData['entry']);
                 break;
+            case 'APISettingsEdit':
+            case 'AuthTokenCreate':
+            case 'AuthTokenRevoke':
             case 'UserBoot':
             case 'UserCreate':
             case 'UserEdit':
@@ -181,7 +187,7 @@ class LOVD_Log extends LOVD_Object
             case 'UserRegister':
             case 'UserResetPassword':
             case 'UserUnlock':
-                $zData['entry'] = preg_replace('/(ID|user) (#)?([0-9]+)( .+)?$/', '$1 $2<A href="users/$3">$3</A>$4', $zData['entry']);
+                $zData['entry'] = preg_replace('/(ID|user) (#)?([0-9]+)(\W|$)/', '$1 $2<A href="users/$3">$3</A>$4', $zData['entry']);
                 break;
             case 'VariantCreate':
             case 'VariantEdit':

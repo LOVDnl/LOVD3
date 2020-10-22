@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-06-25
- * For LOVD    : 3.0-24
+ * Modified    : 2020-07-21
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -38,6 +38,7 @@
 // FIXME: The RNA and protein handling part (EREF vs standard), have increased
 //  to have quite some overlap; fix that?
 // FIXME: Memory usage never gets high, so just remove that code and that bar?
+// FIXME: Also check RNA and protein descriptions when the cDNA is OK!
 
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
@@ -199,7 +200,11 @@ class LOVD_VVAnalyses {
         );
         if ($this->bDNA38) {
             $aDiff[(!$aVariant['DNA38']? '(DNA38)' : $aVariant['DNA38'])] =
-                (!isset($aVV['data']['genome_mappings']['hg38']['DNA'])? '' : $aVV['data']['genome_mappings']['hg38']['DNA']);
+                (isset($aVV['data']['DNA38_clean'])? $aVV['data']['DNA38_clean'] :
+                    (!isset($aVV['data']['genomic_mappings']['hg38'])? '' :
+                        (count($aVV['data']['genomic_mappings']['hg38']) == 1?
+                            substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1) :
+                            $aVV['data']['genomic_mappings']['hg38'])));
         }
         // Because of using array_merge_recursive() to merge $aVV and $aVVVOT,
         //  we may have ended up with arrays.
@@ -366,7 +371,7 @@ class LOVD_VVAnalyses {
                     // If we do get a failure, just try again.
                     $aVV = false;
                     for ($i = 0; (!$aVV && $i < 5); $i ++) {
-                        sleep($i); // Sleep on second or later try.
+                        sleep($i*2); // Sleep on second or later try.
                         $aVV = $_VV->verifyGenomic($sVariant,
                             array(
                                 'map_to_transcripts' => true,
@@ -561,7 +566,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.fsX', 'p.(fs)', 'p.(fs*)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
@@ -635,12 +640,31 @@ class LOVD_VVAnalyses {
                 if (isset($aVV['warnings']['WGAP'])) {
                     // Ignore WGAP warnings when the predicted cDNA is the same
                     //  as the current cDNA, or when the predicted cDNA is WT.
-                    $sTranscript = key($aVariant['vots']);
-                    if ($aVariant['vots'][$sTranscript]['DNA']
+                    // Also, all VKGL variants will just be overwritten as we
+                    //  know they are detected on the genome.
+                    $sTranscript = current(
+                        array_intersect(
+                            array_keys($aVariant['vots']),
+                            array_keys($aVV['data']['transcript_mappings'])
+                        )
+                    );
+                    if ($bVKGL
+                        || !$sTranscript
+                        || $aVariant['vots'][$sTranscript]['DNA']
                         == $aVV['data']['transcript_mappings'][$sTranscript]['DNA']
-                        || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '=') {
+                        || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '='
+                        || strpos($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], '>') !== false) {
                         // Match, or WT.
                         unset($aVV['warnings']['WGAP']);
+                    }
+                }
+                if (isset($aVV['warnings']['WFLAG'])) {
+                    // Ignore WFLAG warnings for flag=processing_error, this
+                    //  happens whenever UTA suggests a transcript that VV
+                    //  cannot map to, which happens plenty.
+                    if (strpos($aVV['warnings']['WFLAG'], 'VV Flag not handled: processing_error.') === 0) {
+                        $aVariant['vots'] = array();
+                        unset($aVV['warnings']['WFLAG']);
                     }
                 }
                 if ($aVV['warnings']) {
@@ -688,7 +712,7 @@ class LOVD_VVAnalyses {
 
                 // If we can, fill in or correct the hg38 prediction.
                 if ($this->bDNA38 && $aVV['data']['DNA38_clean']) {
-                    if (!$aVariant['DNA38']) {
+                    if (!$aVariant['DNA38'] || $aVariant['DNA38'] == 'g.?') {
                         // We didn't have a hg38 description yet. Just fill it in.
                         $aUpdate['DNA38'] = $aVV['data']['DNA38_clean'];
                     } elseif ($aVariant['DNA38'] != $aVV['data']['DNA38_clean']) {
@@ -838,9 +862,10 @@ class LOVD_VVAnalyses {
                         // We get lots of EMISMATCH/EREF errors because the VOT variant
                         //  is actually c.=, something Mutalyzer can't see.
                         foreach (array('DNA', 'RNA', 'protein') as $sField) {
-                            if (in_array($aVOT[$sField], array('', '-', 'c.?', 'r.?', 'p.?'))
-                                || ($bVKGL && $aVOT[$sField] != $aVV['data']['transcript_mappings'][$sTranscript][$sField])) {
-                                // The current field is pretty much bogus, just overwrite it.
+                            if ($aVOT[$sField] != $aVV['data']['transcript_mappings'][$sTranscript][$sField]
+                                && ($bVKGL || in_array($aVOT[$sField], array('', '-', 'c.?', 'r.?', 'p.?')))) {
+                                // Overwrite VOT data if this is a VKGL entry,
+                                //  or if the current field is pretty much bogus.
                                 if (!isset($aUpdate['transcripts'])) {
                                     $aUpdate['transcripts'] = array();
                                 }
@@ -933,7 +958,7 @@ class LOVD_VVAnalyses {
 
                                 // Compare the current protein value with the new protein prediction.
                                 if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
-                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.(fs)'))) {
+                                    if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.fsX', 'p.(fs)', 'p.(fs*)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
@@ -1052,7 +1077,7 @@ class LOVD_VVAnalyses {
                                                     $aFieldsTranscripts[] = 'VariantOnTranscript/DNA';
                                                     $_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] = $sValue;
                                                     // Position fields, too!
-                                                    $aResponse = lovd_getVariantInfo($sValue);
+                                                    $aResponse = lovd_getVariantInfo($sValue, $sTranscript);
                                                     if ($aResponse) {
                                                         $aFieldsTranscripts = array_merge($aFieldsTranscripts,
                                                             array('position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'));
@@ -1113,7 +1138,43 @@ class LOVD_VVAnalyses {
                                 $nTranscriptID = $aVOT['transcriptid'];
                                 foreach ($aFieldsTranscripts as $sField) {
                                     $sKey = $nTranscriptID . '_' . $sField;
-                                    $aData[$sKey] = $_POST[$sKey];
+                                    // If $_POST doesn't contain this field, it's
+                                    //  because we either didn't need to update it,
+                                    //  or because VV didn't come up with this transcript.
+                                    // Don't overwrite data with nothing!!!
+                                    if (isset($_POST[$sKey])) {
+                                        $aData[$sKey] = $_POST[$sKey];
+                                    } else {
+                                        // We should take the original data!
+                                        // Generate the position fields, too!
+                                        if (!isset($aVOT['position_c_start'])) {
+                                            $aResponse = lovd_getVariantInfo($aVOT['DNA'], $sTranscript);
+                                            if ($aResponse) {
+                                                $aVOT['position_c_start'] = $aResponse['position_start'];
+                                                $aVOT['position_c_start_intron'] = $aResponse['position_start_intron'];
+                                                $aVOT['position_c_end'] = $aResponse['position_end'];
+                                                $aVOT['position_c_end_intron'] = $aResponse['position_end_intron'];
+                                                // No fallback. What could happen?
+                                            }
+                                        }
+                                        switch ($sField) {
+                                            case 'VariantOnTranscript/DNA':
+                                                $aData[$sKey] = $aVOT['DNA'];
+                                                break;
+                                            case 'position_c_start':
+                                            case 'position_c_start_intron':
+                                            case 'position_c_end':
+                                            case 'position_c_end_intron':
+                                                $aData[$sKey] = $aVOT[$sField];
+                                                break;
+                                            case 'VariantOnTranscript/RNA':
+                                                $aData[$sKey] = $aVOT['RNA'];
+                                                break;
+                                            case 'VariantOnTranscript/Protein':
+                                                $aData[$sKey] = $aVOT['protein'];
+                                                break;
+                                        }
+                                    }
                                 }
                             }
 

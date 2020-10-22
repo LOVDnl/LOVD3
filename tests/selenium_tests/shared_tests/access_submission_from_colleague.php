@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-06-17
- * Modified    : 2020-06-17
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-09
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -60,19 +60,20 @@ class AccessSubmissionFromColleagueTest extends LOVDSeleniumWebdriverBaseTestCas
         // In our tests, user "Owner" has set a colleague.
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//tr[td[contains(., "Test Owner")]]/td[1]'))->click();
 
+        // Individual.
+        $this->waitForURLContains('/src/individuals/0000');
+
         // Menus should not exist (except for variants, they always have a menu),
         //  but I should be able to see non-public fields.
         // To return here.
         $sSubmissionURL = $this->driver->getCurrentURL();
 
-        // Individual.
-        $this->assertContains('/src/individuals/0000', $this->driver->getCurrentURL());
         $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Individuals')));
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
         $this->driver->findElement(WebDriverBy::xpath('//div[contains(@id, "viewlistDiv_Phenotypes_for_I_VE_0000")]//td[text()="Pending"]'))->click();
 
         // Phenotype.
-        $this->assertContains('/src/phenotypes/0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/phenotypes/0000');
         $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Phenotypes')));
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
 
@@ -80,13 +81,13 @@ class AccessSubmissionFromColleagueTest extends LOVDSeleniumWebdriverBaseTestCas
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="viewlistDiv_Screenings_for_I_VE"]//td'))->click();
 
         // Screening.
-        $this->assertContains('/src/screenings/0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/screenings/0000');
         $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Screenings')));
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="(Pending)"]'));
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="viewlistDiv_CustomVL_VOT_for_S_VE"]//td[text()="Pending"]'))->click();
 
         // Variant, through Screening.
-        $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants/0000');
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="(Pending)"]'));
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
 
@@ -94,7 +95,7 @@ class AccessSubmissionFromColleagueTest extends LOVDSeleniumWebdriverBaseTestCas
         $this->driver->findElement(WebDriverBy::xpath('//div[@id="viewlistDiv_CustomVL_VOT_for_I_VE"]//td[text()="Pending"]'))->click();
 
         // Variant, through Individual.
-        $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants/0000');
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="(Pending)"]'));
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"][1]//td/span[text()="Pending"]'));
     }

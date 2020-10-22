@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-04-21
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-18
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -392,6 +392,7 @@ function lovd_fetchDBID ($aData)
     if (!isset($aData['aTranscripts'])) {
         $aData['aTranscripts'] = array();
     }
+    $aGenes = array();
     $aTranscriptVariants = array();
     foreach ($aData['aTranscripts'] as $nTranscriptID => $aTranscript) {
         // Check for non-empty VariantOnTranscript/DNA fields.
@@ -447,7 +448,9 @@ function lovd_fetchDBID ($aData)
         foreach($aDBIDOptions as $sDBIDoption) {
             // Loop through all the options returned from the database and decide which option to take.
             preg_match('/^((.+)_(\d{6}))$/', $sDBID, $aMatches);
-            list($sDBIDnew, $sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[1], $aMatches[2], $aMatches[3]);
+            //              2 = chr## or gene
+            //                   3 = the actual ID.
+            list($sDBIDnewSymbol, $sDBIDnewNumber) = array($aMatches[2], $aMatches[3]);
 
             if (preg_match('/^(.+)_(\d{6})$/', $sDBIDoption, $aMatches)) {
                 list($sDBIDoption, $sDBIDoptionSymbol, $sDBIDoptionNumber) = $aMatches;
@@ -460,11 +463,15 @@ function lovd_fetchDBID ($aData)
                 if ($sDBIDoptionSymbol == $sDBIDnewSymbol && $sDBIDoptionNumber < $sDBIDnewNumber && $sDBIDoptionNumber != '000000') {
                     // If the symbol of the option is the same, but the number is lower (not including 000000), take it.
                     $sDBID = $sDBIDoption;
-                } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDoptionSymbol, $aGenes)) {
-                    // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
-                    $sDBID = $sDBIDoption;
                 } elseif (substr($sDBIDnewSymbol, 0, 3) == 'chr' && substr($sDBIDoptionSymbol, 0, 3) != 'chr') {
                     // If the symbol of the option is not a chromosome, but the current DBID is, take it.
+                    $sDBID = $sDBIDoption;
+                } elseif ($sDBIDoptionSymbol != $sDBIDnewSymbol && isset($aGenes) && in_array($sDBIDoptionSymbol, $aGenes)
+                    && (!in_array($sDBIDnewSymbol, $aGenes)
+                        || ($sDBIDoptionNumber != '000000' && $sDBIDnewNumber == '000000')
+                        || $sDBIDoptionNumber < $sDBIDnewNumber)) {
+                    // If the symbol of the option is different and is one of the genes of the variant you are editing/creating, take it.
+                    // (but only if the currently selected DBID is *not* in the gene list or if we can pick a non 000000 ID, or if the option's number is lower)
                     $sDBID = $sDBIDoption;
                 }
             }
@@ -491,9 +498,22 @@ function lovd_fetchDBID ($aData)
                 // Update the cache!
                 $aDBIDsSeen[$aData['chromosome']] = $sSymbol . '_' . sprintf('%06d', ($nDBIDnewNumber - 1));
             } else {
-                // 2013-02-28; 3.0-03; By using INNER JOIN to VOT and T and placing a WHERE on t.geneid we sped up this query from 0.45s to 0.00s when having 1M variants.
+                // We used to speed up this query by joining to VOT and T and
+                //  placing a WHERE on t.geneid. However, this assumes that all
+                //  variants with gene-based DBIDs still have VOTs on that gene.
+                // This wasn't always the case in our database as transcripts
+                //  were sometimes removed and added with time in between them,
+                //  and variants were imported and given DBIDs already in use.
+                // So, we now speed up this query by adding an additional WHERE
+                //  on the chromosome. It provides a small speedup, while the
+                //  risk of missing variants is very small (they have to be on
+                //  a different chromosome).
                 $sSymbol = $aGenes[0];
-                $nDBIDnewNumber = $_DB->query('SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ? AND `VariantOnGenome/DBID` REGEXP ?', array($sSymbol, '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
+                $nDBIDnewNumber = $_DB->query('
+                    SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1
+                    FROM ' . TABLE_VARIANTS . '
+                    WHERE chromosome = ? AND `VariantOnGenome/DBID` REGEXP ?',
+                        array($aData['chromosome'], '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
             }
             $sDBID = $sSymbol . '_' . sprintf('%06d', $nDBIDnewNumber);
         }

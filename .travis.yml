@@ -8,7 +8,7 @@ php:
 
 env:
   # Let Selenium use Firefox driver.
-  - LOVD_SELENIUM_DRIVER=firefox
+  # - LOVD_SELENIUM_DRIVER=firefox # 2020-07-21: Disabled, Travis' FF has been failing for weeks, reason unknown.
   # Let Selenium use Chrome driver.
   - LOVD_SELENIUM_DRIVER=chrome
 

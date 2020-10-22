@@ -60,10 +60,10 @@ if (ACTION) {
 
 
 
-// URL: /configuration
-// URL: /configuration/DMD
-// URL: /configuration/GENETHATDOESNOTEXIST
-// URL: /configuration/DMD/something_that_should_not_be_there
+// URL: /configuration
+// URL: /configuration/DMD
+// URL: /configuration/GENETHATDOESNOTEXIST
+// URL: /configuration/DMD/something_that_should_not_be_there
 // Force user to select different gene.
 
 // Only when the path is correct (gene given that exists or no gene given but we've got one in session) and authorization is OK, we don't block.
@@ -124,7 +124,7 @@ if (!(PATH_COUNT <= 2 && $_SESSION['currdb'] && lovd_isAuthorized('gene', $_SESS
 
 
 
-// URL: /configuration/DMD
+// URL: /configuration/DMD
 // View all gene-specific configuration options, like downloads, graphs, custom column settings, etc.
 
 $_T->printHeader();
