@@ -9,7 +9,6 @@ class MakeUserCollaboratorGJBTest extends LOVDSeleniumWebdriverBaseTestCase
     public function testMakeUserCollaboratorGJB()
     {
         $this->driver->get(ROOT_URL . "/src/genes/GJB1?authorize");
-//        $this->selectWindow("null");
         $element = $this->driver->findElement(WebDriverBy::linkText("Test Collaborator"));
         $element->click();
 //        $this->uncheck("xpath=(//input[@name='allow_edit[]'])[2]");

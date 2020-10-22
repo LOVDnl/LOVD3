@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-08-22
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -144,7 +144,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVLOptions = array(
             'cols_to_skip' => array('transcriptid'),
-            'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
         );
         $_DATA->viewList('CustomVL_VOT_for_S_VE', $aVLOptions);
     }
@@ -547,23 +547,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     if (POST) {
         lovd_errorClean();
 
-        // Preventing notices...
         // $_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'] stores the IDs of the variants that are supposed to be present in TABLE_SCR2VAR.
-        if (isset($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'])) {
+        if (empty($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'])) {
+            // No variants selected.
+            lovd_errorAdd('', 'Please select at least one variant to confirm.');
+        } else {
             // Check if all checked variants are actually from this individual.
             $aDiff = array_diff($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']['checked'], $aVariantsIndividual);
             if (!empty($aDiff)) {
                 // The user tried to fake a $_POST by inserting an ID that did not come from our code.
                 lovd_errorAdd('', 'Invalid variant, please select the variants from the top viewlist!');
             }
-        }
-
-        // Mandatory fields.
-        if (empty($_POST['password'])) {
-            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
-        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-            // User had to enter his/her password for authorization.
-            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
         if (!lovd_error()) {
@@ -587,6 +581,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
             $_DB->commit();
             unset($_SESSION['viewlists']['Screenings_' . $nID . '_confirmVariants']);
 
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Updated the list of variants confirmed with screening #' . $nID);
+
             // Get genes which are modified only when linked variant is marked or public.
             $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                   'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
@@ -596,9 +593,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
                 // Change updated date for genes
                 lovd_setUpdatedDate($aGenes);
             }
-
-            // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Updated the list of variants confirmed with screening #' . $nID);
 
             if ($bSubmit) {
                 if (!isset($aSubmit['confirmedVariants'][$nID])) {
@@ -646,6 +640,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     $_GET['search_screeningids'] .= ' !' . $nID;
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
+    $_DATA->setRowLink('Screenings_' . $nID . '_confirmVariants', 'javascript:$(\'#check_{{ID}}\').trigger(\'click\'); return false;');
     $aVLOptions = array(
         'cols_to_skip' => array('id_', 'chromosome'),
         'track_history' => false,
@@ -661,8 +656,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     // Array which will make up the form table.
     $aForm = array(
                     array('POST', '', '', '', '0%', '0', '100%'),
-                    array('', '', 'print', 'Enter your password for authorization'),
-                    array('', '', 'password', 'password', 20),
                     array('', '', 'print', '<INPUT type="submit" value="Save variant list" onclick="lovd_AJAX_viewListSubmit(\'Screenings_' . $nID . '_confirmVariants\', function () { $(\'#confirmVariants\').submit(); }); return false;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT type="submit" value="Cancel" onclick="window.location.href=\'' . lovd_getInstallURL() . 'variants?create&amp;target=' . $nID . '\'; return false;" style="border : 1px solid #FF4422;">'),
                   );
     lovd_viewForm($aForm);
@@ -852,7 +845,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    $a = $_DB->query('SELECT variantid, MIN(screeningid) FROM ' . TABLE_SCR2VAR . ' GROUP BY variantid HAVING COUNT(screeningid) = 1 AND MIN(screeningid) = ?', array($nID))->fetchAllColumn();
+    $a = $_DB->query('SELECT variantid, screeningid FROM ' . TABLE_SCR2VAR . ' GROUP BY variantid HAVING COUNT(screeningid) = 1 AND screeningid = ?', array($nID))->fetchAllColumn();
     $aVariantsRemovable = array();
     if (!empty($a)) {
         $aVariantsRemovable = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($a) - 1) . ')', array_merge(array($nID), $a))->fetchAllColumn();

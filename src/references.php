@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2018-01-26
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-31
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -46,14 +46,13 @@ if ($bImage = (end($aPathElements) == 'image')) {
 }
 
 // Implode elements 1 up to the end, this is because DOI: can have slashes (/).
-$aPathElements[1] = implode('/', array_slice($aPathElements, 1));
-// From now on, we'll use $aPathElements instead of $_PE.
+$sReference = implode('/', array_slice($aPathElements, 1));
 
 
 
 
 
-if (!ACTION && (empty($aPathElements[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($aPathElements[1])))) {
+if (!ACTION && (!$sReference || strpos($sReference, ':') === false)) {
     // URL: /references
     // URL: /references/DMD
     // View all entries (optionally restricted by gene).
@@ -66,20 +65,30 @@ if (!ACTION && (empty($aPathElements[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i',
 
 
 
-if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPathElements[1], 0, 5) == 'PMID:')) {
+if (PATH_COUNT >= 2 && (substr($sReference, 0, 4) == 'DOI:' || substr($sReference, 0, 5) == 'PMID:')) {
     // URL: /references/DOI:.....
     // URL: /references/DOI:...../image
     // URL: /references/PMID:.....
     // URL: /references/PMID:...../image
     // View specific DOI or PMID.
 
-    if (substr($aPathElements[1], 0, 4) == 'DOI:') {
-        $sSearchPattern = '%{DOI:%' . substr($aPathElements[1], 4) . '}%';
-        $sAjaxSearchPattern = '{DOI: ' . ':' . substr($aPathElements[1], 4) . '}';
+    if (substr($sReference, 0, 4) == 'DOI:') {
+        // A DOI search can be using the full DOI, or a part of it (journal or publisher).
+        // There are many formats out there, but if we find a number or a slash, we're sure we're looking for a paper.
+        // Check: 10.1002/humu.21438 (paper) vs 10.1002/humu (journal).
+        if (!empty($_PE[2]) && (!empty($_PE[3]) || preg_match('/[0-9]/', $_PE[2]))) {
+            // Assuming we're searching for a full DOI (a paper) here.
+            $sSearchPattern = '%{DOI:%' . substr($sReference, 4) . '}%';
+            $sAjaxSearchPattern = '{DOI: ' . ':' . substr($sReference, 4) . '}';
+        } else {
+            // No full suffix given, just a publisher or a journal search. Match on part of the DOI.
+            $sSearchPattern = '%{DOI:%' . substr($sReference, 4) . '%';
+            $sAjaxSearchPattern = '{DOI: ' . ':' . substr($sReference, 4);
+        }
         $sType = 'DOI';
-    } elseif (substr($aPathElements[1], 0, 5) == 'PMID:') {
-        $sSearchPattern = '%{PMID:%' . substr($aPathElements[1], 5) . '}%';
-        $sAjaxSearchPattern = '{PMID: ' . ':' . substr($aPathElements[1], 5) . '}';
+    } elseif (substr($sReference, 0, 5) == 'PMID:') {
+        $sSearchPattern = '%{PMID:%' . substr($sReference, 5) . '}%';
+        $sAjaxSearchPattern = '{PMID: ' . ':' . substr($sReference, 5) . '}';
         $sType = 'PubMed';
     }
 
@@ -114,13 +123,13 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
         exit;
     }
 
-    define('PAGE_TITLE', 'Data for reference: ' . $aPathElements[1]);
+    define('PAGE_TITLE', 'Data for reference: ' . $sReference);
     $_T->printHeader();
     $_T->printTitle();
 
     // Print info table when no variants or individuals are availble for given reference.
     if (empty($aCategories['VariantOnGenome']) && empty($aCategories['Individual'])) {
-        lovd_showInfoTable('No data found for reference ' . $aPathElements[1], 'stop');
+        lovd_showInfoTable('No data found for reference ' . $sReference, 'stop');
         $_T->printFooter();
         exit;
     }
@@ -158,11 +167,13 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
           '           <LI><A href="' . lovd_getInstallURL() . implode('/', $_PE) . '#tabs-individuals">Individuals</A></LI>' . "\n" .
           '       </UL>' . "\n" .
           '       <DIV id="tabs-variants">' . "\n");
+
+    $_GET['page_size'] = 50;
     if (!empty($_DATAvariants)){
         $aVLOptions = array(
             'cols_to_skip' => $aColsToHide['VariantOnGenome'],
             'track_history' => false,
-            'show_navigation' => false,
+            'show_navigation' => true,
         );
         $_DATAvariants->viewList('Variants_per_reference', $aVLOptions);
     }
@@ -172,7 +183,7 @@ if (PATH_COUNT >= 2 && (substr($aPathElements[1], 0, 4) == 'DOI:' || substr($aPa
         $aVLOptions = array(
             'cols_to_skip' => $aColsToHide['Individual'],
             'track_history' => false,
-            'show_navigation' => false,
+            'show_navigation' => true,
         );
         $_DATAindividuals->viewList('Individuals_per_reference', $aVLOptions);
     }
@@ -189,10 +200,10 @@ if ($bImage) {
     exit;
 }
 
-define('PAGE_TITLE', 'Data for reference: ' . $aPathElements[1]);
+define('PAGE_TITLE', 'Data for reference: ' . $sReference);
 $_T->printHeader();
 $_T->printTitle();
 
-lovd_showInfoTable('Unknown reference ' . $aPathElements[1], 'stop');
+lovd_showInfoTable('Unknown reference ' . $sReference, 'stop');
 $_T->printFooter();
 exit;

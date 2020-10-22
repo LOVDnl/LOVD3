@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2018-01-16
- * For LOVD    : 3.0-21
+ * Modified    : 2019-10-01
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -55,6 +55,7 @@ $aNeededLevel =
                 'Disease' => 0,
                 'Gene' => 0,
                 'Gene_Panel' => LEVEL_SUBMITTER, // LOVD+
+                'Gene_Panel_Gene' => LEVEL_SUBMITTER, // LOVD+
                 'Gene_Panel_Gene_REV' => LEVEL_SUBMITTER, // LOVD+
                 'Gene_Statistic' => LEVEL_SUBMITTER, // LOVD+
                 'Genome_Variant' => 0,
@@ -82,6 +83,7 @@ if ($sObject == 'Custom_ViewList' && (!isset($sObjectID) || !in_array($sObjectID
             array(
                 'VariantOnGenome,Scr2Var,VariantOnTranscript', // Variants on I and S VEs.
                 'Transcript,VariantOnTranscript,VariantOnGenome', // IN_GENE.
+                'Transcript,VariantOnTranscript,VariantOnGenome,Screening,Individual', // LOVD-wide full data view (external viewer).
                 'VariantOnTranscript,VariantOnGenome', // Gene-specific variant view.
                 'VariantOnTranscriptUnique,VariantOnGenome', // Gene-specific unique variant view.
                 'VariantOnTranscript,VariantOnGenome,Screening,Individual', // Gene-specific full data view.
@@ -94,22 +96,59 @@ if ($sObject == 'Custom_ViewList' && (!isset($sObjectID) || !in_array($sObjectID
 if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AUTH['collaborates']))) {
     if ($sObject == 'Column') {
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+    } elseif ($sObject == 'Individual' && isset($_REQUEST['search_genes_searched']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_genes_searched'], $aRegs)) {
+        lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
+        // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+        $_GET['search_genes_searched'] = $_REQUEST['search_genes_searched'];
     } elseif ($sObject == 'Transcript' && isset($_REQUEST['search_geneid']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_geneid'], $aRegs)) {
         lovd_isAuthorized('gene', $aRegs[1]); // Authorize for the gene currently searched (it currently restricts the view).
+        // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+        $_GET['search_geneid'] = $_REQUEST['search_geneid'];
     } elseif ($sObject == 'Shared_Column' && isset($_REQUEST['object_id'])) {
         lovd_isAuthorized('gene', $sObjectID); // Authorize for the gene currently loaded.
-    } elseif ($sObject == 'Custom_ViewList' && isset($_REQUEST['id'])) {
+    } elseif ($sObject == 'Screening' && $sViewListID == 'Screenings_for_I_VE' && isset($_REQUEST['search_individualid']) && ctype_digit($_REQUEST['search_individualid'])) {
+        // Screenings_for_I_VE has no ID but authorizes on search_individualid.
+        lovd_isAuthorized('individual', $_REQUEST['search_individualid']); // Authorize for the Screening(s) currently searched (it restricts the view).
+        // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+        $_GET['search_individualid'] = $_REQUEST['search_individualid'];
+    } elseif ($sObject == 'Custom_ViewList') {
         // 2013-06-28; 3.0-06; We can't just authorize users based on the given ID without actually checking the shown objects and checking if the search results are actually limited or not.
-        // CustomVL_VOT_for_I_VE has no ID and does not require authorization (only public VOGs loaded).
-        // CustomVL_VOT_for_S_VE has no ID and does not require authorization (only public VOGs loaded).
         // CustomVL_IN_GENE has no ID and does not require authorization (only public VOGs loaded).
 
-        // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
-        // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
-        if (in_array($sObjectID, array('VariantOnTranscript,VariantOnGenome', 'VariantOnTranscriptUnique,VariantOnGenome', 'VariantOnTranscript,VariantOnGenome,Screening,Individual')) && (!isset($_REQUEST['search_transcriptid']) || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
-            die(AJAX_NO_AUTH);
+        if (!empty($_REQUEST['id'])) {
+            // CustomVL_VOT_VOG_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+            // CustomVL_VIEW_<<GENE>> is restricted per gene in the object argument, and search_transcriptid should contain a transcript ID that matches.
+            if (in_array($sObjectID,
+                    array(
+                        'VariantOnTranscript,VariantOnGenome',
+                        'VariantOnTranscriptUnique,VariantOnGenome',
+                        'VariantOnTranscript,VariantOnGenome,Screening,Individual'
+                    )) && (!isset($_REQUEST['search_transcriptid'])
+                    || !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ? AND geneid = ?', array($_REQUEST['search_transcriptid'], $_REQUEST['id']))->fetchColumn())) {
+                die(AJAX_NO_AUTH);
+            }
+            lovd_isAuthorized('gene', $nID); // Authorize for the gene currently loaded.
+
+        } elseif ($sObjectID == 'VariantOnGenome,Scr2Var,VariantOnTranscript' && isset($_REQUEST['search_screeningid'])) {
+            // CustomVL_VOT_for_I_VE has no ID but authorizes on search_screeningid (can contain multiple IDs).
+            // CustomVL_VOT_for_S_VE has no ID but authorizes on search_screeningid.
+
+            // When receiving multiple screenings, we intend of course to authorize on its individual.
+            // We should not allow to add an "OR screeningid = ?" clause including an owned Screening to force authorization.
+            // Check if we have multiple screening IDs. If so, make sure they belong together.
+            $aScreeningIDs = explode('|', $_REQUEST['search_screeningid']);
+            if (count($aScreeningIDs) > 1) {
+                $nIndividuals = $_DB->query('SELECT COUNT(DISTINCT individualid) FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($aScreeningIDs) - 1) . ')',
+                    $aScreeningIDs)->fetchColumn();
+                if ($nIndividuals > 1) {
+                    // This custom VL is only loaded for authorization on Screenings, and there's no reason to have multiple Individuals.
+                    die(AJAX_NO_AUTH);
+                }
+            }
+            lovd_isAuthorized('screening', $aScreeningIDs); // Authorize for the Screening(s) currently searched (it restricts the view).
+            // Since we're authorizing on $_REQUEST which also contains $_POST data, make sure the $_GET (what we actually filter on) matches what we authorize on!!!
+            $_GET['search_screeningid'] = $_REQUEST['search_screeningid'];
         }
-        lovd_isAuthorized('gene', $nID); // Authorize for the gene currently loaded.
     }
 }
 
@@ -128,7 +167,18 @@ $aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
 //  about users than the info the access sharing page gives them.
 if ($sObject == 'User' && $_AUTH['level'] < LEVEL_MANAGER) {
     // Force removal of certain columns, regardless of this has been requested or not.
-    $aColsToSkip = array_unique(array_merge($aColsToSkip, array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_')));
+    // We cannot trust this was set in $_SESSION already since the VL can be loaded independently.
+    $aColsToSkip = array_unique(
+        array_merge(
+            $aColsToSkip,
+            array(
+                'username',
+                'status_',
+                'last_login_',
+                'created_date_',
+                'curates',
+                'level_'
+            )));
 }
 
 // Managers, and sometimes curators, are allowed to download lists...
@@ -160,6 +210,8 @@ if (!file_exists($sFile)) {
 require $sFile;
 $sObjectClassname = 'LOVD_' . str_replace('_', '', $sObject);
 $_DATA = new $sObjectClassname($sObjectID, $nID);
+
+
 
 if (POST && ACTION == 'applyFR') {
     // Apply find & replace.
@@ -204,11 +256,25 @@ if (POST && ACTION == 'applyFR') {
     die(AJAX_DATA_ERROR);
 }
 
+// Restrict the columns of this VL, if given.
+if (LOVD_plus && isset($_INSTANCE_CONFIG['viewlists'][$_GET['viewlistid']]['cols_to_show'])) {
+    $_DATA->setViewListCols($_INSTANCE_CONFIG['viewlists'][$_GET['viewlistid']]['cols_to_show']);
+}
+
 // Show the viewlist.
-// Parameters are assumed to be in $_SESSION, only cols_to_skip can be overridden. This is for the external viewer.
-$aOptions = array();
+// Parameters could be assumed to be in $_SESSION. However, certain options we send through here.
+// only_rows is checked and sent here because of the logs retrieving single rows from the next page.
+// cols_to_skip can be overridden for the external viewer.
+$aOptions = array(
+    'only_rows' => (!empty($_GET['only_rows'])),
+);
 if ($aColsToSkip) {
-    $aOptions['cols_to_skip'] = $aColsToSkip;
+    // Don't let the requested list of columns overwrite the original one. Only additional columns may be hidden.
+    $aOptions['cols_to_skip'] = array_unique(array_merge(
+        (!isset($_SESSION['viewlists'][$_GET['viewlistid']]['options']['cols_to_skip'])? array()
+            : $_SESSION['viewlists'][$_GET['viewlistid']]['options']['cols_to_skip']),
+        $aColsToSkip
+    ));
 }
 $_DATA->viewList($_GET['viewlistid'], $aOptions);
 ?>

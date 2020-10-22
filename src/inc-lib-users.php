@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2017-09-08
- * For LOVD    : 3.0-20
+ * Modified    : 2019-07-25
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2014-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -259,7 +259,7 @@ function lovd_removeUserShareAccess (sViewListID, nID)
 
     // Reset the viewList.
     // Does an ltrim, too. But trim() doesn't work in IE < 9.
-    objViewListF.search_id.value = objViewListF.search_id.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
+    objViewListF.search_userid.value = objViewListF.search_userid.value.replace('!' + nID, '').replace('  ', ' ').replace(/^\s*/, '');
     lovd_AJAX_viewListSubmit(sViewListID);
 
     return true;

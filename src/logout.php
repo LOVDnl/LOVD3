@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-19
- * Modified    : 2016-09-23
- * For LOVD    : 3.0-18
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -41,7 +41,7 @@ if (!$_AUTH) {
 $_DB->query('UPDATE ' . TABLE_USERS . ' SET phpsessid = "" WHERE id = ?', array($_AUTH['id']), false);
 $nSec = time() - strtotime($_AUTH['last_login']);
 $sCurrDB = $_SESSION['currdb']; // Temp storage.
-$aMapping = $_SESSION['mapping']; // Temp storage.
+$aMapping = (!isset($_SESSION['mapping'])? array() : $_SESSION['mapping']); // Temp storage.
 $_SESSION = array(); // Delete variables both from $_SESSION and from session file.
 if (isset($_COOKIE[session_name()])) {
     setcookie(session_name(), '', time() - 172800); // 'Delete' the cookie.

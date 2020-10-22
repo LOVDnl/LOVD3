@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2011-10-12
- * For LOVD    : 3.0-alpha-05
+ * Modified    : 2019-08-28
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2011 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -61,8 +61,8 @@ function lovd_checkForm () {
             // ... but is now changed!
             sMessage = 'Are you really sure you want to change the database URL? This may have serious consequences!\nIf this URL is not correct, links generated to this LOVD, for instance in emails sent by the system, will cease to function. Please make sure you configure a correct and lasting URL!\n\nPress "Cancel" to return to the form, or "OK" to ignore this warning.';
         }
-    } else if (document.forms[0].location_url.value == '') {
-        // Wasn't filled in before, and now still isn't.
+    } else if (document.forms[0].location_url.value == '' && <?php echo (LOVD_plus? 'false' : 'true'); ?>) {
+        // Wasn't filled in before, and now still isn't. // We don't care of this is LOVD+.
         sMessage = 'Are you sure you don\'t want to select a database url?\nPress "Cancel" to return to the form to fill in an URL, or "OK" to ignore this warning.';
     }
 

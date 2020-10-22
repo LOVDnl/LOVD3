@@ -10,14 +10,12 @@ class CreateIndividualDiagnosedWithCMTTest extends LOVDSeleniumWebdriverBaseTest
     {
         $element = $this->driver->findElement(WebDriverBy::id("tab_submit"));
         $element->click();
-        
+
         $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/individuals[\s\S]create$/', $this->driver->getCurrentURL()));
         $this->enterValue(WebDriverBy::name("Individual/Lab_ID"), "12345CMT");
-        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
-        $element->click();
 
         // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
-        $this->driver->getMouse()->mouseMove(null, 200, 200);
+        // $this->driver->getMouse()->mouseMove(null, 200, 200);
 
         $this->enterValue(WebDriverBy::name("Individual/Reference"), "{PMID:Fokkema et al (2011):21520333}");
         $this->enterValue(WebDriverBy::name("Individual/Remarks"), "No Remarks");
@@ -25,9 +23,9 @@ class CreateIndividualDiagnosedWithCMTTest extends LOVDSeleniumWebdriverBaseTest
         $option->click();
         $element = $this->driver->findElement(WebDriverBy::xpath("//input[@value='Create individual information entry']"));
         $element->click();
-        
+
         $this->assertEquals("Successfully created the individual information entry!",
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
-        
+
     }
 }

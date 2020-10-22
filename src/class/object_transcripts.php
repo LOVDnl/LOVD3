@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2018-01-24
- * For LOVD    : 3.0-21
+ * Modified    : 2019-10-01
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -78,16 +78,18 @@ class LOVD_Transcript extends LOVD_Object {
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
                                           'g.chromosome' .
-                                          (!$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
-                                              ', COUNT(DISTINCT ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 'vot.id' : 'vog.id') . ') AS variants');
+                                          (LOVD_plus || !$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
+                                              // Speed optimization by skipping variant counts.
+                                              ', COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants');
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
-                                          (!$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
+                                          (LOVD_plus || !$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
+                                              // Speed optimization by skipping variant counts.
                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
-                                              // If user is less than a collaborator, only show public variants and
-                                              // variants owned/created by him.
-                                              ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' :
-                                                  'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
+                                            // If user is less than a collaborator, only show public variants and
+                                            // variants owned/created by him.
+                                            ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                                                  ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
                                                   '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
                                                   (!$_AUTH? '' :
                                                       ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
@@ -110,10 +112,10 @@ class LOVD_Transcript extends LOVD_Object {
                         'id_protein_uniprot' => 'Protein - Uniprot ID',
                         'exon_table' => 'Exon/intron information',
                         'remarks' => 'Remarks',
-                        'created_by_' => array('Created by', LEVEL_COLLABORATOR),
-                        'created_date_' => array('Date created', LEVEL_COLLABORATOR),
-                        'edited_by_' => array('Last edited by', LEVEL_COLLABORATOR),
-                        'edited_date_' => array('Date last edited', LEVEL_COLLABORATOR),
+                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -136,16 +138,16 @@ class LOVD_Transcript extends LOVD_Object {
                     'db'   => array('t.id_ncbi', 'ASC', true)),
                 'id_protein_ncbi' => array(
                     'view' => array('NCBI Protein ID', 120),
-                    'db'   => array('t.id_protein_ncbi', 'ASC', true))
-            ),
-            (!$_SETT['customization_settings']['transcript_viewlist_show_variants']? array() :
-                array(
-                    'variants' => array(
-                        'view' => array('Variants', 70, 'style="text-align : right;"'),
-                        'db'   => array('variants', 'DESC', 'INT_UNSIGNED'))
-                )
-            )
-        );
+                    'db'   => array('t.id_protein_ncbi', 'ASC', true)),
+                'variants' => array(
+                    'view' => array('Variants', 70, 'style="text-align : right;"'),
+                    'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
+            );
+        if (LOVD_plus || !$_SETT['customization_settings']['transcript_viewlist_show_variants']) {
+            // Diagnostics: Speed up view by removing the variants column.
+            unset($this->aColumnsViewList['variants']);
+        }
+
         $this->sSortDefault = 'geneid';
 
         // Because the disease information is publicly available, remove some columns for the public.

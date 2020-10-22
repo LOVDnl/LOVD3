@@ -29,14 +29,11 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="chromosome"]/option[text()="15"]'));
         $option->click();
         $this->enterValue(WebDriverBy::name("VariantOnGenome/DNA"), "g.40702876G>T");
-        $element = $this->driver->findElement(WebDriverBy::linkText("PubMed"));
-        $element->click();
 
         // Move mouse to let browser hide tooltip of pubmed link (needed for chrome)
-        $this->driver->getMouse()->mouseMove(null, 200, 200);
+        // $this->driver->getMouse()->mouseMove(null, 200, 200);
 
         $this->enterValue(WebDriverBy::name("VariantOnGenome/Reference"), "{PMID:Fokkema et al (2011):21520333}");
-        $this->enterValue(WebDriverBy::name("VariantOnGenome/Frequency"), "11/10000");
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_reported"]/option[text()="Effect unknown"]'));
         $option->click();
         $option = $this->driver->findElement(WebDriverBy::xpath('//select[@name="effect_concluded"]/option[text()="Effect unknown"]'));

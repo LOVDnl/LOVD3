@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2012-06-26
- * For LOVD    : 3.0-beta-07
+ * Modified    : 2019-10-01
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -48,6 +48,7 @@ print('      <I>Current time: ' . date('r') . '</I><BR><BR>' . "\n\n");
 
 
 require ROOT_PATH . 'class/graphs.php';
+$bSeeNonPublicVariants = ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
 $_G = new LOVD_Graphs();
 lovd_includeJS('lib/flot/jquery.flot.min.js');
 lovd_includeJS('lib/flot/jquery.flot.pie.min.js');
@@ -60,7 +61,7 @@ print('      <H5>Genes (' . $nGenes . ')</H5>' . "\n" .
       '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 300px; border-bottom : 3px double #CCC;">' . "\n" .
       '        <TR valign="top">' . "\n" .
       '          <TD width="50%">' . "\n" .
-      '            <B>' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? 'V' : 'Public v') . 'ariants per gene</B><BR>'. "\n" .
+      '            <B>' . ($bSeeNonPublicVariants? 'V' : 'Public v') . 'ariants per gene</B><BR>'. "\n" .
       '            <DIV id="genesNumberOfVariants" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="genesNumberOfVariants_hover">&nbsp;</DIV></TD>' . "\n" .
       '          <TD width="50%">' . "\n" .
       '            <B>Linked diseases per gene</B><BR>'. "\n" .
@@ -75,10 +76,10 @@ print('      <H5>Variant type (DNA level)</H5>' . "\n" .
       '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 320px;">' . "\n" .
       '        <TR valign="top">' . "\n" .
       '          <TD width="50%">' . "\n" .
-      '            <B>All ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . ' variants</B><BR>'. "\n" .
+      '            <B>All ' . ($bSeeNonPublicVariants? '' : 'public ') . ' variants</B><BR>'. "\n" .
       '            <DIV id="variantsTypeDNA_all" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeDNA_all_hover">&nbsp;</DIV></TD>' . "\n" .
       '          <TD width="50%">' . "\n" .
-      '            <B>Unique ' . ($_AUTH['level'] >= LEVEL_COLLABORATOR? '' : 'public ') . 'variants</B><BR>'. "\n" .
+      '            <B>Unique ' . ($bSeeNonPublicVariants? '' : 'public ') . 'variants</B><BR>'. "\n" .
       '            <DIV id="variantsTypeDNA_unique" style="width : 325px; height : 250px;"><IMG src="gfx/lovd_loading.gif" alt="Loading..."></DIV><DIV id="variantsTypeDNA_unique_hover">&nbsp;</DIV></TD></TR></TABLE>' . "\n\n");
 
 
@@ -87,10 +88,10 @@ print('      <H5>Variant type (DNA level)</H5>' . "\n" .
 
 $_T->printFooter(false);
 
-$_G->genesNumberOfVariants('genesNumberOfVariants', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR));
+$_G->genesNumberOfVariants('genesNumberOfVariants', '*', $bSeeNonPublicVariants);
 $_G->genesLinkedDiseases('genesLinkedDiseases', '*');
-$_G->variantsTypeDNA('variantsTypeDNA_all', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), false);
-$_G->variantsTypeDNA('variantsTypeDNA_unique', '*', ($_AUTH['level'] >= LEVEL_COLLABORATOR), true);
+$_G->variantsTypeDNA('variantsTypeDNA_all', '*', $bSeeNonPublicVariants, false);
+$_G->variantsTypeDNA('variantsTypeDNA_unique', '*', $bSeeNonPublicVariants, true);
 
 
 

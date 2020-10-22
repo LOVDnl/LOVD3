@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2017-11-20
- * For LOVD    : 3.0-21
+ * Modified    : 2019-07-25
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -169,34 +169,28 @@ if (ACTION == 'create') {
 
         $_T->printHeader();
         $_T->printTitle();
-        require ROOT_PATH . 'inc-lib-form.php';
 
-        print('      Please select the gene on which you wish to add a transcript.<BR>' . "\n" .
-              '      <BR>' . "\n\n" .
-              '      <FORM name="transcriptsCreate" method="post" onsubmit="window.location = \'' . $_PE[0] . '/\' + this.geneSymbol.options[this.geneSymbol.selectedIndex].value + \'?' . ACTION . '\'; return false;">' . "\n" .
-              '        <TABLE border="0" cellpadding="0" cellspacing="1" width="760">');
-
-        if ($_AUTH['level'] >= LEVEL_MANAGER) {
-            $sSQL = 'SELECT id, CONCAT(id, " (", name, ")") AS name FROM ' . TABLE_GENES . ' ORDER BY id';
-            $aSQL = array();
-        } else {
-            $sSQL = 'SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_CURATES . ' AS cu ON (cu.geneid = g.id) WHERE cu.userid = ? AND allow_edit = 1 ORDER BY g.id';
-            $aSQL = array($_AUTH['id']);
+        // Show a VL of genes instead of a dropdown.
+        $sViewListID = 'Genes_for_createTranscript';
+        require ROOT_PATH . 'class/object_genes.php';
+        $_GET['page_size'] = 25;
+        // For curators, select only the genes they are curator for. That is, if the list is not too big.
+        if ($_AUTH['level'] == LEVEL_CURATOR && count($_AUTH['curates']) <= 25) {
+            $_GET['search_geneid'] = '="' . implode('"|="', $_AUTH['curates']) . '"';
         }
-
-        $aSelectGene = $_DB->query($sSQL, $aSQL)->fetchAllCombine();
-
         // Select currently selected gene, if any.
-        $_POST['geneSymbol'] = $_SESSION['currdb'];
-
-        // Array which will make up the form table.
-        $aFormData = array(
-                            array('POST', '', '', '', '20%', '14', '80%'),
-                            array('Gene', '', 'select', 'geneSymbol', 1, $aSelectGene, false, false, false),
-                            array('', '', 'submit', 'Continue &raquo;'),
-                          );
-        lovd_viewForm($aFormData);
-        print('</TABLE></FORM>' . "\n\n");
+        // But only if we're managers or if this is a curator that is curator of the currently selected gene.
+        if ($_SESSION['currdb'] && ($_AUTH['level'] >= LEVEL_MANAGER
+                || (isset($_AUTH['curates']) && in_array($_SESSION['currdb'], $_AUTH['curates'])))) {
+            $_GET['search_id_'] = '="' . $_SESSION['currdb'] . '"';
+        }
+        $_DATA = new LOVD_Gene();
+        $_DATA->setRowLink($sViewListID, $_PE[0] . '/' . $_DATA->sRowID . '?create');
+        lovd_showInfoTable('Please select the gene to which you wish to add a new transcript. <B>Click on the gene to proceed.</B>', 'information', 600);
+        $aVLOptions = array(
+            'cols_to_skip' => array('variants', 'uniq_variants', 'updated_date_', 'diseases_'),
+        );
+        $_DATA->viewList($sViewListID, $aVLOptions);
 
         $_T->printFooter();
         exit;

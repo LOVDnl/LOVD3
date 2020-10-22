@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2017-06-15
- * For LOVD    : 3.0-19
+ * Modified    : 2019-07-25
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -382,6 +382,37 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                 $aObjects['Phenotypes']['filters']['statusid'] = array(STATUS_MARKED, STATUS_OK);
 
                 // Hide non-public columns.
+                $aObjects['Individuals']['hide_columns'] = array_merge(
+                    $aObjects['Individuals']['hide_columns'],
+                    array(
+                        'statusid',
+                        'created_by',
+                        'created_date',
+                        'edited_by',
+                        'edited_date',
+                    )
+                );
+                $aObjects['Phenotypes']['hide_columns'] = array_merge(
+                    $aObjects['Phenotypes']['hide_columns'],
+                    array(
+                        'statusid',
+                        'created_by',
+                        'created_date',
+                        'edited_by',
+                        'edited_date',
+                    )
+                );
+                $aObjects['Variants']['hide_columns'] = array_merge(
+                    $aObjects['Variants']['hide_columns'],
+                    array(
+                        'mapping_flags',
+                        'statusid',
+                        'created_by',
+                        'created_date',
+                        'edited_by',
+                        'edited_date',
+                    )
+                );
                 $aObjectTranslations = array(
                     'VariantOnTranscript' => 'Variants_On_Transcripts',
                     'VariantOnGenome' => 'Variants',
@@ -557,12 +588,49 @@ if (isset($sFilter) && $sFilter == 'gene_public') {
 
 
 
+// Let Diseases further limit columns of Phenotypes; Let Genes further limit columns of VOTs.
+foreach (
+    array(
+        'Diseases' => 'Phenotypes',
+        'Genes' => 'Variants_On_Transcripts',
+    ) as $sObject => $sObjectToFilter) {
+    // Get IDs that we will show, and hide all active custom columns not assigned to these IDs.
+    if (!empty($aObjects[$sObject]['filters']['id'])) {
+        $aIDs = (!is_array($aObjects[$sObject]['filters']['id'])?
+            array($aObjects[$sObject]['filters']['id']) : array_values($aObjects[$sObject]['filters']['id']));
+        sort($aIDs); // Makes the reporting prettier.
+        $sObjectColumn = strtolower(preg_replace('/s$/', 'id', $sObject));
+        $aInactiveColumns = $_DB->query('
+            SELECT DISTINCT colid 
+            FROM ' . TABLE_SHARED_COLS . '
+            WHERE colid NOT IN (
+                SELECT DISTINCT colid
+                FROM ' . TABLE_SHARED_COLS . '
+                WHERE `' . $sObjectColumn . '` IN (?' . str_repeat(', ?', count($aIDs) - 1) . '))',
+            $aIDs)->fetchAllColumn();
+        $aObjects[$sObjectToFilter]['hide_columns'] = array_merge(
+            $aObjects[$sObjectToFilter]['hide_columns'],
+            $aInactiveColumns
+        );
+
+        // Add comment, warning about selecting columns.
+        // Since it's possible that phenotype entries are created for diseases not linked to the individuals,
+        //  it's possible that we're missing data there.
+        $aObjects[$sObjectToFilter]['comments'][] = 'Note: Only showing ' . rtrim($sObjectToFilter, 's') . ' columns active for ' . $sObject . ' ' . implode(', ', $aIDs);
+    }
+}
+
+
+
+
+
 // Now, query the database and print, or just print the data (if already prefetched).
 foreach ($aObjects as $sObject => $aSettings) {
     print('## ' . (empty($aSettings['label'])? $sObject : $aSettings['label']) . ' ## Do not remove or alter this header ##' . "\r\n");
 
     // If not prefetched, download the data here. If we do a fetchAll() we can easily get the count and we don't need to do a describe.
     // So saving two queries, and it's easier code, at the cost of additional memory usage.
+    // FIXME: Perhaps, if we have a 'hide_columns' setting, modify the query to not select these? May save a lot of memory.
     if (empty($aSettings['data'])) {
         $aSettings['data'] = $_DB->query($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
     }
@@ -601,9 +669,12 @@ foreach ($aObjects as $sObject => $aSettings) {
         $aColumns = array_keys($aSettings['data'][0]);
     }
 
+    // in_array() is really quite slow, especially with large arrays. Flipping the array will speed things up.
+    $aSettings['hide_columns'] = array_flip($aSettings['hide_columns']);
+
     // Print headers.
     foreach ($aColumns as $key => $sCol) {
-        if (!in_array($sCol, $aSettings['hide_columns'])) {
+        if (!isset($aSettings['hide_columns'][$sCol])) {
             print((!$key? '' : "\t") . '"{{' . $sCol . '}}"');
         }
     }
@@ -615,7 +686,7 @@ foreach ($aObjects as $sObject => $aSettings) {
         $z = array_map('addslashes', $z);
 
         foreach ($aColumns as $key => $sCol) {
-            if (!in_array($sCol, $aSettings['hide_columns'])) {
+            if (!isset($aSettings['hide_columns'][$sCol])) {
                 // Replace line endings and tabs (they should not be there but oh well), so they don't cause problems with importing.
                 print(($key? "\t" : '') . '"' . str_replace(array("\r\n", "\r", "\n", "\t"), array('\r\n', '\r', '\n', '\t'), $z[$sCol]) . '"');
             }

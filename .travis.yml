@@ -5,6 +5,7 @@ php:
   # aliased to a recent 5.5.x version
   - 5.5
   # aliased to a recent 5.6.xversion
+  # This one is usually failing due to unexpected halting of the process (and Travis then killing the build).
   - 5.6
   # aliased to a recent 7.x version
   - 7.0
@@ -45,6 +46,7 @@ addons:
     - mysql-server-5.6
     - mysql-client-core-5.6
     - mysql-client-5.6
+    - mutt
 
 before_install:
  - ./tests/travis/setup/setup_chrome.sh
@@ -93,7 +95,6 @@ notifications:
   email:
    recipients:
       - I.F.A.C.Fokkema@lumc.nl
-      - M.Kroon@lumc.nl
    on_success: never
    ## [always|never|change] # default: change
    on_failure: always

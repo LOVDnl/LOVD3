@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2018-01-26
- * For LOVD    : 3.0-21
+ * Modified    : 2019-10-02
+ * For LOVD    : 3.0-22
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -75,6 +75,7 @@ $_SERVER['SCRIPT_NAME'] = lovd_cleanDirName(str_replace('\\', '/', $_SERVER['SCR
 // Our output formats: text/html by default.
 $aFormats = array('text/html', 'text/plain'); // Key [0] is default. Other values may not always be allowed. It is checked in the Template class' printHeader() and in Objects::viewList().
 if (lovd_getProjectFile() == '/api.php') {
+    $aFormats[] = 'application/json';
     $aFormats[] = 'text/bed';
 } elseif (lovd_getProjectFile() == '/import.php' && substr($_SERVER['QUERY_STRING'], 0, 25) == 'autoupload_scheduled_file') {
     // Set format to text/plain only when none is requested.
@@ -140,7 +141,6 @@ $aRequired =
                 'PHP_functions' =>
                      array(
                             'mb_detect_encoding',
-                            'xml_parser_create', // We could also look for libxml constants?
                             'openssl_seal',      // We could also look for openssl constants?
                           ),
                 'PHP_classes' =>
@@ -153,7 +153,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-21',
+                            'version' => '3.0-22',
                           ),
                 'user_levels' =>
                      array(
@@ -168,7 +168,12 @@ $_SETT = array(
                 array(
                     // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
                     // has already been called for gene-specific overviews.
+                    'delete_individual' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
+                    'delete_variant' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
+                    // The see_nonpublic_data setting currently also defines the visibility
+                    //  of the status, created* and edited* fields.
                     'see_nonpublic_data' => ((LOVD_plus || LOVD_LIGHT)? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'set_concluded_effect' => (LOVD_plus? LEVEL_MANAGER : LEVEL_CURATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
                 ),
                 'customization_settings' => // Miscellaneous configuration settings.
@@ -204,7 +209,16 @@ $_SETT = array(
                             'paternal' => 'Imprinted, paternal'
                           ),
                 'var_effect' =>
+                (LOVD_plus?
                      array(
+                            0 => 'Not curated',
+                            5 => 'VUS',
+                            9 => 'Pathogenic',
+                            7 => 'Likely pathogenic',
+                            3 => 'Likely benign',
+                            1 => 'Benign',
+                          ) :
+                    array(
                             0 => 'Not classified', // Submitter cannot select this.
                             9 => 'Affects function',
                             8 => 'Affects function, not associated with individual\'s disease phenotype',
@@ -213,7 +227,7 @@ $_SETT = array(
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
                             5 => 'Effect unknown',
-                          ),
+                          )),
                 'var_effect_api' =>
                      array(
                             // The API requires different, concise but clear, values.
@@ -226,7 +240,38 @@ $_SETT = array(
                             1 => 'functionNotAffected',
                             5 => 'unknown',
                           ),
+                'var_effect_short' =>
+                    array(
+                        0 => '.',   // Not classified
+                        1 => '-',   // Does not affect function
+                        3 => '-?',  // Probably does not affect function
+                        5 => '?',   // Effect unknown
+                        6 => '#',   // Variant affects function but was not associated with any known disease phenotype
+                        7 => '+?',  // Probably affects function
+                        8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
+                        9 => '+',   // Affects function
+                    ),
                 'var_effect_default' => '00',
+                'diseases_inheritance' =>
+                    array(
+                        'AD' => 'Autosomal dominant',
+                        'PI' => 'Autosomal dominant with paternal imprinting',
+                        'MI' => 'Autosomal dominant with maternal imprinting',
+                        'AR' => 'Autosomal recessive',
+                        'DD' => 'Digenic dominant',
+                        'DR' => 'Digenic recessive',
+                        'IC' => 'Isolated Cases (Sporadic)',
+                        'Mi' => 'Mitochondrial',
+                        'Mu' => 'Multifactorial',
+                        'SMo' => 'Somatic mosaicism',
+                        'SMu' => 'Somatic mutation',
+                        'OG' => 'Oligogenic (3 genes)',
+                        'PG' => 'Polygenic (>3 genes)',
+                        'XL' => 'X-linked',
+                        'XLD' => 'X-linked dominant',
+                        'XLR' => 'X-linked recessive',
+                        'YL' => 'Y-linked',
+                    ),
                 'data_status' =>
                      array(
                             STATUS_IN_PROGRESS => 'In progress',
@@ -277,6 +322,8 @@ $_SETT = array(
                 'unique_view_max_string_length' => 100,
                 'objectid_length' =>
                     array(
+                        'analyses' => 3,
+                        'analysisruns' => 5,
                         'diseases' => 5,
                         'individuals' => 8,
                         'links' => 3,
@@ -435,6 +482,115 @@ list($_SETT['system']['tree'], $_SETT['system']['build']) = explode('-', $_SETT[
 $_SETT['update_URL'] = $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/package_update.php';
 $_SETT['check_location_URL'] = $_SETT['upstream_URL'] . $_SETT['system']['tree'] . '/check_location.php';
 
+// Additions for Diagnostics.
+if (LOVD_plus) {
+    define('ANALYSIS_STATUS_WAIT', 0);              // Individual and screening imported, variants not yet (doesn't happen anymore).
+    define('ANALYSIS_STATUS_READY', 1);             // All data imported, waiting for somebody to start analysis.
+    define('ANALYSIS_STATUS_IN_PROGRESS', 2);       // Analysis started.
+    define('ANALYSIS_STATUS_CLOSED', 4);            // Analysis complete, needs to be approved by staff.
+    define('ANALYSIS_STATUS_WAIT_CONFIRMATION', 6); // Staff has checked, now waiting for confirmation of variants in the lab.
+    define('ANALYSIS_STATUS_CONFIRMED', 7);         // Variants were confirmed, analysis is completely done now.
+    define('ANALYSIS_STATUS_ARCHIVED', 9);          // Variants have been taken offline.
+
+    define('CON_STATUS_NOT_PERFORMED', 0); // The variant has not yet been assessed.
+    define('CON_STATUS_NOT_REQUIRED', 1);  // A curator has determined that this variant does not require confirmation so curation can begin immediately.
+    define('CON_STATUS_REQUIRED', 3);      // A curator has determined that this variant requires confirmation.
+    define('CON_STATUS_PASSED', 5);        // This variant has been confirmed to be real and passes the confirmation process.
+    define('CON_STATUS_FAILED', 7);        // This variant has been confirmed to not be real and fails the confirmation process.
+
+    define('CUR_STATUS_VARIANT_OF_INTEREST', 10);    // A curator has determined that this variant requires curation. We still need a second person to confirm this before any curation takes place.
+    define('CUR_STATUS_FOR_CURATION', 20);           // A second curator has confirmed that this variant should be curated so the curation can begin.
+    define('CUR_STATUS_REQUIRES_CONFIRMATION', 30);  // Needs additional labwork to confirm the variant is correct, e.g. sanger.
+    define('CUR_STATUS_CONFIRMED', 40);              // Additional labwork has been completed and the variant is confirmed to be correct. (We don't have a status if the variant turns out to be incorrect, maybe we need one?)
+    define('CUR_STATUS_PROPOSED', 50);               // A curator has completed the curation process and proposed a classification. It will be discussed at a meeting before a final classification is decided.
+    define('CUR_STATUS_CURATED_REPORTABLE', 70);     // A final classification has been determined and this variant is to appear on a report. The curation process is now finished.
+    define('CUR_STATUS_CURATED_NOT_REPORTABLE', 80); // A final classification has been determined but this variant is not to appear on a report. The curation process is now finished.
+    define('CUR_STATUS_NOT_FOR_CURATION', 90);       // A curator has determined that this variant does not require curation and no further action will be taken on this variant.
+    define('CUR_STATUS_ARTEFACT', 91);               // A curator has determined that this variant does not exist as a result of a sequencing error.
+
+    $_SETT['analysis_status'] =
+        array(
+            ANALYSIS_STATUS_WAIT => 'Waiting for data upload',
+            ANALYSIS_STATUS_READY => 'Ready for analysis',
+            ANALYSIS_STATUS_IN_PROGRESS => 'In progress',
+            ANALYSIS_STATUS_CLOSED => 'Closed',
+            ANALYSIS_STATUS_WAIT_CONFIRMATION => 'Awaiting confirmation',
+            ANALYSIS_STATUS_CONFIRMED => 'Confirmed',
+            ANALYSIS_STATUS_ARCHIVED => 'Archived',
+        );
+    $_SETT['confirmation_status'] =
+        array(
+            CON_STATUS_NOT_PERFORMED => 'Not performed',
+            CON_STATUS_NOT_REQUIRED => 'Not required',
+            CON_STATUS_REQUIRED => 'Required',
+            CON_STATUS_PASSED => 'Passed',
+            CON_STATUS_FAILED => 'Failed',
+        );
+    $_SETT['curation_status'] =
+        array(
+            CUR_STATUS_VARIANT_OF_INTEREST => 'Variant of Interest',
+            CUR_STATUS_NOT_FOR_CURATION => 'Not for Curation',
+            CUR_STATUS_ARTEFACT => 'Artefact',
+            CUR_STATUS_FOR_CURATION => 'For Curation',
+            CUR_STATUS_REQUIRES_CONFIRMATION => 'Requires Confirmation',
+            CUR_STATUS_CONFIRMED => 'Confirmed',
+            CUR_STATUS_PROPOSED => 'Proposed Classification',
+            CUR_STATUS_CURATED_REPORTABLE => 'Curated & Reportable',
+            CUR_STATUS_CURATED_NOT_REPORTABLE => 'Curated & Not Reportable',
+        );
+    $_SETT['clinvar_var_effect'] =
+        array(
+            '2' => 'Benign',
+            '3' => 'Likely benign',
+            '4' => 'Likely pathogenic',
+            '5' => 'Pathogenic',
+            '6' => 'Drug response',
+            '7' => 'histocompatibility'
+        );
+    $_SETT['filter_cross_screenings'] = array(
+        'condition_list' => array(
+            'NOT IN' => 'not found in',
+            'NOT Homozygous IN' => 'not homozygous in',
+            'IN' => 'found in',
+            'Homozygous IN' => 'homozygous in',
+            'Heterozygous IN' => 'heterozygous in',
+        ),
+        'grouping_list' => array(
+            'AND' => 'all of',
+            'OR' => 'one or more of',
+        ),
+    );
+
+    if (lovd_verifyInstance('mgha_seq') || lovd_verifyInstance('mgha_cpipe_lymphoma')) {
+        $_SETT['var_effect'] = array(
+            0 => 'Not curated',
+            9 => 'Variants of strong clinical significance',
+            7 => 'Variants of potential clinical significance',
+            5 => 'VUS',
+            3 => 'Likely benign',
+            1 => 'Benign',
+        );
+
+        $_SETT['curation_status'] = array(
+            CUR_STATUS_VARIANT_OF_INTEREST => 'Variant of Interest',
+            CUR_STATUS_NOT_FOR_CURATION => 'Not for Curation',
+            CUR_STATUS_ARTEFACT => 'Artefact',
+            CUR_STATUS_LIKELY_ARTEFACT => 'Likely Artefact',
+            CUR_STATUS_FOR_CURATION => 'For Curation',
+            CUR_STATUS_REQUIRES_CONFIRMATION => 'Requires Confirmation',
+            CUR_STATUS_CONFIRMED => 'Confirmed',
+            CUR_STATUS_PROPOSED => 'Proposed Classification',
+            CUR_STATUS_CURATED_REPORTABLE => 'Curated & Reportable',
+            CUR_STATUS_CURATED_NOT_REPORTABLE => 'Curated & Not Reportable',
+        );
+    }
+
+    // Diagnostics: Added one level, and changed the submitter level's name.
+    unset($_SETT['user_levels'][LEVEL_SUBMITTER]); // To make space, we need to rename it anyway.
+    $_SETT['user_levels'][LEVEL_ANALYZER]  = 'Analyzer';
+    $_SETT['user_levels'][LEVEL_SUBMITTER] = 'Read-only';
+}
+
 // Before we have any output, initiate the template class which takes care of headers and such.
 require ROOT_PATH . 'class/template.php';
 $_T = new LOVD_Template();
@@ -512,7 +668,7 @@ if (!class_exists('PDO')) {
 } else {
     // PDO available, check if we have the requested database driver.
     if (!in_array($_INI['database']['driver'], PDO::getAvailableDrivers())) {
-        $sDriverName = $aConfigValues['database']['driver']['values'][$_INI['database']['driver']];
+        $sDriverName = $_INI['database']['driver']; // We used to be able to get to the formatted name, but no more.
         lovd_displayError('Init', 'This PHP installation does not have ' . $sDriverName . ' support for PDO installed. Without it, LOVD will not function. Please install ' . $sDriverName . ' support for PHP PDO.');
     }
 }
@@ -558,8 +714,8 @@ if (!$_CONF) {
     define('MISSING_CONF', true);
     $_CONF =
          array(
-                'system_title' => 'LOVD 3.0 - Leiden Open Variation Database',
-                'logo_uri' => 'gfx/' . (LOVD_plus? 'LOVD_plus_logo200x50' : 'LOVD3_logo145x50') . '.jpg',
+                'system_title' => (LOVD_plus? 'Leiden Open Variation Database for diagnostics' : 'LOVD 3.0 - Leiden Open Variation Database'),
+                'logo_uri' => 'gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg',
                 'lovd_read_only' => false,
               );
 }
@@ -684,6 +840,8 @@ if (!defined('NOT_INSTALLED')) {
     }
 
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.
+    // FIXME: Running lovd_cleanDirName() on the entire URI causes it to run also on the arguments.
+    //  If there are arguments with ../ in there, this will take effect and arguments or even the path itself is eaten.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
     $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
     $_PE = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
@@ -772,7 +930,7 @@ if (!defined('NOT_INSTALLED')) {
 
     if (!in_array(lovd_getProjectFile(), array('/check_update.php'))) {
         // Load gene data.
-        if (!empty($_SESSION['currdb'])) {
+        if (!LOVD_plus && !empty($_SESSION['currdb'])) {
             $_SETT['currdb'] = @$_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
             if (!$_SETT['currdb']) {
                 $_SESSION['currdb'] = false;
