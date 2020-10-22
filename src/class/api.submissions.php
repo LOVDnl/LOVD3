@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2017-12-01
+ * Modified    : 2018-02-27
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -105,7 +105,7 @@ class LOVD_API_Submissions {
         'Individuals' => array('id', 'panel_size', 'owned_by', 'statusid', 'created_by', 'Individual/Lab_ID', 'Individual/Gender'),
         'Individuals_To_Diseases' => array('individualid', 'diseaseid'),
         'Phenotypes' => array('id', 'diseaseid', 'individualid', 'owned_by', 'statusid', 'created_by', 'Phenotype/Additional'),
-        'Screenings' => array('id', 'individualid', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
+        'Screenings' => array('id', 'individualid', 'variants_found', 'owned_by', 'created_by', 'Screening/Template', 'Screening/Technique'),
         'Screenings_To_Genes' => array(),
         'Variants_On_Genome' => array('id', 'allele', 'effectid', 'chromosome', 'position_g_start', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'VariantOnGenome/DNA', 'VariantOnGenome/DBID'),
         'Variants_On_Transcripts' => array('id', 'transcriptid', 'effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron', 'VariantOnTranscript/DNA', 'VariantOnTranscript/RNA', 'VariantOnTranscript/Protein'),
@@ -437,17 +437,48 @@ class LOVD_API_Submissions {
                 // This function will try and get the default values from LOVD itself.
                 $this->addMandatoryDefaultValues('Screenings', $aScreening);
 
-                $aData['Screenings'][] = array_merge(
+                // Before we add this screening to the list of screenings, let's see if we're not duplicating screenings.
+                // When sending in multiple variants per individual, we'd be repeating the screening information for every variant.
+                // Loop the list of screenings. If we find the same one, don't duplicate it.
+                $aScreening = array_merge(
                     $aScreening,
                     array(
                         'id' => $nScreeningID,
                         'individualid' => $nIndividualID,
+                        'variants_found' => 1,
                         'owned_by' => $this->zAuth['id'],
                         'created_by' => $this->zAuth['id'],
                         'Screening/Template' => implode(';', array_unique($aTemplates)),
                         'Screening/Technique' => implode(';', array_unique($aTechniques)),
                     )
                 );
+                $bScreeningIsNew = true;
+                foreach ($aData['Screenings'] as $aProcessedScreening) {
+                    foreach ($aProcessedScreening as $sKey => $sValue) {
+                        // We could just do $a == $b, but the 'id' key will always be different.
+                        // So, just compare key by key, ignoring the 'id' key.
+                        if ($sKey != 'id' && $sValue != $aScreening[$sKey]) {
+                            // Found a difference.
+                            // Continue to the next screening.
+                            continue 2;
+                        }
+                    }
+
+                    // When we get here, no differences were found. Just one more thing to check.
+                    if (array_keys($aProcessedScreening) == array_keys($aScreening)) {
+                        // Yup, all fields match.
+                        // The screening we see in the data is the same as this one that we previously saw.
+                        $nScreeningID = $aProcessedScreening['id'];
+                        $bScreeningIsNew = false;
+                        break;
+                    }
+                }
+
+                if ($bScreeningIsNew) {
+                    // We didn't find a screening that was the same.
+                    $aData['Screenings'][] = $aScreening;
+                }
+
                 $aData['Screenings_To_Variants'][] = array(
                     'screeningid' => $nScreeningID,
                     'variantid' => $nVariantID,
@@ -703,7 +734,7 @@ class LOVD_API_Submissions {
         }
 
         // Write the LOVD3 output file (and optionally, the JSON data).
-        return $this->writeImportFile($aData, $sInput);
+        return $this->writeImportFile($aData, $sInputClean);
     }
 
 

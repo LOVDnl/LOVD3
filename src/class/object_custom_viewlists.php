@@ -318,8 +318,8 @@ class LOVD_CustomViewList extends LOVD_Object {
                             $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'vot.id IS NOT NULL';
                             // Then also make sure we group on the VOT's ID, unless we're already grouping on something.
                             if (!$aSQL['GROUP_BY']) {
-                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used t.id).
-                                $aSQL['GROUP_BY'] = 't.geneid, vot.id';
+                                // t.geneid needs to be included because we order on this as well (otherwise, we could have used just t.id).
+                                $aSQL['GROUP_BY'] = 't.geneid, t.id, vot.id';
                             }
                         }
                         // We have no fallback, so we'll easily detect an error if we messed up somewhere.
@@ -339,20 +339,19 @@ class LOVD_CustomViewList extends LOVD_Object {
                     // To group variants together that belong together (regardless of minor textual differences, we replace parentheses, remove the "c.", and trim for question marks.
                     // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
                     $aSQL['SELECT'] .= ', TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", ""))) AS vot_clean_dna_change';
-
                     if ($_SETT['customization_settings']['variant_viewlist_show_effect']) {
                         $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect';
                     }
                     if ($_SETT['customization_settings']['variant_viewlist_show_owner']) {
                         $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_' .
-                            ', GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) SEPARATOR ";;") AS __owner';
+                            ', GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_' .
+                            ', GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, IF(IFNULL(uo.department, "") = "", "-", uo.department), IF(IFNULL(uo.countryid, "") = "", "-", uo.countryid)) SEPARATOR ";;") AS __owner';
                     }
                     if ($_SETT['customization_settings']['variant_viewlist_show_status']) {
                         // dsg.id GROUP_CONCAT is ascendingly ordered. This is done for the color marking.
                         // In prepareData() the lowest var_statusid is used to determine the coloring.
                         $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id ASC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status';
                     }
-
                     $aSQL['SELECT'] .= ', COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', MIN(vot.id) AS row_id';
@@ -747,7 +746,7 @@ class LOVD_CustomViewList extends LOVD_Object {
                                 'view' => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
                                 'db'   => array($sPrefix . '`' . $aCol['id'] . '`', 'ASC', lovd_getColumnType('', $aCol['mysql_type'])),
                                 'legend' => array($aCol['description_legend_short'], $aCol['description_legend_full']),
-                                'allowfnr' => true,
+                                'allow_find_replace' => true,
                               );
                 }
             }

@@ -262,8 +262,6 @@ if (ACTION == 'create') {
         // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
         flush();
 
-        require ROOT_PATH . 'class/soap_client.php';
-        $_Mutalyzer = new LOVD_SoapClient();
         $_BAR->setMessage('Collecting all available transcripts...');
         $_BAR->setProgress(0);
 

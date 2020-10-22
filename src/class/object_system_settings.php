@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2017-06-14
- * For LOVD    : 3.0-18
+ * Modified    : 2017-10-26
+ * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -50,7 +50,7 @@ class LOVD_SystemSetting extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
         global $_SETT;
@@ -61,7 +61,7 @@ class LOVD_SystemSetting extends LOVD_Object {
                         'email_address',
                         'refseq_build',
                       );
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
 
         // Database URL is mandatory, if the option "Include in the global LOVD listing" is selected.
         if (!empty($aData['include_in_listing']) && empty($aData['location_url'])) {

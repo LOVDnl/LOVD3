@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2016-11-23
- * For LOVD    : 3.0-18
+ * Modified    : 2017-11-09
+ * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -353,7 +353,7 @@ class LOVD_Custom extends LOVD_Object {
                                     'view'   => array($aCol['head_column'], $aCol['width'], ($bAlignRight? ' align="right"' : '')),
                                     'db'     => array('`' . $aCol['colid'] . '`', 'ASC', lovd_getColumnType('', $aCol['mysql_type'])),
                                     'legend' => array($aCol['description_legend_short'], $aCol['description_legend_full']),
-                                    'allowfnr' => true, // All custom columns allow Find & Replace.
+                                    'allow_find_replace' => true, // All custom columns allow Find & Replace.
                                  );
         }
         return $aViewList;
@@ -363,7 +363,7 @@ class LOVD_Custom extends LOVD_Object {
 
 
 
-    function checkFields ($aData, $zData = false)
+    function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_AUTH;
         // Checks fields before submission of data.
@@ -414,7 +414,7 @@ class LOVD_Custom extends LOVD_Object {
             unset($this->aCheckMandatory[$nIndex]);
         }
 
-        parent::checkFields($aData);
+        parent::checkFields($aData, $zData, $aOptions);
     }
 
 

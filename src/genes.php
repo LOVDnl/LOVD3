@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2018-01-12
+ * Modified    : 2018-01-19
  * For LOVD    : 3.0-21
  *
  * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
@@ -343,9 +343,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
 
-                require ROOT_PATH . 'class/soap_client.php';
-                $_Mutalyzer = new LOVD_SoapClient();
-
                 // Get LRG if it exists
                 $aRefseqGenomic = array();
                 $_BAR->setMessage('Checking for LRG...');
@@ -382,18 +379,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
                 } else {
                     // Get UD from mutalyzer.
-                    try {
-                        $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                        if ($sRefseqUD === '') {
-                            // Function may return an empty string. This is not a SOAP error, but still an error. For instance a type of gene we don't support.
-                            // To prevent further problems (getting transcripts, let's handle this nicely, shall we?
-                            $_BAR->setMessage('Failed to retrieve gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
-                            $_BAR->setMessageVisibility('done', true);
-                            die('</BODY>' . "\n" .
-                                '</HTML>' . "\n");
-                        }
-                    } catch (SoapFault $e) {
-                        lovd_soapError($e);
+                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
+                    if (!$sRefseqUD) {
+                        // Function may return false or an empty string. For instance a type of gene we don't support.
+                        // To prevent further problems (getting transcripts), let's handle this nicely, shall we?
+                        $_BAR->setMessage('Failed to retrieve gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
+                        $_BAR->setMessageVisibility('done', true);
+                        die('</BODY>' . "\n" .
+                            '</HTML>' . "\n");
                     }
                 }
 
@@ -734,13 +727,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
                             );
 
             if (empty($zData['refseq_UD'])) {
-                require ROOT_PATH . 'class/soap_client.php';
-                $_Mutalyzer = new LOVD_SoapClient();
-                try {
-                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
-                    $_POST['refseq_UD'] = $sRefseqUD;
-                    $aFields[] = 'refseq_UD';
-                } catch (SoapFault $e) {} // Silent error.
+                $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
+                $_POST['refseq_UD'] = $sRefseqUD;
+                $aFields[] = 'refseq_UD';
             }
 
             // Prepare values.

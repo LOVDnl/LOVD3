@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2017-11-20
+ * Modified    : 2018-01-26
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -53,8 +53,6 @@ if (PATH_COUNT < 3 && !ACTION) {
             // Category given.
             $_GET['search_category'] = $_PE[1];
             define('PAGE_TITLE', 'Browse ' . $_PE[1] . ' custom data columns');
-
-            require_once ROOT_PATH . 'inc-lib-columns.php';
             $aTableInfo = lovd_getTableInfoByCategory($_PE[1]);
         } else {
             header('Location:' . lovd_getInstallURL() . $_PE[0] . '?search_category=' . $_PE[1]);
@@ -126,7 +124,6 @@ if (PATH_COUNT > 2 && !ACTION) {
     lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
 
-    require_once ROOT_PATH . 'inc-lib-columns.php';
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
     $zData = $_DATA->viewEntry($sColumnID);
@@ -160,7 +157,6 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
 
     $sCategory = $_PE[1];
 
-    require_once ROOT_PATH . 'inc-lib-columns.php';
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if (!$aTableInfo) {
         $_T->printHeader();
@@ -433,7 +429,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
             }
 
             // MySQL and Form type.
-            // FIXME; put this in a function in inc-lib-columns when it's used more than once in the code.
+            // FIXME; put this in a function somewhere when it's used more than once in the code.
             $sFormType = $_POST['name'] . '|' . $_POST['help_text'];
             switch ($_POST['form_type']) {
                 case 'text':
@@ -853,7 +849,6 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
 
     // Require form functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require_once ROOT_PATH . 'inc-lib-columns.php';
 
     // Generate a unique workID, that is sortable.
     if (!isset($_POST['workID'])) {
@@ -1364,7 +1359,6 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require_once ROOT_PATH . 'inc-lib-columns.php';
 
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
@@ -1715,7 +1709,6 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
 
     // Require form & column functions.
     require ROOT_PATH . 'inc-lib-form.php';
-    require_once ROOT_PATH . 'inc-lib-columns.php';
 
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2017-12-11
+ * Modified    : 2018-02-27
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -116,7 +116,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
     // Read out directory and store files in the correct array.
     $nFilesSchedulable = 0; // Keeping track of how many files on disk are not scheduled yet.
     while (($sFile = readdir($h)) !== false) {
-        if (preg_match('/(^LOVD_API_submission.+|.total.data).lovd$/', $sFile, $aRegs)) {
+        if (preg_match('/(^(LOVD_API_submission)_(\d+)_([0-9:_-]+)\.(\d+)|\.total\.data)\.lovd$/', $sFile, $aRegs)) {
             // This should be an importable file.
             $bScheduled = isset($zScheduledFiles[$sFile]);
             if ($bScheduled) {
@@ -131,6 +131,11 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 $sScheduledDate = '0000-00-00 00:00:00';
             }
             $tFileModified = filemtime($_INI['paths']['data_files'] . '/' . $sFile);
+
+            // For files sent over the API, always take the date from the file, and not the timestamp of the file.
+            if ($aRegs[2] == 'LOVD_API_submission') {
+                $tFileModified = strtotime(str_replace('_', ' ', $aRegs[4]));
+            }
 
             // Store file in the files array.
             $aFiles[$bProcessed][$sFile] = array(
@@ -251,11 +256,10 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             // For LOVD API submissions, we change the annotation.
             // File names are long, we can shorten it and annotate better.
             // We deliberately overwrite $aFile['file_date'] here.
-            if (preg_match('/^LOVD_API_submission_(\d+)_([0-9:_-]+)\.(\d+)\.lovd$/', $sFile, $aRegs)) {
+            if (preg_match('/^LOVD_API_submission_(\d+)_/', $sFile, $aRegs)) {
                 $bAPI = true;
-                list(, $nUserID, $aFile['file_date']) = $aRegs;
+                list(, $nUserID) = $aRegs;
                 $nUserID = sprintf('%0' . $_SETT['objectid_length']['users'] . 'd', $nUserID);
-                $aFile['file_date'] = str_replace('_', ' ', $aFile['file_date']);
                 $sFileDisplayName = 'API submission (' . $nUserID . ': ';
                 if (!isset($aUsers[$nUserID])) {
                     $aUsers[$nUserID] = $_DB->query('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchColumn();
@@ -266,7 +270,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 $sFileDisplayName = $sFile;
             }
 
-            $nAgeInDays = floor(($tNow - strtotime($aFile['file_date']))/(60*60*24));
+            $sAge = lovd_convertSecondsToTime($tNow - strtotime($aFile['file_date']), 0, true);
             // Build the link for actions for already scheduled files.
             $sAjaxActions = 'onclick="$.get(\'ajax/import_scheduler.php/' . urlencode($sFile) . '?view\').fail(function(){alert(\'Error retrieving actions, please try again later.\');}); return false;"';
             if ($i) {
@@ -314,7 +318,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             print('
                   <TD>' . $sDownloadHTML . $sInformationHTML . $sPriorityHTML . $sProcessingHTML . $sErrorsHTML . '
                     <B>' . $sFileDisplayName . '</B><BR>
-                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $nAgeInDays . ' day' . ($nAgeInDays == 1? '' : 's') . ' ago') . '</SPAN>
+                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus? 'Converted' : 'Created')) . ' ' . $sAge . ' ago') . '</SPAN>
                   </TD></TR>');
         }
         print('</TABLE></TD>' . "\n");
@@ -1254,7 +1258,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                 // Only instantiate an object when a gene is found for a transcript.
                 if ($sGene) {
                     if (!isset($aSection['objects'][$sGene])) {
-                        $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene);
+                        $aSection['objects'][$sGene] = new LOVD_TranscriptVariant($sGene, '', false);
                     }
                     $aSection['object'] =& $aSection['objects'][$sGene];
                 }
@@ -1418,7 +1422,14 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
 
                 // Use the object's checkFields() to have the values checked.
                 $nErrors = count($_ERROR['messages']); // We'll need to mark the generated errors.
-                $aSection['object']->checkFields($aLine, $zData);
+                $aCheckFieldsOptions = array(
+                    'mandatory_password' => false,  // Password field is not mandatory.
+                    'fieldname_as_header' => true,  // Use field name in errors instead of form field header.
+                    'trim_fields' => false,         // No trimming of whitespace.
+                    'explode_strings' => true,      // Multiple selection lists are input as simple strings here.
+                    'show_select_alts' => true,     // Show alternatives in errors for select fields.
+                );
+                $aSection['object']->checkFields($aLine, $zData, $aCheckFieldsOptions);
                 for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
                     // When updating, if a error is triggered by a field that is
                     // not in the file, then this error is unrelated to the data

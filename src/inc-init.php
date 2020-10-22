@@ -145,7 +145,6 @@ $aRequired =
                           ),
                 'PHP_classes' =>
                      array(
-                            'SoapClient',
                           ),
                 'MySQL' => '4.1.2',
               );
@@ -154,7 +153,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-20c',
+                            'version' => '3.0-21',
                           ),
                 'user_levels' =>
                      array(
