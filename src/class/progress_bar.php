@@ -7,7 +7,7 @@
  * Modified    : 2017-11-10
  * For LOVD    : 3.0-21
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -38,7 +38,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class ProgressBar {
+class ProgressBar
+{
     // This class creates a progress bar that can be controlled in various ways.
     var $sID = '';
     var $nCurrentPercentage = 0;

@@ -7,9 +7,8 @@
  * Modified    : 2017-06-16
  * For LOVD    : 3.0-18
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               M. Kroon <m.kroon@lumc.nl>
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -36,7 +35,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_API {
+class LOVD_API
+{
     // This class defines the LOVD API object, handling URL parsing and general
     //  handling of headers.
 

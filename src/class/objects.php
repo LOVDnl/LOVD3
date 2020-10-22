@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -38,9 +38,10 @@ if (!defined('ROOT_PATH')) {
 }
 
 
-class LOVD_Object {
-    // This class is the base class which is inherited by other object classes.
-    // It provides basic functionality for setting up forms and showing data.
+class LOVD_Object
+{
+    // This class is the base class which is inherited by all other object classes.
+    // It provides functionality for setting up forms and for showing, checking, inserting, updating and deleting data.
     var $sObject = '';
     var $sTable = '';
     var $aFormData = array();
@@ -1514,9 +1515,14 @@ class LOVD_Object {
         // Quote special characters, disallowing HTML and other tricks.
         $zData = lovd_php_htmlspecialchars($zData);
 
-        $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'valid_from', 'valid_to');
+        $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'last_login', 'start_date', 'end_date', 'valid_from', 'valid_to');
         foreach($aDateColumns as $sDateColumn) {
+            // Replace empty date values with "N/A".
             $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A');
+            if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $zData[$sDateColumn . ($sView == 'list'? '' : '_')])) {
+                // Add timezone to full datetime values. VLs usually have removed the times.
+                $zData[$sDateColumn . ($sView == 'list'? '' : '_')] .= ' ' . date('P (T)', strtotime($zData[$sDateColumn]));
+            }
         }
 
         if ($sView == 'list') {
@@ -1529,35 +1535,6 @@ class LOVD_Object {
                     if (isset($this->aColumnsViewList[$sCol])) {
                         $zData[$sCol] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData[$sCol] . '</A>';
                     }
-                }
-            }
-            // If we find an owned_by_ field, and an owner array, we set up the popups as well.
-            if (isset($zData['owned_by_']) && !empty($zData['owner'])) {
-                if (!is_array($zData['owner'][0])) {
-                    $zData['owner'] = array($zData['owner']);
-                }
-                // We are going to overwrite the 'owned_by_' field.
-                $zData['owned_by_'] = '';
-                foreach($zData['owner'] as $aLinkData) {
-                    if (count($aLinkData) >= 6) {
-                        list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
-                        if (intval($nID) === 0) {
-                            // Skip special "LOVD" user.
-                            continue;
-                        }
-                        // Call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table, and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
-                        $zData['owned_by_'] .= (!$zData['owned_by_']? '' : ', ') .
-                            '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
-                            addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') .
-                            '\', this, [-200, 0]);">' . $sName . '</SPAN>';
-                    }
-                }
-            }
-            if (LOVD_plus) {
-                // Analyzer's details like the owner's details.
-                if (isset($zData['analysis_by']) && (int) $zData['analysis_by'] && !empty($zData['analyzer'])) {
-                    list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['analyzer'];
-                    $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
                 }
             }
             // Determine minimum status for all data in current VL row.
@@ -1613,6 +1590,37 @@ class LOVD_Object {
                     // Restructure the JSON.
                     $zData[$sKey] = $this->formatArrayToTable(json_decode(htmlspecialchars_decode($Value), true));
                 }
+            }
+        }
+
+        // If we find an owned_by_ field, and an owner array, we set up the popups as well.
+        if (isset($zData['owned_by_']) && !empty($zData['owner'])) {
+            if (!is_array($zData['owner'][0])) {
+                $zData['owner'] = array($zData['owner']);
+            }
+            // We are going to overwrite the 'owned_by_' field.
+            $zData['owned_by_'] = '';
+            foreach($zData['owner'] as $aLinkData) {
+                if (count($aLinkData) >= 6) {
+                    list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
+                    if (intval($nID) === 0) {
+                        // Skip special "LOVD" user.
+                        continue;
+                    }
+                    // For VLs, call the tooltip function with a request to move the tooltip left, because "Owner" is often the last column in the table,
+                    //  and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
+                    $zData['owned_by_'] .= (!$zData['owned_by_']? '' : ', ') .
+                        '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
+                        addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') .
+                        '\', this, [' . ($sView == 'list'? '-200' : '0') . ', 0]);">' . $sName . '</SPAN>';
+                }
+            }
+        }
+        if (LOVD_plus) {
+            // Analyzer's details like the owner's details.
+            if (isset($zData['analysis_by']) && (int) $zData['analysis_by'] && !empty($zData['analyzer'])) {
+                list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['analyzer'];
+                $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
             }
         }
 
@@ -2801,7 +2809,7 @@ FROptions
             if (ACTION == 'downloadSelected') {
                 print('## Filter: selected = ' . implode(',', $aSessionViewList['checked']) . "\r\n");
             }
-            print('# charset=UTF-8' . "\r\n");
+            print('# charset = UTF-8' . "\r\n");
             $i = 0;
             foreach ($this->aColumnsViewList as $sField => $aCol) {
                 if (in_array($sField, $aOptions['cols_to_skip'])) {

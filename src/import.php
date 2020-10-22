@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -304,7 +304,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
         $bConverted = ($i != -1);
 
         print('            <TD>
-              <TABLE border="0" cellpadding="10" cellspacing="1" width="' . (!$bConverted || $bProcessed? '350' : '450') . '" class="data" style="font-size : 13px;">
+              <TABLE border="0" cellpadding="10" cellspacing="1" width="' . (!$bConverted || $bProcessed? '400' : '450') . '" class="data" style="font-size : 13px;">
                 <TR>
                   <TH' . (!$bConverted || $bProcessed? '' : '></TH><TH') . ' class="S16">' .
             ($bProcessed == 1? 'Files already processed' : ($bConverted? 'Files to be processed' : 'Files to be converted')) . '</TH></TR>');
@@ -380,12 +380,12 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             $sDownloadHTML = ($aFile['file_lost']? '' : '
                     <A href="' . CURRENT_PATH . '?download_scheduled_file&amp;file=' . $sFile . '" target="_blank" onclick="event.stopPropagation(); if (!window.confirm(\'' . $sDownloadWarningMessage . '\')) { return false; }"><IMG src="gfx/menu_save.png" alt="Download" width="16" height="16" title="Download file" style="float : right;"></A>');
             $sInformationHTML = (!$aFile['scheduled'] || !$bConverted? '' : '
-                    <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . ($sFile == $sFileDisplayName? '' : $sFile . ' - ') . 'Scheduled ' . $zScheduledFiles[$sFile]['scheduled_date'] . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
+                    <IMG src="gfx/lovd_form_information.png" alt="Information" width="16" height="16" title="' . ($sFile == $sFileDisplayName? '' : $sFile . ' - ') . 'Scheduled ' . date('Y-m-d H:i:s P (T)', strtotime($zScheduledFiles[$sFile]['scheduled_date'])) . ' by ' . $zScheduledFiles[$sFile]['scheduled_by_name'] . '" style="float : right;">');
             $sPriorityHTML = (!$aFile['priority']? '' : '
                     <IMG src="gfx/lovd_form_warning.png" alt="Priority" width="16" height="16" title="Priority import: ' . $_SETT['import_priorities'][$aFile['priority']] . '" style="float : right;">');
             $sProcessingHTML = (!$bProcessing? '' : '
                     <IMG src="gfx/menu_clock.png" alt="Processing ..." width="16" height="16" title="' .
-                ($bConverted? 'Processing' : 'Conversion') . ' started ' . $aFile['processed_date'] . '" style="float : right;">');
+                ($bConverted? 'Processing' : 'Conversion') . ' started ' . date('Y-m-d H:i:s P (T)', strtotime($aFile['processed_date'])) . '" style="float : right;">');
             $sErrorsHTML = (!$bError? '' : '
                     <IMG src="gfx/cross.png" alt="Errors while processing" width="16" height="16" title="Errors while processing:' . "\n" .
                 ($bProcessed? htmlspecialchars($zScheduledFiles[$sFile]['process_errors']) :
@@ -393,7 +393,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
             print('
                   <TD>' . $sDownloadHTML . $sInformationHTML . $sPriorityHTML . $sProcessingHTML . $sErrorsHTML . '
                     <B>' . $sFileDisplayName . '</B><BR>
-                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : $aFile['file_date'] . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus && $bConverted? 'Converted' : 'Created')) . ' ' . $sAge . ' ago') . '</SPAN>
+                    <SPAN class="S11">' . ($aFile['file_lost']? 'File not found' : date('Y-m-d H:i:s P (T)', strtotime($aFile['file_date'])) . ' - ' . ($bAPI? 'Submitted' : (LOVD_plus && $bConverted? 'Converted' : 'Created')) . ' ' . $sAge . ' ago') . '</SPAN>
                   </TD></TR>');
         }
         print('</TABLE><BR>' .
@@ -971,7 +971,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                 );
                             break;
                         case 'Genes':
-                            // The following columns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, allow_index_wiki, show_hgmd, show_genecards,
+                            // The following columns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, show_hgmd, show_genecards,
                             // show_genetests, note_index, note_listing, refseq, refseq_url, disclaimer, disclaimer_text, header, header_align,
                             // footer, footer_align.
                             if ($sMode == 'update') {
@@ -2413,7 +2413,6 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     'country_' => 'Country',
                     'email' => 'Email address',
                     'telephone' => 'Telephone',
-                    'reference' => 'Reference',
                 );
             $zUser['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($zUser['countryid']))->fetchColumn();
 

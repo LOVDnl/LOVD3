@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-18
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -684,6 +684,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'UPDATE ' . TABLE_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\nstart-lost\r\ncoding\r\nnon-coding-exon\r\ncoding-near-splice\r\nnon-coding-exon-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nsplice\r\nnon-coding-intron-near-splice\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" AND id = "VariantOnTranscript/GVS/Function"',
                      'UPDATE ' . TABLE_SHARED_COLS . ' SET select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\nstart-lost\r\ncoding\r\nnon-coding-exon\r\ncoding-near-splice\r\nnon-coding-exon-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nsplice\r\nnon-coding-intron-near-splice\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" WHERE select_options = "intergenic\r\nnear-gene-5\r\nutr-5\r\ncoding\r\ncoding-near-splice\r\ncoding-synonymous\r\ncoding-synonymous-near-splice\r\ncodingComplex\r\ncodingComplex-near-splice\r\nframeshift\r\nframeshift-near-splice\r\nmissense\r\nmissense-near-splice\r\nsplice-5\r\nintron\r\nsplice-3\r\nstop-gained\r\nstop-gained-near-splice\r\nstop-lost\r\nstop-lost-near-splice\r\nutr-3\r\nnear-gene-3" AND colid = "VariantOnTranscript/GVS/Function"',
                  ),
+                 '3.0-23' => array(
+                     'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN allow_index_wiki',
+                     'ALTER TABLE ' . TABLE_USERS . ' DROP COLUMN reference',
+                 )
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
@@ -767,7 +771,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     require ROOT_PATH . 'class/progress_bar.php';
     // FIXME; if we're not in post right now, don't send the form in POST either! (GET variables then should be put in input fields then)
-    $sFormNextPage = '<FORM action="' . $_SERVER['REQUEST_URI'] . '" method="post" id="upgrade_form">' . "\n";
+    $sFormNextPage = '<FORM action="' . addslashes($_SERVER['REQUEST_URI']) . '" method="post" id="upgrade_form">' . "\n";
     foreach ($_POST as $key => $val) {
         // Added htmlspecialchars to prevent XSS and allow values to include quotes.
         if (is_array($val)) {
@@ -921,7 +925,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         $_SERVER['REQUEST_URI'] = preg_replace('/[?&]force_lock$/', '', $_SERVER['REQUEST_URI']);
     }
 
-    print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].action=\'' . str_replace('\'', '\\\'', $_SERVER['REQUEST_URI']) . '\';</SCRIPT>' . "\n");
+    print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].action=\'' . addslashes($_SERVER['REQUEST_URI']) . '\';</SCRIPT>' . "\n");
     if ($bLocked) {
         print('<SCRIPT type="text/javascript">document.forms[\'upgrade_form\'].submit.value = document.forms[\'upgrade_form\'].submit.value.replace(\'Proceed\', \'Force upgrade\');</SCRIPT>' . "\n");
     }

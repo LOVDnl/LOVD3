@@ -11,7 +11,7 @@ class PostFinishAddVariantLocatedWithinGeneToCMTIndividualTest extends LOVDSelen
         // Wait for redirect
         $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000005$/', $this->driver->getCurrentURL()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000005($|#)/', $this->driver->getCurrentURL()));
 
         // Move mouse to Screenings tab and click 'view all screenings' option.
         $tabElement = $this->driver->findElement(WebDriverBy::id("tab_screenings"));

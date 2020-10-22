@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2019-08-08
- * For LOVD    : 3.0-22
+ * Modified    : 2019-10-23
+ * For LOVD    : 3.0-23
  *
  * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -35,7 +35,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class LOVD_API_Submissions {
+class LOVD_API_Submissions
+{
     // This class defines the LOVD API object handling submissions.
 
     private $API;                     // The API object.
@@ -1075,7 +1076,7 @@ class LOVD_API_Submissions {
                     }
                 }
             } else {
-                $aInput['lsdb']['individual'][$iIndividual]['phenotype'] = array();
+                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Missing required phenotype element.';
             }
 
 

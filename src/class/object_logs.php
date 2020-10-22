@@ -41,8 +41,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Log extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Log object.
+class LOVD_Log extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Logs.
     var $sObject = 'Log';
 
 

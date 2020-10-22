@@ -49,6 +49,6 @@ class PostFinishAddVariantOnlyDescribedOnGenomicLevelToIVAIndividualTest extends
         // wait for page redirect
         $this->waitUntil(WebDriverExpectedCondition::titleContains("Genomic variant"));
 
-        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000333$/', $this->driver->getCurrentURL()));
+        $this->assertTrue((bool)preg_match('/^[\s\S]*\/src\/variants\/0000000333($|#)/', $this->driver->getCurrentURL()));
     }
 }
