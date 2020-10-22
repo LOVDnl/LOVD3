@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-22
- * Modified    : 2016-09-22
- * For LOVD    : 3.0-17
+ * Modified    : 2020-07-09
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -28,51 +28,60 @@
  *
  *************/
 
-
 require_once 'LOVDSeleniumBaseTestCase.php';
 
 use \Facebook\WebDriver\WebDriverBy;
+use \Facebook\WebDriver\WebDriverKeys;
 
 class CheckCustomLinks extends LOVDSeleniumWebdriverBaseTestCase
 {
+    public function setUp ()
+    {
+        parent::setUp();
+        $this->driver->get(ROOT_URL . '/src/variants');
+        $sBody = $this->driver->findElement(WebDriverBy::tagName('body'))->getText();
+        if (preg_match('/LOVD was not installed yet/', $sBody)) {
+            $this->markTestSkipped('LOVD was not installed yet.');
+        }
+    }
 
-    public function testCheckCustomLinks ()
+
+
+
+
+    public function test ()
     {
         // This test checks some basic functionality of the custom links. It
         // doesn't require authorization, just checks some VLs if the links are
         // rendered correctly.
 
-        // Load the common variant overview.
         $this->driver->get(ROOT_URL . '/src/variants');
 
         // Find a custom link, and move the mouse over it.
-        $oCustomLink = $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr/td/span[text()="dbSNP"]'));
+        // We take the last custom link, because sometimes the first one(s)
+        //  are covered by a tab's dropdown menu that's somehow open.
+        $oCustomLink = $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="data"]/tbody/tr[td/span[text()="dbSNP"]][last()]/td/span[text()="dbSNP"]'));
+        $this->driver->scrollToElement($oCustomLink);
         $this->driver->getMouse()->mouseMove($oCustomLink->getCoordinates());
 
         // Now find the tooltip that should have shown.
         $sToolTipLinkText = $this->driver->findElement(WebDriverBy::xpath('//div[@id="tooltip"]/a'))->getText();
-        $this->assertTrue((strpos($sToolTipLinkText, 'http') === 0 && strpos($sToolTipLinkText, 'SNP')));
+        $this->assertStringStartsWith('https://www.ncbi.nlm.nih.gov/SNP/', $sToolTipLinkText);
 
         // This test data does not have many links, try and find a PubMed link.
-        // Load the in_gene view.
         $this->driver->get(ROOT_URL . '/src/variants/in_gene');
-
-        // Filter on Reference, so we can find this link on the first page.
-        $sSelector = WebDriverBy::name('search_VariantOnGenome/Reference');
-        $this->enterValue($sSelector, 'Fokkema');
-        $oElement = $this->driver->findElement($sSelector);
-        // Use json_decode to send enter key to browser.
-        $oElement->sendKeys(json_decode('"\uE007"'));
-
-        // FIXME: It would be good if we can test for the VL to renew. Now just waiting a second.
-        sleep(1);
+        $this->enterValue('search_VariantOnGenome/Reference', 'Fokkema' . WebDriverKeys::ENTER);
+        $this->waitForElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr/td/span[text()="Fokkema et al (2011)"]'));
 
         // Find a custom link, and move the mouse over it.
-        $oCustomLink = $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]/tbody/tr/td/span[text()="Fokkema et al (2011)"]'));
+        $oCustomLink = $this->driver->findElement(WebDriverBy::xpath(
+            '//table[@class="data"]/tbody/tr/td/span[text()="Fokkema et al (2011)"]'));
         $this->driver->getMouse()->mouseMove($oCustomLink->getCoordinates());
 
         // Now find the tooltip that should have shown.
         $sToolTipLinkText = $this->driver->findElement(WebDriverBy::xpath('//div[@id="tooltip"]/a'))->getText();
-        $this->assertTrue((strpos($sToolTipLinkText, 'http') === 0 && strpos($sToolTipLinkText, 'pubmed')));
+        $this->assertStringStartsWith('https://pubmed.ncbi.nlm.nih.gov/', $sToolTipLinkText);
     }
 }
+?>

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2019-12-19
- * For LOVD    : 3.0-22
+ * Modified    : 2020-06-08
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -62,11 +62,12 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         global $_DB, $_SETT;
 
         // SQL code for loading an entry for an edit form.
-        $this->sSQLLoadEntry = 'SELECT vot.* ' .
-                               'FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ' .
-                               'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) ' .
-                               'WHERE vot.id = ? ' .
-                               'AND t.geneid = ?';
+        $this->sSQLLoadEntry = '
+            SELECT vot.*
+            FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+            WHERE vot.id = ?' .
+            (!$sObjectID? '' : ' AND t.geneid = ?');
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'vot.*, ' .
@@ -141,8 +142,8 @@ class LOVD_TranscriptVariant extends LOVD_Custom
                         'effect' => array(
                                     'view' => array('Affects function', 70),
                                     'db'   => array('e.name', 'ASC', true),
-                                    'legend' => array('The variant\'s effect on the protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                        'The variant\'s effect on the protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                    'legend' => array('The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
                       ),
                  $this->buildViewList(),
                  array(
@@ -343,7 +344,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
         }
 
-        $q = $_DB->query($this->sSQLLoadEntry, array($nID, $this->sObjectID), false);
+        $q = $_DB->query($this->sSQLLoadEntry, array_merge(
+            array($nID),
+            (!$this->sObjectID? array() : array($this->sObjectID))), false);
         if ($q) {
             $z = $q->fetchAllAssoc();
         }
@@ -487,33 +490,51 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         // FIXME; We need a cleaner solution than globalizing zData.
         global $zData, $_AUTH, $_DB;
 
+        // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
+        if (!trim($nID)) {
+            lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive ID');
+        } elseif (!is_array($aData) || !count($aData)) {
+            lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive data array');
+        }
+
         $nAffected = 0;
         foreach ($this->aTranscripts as $nTranscriptID => $aTranscript) {
+            // Loop through transcripts, running the update one by one.
+            $sGene = $aTranscript[1];
+
+            if (empty($aGeneFields[$sGene]) || !is_array($aGeneFields[$sGene])) {
+                // Just update everything.
+                $aGeneFields[$sGene] = array_unique(array_map(function ($sField) {
+                    // Clean transcript ID off of the field.
+                    if (preg_match('/^(?:[0-9]+)_(.+)$/', $sField, $aRegs)) {
+                        $sField = $aRegs[1];
+                    }
+                    return $sField;
+                }, array_keys($aData)));
+            }
+
             // Each gene has different fields of course.
-            foreach ($aGeneFields[$aTranscript[1]] as $sField) {
+            foreach ($aGeneFields[$sGene] as $sField) {
                 if (strpos($sField, '/')) {
                     $aData[$sField] = $aData[$nTranscriptID . '_' . $sField];
                 }
             }
-            $aData['effectid'] = $aData[$nTranscriptID . '_effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $aData[$nTranscriptID . '_effect_concluded'] : $zData[$nTranscriptID . '_effectid']{1});
-            $aData['position_c_start'] = $aData[$nTranscriptID . '_position_c_start'];
-            $aData['position_c_start_intron'] = $aData[$nTranscriptID . '_position_c_start_intron'];
-            $aData['position_c_end'] = $aData[$nTranscriptID . '_position_c_end'];
-            $aData['position_c_end_intron'] = $aData[$nTranscriptID . '_position_c_end_intron'];
 
-            // Updates entry $nID with data from $aData in the database, changing only fields defined in $aFields.
-            if (!trim($nID)) {
-                lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive ID');
-            } elseif (!is_array($aData) || !count($aData)) {
-                lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::updateEntry() - Method didn\'t receive data array');
-            } elseif (!is_array($aGeneFields[$aTranscript[1]]) || !count($aGeneFields[$aTranscript[1]])) {
-                $aGeneFields[$aTranscript[1]] = array_keys($aData);
+            // Although these fields should of course exist, this method should not assume they do.
+            if (in_array('effectid', $aGeneFields[$sGene])) {
+                $aData['effectid'] = $aData[$nTranscriptID . '_effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $aData[$nTranscriptID . '_effect_concluded'] : $zData[$nTranscriptID . '_effectid']{1});
+            }
+            if (in_array('position_c_start', $aGeneFields[$sGene])) {
+                $aData['position_c_start'] = $aData[$nTranscriptID . '_position_c_start'];
+                $aData['position_c_start_intron'] = $aData[$nTranscriptID . '_position_c_start_intron'];
+                $aData['position_c_end'] = $aData[$nTranscriptID . '_position_c_end'];
+                $aData['position_c_end_intron'] = $aData[$nTranscriptID . '_position_c_end_intron'];
             }
 
             // Query text.
             $sSQL = 'UPDATE ' . constant($this->sTable) . ' SET ';
             $aSQL = array();
-            foreach ($aGeneFields[$aTranscript[1]] as $key => $sField) {
+            foreach ($aGeneFields[$sGene] as $key => $sField) {
                 $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
                 if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
                     $aData[$sField] = NULL;

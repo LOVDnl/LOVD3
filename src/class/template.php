@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-01-22
- * For LOVD    : 3.0-23
+ * Modified    : 2020-02-25
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -88,7 +88,7 @@ class LOVD_Template
                         'genes_' =>
                          array(
                              '/gene_panels' => array('menu_magnifying_glass.png', 'View all gene panels', 0),
-                             '/gene_panels?create' => array('plus.png', 'Create a new gene panel', LEVEL_SUBMITTER),
+                             '/gene_panels?create' => array('plus.png', 'Create a new gene panel', $_SETT['user_level_settings']['genepanels_create']),
                              'hr',
                              '/genes' => array('menu_magnifying_glass.png', 'View all genes', 0),
                              '/gene_statistics' => array('menu_magnifying_glass.png', 'View all gene statistics', 0),

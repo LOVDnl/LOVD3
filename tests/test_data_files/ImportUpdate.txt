@@ -1,0 +1,58 @@
+### LOVD-version 3000-130 ### Full data download ### To import, do not remove or alter this header ###
+# charset = UTF-8
+
+## Columns ## Do not remove or alter this header ##
+"{{id}}"	"{{col_order}}"	"{{width}}"	"{{hgvs}}"	"{{standard}}"	"{{mandatory}}"	"{{head_column}}"	"{{description_form}}"	"{{description_legend_short}}"	"{{description_legend_full}}"	"{{mysql_type}}"	"{{form_type}}"	"{{select_options}}"	"{{preg_pattern}}"	"{{public_view}}"	"{{public_add}}"	"{{allow_count_all}}"
+"Individual/Remarks_Non_Public"	"251"	"200"	"0"	"1"	"0"	"Remarks (hidden)"	""	"Non-public remarks about the individual."	"Non-public remarks about the individual."	"TEXT"	"Remarks (non public)||textarea|50|3"	""	""	"0"	"0"	"0"
+
+
+## Genes ## Do not remove or alter this header ##
+
+
+## Transcripts ## Do not remove or alter this header ##
+
+
+## Diseases ## Do not remove or alter this header ##
+"{{id}}"	"{{symbol}}"	"{{name}}"
+"00002"	"ID"	"Majeed syndrome"
+
+
+## Genes_To_Diseases ## Do not remove or alter this header ##
+
+
+## Individuals ## Do not remove or alter this header ##
+"{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{owned_by}}"	"{{statusid}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"	"{{Individual/Gender}}"
+"00000003"	""	""	"00000002"	"1"	"00001"	"9"	"12345IVAF"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"F"
+"00000004"	""	""	"00000002"	"1"	"00001"	"9"	"12345IVAM"	"{PMID:Fokkema et al (2011):21520333}"	"No Remarks"	"Still no remarks"	"M"
+
+
+## Individuals_To_Diseases ## Do not remove or alter this header ##
+
+
+## Phenotypes ## Do not remove or alter this header ##
+"{{id}}"	"{{diseaseid}}"	"{{individualid}}"	"{{owned_by}}"	"{{statusid}}"	"{{Phenotype/Additional}}"	"{{Phenotype/Inheritance}}"	"{{Phenotype/Age}}"
+"0000000001"	"00001"	"00000001"	"00001"	"9"	"Additional phenotype information"	"Familial"	"9y"
+
+
+## Screenings ## Do not remove or alter this header ##
+"{{id}}"	"{{individualid}}"	"{{variants_found}}"	"{{owned_by}}"	"{{Screening/Technique}}"	"{{Screening/Template}}"
+"0000000001"	"00000001"	"1"	"00001"	"arrayCGH;arraySEQ;arraySNP"	"DNA"
+"0000000002"	"00000001"	"1"	"00001"	"SBE;SSCA;SSCAf"	"DNA"
+
+
+## Screenings_To_Genes ## Do not remove or alter this header ##
+
+
+## Variants_On_Genome ## Do not remove or alter this header ##
+"{{id}}"	"{{allele}}"	"{{effectid}}"	"{{chromosome}}"	"{{position_g_start}}"	"{{position_g_end}}"	"{{type}}"	"{{mapping_flags}}"	"{{average_frequency}}"	"{{owned_by}}"	"{{statusid}}"	"{{VariantOnGenome/DBID}}"	"{{VariantOnGenome/DNA}}"	"{{VariantOnGenome/Reference}}"
+"0000000001"	"11"	"55"	"15"	"40702876"	"40702876"	"subst"	"0"	""	"00001"	"9"	"IVD_000001"	"g.40702876G>T"	"(Fokkema et al, submitted)"
+
+
+## Variants_On_Transcripts ## Do not remove or alter this header ##
+"{{id}}"	"{{transcriptid}}"	"{{effectid}}"	"{{position_c_start}}"	"{{position_c_start_intron}}"	"{{position_c_end}}"	"{{position_c_end_intron}}"	"{{VariantOnTranscript/DNA}}"	"{{VariantOnTranscript/Exon}}"	"{{VariantOnTranscript/Protein}}"	"{{VariantOnTranscript/RNA}}"
+"0000000001"	"00000001"	"55"	"345"	"0"	"345"	"0"	"c.345G>T"	"4"	"p.(Met115Ile)"	"r.(?)"
+
+
+## Screenings_To_Variants ## Do not remove or alter this header ##
+
+

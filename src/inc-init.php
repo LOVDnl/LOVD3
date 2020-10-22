@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-02-18
- * For LOVD    : 3.0-23
+ * Modified    : 2020-07-13
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -34,6 +34,18 @@
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
+}
+
+// Sometimes inc-init.php gets run over CLI (LOVD+, external scripts, etc.).
+// Handle that here, instead of building lots of code in many different places.
+if (!isset($_SERVER['HTTP_HOST'])) {
+    // To prevent notices...
+    $_SERVER = array_merge($_SERVER, array(
+        'HTTP_HOST' => 'localhost',
+        'REQUEST_URI' => '/' . basename(__FILE__),
+        'QUERY_STRING' => '',
+        'REQUEST_METHOD' => 'GET',
+    ));
 }
 
 // Require library standard functions.
@@ -153,7 +165,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-23',
+                            'version' => '3.0-24',
                           ),
                 'user_levels' =>
                      array(
@@ -168,8 +180,15 @@ $_SETT = array(
                 array(
                     // Checking for LEVEL_COLLABORATOR assumes lovd_isAuthorized()
                     // has already been called for gene-specific overviews.
+                    // FIXME: Many more will follow. Better use 'object_action' naming convention.
                     'delete_individual' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
                     'delete_variant' => (LOVD_plus? LEVEL_ADMIN : LEVEL_CURATOR),
+                    'genepanels_create' => LEVEL_MANAGER,
+                    'genepanels_delete' => LEVEL_ADMIN,
+                    'genepanels_edit' => LEVEL_MANAGER,
+                    'genepanels_genes_delete' => LEVEL_MANAGER,
+                    'genepanels_genes_edit' => LEVEL_ANALYZER,
+                    'genepanels_manage_genes' => LEVEL_MANAGER,
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
                     'see_nonpublic_data' => ((LOVD_plus || LOVD_LIGHT)? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
@@ -221,8 +240,6 @@ $_SETT = array(
                     array(
                             0 => 'Not classified', // Submitter cannot select this.
                             9 => 'Affects function',
-                            8 => 'Affects function, not associated with individual\'s disease phenotype',
-                            6 => 'Affects function, not associated with any known disease phenotype',
                             7 => 'Probably affects function',
                             3 => 'Probably does not affect function',
                             1 => 'Does not affect function',
@@ -233,8 +250,6 @@ $_SETT = array(
                             // The API requires different, concise but clear, values.
                             0 => 'notClassified',
                             9 => 'functionAffected',
-                            8 => 'notThisDisease',
-                            6 => 'notAnyDisease',
                             7 => 'functionProbablyAffected',
                             3 => 'functionProbablyNotAffected',
                             1 => 'functionNotAffected',
@@ -246,9 +261,7 @@ $_SETT = array(
                         1 => '-',   // Does not affect function
                         3 => '-?',  // Probably does not affect function
                         5 => '?',   // Effect unknown
-                        6 => '#',   // Variant affects function but was not associated with any known disease phenotype
                         7 => '+?',  // Probably affects function
-                        8 => '+*',  // Variant affects function but was not associated with this individual's disease phenotype
                         9 => '+',   // Affects function
                     ),
                 'var_effect_default' => '00',
@@ -403,7 +416,7 @@ $_SETT = array(
                                                             '22' => 'NC_000022.10',
                                                             'X'  => 'NC_000023.10',
                                                             'Y'  => 'NC_000024.9',
-                                                            'M'  => 'NC_012920.1', // Note that hg19 uses NC_012920!
+                                                            'M'  => 'NC_012920.1', // GRCh37; Note that hg19 actually uses NC_001807.4!
                                                           ),
                                           ),
                             // http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/data/

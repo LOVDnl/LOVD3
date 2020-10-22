@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-03-09
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -167,6 +167,9 @@ class LOVD_Log extends LOVD_Object
                 break;
             case 'TranscriptEdit':
                 $zData['entry'] = preg_replace('/(entry) (#)?([0-9]+) /', '$1 $2<A href="transcripts/$3">$3</A> ', $zData['entry']);
+                break;
+            case 'QuickCurate':
+                $zData['entry'] = preg_replace('/(Curated (.+) information entry) (#)?([0-9]+)( .+)?$/', '$1 $3<A href="${2}s/$4">$4</A>$5', $zData['entry']);
                 break;
             case 'ShareAccess':
                 $zData['entry'] = preg_replace('/(user) (#)?([0-9]+)/', '$1 $2<A href="users/$3">$3</A>', $zData['entry']);

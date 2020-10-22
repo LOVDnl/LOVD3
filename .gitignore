@@ -9,7 +9,13 @@ src/_sett
 src/refseq
 src/config.ini.php
 tests/test_results/error_screenshots
-tests/test_results/reports
-vendor
-composer.lock
 __*
+
+# Composer-related files.
+composer.lock
+chromedriver
+chromedriver_linux64.zip
+geckodriver
+geckodriver-v*-linux64.tar.gz
+selenium-server-standalone-*.jar
+vendor

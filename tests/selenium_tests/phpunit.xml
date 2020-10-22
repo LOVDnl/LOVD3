@@ -1,214 +1,157 @@
-<phpunit stopOnFailure="false" bootstrap="../phpunit_bootstrap.php">
+<phpunit stopOnFailure="true" bootstrap="../phpunit_bootstrap.php">
     <testsuites>
         <testsuite name="admin_tests">
+            <!-- Administrator tests; nearly all basic functionality.
+                 Takes ~5 minutes. -->
+            <file>shared_tests/check_PHP_version.php</file>
             <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/login_as_admin.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
-            <file>admin_tests/create_user_manager.php</file>
-            <file>shared_tests/create_user_curator.php</file>
-            <file>admin_tests/make_user_curator_IVD.php</file>
-            <file>shared_tests/create_user_submitter.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
-            <file>shared_tests/convert_LOVD2_export_IVD.php</file>
-            <file>admin_tests/create_individual_diagnosed_with_Healthy_Control.php</file>
-            <file>admin_tests/add_phenotype_info_to_healthy_individual.php</file>
-            <file>admin_tests/add_screening_to_healthy_individual.php</file>
-            <file>admin_tests/add_variant_located_within_gene_to_healthy_individual.php</file>
-            <file>admin_tests/add_seatlleseq_file_to_healthy_individual.php</file>
-            <file>admin_tests/add_variant_only_described_on_genomic_level_to_healthy_individual.php</file>
-            <file>admin_tests/finish_individual_diagnosed_healthy.php</file>
-            <file>admin_tests/create_individual_diagnosed_with_IVA.php</file>
-            <file>admin_tests/add_phenotype_info_to_IVA_individual.php</file>
-            <file>admin_tests/add_screening_to_IVA_individual.php</file>
-            <file>admin_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
-            <file>admin_tests/add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
-            <file>admin_tests/confirm_variant_to_IVA_individual.php</file>
-            <file>admin_tests/add_vcf_file_to_IVA_individual.php</file>
-            <file>admin_tests/finish_individual_diagnosed_with_IVA.php</file>
-            <file>admin_tests/add_summary_variant_located_within_gene.php</file>
-            <file>admin_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>admin_tests/add_summary_variant_seatlleseq_file.php</file>
-            <file>admin_tests/add_summary_variant_vcf_file.php</file>
-            <file>admin_tests/post_finish_add_variant_only_described_on_genomic_level_to_IVA_individual.php</file>
-            <file>admin_tests/post_finish_add_variant_located_within_gene_to_IVA_individual.php</file>
-            <file>admin_tests/post_finish_add_screening_to_IVA_individual.php</file>
-            <file>admin_tests/post_finish_add_phenotype_info_to_IVA_individual.php</file>
-            <file>shared_tests/test_create_token.php</file>
-            <file>shared_tests/test_submission_api_fail.php</file>
-            <file>shared_tests/test_submission_api_success.php</file>
-            <file>admin_tests/delete_gene_IVD.php</file>
+            <file>shared_tests/create_user_manager.php</file>
+            <file>shared_tests/create_user_curator.php</file>
+            <file>shared_tests/assign_curator_to_IVD.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/assign_collaborator_to_IVD.php</file>
+            <file>shared_tests/create_user_owner.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
+            <file>shared_tests/assign_colleague_to_owner.php</file>
+            <file>shared_tests/create_custom_column_phenotype.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA.php</file>
+            <file>shared_tests/create_submission_individual_with_IVA.php</file>
+            <file>shared_tests/manage_transcripts_for_variant.php</file>
+            <file>shared_tests/add_more_data_to_existing_submission.php</file>
+            <file>shared_tests/create_summary_data_upload_seattleseq.php</file>
+            <file>shared_tests/create_summary_variant_located_within_gene_with_multiple_transcripts.php</file>
+            <file>shared_tests/create_summary_data_upload_vcf.php</file>
+            <file>shared_tests/submission_API.php</file>
+            <file>admin_tests/verify_full_download.php</file>
             <file>admin_tests/multi_value_search.php</file>
-            <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="authorization_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_user_manager.php</file>
-            <file>shared_tests/create_user_curator.php</file>
-            <file>authorization_tests/create_user_collaborator.php</file>
-            <file>shared_tests/create_user_submitter.php</file>
-            <file>authorization_tests/create_user_owner.php</file>
-            <file>shared_tests/create_gene_IVD.php</file>
-            <file>shared_tests/create_disease_IVA.php</file>
-            <file>authorization_tests/create_individual_diagnosed_with_IVA.php</file>
-            <file>authorization_tests/add_screening_to_IVA_individual.php</file>
-            <file>authorization_tests/add_variant_located_within_gene_to_IVA_individual.php</file>
-            <file>authorization_tests/add_phenotype_info_to_IVA_individual.php</file>
-            <file>authorization_tests/make_user_curator_IVD.php</file>
-            <file>authorization_tests/make_user_collaborator_IVD.php</file>
-            <file>authorization_tests/authorization.php</file>
-            <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="collaborator_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_gene_GJB.php</file>
-            <file>collaborator_tests/create_user_collaborator.php</file>
-            <file>shared_tests/make_user_collaborator_GJB.php</file>
-            <file>collaborator_tests/login_as_collaborator.php</file>
-            <file>collaborator_tests/create_user_submitter.php</file>
-            <file>collaborator_tests/create_disease_CMT.php</file>
-            <file>collaborator_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>collaborator_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_screening_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>collaborator_tests/confirm_variant_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
-            <file>collaborator_tests/add_vcf_file_to_CMT_individual.php</file>
-            <file>collaborator_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>collaborator_tests/add_summary_variant_located_within_gene.php</file>
-            <file>collaborator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>collaborator_tests/add_summary_variant_seatlleseq_file.php</file>
-            <file>collaborator_tests/add_summary_variant_vcf_file.php</file>
-            <file>shared_tests/login_as_admin.php</file>
-            <file>collaborator_tests/curate_submitted_data.php</file>
-            <file>collaborator_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>collaborator_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>collaborator_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>collaborator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
-            <file>collaborator_tests/delete_gene_GJB.php</file>
-            <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="curator_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_gene_GJB.php</file>
-            <file>shared_tests/create_user_manager.php</file>
-            <file>shared_tests/create_user_curator.php</file>
-            <file>curator_tests/make_user_curator_GJB.php</file>
-            <file>curator_tests/login_as_curator.php</file>
-            <file>curator_tests/create_user_curator2.php</file>
-            <file>curator_tests/create_user_submitter.php</file>
-            <file>curator_tests/create_disease_CMT.php</file>
-            <file>curator_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>curator_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>curator_tests/add_screening_to_CMT_individual.php</file>
-            <file>curator_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>curator_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>curator_tests/confirm_variant_to_CMT_individual.php</file>
-            <file>curator_tests/add_seatlleseq_file_to_CMT_individual.php</file>
-            <file>curator_tests/add_vcf_file_to_CMT_individual.php</file>
-            <file>curator_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>curator_tests/add_summary_variant_located_within_gene.php</file>
-            <file>curator_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>curator_tests/add_summary_variant_seatlleseq_file.php</file>
-            <file>curator_tests/add_summary_variant_vcf_file.php</file>
-            <file>curator_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>curator_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>curator_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>curator_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
-            <file>curator_tests/delete_gene_GJB.php</file>
+            <file>admin_tests/find_and_replace.php</file>
+            <file>shared_tests/check_all_authorization_levels.php</file>
+            <file>shared_tests/check_custom_links.php</file>
+            <file>shared_tests/delete_gene_IVD.php</file>
+            <file>shared_tests/delete_disease_IVA.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="manager_tests">
+            <!-- Manager tests; import, system settings, announcements.
+                 Takes ~1.5 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_user_manager.php</file>
-            <file>manager_tests/login_as_manager.php</file>
-            <file>manager_tests/create_user_manager2.php</file>
-            <file>manager_tests/create_gene_GJB.php</file>
-            <file>manager_tests/create_user_submitter.php</file>
+            <file>shared_tests/login_as_manager.php</file>
+            <file>manager_tests/create_user_manager_not_authorized.php</file>
+            <file>shared_tests/create_gene_IVD.php</file>
+            <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/create_user_curator.php</file>
-            <file>manager_tests/make_user_curator_GJB.php</file>
-            <file>manager_tests/create_disease_CMT.php</file>
-            <file>manager_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>manager_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>manager_tests/add_screening_to_CMT_individual.php</file>
-            <file>manager_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>manager_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>manager_tests/confirm_variant_to_CMT_individual.php</file>
-            <file>manager_tests/add_seatlleseq_file_to_CMT_individual.php</file>
-            <file>manager_tests/add_vcf_file_to_CMT_individual.php</file>
-            <file>manager_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>manager_tests/add_summary_variant_located_within_gene.php</file>
-            <file>manager_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>manager_tests/add_summary_variant_seatlleseq_file.php</file>
-            <file>manager_tests/add_summary_variant_vcf_file.php</file>
-            <file>manager_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>manager_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>manager_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>manager_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
-            <file>manager_tests/delete_gene_GJB.php</file>
-            <file>manager_tests/test_block_submitter_registration.php</file>
-            <file>manager_tests/create_announcement_readonly.php</file>
-            <file>manager_tests/test_read_only_state.php</file>
-            <file>shared_tests/check_custom_links.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
+            <file>shared_tests/enable_custom_column_for_individuals.php</file>
+            <file>manager_tests/import_data_file.php</file>
+            <file>manager_tests/import_data_file_failed.php</file>
+            <file>manager_tests/import_data_for_update_failed.php</file>
+            <file>manager_tests/import_data_for_update.php</file>
+            <file>manager_tests/block_submitter_registration.php</file>
+            <file>manager_tests/create_announcement_making_LOVD_readonly.php</file>
+            <file>manager_tests/delete_announcement.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
-        <testsuite name="import_tests">
+        <testsuite name="curator_tests">
+            <!-- Curator tests; authorization, disease settings, submission.
+                 Takes ~2.5 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/login_as_admin.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
-            <file>import_tests/enable_gender_column.php</file>
+            <file>shared_tests/create_user_manager.php</file>
+            <file>shared_tests/create_user_curator.php</file>
+            <file>shared_tests/assign_curator_to_IVD.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/create_user_owner.php</file>
+            <file>shared_tests/create_custom_column_phenotype.php</file>
+            <file>shared_tests/login_as_curator.php</file>
+            <file>shared_tests/create_gene_not_authorized.php</file>
+            <file>shared_tests/create_user_not_authorized.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
-            <file>import_tests/create_disease_IVA2.php</file>
-            <file>import_tests/insert_import.php</file>
-            <file>import_tests/false_insert_import.php</file>
-            <file>import_tests/false_update_import.php</file>
-            <file>import_tests/second_insert_import.php</file>
-            <file>import_tests/update_import.php</file>
+            <file>shared_tests/create_custom_column_not_authorized.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA.php</file>
+            <file>shared_tests/create_submission_individual_with_IVA.php</file>
+            <file>shared_tests/manage_transcripts_for_variant.php</file>
+            <file>shared_tests/add_more_data_to_existing_submission.php</file>
+            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
+            <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
+            <file>shared_tests/delete_gene_IVD_not_authorized.php</file>
+            <file>shared_tests/delete_disease_IVA.php</file>
+            <file>shared_tests/uninstall_LOVD.php</file>
+        </testsuite>
+        <testsuite name="collaborator_tests">
+            <!-- Collaborator tests; authorization, submission.
+                 Takes ~2.5 minutes.-->
+            <file>shared_tests/install_LOVD.php</file>
+            <file>shared_tests/create_gene_IVD.php</file>
+            <file>shared_tests/create_disease_IVA.php</file>
+            <file>shared_tests/create_user_manager.php</file>
+            <file>shared_tests/create_user_curator.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/assign_collaborator_to_IVD.php</file>
+            <file>shared_tests/create_user_owner.php</file>
+            <file>shared_tests/create_custom_column_phenotype.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA.php</file>
+            <file>shared_tests/login_as_collaborator.php</file>
+            <file>shared_tests/create_gene_not_authorized.php</file>
+            <file>shared_tests/create_disease_not_authorized.php</file>
+            <file>shared_tests/create_user_not_authorized.php</file>
+            <file>shared_tests/assign_curator_to_IVD_not_authorized.php</file>
+            <file>shared_tests/create_custom_column_not_authorized.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA_not_authorized.php</file>
+            <file>shared_tests/create_submission_individual_with_IVA.php</file>
+            <file>shared_tests/manage_transcripts_for_variant.php</file>
+            <file>shared_tests/add_more_data_to_existing_submission.php</file>
+            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
+            <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
+            <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
+            <file>shared_tests/create_summary_variant_on_genomic_level_not_authorized.php</file>
+            <file>shared_tests/delete_gene_IVD_not_authorized.php</file>
+            <file>shared_tests/delete_disease_IVA_not_authorized.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
         <testsuite name="submitter_tests">
+            <!-- Submitter tests; authorization, submission, access sharing,
+                 LOVD2 data file conversion, simple curation by a Curator.
+                 Takes ~3.5 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_gene_GJB.php</file>
-            <file>submitter_tests/create_user_submitter.php</file>
-            <file>submitter_tests/login_as_submitter.php</file>
-            <file>submitter_tests/create_user_submitter2.php</file>
-            <file>submitter_tests/create_disease_CMT.php</file>
-            <file>submitter_tests/create_individual_diagnosed_with_CMT.php</file>
-            <file>submitter_tests/add_phenotype_info_to_CMT_individual.php</file>
-            <file>submitter_tests/add_screening_to_CMT_individual.php</file>
-            <file>submitter_tests/add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>submitter_tests/add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>submitter_tests/confirm_variant_to_CMT_individual.php</file>
-            <file>submitter_tests/add_seatlleseq_file_to_CMT_individual.php</file>
-            <file>submitter_tests/add_vcf_file_to_CMT_individual.php</file>
-            <file>submitter_tests/finish_individual_diagnosed_with_CMT.php</file>
-            <file>submitter_tests/add_summary_variant_located_within_gene.php</file>
-            <file>submitter_tests/add_summary_variant_only_described_on_genomic_level.php</file>
-            <file>submitter_tests/add_summary_variant_seatlleseq_file.php</file>
-            <file>submitter_tests/add_summary_variant_vcf_file.php</file>
-            <file>shared_tests/login_as_admin.php</file>
-            <file>submitter_tests/curate_submitted_data.php</file>
-            <file>submitter_tests/post_finish_add_variant_only_described_on_genomic_level_to_CMT_individual.php</file>
-            <file>submitter_tests/post_finish_add_variant_located_within_gene_to_CMT_individual.php</file>
-            <file>submitter_tests/post_finish_add_screening_to_CMT_individual.php</file>
-            <file>submitter_tests/post_finish_add_phenotype_info_to_CMT_individual.php</file>
-            <file>submitter_tests/delete_gene_GJB.php</file>
+            <file>shared_tests/create_gene_IVD.php</file>
+            <file>shared_tests/create_disease_IVA.php</file>
+            <file>shared_tests/create_user_manager.php</file>
+            <file>shared_tests/create_user_curator.php</file>
+            <file>shared_tests/assign_curator_to_IVD.php</file>
+            <file>shared_tests/create_user_collaborator.php</file>
+            <file>shared_tests/create_user_owner.php</file>
+            <file>shared_tests/create_user_submitter.php</file>
+            <file>shared_tests/assign_colleague_to_owner.php</file>
+            <file>shared_tests/create_custom_column_phenotype.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA.php</file>
+            <file>shared_tests/login_as_owner.php</file>
+            <file>shared_tests/create_gene_not_authorized.php</file>
+            <file>shared_tests/create_disease_not_authorized.php</file>
+            <file>shared_tests/create_user_not_authorized.php</file>
+            <file>shared_tests/assign_curator_to_IVD_not_authorized.php</file>
+            <file>shared_tests/create_custom_column_not_authorized.php</file>
+            <file>shared_tests/enable_custom_column_for_IVA_not_authorized.php</file>
+            <file>shared_tests/create_submission_individual_with_IVA.php</file>
+            <file>shared_tests/manage_transcripts_for_variant.php</file>
+            <file>shared_tests/add_more_data_to_existing_submission.php</file>
+            <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
+            <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
+            <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>
+            <file>shared_tests/create_summary_variant_on_genomic_level_not_authorized.php</file>
+            <file>shared_tests/login_as_submitter.php</file>
+            <file>shared_tests/access_submission_from_colleague.php</file>
+            <file>shared_tests/convert_LOVD2_export_IVD.php</file>
+            <file>shared_tests/delete_gene_IVD_not_authorized.php</file>
+            <file>shared_tests/delete_disease_IVA_not_authorized.php</file>
+            <file>shared_tests/login_as_curator.php</file>
+            <file>shared_tests/curate_submission_step_by_step.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="access_sharing_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/create_users_submitter.php</file>
-            <file>access_sharing_tests/access_sharing_submitter.php</file>
-            <file>shared_tests/uninstall_LOVD.php</file>
-        </testsuite>
-        <testsuite name="find_replace_tests">
-            <file>shared_tests/install_LOVD.php</file>
-            <file>shared_tests/login_as_admin.php</file>
-            <file>find_replace_tests/find_replace.php</file>
         </testsuite>
     </testsuites>
     <listeners>
         <listener class="LOVDScreenshotListener" file="LOVDScreenshotListener.php" />
     </listeners>
-
 </phpunit>

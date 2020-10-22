@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-07-08
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -404,12 +404,10 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                     $aStopSpamResponse = array(
                         'success' => 0,
                         'ip' => array(
-                            array(
-                                'appears' => 0,
-                                'lastseen' => '',
-                                'frequency' => 0,
-                                'confidence' => 0,
-                            )
+                            'appears' => 0,
+                            'lastseen' => '',
+                            'frequency' => 0,
+                            'confidence' => 0,
                         ),
                         'email' => array(
                             array(
@@ -420,12 +418,10 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                             )
                         ),
                         'username' => array(
-                            array(
-                                'appears' => 0,
-                                'lastseen' => '',
-                                'frequency' => 0,
-                                'confidence' => 0,
-                            )
+                            'appears' => 0,
+                            'lastseen' => '',
+                            'frequency' => 0,
+                            'confidence' => 0,
                         ),
                     );
                     $aStopSpamEmailTemplate = $aStopSpamResponse['email'][0];
@@ -440,13 +436,18 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         }
                     }
                     if ($aStopSpamResponse['success']) {
-                        $nFrequency = $aStopSpamResponse['ip'][0]['frequency'] + $aStopSpamResponse['username'][0]['frequency'];
-                        $nConfidence = max($aStopSpamResponse['ip'][0]['confidence'], $aStopSpamResponse['username'][0]['confidence']);
+                        $nFrequency = $aStopSpamResponse['ip']['frequency'] + $aStopSpamResponse['username']['frequency'];
+                        $nConfidence = max($aStopSpamResponse['ip']['confidence'], $aStopSpamResponse['username']['confidence']);
                         foreach ($aStopSpamResponse['email'] as $aEmail) {
                             $nFrequency += $aEmail['frequency'];
                             $nConfidence = max($nConfidence, $aEmail['confidence']);
                         }
-                        if ($nFrequency >= 10 || $nConfidence >= 75) {
+                        // If we only have this score because of the username, remove the scores.
+                        if ($nFrequency == $aStopSpamResponse['username']['frequency']
+                            && $nConfidence == $aStopSpamResponse['username']['confidence']) {
+                            $nFrequency = $nConfidence = 0;
+                        }
+                        if ($nFrequency >= 25 || $nConfidence >= 75) {
                             lovd_writeLog('Event', LOG_EVENT, 'User registration blocked based on frequency (' . $nFrequency . ') and confidence (' . $nConfidence . ') in spam database: ' . $_SERVER['REMOTE_ADDR'] . ', ' . str_replace("\r\n", ';', $_POST['email']) . ', ' . $_POST['username']);
                             lovd_errorAdd('', 'Your registration has been blocked based on suspicion of spamming. If you feel this is an error, please contact us.');
                             $_POST = array('orcid' => 'none'); // Empty all fields (except for the orcid_id, to prevent notices).

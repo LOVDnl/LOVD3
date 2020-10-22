@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2020-04-21
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -366,6 +366,14 @@ function lovd_fetchDBID ($aData)
     // function implies you've checked for it's presence.
     global $_DB, $_CONF;
 
+    // Array to remember which IDs we saw. This is to speed up the generation of
+    //  DBIDs for new variants. The search in the database for the max ID in use
+    //  may take several seconds in databases with 20M+ variants, even with an
+    //  index on DBID. If we limit the search by the DBID that we have seen
+    //  before, we can greatly speed up the query (requires an index on the DBID
+    //  column).
+    static $aDBIDsSeen = array();
+
     $sGenomeVariant = '';
     if (!empty($aData['VariantOnGenome/DNA'])) {
         $sGenomeVariant = str_replace(array('(', ')', '?'), '', $aData['VariantOnGenome/DNA']);
@@ -470,8 +478,18 @@ function lovd_fetchDBID ($aData)
                 // No genes, simple query only on TABLE_VARIANTS.
                 // 2013-02-28; 3.0-03; By querying the chromosome also we sped up this query from 0.43s to 0.09s when having 1M variants.
                 // NOTE: By adding an index on `VariantOnGenome/DBID` this query time can be reduced to 0.00s because of the LIKE on the DBID field.
+                // 2017-06-02; LOVD+ 3.0-17k; Even with an index, on a database with 22M variants, this query takes 2.2 seconds.
+                // Cache the DBIDs we saw to speed this up when we repeatedly ask for the DBIDs on the same chromosome.
                 $sSymbol = 'chr' . $aData['chromosome'];
-                $nDBIDnewNumber = $_DB->query('SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.chromosome = ? AND `VariantOnGenome/DBID` LIKE ? AND `VariantOnGenome/DBID` REGEXP ?', array($aData['chromosome'], $sSymbol . '\_%', '^' . $sSymbol . '_[0-9]{6}$'))->fetchColumn();
+                $sSQL = 'SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1 FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.chromosome = ? AND `VariantOnGenome/DBID` LIKE ? AND `VariantOnGenome/DBID` REGEXP ?';
+                $aArgs = array($aData['chromosome'], $sSymbol . '\_%', '^' . $sSymbol . '_[0-9]{6}$');
+                if (isset($aDBIDsSeen[$aData['chromosome']])) {
+                    $sSQL .= ' AND `VariantOnGenome/DBID` >= ?';
+                    $aArgs[] = $aDBIDsSeen[$aData['chromosome']];
+                }
+                $nDBIDnewNumber = $_DB->query($sSQL, $aArgs)->fetchColumn();
+                // Update the cache!
+                $aDBIDsSeen[$aData['chromosome']] = $sSymbol . '_' . sprintf('%06d', ($nDBIDnewNumber - 1));
             } else {
                 // 2013-02-28; 3.0-03; By using INNER JOIN to VOT and T and placing a WHERE on t.geneid we sped up this query from 0.45s to 0.00s when having 1M variants.
                 $sSymbol = $aGenes[0];
@@ -765,9 +783,11 @@ function lovd_sendMailFormatAddresses ($aRecipients, & $aEmailsUsed)
 
 
 
-function lovd_setUpdatedDate ($aGenes)
+function lovd_setUpdatedDate ($aGenes, $bAuth = true)
 {
     // Updates the updated_date field of the indicated gene.
+    // $bAuth allows you to control who gets marked as updated_by; the current
+    //  user (the default) or LOVD (pass false).
     global $_AUTH, $_DB;
 
     if (LOVD_plus) {
@@ -793,7 +813,11 @@ function lovd_setUpdatedDate ($aGenes)
     }
 
     // Just update the database and we'll see what happens.
-    $q = $_DB->query('UPDATE ' . TABLE_GENES . ' SET updated_by = ?, updated_date = NOW() WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')', array_merge(array($_AUTH['id']), $aGenes), false);
+    $q = $_DB->query('
+        UPDATE ' . TABLE_GENES . '
+        SET updated_by = ?, updated_date = NOW()
+        WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')',
+        array_merge(array((!$bAuth? 0 : $_AUTH['id'])), $aGenes), false);
     return ($q->rowCount());
 }
 

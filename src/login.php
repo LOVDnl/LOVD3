@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-19
- * Modified    : 2018-01-19
- * For LOVD    : 3.0-21
+ * Modified    : 2020-07-09
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2018 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -180,11 +180,6 @@ if (!empty($_POST)) {
                 if ($zUser && $zUser['login_attempts'] >= (3-1)) {
                     lovd_errorAdd('password', 'Your account is now locked, since this is the third time a wrong password was provided.');
                 }
-
-                // The "Forgot my password" option.
-                if ($_CONF['allow_unlock_accounts']) {
-                    lovd_errorAdd('', 'Did you <A href="reset_password">forget your password</A>?');
-                }
             }
         }
     }
@@ -219,17 +214,17 @@ if (!$_AUTH) {
           '        <TABLE border="0" cellpadding="0" cellspacing="0" width="275">' . "\n" .
           '          <TR align="right">' . "\n" .
           '            <TD width="100" style="padding-right : 5px;">Username</TD>' . "\n" .
-          '            <TD width="175"><INPUT type="text" name="username" size="20"></TD></TR>' . "\n" .
+          '            <TD width="175" colspan="2"><INPUT type="text" name="username" size="20"></TD></TR>' . "\n" .
           '          <TR>' . "\n" .
           '            <TD colspan="2"><IMG src="gfx/trans.png" alt="" width="1" height="1"></TD></TR>' . "\n" .
           '          <TR align="right">' . "\n" .
           '            <TD width="100" style="padding-right : 5px;">Password</TD>' . "\n" .
-          '            <TD width="175"><INPUT type="password" name="password" size="20"></TD></TR>' . "\n" .
+          '            <TD width="175" colspan="2"><INPUT type="password" name="password" size="20"></TD></TR>' . "\n" .
           '          <TR>' . "\n" .
           '            <TD colspan="2"><IMG src="gfx/trans.png" alt="" width="1" height="1"></TD></TR>' . "\n" .
           '          <TR align="right">' . "\n" .
-          '            <TD width="100">&nbsp;</TD>' . "\n" .
-          '            <TD width="175"><INPUT type="submit" value="Log in"></TD></TR></TABLE>' . "\n" .
+          '            <TD width="150" colspan="2">' . (!$_CONF['allow_unlock_accounts']? '&nbsp;' : '<A href="reset_password">Forgot your password</A>?') . '</TD>' . "\n" .
+          '            <TD width="125"><INPUT type="submit" value="Log in"></TD></TR></TABLE>' . "\n" .
           '      </FORM>' . "\n\n" .
           '      <SCRIPT type="text/javascript">' . "\n" .
           '        document.forms[\'login\'].username.focus();' . "\n" .

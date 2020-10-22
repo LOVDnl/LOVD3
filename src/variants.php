@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD) (MODIFIED)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-06-16
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -66,7 +66,15 @@ function lovd_getMaxVOTEffects ($sType, $zData = array())
     if (!$aEffects) {
         return false;
     }
-    return max($aEffects);
+
+    $nMax = max($aEffects);
+    // We cannot return "(Probably) does not affect function"
+    //  if one value is also "Not classified".
+    if ($nMax < 5 && in_array('0', $aEffects)) {
+        $nMax = 0;
+    }
+
+    return $nMax;
 }
 
 
@@ -161,6 +169,7 @@ if (!ACTION && (empty($_PE[1]) ||
         'cols_to_skip' => $aColsToHide,
         'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
+        'curate_set' => true,
     );
     $_DATA->viewList('VOG', $aVLOptions);
     $_T->printFooter();
@@ -189,6 +198,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
     $aVLOptions = array(
         'cols_to_skip' => array('name', 'id_protein_ncbi'),
         'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'curate_set' => true,
     );
     $_DATA->viewList('CustomVL_IN_GENE', $aVLOptions);
 
@@ -242,9 +252,12 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $bUnique = true;
     }
 
-    $qGene = $_DB->query('SELECT g.id, count(t.id) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' .
-                         TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid WHERE g.id = ?',
-                         array(rawurldecode($_PE[1])));
+    $qGene = $_DB->query('
+        SELECT g.id, COUNT(t.id)
+        FROM ' . TABLE_GENES . ' AS g
+          LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid
+        WHERE g.id = ?
+        GROUP BY g.id', array(rawurldecode($_PE[1])));
     list($sGene, $nTranscripts) = $qGene->fetchRow();
 
     if ($sGene) {
@@ -255,12 +268,15 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
             define('FORMAT_ALLOW_TEXTPLAIN', true);
         }
 
-        // Overview is given per transcript. If there is only one, it will be mentioned. If there are more, you will be able to select which one you'd like to see.
+        // Overview is given per transcript. If there is only one, it will be mentioned.
+        // If there are more, you will be able to select which one you'd like to see.
         $aTranscriptsWithVariants = $_DB->query(
             'SELECT t.id, t.id_ncbi
              FROM ' . TABLE_TRANSCRIPTS . ' AS t
                INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
-             WHERE t.geneid = ?', array($sGene))->fetchAllCombine();
+             WHERE t.geneid = ?
+             GROUP BY t.id
+             ORDER BY COUNT(vot.id) DESC, t.id ASC', array($sGene))->fetchAllCombine();
         $nTranscriptsWithVariants = count($aTranscriptsWithVariants);
 
         // If NM is mentioned, check if exists for this gene. If not, reload page without NM. Otherwise, restrict $aTranscriptsWithVariants.
@@ -296,7 +312,8 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
 
     // If this gene has only one NM, show that one. Otherwise have people pick one.
-    list($nTranscriptID, $sTranscript) = each($aTranscriptsWithVariants);
+    $nTranscriptID = key($aTranscriptsWithVariants);
+    $sTranscript = current($aTranscriptsWithVariants);
     if (!$nTranscripts) {
         $sMessage = 'No transcripts found for this gene.';
     } elseif (!$nTranscriptsWithVariants) {
@@ -333,10 +350,11 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $aVLOptions = array(
-            'cols_to_skip' => array('chromosome', 'allele_'),
+            'cols_to_skip' => array('chromosome', 'allele_'), // Enforced for unique view in the object.
             'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
             'find_and_replace' => !$bUnique,
             'multi_value_filter' => $bUnique,
+            'curate_set' => !$bUnique,
         );
         $_DATA->viewList($sViewListID, $aVLOptions);
 
@@ -578,11 +596,13 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     // don't have to duplicate this code for variants?create and variants/upload?create.
 
     // We don't want to show an error message about the screening if the user isn't allowed to come here.
-    // 2012-07-10; 3.0-beta-07; Submitters are no longer allowed to add variants without individual data.
-    if (!isset($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)) {
-        lovd_requireAUTH(LEVEL_CURATOR);
-    }
-    lovd_requireAUTH(empty($_PE[1])? $_SETT['user_level_settings']['submit_new_data'] : LEVEL_MANAGER);
+    // This will show a "View variants" title that makes no sense, but setting
+    //  PAGE_TITLE here already throws an error when LOVD tries to overwrite it.
+    // FIXME: Pass page title as an optional argument to this function?
+    lovd_requireAUTH(
+        (!empty($_PE[1])? LEVEL_MANAGER :
+            (empty($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)? LEVEL_CURATOR :
+                $_SETT['user_level_settings']['submit_new_data'])));
 
     $bSubmit = false;
     if (isset($_GET['target'])) {
@@ -592,7 +612,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
         $sMessage = '';
         if (!$z) {
             $sMessage = 'The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.';
-        } elseif (!lovd_isAuthorized('screening', $_GET['target'])) {
+        } elseif (!lovd_isAuthorized('screening', $_GET['target'], false)) {
             lovd_requireAUTH(LEVEL_OWNER);
         } elseif (!$z['variants_found']) {
             $sMessage = 'Cannot add variants to the given screening, because the value \'Have variants been found?\' is unchecked.';
@@ -1316,12 +1336,14 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             $fInput = fopen($_FILES['variant_file']['tmp_name'], 'r');
             @set_time_limit(0);
 
-            // This will take some time, allow the user to browse in other tabs.
-            // FIXME; if the user finishes a screening submission in another tab while the upload
-            // is still working, a seperate e-mail about the upload will be sent once it has finished.
-            // So, other than that it results in two e-mails, it is working just fine actually.
-            // Though maybe we should block submit/finish until we're done here?
-            session_write_close();
+            if (empty($_INI['test'])) {
+                // This will take some time, allow the user to browse in other tabs.
+                // FIXME; if the user finishes a screening submission in another tab while the upload
+                // is still working, a seperate e-mail about the upload will be sent once it has finished.
+                // So, other than that it results in two e-mails, it is working just fine actually.
+                // Though maybe we should block submit/finish until we're done here?
+                session_write_close();
+            }
 
             $_DB->beginTransaction();
 
@@ -2196,11 +2218,13 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             $_BAR->setMessage('Committing changes to the database...');
             $_DB->commit();
 
-            // Done! Reopen the session. Don't show warnings; session_start() is not going
-            // to be able to send another cookie. But session data is written nonetheless.
-            // First commit, then restart session, otherwise two browser windows may be waiting
-            // for each other forever... one for the DB lock, the other for the session lock.
-            @session_start();
+            if (empty($_INI['test'])) {
+                // Done! Reopen the session. Don't show warnings; session_start() is not going
+                // to be able to send another cookie. But session data is written nonetheless.
+                // First commit, then restart session, otherwise two browser windows may be waiting
+                // for each other forever... one for the DB lock, the other for the session lock.
+                @session_start();
+            }
 
             // Turn on automatic mapping if it is enabled for the imported variants.
             if ($nMappingFlags & MAPPING_ALLOW) {
@@ -3033,7 +3057,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
                                     );
                                 }
                                 // Insert all the gathered information about the variant description into the database.
-                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], $_SETT['var_effect_default'], $aMatches[1]));
+                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], $zData['effectid'], $aMatches[1]));
                                 $bAdded = true;
                                 $aGenesUpdated[] = $aTranscripts[$nTranscript];
                                 // Speed improvement: remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
