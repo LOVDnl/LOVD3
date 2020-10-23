@@ -72,7 +72,7 @@ class LOVD_Object
     var $nID = 0;
     var $sRowID = ''; // FIXME; needs getter and setter?
     var $sRowLink = ''; // FIXME; needs getter and setter?
-    var $bEntryExists = NULL;
+    protected $bEntryExists = NULL;
 
 
 
