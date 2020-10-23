@@ -205,7 +205,7 @@ class LOVD_Gene extends LOVD_Object
                     'view' => array('Unique variants', 70, 'style="text-align : right;"'),
                     'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
                 'updated_date_' => array(
-                    'view' => (LOVD_LIGHT? false : array('Last updated', 110)),
+                    'view' => (LOVD_light? false : array('Last updated', 110)),
                     'db'   => array('g.updated_date', 'DESC', true)),
                 'diseases_' => array(
                     'view' => array('Associated with diseases', 200),

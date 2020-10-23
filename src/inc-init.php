@@ -151,9 +151,9 @@ define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 // LOVD and LOVD+, simply define if we're active or not.
 @define('LOVD_plus', false);
 
-// Flag LOVD_LIGHT disables certain features to streamline LOVD for high
+// Flag LOVD_light disables certain features to streamline LOVD for high
 // quantities of variants but no or few individuals or diseases.
-define('LOVD_LIGHT', false);
+define('LOVD_light', false);
 
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
@@ -200,35 +200,35 @@ $_SETT = array(
                     'genepanels_manage_genes' => LEVEL_MANAGER,
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
-                    'see_nonpublic_data' => ((LOVD_plus || LOVD_LIGHT)? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'see_nonpublic_data' => ((LOVD_plus || LOVD_light)? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
                     'set_concluded_effect' => (LOVD_plus? LEVEL_MANAGER : LEVEL_CURATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
                 ),
                 'customization_settings' => // Miscellaneous configuration settings.
                 array(
-                    'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_LIGHT),
-                    'enable_variant_mapping_in_background' => !LOVD_LIGHT && !LOVD_plus,
+                    'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    // FIXME: Check and rename all features below into object_action. Add LOVD_plus flag when necessary.
+                    'enable_variant_mapping_in_background' => !LOVD_light && !LOVD_plus,
                     // Show variant list for whole genome on page `variants/`. If false, variant
                     // counts per chromosome are displayed.
-                    'show_full_genome_variant_vl' => !LOVD_LIGHT && !LOVD_plus,
+                    'show_full_genome_variant_vl' => !LOVD_light && !LOVD_plus,
                     // Show graphs page and links to that page.
-                    'show_graphs' => !LOVD_LIGHT,
+                    'show_graphs' => !LOVD_light,
                     // Show / hide tabs in page header.
-                    'show_tab_diseases' => !LOVD_LIGHT,
-                    'show_tab_individuals' => !LOVD_LIGHT,
-                    'show_tab_screenings' => !LOVD_LIGHT,
-                    'show_tab_submit' => !LOVD_LIGHT,
+                    'show_tab_diseases' => !LOVD_light,
+                    'show_tab_individuals' => !LOVD_light,
+                    'show_tab_screenings' => !LOVD_light,
+                    'show_tab_submit' => !LOVD_light,
                     'show_transcript_select_on_gene_vl' => LOVD_plus,
-                    'show_unique_variants_menu_item' => !LOVD_LIGHT,
-                    'show_unique_variants_on_gene_ve' => !LOVD_LIGHT,
-                    'show_variants_affecting_transcripts_menu_item' => !LOVD_LIGHT,
-                    'show_variants_on_gene_vl' => !LOVD_LIGHT,
-                    'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_LIGHT),
-                    'variant_viewlist_show_allele' => !LOVD_LIGHT,
-                    'variant_viewlist_show_effect' => !LOVD_LIGHT,
-                    'variant_viewlist_show_owner' => !LOVD_LIGHT,
-                    'variant_viewlist_show_screeningids' => !LOVD_LIGHT,
-                    'variant_viewlist_show_status' => !LOVD_LIGHT,
+                    'show_unique_variants_menu_item' => !LOVD_light,
+                    'show_unique_variants_on_gene_ve' => !LOVD_light,
+                    'show_variants_affecting_transcripts_menu_item' => !LOVD_light,
+                    'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    'variant_viewlist_show_allele' => !LOVD_light,
+                    'variant_viewlist_show_effect' => !LOVD_light,
+                    'variant_viewlist_show_owner' => !LOVD_light,
+                    'variant_viewlist_show_screeningids' => !LOVD_light,
+                    'variant_viewlist_show_status' => !LOVD_light,
                 ),
                 'gene_imprinting' =>
                      array(
