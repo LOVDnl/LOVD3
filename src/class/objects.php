@@ -103,33 +103,6 @@ class LOVD_Object
 
 
 
-    function autoExplode ($zData)
-    {
-        // Automatically explode GROUP_CONCAT values based on their name.
-        foreach ($zData as $key => $val) {
-            if ($key{0} == '_') {
-                unset($zData[$key]);
-                if (!empty($val)) {
-                    if ($key{1} == '_') {
-                        // Explode GROUP_CONCAT nested array
-                        $aValues = explode(';;', $val);
-                        $zData[ltrim($key, '_')] = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
-                    } else {
-                        // Explode GROUP_CONCAT array
-                        $zData[ltrim($key, '_')] = explode(';', $val);
-                    }
-                } else {
-                    $zData[ltrim($key, '_')] = array();
-                }
-            }
-        }
-        return $zData;
-    }
-
-
-
-
-
     public function applyColumnFindAndReplace ($sFRViewlistCol, $sFRSearchValue, $sFRReplaceValue,
                                                $aArgs, $aOptions) {
         // Perform a find and replace action for given viewlist column. Return
@@ -168,17 +141,32 @@ class LOVD_Object
 
         // Get replace statement to use inside subquery. This is needed to
         // analyse the changed values with checkFields() later on.
-        $sReplaceStmtInsideSubq = $this->generateViewListFRReplaceStatement($sTableRef,
-            $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
+        $sReplaceStmtInsideSubq = $this->generateViewListFRReplaceStatement(
+            $sTableRef,
+            $sFieldname,
+            $sFRSearchValue,
+            $sFRReplaceValue,
+            $aOptions
+        );
 
         // Construct find & replace search condition to select only records
         // that match the find & replace search options.
-        $sFRSearchCondition = $this->generateFRSearchCondition($sFRSearchValue, $sSubqueryAlias,
-                                                               $sFieldname, $aOptions);
+        $sFRSearchCondition = $this->generateFRSearchCondition(
+            $sFRSearchValue,
+            $sSubqueryAlias,
+            $sFieldname,
+            $aOptions
+        );
 
         // Run checkFields() on all changed records.
-        list($bSuccess,) = $this->checkFieldFRResult($sFieldname, $sTablename, $sTableRef,
-            $sFRSearchCondition, $aArgs, $sReplaceStmtInsideSubq);
+        list($bSuccess,) = $this->checkFieldFRResult(
+            $sFieldname,
+            $sTablename,
+            $sTableRef,
+            $sFRSearchCondition,
+            $aArgs,
+            $sReplaceStmtInsideSubq
+        );
         if (!$bSuccess) {
             return false;
         }
@@ -205,8 +193,13 @@ class LOVD_Object
         }
 
         // Generate replacement statement for outside the subquery.
-        $sReplaceStmtOutsideSubq = $this->generateViewListFRReplaceStatement($sSubqueryAlias,
-            $sFieldname, $sFRSearchValue, $sFRReplaceValue, $aOptions);
+        $sReplaceStmtOutsideSubq = $this->generateViewListFRReplaceStatement(
+            $sSubqueryAlias,
+            $sFieldname,
+            $sFRSearchValue,
+            $sFRReplaceValue,
+            $aOptions
+        );
 
         // Construct and apply update query.
         $sUpdateSQL = 'UPDATE ' . $sTablename .  ', (' . $sSelectSQL . ') AS ' .
@@ -218,13 +211,15 @@ class LOVD_Object
         if ($sTablename == TABLE_VARIANTS_ON_TRANSCRIPTS) {
             // Update edited_by/-date fields of variant on genome table if query changes values on
             // variant on transcript.
-            $sUpdateSQL = 'UPDATE ' . TABLE_VARIANTS .  ' vog INNER JOIN ' .
-                          TABLE_VARIANTS_ON_TRANSCRIPTS . ' vot ON vog.id = vot.id, (' .
-                          $sSelectSQL . ') AS ' . $sSubqueryAlias . ' SET vot.`' . $sFieldname .
-                          '` = ' . $sReplaceStmtOutsideSubq . ', vog.edited_by = ?, ' .
-                          'vog.edited_date = ? WHERE ' . $sFRSearchCondition . ' AND vot.' .
-                          $sIDField . ' = ' . $sSubqueryAlias . '.' . $sSubqueryIDField .
-                          ' AND vot.transcriptid = '  . $sSubqueryAlias . '.transcriptid';
+            $sUpdateSQL = '
+                UPDATE ' . TABLE_VARIANTS .  ' vog
+                  INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' vot ON (vog.id = vot.id),
+                  (' . $sSelectSQL . ') AS ' . $sSubqueryAlias . '
+                SET vot.`' . $sFieldname . '` = ' . $sReplaceStmtOutsideSubq . ',
+                  vog.edited_by = ?, vog.edited_date = ?
+                WHERE ' . $sFRSearchCondition . '
+                  AND vot.' . $sIDField . ' = ' . $sSubqueryAlias . '.' . $sSubqueryIDField . '
+                  AND vot.transcriptid = '  . $sSubqueryAlias . '.transcriptid';
         }
 
         // Add edit fields to SQL arguments.
@@ -240,6 +235,33 @@ class LOVD_Object
             lovd_writeLog('Event', 'FindAndReplace', 'Find and Replace successfully run on ' . $sFRViewlistCol . ', replacing "' . $sFRSearchValue . '" (matching ' . ($aOptions['sFRMatchType'] == 1? 'anywhere' : 'at the ' . ($aOptions['sFRMatchType'] == 2? 'beginning' : 'end')) . ') with "' . $sFRReplaceValue . '"' . (empty($aOptions['bFRReplaceAll'])? '' : ', overwriting the entire field'). ', updating ' . $n . ' row' . ($n == 1? '' : 's') . '.' . ($sTablename != TABLE_VARIANTS_ON_TRANSCRIPTS? '' : ' Note: the number of updated rows may be an overcalculation since variant data is stored in multiple rows.'));
         }
         return $bSuccess;
+    }
+
+
+
+
+
+    function autoExplode ($zData)
+    {
+        // Automatically explode GROUP_CONCAT values based on their name.
+        foreach ($zData as $key => $val) {
+            if ($key{0} == '_') {
+                unset($zData[$key]);
+                if (!empty($val)) {
+                    if ($key{1} == '_') {
+                        // Explode GROUP_CONCAT nested array
+                        $aValues = explode(';;', $val);
+                        $zData[ltrim($key, '_')] = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
+                    } else {
+                        // Explode GROUP_CONCAT array
+                        $zData[ltrim($key, '_')] = explode(';', $val);
+                    }
+                } else {
+                    $zData[ltrim($key, '_')] = array();
+                }
+            }
+        }
+        return $zData;
     }
 
 
@@ -669,6 +691,52 @@ class LOVD_Object
 
 
 
+    function entryExist ($ID = false)
+    {
+        // Checks if any, or a specific, entry exists in the database table.
+        // ViewEntry() and ViewList() call this function to see if data exists.
+        // $ID = Can be an integer, string, or an array.
+        // - If an integer/string: ID to check for.
+        // - If an associative array (for linking tables), use
+        //   array('geneid' => 'IVD', 'userid' => 1).
+        global $_DB;
+
+        if ($ID) {
+            // Prepare ID variable, to always be in the array('id' => 1) format.
+            $aIDs = $ID;
+            if (!is_array($ID)) {
+                $sIDColumn = 'id';
+                // In case a different column name is used, better use that instead.
+                if (!empty($this->aColumnsViewList['id']['db'][0])) {
+                    $sIDColumn = $this->aColumnsViewList['id']['db'][0];
+                    // But take the optional table alias off.
+                    $sIDColumn = substr(strrchr('.' . $sIDColumn, '.'), 1);
+                }
+                $aIDs = array($sIDColumn => $ID);
+            }
+
+            $bEntryExists = (bool) $_DB->query('
+                SELECT 1
+                FROM ' . constant($this->sTable) . '
+                WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? LIMIT 1',
+                array_values($aIDs))->fetchColumn();
+            return $bEntryExists;
+        } else {
+            if (isset($this->bEntryExists)) {
+                return $this->bEntryExists;
+            }
+            $bEntryExists = (bool) $_DB->query('
+                SELECT 1
+                FROM ' . constant($this->sTable) . ' LIMIT 1')->fetchColumn();
+            $this->bEntryExists = $bEntryExists;
+            return $this->bEntryExists;
+        }
+    }
+
+
+
+
+
     function formatArrayToTable ($aData, $nNesting = 0)
     {
         // Formats an Array to an data table, used for JSON data to be formatted in an VE.
@@ -735,32 +803,6 @@ class LOVD_Object
 
 
 
-    function generateRowID ($zData = false)
-    {
-        // Generates the row_id for the viewList rows.
-        if ($zData && is_array($zData) && !empty($zData)) {
-            if (!isset($zData['row_id'])) {
-                if (isset($zData['id'])) {
-                    if ($this->sRowID !== '') {
-                        $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
-                        foreach ($zData as $key => $val) {
-                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_id']);
-                        }
-                    } else {
-                        $zData['row_id'] = $zData['id'];
-                    }
-                } else {
-                    $zData['row_id'] = '';
-                }
-            }
-        }
-        return $zData;
-    }
-
-
-
-
-
     private function generateFRSearchCondition ($sFRSearchValue, $sTablename, $sFieldname,
                                                 $aOptions)
     {
@@ -798,6 +840,32 @@ class LOVD_Object
             $sFRSearchCondition = $sCompositeFieldname . ' LIKE ' . $_DB->quote('%' . lovd_escapeSearchTerm($sFRSearchValue) . '%');
         }
         return $sFRSearchCondition;
+    }
+
+
+
+
+
+    function generateRowID ($zData = false)
+    {
+        // Generates the row_id for the viewList rows.
+        if ($zData && is_array($zData) && !empty($zData)) {
+            if (!isset($zData['row_id'])) {
+                if (isset($zData['id'])) {
+                    if ($this->sRowID !== '') {
+                        $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
+                        foreach ($zData as $key => $val) {
+                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_id']);
+                        }
+                    } else {
+                        $zData['row_id'] = $zData['id'];
+                    }
+                } else {
+                    $zData['row_id'] = '';
+                }
+            }
+        }
+        return $zData;
     }
 
 
@@ -899,52 +967,6 @@ class LOVD_Object
 
 
 
-    function entryExist ($ID = false)
-    {
-        // Checks if any, or a specific, entry exists in the database table.
-        // ViewEntry() and ViewList() call this function to see if data exists.
-        // $ID = Can be an integer, string, or an array.
-        // - If an integer/string: ID to check for.
-        // - If an associative array (for linking tables), use
-        //   array('geneid' => 'IVD', 'userid' => 1).
-        global $_DB;
-
-        if ($ID) {
-            // Prepare ID variable, to always be in the array('id' => 1) format.
-            $aIDs = $ID;
-            if (!is_array($ID)) {
-                $sIDColumn = 'id';
-                // In case a different column name is used, better use that instead.
-                if (!empty($this->aColumnsViewList['id']['db'][0])) {
-                    $sIDColumn = $this->aColumnsViewList['id']['db'][0];
-                    // But take the optional table alias off.
-                    $sIDColumn = substr(strrchr('.' . $sIDColumn, '.'), 1);
-                }
-                $aIDs = array($sIDColumn => $ID);
-            }
-
-            $bEntryExists = (bool) $_DB->query('
-                SELECT 1
-                FROM ' . constant($this->sTable) . '
-                WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? LIMIT 1',
-                array_values($aIDs))->fetchColumn();
-            return $bEntryExists;
-        } else {
-            if (isset($this->bEntryExists)) {
-                return $this->bEntryExists;
-            }
-            $bEntryExists = (bool) $_DB->query('
-                SELECT 1
-                FROM ' . constant($this->sTable) . ' LIMIT 1')->fetchColumn();
-            $this->bEntryExists = $bEntryExists;
-            return $this->bEntryExists;
-        }
-    }
-
-
-
-
-
     private function getFieldInfo ($sViewListCol)
     {
         // Get information on viewlist column. Returns:
@@ -996,6 +1018,46 @@ class LOVD_Object
     {
         // Returns the $this->aFormData variable, to build a form.
         return $this->aFormData;
+    }
+
+
+
+
+
+    public static function lovd_getObjectLinksHTML ($aIDs, $sURLFormat)
+    {
+        // Returns a list of object links in HTML format.
+        // Parameter $aIDs is an array with object IDs, and optionally, values.
+        // Parameter $sURLFormat designates the target of the links, where any
+        //   sprintf() recognized format (like %s) will be substituted with the
+        //   object ID, e.g. "genes/%s".
+        // For more information on formats to use, see:
+        //   http://php.net/manual/en/function.sprintf.php
+
+        $sShortDescription = '';
+        $sHTMLoutput = '';
+        $i = 0;
+        foreach ($aIDs as $key => $val) {
+            if (is_array($val)) {
+                $sObjectID = $val[0];
+                $sObjectValue = $val[1];
+            } else {
+                $sObjectID = $sObjectValue = $val;
+            }
+
+            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($sURLFormat, $sObjectID) .
+                '">' . $sObjectValue . '</A>';
+            if ($i < 20) {
+                $sShortDescription .= (!$key ? '' : ', ') . '<A href="' .
+                    sprintf($sURLFormat, $sObjectID) . '">' . $sObjectValue . '</A>';
+                $i++;
+            }
+        }
+        if (count($aIDs) > 22) {
+            // Replace long gene list by shorter one, allowing expand.
+            $sHTMLoutput = '<SPAN>' . $sShortDescription . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($aIDs) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $sHTMLoutput . '</SPAN>';
+        }
+        return $sHTMLoutput;
     }
 
 
@@ -1465,46 +1527,6 @@ class LOVD_Object
         $zData = $this->autoExplode($zData);
 
         return $zData;
-    }
-
-
-
-
-
-    public static function lovd_getObjectLinksHTML ($aIDs, $sURLFormat)
-    {
-        // Returns a list of object links in HTML format.
-        // Parameter $aIDs is an array with object IDs, and optionally, values.
-        // Parameter $sURLFormat designates the target of the links, where any
-        //   sprintf() recognized format (like %s) will be substituted with the
-        //   object ID, e.g. "genes/%s".
-        // For more information on formats to use, see:
-        //   http://php.net/manual/en/function.sprintf.php
-
-        $sShortDescription = '';
-        $sHTMLoutput = '';
-        $i = 0;
-        foreach ($aIDs as $key => $val) {
-            if (is_array($val)) {
-                $sObjectID = $val[0];
-                $sObjectValue = $val[1];
-            } else {
-                $sObjectID = $sObjectValue = $val;
-            }
-
-            $sHTMLoutput .= (!$key ? '' : ', ') . '<A href="' . sprintf($sURLFormat, $sObjectID) .
-                '">' . $sObjectValue . '</A>';
-            if ($i < 20) {
-                $sShortDescription .= (!$key ? '' : ', ') . '<A href="' .
-                    sprintf($sURLFormat, $sObjectID) . '">' . $sObjectValue . '</A>';
-                $i++;
-            }
-        }
-        if (count($aIDs) > 22) {
-            // Replace long gene list by shorter one, allowing expand.
-            $sHTMLoutput = '<SPAN>' . $sShortDescription . ', <A href="#" onclick="$(this).parent().hide(); $(this).parent().next().show(); return false;">' . (count($aIDs) - $i) . ' more...</A></SPAN><SPAN style="display : none;">' . $sHTMLoutput . '</SPAN>';
-        }
-        return $sHTMLoutput;
     }
 
 
