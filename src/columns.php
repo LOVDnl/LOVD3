@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2020-09-11
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-23
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -70,7 +70,7 @@ if (PATH_COUNT < 3 && !ACTION) {
 
     require ROOT_PATH . 'class/object_columns.php';
     $_DATA = new LOVD_Column();
-    if (!$_DATA->isEmpty()) {
+    if ($_DATA->entryExist()) {
         lovd_showInfoTable('Please note that these are all ' . (empty($_PE[1])? '' : $_PE[1]) . ' columns available in this LOVD installation. This is not the list of columns actually added to the system.' .
                            (!empty($_PE[1]) && !$aTableInfo['shared']? '' :
                             ' Also, modifications made to the columns added to ' . (empty($_PE[1])? 'the system' : 'a certain ' . $aTableInfo['unit']) . ' are not shown.'), 'information', 950);

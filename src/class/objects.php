@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-10-12
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-23
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -72,7 +72,7 @@ class LOVD_Object
     var $nID = 0;
     var $sRowID = ''; // FIXME; needs getter and setter?
     var $sRowLink = ''; // FIXME; needs getter and setter?
-    var $nCount = '';
+    var $bEntryExists = NULL;
 
 
 
@@ -899,14 +899,14 @@ class LOVD_Object
 
 
 
-    function isEmpty ($ID = false)
+    function entryExist ($ID = false)
     {
-        // Returns the number of entries in the database table.
-        // ViewEntry() and ViewList() call this function to see if data exists at all, and actually don't require a precise number.
-        // $ID = Can be an integer/numeric string, or an array. If an integer/numeric string: ID to check for existance.
-        //   If an associative array (for linking tables), use array('geneid' => 'IVD', 'userid' => 1).
-        // FIXME: This function's name is wrong, and it should be renamed to isNotEmpty() or entryExist() or so.
-        // FIXME: Also the $this->nCount should be renamed, and the custom VL's functions for filling nCount can be simplified.
+        // Checks if any, or a specific, entry exists in the database table.
+        // ViewEntry() and ViewList() call this function to see if data exists.
+        // $ID = Can be an integer, string, or an array.
+        // - If an integer/string: ID to check for.
+        // - If an associative array (for linking tables), use
+        //   array('geneid' => 'IVD', 'userid' => 1).
         global $_DB;
 
         if ($ID) {
@@ -923,21 +923,21 @@ class LOVD_Object
                 $aIDs = array($sIDColumn => $ID);
             }
 
-            $bNonEmpty = (bool) $_DB->query('
+            $bEntryExists = (bool) $_DB->query('
                 SELECT 1
                 FROM ' . constant($this->sTable) . '
                 WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? LIMIT 1',
                 array_values($aIDs))->fetchColumn();
-            return $bNonEmpty;
+            return $bEntryExists;
         } else {
-            if (isset($this->isEmpty)) {
-                return $this->isEmpty;
+            if (isset($this->bEntryExists)) {
+                return $this->bEntryExists;
             }
-            $bNonEmpty = (bool) $_DB->query('
+            $bEntryExists = (bool) $_DB->query('
                 SELECT 1
                 FROM ' . constant($this->sTable) . ' LIMIT 1')->fetchColumn();
-            $this->isEmpty = $bNonEmpty;
-            return $this->isEmpty;
+            $this->bEntryExists = $bEntryExists;
+            return $this->bEntryExists;
         }
     }
 
@@ -2143,7 +2143,7 @@ class LOVD_Object
         $bAjax = (substr(lovd_getProjectFile(), 0, 6) == '/ajax/');
 
         // Check existence of entry.
-        if ($this->isEmpty($ID)) {
+        if (!$this->entryExist($ID)) {
             lovd_showInfoTable('No such ID!', 'stop');
             if (!$bAjax) {
                 $_T->printFooter();
@@ -2312,7 +2312,7 @@ class LOVD_Object
         require_once ROOT_PATH . 'inc-lib-viewlist.php';
 
         // First, check if entries are in the database at all.
-        if ($this->isEmpty() && FORMAT == 'text/html') {
+        if (!$this->entryExist() && FORMAT == 'text/html') {
             if ($aOptions['only_rows']) {
                 die('0'); // Silent error.
             }

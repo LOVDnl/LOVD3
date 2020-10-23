@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2020-09-10
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-23
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -49,7 +49,7 @@ class LOVD_CustomViewList extends LOVD_Object
     var $nOtherID = 0; // Some objects (like DistanceToVar) need an additional ID.
     var $aColumns = array();
     var $aCustomLinks = array();
-    protected $isEmpty = true; // Necessary for tricking Objects::isEmpty() that is run in viewList().
+    protected $bEntryExists = false; // Necessary for tricking Objects::entryExists() that is run in viewList().
 
 
 
@@ -155,7 +155,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_GENES . ' AS g';
-                        $this->isEmpty = $_DB->query('SELECT 1 FROM ' . TABLE_GENES . ' LIMIT 1')->fetchColumn() === false;
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_GENES . ' LIMIT 1')->fetchColumn();
                     }
                     break;
 
@@ -169,8 +170,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_TRANSCRIPTS . ' AS t';
-                        $this->isEmpty = $_DB->query('SELECT 1 FROM ' . TABLE_TRANSCRIPTS .
-                                ' LIMIT 1')->fetchColumn() === false;
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
                     } else {
                         $aSQL['FROM'] .= ' INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (';
                         $nKeyG   = array_search('Gene', $aObjects);
@@ -231,8 +232,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS . ' AS vog';
-                        $this->isEmpty = $_DB->query('SELECT 1 FROM ' . TABLE_VARIANTS .
-                                ' LIMIT 1')->fetchColumn() === false;
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_VARIANTS . ' LIMIT 1')->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vog.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                         $aSQL['ORDER_BY'] = 'vog.chromosome ASC, vog.position_g_start';
                     } elseif ($nKeyVOTUnique !== false && $nKeyVOTUnique < $nKey) {
@@ -300,8 +301,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
-                        $this->isEmpty = $_DB->query('SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS .
-                                ' LIMIT 1')->fetchColumn() === false;
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vot.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                     } elseif ($nKeyVOG !== false && $nKeyVOG < $nKey) {
                         // Previously, VOG was used. We will join VOT with VOG, using GROUP_CONCAT.
@@ -371,8 +372,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     }
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
-                    $this->isEmpty = $_DB->query('SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS .
-                            ' LIMIT 1')->fetchColumn() === false;
+                    $this->bEntryExists = (bool) $_DB->query('
+                        SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
 
                     $aSQL['GROUP_BY'] = '`position_c_start`, `position_c_start_intron`, `position_c_end`, `position_c_end_intron`, vot_clean_dna_change'; // Necessary for GROUP_CONCAT(), such as in Screening.
 
@@ -398,9 +399,8 @@ class LOVD_CustomViewList extends LOVD_Object
                         // First data table in query.
                         $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 's.id AS sid';
                         $aSQL['FROM'] = TABLE_SCREENINGS . ' AS s';
-                        $this->isEmpty = $_DB->query('SELECT 1 FROM ' . TABLE_SCREENINGS .
-                                ' LIMIT 1')->fetchColumn() === false;
-
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_SCREENINGS . ' LIMIT 1')->fetchColumn();
                         $aSQL['ORDER_BY'] = 's.id';
                     } else {
                         // SELECT will be different: we will GROUP_CONCAT the whole lot, per column.
@@ -467,8 +467,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
-                        $this->isEmpty = $_DB->query('SELECT 1 FROM ' . TABLE_INDIVIDUALS .
-                                ' LIMIT 1')->fetchColumn() === false;
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_INDIVIDUALS . ' LIMIT 1')->fetchColumn();
                         $aSQL['ORDER_BY'] = 'i.id';
                         // If no manager, hide lines with hidden individuals (not specific to a gene)!
                         if ($_AUTH['level'] < LEVEL_MANAGER) {
