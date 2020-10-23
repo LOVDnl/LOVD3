@@ -213,11 +213,6 @@ $_SETT = array(
                     // Show variant list for whole genome on page `variants/`. If false, variant
                     // counts per chromosome are displayed.
                     'show_full_genome_variant_vl' => !LOVD_light && !LOVD_plus,
-                    // Show / hide tabs in page header.
-                    'show_tab_diseases' => !LOVD_light,
-                    'show_tab_individuals' => !LOVD_light,
-                    'show_tab_screenings' => !LOVD_light,
-                    'show_tab_submit' => !LOVD_light,
                     'show_transcript_select_on_gene_vl' => LOVD_plus,
                     'show_unique_variants_menu_item' => !LOVD_light,
                     'show_unique_variants_on_gene_ve' => !LOVD_light,

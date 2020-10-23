@@ -286,6 +286,14 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/gene_statistics']);
         }
 
+        if (LOVD_light) {
+            unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
+            unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            unset($this->aMenu['individuals'], $this->aMenu['individuals_']);
+            unset($this->aMenu['screenings'], $this->aMenu['screenings_']);
+            unset($this->aMenu['submit'], $this->aMenu['submit_']);
+        }
+
         return true;
     }
 
