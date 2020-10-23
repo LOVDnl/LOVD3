@@ -1024,7 +1024,7 @@ class LOVD_Object
 
 
 
-    public static function lovd_getObjectLinksHTML ($aIDs, $sURLFormat)
+    public static function getObjectLinksHTML ($aIDs, $sURLFormat)
     {
         // Returns a list of object links in HTML format.
         // Parameter $aIDs is an array with object IDs, and optionally, values.
@@ -1033,6 +1033,7 @@ class LOVD_Object
         //   object ID, e.g. "genes/%s".
         // For more information on formats to use, see:
         //   http://php.net/manual/en/function.sprintf.php
+        // FIXME: There's no real reason why this is in the object.
 
         $sShortDescription = '';
         $sHTMLoutput = '';

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-09-23
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-23
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -481,7 +481,7 @@ class LOVD_User extends LOVD_Object
             }
 
             // Get HTML links for genes curated by current user.
-            $zData['curates_'] = $this->lovd_getObjectLinksHTML($zData['curates'], 'genes/%s');
+            $zData['curates_'] = $this->getObjectLinksHTML($zData['curates'], 'genes/%s');
 
             $zData['collaborates_'] = '';
             foreach ($zData['collaborates'] as $key => $sGene) {
@@ -540,7 +540,7 @@ class LOVD_User extends LOVD_Object
             }
 
             $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
-            $zData['colleagues_'] = $this->lovd_getObjectLinksHTML($zData['colleagues'], 'users/%s');
+            $zData['colleagues_'] = $this->getObjectLinksHTML($zData['colleagues'], 'users/%s');
 
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');
