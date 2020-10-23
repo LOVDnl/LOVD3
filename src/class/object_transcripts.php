@@ -79,12 +79,12 @@ class LOVD_Transcript extends LOVD_Object
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
                                           'g.chromosome' .
-                                          (LOVD_plus || !$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
+                                          (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']? '' :
                                               // Speed optimization by skipping variant counts.
                                               ', COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants');
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
-                                          (LOVD_plus || !$_SETT['customization_settings']['transcript_viewlist_show_variants']? '' :
+                                          (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']? '' :
                                               // Speed optimization by skipping variant counts.
                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
                                             // If user is less than a collaborator, only show public variants and
@@ -145,8 +145,8 @@ class LOVD_Transcript extends LOVD_Object
                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
             )
         );
-        if (LOVD_plus || !$_SETT['customization_settings']['transcript_viewlist_show_variants']) {
-            // Diagnostics: Speed up view by removing the variants column.
+        if (!$_SETT['customization_settings']['transcript_viewlist_show_variants']) {
+            // Speed up view by removing the variants column.
             unset($this->aColumnsViewList['variants']);
         }
 
