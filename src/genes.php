@@ -215,7 +215,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && !ACTION)
             $aNavigation[$_PE[0] . '/' . $sID . '?sortCurators'] = array('', 'Sort/hide curator names', 1);
         }
         $aNavigation[$_PE[0] . '/' . $sID . '?empty']            = array('menu_empty.png', 'Empty this gene database', (bool) ($zData['variants']));
-        if ($_SETT['customization_settings']['show_graphs']) {
+        if ($_SETT['customization_settings']['graphs_enable']) {
             $aNavigation[$_PE[0] . '/' . $sID . '/graphs'] = array('menu_graphs.png', 'View graphs about this gene database', 1);
         }
         $aNavigation[$_PE[0] . '/' . $sID . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
@@ -1383,7 +1383,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
 
 
 if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]))
-    && $_PE[2] == 'graphs' && !ACTION && $_SETT['customization_settings']['show_graphs']) {
+    && $_PE[2] == 'graphs' && !ACTION && $_SETT['customization_settings']['graphs_enable']) {
     // URL: /genes/DMD/graphs
     // Show different graphs about this gene; variant type (DNA, RNA & Protein level), ...
 

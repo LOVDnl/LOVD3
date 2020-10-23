@@ -207,13 +207,12 @@ $_SETT = array(
                 'customization_settings' => // Miscellaneous configuration settings.
                 array(
                     'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    'graphs_enable' => !LOVD_light,
                     // FIXME: Check and rename all features below into object_action. Add LOVD_plus flag when necessary.
                     'enable_variant_mapping_in_background' => !LOVD_light && !LOVD_plus,
                     // Show variant list for whole genome on page `variants/`. If false, variant
                     // counts per chromosome are displayed.
                     'show_full_genome_variant_vl' => !LOVD_light && !LOVD_plus,
-                    // Show graphs page and links to that page.
-                    'show_graphs' => !LOVD_light,
                     // Show / hide tabs in page header.
                     'show_tab_diseases' => !LOVD_light,
                     'show_tab_individuals' => !LOVD_light,
