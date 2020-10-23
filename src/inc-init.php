@@ -206,6 +206,7 @@ $_SETT = array(
                 ),
                 'customization_settings' => // Miscellaneous configuration settings.
                 array(
+                    'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_LIGHT),
                     'enable_variant_mapping_in_background' => !LOVD_LIGHT && !LOVD_plus,
                     // Show variant list for whole genome on page `variants/`. If false, variant
                     // counts per chromosome are displayed.

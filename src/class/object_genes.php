@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-07-22
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-23
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -97,7 +97,7 @@ class LOVD_Gene extends LOVD_Object
                                           // FIXME; Can we get this order correct, such that diseases without abbreviation nicely mix with those with? Right now, the diseases without symbols are in the back.
                                           'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
                                           'COUNT(DISTINCT t.id) AS transcripts' .
-                                          (!$_SETT['customization_settings']['show_variants_on_gene_vl']? '' :
+                                          (!$_SETT['customization_settings']['genes_VL_show_variant_counts']? '' :
                                               ', ' .
                                               'COUNT(DISTINCT vog.id) AS variants, ' .
                                               'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants');
@@ -105,7 +105,7 @@ class LOVD_Gene extends LOVD_Object
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
-                                          (!$_SETT['customization_settings']['show_variants_on_gene_vl']? '' :
+                                          (!$_SETT['customization_settings']['genes_VL_show_variant_counts']? '' :
                                              // Speed optimization by skipping variant counts.
                                             'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
                                             'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
@@ -205,18 +205,17 @@ class LOVD_Gene extends LOVD_Object
                     'view' => array('Unique variants', 70, 'style="text-align : right;"'),
                     'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
                 'updated_date_' => array(
-                    'view' => array('Last updated', 110),
+                    'view' => (LOVD_LIGHT? false : array('Last updated', 110)),
                     'db'   => array('g.updated_date', 'DESC', true)),
                 'diseases_' => array(
                     'view' => array('Associated with diseases', 200),
                     'db'   => array('diseases_', false, 'TEXT')),
             );
 
-        if (!$_SETT['customization_settings']['show_variants_on_gene_vl']) {
+        if (!$_SETT['customization_settings']['genes_VL_show_variant_counts']) {
             // Hide variant columns and updated_date.
             unset($this->aColumnsViewList['variants']);
             unset($this->aColumnsViewList['uniq_variants']);
-            unset($this->aColumnsViewList['updated_date_']);
         }
 
         if ($_SETT['customization_settings']['show_transcript_select_on_gene_vl']) {
