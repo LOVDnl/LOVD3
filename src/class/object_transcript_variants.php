@@ -127,6 +127,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
+                     'id' => array(
+                         'view' => false,
+                         'db'   => array('vot.id', 'ASC', true)),
                         'geneid' => array(
                                     'view' => array('Gene', 70),
                                     'db'   => array('t.geneid', 'ASC', true)),

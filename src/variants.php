@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-10-01
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-26
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -477,7 +477,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
           '      <DIV id="viewentryDiv">' . "\n" .
           '      </DIV>' . "\n\n");
 
-    $_GET['search_id_'] = $nID;
+    $_GET['search_id'] = $nID;
     print('      <BR><BR>' . "\n\n");
     $_T->printTitle('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
@@ -500,7 +500,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         });
     }
     $_DATA->viewList($sViewListID, $aVLOptions);
-    unset($_GET['search_id_']);
+    unset($_GET['search_id']);
 ?>
 
       <SCRIPT type="text/javascript">
