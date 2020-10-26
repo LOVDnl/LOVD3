@@ -131,7 +131,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
                                     'view' => array('Gene', 70),
                                     'db'   => array('t.geneid', 'ASC', true)),
                         'transcriptid' => array(
-                                    'view' => array('Transcript ID', 90),
+                                    'view' => array('Transcript ID', 50),
                                     'db'   => array('vot.transcriptid', 'ASC', true)),
                         'id_ncbi' => array(
                                     'view' => array('Transcript', 120),
