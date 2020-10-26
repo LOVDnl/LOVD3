@@ -142,6 +142,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                                     'view' => false,
                                     'db'   => array('screeningids', 'ASC', 'TEXT')),
                         'id_' => array(
+                                    'auth' => LEVEL_CURATOR,
                                     'view' => array('Variant ID', 75, 'style="text-align : right;"'),
                                     'db'   => array('vog.id', 'ASC', true)),
                         'effect' => array(

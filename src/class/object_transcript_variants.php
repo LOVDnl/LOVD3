@@ -137,6 +137,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
                                     'view' => array('Transcript', 120),
                                     'db'   => array('t.id_ncbi', 'ASC', true)),
                         'id_' => array(
+                                    'auth' => LEVEL_CURATOR,
                                     'view' => array('Variant ID', 75),
                                     'db'   => array('vot.id', 'ASC', true)),
                         'effect' => array(

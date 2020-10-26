@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2020-09-10
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-26
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -617,6 +617,10 @@ class LOVD_CustomViewList extends LOVD_Object
                     // The fixed columns.
                     $this->aColumnsViewList = array_merge($this->aColumnsViewList,
                          array(
+                                'votid' => array(
+                                        'auth' => LEVEL_CURATOR,
+                                        'view' => (!isset($nKeyVOT) || $nKeyVOT !== 0? false : array('Variant ID', 70, 'style="text-align : right;"')),
+                                        'db'   => array('vot.id', 'ASC', true)),
                                 'transcriptid' => array(
                                         'view' => false,
                                         'db'   => array('vot.transcriptid', 'ASC', true)),
@@ -794,6 +798,9 @@ class LOVD_CustomViewList extends LOVD_Object
                     break;
             }
         }
+
+        // Unset columns with a configured 'auth' key for lower level users.
+        $this->unsetColsByAuthLevel();
 
 
 
