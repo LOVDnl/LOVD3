@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-10-23
+ * Modified    : 2020-10-26
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -239,11 +239,6 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/genes/' . $_SESSION['currdb'] . '/graphs']);
         }
 
-        if (!$_SETT['customization_settings']['show_unique_variants_menu_item']) {
-            // Hide link to unique variant view for current gene.
-            unset($this->aMenu['variants_']['/variants/' . $_SESSION['currdb'] . '/unique']);
-        }
-
         if (!$_SETT['customization_settings']['show_variants_affecting_transcripts_menu_item']) {
             // Hide link to variants affecting transcripts.
             unset($this->aMenu['variants_']['/variants/in_gene']);
@@ -287,6 +282,7 @@ class LOVD_Template
         }
 
         if (LOVD_light) {
+            unset($this->aMenu['variants_']['/variants/' . $_SESSION['currdb'] . '/unique']);
             unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
             unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
             unset($this->aMenu['individuals'], $this->aMenu['individuals_']);
@@ -835,7 +831,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
             if ($_SESSION['currdb']) {
                 if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants', 'screenings', 'individuals'))) {
                     $sURL = $sPrefix . '/' . $_SESSION['currdb'];
-                    if ($sPrefix == 'variants' && $_SETT['customization_settings']['show_unique_variants_menu_item']) {
+                    if ($sPrefix == 'variants' && isset($this->aMenu[$sPrefix . '_']['/' . $sURL . '/unique'])) {
                         $sURL .= '/unique';
                     }
                 } elseif ($sPrefix == 'diseases') {
