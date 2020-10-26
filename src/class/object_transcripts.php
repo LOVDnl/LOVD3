@@ -123,7 +123,7 @@ class LOVD_Transcript extends LOVD_Object
         $this->aColumnsViewList = array_merge(
             array(
                 'id_' => array(
-                    'view' => array('ID', 70, 'style="text-align : right;"'),
+                    'view' => array('ID', 50, 'style="text-align : right;"'),
                     'db'   => array('t.id', 'ASC', true)),
                 'chromosome' => array(
                     'view' => array('Chr', 40),
