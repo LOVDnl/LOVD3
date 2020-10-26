@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-06-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-26
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -142,7 +142,8 @@ class LOVD_GenomeVariant extends LOVD_Custom
                                     'view' => false,
                                     'db'   => array('screeningids', 'ASC', 'TEXT')),
                         'id_' => array(
-                                    'view' => array('Variant ID', 90, 'style="text-align : right;"'),
+                                    'auth' => LEVEL_CURATOR,
+                                    'view' => array('Variant ID', 75, 'style="text-align : right;"'),
                                     'db'   => array('vog.id', 'ASC', true)),
                         'effect' => array(
                                     'view' => array('Effect', 70),
