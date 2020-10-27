@@ -110,26 +110,27 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-                 array(
-                        'individualid_' => 'Individual ID',
-                        'chromosome' => 'Chromosome',
-                        'allele_' => 'Allele',
-                        'effect_reported' => 'Affects function (as reported)',
-                        'effect_concluded' => 'Affects function (by curator)',
-                        'curation_status_' => 'Curation status',
-                        'confirmation_status_' => 'Confirmation status',
-                      ),
-                 $this->buildViewEntry(),
-                 array(
-                        'mapping_flags_' => array('Automatic mapping', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'average_frequency_' => 'Average frequency (large NGS studies)',
-                        'owned_by_' => 'Owner',
-                        'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
-                      ));
+            array(
+                'individualid_' => 'Individual ID',
+                'chromosome' => 'Chromosome',
+                'allele_' => 'Allele',
+                'effect_reported' => 'Affects function (as reported)',
+                'effect_concluded' => 'Affects function (by curator)',
+                'curation_status_' => 'Curation status',
+                'confirmation_status_' => 'Confirmation status',
+            ),
+            $this->buildViewEntry(),
+            array(
+                'mapping_flags_' => array('Automatic mapping', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'average_frequency_' => 'Average frequency (large NGS studies)',
+                'owned_by_' => 'Owner',
+                'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
+            )
+        );
         if (!LOVD_plus) {
             unset($this->aColumnsViewEntry['curation_status_']);
             unset($this->aColumnsViewEntry['confirmation_status_']);
@@ -137,56 +138,59 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
-                 array(
-                     'id' => array(
-                         'view' => false,
-                         'db'   => array('vog.id', 'ASC', true)),
-                        'screeningids' => array(
-                                    'view' => false,
-                                    'db'   => array('screeningids', 'ASC', 'TEXT')),
-                        'id_' => array(
-                                    'auth' => LEVEL_CURATOR,
-                                    'view' => array('Variant ID', 75, 'style="text-align : right;"'),
-                                    'db'   => array('vog.id', 'ASC', true)),
-                        'effect' => array(
-                                    'view' => array('Effect', 70),
-                                    'db'   => array('e.name', 'ASC', true),
-                                    'legend' => array('The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
-                        'allele_' => array(
-                                    'view' => array('Allele', 120),
-                                    'db'   => array('a.name', 'ASC', true),
-                                    'legend' => array('On which allele is the variant located? Does not necessarily imply inheritance!',
-                                                      'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
-                        'chromosome' => array(
-                                    'view' => array('Chr', 50),
-                                    'db'   => array('vog.chromosome', 'ASC', true)),
-                        'position_g_start' => array(
-                                    'view' => false,
-                                    'db'   => array('vog.position_g_start', 'ASC', true)),
-                        'position_g_end' => array(
-                                     'view' => false,
-                                    'db'   => array('vog.position_g_end', 'ASC', true)),
-                      ),
-                 $this->buildViewList(),
-                 array(
-                        'owned_by_' => array(
-                                    'view' => array('Owner', 160),
-                                    'db'   => array('uo.name', 'ASC', true)),
-                        'owner_countryid' => array(
-                                    'view' => false,
-                                    'db'   => array('uo.countryid', 'ASC', true)),
-                        'status' => array(
-                                    'view' => array('Status', 70),
-                                    'db'   => array('ds.name', false, true),
-                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_by' => array(
-                                    'view' => false,
-                                    'db'   => array('vog.created_by', false, true)),
-                        'created_date' => array(
-                                    'view' => false,
-                                    'db'   => array('vog.created_date', 'ASC', true)),
-                      ));
+            array(
+                'id' => array(
+                    'view' => false,
+                    'db'   => array('vog.id', 'ASC', true)),
+                'screeningids' => array(
+                    'view' => false,
+                    'db'   => array('screeningids', 'ASC', 'TEXT')),
+                'id_' => array(
+                    'auth' => LEVEL_CURATOR,
+                    'view' => array('Variant ID', 75, 'style="text-align : right;"'),
+                    'db'   => array('vog.id', 'ASC', true)),
+                'effect' => array(
+                    'view' => array('Effect', 70),
+                    'db'   => array('e.name', 'ASC', true),
+                    'legend' => array(
+                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
+                'allele_' => array(
+                    'view' => array('Allele', 120),
+                    'db'   => array('a.name', 'ASC', true),
+                    'legend' => array(
+                        'On which allele is the variant located? Does not necessarily imply inheritance!',
+                        'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
+                'chromosome' => array(
+                    'view' => array('Chr', 50),
+                    'db'   => array('vog.chromosome', 'ASC', true)),
+                'position_g_start' => array(
+                    'view' => false,
+                    'db'   => array('vog.position_g_start', 'ASC', true)),
+                'position_g_end' => array(
+                    'view' => false,
+                    'db'   => array('vog.position_g_end', 'ASC', true)),
+            ),
+            $this->buildViewList(),
+            array(
+                'owned_by_' => array(
+                    'view' => array('Owner', 160),
+                    'db'   => array('uo.name', 'ASC', true)),
+                'owner_countryid' => array(
+                    'view' => false,
+                    'db'   => array('uo.countryid', 'ASC', true)),
+                'status' => array(
+                    'view' => array('Status', 70),
+                    'db'   => array('ds.name', false, true),
+                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_by' => array(
+                    'view' => false,
+                    'db'   => array('vog.created_by', false, true)),
+                'created_date' => array(
+                    'view' => false,
+                    'db'   => array('vog.created_date', 'ASC', true)),
+            )
+        );
 
         $this->sSortDefault = 'VariantOnGenome/DNA';
 
