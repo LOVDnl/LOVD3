@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-10-12
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-27
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -678,7 +678,11 @@ class LOVD_Object
         }
 
         // Handle simple setting arrays differently.
-        if (!$nNesting && current(array_unique(array_values($aData))) == 1) {
+        // Added SORT_REGULAR to prevent array_unique() to transform nested
+        //  arrays to string to make the comparison (as it does by default).
+        //  Adding SORT_REGULAR makes it actually compare the arrays instead of
+        //  comparing "Array" and then taking the first only.
+        if (!$nNesting && current(array_unique(array_values($aData), SORT_REGULAR)) == 1) {
             // This is a simple array with just settings that are turned on.
             return implode('<BR>', array_map(function ($sKey) {
                 return ucfirst(str_replace('_', ' ', $sKey)) . ' <IMG src="gfx/mark_1.png" alt="" width="11" height="11">';
