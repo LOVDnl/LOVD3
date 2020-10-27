@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-10-26
+ * Modified    : 2020-10-27
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -138,6 +138,9 @@ class LOVD_GenomeVariant extends LOVD_Custom
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
                  array(
+                     'id' => array(
+                         'view' => false,
+                         'db'   => array('vog.id', 'ASC', true)),
                         'screeningids' => array(
                                     'view' => false,
                                     'db'   => array('screeningids', 'ASC', 'TEXT')),
