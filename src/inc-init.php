@@ -213,8 +213,6 @@ $_SETT = array(
                     'variant_mapping_in_background' => !(LOVD_plus || LOVD_light),
                     'variants_VL_per_chromosome_only' => !(LOVD_plus || LOVD_light),
                     // FIXME: Check and rename all features below into object_action. Add LOVD_plus flag when necessary.
-                    // Show variant list for whole genome on page `variants/`. If false, variant
-                    // counts per chromosome are displayed.
                     'variant_viewlist_show_allele' => !LOVD_light,
                     'variant_viewlist_show_effect' => !LOVD_light,
                     'variant_viewlist_show_owner' => !LOVD_light,

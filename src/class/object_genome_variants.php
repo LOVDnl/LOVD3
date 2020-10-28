@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-06-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-28
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -87,10 +87,6 @@ class LOVD_GenomeVariant extends LOVD_Custom
         // FIXME: we should implement this in a different way
         $this->aSQLViewList['SELECT'] =
             'vog.*' .
-            // FIXME; de , is niet de standaard.
-            (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']? '' :
-                ', GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids'
-            ) .
             (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
                 ', a.name AS allele_'
             ) .
@@ -170,7 +166,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             array(
                 'screeningids' => array(
                     'view' => false,
-                    'db'   => array('screeningids', 'ASC', 'TEXT')),
+                    'db'   => array('s2v.screeningid', 'ASC', true)),
                 'id_' => array(
                     'view' => array('Variant ID', 90, 'style="text-align : right;"'),
                     'db'   => array('vog.id', 'ASC', true)),
