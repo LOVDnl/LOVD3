@@ -209,12 +209,12 @@ $_SETT = array(
                     'genes_VE_show_unique_variant_counts' => !LOVD_light,
                     'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
                     'graphs_enable' => !LOVD_light,
+                    'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
                     // FIXME: Check and rename all features below into object_action. Add LOVD_plus flag when necessary.
                     'enable_variant_mapping_in_background' => !LOVD_light && !LOVD_plus,
                     // Show variant list for whole genome on page `variants/`. If false, variant
                     // counts per chromosome are displayed.
                     'show_full_genome_variant_vl' => !LOVD_light && !LOVD_plus,
-                    'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
                     'variant_viewlist_show_allele' => !LOVD_light,
                     'variant_viewlist_show_effect' => !LOVD_light,
                     'variant_viewlist_show_owner' => !LOVD_light,

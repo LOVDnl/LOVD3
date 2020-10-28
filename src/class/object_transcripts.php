@@ -87,15 +87,15 @@ class LOVD_Transcript extends LOVD_Object
                                           (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']? '' :
                                               // Speed optimization by skipping variant counts.
                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
-                                            // If user is less than a collaborator, only show public variants and
-                                            // variants owned/created by him.
-                                            ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
-                                                  ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
-                                                  '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
+                                              // If user is less than a collaborator, only show public variants and
+                                              // variants owned/created by him.
+                                              ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                                                  ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog' .
+                                                  '   ON (vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
                                                   (!$_AUTH? '' :
-                                                      ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
-                                                      'vog.owned_by = "' . $_AUTH['id'] . '"'
-                                                  ) . ')) '
+                                                      ' OR vog.created_by = "' . $_AUTH['id'] . '"' .
+                                                      ' OR vog.owned_by = "' . $_AUTH['id'] . '"'
+                                                  ) . '))'
                                               )
                                           );
         $this->aSQLViewList['GROUP_BY'] = 't.id';
