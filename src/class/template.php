@@ -239,11 +239,6 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/genes/' . $_SESSION['currdb'] . '/graphs']);
         }
 
-        if (!$_SETT['customization_settings']['show_variants_affecting_transcripts_menu_item']) {
-            // Hide link to variants affecting transcripts.
-            unset($this->aMenu['variants_']['/variants/in_gene']);
-        }
-
         foreach ($this->aMenu as $name => $val) {
             // Unset menu items if their "show_tab_*" setting is set to false.
             // E.g. remove 'genes' and 'genes_' from menu when
@@ -282,6 +277,7 @@ class LOVD_Template
         }
 
         if (LOVD_light) {
+            unset($this->aMenu['variants_']['/variants/in_gene']);
             unset($this->aMenu['variants_']['/variants/' . $_SESSION['currdb'] . '/unique']);
             unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
             unset($this->aMenu['diseases'], $this->aMenu['diseases_']);

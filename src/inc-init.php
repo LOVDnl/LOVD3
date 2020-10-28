@@ -214,7 +214,6 @@ $_SETT = array(
                     // Show variant list for whole genome on page `variants/`. If false, variant
                     // counts per chromosome are displayed.
                     'show_full_genome_variant_vl' => !LOVD_light && !LOVD_plus,
-                    'show_variants_affecting_transcripts_menu_item' => !LOVD_light,
                     'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
                     'variant_viewlist_show_allele' => !LOVD_light,
                     'variant_viewlist_show_effect' => !LOVD_light,
