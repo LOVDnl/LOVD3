@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-10-23
+ * Modified    : 2020-10-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -218,7 +218,7 @@ class LOVD_Gene extends LOVD_Object
             unset($this->aColumnsViewList['uniq_variants']);
         }
 
-        if ($_SETT['customization_settings']['show_transcript_select_on_gene_vl']) {
+        if (LOVD_plus) {
             // Add transcript information for the gene panel's "Manage genes" gene viewlist.
             // Unfortunately, we can't limit this for the genes VL on the gene panel page,
             //  because we also want it to work on the AJAX viewlist, so we can't use lovd_getProjectFile(),
