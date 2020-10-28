@@ -216,7 +216,6 @@ $_SETT = array(
                     'variant_viewlist_show_allele' => !LOVD_light,
                     'variant_viewlist_show_effect' => !LOVD_light,
                     'variant_viewlist_show_owner' => !LOVD_light,
-                    'variant_viewlist_show_screeningids' => !LOVD_light,
                     'variant_viewlist_show_status' => !LOVD_light,
                 ),
                 'gene_imprinting' =>

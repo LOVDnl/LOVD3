@@ -111,7 +111,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
                 : ''
             ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']? '' :
+            (empty($_GET['search_screeningids'])? '' :
                 'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) '
             ) .
             (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
@@ -126,10 +126,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             (!$_SETT['customization_settings']['variant_viewlist_show_status']? '' :
                 'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)'
             );
-
-        if ($_SETT['customization_settings']['variant_viewlist_show_screeningids']) {
-            $this->aSQLViewList['GROUP_BY'] = 'vog.id';
-        }
+        $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
         parent::__construct();
 
@@ -213,9 +210,6 @@ class LOVD_GenomeVariant extends LOVD_Custom
             )
         );
 
-        if (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']) {
-            unset($this->aColumnsViewList['screeningids']);
-        }
         if (!$_SETT['customization_settings']['variant_viewlist_show_effect']) {
             unset($this->aColumnsViewList['effect']);
         }
