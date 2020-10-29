@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-10-26
+ * Modified    : 2020-10-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -239,11 +239,6 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/genes/' . $_SESSION['currdb'] . '/graphs']);
         }
 
-        if (!$_SETT['customization_settings']['show_variants_affecting_transcripts_menu_item']) {
-            // Hide link to variants affecting transcripts.
-            unset($this->aMenu['variants_']['/variants/in_gene']);
-        }
-
         foreach ($this->aMenu as $name => $val) {
             // Unset menu items if their "show_tab_*" setting is set to false.
             // E.g. remove 'genes' and 'genes_' from menu when
@@ -282,6 +277,7 @@ class LOVD_Template
         }
 
         if (LOVD_light) {
+            unset($this->aMenu['variants_']['/variants/in_gene']);
             unset($this->aMenu['variants_']['/variants/' . $_SESSION['currdb'] . '/unique']);
             unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
             unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
@@ -421,8 +417,8 @@ class LOVD_Template
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!LOVD_plus && $_SETT['customization_settings']['enable_variant_mapping_in_background'] &&
-            !((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
+        if ($_SETT['customization_settings']['variant_mapping_in_background'] && !defined('NOT_INSTALLED')
+            && !(ROOT_PATH == '../' && defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) {
             // Allow variant mapping to happen in the background (either manually or
             // automatically triggered).
             print('

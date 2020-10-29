@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-10-26
+ * Modified    : 2020-10-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -87,10 +87,6 @@ class LOVD_GenomeVariant extends LOVD_Custom
         // FIXME: we should implement this in a different way
         $this->aSQLViewList['SELECT'] =
             'vog.*' .
-            // FIXME; de , is niet de standaard.
-            (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']? '' :
-                ', GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids'
-            ) .
             (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
                 ', a.name AS allele_'
             ) .
@@ -115,7 +111,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
                 : ''
             ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']? '' :
+            (empty($_GET['search_screeningids'])? '' :
                 'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) '
             ) .
             (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
@@ -130,10 +126,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             (!$_SETT['customization_settings']['variant_viewlist_show_status']? '' :
                 'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)'
             );
-
-        if ($_SETT['customization_settings']['variant_viewlist_show_screeningids']) {
-            $this->aSQLViewList['GROUP_BY'] = 'vog.id';
-        }
+        $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
         parent::__construct();
 
@@ -170,7 +163,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             array(
                 'screeningids' => array(
                     'view' => false,
-                    'db'   => array('screeningids', 'ASC', 'TEXT')),
+                    'db'   => array('s2v.screeningid', 'ASC', true)),
                 'id_' => array(
                     'auth' => LEVEL_CURATOR,
                     'view' => array('Variant ID', 75, 'style="text-align : right;"'),
@@ -218,9 +211,6 @@ class LOVD_GenomeVariant extends LOVD_Custom
             )
         );
 
-        if (!$_SETT['customization_settings']['variant_viewlist_show_screeningids']) {
-            unset($this->aColumnsViewList['screeningids']);
-        }
         if (!$_SETT['customization_settings']['variant_viewlist_show_effect']) {
             unset($this->aColumnsViewList['effect']);
         }

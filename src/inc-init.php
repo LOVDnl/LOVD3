@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-10-26
+ * Modified    : 2020-10-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -206,21 +206,16 @@ $_SETT = array(
                 ),
                 'customization_settings' => // Miscellaneous configuration settings.
                 array(
+                    'genes_VE_show_unique_variant_counts' => !LOVD_light,
                     'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
                     'graphs_enable' => !LOVD_light,
-                    // FIXME: Check and rename all features below into object_action. Add LOVD_plus flag when necessary.
-                    'enable_variant_mapping_in_background' => !LOVD_light && !LOVD_plus,
-                    // Show variant list for whole genome on page `variants/`. If false, variant
-                    // counts per chromosome are displayed.
-                    'show_full_genome_variant_vl' => !LOVD_light && !LOVD_plus,
-                    'show_transcript_select_on_gene_vl' => LOVD_plus,
-                    'show_unique_variants_on_gene_ve' => !LOVD_light,
-                    'show_variants_affecting_transcripts_menu_item' => !LOVD_light,
                     'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    'variant_mapping_in_background' => !(LOVD_plus || LOVD_light),
+                    'variants_VL_per_chromosome_only' => !(LOVD_plus || LOVD_light),
+                    // FIXME: Check and rename all features below into object_action. Add LOVD_plus flag when necessary.
                     'variant_viewlist_show_allele' => !LOVD_light,
                     'variant_viewlist_show_effect' => !LOVD_light,
                     'variant_viewlist_show_owner' => !LOVD_light,
-                    'variant_viewlist_show_screeningids' => !LOVD_light,
                     'variant_viewlist_show_status' => !LOVD_light,
                 ),
                 'gene_imprinting' =>

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-10-23
+ * Modified    : 2020-10-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -76,9 +76,9 @@ class LOVD_Gene extends LOVD_Object
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
                                            '(SELECT COUNT(DISTINCT vog.id) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS variants, ' .
-                                           (!$_SETT['customization_settings']['show_unique_variants_on_gene_ve']? '' :
+                                           (!$_SETT['customization_settings']['genes_VE_show_unique_variant_counts']? '' :
                                                '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ') .
-                                           '"" AS count_individuals, ' . // Temporarely value, prepareData actually runs this query.
+                                           '"" AS count_individuals, ' . // Temporary value, prepareData actually runs this query.
                                            '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS hidden_vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS hidden_vot ON (hidden_vog.id = hidden_vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (hidden_vot.transcriptid = t.id) WHERE t.geneid = g.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') AS hidden_variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
@@ -173,7 +173,7 @@ class LOVD_Gene extends LOVD_Object
             unset($this->aColumnsViewEntry['updated_by_']);
             unset($this->aColumnsViewEntry['updated_date_']);
         }
-        if (!$_SETT['customization_settings']['show_unique_variants_on_gene_ve']) {
+        if (!$_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
             unset($this->aColumnsViewEntry['uniq_variants_']);
         }
 
@@ -218,7 +218,7 @@ class LOVD_Gene extends LOVD_Object
             unset($this->aColumnsViewList['uniq_variants']);
         }
 
-        if ($_SETT['customization_settings']['show_transcript_select_on_gene_vl']) {
+        if (LOVD_plus) {
             // Add transcript information for the gene panel's "Manage genes" gene viewlist.
             // Unfortunately, we can't limit this for the genes VL on the gene panel page,
             //  because we also want it to work on the AJAX viewlist, so we can't use lovd_getProjectFile(),
@@ -624,11 +624,9 @@ class LOVD_Gene extends LOVD_Object
                 $zData['variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['variants'] . '</A>';
             }
 
-            if ($_SETT['customization_settings']['show_unique_variants_on_gene_ve']) {
-                $zData['uniq_variants_'] = 0;
-                if ($zData['uniq_variants']) {
-                    $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
-                }
+            $zData['uniq_variants_'] = 0;
+            if ($zData['uniq_variants'] && $_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
+                $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
             }
             //'count_individuals' => 'Individuals with public variants',
             $zData['hidden_variants_'] = $zData['hidden_variants'];
