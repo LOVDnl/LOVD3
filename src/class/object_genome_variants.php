@@ -190,17 +190,14 @@ class LOVD_GenomeVariant extends LOVD_Custom
             )
         );
 
+        if (!$_SETT['customization_settings']['variants_hide_observation_features']) {
+            foreach (array('allele_', 'owned_by_', 'status') as $sCol) {
+                unset($this->aColumnsViewEntry[$sCol]);
+                unset($this->aColumnsViewList[$sCol]);
+            }
+        }
         if (!$_SETT['customization_settings']['variant_viewlist_show_effect']) {
             unset($this->aColumnsViewList['effect']);
-        }
-        if (!$_SETT['customization_settings']['variant_viewlist_show_allele']) {
-            unset($this->aColumnsViewList['allele_']);
-        }
-        if (!$_SETT['customization_settings']['variant_viewlist_show_owner']) {
-            unset($this->aColumnsViewList['owned_by_']);
-        }
-        if (!$_SETT['customization_settings']['variant_viewlist_show_status']) {
-            unset($this->aColumnsViewList['status']);
         }
 
         $this->sSortDefault = 'VariantOnGenome/DNA';

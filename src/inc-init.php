@@ -211,6 +211,7 @@ $_SETT = array(
                     'graphs_enable' => !LOVD_light,
                     'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
                     'variant_mapping_in_background' => !(LOVD_plus || LOVD_light),
+                    'variants_hide_observation_features' => LOVD_light,
                     'variants_VL_per_chromosome_only' => !(LOVD_plus || LOVD_light),
                     'variants_VL_quick_dirty_sort' => (LOVD_plus || LOVD_light),
                     // FIXME: Check and rename all features below into object_action. Add LOVD_plus flag when necessary.
