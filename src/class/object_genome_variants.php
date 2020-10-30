@@ -84,48 +84,27 @@ class LOVD_GenomeVariant extends LOVD_Custom
         $this->aSQLViewEntry['GROUP_BY'] = 'vog.id';
 
         // SQL code for viewing the list of variants
-        // FIXME: we should implement this in a different way
         $this->aSQLViewList['SELECT'] =
-            'vog.*' .
-            (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
-                ', a.name AS allele_'
-            ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_effect']? '' :
-                ', e.name AS effect'
-            ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_owner']? '' :
-                ', uo.name AS owned_by_' .
-                ', CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner'
-            ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_status']? '' :
-              ', ds.name AS status'
-            );
-
+            'vog.*, ' .
+            'a.name AS allele_, ' .
+            'e.name AS effect, ' .
+            'uo.name AS owned_by_, ' .
+            'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
+            'ds.name AS status';
         $this->aSQLViewList['FROM'] =
             TABLE_VARIANTS . ' AS vog ' .
             // Added so that Curators and Collaborators can view the variants for which they have
-            // viewing rights in the genomic variant viewlist. Where condition is set in
-            // object_custom.php
+            // viewing rights in the genomic variant VL.
+            // The WHERE condition is set in object_custom.php.
             ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
                 'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
                 'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
-                : ''
-            ) .
-            (empty($_GET['search_screeningids'])? '' :
-                'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) '
-            ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
-                'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) '
-            ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_effect']? '' :
-                'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) '
-            ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_owner']? '' :
-                'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) '
-            ) .
-            (!$_SETT['customization_settings']['variant_viewlist_show_status']? '' :
-                'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)'
-            );
+            : '') .
+            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
+            'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
         $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
         parent::__construct();
