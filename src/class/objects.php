@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-10-23
+ * Modified    : 2020-10-30
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2384,10 +2384,20 @@ class LOVD_Object
             } elseif (preg_match('/' . TABLE_VARIANTS . ' AS ([a-z]+)/i', $this->aSQLViewList['FROM'], $aRegs)) {
                 $sAlias = $aRegs[1];
             }
-            $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_CHROMOSOMES . ' AS chr ON (' . (!$sAlias? '' : $sAlias . '.') . 'chromosome = chr.name)';
-            $sSQLOrderBy = 'chr.sort_id ' . $aOrder[1];
+            if (!$_SETT['customization_settings']['variants_VL_quick_dirty_sort']) {
+                // The quick dirty sort sorts on chromosomes alphabetically to use the VOG's keys.
+                // It's ugly because 2 sorts after 10-19, but it's 1000x faster if also the sort on VOG/DNA is dropped (which we do below).
+                $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_CHROMOSOMES . ' AS chr ON (' . (!$sAlias? '' : $sAlias . '.') . 'chromosome = chr.name)';
+                $sSQLOrderBy = 'chr.sort_id ' . $aOrder[1];
+            } else {
+                $sSQLOrderBy = $sAlias . '.chromosome ' . $aOrder[1];
+            }
             if ($aOrder[0] == 'VariantOnGenome/DNA') {
-                $sSQLOrderBy .= ', position_g_start ' . $aOrder[1] . ', position_g_end ' . $aOrder[1] . ', `VariantOnGenome/DNA` ' . $aOrder[1];
+                $sSQLOrderBy .= ', position_g_start ' . $aOrder[1] . ', position_g_end ' . $aOrder[1];
+                if (!$_SETT['customization_settings']['variants_VL_quick_dirty_sort']) {
+                    // Only actually sort on VOG/DNA if we're not dirty-sorting.
+                    $sSQLOrderBy .= ', `VariantOnGenome/DNA` ' . $aOrder[1];
+                }
             }
         } elseif ($aOrder[0] == 'VariantOnTranscript/DNA') {
             $sSQLOrderBy = 'position_c_start ' . $aOrder[1] . ', position_c_start_intron ' . $aOrder[1] . ', position_c_end ' . $aOrder[1] . ', position_c_end_intron ' . $aOrder[1] . ', `VariantOnTranscript/DNA` ' . $aOrder[1];
