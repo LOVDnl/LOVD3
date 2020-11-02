@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-10-28
+ * Modified    : 2020-11-02
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -237,16 +237,6 @@ class LOVD_Template
         if (!$_SETT['customization_settings']['graphs_enable']) {
             // Hide link to graphs for current gene.
             unset($this->aMenu['genes_']['/genes/' . $_SESSION['currdb'] . '/graphs']);
-        }
-
-        foreach ($this->aMenu as $name => $val) {
-            // Unset menu items if their "show_tab_*" setting is set to false.
-            // E.g. remove 'genes' and 'genes_' from menu when
-            // $_SETT['customization_settings']['show_tab_genes'] is false.
-            if (isset($_SETT['customization_settings']['show_tab_' . $name]) &&
-                $_SETT['customization_settings']['show_tab_' . $name] == false) {
-                unset($this->aMenu[$name], $this->aMenu[$name . '_']);
-            }
         }
 
         if (LOVD_plus) {
