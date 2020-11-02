@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-10-28
+ * Modified    : 2020-11-02
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -625,7 +625,7 @@ class LOVD_Gene extends LOVD_Object
             }
 
             $zData['uniq_variants_'] = 0;
-            if ($zData['uniq_variants'] && $_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
+            if (!empty($zData['uniq_variants']) && $_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
                 $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
             }
             //'count_individuals' => 'Individuals with public variants',
