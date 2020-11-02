@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-10-28
+ * Modified    : 2020-11-01
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,7 +83,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vog.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'vog.id';
 
-        // SQL code for viewing the list of variants
+        // SQL code for viewing the list of variants.
         $this->aSQLViewList['SELECT'] =
             'vog.*, ' .
             'a.name AS allele_, ' .
@@ -190,7 +190,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             )
         );
 
-        if (!$_SETT['customization_settings']['variants_hide_observation_features']) {
+        if ($_SETT['customization_settings']['variants_hide_observation_features']) {
             foreach (array('allele_', 'owned_by_', 'status') as $sCol) {
                 unset($this->aColumnsViewEntry[$sCol]);
                 unset($this->aColumnsViewList[$sCol]);
