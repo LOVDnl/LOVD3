@@ -206,6 +206,7 @@ $_SETT = array(
                 ),
                 'customization_settings' => // Miscellaneous configuration settings.
                 array(
+                    'genes_show_meta_data' => !(LOVD_plus || LOVD_light),
                     'genes_VE_show_unique_variant_counts' => !LOVD_light,
                     'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
                     'graphs_enable' => !LOVD_light,

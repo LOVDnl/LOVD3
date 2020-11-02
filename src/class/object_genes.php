@@ -98,6 +98,7 @@ class LOVD_Gene extends LOVD_Object
                                           'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
                                           'COUNT(DISTINCT t.id) AS transcripts' .
                                           (!$_SETT['customization_settings']['genes_VL_show_variant_counts']? '' :
+                                              // Speed optimization by skipping variant counts.
                                               ', ' .
                                               'COUNT(DISTINCT vog.id) AS variants, ' .
                                               'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants');
@@ -106,9 +107,9 @@ class LOVD_Gene extends LOVD_Object
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
                                           (!$_SETT['customization_settings']['genes_VL_show_variant_counts']? '' :
-                                             // Speed optimization by skipping variant counts.
-                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
+                                              // Speed optimization by skipping variant counts.
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
@@ -169,9 +170,15 @@ class LOVD_Gene extends LOVD_Object
                         'show_genecards_' => 'GeneCards',
                         'show_genetests_' => 'GeneTests',
                       );
-        if (LOVD_plus) {
+        if (!$_SETT['customization_settings']['genes_show_meta_data']) {
+            // Hide date and user fields.
+            unset($this->aColumnsViewEntry['created_by_']);
+            unset($this->aColumnsViewEntry['created_date_']);
+            unset($this->aColumnsViewEntry['edited_by_']);
+            unset($this->aColumnsViewEntry['edited_date_']);
             unset($this->aColumnsViewEntry['updated_by_']);
             unset($this->aColumnsViewEntry['updated_date_']);
+            unset($this->aColumnsViewEntry['version_']);
         }
         if (!$_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
             unset($this->aColumnsViewEntry['uniq_variants_']);
@@ -205,13 +212,17 @@ class LOVD_Gene extends LOVD_Object
                     'view' => array('Unique variants', 70, 'style="text-align : right;"'),
                     'db'   => array('uniq_variants', 'DESC', 'INT_UNSIGNED')),
                 'updated_date_' => array(
-                    'view' => (LOVD_light? false : array('Last updated', 110)),
+                    'view' => array('Last updated', 110),
                     'db'   => array('g.updated_date', 'DESC', true)),
                 'diseases_' => array(
                     'view' => array('Associated with diseases', 200),
                     'db'   => array('diseases_', false, 'TEXT')),
             );
 
+        if (!$_SETT['customization_settings']['genes_show_meta_data']) {
+            // Hide date field.
+            unset($this->aColumnsViewList['updated_date_']);
+        }
         if (!$_SETT['customization_settings']['genes_VL_show_variant_counts']) {
             // Hide variant columns and updated_date.
             unset($this->aColumnsViewList['variants']);
