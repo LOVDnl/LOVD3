@@ -134,7 +134,7 @@ class LOVD_Gene extends LOVD_Object
                         'collaborators_' => array('Collaborators', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'variants_' => 'Total number of public variants reported',
                         'uniq_variants_' => 'Unique public DNA variants reported',
-                        'count_individuals' => 'Individuals with public variants',
+                        'count_individuals_' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
                         'allow_download_' => array('Allow public to download linked information', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'download_' => 'Download all this gene\'s data',
@@ -639,17 +639,21 @@ class LOVD_Gene extends LOVD_Object
             if (!empty($zData['uniq_variants']) && $_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
                 $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
             }
-            //'count_individuals' => 'Individuals with public variants',
+
+            // The individual count can only be found by adding up all distinct individual's panel_size.
+            // 2013-10-11; 3.0-08; This query was first done using GROUP_CONCAT incorporated in the ViewEntry query. However, since the results were sometimes too long for MySQL, resulting in incorrect numbers and notices, this query is better represented as a separate query.
+            $zData['count_individuals'] = (int) $_DB->query('SELECT SUM(panel_size) FROM (SELECT DISTINCT i.id, i.panel_size FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.panelid IS NULL AND vog.statusid >= ' . STATUS_MARKED . ' AND t.geneid = ?)i', array($zData['id']))->fetchColumn();
+            $zData['count_individuals_'] = 0;
+            if ($zData['count_individuals']) {
+                $zData['count_individuals_'] = '<A href="individuals/' . $zData['id'] . '">' . $zData['count_individuals'] . '</A>';
+            }
+
             $zData['hidden_variants_'] = $zData['hidden_variants'];
             if ($zData['hidden_variants'] && $_AUTH['level'] >= LEVEL_CURATOR) {
                 $zData['hidden_variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Pending%22%7C%3D%22Non%20public%22">' . $zData['hidden_variants'] . '</A>';
             }
 
             $zData['note_index'] = html_entity_decode($zData['note_index']);
-
-            // The individual count can only be found by adding up all distinct individual's panel_size.
-            // 2013-10-11; 3.0-08; This query was first done using GROUP_CONCAT incorporated in the ViewEntry query. However, since the results were sometimes too long for MySQL, resulting in incorrect numbers and notices, this query is better represented as a separate query.
-            $zData['count_individuals'] = (int) $_DB->query('SELECT SUM(panel_size) FROM (SELECT DISTINCT i.id, i.panel_size FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.panelid IS NULL AND vog.statusid >= ' . STATUS_MARKED . ' AND t.geneid = ?)i', array($zData['id']))->fetchColumn();
 
             $zData['created_date_'] = preg_replace('/ 00:00:00.*$/', '', $zData['created_date_']);
             if ($zData['updated_date']) {
