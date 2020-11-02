@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2020-10-26
+ * Modified    : 2020-11-02
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -211,19 +211,11 @@ class LOVD_CustomViewList extends LOVD_Object
                     if ($nKeyVOTUnique === false) {
                         // Not viewing the unique variants view.
                         $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') .
-                            'vog.id AS vogid, vog.chromosome' .
-                            (!$_SETT['customization_settings']['variant_viewlist_show_allele']? '' :
-                                ', a.name AS allele_'
-                            ) .
-                            ((!$_SETT['customization_settings']['variant_viewlist_show_effect'] || !$bLoadVOGEffect)? '' :
-                                ', MIN(eg.name) AS vog_effect'
-                            ) .
-                            ((!$_SETT['customization_settings']['variant_viewlist_show_owner'] || in_array('Individual', $aObjects))? '' :
-                                ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner'
-                            ) .
-                            ((!$_SETT['customization_settings']['variant_viewlist_show_status'])? '' :
-                                ', dsg.id AS var_statusid, dsg.name AS var_status'
-                            );
+                            'vog.id AS vogid, vog.chromosome, a.name AS allele_' .
+                            (!$bLoadVOGEffect? '' : ', eg.name AS vog_effect') .
+                            (in_array('Individual', $aObjects)? '' :
+                                ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
+                            ', dsg.id AS var_statusid, dsg.name AS var_status';
                     }
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', vog.id AS row_id';
@@ -262,19 +254,14 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (($sCustomCols = $this->getCustomColQuery($sObject, $aSQL['SELECT'])) != '') {
                         $aSQL['SELECT'] .= ', ' . $sCustomCols;
                     }
-                    if ($_SETT['customization_settings']['variant_viewlist_show_allele']) {
-                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id)';
-                    }
-                    if ($bLoadVOGEffect && $_SETT['customization_settings']['variant_viewlist_show_effect']) {
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id)';
+                    if ($bLoadVOGEffect) {
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS eg ON (vog.effectid = eg.id)';
                     }
-                    if ($_SETT['customization_settings']['variant_viewlist_show_owner'] &&
-                        !in_array('Individual', $aObjects)) {
+                    if (!in_array('Individual', $aObjects)) {
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)';
                     }
-                    if ($_SETT['customization_settings']['variant_viewlist_show_status']) {
-                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
-                    }
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
 
                     // If user level not high enough, hide lines with hidden variants!
                     if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
@@ -282,7 +269,7 @@ class LOVD_CustomViewList extends LOVD_Object
                         $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                         $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 
-                        $aSQL['WHERE'] .= (!$aSQL['WHERE'] ? '' : ' AND ') . '(vog.statusid >= ' . STATUS_MARKED . (!$_AUTH ? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';
+                        $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . '(vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';
                     }
                     break;
 
@@ -352,20 +339,14 @@ class LOVD_CustomViewList extends LOVD_Object
                     // This notation will be used to group on, and search on when navigating from the unique variant view to the full variant view.
                     // Note that the CONCAT() is needed for the grouping to work in large databases. I can't find any real explanation but the shared DMD didn't group well at all without this CONCAT() in place.
                     //  Somehow, the TRIM may leave some kind of trace that prevents MySQL to group. When searching on the set and the size decreases (search on DBID, id), the grouping artefact disappears as well.
-                    $aSQL['SELECT'] .= ', CONCAT("c.", TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", "")))) AS vot_clean_dna_change';
-                    if ($_SETT['customization_settings']['variant_viewlist_show_effect']) {
-                        $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect';
-                    }
-                    if ($_SETT['customization_settings']['variant_viewlist_show_owner']) {
-                        $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_' .
-                            ', GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, IF(IFNULL(uo.department, "") = "", "-", uo.department), IF(IFNULL(uo.countryid, "") = "", "-", uo.countryid)) SEPARATOR ";;") AS __owner';
-                    }
-                    if ($_SETT['customization_settings']['variant_viewlist_show_status']) {
-                        // dsg.id GROUP_CONCAT is ascendingly ordered. This is done for the color marking.
-                        // In prepareData() the lowest var_statusid is used to determine the coloring.
-                        $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id ASC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status';
-                    }
-                    $aSQL['SELECT'] .= ', COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
+                    $aSQL['SELECT'] .= ', CONCAT("c.", TRIM(BOTH "?" FROM TRIM(LEADING "c." FROM REPLACE(REPLACE(`VariantOnTranscript/DNA`, ")", ""), "(", "")))) AS vot_clean_dna_change' .
+                                       ', GROUP_CONCAT(DISTINCT et.name SEPARATOR ", ") AS vot_effect' .
+                                       ', GROUP_CONCAT(DISTINCT NULLIF(uo.name, "") SEPARATOR ", ") AS owned_by_' .
+                                       ', GROUP_CONCAT(DISTINCT CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, IF(IFNULL(uo.department, "") = "", "-", uo.department), IF(IFNULL(uo.countryid, "") = "", "-", uo.countryid)) SEPARATOR ";;") AS __owner';
+                    // dsg.id GROUP_CONCAT is ascendingly ordered. This is done for the color marking.
+                    // In prepareData() the lowest var_statusid is used to determine the coloring.
+                    $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(dsg.id, "") ORDER BY dsg.id ASC SEPARATOR ", ") AS var_statusid, GROUP_CONCAT(DISTINCT NULLIF(dsg.name, "") SEPARATOR ", ") AS var_status' .
+                                       ', COUNT(`VariantOnTranscript/DNA`) AS vot_reported';
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', MIN(vot.id) AS row_id';
                         $bSetRowID = true;
@@ -384,10 +365,7 @@ class LOVD_CustomViewList extends LOVD_Object
                         // The NULLIF() is used to not show empty values. GROUP_CONCAT handles NULL values well (ignores them), but not empty values (includes them).
                         $aSQL['SELECT'] .= ', GROUP_CONCAT(DISTINCT NULLIF(`' . $sCol . '`, "") SEPARATOR ";;") AS `' . $sCol . '`';
                     }
-
-                    if ($_SETT['customization_settings']['variant_viewlist_show_effect']) {
-                        $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS et ON (vot.effectid = et.id)';
-                    }
+                    $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS et ON (vot.effectid = et.id)';
                     break;
 
                 case 'Screening':
@@ -596,27 +574,20 @@ class LOVD_CustomViewList extends LOVD_Object
                         array(
                             // NOTE: there are more columns defined a little further below.
                             'chromosome' => array(
-                                    'view' => array('Chr', 50),
-                                    'db'   => array('vog.chromosome', 'ASC', true))
-                        ),
-                        (!$_SETT['customization_settings']['variant_viewlist_show_allele']? array() :
-                            array(
-                                'allele_' => array(
-                                    'view' => array('Allele', 120),
-                                    'db'   => array('a.name', 'ASC', true),
-                                    'legend' => array('On which allele is the variant located? Does not necessarily imply inheritance!',
-                                                      'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.'))
-                            )
-                        ),
-                        (!$_SETT['customization_settings']['variant_viewlist_show_effect']? array() :
-                            array(
-                                'vog_effect' => array(
-                                        'view' => array('Effect', 70),
-                                        'db'   => array('eg.name', 'ASC', true),
-                                        'legend' => array(
-                                            str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
-                                            str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
-                            )
+                                'view' => array('Chr', 50),
+                                'db'   => array('vog.chromosome', 'ASC', true)),
+                            'allele_' => array(
+                                'view' => array('Allele', 120),
+                                'db'   => array('a.name', 'ASC', true),
+                                'legend' => array(
+                                    'On which allele is the variant located? Does not necessarily imply inheritance!',
+                                    'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
+                            'vog_effect' => array(
+                                'view' => array('Effect', 70),
+                                'db'   => array('eg.name', 'ASC', true),
+                                'legend' => array(
+                                    str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
+                                    str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
                         )
                     );
                     if ($nKeyVOTUnique !== false) {
@@ -697,23 +668,18 @@ class LOVD_CustomViewList extends LOVD_Object
                         $this->aColumnsViewList,
                         array(
                             'transcriptid' => array(
-                                    'view' => false,
-                                    'db'   => array('vot.transcriptid', 'ASC', true))
-                        ),
-                        (!$_SETT['customization_settings']['variant_viewlist_show_effect']? array() :
-                            array(
-                                'vot_effect' => array(
-                                        'view' => array('Effect', 70),
-                                        'db'   => array('et.name', 'ASC', true),
-                                        'legend' => $aLegendVarEffect)
-                                )
-                        ),
-                        array(
+                                'view' => false,
+                                'db'   => array('vot.transcriptid', 'ASC', true)),
+                            'vot_effect' => array(
+                                'view' => array('Effect', 70),
+                                'db'   => array('et.name', 'ASC', true),
+                                'legend' => $aLegendVarEffect),
                             'vot_reported' => array(
-                                    'view' => array('Reported', 70, 'style="text-align : right;"'),
-                                    'db'   => array('vot_reported', 'ASC', 'INT_UNSIGNED'),
-                                    'legend' => array('The number of times this variant has been reported.',
-                                                      'The number of times this variant has been reported in the database.')),
+                                'view' => array('Reported', 70, 'style="text-align : right;"'),
+                                'db'   => array('vot_reported', 'ASC', 'INT_UNSIGNED'),
+                                'legend' => array(
+                                    'The number of times this variant has been reported.',
+                                    'The number of times this variant has been reported in the database.')),
                         )
                     );
                     if (!$this->sSortDefault) {
@@ -790,23 +756,17 @@ class LOVD_CustomViewList extends LOVD_Object
                     // More fixed columns.
                     $this->aColumnsViewList = array_merge(
                         $this->aColumnsViewList,
-                        (!$_SETT['customization_settings']['variant_viewlist_show_owner']? array() :
-                            array(
-                                // NOTE: there are more columns defined a little further up.
-                                'owned_by_' => array(
-                                    'view' => array('Owner', 160),
-                                    'db' => array('uo.name', 'ASC', true)),
-                                'owner_countryid' => array(
-                                    'view' => false,
-                                    'db' => array('uo.countryid', 'ASC', true))
-                            )
-                        ),
-                        (!$_SETT['customization_settings']['variant_viewlist_show_status']? array() :
-                            array(
-                                'var_status' => array(
-                                    'view' => array('Var. status', 70),
-                                    'db' => array('dsg.name', false, true))
-                            )
+                        array(
+                            // NOTE: there are more columns defined a little further up.
+                            'owned_by_' => array(
+                                'view' => array('Owner', 160),
+                                'db' => array('uo.name', 'ASC', true)),
+                            'owner_countryid' => array(
+                                'view' => false,
+                                'db' => array('uo.countryid', 'ASC', true)),
+                            'var_status' => array(
+                                'view' => array('Var. status', 70),
+                                'db' => array('dsg.name', false, true)),
                         )
                     );
                     if (in_array('Individual', $aObjects)) {
@@ -841,6 +801,16 @@ class LOVD_CustomViewList extends LOVD_Object
                     }
                     break;
             }
+        }
+
+        if ($_SETT['customization_settings']['variants_hide_observation_features']) {
+            foreach (array('allele_', 'owned_by_', 'var_status') as $sCol) {
+                unset($this->aColumnsViewList[$sCol]);
+            }
+        }
+        if (!$_SETT['customization_settings']['variant_viewlist_show_effect']) {
+            unset($this->aColumnsViewList['vog_effect']);
+            unset($this->aColumnsViewList['vot_effect']);
         }
 
         // Unset columns with a configured 'auth' key for lower level users.
