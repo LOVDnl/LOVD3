@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-10-30
+ * Modified    : 2020-11-01
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2375,7 +2375,7 @@ class LOVD_Object
             $sSQLOrderBy = '`' . trim($aOrder[0], '`') . '` ' . $aOrder[1];
         }
 
-        if (in_array($aOrder[0], array('chromosome','VariantOnGenome/DNA'))) {
+        if (in_array($aOrder[0], array('chromosome', 'VariantOnGenome/DNA'))) {
             // 2014-03-07; 3.0-10; We need to find the table alias of the VOG or genes table, because otherwise MySQL fails here ('chromosome' is ambiguous) if both are joined.
             // 2014-04-28; 3.0-10; Prefer the genes table, since it joins to VOG as well, but may not have results which messes up the order.
             $sAlias = '';
@@ -2400,7 +2400,11 @@ class LOVD_Object
                 }
             }
         } elseif ($aOrder[0] == 'VariantOnTranscript/DNA') {
-            $sSQLOrderBy = 'position_c_start ' . $aOrder[1] . ', position_c_start_intron ' . $aOrder[1] . ', position_c_end ' . $aOrder[1] . ', position_c_end_intron ' . $aOrder[1] . ', `VariantOnTranscript/DNA` ' . $aOrder[1];
+            $sSQLOrderBy = 'position_c_start ' . $aOrder[1] . ', position_c_start_intron ' . $aOrder[1] . ', position_c_end ' . $aOrder[1] . ', position_c_end_intron ' . $aOrder[1];
+            if (!$_SETT['customization_settings']['variants_VL_quick_dirty_sort']) {
+                // Only actually sort on VOT/DNA if we're not dirty-sorting.
+                $sSQLOrderBy .= ', `VariantOnTranscript/DNA` ' . $aOrder[1];
+            }
         }
         // At this point, we're not sure if we'll actually use the ORDER BY at all.
         $this->aSQLViewList['ORDER_BY'] = $sSQLOrderBy . (empty($this->aSQLViewList['ORDER_BY'])? '' : ', ' . $this->aSQLViewList['ORDER_BY']);
