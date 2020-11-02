@@ -808,7 +808,7 @@ class LOVD_CustomViewList extends LOVD_Object
                 unset($this->aColumnsViewList[$sCol]);
             }
         }
-        if (!$_SETT['customization_settings']['variant_viewlist_show_effect']) {
+        if (!$_SETT['customization_settings']['variants_VL_show_effect']) {
             unset($this->aColumnsViewList['vog_effect']);
             unset($this->aColumnsViewList['vot_effect']);
         }
