@@ -476,12 +476,16 @@ if ($sDataType == 'variants') {
     $sSQL = '';
     $aArgs = array();
     foreach ($aVariants as $nKey => $aVariant) {
-        // If we received through $_POST we're not 100% sure everthing looks like how it should.
+        // If we received through $_POST we're not 100% sure everything looks like how it should.
         if (count($aVariant) == 4) {
-            $sSQL .= (!$sSQL? '' : ' UNION ALL ') . '(SELECT ' . $nKey . ', `VariantOnGenome/Frequency` FROM ' . TABLE_VARIANTS . ' WHERE chromosome = ? AND position_g_start = ? AND position_g_end = ? AND `VariantOnGenome/DNA` = ?)';
+            $sSQL .= (!$sSQL? '' : ' UNION ALL ') . '(SELECT ' . $nKey . ' AS result, `VariantOnGenome/Frequency` AS frequency FROM ' . TABLE_VARIANTS . ' WHERE chromosome = ? AND position_g_start = ? AND position_g_end = ? AND `VariantOnGenome/DNA` = ?)';
             $aArgs = array_merge($aArgs, array($aVariant['chromosome'], $aVariant['position_g_start'], $aVariant['position_g_end'], $aVariant['DNA']));
         }
     }
+    // In case there are multiple observations of the same variant,
+    //  we need the one with the Frequency filled in. Sort that entry last.
+    $sSQL .= ' ORDER BY result ASC, (frequency IS NULL) DESC, (frequency = "") DESC';
+
     if ($sSQL && $aArgs) {
         $aResults = $_DB->query($sSQL, $aArgs)->fetchAllCombine();
     } else {
