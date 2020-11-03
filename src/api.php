@@ -4,10 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2020-03-19
- * For LOVD    : 3.0-24
+ * Modified    : 2020-11-03
+ * For LOVD    : 3.0-26
  *
  * Supported URIs:
+ *  3.0-26       /api/rest.php/get_frequencies (POST)
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}/{{ ID }}
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}/unique
@@ -435,7 +436,16 @@ if ($sDataType == 'variants') {
 
 
 } elseif ($sDataType == 'get_frequencies') {
-    // 2013-09-26; This addition to the API allows us to fetch frequencies from the whole_genome installation using this API.
+    // This addition to the API allows us to fetch frequencies from the LOVDs.
+    // This is built so that the GnomAD LOVD can provide frequencies to other LOVDs.
+
+    // This requires the presence of the VariantOnGenome/Frequency column.
+    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?', array('VariantOnGenome/Frequency'))->fetchColumn()) {
+        // Column not active, we can't do this.
+        header('HTTP/1.0 503 Service Unavailable');
+        die(json_encode(array('errors' => array('The VariantOnGenome/Frequency column is not active for this LOVD installation.'))) . "\n");
+    }
+
     if (!empty($_POST['variants'])) {
         $aVariants = @json_decode($_POST['variants'], true);
         if (!$aVariants) {
