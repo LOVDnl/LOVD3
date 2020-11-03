@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-09-23
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-03
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -153,7 +153,14 @@ class LOVD_API
             $this->aResponse['version'] = 0;
             // This API also ignores the Accept header.
             $this->sFormatOutput = 'text/plain';
-            // And, we only allow GET.
+
+            // Parse URL to see what we need to do.
+            list(,,
+                $this->sResource, // 2
+                $this->sGene,     // 3
+                $this->nID) = $_PE;
+
+            // We allow GET or HEAD, and POST only in case we're fetching frequencies.
             if (!GET && !HEAD && !(POST && $this->sResource == 'get_frequencies')) {
                 // Will only allow GET and HEAD.
                 // HEAD is necessary for the NCBI sequence viewer, which uses
@@ -164,12 +171,6 @@ class LOVD_API
                 header('HTTP/1.0 501 Not Implemented');
                 exit;
             }
-
-            // Parse URL to see what we need to do.
-            list(,,
-                $this->sResource, // 2
-                $this->sGene,     // 3
-                $this->nID) = $_PE;
 
             if (!$this->sResource) { // No data type given.
                 header('HTTP/1.0 400 Bad Request');
