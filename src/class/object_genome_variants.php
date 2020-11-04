@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-10-27
+ * Modified    : 2020-11-02
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,27 +83,28 @@ class LOVD_GenomeVariant extends LOVD_Custom
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vog.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'vog.id';
 
-        // SQL code for viewing the list of variants
-        // FIXME: we should implement this in a different way
-        $this->aSQLViewList['SELECT']   = 'vog.*, ' .
-                                          // FIXME; de , is niet de standaard.
-                                          'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
-                                          'a.name AS allele_, ' .
-                                          'e.name AS effect, ' .
-                                          'uo.name AS owned_by_, ' .
-                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
-                                          'ds.name AS status';
-        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
-                                // Added so that Curators and Collaborators can view the variants for which they have viewing rights in the genomic variant viewlist.
-                                ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
-                                        : '') .
-                                          'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
+        // SQL code for viewing the list of variants.
+        $this->aSQLViewList['SELECT'] =
+            'vog.*, ' .
+            'a.name AS allele_, ' .
+            'e.name AS effect, ' .
+            'uo.name AS owned_by_, ' .
+            'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
+            'ds.name AS status';
+        $this->aSQLViewList['FROM'] =
+            TABLE_VARIANTS . ' AS vog ' .
+            // Added so that Curators and Collaborators can view the variants for which they have
+            // viewing rights in the genomic variant VL.
+            // The WHERE condition is set in object_custom.php.
+            ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
+                'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
+                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
+            : '') .
+            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
+            'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
         $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
         parent::__construct();
@@ -144,7 +145,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                     'db'   => array('vog.id', 'ASC', true)),
                 'screeningids' => array(
                     'view' => false,
-                    'db'   => array('screeningids', 'ASC', 'TEXT')),
+                    'db'   => array('s2v.screeningid', 'ASC', true)),
                 'id_' => array(
                     'auth' => LEVEL_CURATOR,
                     'view' => array('Variant ID', 75, 'style="text-align : right;"'),
@@ -191,6 +192,16 @@ class LOVD_GenomeVariant extends LOVD_Custom
                     'db'   => array('vog.created_date', 'ASC', true)),
             )
         );
+
+        if ($_SETT['customization_settings']['variants_hide_observation_features']) {
+            foreach (array('allele_', 'owned_by_', 'status') as $sCol) {
+                unset($this->aColumnsViewEntry[$sCol]);
+                unset($this->aColumnsViewList[$sCol]);
+            }
+        }
+        if (!$_SETT['customization_settings']['variants_VL_show_effect']) {
+            unset($this->aColumnsViewList['effect']);
+        }
 
         $this->sSortDefault = 'VariantOnGenome/DNA';
 

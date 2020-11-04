@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-10-07
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-02
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -234,6 +234,11 @@ class LOVD_Template
             unset($this->aMenu['configuration_']);
         }
 
+        if (!$_SETT['customization_settings']['graphs_enable']) {
+            // Hide link to graphs for current gene.
+            unset($this->aMenu['genes_']['/genes/' . $_SESSION['currdb'] . '/graphs']);
+        }
+
         if (LOVD_plus) {
             // Unset unneeded tabs for Diagnostics.
             unset($this->aMenu['genes']);
@@ -259,6 +264,16 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/gene_panels?create']);
             unset($this->aMenu['genes_'][0]);
             unset($this->aMenu['genes_']['/gene_statistics']);
+        }
+
+        if (LOVD_light) {
+            unset($this->aMenu['variants_']['/variants/in_gene']);
+            unset($this->aMenu['variants_']['/variants/' . $_SESSION['currdb'] . '/unique']);
+            unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
+            unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            unset($this->aMenu['individuals'], $this->aMenu['individuals_']);
+            unset($this->aMenu['screenings'], $this->aMenu['screenings_']);
+            unset($this->aMenu['submit'], $this->aMenu['submit_']);
         }
 
         return true;
@@ -392,8 +407,10 @@ class LOVD_Template
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!LOVD_plus && !((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
-            // In install directory.
+        if ($_SETT['customization_settings']['variant_mapping_in_background'] && !defined('NOT_INSTALLED')
+            && !(ROOT_PATH == '../' && defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) {
+            // Allow variant mapping to happen in the background (either manually or
+            // automatically triggered).
             print('
 function lovd_mapVariants ()
 {
@@ -800,7 +817,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
             if ($_SESSION['currdb']) {
                 if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants', 'screenings', 'individuals'))) {
                     $sURL = $sPrefix . '/' . $_SESSION['currdb'];
-                    if ($sPrefix == 'variants') {
+                    if ($sPrefix == 'variants' && isset($this->aMenu[$sPrefix . '_']['/' . $sURL . '/unique'])) {
                         $sURL .= '/unique';
                     }
                 } elseif ($sPrefix == 'diseases') {

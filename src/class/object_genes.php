@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-07-22
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-02
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -76,8 +76,9 @@ class LOVD_Gene extends LOVD_Object
                                            'ue.name AS edited_by_, ' .
                                            'uu.name AS updated_by_, ' .
                                            '(SELECT COUNT(DISTINCT vog.id) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS variants, ' .
-                                           '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ' .
-                                           '"" AS count_individuals, ' . // Temporarely value, prepareData actually runs this query.
+                                           (!$_SETT['customization_settings']['genes_VE_show_unique_variant_counts']? '' :
+                                               '(SELECT COUNT(DISTINCT vog.`VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = g.id AND vog.statusid >= ' . STATUS_MARKED . ') AS uniq_variants, ') .
+                                           '"" AS count_individuals, ' . // Temporary value, prepareData actually runs this query.
                                            '(SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' AS hidden_vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS hidden_vot ON (hidden_vog.id = hidden_vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (hidden_vot.transcriptid = t.id) WHERE t.geneid = g.id AND hidden_vog.statusid < ' . STATUS_MARKED . ') AS hidden_variants';
         $this->aSQLViewEntry['FROM']     = TABLE_GENES . ' AS g ' .
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
@@ -95,20 +96,20 @@ class LOVD_Gene extends LOVD_Object
                                           'g.id AS geneid, ' .
                                           // FIXME; Can we get this order correct, such that diseases without abbreviation nicely mix with those with? Right now, the diseases without symbols are in the back.
                                           'GROUP_CONCAT(DISTINCT IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol) ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ", ") AS diseases_, ' .
-                                          'COUNT(DISTINCT t.id) AS transcripts';
-        if (!LOVD_plus) {
-            // Speed optimization by skipping variant counts.
-            $this->aSQLViewList['SELECT'] .= ', ' .
-                                          'COUNT(DISTINCT vog.id) AS variants, ' .
-                                          'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants';
-        }
+                                          'COUNT(DISTINCT t.id) AS transcripts' .
+                                          (!$_SETT['customization_settings']['genes_VL_show_variant_counts']? '' :
+                                              // Speed optimization by skipping variant counts.
+                                              ', ' .
+                                              'COUNT(DISTINCT vog.id) AS variants, ' .
+                                              'COUNT(DISTINCT vog.`VariantOnGenome/DBID`) AS uniq_variants');
+
         $this->aSQLViewList['FROM']     = TABLE_GENES . ' AS g ' .
                                           'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                           'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) ' .
-                                          (LOVD_plus? '' :
-                                             // Speed optimization by skipping variant counts.
-                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
+                                          (!$_SETT['customization_settings']['genes_VL_show_variant_counts']? '' :
+                                              // Speed optimization by skipping variant counts.
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
@@ -133,7 +134,7 @@ class LOVD_Gene extends LOVD_Object
                         'collaborators_' => array('Collaborators', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'variants_' => 'Total number of public variants reported',
                         'uniq_variants_' => 'Unique public DNA variants reported',
-                        'count_individuals' => 'Individuals with public variants',
+                        'count_individuals_' => 'Individuals with public variants',
                         'hidden_variants_' => 'Hidden variants',
                         'allow_download_' => array('Allow public to download linked information', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'download_' => 'Download all this gene\'s data',
@@ -169,9 +170,18 @@ class LOVD_Gene extends LOVD_Object
                         'show_genecards_' => 'GeneCards',
                         'show_genetests_' => 'GeneTests',
                       );
-        if (LOVD_plus) {
+        if (!$_SETT['customization_settings']['genes_show_meta_data']) {
+            // Hide date and user fields.
+            unset($this->aColumnsViewEntry['created_by_']);
+            unset($this->aColumnsViewEntry['created_date_']);
+            unset($this->aColumnsViewEntry['edited_by_']);
+            unset($this->aColumnsViewEntry['edited_date_']);
             unset($this->aColumnsViewEntry['updated_by_']);
             unset($this->aColumnsViewEntry['updated_date_']);
+            unset($this->aColumnsViewEntry['version_']);
+        }
+        if (!$_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
+            unset($this->aColumnsViewEntry['uniq_variants_']);
         }
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -208,11 +218,18 @@ class LOVD_Gene extends LOVD_Object
                     'view' => array('Associated with diseases', 200),
                     'db'   => array('diseases_', false, 'TEXT')),
             );
-        if (LOVD_plus) {
-            // Diagnostics: Remove some columns, and add one.
+
+        if (!$_SETT['customization_settings']['genes_show_meta_data']) {
+            // Hide date field.
+            unset($this->aColumnsViewList['updated_date_']);
+        }
+        if (!$_SETT['customization_settings']['genes_VL_show_variant_counts']) {
+            // Hide variant columns and updated_date.
             unset($this->aColumnsViewList['variants']);
             unset($this->aColumnsViewList['uniq_variants']);
-            unset($this->aColumnsViewList['updated_date_']);
+        }
+
+        if (LOVD_plus) {
             // Add transcript information for the gene panel's "Manage genes" gene viewlist.
             // Unfortunately, we can't limit this for the genes VL on the gene panel page,
             //  because we also want it to work on the AJAX viewlist, so we can't use lovd_getProjectFile(),
@@ -617,21 +634,26 @@ class LOVD_Gene extends LOVD_Object
             if ($zData['variants']) {
                 $zData['variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['variants'] . '</A>';
             }
+
             $zData['uniq_variants_'] = 0;
-            if ($zData['uniq_variants']) {
+            if (!empty($zData['uniq_variants']) && $_SETT['customization_settings']['genes_VE_show_unique_variant_counts']) {
                 $zData['uniq_variants_'] = '<A href="variants/' . $zData['id'] . '/unique?search_var_status=%3D%22Marked%22%7C%3D%22Public%22">' . $zData['uniq_variants'] . '</A>';
             }
-            //'count_individuals' => 'Individuals with public variants',
+
+            // The individual count can only be found by adding up all distinct individual's panel_size.
+            // 2013-10-11; 3.0-08; This query was first done using GROUP_CONCAT incorporated in the ViewEntry query. However, since the results were sometimes too long for MySQL, resulting in incorrect numbers and notices, this query is better represented as a separate query.
+            $zData['count_individuals'] = (int) $_DB->query('SELECT SUM(panel_size) FROM (SELECT DISTINCT i.id, i.panel_size FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.panelid IS NULL AND vog.statusid >= ' . STATUS_MARKED . ' AND t.geneid = ?)i', array($zData['id']))->fetchColumn();
+            $zData['count_individuals_'] = 0;
+            if ($zData['count_individuals']) {
+                $zData['count_individuals_'] = '<A href="individuals/' . $zData['id'] . '">' . $zData['count_individuals'] . '</A>';
+            }
+
             $zData['hidden_variants_'] = $zData['hidden_variants'];
             if ($zData['hidden_variants'] && $_AUTH['level'] >= LEVEL_CURATOR) {
                 $zData['hidden_variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Pending%22%7C%3D%22Non%20public%22">' . $zData['hidden_variants'] . '</A>';
             }
 
             $zData['note_index'] = html_entity_decode($zData['note_index']);
-
-            // The individual count can only be found by adding up all distinct individual's panel_size.
-            // 2013-10-11; 3.0-08; This query was first done using GROUP_CONCAT incorporated in the ViewEntry query. However, since the results were sometimes too long for MySQL, resulting in incorrect numbers and notices, this query is better represented as a separate query.
-            $zData['count_individuals'] = (int) $_DB->query('SELECT SUM(panel_size) FROM (SELECT DISTINCT i.id, i.panel_size FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.panelid IS NULL AND vog.statusid >= ' . STATUS_MARKED . ' AND t.geneid = ?)i', array($zData['id']))->fetchColumn();
 
             $zData['created_date_'] = preg_replace('/ 00:00:00.*$/', '', $zData['created_date_']);
             if ($zData['updated_date']) {

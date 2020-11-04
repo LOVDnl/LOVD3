@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2020-10-26
+ * Modified    : 2020-11-02
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,7 @@ class LOVD_CustomViewList extends LOVD_Object
     var $nOtherID = 0; // Some objects (like DistanceToVar) need an additional ID.
     var $aColumns = array();
     var $aCustomLinks = array();
-    var $nCount = 0; // Necessary for tricking Objects::getCount() that is run in viewList().
+    protected $bEntryExists = false; // Necessary for tricking Objects::entryExists() that is run in viewList().
 
 
 
@@ -155,7 +155,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_GENES . ' AS g';
-                        $this->nCount = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES)->fetchColumn();
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_GENES . ' LIMIT 1')->fetchColumn();
                     }
                     break;
 
@@ -169,9 +170,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_TRANSCRIPTS . ' AS t';
-                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
-                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
-                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_TRANSCRIPTS)->fetchColumn();
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
                     } else {
                         $aSQL['FROM'] .= ' INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (';
                         $nKeyG   = array_search('Gene', $aObjects);
@@ -213,7 +213,8 @@ class LOVD_CustomViewList extends LOVD_Object
                         $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') .
                             'vog.id AS vogid, vog.chromosome, a.name AS allele_' .
                             (!$bLoadVOGEffect? '' : ', eg.name AS vog_effect') .
-                            (in_array('Individual', $aObjects)? '' : ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
+                            (in_array('Individual', $aObjects)? '' :
+                                ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
                             ', dsg.id AS var_statusid, dsg.name AS var_status';
                     }
                     if (!$bSetRowID) {
@@ -223,9 +224,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS . ' AS vog';
-                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
-                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
-                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_VARIANTS)->fetchColumn();
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_VARIANTS . ' LIMIT 1')->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vog.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                         $aSQL['ORDER_BY'] = 'vog.chromosome ASC, vog.position_g_start';
                     } elseif ($nKeyVOTUnique !== false && $nKeyVOTUnique < $nKey) {
@@ -262,6 +262,7 @@ class LOVD_CustomViewList extends LOVD_Object
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)';
                     }
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
+
                     // If user level not high enough, hide lines with hidden variants!
                     if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                         // Construct list of user IDs for current user and users who share access with him.
@@ -287,9 +288,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
-                        // MAX(id) on the VOT table gets nowhere nearly the correct number of results, but this number
-                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
-                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vot.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                     } elseif ($nKeyVOG !== false && $nKeyVOG < $nKey) {
                         // Previously, VOG was used. We will join VOT with VOG, using GROUP_CONCAT.
@@ -353,10 +353,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     }
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
-                    // $this->nCount = $_DB->query('SELECT COUNT(DISTINCT `VariantOnTranscript/DNA`) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchColumn();
-                    // No longer calculate the number of results; this number anyway doesn't need to be correct at all,
-                    //  and this query is too slow on large systems running InnoDB.
-                    $this->nCount = $_DB->query('SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
+                    $this->bEntryExists = (bool) $_DB->query('
+                        SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
 
                     $aSQL['GROUP_BY'] = '`position_c_start`, `position_c_start_intron`, `position_c_end`, `position_c_end_intron`, vot_clean_dna_change'; // Necessary for GROUP_CONCAT(), such as in Screening.
 
@@ -379,9 +377,8 @@ class LOVD_CustomViewList extends LOVD_Object
                         // First data table in query.
                         $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 's.id AS sid';
                         $aSQL['FROM'] = TABLE_SCREENINGS . ' AS s';
-                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
-                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
-                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_SCREENINGS)->fetchColumn();
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_SCREENINGS . ' LIMIT 1')->fetchColumn();
                         $aSQL['ORDER_BY'] = 's.id';
                     } else {
                         // SELECT will be different: we will GROUP_CONCAT the whole lot, per column.
@@ -448,9 +445,8 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
-                        // MAX(id) gets nowhere nearly the correct number of results when data has been removed or archived, but this number
-                        //  anyway doesn't need to be accurate at all, and a COUNT(*) can be too slow on large systems running InnoDB.
-                        $this->nCount = $_DB->query('SELECT MAX(id) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
+                        $this->bEntryExists = (bool) $_DB->query('
+                            SELECT 1 FROM ' . TABLE_INDIVIDUALS . ' LIMIT 1')->fetchColumn();
                         $aSQL['ORDER_BY'] = 'i.id';
                         // If no manager, hide lines with hidden individuals (not specific to a gene)!
                         if ($_AUTH['level'] < LEVEL_MANAGER) {
@@ -573,24 +569,27 @@ class LOVD_CustomViewList extends LOVD_Object
                 case 'VariantOnGenome':
                     $sPrefix = 'vog.';
                     // The fixed columns.
-                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
-                         array(
-                                // NOTE: there are more columns defined a little further below.
-                                'chromosome' => array(
-                                        'view' => array('Chr', 50),
-                                        'db'   => array('vog.chromosome', 'ASC', true)),
-                                'allele_' => array(
-                                        'view' => array('Allele', 120),
-                                        'db'   => array('a.name', 'ASC', true),
-                                        'legend' => array('On which allele is the variant located? Does not necessarily imply inheritance!',
-                                                          'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
-                                'vog_effect' => array(
-                                        'view' => array('Effect', 70),
-                                        'db'   => array('eg.name', 'ASC', true),
-                                        'legend' => array(
-                                            str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
-                                            str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
-                              ));
+                    $this->aColumnsViewList = array_merge(
+                        $this->aColumnsViewList,
+                        array(
+                            // NOTE: there are more columns defined a little further below.
+                            'chromosome' => array(
+                                'view' => array('Chr', 50),
+                                'db'   => array('vog.chromosome', 'ASC', true)),
+                            'allele_' => array(
+                                'view' => array('Allele', 120),
+                                'db'   => array('a.name', 'ASC', true),
+                                'legend' => array(
+                                    'On which allele is the variant located? Does not necessarily imply inheritance!',
+                                    'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
+                            'vog_effect' => array(
+                                'view' => array('Effect', 70),
+                                'db'   => array('eg.name', 'ASC', true),
+                                'legend' => array(
+                                    str_replace('the protein', 'a protein', $aLegendVarEffect[0]),
+                                    str_replace('the protein', 'a protein', $aLegendVarEffect[1]))),
+                        )
+                    );
                     if ($nKeyVOTUnique !== false) {
                         // Unique view doesn't load these cols, so we can't show them even if users bypass the cols_to_hide.
                         unset($this->aColumnsViewList['chromosome'], $this->aColumnsViewList['allele_']);
@@ -665,21 +664,24 @@ class LOVD_CustomViewList extends LOVD_Object
                 case 'VariantOnTranscriptUnique':
                     $sPrefix = 'vot.';
                     // The fixed columns.
-                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
-                         array(
-                                'transcriptid' => array(
-                                        'view' => false,
-                                        'db'   => array('vot.transcriptid', 'ASC', true)),
-                                'vot_effect' => array(
-                                        'view' => array('Effect', 70),
-                                        'db'   => array('et.name', 'ASC', true),
-                                        'legend' => $aLegendVarEffect),
-                                'vot_reported' => array(
-                                        'view' => array('Reported', 70, 'style="text-align : right;"'),
-                                        'db'   => array('vot_reported', 'ASC', 'INT_UNSIGNED'),
-                                        'legend' => array('The number of times this variant has been reported.',
-                                                          'The number of times this variant has been reported in the database.')),
-                                ));
+                    $this->aColumnsViewList = array_merge(
+                        $this->aColumnsViewList,
+                        array(
+                            'transcriptid' => array(
+                                'view' => false,
+                                'db'   => array('vot.transcriptid', 'ASC', true)),
+                            'vot_effect' => array(
+                                'view' => array('Effect', 70),
+                                'db'   => array('et.name', 'ASC', true),
+                                'legend' => $aLegendVarEffect),
+                            'vot_reported' => array(
+                                'view' => array('Reported', 70, 'style="text-align : right;"'),
+                                'db'   => array('vot_reported', 'ASC', 'INT_UNSIGNED'),
+                                'legend' => array(
+                                    'The number of times this variant has been reported.',
+                                    'The number of times this variant has been reported in the database.')),
+                        )
+                    );
                     if (!$this->sSortDefault) {
                         // First data table in view.
                         $this->sSortDefault = 'VariantOnTranscript/DNA';
@@ -752,19 +754,21 @@ class LOVD_CustomViewList extends LOVD_Object
             switch ($sObject) {
                 case 'VariantOnGenome':
                     // More fixed columns.
-                    $this->aColumnsViewList = array_merge($this->aColumnsViewList,
+                    $this->aColumnsViewList = array_merge(
+                        $this->aColumnsViewList,
                         array(
                             // NOTE: there are more columns defined a little further up.
                             'owned_by_' => array(
                                 'view' => array('Owner', 160),
-                                'db'   => array('uo.name', 'ASC', true)),
+                                'db' => array('uo.name', 'ASC', true)),
                             'owner_countryid' => array(
                                 'view' => false,
-                                'db'   => array('uo.countryid', 'ASC', true)),
+                                'db' => array('uo.countryid', 'ASC', true)),
                             'var_status' => array(
                                 'view' => array('Var. status', 70),
-                                'db'   => array('dsg.name', false, true)),
-                        ));
+                                'db' => array('dsg.name', false, true)),
+                        )
+                    );
                     if (in_array('Individual', $aObjects)) {
                         unset($this->aColumnsViewList['owned_by_']);
                     }
@@ -797,6 +801,16 @@ class LOVD_CustomViewList extends LOVD_Object
                     }
                     break;
             }
+        }
+
+        if ($_SETT['customization_settings']['variants_hide_observation_features']) {
+            foreach (array('allele_', 'owned_by_', 'var_status') as $sCol) {
+                unset($this->aColumnsViewList[$sCol]);
+            }
+        }
+        if (!$_SETT['customization_settings']['variants_VL_show_effect']) {
+            unset($this->aColumnsViewList['vog_effect']);
+            unset($this->aColumnsViewList['vot_effect']);
         }
 
         // Unset columns with a configured 'auth' key for lower level users.

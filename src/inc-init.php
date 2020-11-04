@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-10-22
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-02
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -151,6 +151,10 @@ define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 // LOVD and LOVD+, simply define if we're active or not.
 @define('LOVD_plus', false);
 
+// Flag LOVD_light disables certain features to streamline LOVD for high
+// quantities of variants but no or few individuals or diseases.
+define('LOVD_light', false);
+
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
@@ -196,9 +200,22 @@ $_SETT = array(
                     'genepanels_manage_genes' => LEVEL_MANAGER,
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
-                    'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'see_nonpublic_data' => ((LOVD_plus || LOVD_light)? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
                     'set_concluded_effect' => (LOVD_plus? LEVEL_MANAGER : LEVEL_CURATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
+                ),
+                'customization_settings' => // Miscellaneous configuration settings.
+                array(
+                    'genes_show_meta_data' => !(LOVD_plus || LOVD_light),
+                    'genes_VE_show_unique_variant_counts' => !LOVD_light,
+                    'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    'graphs_enable' => !LOVD_light,
+                    'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    'variant_mapping_in_background' => !(LOVD_plus || LOVD_light),
+                    'variants_hide_observation_features' => LOVD_light,
+                    'variants_VL_per_chromosome_only' => !(LOVD_plus || LOVD_light),
+                    'variants_VL_quick_dirty_sort' => (LOVD_plus || LOVD_light),
+                    'variants_VL_show_effect' => !LOVD_light,
                 ),
                 'gene_imprinting' =>
                      array(

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-10-26
+ * Modified    : 2020-11-02
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -78,27 +78,26 @@ class LOVD_Transcript extends LOVD_Object
 
         // SQL code for viewing the list of transcripts
         $this->aSQLViewList['SELECT']   = 't.*, ' .
-                                          'g.chromosome';
-        if (!LOVD_plus) {
-            // Speed optimization by skipping variant counts.
-            $this->aSQLViewList['SELECT'] .= ', ' .
-                'COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants';
-        }
+                                          'g.chromosome' .
+                                          (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']? '' :
+                                              // Speed optimization by skipping variant counts.
+                                              ', COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants');
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
-                                          (LOVD_plus? '' :
-                                            // Speed optimization by skipping variant counts.
-                                            'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                            // If user is less than a collaborator, only show public variants and
-                                            // variants owned/created by him.
-                                            ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
-                                                'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON ' .
-                                                    '(vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
-                                                    (!$_AUTH? '' :
-                                                        ' OR vog.created_by = "' . $_AUTH['id'] . '" OR ' .
-                                                        'vog.owned_by = "' . $_AUTH['id'] . '"'
-                                                    ) . ')) '
-                                            ));
+                                          (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']? '' :
+                                              // Speed optimization by skipping variant counts.
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
+                                              // If user is less than a collaborator, only show public variants and
+                                              // variants owned/created by him.
+                                              ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                                                  ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog' .
+                                                  '   ON (vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
+                                                  (!$_AUTH? '' :
+                                                      ' OR vog.created_by = "' . $_AUTH['id'] . '"' .
+                                                      ' OR vog.owned_by = "' . $_AUTH['id'] . '"'
+                                                  ) . '))'
+                                              )
+                                          );
         $this->aSQLViewList['GROUP_BY'] = 't.id';
 
         // List of columns and (default?) order for viewing an entry.
@@ -145,8 +144,8 @@ class LOVD_Transcript extends LOVD_Object
                     'view' => array('Variants', 70, 'style="text-align : right;"'),
                     'db'   => array('variants', 'DESC', 'INT_UNSIGNED')),
             );
-        if (LOVD_plus) {
-            // Diagnostics: Speed up view by removing the variants column.
+        if (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']) {
+            // Speed up view by removing the variants column.
             unset($this->aColumnsViewList['variants']);
         }
 

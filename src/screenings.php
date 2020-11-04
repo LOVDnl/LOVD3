@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2020-10-27
+ * Modified    : 2020-10-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -525,7 +525,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
         exit;
     } else {
         $nIndividual = $z['individualid'];
-        $_GET['search_screeningids'] = $_DB->query('SELECT GROUP_CONCAT(id SEPARATOR "|") FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ? AND id != ? GROUP BY individualid', array($nIndividual, $nID))->fetchColumn();
     }
 
     $bSubmit = false;
@@ -634,7 +633,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     lovd_showInfoTable('The variant entries below are all variants found in this individual, not yet confirmed by/added to this screening.', 'information');
 
     $_GET['page_size'] = 10;
-    $_GET['search_screeningids'] .= ' !' . $nID;
+    $_GET['search_screeningids'] = $_DB->query('
+        SELECT GROUP_CONCAT(id SEPARATOR "|")
+        FROM ' . TABLE_SCREENINGS . '
+        WHERE individualid = ? AND id != ?
+        GROUP BY individualid', array($nIndividual, $nID))->fetchColumn();
     require ROOT_PATH . 'class/object_genome_variants.php';
     $_DATA = new LOVD_GenomeVariant();
     $_DATA->setRowLink('Screenings_' . $nID . '_confirmVariants', 'javascript:$(\'#check_{{ID}}\').trigger(\'click\'); return false;');

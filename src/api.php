@@ -4,10 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2020-03-19
- * For LOVD    : 3.0-24
+ * Modified    : 2020-11-03
+ * For LOVD    : 3.0-26
  *
  * Supported URIs:
+ *  3.0-26       /api/rest.php/get_frequencies (POST)
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}/{{ ID }}
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}/unique
@@ -431,6 +432,66 @@ if ($sDataType == 'variants') {
         }
     }
     $sQ .= ' GROUP BY g.id ORDER BY g.id';
+
+
+
+} elseif ($sDataType == 'get_frequencies') {
+    // This addition to the API allows us to fetch frequencies from the LOVDs.
+    // This is built so that the GnomAD LOVD can provide frequencies to other LOVDs.
+
+    // This requires the presence of the VariantOnGenome/Frequency column.
+    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?', array('VariantOnGenome/Frequency'))->fetchColumn()) {
+        // Column not active, we can't do this.
+        header('HTTP/1.0 503 Service Unavailable');
+        die(json_encode(array('errors' => array('The VariantOnGenome/Frequency column is not active for this LOVD installation.'))) . "\n");
+    }
+
+    if (!empty($_POST['variants'])) {
+        $aVariants = @json_decode($_POST['variants'], true);
+        if (!$aVariants) {
+            header('HTTP/1.0 400 Bad Request');
+            die('Error decoding variant string.' . "\n");
+        }
+    } else {
+        // Hmm... in GET then, maybe?
+        $aVariants = array();
+        if (isset($_GET['variant'])) {
+            if (preg_match('/^([0-9]{1,2}|[XYM]);([0-9]+);([0-9]+);(g\..+)/', $_GET['variant'], $aRegs)) {
+                list(,$sChr, $nPositionStart, $nPositionEnd, $sDNA) = $aRegs;
+                $aVariants[] = array('chromosome' => $sChr, 'position_g_start' => $nPositionStart, 'position_g_end' => $nPositionEnd, 'DNA' => $sDNA);
+            }
+        }
+    }
+    if (!$aVariants) {
+        // No variants in $_POST nor $_GET.
+        header('HTTP/1.0 400 Bad Request');
+        die('No variants received.' . "\n");
+    } elseif (count($aVariants) > 25) {
+        // More than 25 variants at the same time at this time not supported.
+        header('HTTP/1.0 400 Bad Request');
+        die('Please do not request more than 25 variants at the same time.' . "\n");
+    }
+
+    // Send one query to the server, request all variants using a UNION. This is done to prevent overhead from 25 queries.
+    $sSQL = '';
+    $aArgs = array();
+    foreach ($aVariants as $nKey => $aVariant) {
+        // If we received through $_POST we're not 100% sure everything looks like how it should.
+        if (count($aVariant) == 4) {
+            $sSQL .= (!$sSQL? '' : ' UNION ALL ') . '(SELECT ' . $nKey . ' AS result, `VariantOnGenome/Frequency` AS frequency FROM ' . TABLE_VARIANTS . ' WHERE chromosome = ? AND position_g_start = ? AND position_g_end = ? AND `VariantOnGenome/DNA` = ?)';
+            $aArgs = array_merge($aArgs, array($aVariant['chromosome'], $aVariant['position_g_start'], $aVariant['position_g_end'], $aVariant['DNA']));
+        }
+    }
+    // In case there are multiple observations of the same variant,
+    //  we need the one with the Frequency filled in. Sort that entry last.
+    $sSQL .= ' ORDER BY result ASC, (frequency IS NULL) DESC, (frequency = "") DESC';
+
+    if ($sSQL && $aArgs) {
+        $aResults = $_DB->query($sSQL, $aArgs)->fetchAllCombine();
+    } else {
+        $aResults = array();
+    }
+    die(json_encode($aResults) . "\n");
 }
 $aData = $_DB->query($sQ)->fetchAllAssoc();
 $n = count($aData);

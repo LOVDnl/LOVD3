@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-10-26
+ * Modified    : 2020-11-03
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -105,12 +105,12 @@ if (!ACTION && !empty($_GET['select_db'])) {
 
 
 
-if (!ACTION && (empty($_PE[1]) ||
-        preg_match('/^(chr[0-9A-Z]{1,2})(?::([0-9]+)-([0-9]+))?$/', $_PE[1], $aRegionArgs))) {
+if (!ACTION && (empty($_PE[1])
+        || preg_match('/^(chr[0-9A-Z]{1,2})(?::([0-9]+)-([0-9]+))?$/', $_PE[1], $aRegionArgs))) {
     // URL: /variants
     // URL: /variants/chrX
     // URL: /variants/chr3:20-200000
-    // View all variant entries on the genome level, optionally restricted by chromosome.
+    // View all variant entries on the genome level, optionally restricted by chromosome or genomic range.
 
     // Managers are allowed to download this list...
     if ($_AUTH['level'] >= LEVEL_MANAGER) {
@@ -122,7 +122,12 @@ if (!ACTION && (empty($_PE[1]) ||
     $aColsToHide = array('allele_');
     $sTitle = 'All variants';
 
-    // Set conditions on viewlist if a region is specified (e.g. chr3:20-200000)
+    // Show page with variant VL.
+    define('PAGE_TITLE', $sTitle);
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Set conditions on VL if a region is specified (e.g. chr3:20-200000).
     if (isset($aRegionArgs)) {
         list($sRegion, $sChr, $sPositionStart, $sPositionEnd) = array_pad($aRegionArgs, 4, null);
 
@@ -138,12 +143,34 @@ if (!ACTION && (empty($_PE[1]) ||
         } else {
             $sTitle .= ' on chromosome ' . substr($sChr, 3);
         }
-    }
 
-    // Show page with variant viewlist.
-    define('PAGE_TITLE', $sTitle);
-    $_T->printHeader();
-    $_T->printTitle();
+    } elseif (!$_SETT['customization_settings']['variants_VL_per_chromosome_only']) {
+        // Optimize for speed; show a list of chromosomes with variant counts
+        //  instead of the Variant VL for the whole genome.
+        print('Please select a chromosome to view the variant listing.<BR><BR>' . "\n");
+        $aChromosomes = $_DB->query('
+            SELECT c.name, COUNT(vog.id)
+            FROM ' . TABLE_CHROMOSOMES . ' AS c
+              LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (c.name = vog.chromosome)' .
+            ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                ' WHERE vog.statusid >= ' . STATUS_MARKED) . '
+            GROUP BY c.name
+            ORDER BY c.sort_id')->fetchAllCombine();
+        print('
+      <TABLE border="0" cellpadding="0" cellspacing="1" class="data">
+        <TR>
+          <TH valign="top" class="ordered">Chromosome</TH>
+          <TH valign="top">Variants</TH></TR>');
+        foreach ($aChromosomes as $sChr => $nVariants) {
+            print('
+        <TR class="data" valign="top" style="cursor : pointer;" onclick="window.location.href = \'' . $_PE[0] . '/chr' . $sChr . '\';">
+          <TD class="ordered"><A href="' . $_PE[0] . '/chr' . $sChr . '" class="hide">' . $sChr . '</A></TD>
+          <TD>' . $nVariants . '</TD></TR>');
+        }
+        print('</TABLE>' . "\n\n");
+        $_T->printFooter();
+        exit;
+    }
 
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
@@ -160,7 +187,8 @@ if (!ACTION && (empty($_PE[1]) ||
 
 
 
-if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION) {
+if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION
+    && (!(LOVD_plus || LOVD_light) || (!empty($_GET['search_geneid']) && !empty('search_VariantOnTranscript/DNA')))) {
     // URL: /variants/in_gene
     // View all entries effecting a transcript.
 
