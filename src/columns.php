@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2020-11-03
+ * Modified    : 2020-11-04
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1341,7 +1341,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                 $_DB->query('DESCRIBE ' . $aTableInfo['table_sql'])->fetchAllColumn());
             $zData['active'] = (bool)
                 $_DB->query('SELECT COUNT(*) FROM  ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?',
-                array($sColumnID))->fetchAllColumn();
+                array($sColumnID))->fetchColumn();
 
             if (!$zData['active_checked']) {
                 $sMessage = 'Adding column to data table ' . ($tAlter < 4? '' : '(this may take some time)') . '...';
