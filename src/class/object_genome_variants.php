@@ -111,26 +111,26 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-                 array(
-                        'individualid_' => 'Individual ID',
-                        'chromosome' => 'Chromosome',
-                        'allele_' => 'Allele',
-                        'effect_reported' => 'Affects function (as reported)',
-                        'effect_concluded' => 'Affects function (by curator)',
-                        'curation_status_' => 'Curation status',
-                        'confirmation_status_' => 'Confirmation status',
-                      ),
-                 $this->buildViewEntry(),
-                 array(
-                        'mapping_flags_' => array('Automatic mapping', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'average_frequency_' => 'Average frequency (large NGS studies)',
-                        'owned_by_' => 'Owner',
-                        'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
-                 )
+            array(
+                'individualid_' => 'Individual ID',
+                'chromosome' => 'Chromosome',
+                'allele_' => 'Allele',
+                'effect_reported' => 'Affects function (as reported)',
+                'effect_concluded' => 'Affects function (by curator)',
+                'curation_status_' => 'Curation status',
+                'confirmation_status_' => 'Confirmation status',
+            ),
+            $this->buildViewEntry(),
+            array(
+                'mapping_flags_' => array('Automatic mapping', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'average_frequency_' => 'Average frequency (large NGS studies)',
+                'owned_by_' => 'Owner',
+                'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
+            )
         );
         if (!LOVD_plus) {
             unset($this->aColumnsViewEntry['curation_status_']);
@@ -140,6 +140,9 @@ class LOVD_GenomeVariant extends LOVD_Custom
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
             array(
+                'id' => array(
+                    'view' => false,
+                    'db'   => array('vog.id', 'ASC', true)),
                 'screeningids' => array(
                     'view' => false,
                     'db'   => array('s2v.screeningid', 'ASC', true)),
@@ -160,33 +163,33 @@ class LOVD_GenomeVariant extends LOVD_Custom
                         'On which allele is the variant located? Does not necessarily imply inheritance!',
                         'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
                 'chromosome' => array(
-                            'view' => array('Chr', 50),
-                            'db'   => array('vog.chromosome', 'ASC', true)),
+                    'view' => array('Chr', 50),
+                    'db'   => array('vog.chromosome', 'ASC', true)),
                 'position_g_start' => array(
-                            'view' => false,
-                            'db'   => array('vog.position_g_start', 'ASC', true)),
+                    'view' => false,
+                    'db'   => array('vog.position_g_start', 'ASC', true)),
                 'position_g_end' => array(
-                             'view' => false,
-                            'db'   => array('vog.position_g_end', 'ASC', true)),
+                    'view' => false,
+                    'db'   => array('vog.position_g_end', 'ASC', true)),
             ),
             $this->buildViewList(),
             array(
                 'owned_by_' => array(
-                            'view' => array('Owner', 160),
-                            'db'   => array('uo.name', 'ASC', true)),
+                    'view' => array('Owner', 160),
+                    'db'   => array('uo.name', 'ASC', true)),
                 'owner_countryid' => array(
-                            'view' => false,
-                            'db'   => array('uo.countryid', 'ASC', true)),
+                    'view' => false,
+                    'db'   => array('uo.countryid', 'ASC', true)),
                 'status' => array(
-                            'view' => array('Status', 70),
-                            'db'   => array('ds.name', false, true),
-                            'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
+                    'view' => array('Status', 70),
+                    'db'   => array('ds.name', false, true),
+                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
                 'created_by' => array(
-                            'view' => false,
-                            'db'   => array('vog.created_by', false, true)),
+                    'view' => false,
+                    'db'   => array('vog.created_by', false, true)),
                 'created_date' => array(
-                            'view' => false,
-                            'db'   => array('vog.created_date', 'ASC', true)),
+                    'view' => false,
+                    'db'   => array('vog.created_date', 'ASC', true)),
             )
         );
 

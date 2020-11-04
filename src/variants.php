@@ -505,7 +505,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
           '      <DIV id="viewentryDiv">' . "\n" .
           '      </DIV>' . "\n\n");
 
-    $_GET['search_id_'] = $nID;
+    $_GET['search_id'] = $nID;
     print('      <BR><BR>' . "\n\n");
     $_T->printTitle('Variant on transcripts', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
@@ -528,7 +528,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         });
     }
     $_DATA->viewList($sViewListID, $aVLOptions);
-    unset($_GET['search_id_']);
+    unset($_GET['search_id']);
 ?>
 
       <SCRIPT type="text/javascript">
