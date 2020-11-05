@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-11-02
+ * Modified    : 2020-11-05
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -554,7 +554,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             } elseif ($zData['average_frequency'] === '0') {
                 $zData['average_frequency_'] = 'Variant not found in online data sets';
             } else {
-                $zData['average_frequency_'] = round($zData['average_frequency'], 5) . ' <SPAN style="float: right"><A href="http://databases.lovd.nl/whole_genome/variants/chr' . $zData['chromosome'] . '?search_VariantOnGenome/DNA=' . $zData['VariantOnGenome/DNA'] . '" title="" target="_blank">View details</A></SPAN>';
+                $zData['average_frequency_'] = round($zData['average_frequency'], 5) . ' <SPAN style="float: right"><A href="https://gnomad.broadinstitute.org/region/' . $zData['chromosome'] . '-' . $zData['position_g_start'] . '-' . $zData['position_g_end'] . '?dataset=gnomad_r2_1" target="_blank">View details</A></SPAN>';
             }
             if (LOVD_plus && !empty($zData['curation_status_'])) {
                 // Add a link to the curation status to show the curation status history for this variant.
