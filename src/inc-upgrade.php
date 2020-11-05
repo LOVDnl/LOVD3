@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-09-30
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-05
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -793,6 +793,9 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  ),
                  '3.0-24c' => array(
                      'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN md_apikey VARCHAR(50) NOT NULL DEFAULT "" AFTER mutalyzer_soap_url',
+                 ),
+                 '3.0-25b' => array(
+                     'UPDATE ' . TABLE_VARIANTS . ' SET average_frequency = NULL',
                  ),
              );
 
