@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-07-21
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-09
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -565,12 +565,12 @@ class LOVD_VVAnalyses {
                                 }
 
                                 // Compare the current protein value with the new protein prediction.
-                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
+                                if (str_replace('Ter', '*', $aVOT['protein']) != $aVVVot['data']['protein']) {
                                     if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.fsX', 'p.(fs)', 'p.(fs*)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
-                                    } elseif (str_replace('*', 'Ter', $aVOT['protein']) == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
+                                    } elseif (str_replace('Ter', '*', $aVOT['protein']) == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
                                         || ($aVOT['protein'] == 'p.?' && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } elseif ((preg_match('/^r\.[0-9]/', $aVOT['RNA']) && preg_match('/^p\.[A-Z]([a-z]{2})?[0-9]/', $aVOT['protein']))
@@ -580,7 +580,7 @@ class LOVD_VVAnalyses {
                                         // OR VV doesn't dare to predict, and either the original RNA or protein field
                                         //    seems to contain some kind of prediction;
                                         // Keep the current protein value.
-                                    } elseif (similar_text(str_replace('*', 'Ter', $aVOT['protein']), $aVVVot['data']['protein'], $n)
+                                    } elseif (similar_text(str_replace('Ter', '*', $aVOT['protein']), $aVVVot['data']['protein'], $n)
                                         && $n > 50) {
                                         // We have similar protein values. We already know the cDNA changed.
                                         // VV probably knows better because of the updated cDNA.
@@ -957,12 +957,12 @@ class LOVD_VVAnalyses {
                                 }
 
                                 // Compare the current protein value with the new protein prediction.
-                                if (str_replace('*', 'Ter', $aVOT['protein']) != $aVVVot['data']['protein']) {
+                                if (str_replace('Ter', '*', $aVOT['protein']) != $aVVVot['data']['protein']) {
                                     if (in_array($aVOT['protein'], array('', 'p.?', 'p.fs', 'p.fs?', 'p.fs*', 'p.fsX', 'p.(fs)', 'p.(fs*)'))) {
                                         // Overwrite the protein field if it's different and not so interesting,
                                         //  we assume to have something better.
                                         $aUpdate['transcripts'][$sTranscript]['protein'] = $aVVVot['data']['protein'];
-                                    } elseif (str_replace('*', 'Ter', $aVOT['protein']) == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
+                                    } elseif (str_replace('Ter', '*', $aVOT['protein']) == str_replace(array('(', ')'), '', $aVVVot['data']['protein'])
                                         || ($aVOT['protein'] == 'p.?' && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
                                     } elseif ((preg_match('/^r\.[0-9]/', $aVOT['RNA']) && preg_match('/^p\.[A-Z]([a-z]{2})?[0-9]/', $aVOT['protein']))
@@ -972,7 +972,7 @@ class LOVD_VVAnalyses {
                                         // OR VV doesn't dare to predict, and either the original RNA or protein field
                                         //    seems to contain some kind of prediction;
                                         // Keep the current protein value.
-                                    } elseif (similar_text(str_replace('*', 'Ter', $aVOT['protein']), $aVVVot['data']['protein'], $n)
+                                    } elseif (similar_text(str_replace('Ter', '*', $aVOT['protein']), $aVVVot['data']['protein'], $n)
                                         && $n > 50) {
                                         // We have similar protein values. We already know the cDNA changed.
                                         // VV probably knows better because of the updated cDNA.
