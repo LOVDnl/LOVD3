@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-10-14
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-06
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -225,6 +225,13 @@ class LOVD_VV
                     $aMapping['protein'] = '';
                 }
             }
+
+        } elseif (strpos($aMapping['protein'], 'Ter') !== false) {
+            // VV likes to use 'Ter', which is consistent with otherwise using
+            //  three-letter aminoacid codes. However, publications and
+            //  submitters mostly use *, and it's annoying to have to search for
+            //  both * and Ter if we want to find variants causing a stop.
+            $aMapping['protein'] = str_replace('Ter', '*', $aMapping['protein']);
         }
 
         return true;
