@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2020-07-16
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-12
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -70,12 +70,6 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     // People sometimes leave spaces.
     if (strpos($sVariant, ' ') !== false) {
         return lovd_fixHGVS(preg_replace('/\s+/', '', $sVariant));
-    }
-
-    // Delins variants that should be conversions.
-    if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)delins([0-9+-]+_[0-9+-]+)$/', $sVariant, $aRegs)) {
-        // Return as a conversion.
-        return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'con' . $aRegs[2]);
     }
 
     // Parentheses where they shouldn't belong?
