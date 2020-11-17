@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-11-02
+ * Modified    : 2020-11-17
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1054,6 +1054,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         if ($bCheckHGVS) {
             // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
+            if ($sVariant == 'con') {
+                // Conversion has been removed in favor of delins.
+                // See: http://varnomen.hgvs.org/bg-material/consultation/svd-wg009/
+                return false;
+            }
             if (strpos($sVariant, '>') !== false && $sEndPosition) {
                 // Substitutions are not allowed to have a range.
                 return false;
@@ -1153,6 +1158,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         if ($bCheckHGVS) {
             // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
+            if ($sVariant == 'con') {
+                // Conversion has been removed in favor of delins.
+                // See: http://varnomen.hgvs.org/bg-material/consultation/svd-wg009/
+                return false;
+            }
             if ($sSuffix) {
                 // Suffix not allowed in some cases.
                 if (in_array($sVariant, array('del', 'dup', 'inv')) || substr($sVariant, 0, 1) == '|') {
