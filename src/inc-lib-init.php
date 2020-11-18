@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-11-17
+ * Modified    : 2020-11-18
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1069,15 +1069,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if (strpos($sVariant, '>') !== false || $sVariant == 'inv' || substr($sVariant, 0, 1) == '|' || $sVariant == '=') {
                     // No suffix allowed for substitutions, inversions, methylation or WT calls.
                     return false;
-                } elseif ($sVariant == 'con' && !preg_match('/^([NX][CMR]_[0-9]{6}\.[0-9]+:)?([0-9]+|[0-9]+[+-][0-9]+)_([0-9]+|[0-9]+[+-][0-9]+)$/', $sSuffix)) {
-                    // Gene conversions require position fields.
-                    return false;
                 } elseif (in_array($sVariant, array('del', 'dup')) && !preg_match('/^[ACTG]+$/', $sSuffix)) {
                     // Only allow bases as suffix for deletions and duplications.
                     return false;
-                } elseif ($sVariant == 'delins' && !preg_match('/^([ACTG]+|\([0-9]+\))$/', $sSuffix)) {
-                    // Only allow bases or length as suffix for deletion-insertion events.
-                    // Position ranges for deletion-insertions are actually conversions.
+                } elseif ($sVariant == 'delins'
+                    && !preg_match('/^([ACTG]+|\([0-9]+\))$/', $sSuffix)
+                    && !preg_match('/^([0-9]+|[0-9]+[+-][0-9]+)_([0-9]+|[0-9]+[+-][0-9]+)$/', $sSuffix)
+                    && !preg_match('/^\[[NX][CMR]_[0-9]{6,9}\.[0-9]+:[cgmn]\.([0-9]+|[0-9]+[+-][0-9]+)_([0-9]+|[0-9]+[+-][0-9]+)\]$/', $sSuffix)) {
+                    // Only allow bases, length, or positions as suffix for deletion-insertion events.
+                    // Position ranges for deletion-insertions used to be conversions.
                     return false;
                 } elseif ($sVariant == 'ins' && !preg_match('/^([ACTG]+|\([0-9]+\)|[0-9]+_[0-9]+|\[NC_[0-9]{6}\.[0-9]+:[0-9]+_[0-9]+\])$/', $sSuffix)) {
                     // Supported are insertions with bases, length, or with position fields.
@@ -1168,12 +1168,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if (in_array($sVariant, array('del', 'dup', 'inv')) || substr($sVariant, 0, 1) == '|') {
                     // No suffix allowed for uncertain deletions, duplications, or inversions.
                     return false;
-                } elseif ($sVariant == 'con' && !preg_match('/^([NX][CMR]_[0-9]{6}\.[0-9]+:)?[0-9]+_[0-9]+$/', $sSuffix)) {
-                    // Gene conversions require position fields.
-                    return false;
-                } elseif ($sVariant == 'delins' && !preg_match('/^(\([0-9]+\))$/', $sSuffix)) {
-                    // Only allow length as suffix for deletion-insertion events.
-                    // Position ranges for deletion-insertions are actually conversions.
+                } elseif ($sVariant == 'delins'
+                    && !preg_match('/^\([0-9]+\)$/', $sSuffix)
+                    && !preg_match('/^[0-9]+_[0-9]+$/', $sSuffix)
+                    && !preg_match('/^\[[NX][CMR]_[0-9]{6,9}\.[0-9]+:[cgmn]\.[0-9]+_[0-9]+\]$/', $sSuffix)) {
+                    // Only allow length or positions as suffix for deletion-insertion events.
+                    // Position ranges for deletion-insertions used to be conversions.
                     return false;
                 } elseif ($sVariant == 'ins' && !preg_match('/^(\([0-9]+\)|[0-9]+_[0-9]+|\[NC_[0-9]{6}\.[0-9]+:[0-9]+_[0-9]+\])$/', $sSuffix)) {
                     // Supported are insertions with length or with position fields.
