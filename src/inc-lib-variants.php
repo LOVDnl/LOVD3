@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2020-11-17
+ * Modified    : 2020-11-19
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -73,14 +73,20 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     }
 
     // Con variants that should be delins.
-    if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)con([N0-9].+)/', $sVariant, $aRegs)) {
+    if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)con(.+)$/', $sVariant, $aRegs)) {
         // Return as a delins.
         // The annoying thing is that 'con' never needed a square bracket,
-        //  but a delins does, when NCs are involved.
-        if ($aRegs[2]{0} == 'N') {
+        //  but a delins does, when other reference sequences are involved.
+        if (in_array($aRegs[2]{0}, array('N', 'X'))) {
             $aRegs[2] = '[' . $aRegs[2] . ']';
         }
         return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'delins' . $aRegs[2]);
+    }
+
+    // Delins variants that require square brackets.
+    if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)delins([NX].+)$/', $sVariant, $aRegs)) {
+        // Include the inserted sequence into square brackets.
+        return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'delins' . '[' . $aRegs[2] . ']');
     }
 
     // Parentheses where they shouldn't belong?
