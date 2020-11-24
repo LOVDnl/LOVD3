@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2020-11-04
+ * Modified    : 2020-11-24
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -393,7 +393,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
         if (!empty($_POST['select_options'])) {
             $aOptions = explode("\r\n", $_POST['select_options']);
             foreach ($aOptions as $n => $sOption) {
-                if (!preg_match('/^([^=]+|[A-Z0-9 \/\()?._+-]+ *= *[^=]+)$/i', $sOption)) {
+                if (!preg_match('/^([^=;]+|[A-Z0-9 \/\()?._+-]+ *= *[^=;]+)$/i', $sOption)) {
                     lovd_errorAdd('select_options', 'Select option #' . ($n + 1) . ' &quot;' . htmlspecialchars($sOption) . '&quot; not understood.');
                 }
             }
