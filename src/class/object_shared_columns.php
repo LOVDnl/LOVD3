@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2020-10-23
+ * Modified    : 2020-11-24
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -173,6 +173,16 @@ class LOVD_SharedColumn extends LOVD_Object
                       );
 
         parent::checkFields($aData, $zData, $aOptions);
+
+        // Select_options.
+        if (!empty($aData['select_options'])) {
+            $aOptions = explode("\r\n", $aData['select_options']);
+            foreach ($aOptions as $n => $sOption) {
+                if (!preg_match('/^([^=;]+|[A-Z0-9 \/\()?._+-]+ *= *[^=;]+)$/i', $sOption)) {
+                    lovd_errorAdd('select_options', 'Select option #' . ($n + 1) . ' &quot;' . htmlspecialchars($sOption) . '&quot; not understood.');
+                }
+            }
+        }
 
         // Width can not be less than 20 or more than 500.
         // These numbers are also defined in object_columns.php and inc-js-columns.php.
