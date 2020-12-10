@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-10-08
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-30
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -91,6 +91,22 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
         $this->driver->findElement(WebDriverBy::name('owned_by'));
         $this->driver->findElement(WebDriverBy::name('statusid'));
         $this->submitForm('Upload SeattleSeq file');
+
+        // Tests often time out here (2 minutes). Progress got stuck at
+        //  different percentages; measure if this is just slow or if it really
+        //  gets stuck for some reason.
+        // For a whole minute, write out the progress every 5 seconds.
+        for ($i = 0; $i < 60; $i += 5) {
+            $sProgress = $this->driver->findElement(
+                WebDriverBy::id('lovd__progress_value'))->getText();
+            fwrite(STDERR, PHP_EOL . 'Progress output: ' . $sProgress);
+            if ($sProgress == '100%') {
+                fwrite(STDERR, PHP_EOL);
+                break;
+            }
+            sleep(5);
+        }
+
         $this->waitForElement(WebDriverBy::xpath('//input[contains(@value, "Continue")]'), 300);
 
         $this->assertEquals('138 variants were imported, 1 variant could not be imported.',
