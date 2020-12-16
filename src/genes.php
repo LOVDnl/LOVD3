@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-11-02
+ * Modified    : 2020-12-14
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -729,6 +729,22 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                 $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
                 $_POST['refseq_UD'] = $sRefseqUD;
                 $aFields[] = 'refseq_UD';
+            }
+
+            // In case this gene misses some IDs that should have been added
+            //  when it was created, see if we can find these now.
+            $aGeneInfo = null;
+            foreach (array('id_entrez', 'id_omim') as $sField) {
+                if (empty($zData[$sField]) && max($zData['created_date'], $zData['edited_date']) < date('Y-m-d H:i:s', strtotime('-1 week'))) {
+                    if (!isset($aGeneInfo)) {
+                        $aGeneInfo = lovd_getGeneInfoFromHGNC($zData['id_hgnc']);
+                    }
+                    $sHGNCField = substr(strstr($sField, '_'), 1) . '_id';
+                    if (!empty($aGeneInfo[$sHGNCField])) {
+                        $_POST[$sField] = $aGeneInfo[$sHGNCField];
+                        $aFields[] = $sField;
+                    }
+                }
             }
 
             // Prepare values.
