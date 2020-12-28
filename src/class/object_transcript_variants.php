@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2020-10-26
+ * Modified    : 2020-12-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -544,7 +544,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
             $aSQL = array();
             foreach ($aGeneFields[$sGene] as $key => $sField) {
                 $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
-                if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
+                if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC', 'FLO'))) {
                     $aData[$sField] = NULL;
                 }
                 $aSQL[] = $aData[$sField];
