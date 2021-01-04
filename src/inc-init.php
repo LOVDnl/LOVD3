@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-11-05
+ * Modified    : 2020-12-29
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
@@ -305,7 +305,7 @@ $_SETT = array(
                             8 => '<SPAN style="color:red;">Important</SPAN>',
                             9 => '<SPAN style="color:red;"><B>Critical</B></SPAN>',
                           ),
-                'upstream_URL' => 'http://www.LOVD.nl/',
+                'upstream_URL' => 'https://www.LOVD.nl/',
                 'upstream_BTS_URL' => 'https://github.com/LOVDnl/LOVD3/issues/',
                 'upstream_BTS_URL_new_ticket' => 'https://github.com/LOVDnl/LOVD3/issues/new',
                 'list_sizes' =>
