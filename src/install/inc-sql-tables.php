@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2020-09-30
- * For LOVD    : 3.0-25
+ * Modified    : 2021-01-05
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -142,6 +142,7 @@ $aTableSQL =
     show_hgmd BOOLEAN NOT NULL DEFAULT 0,
     show_genecards BOOLEAN NOT NULL DEFAULT 0,
     show_genetests BOOLEAN NOT NULL DEFAULT 0,
+    show_orphanet BOOLEAN NOT NULL DEFAULT 0,
     note_index TEXT,
     note_listing TEXT,
     refseq VARCHAR(1) NOT NULL DEFAULT "",
