@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-11-02
+ * Modified    : 2021-01-05
  * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -65,7 +65,9 @@ class LOVD_Gene extends LOVD_Object
                                'GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests, ' .
+        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene,
+                                            IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests,
+                                            IF(g.show_orphanet AND g.id_hgnc, g.id_hgnc, 0) AS show_orphanet, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
                                            'MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, ' .
@@ -169,6 +171,7 @@ class LOVD_Gene extends LOVD_Object
                         'show_hgmd_' => 'HGMD',
                         'show_genecards_' => 'GeneCards',
                         'show_genetests_' => 'GeneTests',
+                        'show_orphanet_' => 'Orphanet',
                       );
         if (!$_SETT['customization_settings']['genes_show_meta_data']) {
             // Hide date and user fields.
@@ -721,7 +724,7 @@ class LOVD_Gene extends LOVD_Object
                 }
             }
 
-            $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'id_pubmed_gene', 'show_hgmd', 'show_genecards', 'show_genetests');
+            $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'id_pubmed_gene', 'show_hgmd', 'show_genecards', 'show_genetests', 'show_orphanet');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID, 2);
                 if (!empty($zData[$sColID])) {
@@ -729,7 +732,11 @@ class LOVD_Gene extends LOVD_Object
                     //  for IDs, use the IDs in the visible part of the link, otherwise use the gene symbol.
                     // FIXME: Note that id_pubmed_gene now uses the gene symbol in the visible part of the link (code below this block);
                     //  it would be good if we'd standardize that.
-                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                    $zData[$sColID . '_'] = '<A href="' .
+                        lovd_getExternalSource($sSource,
+                            ($sType == 'id' || $sSource == 'genetests' || $sSource == 'orphanet'? $zData[$sColID] :
+                                rawurlencode($zData['id'])), true) . '" target="_blank">' .
+                        ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }
