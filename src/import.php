@@ -972,7 +972,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                             break;
                         case 'Genes':
                             // The following columns are allowed for update: chrom_band, imprinting, reference, url_homepage, url_external, allow_download, show_hgmd, show_genecards,
-                            // show_genetests, note_index, note_listing, refseq, refseq_url, disclaimer, disclaimer_text, header, header_align,
+                            // show_genetests, show_orphanet, note_index, note_listing, refseq, refseq_url, disclaimer, disclaimer_text, header, header_align,
                             // footer, footer_align.
                             if ($sMode == 'update') {
                                 // Not allowed to be inserted yet, so we don't want checkFields() to be run like that.

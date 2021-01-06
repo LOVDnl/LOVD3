@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-11-05
+ * Modified    : 2021-01-05
  * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -796,6 +796,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  ),
                  '3.0-25b' => array(
                      'UPDATE ' . TABLE_VARIANTS . ' SET average_frequency = NULL',
+                 ),
+                 '3.0-25c' => array(
+                     'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN show_orphanet BOOLEAN NOT NULL DEFAULT 0 AFTER show_genetests',
+                     'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("orphanet", "https://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Gene={{ ID }}")',
                  ),
              );
 

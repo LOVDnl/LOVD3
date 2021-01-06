@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-11-02
+ * Modified    : 2021-01-06
  * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -65,7 +65,9 @@ class LOVD_Gene extends LOVD_Object
                                'GROUP BY g.id';
 
         // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene, IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests, ' .
+        $this->aSQLViewEntry['SELECT']   = 'g.*, g.id_entrez AS id_pubmed_gene,
+                                            IF(g.show_genetests AND g.id_entrez, g.id_entrez, 0) AS show_genetests,
+                                            IF(g.show_orphanet AND g.id_hgnc, g.id_hgnc, 0) AS show_orphanet, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IFNULL(d.id_omim, 0), ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT t.id, ";", t.id_ncbi ORDER BY t.id_ncbi SEPARATOR ";;") AS __transcripts, ' .
                                            'MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, ' .
@@ -169,6 +171,7 @@ class LOVD_Gene extends LOVD_Object
                         'show_hgmd_' => 'HGMD',
                         'show_genecards_' => 'GeneCards',
                         'show_genetests_' => 'GeneTests',
+                        'show_orphanet_' => 'Orphanet',
                       );
         if (!$_SETT['customization_settings']['genes_show_meta_data']) {
             // Hide date and user fields.
@@ -449,6 +452,7 @@ class LOVD_Gene extends LOVD_Object
                         array('Provide link to HGMD', 'Do you want a link to this gene\'s entry in the Human Gene Mutation Database added to the homepage?', 'checkbox', 'show_hgmd'),
                         array('Provide link to GeneCards', 'Do you want a link to this gene\'s entry in the GeneCards database added to the homepage?', 'checkbox', 'show_genecards'),
                         array('Provide link to GeneTests', 'Do you want a link to this gene\'s entry in the GeneTests database added to the homepage?', 'checkbox', 'show_genetests'),
+                        array('Provide link to Orphanet', 'Do you want a link to this gene\'s entry in the Orphanet database added to the homepage?', 'checkbox', 'show_orphanet'),
                         array('This gene has a human-readable reference sequence', '', 'select', 'refseq', 1, $aSelectRefseq, 'No', false, false),
                         array('', '', 'note', 'Although GenBank files are the official reference sequence, they are not very readable for humans. If you have a human-readable format of your reference sequence online, please select the type here.'),
                         array('Human-readable reference sequence location', '', 'text', 'refseq_url', 40),
@@ -721,7 +725,7 @@ class LOVD_Gene extends LOVD_Object
                 }
             }
 
-            $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'id_pubmed_gene', 'show_hgmd', 'show_genecards', 'show_genetests');
+            $aExternal = array('id_omim', 'id_hgnc', 'id_entrez', 'id_pubmed_gene', 'show_hgmd', 'show_genecards', 'show_genetests', 'show_orphanet');
             foreach ($aExternal as $sColID) {
                 list($sType, $sSource) = explode('_', $sColID, 2);
                 if (!empty($zData[$sColID])) {
@@ -729,7 +733,11 @@ class LOVD_Gene extends LOVD_Object
                     //  for IDs, use the IDs in the visible part of the link, otherwise use the gene symbol.
                     // FIXME: Note that id_pubmed_gene now uses the gene symbol in the visible part of the link (code below this block);
                     //  it would be good if we'd standardize that.
-                    $zData[$sColID . '_'] = '<A href="' . lovd_getExternalSource($sSource, ($sType == 'id' || $sSource == 'genetests'? $zData[$sColID] : rawurlencode($zData['id'])), true) . '" target="_blank">' . ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
+                    $zData[$sColID . '_'] = '<A href="' .
+                        lovd_getExternalSource($sSource,
+                            ($sType == 'id' || $sSource == 'genetests' || $sSource == 'orphanet'? $zData[$sColID] :
+                                rawurlencode($zData['id'])), true) . '" target="_blank">' .
+                        ($sType == 'id'? $zData[$sColID] : rawurlencode($zData['id'])) . '</A>';
                 } else {
                     $zData[$sColID . '_'] = '';
                 }
@@ -746,7 +754,11 @@ class LOVD_Gene extends LOVD_Object
                 'The contents of this LOVD database are the intellectual property of the respective curator(s). Any unauthorised use, copying, storage or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising out of any inaccuracies or omissions. Individuals, organisations and companies which use this database do so on the understanding that no liability whatsoever either direct or indirect shall rest upon the curator(s) or any of their employees or agents for the effects of any product, process or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
 
             // Unset fields that will not be shown if they're empty.
-            foreach (array('note_index', 'refseq_url_', 'url_homepage_', 'url_external_' , 'id_entrez_', 'id_pubmed_gene_', 'id_omim_', 'disease_omim_', 'show_hgmd_', 'show_genecards_', 'show_genetests_', 'rf_checker_') as $key) {
+            foreach (array('note_index', 'refseq_url_', 'url_homepage_',
+                    'url_external_' , 'id_entrez_', 'id_pubmed_gene_',
+                    'id_omim_', 'disease_omim_', 'show_hgmd_',
+                    'show_genecards_', 'show_genetests_', 'show_orphanet_',
+                    'rf_checker_') as $key) {
                 if (empty($zData[$key])) {
                     unset($this->aColumnsViewEntry[$key]);
                 }
