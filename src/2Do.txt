@@ -2,6 +2,7 @@ Release LOVD?
 =============
 Update LOVD installations:
 /DNA_profiles/ heeft aangepaste index.php.
+/leveDNA/ heeft aangepaste styles.css.
 /my_genome/ heeft veel aangepaste files (ajax/map_variants.php, ajax/viewlist.php, class/object_custom_viewlist.php, class/object_genes.php, class/object_individuals.php, individuals.php, screenings.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!! Also this install no longer has a key on id_ncbi, because duplicate values already existed (????????) and altering the table in any way (to increase the transcriptid length) was rejected because of this.
 /shared/ heeft een aangepaste class/api.submissions.php, class/template.php, download.php, import.php en individuals.php en een paar eigen files die niet overschreven mag worden (zoals export.php).
 /whole_genome/ heeft aangepaste files (class/api.php, class/object_custom_viewlists.php, class/object_genes.php, class/object_genome_variants.php, class/template.php, api.php, genes.php, variants.php), NOOIT ZOMAAR OVERSCHRIJVEN!!!
@@ -245,7 +246,6 @@ Phen cols niet aan voor die ziekte, dat wordt niet gemerkt, als hij wel aanstaat
 - (@Ivo:) Indien geen kolommen actief zijn voor aandoening en/of gen, geef aan hoe dat te fixen vanaf het object z'n columns VL. ViewList zou count(*) terug moeten geven, waarna de code kan weten dat er blijkbaar niets te tonen was.
 - Als send_stats uit staat, heeft include_in_listing weinig zin...
 - Gene removed, refseq files deleted?
-- Orphanet links toevoegen: meteen ID kolommen omzetten in 'n grote bitwise kolom?
 - Atom update feed (student project?).
 - Follow variant? (student project?).
 - Iets als check_update, maar dan check_news.php. Wordt gerund iedere keer als men inlogt. Maakt gebruik van Atom feed of tab delimited en presenteert nieuws (jQuery!)

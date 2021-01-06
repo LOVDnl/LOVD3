@@ -47,7 +47,7 @@
    Closes #452: "Improve variant page's titles with variant information".
  * Fixed the generation of DBIDs, in some cases DBIDs were generated that were
    already in use.
-   Close #460: "LOVD generates DBIDs that are already in use under certain
+   Closes #460: "LOVD generates DBIDs that are already in use under certain
    circumstances".
  * Improved the submission API to allow variant-only submissions and to directly
    process submissions if configured to do so. Also, HGNC IDs can be used
