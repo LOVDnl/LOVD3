@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-03-04
- * Modified    : 2020-07-20
- * For LOVD    : 3.0-25
+ * Modified    : 2021-01-06
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -68,6 +68,7 @@ class CreateGeneIVDTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->check('show_hgmd');
         $this->check('show_genecards');
         $this->check('show_genetests');
+        $this->check('show_orphanet');
         $this->submitForm('Create gene information entry');
         $this->assertEquals('Successfully created the gene information entry!',
             $this->driver->findElement(WebDriverBy::cssSelector("table[class=info]"))->getText());
