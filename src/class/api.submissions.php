@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-10-07
- * For LOVD    : 3.0-25
+ * Modified    : 2021-01-07
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -1443,9 +1443,11 @@ class LOVD_API_Submissions
                                         } else {
                                             // Store the gene, and check if it exists.
                                             $aGenes[$iVariantLevel2] = $aVariantLevel2['gene']['@accession'];
-                                            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?',
-                                                array($aVariantLevel2['gene']['@accession'], $aVariantLevel2['gene']['@accession']))->fetchColumn()) {
+                                            $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?',
+                                                array($aVariantLevel2['gene']['@accession'], $aVariantLevel2['gene']['@accession']))->fetchColumn();
+                                            if ($sGene) {
                                                 // Gene exists.
+                                                $aVariantLevel2['gene']['@accession'] = $sGene;
                                                 $aGenesExisting[$iVariantLevel2] = $aVariantLevel2['gene']['@accession'];
                                             }
                                         }
@@ -1477,13 +1479,6 @@ class LOVD_API_Submissions
                                                     // But also check gene. If we have a gene from the JSON file, and we have
                                                     //  that in the database, then it must match this transcript.
                                                     if (isset($aVariantLevel2['gene']['@accession'])) {
-                                                        if (ctype_digit($aVariantLevel2['gene']['@accession'])) {
-                                                            $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?',
-                                                                array($aVariantLevel2['gene']['@accession']))->fetchColumn();
-                                                            if ($sGene) {
-                                                                $aVariantLevel2['gene']['@accession'] = $sGene;
-                                                            }
-                                                        }
                                                         if ($aVariantLevel2['gene']['@accession'] != $sTranscriptGene) {
                                                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': SeqChange #' . $nVariantLevel2 . ': ' .
                                                                 'Gene source (' . $aVariantLevel2['gene']['@accession'] . ') mismatches with gene (' . $sTranscriptGene . ') attached to given RefSeq accession (' . $aVariantLevel2['ref_seq']['@accession'] . ').' .
