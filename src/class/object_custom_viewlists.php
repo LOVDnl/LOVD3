@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2021-01-11
+ * Modified    : 2021-01-13
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,14 +72,16 @@ class LOVD_CustomViewList extends LOVD_Object
             $sGene = $sOtherID;
         }
 
-
-        // FIXME: Disable this part when not using any of the custom column data types...
-        // Collect custom column information, all active columns (possibly restricted per gene).
-        // FIXME; This join is not always needed (it's done for VOT columns, but sometimes they are excluded, or the join is not necessary because of the user level), exclude when not needed to speed up the query?
-        //   Also, the select of public_view makes no sense of VOTs are restricted by gene.
-        // Note: objects inheriting LOVD_custom implement selection of
-        //  viewable columns in buildViewList().
-        $sSQL = 'SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
+        // Are VOT columns shared? (Not for LOVD+ or for LOVD light)
+        $aVOT = lovd_getTableInfoByCategory('VariantOnTranscript');
+        if ($aVOT['shared']) {
+            // FIXME: Disable this part when not using any of the custom column data types...
+            // Collect custom column information, all active columns (possibly restricted per gene).
+            // FIXME; This join is not always needed (it's done for VOT columns, but sometimes they are excluded, or the join is not necessary because of the user level), exclude when not needed to speed up the query?
+            //   Also, the select of public_view makes no sense of VOTs are restricted by gene.
+            // Note: objects inheriting LOVD_custom implement selection of
+            //  viewable columns in buildViewList().
+            $sSQL = 'SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
                     'WHERE ' . ($_AUTH['level'] >= ($sGene? $_SETT['user_level_settings']['see_nonpublic_data'] : LEVEL_MANAGER)? '' : '((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     (!$sGene? 'GROUP BY c.id ' :
                       // If gene is given, only shown VOT columns active in the given gene! We'll use an UNION for that, so that we'll get the correct width and order also.
@@ -88,11 +90,12 @@ class LOVD_CustomViewList extends LOVD_Object
                       'SELECT c.id, sc.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, sc.col_order, CONCAT(sc.geneid, ":", sc.public_view) AS public_view FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE sc.geneid = ? ' .
                       ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : 'AND sc.public_view = 1 ')) .
                     'ORDER BY col_order';
-        if (LOVD_plus || LOVD_light) {
+        } else {
             // In LOVD_plus, the shared cols table is empty and the public_view field is used to set if a custom column will be displayed in a VL or not.
             // So, in LOVD_plus we need to check for ALL USERS if a custom column has public_view flag turned on or not.
             $sSQL = 'SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, c.public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) ' .
-                    'WHERE c.public_view = 1 AND (c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
+                    'WHERE ' . (!LOVD_plus && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : 'c.public_view = 1 AND ') .
+                    '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     'GROUP BY c.id ' .
                     'ORDER BY col_order';
             // And then we don't need this.
