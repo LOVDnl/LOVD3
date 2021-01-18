@@ -219,6 +219,9 @@ class LOVD_CustomViewList extends LOVD_Object
                             (in_array('Individual', $aObjects)? '' :
                                 ', uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner') .
                             ', dsg.id AS var_statusid, dsg.name AS var_status';
+                    } elseif ($bLoadVOGEffect) {
+                        $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') .
+                            'GROUP_CONCAT(DISTINCT eg.name SEPARATOR ", ") AS vog_effect';
                     }
                     if (!$bSetRowID) {
                         $aSQL['SELECT'] .= ', vog.id AS row_id';
@@ -685,6 +688,10 @@ class LOVD_CustomViewList extends LOVD_Object
                                     'The number of times this variant has been reported in the database.')),
                         )
                     );
+                    if (!empty($bLoadVOGEffect)) {
+                        // Show vog_effect instead of vot_effect when requested.
+                        unset($this->aColumnsViewList['vot_effect']);
+                    }
                     if (!$this->sSortDefault) {
                         // First data table in view.
                         $this->sSortDefault = 'VariantOnTranscript/DNA';
