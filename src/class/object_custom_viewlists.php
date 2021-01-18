@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2021-01-13
+ * Modified    : 2021-01-18
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -103,7 +103,7 @@ class LOVD_CustomViewList extends LOVD_Object
         }
         $aSQL = array();
         foreach ($aObjects as $sObject) {
-            $aSQL[] = $sObject . '/%';
+            $aSQL[] = str_replace('Unique', '', $sObject) . '/%';
         }
         if ($sGene) {
             $aSQL[] = $sGene;
