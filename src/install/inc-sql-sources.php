@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2021-01-05
+ * Modified    : 2021-01-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -38,7 +38,7 @@ $aSourceSQL =
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("genetests",    "https://www.ncbi.nlm.nih.gov/gtr/genes/{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgmd",         "http://www.hgmd.cf.ac.uk/ac/gene.php?gene={{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hgnc",         "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:{{ ID }}")',
-                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hpo_disease",  "http://compbio.charite.de/hpoweb/showterm?disease=OMIM:{{ ID }}")',
+                'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("hpo_disease",  "https://hpo.jax.org/app/browse/disease/OMIM:{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("omim",         "http://www.omim.org/entry/{{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("orphanet",     "https://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Gene={{ ID }}")',
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("pubmed_gene",  "https://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid={{ ID }}")',
