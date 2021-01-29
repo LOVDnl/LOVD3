@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-10-23
+ * Modified    : 2021-01-26
  * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -301,8 +301,12 @@ class LOVD_User extends LOVD_Object
         }
 
         // Level can't be higher or equal than the current user.
-        if (!empty($aData['level']) && $aData['level'] >= $_AUTH['level']) {
-            lovd_writeLog('Error', 'HackAttempt', 'Tried to upgrade user ID ' . $_PE[1] . ' to level ' . $_SETT['user_levels'][$aData['level']] . ')');
+        // But don't complain when the level doesn't exist, because we would
+        //  have handled that already.
+        if (!empty($aData['level']) && $aData['level'] >= $_AUTH['level'] && isset($_SETT['user_levels'][$aData['level']])) {
+            lovd_writeLog('Error', 'HackAttempt', 'Tried to ' .
+                (ACTION != 'edit'? 'create user' : 'upgrade user ID ' . $_PE[1]) .
+                ' to level ' . $_SETT['user_levels'][$aData['level']] . ')');
             lovd_errorAdd('level', 'User level is not permitted. Hack attempt.');
         }
 

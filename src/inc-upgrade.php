@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2021-01-05
+ * Modified    : 2021-01-28
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -800,6 +800,9 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-25c' => array(
                      'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN show_orphanet BOOLEAN NOT NULL DEFAULT 0 AFTER show_genetests',
                      'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("orphanet", "https://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Gene={{ ID }}")',
+                 ),
+                 '3.0-25d' => array(
+                     'UPDATE ' . TABLE_SOURCES . ' SET URL = "https://hpo.jax.org/app/browse/disease/OMIM:{{ ID }}" WHERE id = "hpo_disease" and URL = "http://compbio.charite.de/hpoweb/showterm?disease=OMIM:{{ ID }}"',
                  ),
              );
 

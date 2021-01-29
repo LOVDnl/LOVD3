@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-09-11
- * For LOVD    : 3.0-25
+ * Modified    : 2021-01-27
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -628,7 +628,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     lovd_includeJS('inc-js-submit-userform.php');
 
     if (ACTION == 'register') {
-        lovd_includeJS('https://www.google.com/recaptcha/api.js');
+        lovd_includeJS('https://www.recaptcha.net/recaptcha/api.js');
     }
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .

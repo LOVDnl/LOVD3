@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2020-11-03
+ * Modified    : 2021-01-28
  * For LOVD    : 3.0-26
  *
  * Supported URIs:
@@ -585,6 +585,10 @@ if ($sDataType == 'variants') {
             'position_genomic' => array(
                 $_CONF['refseq_build'] => $zData['position_genomic'],
             ),
+            'variant_genomic' => array(
+                $_CONF['refseq_build'] => 'chr' . $sChromosome . ':' .
+                    $zData['VariantOnGenome/DNA'],
+            ),
             'Variant/DNA' => explode(';;', $zData['__VariantOnTranscript/DNA']),
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
@@ -601,6 +605,8 @@ if ($sDataType == 'variants') {
             $aReturn['position_genomic']['hg38'] = 'chr' . $zData['chromosome'] .
                 ':' . $aPositions['position_start'] .
                 ($aPositions['position_start'] == $aPositions['position_end']? '' : '_' . $aPositions['position_end']);
+            $aReturn['variant_genomic']['hg38'] = 'chr' . $zData['chromosome'] .
+                ':' . $zData['DNA/hg38'];
         }
 
         if ($bUnique && FORMAT == 'application/json') {
