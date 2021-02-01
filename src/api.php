@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2021-01-28
+ * Modified    : 2021-02-01
  * For LOVD    : 3.0-26
  *
  * Supported URIs:
@@ -375,9 +375,23 @@ if ($sDataType == 'variants') {
     // Listing or simple request on gene symbol.
     // First build query.
     // All transcripts are listed here, ordered by the number of variants.
-    $sQ = 'SELECT g.id, g.name, g.chromosome, g.chrom_band, MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense, LEAST(MIN(t.position_g_mrna_start), MIN(t.position_g_mrna_end)) AS position_g_mrna_start, GREATEST(MAX(t.position_g_mrna_start), MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic, GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY (SELECT COUNT(*) FROM lovd_v3_variants_on_transcripts WHERE transcriptid = t.id) DESC, t.id ASC SEPARATOR ";") AS id_ncbi, g.id_entrez, g.created_date, g.updated_date, u.name AS created_by, GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
-           FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id) LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1) LEFT OUTER JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
-           WHERE 1=1';
+    $sQ = '
+        SELECT g.id, g.name, g.chromosome, g.chrom_band,
+          MAX(t.position_g_mrna_start < t.position_g_mrna_end) AS sense,
+          LEAST(MIN(t.position_g_mrna_start),
+          MIN(t.position_g_mrna_end)) AS position_g_mrna_start,
+          GREATEST(MAX(t.position_g_mrna_start),
+          MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic,
+          GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY (SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE transcriptid = t.id) DESC,
+          t.id ASC SEPARATOR ";") AS id_ncbi, g.id_entrez,
+          g.created_date, g.updated_date, u.name AS created_by,
+          GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
+        FROM ' . TABLE_GENES . ' AS g
+          LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid)
+          LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id)
+          LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1)
+          LEFT OUTER JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
+        WHERE 1=1';
 
     $bSearching = false;
     if ($sSymbol) {
