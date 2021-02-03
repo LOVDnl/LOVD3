@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-02-02
+ * Modified    : 2021-02-03
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -844,6 +844,22 @@ if (!defined('NOT_INSTALLED')) {
         // (In principle, it can also happen when an existing message is edited
         //   to lock the installation.)
         $_AUTH = false;
+    }
+
+    // Also set cookies for session-independent settings.
+    $aCookieSettingsDefaults = array(
+        'donation_dialog_last_seen' => 0,
+    );
+    if (!isset($_COOKIE['lovd_settings'])) {
+        // @ is to suppress errors in Travis test.
+        @setcookie('lovd_settings', json_encode($aCookieSettingsDefaults), strtotime('+1 year'), lovd_getInstallURL(false));
+        $_COOKIE['lovd_settings'] = $aCookieSettingsDefaults;
+    } else {
+        $aCookieSettings = @json_decode($_COOKIE['lovd_settings'], true);
+        if (!$aCookieSettings) {
+            $aCookieSettings = array();
+        }
+        $_COOKIE['lovd_settings'] = $aCookieSettings + $aCookieSettingsDefaults;
     }
 
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.

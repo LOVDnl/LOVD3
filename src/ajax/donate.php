@@ -28,6 +28,24 @@
  *
  *************/
 
+// Overwrite the settings, so we'll hide this dialog after this.
+// Not calling inc-init.php here, why connect to the DB etc just to make sure
+//  $_COOKIE['lovd_settings'] exists? We can also replace lovd_getInstallURL()
+//  with this $_SERVER['SCRIPT_NAME']-based code.
+// If ever including inc-init.php again, remove the json_decode() below!
+// To prevent notices just in case:
+if (!empty($_COOKIE['lovd_settings'])) {
+    setcookie(
+        'lovd_settings',
+        json_encode(
+            array(
+                'donation_dialog_last_seen' => time()
+            ) + json_decode($_COOKIE['lovd_settings'], true)),
+        strtotime('+1 year'),
+        dirname(dirname($_SERVER['SCRIPT_NAME'])) . '/'
+    );
+}
+
 header('Content-type: text/javascript; charset=UTF-8');
 ?>
 // Make sure we have and show the dialog.
