@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2020-10-02
- * For LOVD    : 3.0-25
+ * Modified    : 2021-02-03
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -212,8 +212,10 @@ class LOVD_SystemSetting extends LOVD_Object
         unset($aHumanBuilds['hg18']);
 
         $aFeedHistory = array('Not available');
-        for ($i = 1; $i <= 12; $i ++) {
+        $aDonationDialogMonths = array();
+        foreach (array(1, 2, 3, 6, 9, 12) as $i) {
             $aFeedHistory[$i] = $i . ' month' . ($i == 1? '' : 's');
+            $aDonationDialogMonths[$i] = $i . ' month' . ($i == 1? '' : 's');
         }
 
         $this->aFormData =
@@ -250,10 +252,13 @@ class LOVD_SystemSetting extends LOVD_Object
                         'skip',
                         'skip',
                         array('', '', 'print', '<B>Customize LOVD</B>'), // Don't edit, we're parsing for this.
-                        array('', '', 'note', 'Here you can customize the way LOVD looks. We will add more options here later.'),
+                        array('', '', 'note', 'Here you can customize the way LOVD looks.'),
                         'hr',
                         array('System logo', 'If you wish to have your custom logo on the top left of every page instead of the default LOVD logo, enter the path to the image here, relative to the LOVD installation path.', 'text', 'logo_uri', 40),
                         array('', '', 'note', 'Currently, only images already uploaded to the LOVD server are allowed here.'),
+                        array('Ask visitors of this database to donate to LOVD?', 'We rely on donations to keep updating and developing the LOVD software. Please consider allowing LOVD to regularly ask visitors to donate to the LOVD project using a popup dialog.', 'checkbox', 'donate_dialog_allow'),
+                        array('Once shown, don\'t show the dialog for this long', 'When enabled, the dialog will always be shown to new users. Once seen, select for how long the dialog should then remain hidden for this user.', 'select', 'donate_dialog_months_hidden', 1, $aDonationDialogMonths, false, false, false),
+                        array('', '', 'note', 'We rely on donations to keep updating and developing the LOVD software. Please consider allowing LOVD to regularly ask visitors to donate to the LOVD project using a popup dialog. If enabled, new visitors will always see this dialog. You can configure for how long this dialog should then be hidden from them.'),
                         'hr',
                         'skip',
                         'skip',
@@ -297,7 +302,8 @@ class LOVD_SystemSetting extends LOVD_Object
                     && strpos($aFormEntry[3], '<B>Customize LOVD</B>') !== false) {
                     unset($this->aFormData[$nKey], $this->aFormData[$nKey + 1], $this->aFormData[$nKey + 2],
                         $this->aFormData[$nKey + 3], $this->aFormData[$nKey + 4], $this->aFormData[$nKey + 5],
-                        $this->aFormData[$nKey + 6], $this->aFormData[$nKey + 7]);
+                        $this->aFormData[$nKey + 6], $this->aFormData[$nKey + 7], $this->aFormData[$nKey + 8],
+                        $this->aFormData[$nKey + 9], $this->aFormData[$nKey + 10]);
                     continue;
 
                 } elseif (isset($this->aFormData[$nKey]) && is_array($aFormEntry)
