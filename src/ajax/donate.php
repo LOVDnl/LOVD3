@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-01
- * Modified    : 2021-02-04
+ * Modified    : 2021-02-05
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,7 +50,7 @@ header('Content-type: text/javascript; charset=UTF-8');
 ?>
 // Make sure we have and show the dialog.
 if (!$("#donate_dialog").length) {
-    $("body").append("<DIV id='donate_dialog' title='Donate to the LOVD project'>The LOVD software that runs this database is provided free of charge to the scientific community. However, creating and maintaining the software, keeping the servers running, and curating the central &quot;Global Variome shared LOVD&quot; database, is not free. Please consider to support our work through a donation to &quot;Global Variome&quot; (select &quot;Support Global Variome Shared LOVD&quot;).<IMG src='gfx/donate_qr_100x100.png' alt='' width='100' height='100' style='float: right;'><BR><BR>Thank you in advance for your generous support,<BR>the LOVD team, Leiden, Netherlands<BR><BR><A href='https://www.paypal.com/donate/?hosted_button_id=DHJVLF3Z2TA2U' target='_blank'><IMG src='https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif' border='0' title='PayPal - The safer, easier way to pay online!' alt='Donate with PayPal button'></A></DIV>");
+    $("body").append("<DIV id='donate_dialog' title='Donate to the LOVD project'>The LOVD software that runs this database is provided free of charge to the scientific community. However, creating and maintaining the software, keeping the servers running, and curating the central &quot;Global Variome shared LOVD&quot; database is not for free. Please consider supporting our work through a donation to &quot;Global Variome&quot; (select &quot;Support Global Variome Shared LOVD&quot;).<IMG src='gfx/donate_qr_100x100.png' alt='' width='100' height='100' style='float: right;'><BR><BR>Thank you in advance for your generous support,<BR>the LOVD team, Leiden, Netherlands<BR><BR><A href='https://www.paypal.com/donate/?hosted_button_id=DHJVLF3Z2TA2U' target='_blank'><IMG src='https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif' border='0' title='PayPal - The safer, easier way to pay online!' alt='Donate with PayPal button'></A></DIV>");
 }
 if (!$("#donate_dialog").hasClass("ui-dialog-content") || !$("#donate_dialog").dialog("isOpen")) {
     $("#donate_dialog").dialog(
