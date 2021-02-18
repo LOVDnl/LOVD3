@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-02-16
+ * Modified    : 2021-02-18
  * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -623,6 +623,55 @@ function lovd_getColumnLength ($sTable, $sCol)
     }
 
     return 0;
+}
+
+
+
+
+
+function lovd_getColumnMinMax ($sTable, $sCol)
+{
+    // Determines the column's minimum and maximum values
+    //  for a given table and column.
+    static $aBytes = array(
+        'TINY' => 1,
+        'SMALL' => 2,
+        'MEDIUM' => 3,
+        '' => 4,
+        'BIG' => 8,
+    );
+
+    $aTableCols = lovd_getColumnData($sTable);
+
+    if (!empty($aTableCols[$sCol])) {
+        // Table && col exist.
+        $sColType = $aTableCols[$sCol]['type'];
+
+        if (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT(\([0-9]+\))?( UNSIGNED)?/i', $sColType, $aRegs)) {
+            list(,$sType,, $bUnsigned) = array_pad($aRegs, 4, false);
+            $sType = strtoupper($sType);
+            $nOptions = pow(2, (8*$aBytes[$sType]))-1;
+            if (!$bUnsigned) {
+                // Signed columns.
+                $nMin = -ceil($nOptions/2);
+                $nMax = floor($nOptions/2);
+            } else {
+                $nMin = 0;
+                $nMax = $nOptions;
+            }
+
+        } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
+            $nMax = (int) str_repeat('9', ($aRegs[1] - $aRegs[2])) . '.' . str_repeat('9', $aRegs[2]);
+            $nMin = -$nMax;
+
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    return array($nMin, $nMax);
 }
 
 
