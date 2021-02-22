@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-11-02
+ * Modified    : 2021-02-22
  * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -541,15 +541,26 @@ class LOVD_Object
                 $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
                 if (!empty($sFieldvalue)) {
                     // For numerical columns, maxlength works differently!
-                    if (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'FLOAT', 'FLOAT_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
-                        // SIGNED cols: negative values.
-                        if (in_array($sMySQLType, array('DECIMAL', 'INT')) && (int) $sFieldvalue < (int) ('-' . str_repeat('9', $nMaxLength))) {
-                            lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no lower than -' . str_repeat('9', $nMaxLength) . '.');
+                    if (in_array($sMySQLType, array('FLOAT', 'FLOAT_UNSIGNED'))) {
+                        // Floats don't have a real min/max value. We'll check
+                        //  if they contain value values further below.
+
+                    } elseif (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
+                        // Although the data type wizard makes sure that a
+                        //  numeric field allowing 3 characters can actually
+                        //  contain 999, somebody could still override this and
+                        //  create a TINYINT(3) UNSIGNED column.
+                        // lovd_getColumnLength() then considers 999 to be the
+                        //  maximum value, which isn't true. We actually define
+                        //  a MEDIUMINT(8) ourselves, which needs proper checks.
+                        // lovd_getColumnMinMax() does a much better job.
+                        list($nMin, $nMax) = lovd_getColumnMinMax(constant($this->sTable), $sNameClean);
+                        if ($sFieldvalue < $nMin) {
+                            lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no lower than ' . $nMin . '.');
+                        } elseif ($sFieldvalue > $nMax) {
+                            lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . $nMax . '.');
                         }
-                        // ALL numerical cols (except floats): positive values.
-                        if (substr($sMySQLType, 0, 5) != 'FLOAT' && (int) $sFieldvalue > (int) str_repeat('9', $nMaxLength)) {
-                            lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . str_repeat('9', $nMaxLength) . '.');
-                        }
+
                     } elseif (strlen($sFieldvalue) > $nMaxLength) {
                         lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to ' . $nMaxLength . ' characters, you entered ' . strlen($sFieldvalue) . '.');
                     }
