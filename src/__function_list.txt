@@ -197,7 +197,7 @@
 5.4.0 JSON_PRETTY_PRINT is available (now I'm using it if available)
 5.4.0 Short array notation is available; array() => [].
 =====-========
-5.3.0 REQUIRED
+5.3.0 REQUIRED (2021-02-17: we still have a lot of PHP/5.3 users, although they haven't updated their LOVDs for years)
 
 
 
