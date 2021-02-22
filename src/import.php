@@ -2358,15 +2358,15 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     }
                 }
                 $sSQL = 'SELECT t.geneid, GROUP_CONCAT(DISTINCT "individuals/", s.individualid ORDER BY s.individualid SEPARATOR ";")
-                                 FROM ' . TABLE_SCREENINGS . ' AS s
-                                   INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid)
-                                   INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id)
-                                   LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
-                                   LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                                 WHERE vog.statusid < ?
-                                   AND s.individualid IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
-                                 GROUP BY t.geneid
-                                 ORDER BY t.geneid';
+                         FROM ' . TABLE_SCREENINGS . ' AS s
+                           INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid)
+                           INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id)
+                           LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
+                           LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                         WHERE vog.statusid < ?
+                           AND s.individualid IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
+                         GROUP BY t.geneid
+                         ORDER BY t.geneid';
             } elseif (!empty($aParsed['Variants_On_Genome']['data'])) {
                 // We have separate variants instead.
                 // Collect genes and the variant IDs.
@@ -2377,13 +2377,13 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     }
                 }
                 $sSQL = 'SELECT DISTINCT t.geneid, GROUP_CONCAT(DISTINCT "variants/", vog.id ORDER BY vog.id SEPARATOR ";")
-                                 FROM ' . TABLE_VARIANTS . ' AS vog
-                                   LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
-                                   LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                                 WHERE vog.statusid < ?
-                                   AND vog.id IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
-                                 GROUP BY t.geneid
-                                 ORDER BY t.geneid';
+                         FROM ' . TABLE_VARIANTS . ' AS vog
+                           LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id)
+                           LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                         WHERE vog.statusid < ?
+                           AND vog.id IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
+                         GROUP BY t.geneid
+                         ORDER BY t.geneid';
             }
             $aGenesToNotify = $_DB->query($sSQL, array_merge(array(STATUS_MARKED), $aIDs))->fetchAllCombine();
             $aFailedGenes = array(); // Which emails were *NOT* successfully sent?

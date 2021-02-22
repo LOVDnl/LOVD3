@@ -5,6 +5,58 @@
  *************/
 
 /***************************
+ * 3.0 Build 26 (tag:3.0-26)
+ * 2021-02-22
+ *********/
+ * Changed rules when variant ID columns are shown, and restyled them a bit.
+ * Added an "LOVD light" switch, allowing large databases to easily enable
+   database optimizations. An "LOVD light" database will perform much faster
+   than a regular LOVD instance, because it disables some features that cost a
+   lot of CPU power on large databases.
+ * Improved imported frequencies; the "average frequency (large NGS studies)"
+   field now imports gnomAD v.2.1.1 frequencies, and also links to the variant
+   location in gnomAD.
+ * Removed the "Conversion" variant type. The HGVS nomenclature will remove it
+   from their nomenclature pages, this variant type will now be described as a
+   deletion-insertion.
+ * Fixed missing checks on selection field values; semicolons are now disallowed
+   in values.
+   Closes #480: "Disallow semicolons to be used as a selection option for
+   fields".
+ * Improved the automated tests.
+   Closes #482: "Fix randomly failing tests".
+ * LOVD will now automatically add the Entrez ID and OMIM ID to genes that don't
+   have these IDs filled in, when any user edits the gene.
+   Closes #483: "Not all information can be added to a gene once created".
+ * Fixed query error when creating or editing an entry and leaving a decimal
+   field empty.
+   Closes #489: "Query error upon editing an entry while leaving a decimal field
+   empty".
+ * Updated the upstream URL to prevent redirect issues. We now require HTTPS on
+   our website.
+ * Added an option to add links to Orphanet from the gene homepages.
+   Closes #488: "Add links to Orphanet from the gene home pages".
+ * Fixed bug; HGNC IDs weren't handled well in the submission API.
+   Closes #492: "Submission API: Providing HGNC IDs as integers causes
+   unpredictable results".
+ * Fixed the link from the Diseases detailed view to HPO.
+ * Added the genomic DNA description(s) to the LOVD2-style API's JSON output.
+ * Fixed reCAPTCHA for users in China by using a different domain. Google.com is
+   blocked, but Rechaptcha.net is not.
+   Closes #495: "Can't add or register new user account".
+ * Fixed hard-coded table name in the API, which disabled part of the API if the
+   table prefix was not "lovd_v3".
+   Closes #497: "'lovd3_whole_genome.lovd_v3_variants_on_transcripts' doesn't
+   exist".
+ * Added an optional donation request dialog. When enabled, this shows a dialog
+   requesting for a donation. The dialog will be hidden for a chosen amount of
+   time.
+ * Fixed problems with MySQL 8.0.x.
+ * Fixed how the input for numeric columns are checked; minimum and maximum
+   values weren't checked properly.
+
+
+/***************************
  * 3.0 Build 25 (tag:3.0-25)
  * 2020-10-22
  *********/
