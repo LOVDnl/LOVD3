@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-11-18
+ * Modified    : 2021-02-18
  * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -587,21 +587,91 @@ function lovd_getColumnLength ($sTable, $sCol)
         } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
             return ($aRegs[1] - $aRegs[2]);
 
-        } elseif (preg_match('/^(TINY|MEDIUM|LONG)?(TEXT|BLOB)/i', $sColType, $aRegs)) {
+        } elseif (preg_match('/^(TINY|SMALL|MEDIUM|LONG)?(TEXT|BLOB|INT UNSIGNED)/i', $sColType, $aRegs)) {
+            // We're matching *INT UNSIGNED as well here. MySQL 8.0.22 leaves
+            //  out the length of the field when defining unsigned fields
+            //  *without* zerofill. Signed fields or fields with zerofill all
+            //  have their length in the column definition. It doesn't make much
+            //  sense, but we need this column to work.
+            if (substr($aRegs[0], 0, 3) == 'INT') {
+                $aRegs[1] = 'LONG';
+            }
             switch ($aRegs[1]) { // Key [1] must exist, because $aRegs[2] exists.
                 case 'TINY':
-                    return 255;
+                    $nBytes = 255;
+                    break;
+                case 'SMALL':
+                    // This is for INTs only.
+                    $nBytes = 65535;
+                    break;
                 case 'MEDIUM':
-                    return 16777215;
+                    $nBytes = 16777215;
+                    break;
                 case 'LONG':
-                    return 4294967295;
+                    $nBytes = 4294967295;
+                    break;
                 default:
-                    return 65535;
+                    // TEXT|BLOB only.
+                    $nBytes = 65535;
+            }
+            if (substr($aRegs[2], 0, 3) == 'INT') {
+                return strlen((string) $nBytes);
+            } else {
+                return $nBytes;
             }
         }
     }
 
     return 0;
+}
+
+
+
+
+
+function lovd_getColumnMinMax ($sTable, $sCol)
+{
+    // Determines the column's minimum and maximum values
+    //  for a given table and column.
+    static $aBytes = array(
+        'TINY' => 1,
+        'SMALL' => 2,
+        'MEDIUM' => 3,
+        '' => 4,
+        'BIG' => 8,
+    );
+
+    $aTableCols = lovd_getColumnData($sTable);
+
+    if (!empty($aTableCols[$sCol])) {
+        // Table && col exist.
+        $sColType = $aTableCols[$sCol]['type'];
+
+        if (preg_match('/^(TINY|SMALL|MEDIUM|BIG)?INT(\([0-9]+\))?( UNSIGNED)?/i', $sColType, $aRegs)) {
+            list(,$sType,, $bUnsigned) = array_pad($aRegs, 4, false);
+            $sType = strtoupper($sType);
+            $nOptions = pow(2, (8*$aBytes[$sType]))-1;
+            if (!$bUnsigned) {
+                // Signed columns.
+                $nMin = -ceil($nOptions/2);
+                $nMax = floor($nOptions/2);
+            } else {
+                $nMin = 0;
+                $nMax = $nOptions;
+            }
+
+        } elseif (preg_match('/^DECIMAL\(([0-9]+),([0-9]+)\)/i', $sColType, $aRegs)) {
+            $nMax = (int) str_repeat('9', ($aRegs[1] - $aRegs[2])) . '.' . str_repeat('9', $aRegs[2]);
+            $nMin = -$nMax;
+
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    return array($nMin, $nMax);
 }
 
 
