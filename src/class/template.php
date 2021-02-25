@@ -620,7 +620,7 @@ function lovd_mapVariants ()
         }
     }
 <?php
-        if (!defined('NOT_INSTALLED') && isset($_COOKIE['lovd_settings'])) {
+        if (!defined('MISSING_CONF') && isset($_COOKIE['lovd_settings'])) {
             // Determine whether or not to show the donation dialog.
             $nTimeToShow = strtotime('+' . ($_CONF['donate_dialog_months_hidden'] < 1 ? 1 : $_CONF['donate_dialog_months_hidden']) . ' months', $_COOKIE['lovd_settings']['donation_dialog_last_seen']);
             if ($_CONF['donate_dialog_allow'] && $nTimeToShow <= time()) {
