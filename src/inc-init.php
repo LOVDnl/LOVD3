@@ -296,6 +296,14 @@ $_SETT = array(
                         4 => 'Medium priority',
                         9 => 'High priority',
                     ),
+                'licenses' => array(
+                    'cc_by_4.0' => 'Creative Commons Attribution 4.0 International',
+                    'cc_by-nc_4.0' => 'Creative Commons Attribution-NonCommercial 4.0 International',
+                    'cc_by-nc-nd_4.0' => 'Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International',
+                    'cc_by-nc-sa_4.0' => 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International',
+                    'cc_by-nd_4.0' => 'Creative Commons Attribution-NoDerivatives 4.0 International',
+                    'cc_by-sa_4.0' => 'Creative Commons Attribution-ShareAlike 4.0 International',
+                ),
                 'update_levels' =>
                      array(
                             1 => 'Optional',

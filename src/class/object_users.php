@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-01-26
- * For LOVD    : 3.0-26
+ * Modified    : 2021-02-25
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -129,6 +129,7 @@ class LOVD_User extends LOVD_Object
                         'entries_owned_by_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
                         'entries_created_by_' => 'Has created', // Will be unset if not viewing himself or manager or up.
                         'colleagues_' => '', // Other users that may access this user's data.
+                        'default_license_' => 'Default license',
                         'level_' => array('User level', LEVEL_CURATOR),
                         'allowed_ip_' => array('Allowed IP address list', LEVEL_MANAGER),
                         'status_' => array('Status', LEVEL_MANAGER),
@@ -545,6 +546,21 @@ class LOVD_User extends LOVD_Object
 
             $this->aColumnsViewEntry['colleagues_'] = 'Shares access with ' . count($zData['colleagues']) . ' user' . (count($zData['colleagues']) == 1? '' : 's');
             $zData['colleagues_'] = $this->getObjectLinksHTML($zData['colleagues'], 'users/%s');
+
+            // License information.
+            if (!$zData['default_license']) {
+                $zData['default_license_'] = 'No default license selected';
+            } else {
+                $sLicenseName = substr($zData['default_license'], 3, -4);
+                $sLicenseVersion = substr($zData['default_license'], -3);
+                $zData['default_license_'] =
+                    '<A href="http://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank">' .
+                    '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['default_license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['default_license']] . '" border="0">' .
+                    '</A> ';
+                if (lovd_isAuthorized('user', $zData['id'])) {
+                    $zData['default_license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/user/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
+                }
+            }
 
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
             $zData['status_'] = ($zData['active']? '<IMG src="gfx/status_online.png" alt="Online" title="Online" width="14" height="14" align="top"> Online' : 'Offline');
