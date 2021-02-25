@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2021-02-02
- * For LOVD    : 3.0-26
+ * Modified    : 2021-02-25
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -807,6 +807,9 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-25e' => array(
                      'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN donate_dialog_allow BOOLEAN NOT NULL DEFAULT 0 AFTER logo_uri',
                      'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN donate_dialog_months_hidden TINYINT(2) UNSIGNED NOT NULL DEFAULT 1 AFTER donate_dialog_allow',
+                 ),
+                 '3.0-26b' => array(
+                     'UPDATE ' . TABLE_COLS . ' SET mysql_type = "FLOAT" WHERE mysql_type = "FLOAT UNSIGNED"',
                  ),
              );
 
