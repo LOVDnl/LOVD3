@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-02-25
+ * Modified    : 2021-02-26
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -554,12 +554,12 @@ class LOVD_User extends LOVD_Object
                 $sLicenseName = substr($zData['default_license'], 3, -4);
                 $sLicenseVersion = substr($zData['default_license'], -3);
                 $zData['default_license_'] =
-                    '<A href="http://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank">' .
+                    '<A href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank">' .
                     '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['default_license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['default_license']] . '" border="0">' .
                     '</A> ';
-                if (lovd_isAuthorized('user', $zData['id'])) {
-                    $zData['default_license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/user/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
-                }
+            }
+            if (lovd_isAuthorized('user', $zData['id'])) {
+                $zData['default_license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/user/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
             }
 
             $zData['allowed_ip_'] = preg_replace('/[;,]+/', '<BR>', $zData['allowed_ip']);
