@@ -147,7 +147,7 @@ foreach ($aFields as $sField => $aItems) {
 }
 $sFormEdit .= '</TABLE><BR></FORM>';
 // Add a license result div.
-$sFormEdit .= '<DIV id=\'selected_license\' style=\'text-align: center; display: none;\'><H1>Selected license:</H1><BR><H3 id=\'selected_license_name\' style=\'width: 450px; margin: auto;\'></H3><BR><SPAN id=\'selected_license_icons\'></SPAN></DIV>';
+$sFormEdit .= '<DIV id=\'selected_license\' style=\'text-align: center; background: #DEEDF7; border: 1px solid #AED0EA; display: none;\'><H1>Selected license:</H1><BR><H3 id=\'selected_license_name\' style=\'width: 450px; margin: auto;\'></H3><BR><SPAN id=\'selected_license_icons\'></SPAN></DIV>';
 
 // Set JS variables and objects.
 print('
@@ -181,7 +181,13 @@ if (ACTION == 'edit' && GET) {
     $("#licenses_edit_form input:radio").change(function () {
         lovd_showLicense();
     });
-    ');
+
+    // Fill in preselected settings.');
+    if ($sLicense) {
+        print('
+    $("#licenses_edit_form input[name=commercial][value=' . (strpos($sLicense, '-nc')? 'no' : 'yes') . ']").click();
+    $("#licenses_edit_form input[name=derivatives][value=' . (strpos($sLicense, '-nd')? 'no' : (strpos($sLicense, '-sa')? 'yes-sa' : 'yes')) . ']").click();');
+    }
     exit;
 }
 
