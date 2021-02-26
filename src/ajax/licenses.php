@@ -67,10 +67,22 @@ if (!$("#licenses_dialog").hasClass("ui-dialog-content") || !$("#licenses_dialog
     $("#licenses_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true});
 }
 
+function lovd_reloadVE (sObject)
+{
+    // Reloads the VE if we\'ve changed the token info.
+    $.get("ajax/viewentry.php", { object: sObject, id: "' . $nID . '" },
+        function (sData) {
+            if (sData.length > 2) {
+                $("#viewentryDiv").html("\n" + sData);
+            }
+        });
+}
+
 function lovd_showLicense ()
 {
     // Checks the form\'s contents and displays the chosen license.
     var sLicense = "";
+    $("#licenses_edit_form input[name=license]").val("");
     if ($("#licenses_edit_form input:radio:checked").length > 1) {
         // Both parts of the form filled in.
         sLicense = "cc_by";
@@ -82,7 +94,7 @@ function lovd_showLicense ()
         } else if ($("#licenses_edit_form input[name=derivatives]:checked").val() == "no") {
             sLicense += "-nd";
         }
-        $("#licenses_edit_form input[name=license]").val(sLicense);
+        $("#licenses_edit_form input[name=license]").val(sLicense + "_4.0");
     }
     
     if (sLicense) {
@@ -140,6 +152,7 @@ $sFormEdit .= '<DIV id=\'selected_license\' style=\'text-align: center; display:
 // Set JS variables and objects.
 print('
 var oButtonCancel = {"Cancel":function () { $(this).dialog("close"); }};
+var oButtonClose  = {"Close":function () { $(this).dialog("close"); }};
 var oButtonFormEdit = {"Save settings":function () { $.post("' . CURRENT_PATH . '?edit", $("#licenses_edit_form").serialize()); }};
 
 
@@ -168,6 +181,43 @@ if (ACTION == 'edit' && GET) {
     $("#licenses_edit_form input:radio").change(function () {
         lovd_showLicense();
     });
+    ');
+    exit;
+}
+
+
+
+
+
+if (ACTION == 'edit' && POST) {
+    // Process edit form.
+    // We do this in two steps to prevent CSRF.
+
+    if (empty($_POST['csrf_token']) || $_POST['csrf_token'] != $_SESSION['csrf_tokens']['licenses_edit']) {
+        die('alert("Error while sending data, possible security risk. Try reloading the page, and loading the form again.");');
+    }
+
+    if (empty($_POST['license']) || !isset($_SETT['licenses'][$_POST['license']])) {
+        die('alert("Please answer both questions on the form to select the correct license.");');
+    }
+
+    // Update!
+    if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET default_license = ? WHERE id = ?',
+        array($_POST['license'], $nID), false)) {
+        die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
+    }
+    // If we get here, the changes have been saved successfully!
+    lovd_writeLog('Event', 'UserLicenseEdit', 'Successfully set default license to ' . $_POST['license']. ' for user #' . $nID);
+
+    // Reload the dialog, and put the right buttons in place.
+    print('
+    $("#licenses_dialog").html("Settings saved successfully!");
+    lovd_reloadVE("' . ucfirst($_PE[2]) . '");
+    
+    // Select the right buttons.
+    $("#licenses_dialog").dialog({buttons: oButtonClose}); 
+    
+    setTimeout(function() { $("#licenses_dialog").dialog("close"); }, 1000);
     ');
     exit;
 }
