@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2020-03-10
- * For LOVD    : 3.0-24
+ * Modified    : 2021-02-26
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -72,6 +72,7 @@ class LOVD_Individual extends LOVD_Custom
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'i.*, ' .
+                                           'IFNULL(i.license, uc.default_license) AS license, ' .
                                            'GROUP_CONCAT(DISTINCT d.id SEPARATOR ";") AS _diseaseids, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS _phenotypes, ' .
@@ -146,6 +147,7 @@ class LOVD_Individual extends LOVD_Custom
                         'parents_' => 'Parent(s)',
                         'owned_by_' => 'Owner name',
                         'status' => array('Individual data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'license_' => 'License',
                         'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
@@ -444,6 +446,7 @@ class LOVD_Individual extends LOVD_Custom
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        global $_SETT;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -485,6 +488,21 @@ class LOVD_Individual extends LOVD_Custom
                 if ($zData['motherid']) {
                     $zData['parents_'] .= (empty($zData['parents_'])? '' : ', ') . '<A href="individuals/' . $zData['motherid'] . '">Mother</A>';
                 }
+            }
+
+            // License information.
+            if (!$zData['license']) {
+                $zData['license_'] = 'No license selected';
+            } else {
+                $sLicenseName = substr($zData['license'], 3, -4);
+                $sLicenseVersion = substr($zData['license'], -3);
+                $zData['license_'] =
+                    '<A rel="license" href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank">' .
+                    '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['license']] . '" border="0">' .
+                    '</A> ';
+            }
+            if (lovd_isAuthorized('individual', $zData['id'])) {
+                $zData['license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/individual/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
             }
         }
 
