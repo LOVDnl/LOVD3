@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2020-08-13
- * For LOVD    : 3.0-25
+ * Modified    : 2021-02-26
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -137,7 +137,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     require ROOT_PATH . 'class/object_individuals.php';
     $_DATA = new LOVD_Individual($nID);
+
+    // Added the DIV to allow us reloading the VE using JS.
+    print('      <DIV id="viewentryDiv">' . "\n");
     $zData = $_DATA->viewEntry($nID);
+    print('      </DIV>' . "\n\n");
 
     $aNavigation = array();
     if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {

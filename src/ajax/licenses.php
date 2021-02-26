@@ -32,10 +32,11 @@ define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
+// URL: /ajax/licenses.php/individual/00000001
 // URL: /ajax/licenses.php/user/00001
 
 // Check for basic format.
-if (PATH_COUNT != 4 || !in_array($_PE[2], array('user'))
+if (PATH_COUNT != 4 || !in_array($_PE[2], array('individual', 'user'))
     || !ctype_digit($_PE[3]) || !in_array(ACTION, array('edit'))) {
     die('alert("Error while sending data.");');
 }
@@ -49,7 +50,13 @@ if (!$_AUTH || !lovd_isAuthorized($_PE[2], $_PE[3])) {
 // Let's download the user's data.
 $nID = lovd_getCurrentID();
 $sObject = $_PE[2];
-if ($sObject == 'user') {
+if ($sObject == 'individual') {
+    $rObject = $_DB->query('
+        SELECT CONCAT("individual #", i.id), IFNULL(i.license, uc.default_license)
+        FROM ' . TABLE_INDIVIDUALS . ' AS i
+          INNER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
+        WHERE i.id = ?', array($nID))->fetchRow();
+} elseif ($sObject == 'user') {
     $rObject = $_DB->query('SELECT username, default_license FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchRow();
 }
 if (!$rObject) {
@@ -208,12 +215,21 @@ if (ACTION == 'edit' && POST) {
     }
 
     // Update!
-    if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET default_license = ? WHERE id = ?',
-        array($_POST['license'], $nID), false)) {
-        die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
+    if ($sObject == 'individual') {
+        if (!$_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET license = ? WHERE id = ?',
+            array($_POST['license'], $nID), false)) {
+            die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
+        }
+        // If we get here, the changes have been saved successfully!
+        lovd_writeLog('Event', 'IndividualLicenseEdit', 'Successfully set license to ' . $_POST['license'] . ' for individual #' . $nID);
+    } elseif ($sObject == 'user') {
+        if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET default_license = ? WHERE id = ?',
+            array($_POST['license'], $nID), false)) {
+            die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
+        }
+        // If we get here, the changes have been saved successfully!
+        lovd_writeLog('Event', 'UserLicenseEdit', 'Successfully set default license to ' . $_POST['license'] . ' for user #' . $nID);
     }
-    // If we get here, the changes have been saved successfully!
-    lovd_writeLog('Event', 'UserLicenseEdit', 'Successfully set default license to ' . $_POST['license']. ' for user #' . $nID);
 
     // Reload the dialog, and put the right buttons in place.
     print('

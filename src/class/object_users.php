@@ -554,7 +554,7 @@ class LOVD_User extends LOVD_Object
                 $sLicenseName = substr($zData['default_license'], 3, -4);
                 $sLicenseVersion = substr($zData['default_license'], -3);
                 $zData['default_license_'] =
-                    '<A href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank">' .
+                    '<A rel="license" href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank">' .
                     '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['default_license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['default_license']] . '" border="0">' .
                     '</A> ';
             }
