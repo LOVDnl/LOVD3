@@ -224,9 +224,9 @@
 
 ## Individuals ## Do not remove or alter this header ##
 ## Count = 2
-"{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"
-"00000001"	""	""	""	"1"	"00005"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"1234IVA"	"{PMID:Fokkema et al (2011):21520333}"	""	""
-"00000002"	""	""	""	"1"	"00001"	"2"	"00001"	"0000-00-00 00:00:00"	""	""	"patient_ID"	""	""	""
+"{{id}}"	"{{fatherid}}"	"{{motherid}}"	"{{panelid}}"	"{{panel_size}}"	"{{license}}"	"{{owned_by}}"	"{{statusid}}"	"{{created_by}}"	"{{created_date}}"	"{{edited_by}}"	"{{edited_date}}"	"{{Individual/Lab_ID}}"	"{{Individual/Reference}}"	"{{Individual/Remarks}}"	"{{Individual/Remarks_Non_Public}}"
+"00000001"	""	""	""	"1"	""	"00005"	"9"	"00001"	"0000-00-00 00:00:00"	""	""	"1234IVA"	"{PMID:Fokkema et al (2011):21520333}"	""	""
+"00000002"	""	""	""	"1"	""	"00001"	"2"	"00001"	"0000-00-00 00:00:00"	""	""	"patient_ID"	""	""	""
 
 
 ## Individuals_To_Diseases ## Do not remove or alter this header ##
