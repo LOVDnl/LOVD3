@@ -148,7 +148,7 @@ class LOVD_Individual extends LOVD_Custom
                         'owned_by_' => 'Owner name',
                         'status' => array('Individual data status', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'license_' => 'License',
-                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_by_' => 'Created by',
                         'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
@@ -498,8 +498,12 @@ class LOVD_Individual extends LOVD_Custom
                 $sLicenseVersion = substr($zData['license'], -3);
                 $zData['license_'] =
                     '<A rel="license" href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank" onclick="$.get(\'ajax/licenses.php/individual/' . $zData['id'] . '?view\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">' .
+                    '<SPAN style="display: none;">' . $_SETT['licenses'][$zData['license']] . '</SPAN>' .
                     '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['license']] . '" border="0">' .
                     '</A> ';
+                // Also annotate the HTML.
+                $this->aColumnsViewEntry['license_'] = '<SPAN xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Dataset" property="dct:title" rel="dct:type">Database submission</SPAN> license';
+                $zData['created_by_'] = '<SPAN xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">' . $zData['created_by_'] . '</SPAN>';
             }
             if (lovd_isAuthorized('individual', $zData['id'])) {
                 $zData['license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/individual/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
