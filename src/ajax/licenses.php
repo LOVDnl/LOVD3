@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2021-02-26
+ * Modified    : 2021-03-22
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,12 +37,12 @@ header('Content-type: text/javascript; charset=UTF-8');
 
 // Check for basic format.
 if (PATH_COUNT != 4 || !in_array($_PE[2], array('individual', 'user'))
-    || !ctype_digit($_PE[3]) || !in_array(ACTION, array('edit'))) {
+    || !ctype_digit($_PE[3]) || !in_array(ACTION, array('edit', 'view'))) {
     die('alert("Error while sending data.");');
 }
 
 // Require authorization on this user.
-if (!$_AUTH || !lovd_isAuthorized($_PE[2], $_PE[3])) {
+if (ACTION != 'view' && (!$_AUTH || !lovd_isAuthorized($_PE[2], $_PE[3]))) {
     // If not authorized, die with error message.
     die('alert("Lost your session. Please log in again.");');
 }
@@ -52,7 +52,7 @@ $nID = lovd_getCurrentID();
 $sObject = $_PE[2];
 if ($sObject == 'individual') {
     $rObject = $_DB->query('
-        SELECT CONCAT("individual #", i.id), IFNULL(i.license, uc.default_license)
+        SELECT CONCAT("individual #", i.id), IFNULL(i.license, uc.default_license), uc.name
         FROM ' . TABLE_INDIVIDUALS . ' AS i
           INNER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
         WHERE i.id = ?', array($nID))->fetchRow();
@@ -63,12 +63,12 @@ if (!$rObject) {
     // FIXME: Should we log this?
     die('alert("Data not found.");');
 }
-list($sName, $sLicense) = $rObject;
+list($sObjectID, $sLicense, $sCreatorName) = $rObject;
 
 // If we get here, we want to show the dialog for sure.
 print('// Make sure we have and show the dialog.
 if (!$("#licenses_dialog").length) {
-    $("body").append("<DIV id=\'licenses_dialog\' title=\'License settings for ' . $sName . '\'></DIV>");
+    $("body").append("<DIV id=\'licenses_dialog\' title=\'License settings for ' . $sObjectID . '\'></DIV>");
 }
 if (!$("#licenses_dialog").hasClass("ui-dialog-content") || !$("#licenses_dialog").dialog("isOpen")) {
     $("#licenses_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true});
@@ -164,6 +164,44 @@ var oButtonFormEdit = {"Save settings":function () { $.post("' . CURRENT_PATH . 
 
 
 ');
+
+
+
+
+
+if (ACTION == 'view' && GET) {
+    // Show license information.
+
+    $sLicenseCode = substr($sLicense, 3, -4);
+    $sLicenseVersion = substr($sLicense, -3);
+
+    // Display the the license information including Linked Data annotation.
+    $sHTML = 'This <SPAN xmlns:dct=\'http://purl.org/dc/terms/\' href=\'http://purl.org/dc/dcmitype/Dataset\' property=\'dct:title\' rel=\'dct:type\'>database submission</SPAN>' .
+        ' by <SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
+        ' is licensed under a <A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\'>' . $_SETT['licenses'][$sLicense] . ' License</A>.<BR><BR>' .
+        '<A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\' target=\'_blank\'><IMG src=\'gfx/' . str_replace($sLicenseVersion, '88x31', $sLicense) . '.png\' alt=\'Creative Commons License\' title=\'' . $_SETT['licenses'][$sLicense] . '\' border=\'0\'></A><BR><BR>' .
+        '<TABLE>';
+
+    // Break down the license requirements in clear parts, as seen on search.creativecommons.org.
+    $aParts = array(
+        'by' => 'Credit the creator.',
+        'nc' => 'Noncommercial uses only.',
+        'nd' => 'No derivatives or adaptations permitted.',
+        'sa' => 'Share adaptations under the same terms.',
+    );
+
+    foreach (explode('-', $sLicenseCode) as $sPart) {
+        if (isset($aParts[$sPart])) {
+            $sHTML .= '<TR><TD><IMG src=\'gfx/cc_icon_' . $sPart . '.png\' alt=\'\' width=\'24\' style=\'margin-right: 10px;\'></TD><TD>' . $aParts[$sPart] . '</TD></TR>';
+        }
+    }
+    $sHTML .= '</TABLE>';
+
+    print('
+    $("#licenses_dialog").html("' . $sHTML . '");
+');
+    exit;
+}
 
 
 
