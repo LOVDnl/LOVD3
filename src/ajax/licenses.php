@@ -57,7 +57,7 @@ if ($sObject == 'individual') {
           INNER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
         WHERE i.id = ?', array($nID))->fetchRow();
 } elseif ($sObject == 'user') {
-    $rObject = $_DB->query('SELECT username, default_license FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchRow();
+    $rObject = $_DB->query('SELECT username, default_license, name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchRow();
 }
 if (!$rObject) {
     // FIXME: Should we log this?
@@ -176,9 +176,15 @@ if (ACTION == 'view' && GET) {
     $sLicenseVersion = substr($sLicense, -3);
 
     // Display the the license information including Linked Data annotation.
-    $sHTML = 'This <SPAN xmlns:dct=\'http://purl.org/dc/terms/\' href=\'http://purl.org/dc/dcmitype/Dataset\' property=\'dct:title\' rel=\'dct:type\'>database submission</SPAN>' .
-        ' by <SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
-        ' is licensed under a <A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\'>' . $_SETT['licenses'][$sLicense] . ' License</A>.<BR><BR>' .
+    if ($sObject == 'individual') {
+        $sHTML = 'This <SPAN xmlns:dct=\'http://purl.org/dc/terms/\' href=\'http://purl.org/dc/dcmitype/Dataset\' property=\'dct:title\' rel=\'dct:type\'>database submission</SPAN>' .
+            ' by <SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
+            ' is licensed under a';
+    } elseif ($sObject == 'user') {
+        $sHTML = '<SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
+            ' by default licences using a';
+    }
+    $sHTML .= ' <A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\'>' . $_SETT['licenses'][$sLicense] . ' License</A>.<BR><BR>' .
         '<A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\' target=\'_blank\'><IMG src=\'gfx/' . str_replace($sLicenseVersion, '88x31', $sLicense) . '.png\' alt=\'Creative Commons License\' title=\'' . $_SETT['licenses'][$sLicense] . '\' border=\'0\'></A><BR><BR>' .
         '<TABLE>';
 

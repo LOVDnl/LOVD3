@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-02-26
+ * Modified    : 2021-03-22
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -554,7 +554,7 @@ class LOVD_User extends LOVD_Object
                 $sLicenseName = substr($zData['default_license'], 3, -4);
                 $sLicenseVersion = substr($zData['default_license'], -3);
                 $zData['default_license_'] =
-                    '<A rel="license" href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank">' .
+                    '<A rel="license" href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank" onclick="$.get(\'ajax/licenses.php/user/' . $zData['id'] . '?view\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">' .
                     '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['default_license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['default_license']] . '" border="0">' .
                     '</A> ';
             }
