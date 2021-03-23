@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2021-02-25
+ * Modified    : 2021-03-23
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -731,7 +731,7 @@ $aTableSQL =
     date DATETIME NOT NULL,
     mtime MEDIUMINT(6) UNSIGNED ZEROFILL NOT NULL,
     userid SMALLINT(5) UNSIGNED ZEROFILL,
-    event VARCHAR(20) NOT NULL,
+    event VARCHAR(25) NOT NULL,
     log TEXT NOT NULL,
     PRIMARY KEY (name, date, mtime),
     INDEX (userid),
