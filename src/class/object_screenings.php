@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2021-03-25
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -68,6 +68,7 @@ class LOVD_Screening extends LOVD_Custom
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 's.*, ' .
+                                           'IFNULL(i.license, iuc.default_license) AS license, ' .
                                            'i.statusid AS individual_statusid, ' .
                                            'GROUP_CONCAT(DISTINCT "=\"", s2g.geneid, "\"" SEPARATOR "|") AS search_geneid, ' .
                                            'IF(s.variants_found = 1 AND COUNT(s2v.variantid) = 0, -1, COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ')) AS variants_found_, ' .
@@ -86,6 +87,7 @@ class LOVD_Screening extends LOVD_Custom
                                                'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')) ') .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (s.owned_by = uo.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS iuc ON (i.created_by = iuc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (s.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (s.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 's.id';
@@ -119,7 +121,8 @@ class LOVD_Screening extends LOVD_Custom
                  array(
                         'variants_found_' => 'Variants found?',
                         'owned_by_' => 'Owner name',
-                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'license_' => 'License',
+                        'created_by_' => 'Created by',
                         'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
