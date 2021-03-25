@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2021-03-18
+ * Modified    : 2021-03-25
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -490,21 +490,8 @@ class LOVD_Individual extends LOVD_Custom
                 }
             }
 
-            // License information.
-            if (!$zData['license']) {
-                $zData['license_'] = 'No license selected';
-            } else {
-                $sLicenseName = substr($zData['license'], 3, -4);
-                $sLicenseVersion = substr($zData['license'], -3);
-                $zData['license_'] =
-                    '<A rel="license" href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank" onclick="$.get(\'ajax/licenses.php/individual/' . $zData['id'] . '?view\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">' .
-                    '<SPAN style="display: none;">' . $_SETT['licenses'][$zData['license']] . '</SPAN>' .
-                    '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['license']] . '" border="0">' .
-                    '</A> ';
-                // Also annotate the HTML.
-                $this->aColumnsViewEntry['license_'] = '<SPAN xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Dataset" property="dct:title" rel="dct:type">Database submission</SPAN> license';
-                $zData['created_by_'] = '<SPAN xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">' . $zData['created_by_'] . '</SPAN>';
-            }
+            // Tool to set/change the license.
+            // Provide this link only here, because here we can reload the Individual VE.
             if (lovd_isAuthorized('individual', $zData['id'])) {
                 $zData['license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/individual/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
             }
