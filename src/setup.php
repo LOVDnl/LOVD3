@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2019-08-28
- * For LOVD    : 3.0-22
+ * Modified    : 2021-03-31
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -103,6 +103,19 @@ print('</TABLE><BR>' . "\n\n");
 if (!LOVD_plus && $_STAT['update_level']) { // Not for LOVD+, unless we build a separate list.
     $_STAT['update_level'] = 7;
     lovd_showInfoTable('LOVD update available:<BR><B>' . $_STAT['update_version'] . '</B><BR>' . ($_STAT['update_level'] >= 7? ' It is ' . strtolower($_SETT['update_levels'][$_STAT['update_level']]) . ' to upgrade!' : '') . '<BR><A href="#" onclick="lovd_openWindow(\'' . lovd_getInstallURL() . 'check_update\', \'CheckUpdate\', 650, 175); return false;">More information &raquo;</A>', ($_STAT['update_level'] >= 7? 'warning' : 'information'));
+}
+
+// Check if we have a system-default license, and if we need one at all anyway.
+if ($_DB->query('SELECT default_license FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchColumn() == '') {
+    // There's no default license. Do we need one?
+    if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE created_by = 0')->fetchColumn() > 0) {
+        lovd_showInfoTable(
+            'Some of the data in this LOVD instance isn\'t created by a specific user, but there is no default data license selected for these entries. Please help promote data sharing by selecting a default license for this data.',
+            'warning',
+            '100%',
+            '$.get(\'ajax/licenses.php/user/00000?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');});'
+        );
+    }
 }
 
 
