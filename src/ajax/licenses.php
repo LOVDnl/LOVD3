@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2021-03-26
+ * Modified    : 2021-04-01
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -174,38 +174,41 @@ var oButtonFormEdit = {"Save settings":function () { $.post("' . CURRENT_PATH . 
 
 if (ACTION == 'view' && GET) {
     // Show license information.
-    // FIXME: This assumes a license has been chosen, otherwise this fails.
 
-    $sLicenseCode = substr($sLicense, 3, -4);
-    $sLicenseVersion = substr($sLicense, -3);
+    if (!$sLicense) {
+        $sHTML = 'This data does not have a license selected. This means that it is currently not freely reusable.';
+    } else {
+        $sLicenseCode = substr($sLicense, 3, -4);
+        $sLicenseVersion = substr($sLicense, -3);
 
-    // Display the the license information including Linked Data annotation.
-    if ($sObject == 'individual') {
-        $sHTML = 'This <SPAN xmlns:dct=\'http://purl.org/dc/terms/\' href=\'http://purl.org/dc/dcmitype/Dataset\' property=\'dct:title\' rel=\'dct:type\'>database submission</SPAN>' .
-            ' by <SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
-            ' is licensed under a';
-    } elseif ($sObject == 'user') {
-        $sHTML = '<SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
-            ' by default licences using a';
-    }
-    $sHTML .= ' <A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\'>' . $_SETT['licenses'][$sLicense] . ' License</A>.<BR><BR>' .
-        '<A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\' target=\'_blank\'><IMG src=\'gfx/' . str_replace($sLicenseVersion, '88x31', $sLicense) . '.png\' alt=\'Creative Commons License\' title=\'' . $_SETT['licenses'][$sLicense] . '\' border=\'0\'></A><BR><BR>' .
-        '<TABLE>';
-
-    // Break down the license requirements in clear parts, as seen on search.creativecommons.org.
-    $aParts = array(
-        'by' => 'Credit the creator.',
-        'nc' => 'Noncommercial uses only.',
-        'nd' => 'No derivatives or adaptations permitted.',
-        'sa' => 'Share adaptations under the same terms.',
-    );
-
-    foreach (explode('-', $sLicenseCode) as $sPart) {
-        if (isset($aParts[$sPart])) {
-            $sHTML .= '<TR><TD><IMG src=\'gfx/cc_icon_' . $sPart . '.png\' alt=\'\' width=\'24\' style=\'margin-right: 10px;\'></TD><TD>' . $aParts[$sPart] . '</TD></TR>';
+        // Display the the license information including Linked Data annotation.
+        if ($sObject == 'individual') {
+            $sHTML = 'This <SPAN xmlns:dct=\'http://purl.org/dc/terms/\' href=\'http://purl.org/dc/dcmitype/Dataset\' property=\'dct:title\' rel=\'dct:type\'>database submission</SPAN>' .
+                ' by <SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
+                ' is licensed under a';
+        } elseif ($sObject == 'user') {
+            $sHTML = '<SPAN xmlns:cc=\'http://creativecommons.org/ns#\' property=\'cc:attributionName\'>' . $sCreatorName . '</SPAN>' .
+                ' by default licences using a';
         }
+        $sHTML .= ' <A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\'>' . $_SETT['licenses'][$sLicense] . ' License</A>.<BR><BR>' .
+            '<A rel=\'license\' href=\'http://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion . '/\' target=\'_blank\'><IMG src=\'gfx/' . str_replace($sLicenseVersion, '88x31', $sLicense) . '.png\' alt=\'Creative Commons License\' title=\'' . $_SETT['licenses'][$sLicense] . '\' border=\'0\'></A><BR><BR>' .
+            '<TABLE>';
+
+        // Break down the license requirements in clear parts, as seen on search.creativecommons.org.
+        $aParts = array(
+            'by' => 'Credit the creator.',
+            'nc' => 'Noncommercial uses only.',
+            'nd' => 'No derivatives or adaptations permitted.',
+            'sa' => 'Share adaptations under the same terms.',
+        );
+
+        foreach (explode('-', $sLicenseCode) as $sPart) {
+            if (isset($aParts[$sPart])) {
+                $sHTML .= '<TR><TD><IMG src=\'gfx/cc_icon_' . $sPart . '.png\' alt=\'\' width=\'24\' style=\'margin-right: 10px;\'></TD><TD>' . $aParts[$sPart] . '</TD></TR>';
+            }
+        }
+        $sHTML .= '</TABLE>';
     }
-    $sHTML .= '</TABLE>';
 
     print('
     $("#licenses_dialog").html("' . $sHTML . '");
