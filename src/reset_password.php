@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2020-07-27
- * For LOVD    : 3.0-25
+ * Modified    : 2021-04-14
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -60,7 +60,7 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
                 array($_POST['username']))->fetchAllAssoc();
             if (!$zData) {
                 $zData = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE email REGEXP ?',
-                    array('(^|\r\n)' . $_POST['username'] . '(\r\n|$)'))->fetchAllAssoc();
+                    array("(^|\r\n)" . $_POST['username'] . "(\r\n|$)"))->fetchAllAssoc();
             }
         }
         if (!$zData || $zData == array(false)) {
