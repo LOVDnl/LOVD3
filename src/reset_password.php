@@ -68,9 +68,9 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $_T->printHeader();
             $_T->printTitle();
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for non-existent account ' . $_POST['username']);
-            print('      If you entered the username correctly, we have successfully reset your password.<BR>' . "\n" .
-                  '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
-                  '      If you don\'t receive this email, it is possible that the username you entered is not correct. Please double-check it. Another possibility is that you registered at a different LOVD installation. Accounts are not shared between different LOVD installations, so please double-check where you are registered.<BR><BR>' . "\n\n");
+            print('      If you entered the username or email address correctly, we have successfully reset your password and we have sent you an email.' . "\n" .
+                  '      With this new password, you can <A href="' . ROOT_PATH . 'login">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
+                  '      If you don\'t receive this email, it is possible that the username or email address that you entered is not correct. Please double-check it. Another possibility is that you registered at a different LOVD installation. Accounts are not shared between different LOVD installations, so please double-check where you are registered.<BR><BR>' . "\n\n");
             $_T->printFooter();
             exit;
 
