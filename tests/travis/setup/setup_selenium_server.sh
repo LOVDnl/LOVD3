@@ -7,8 +7,10 @@
 
 # Before changing any of these versions, ensure they are compatible with each other, and with your browser versions.
 seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar"
-# Because we're using the latest stable Chrome, we need to use the latest stable Chrome driver.
-chromeDriverVersion=$(curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+# Make sure our Chrome Driver matched our Chrome version.
+# We're using the latest stable Chrome, but this doesn't always mean the latest stable Chrome driver.
+chromeMajorVersion=$(google-chrome --version | cut -d " " -f 3 | cut -d . -f 1);
+chromeDriverVersion=$(curl -s "http://chromedriver.storage.googleapis.com/LATEST_RELEASE_${chromeMajorVersion}")
 chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip"
 # https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html
 geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
