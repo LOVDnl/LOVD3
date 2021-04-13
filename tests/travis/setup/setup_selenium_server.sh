@@ -15,9 +15,9 @@ chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersio
 # https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html
 geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
 
-echo "Download Selenium"
+echo "Downloading Selenium from ${seleniumDownloadURL}";
 if [ ! -f ${seleniumDownloadURL} ]; then
-    curl -L -O ${seleniumDownloadURL}
+    curl -sLO ${seleniumDownloadURL}
 fi
 serverFile=${seleniumDownloadURL##*/}
 if [ ! -e ${serverFile} ]; then
@@ -25,9 +25,9 @@ if [ ! -e ${serverFile} ]; then
     exit 1
 fi
 
-echo "Download chromedriver from ${chromeDriverURL}";
+echo "Downloading chromedriver from ${chromeDriverURL}";
 chromeDriverArchive=${chromeDriverURL##*/}
-curl -L -O ${chromeDriverURL}
+curl -sLO ${chromeDriverURL}
 if [ ! -f ${chromeDriverArchive} ]; then
     echo "Download of $chromeDriverURL failed. Aborting."
     exit 1
@@ -38,7 +38,7 @@ if [ ! -f "chromedriver" ]; then
     exit 1
 fi
 
-echo "Download geckodriver from ${geckoDriverURL}";
+echo "Downloading geckodriver from ${geckoDriverURL}";
 geckoDriverArchive=${geckoDriverURL##*/}
 curl -L -O ${geckoDriverURL}
 if [ ! -f ${geckoDriverArchive} ]; then
