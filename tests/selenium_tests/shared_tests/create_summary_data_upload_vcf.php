@@ -120,6 +120,9 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
                 // Just one more time, please!
                 $sBody = '';
                 $bRepeated = true;
+            } elseif (substr($sBody, 0, 5) != '0 99 ') {
+                // Reset timer in case we are again mapping.
+                $bRepeated = false;
             }
         } while (substr($sBody, 0, 5) != '0 99 ');
         // Travis sometimes reports a "There are no variants to map in the
@@ -127,7 +130,7 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertContains(
             $this->driver->findElement(WebDriverBy::tagName('body'))->getText(),
             array(
-              '0 99 Successfully mapped 25 variants',
+              '0 99 Successfully mapped ',
               '0 99 There are no variants to map in the database',
             ));
     }
