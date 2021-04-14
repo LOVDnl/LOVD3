@@ -7,15 +7,17 @@
 
 # Before changing any of these versions, ensure they are compatible with each other, and with your browser versions.
 seleniumDownloadURL="http://selenium-release.storage.googleapis.com/3.141/selenium-server-standalone-3.141.59.jar"
-# Because we're using the latest stable Chrome, we need to use the latest stable Chrome driver.
-chromeDriverVersion=$(curl http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+# Make sure our Chrome Driver matched our Chrome version.
+# We're using the latest stable Chrome, but this doesn't always mean the latest stable Chrome driver.
+chromeMajorVersion=$(google-chrome --version | cut -d " " -f 3 | cut -d . -f 1);
+chromeDriverVersion=$(curl -s "http://chromedriver.storage.googleapis.com/LATEST_RELEASE_${chromeMajorVersion}")
 chromeDriverURL="http://chromedriver.storage.googleapis.com/${chromeDriverVersion}/chromedriver_linux64.zip"
 # https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html
 geckoDriverURL="https://github.com/mozilla/geckodriver/releases/download/v0.26.0/geckodriver-v0.26.0-linux64.tar.gz"
 
-echo "Download Selenium"
+echo "Downloading Selenium from ${seleniumDownloadURL}";
 if [ ! -f ${seleniumDownloadURL} ]; then
-    curl -L -O ${seleniumDownloadURL}
+    curl -sLO ${seleniumDownloadURL}
 fi
 serverFile=${seleniumDownloadURL##*/}
 if [ ! -e ${serverFile} ]; then
@@ -23,9 +25,9 @@ if [ ! -e ${serverFile} ]; then
     exit 1
 fi
 
-echo "Download chromedriver from ${chromeDriverURL}";
+echo "Downloading chromedriver from ${chromeDriverURL}";
 chromeDriverArchive=${chromeDriverURL##*/}
-curl -L -O ${chromeDriverURL}
+curl -sLO ${chromeDriverURL}
 if [ ! -f ${chromeDriverArchive} ]; then
     echo "Download of $chromeDriverURL failed. Aborting."
     exit 1
@@ -36,9 +38,9 @@ if [ ! -f "chromedriver" ]; then
     exit 1
 fi
 
-echo "Download geckodriver from ${geckoDriverURL}";
+echo "Downloading geckodriver from ${geckoDriverURL}";
 geckoDriverArchive=${geckoDriverURL##*/}
-curl -L -O ${geckoDriverURL}
+curl -sLO ${geckoDriverURL}
 if [ ! -f ${geckoDriverArchive} ]; then
     echo "Download of $geckoDriverURL failed. Aborting."
     exit 1
