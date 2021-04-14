@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-02-18
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-06
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -856,7 +856,12 @@ function lovd_getCurrentPageTitle ()
             switch ($sObject) {
                 case 'phenotypes':
                 case 'screenings':
+                    $sObject = 'individuals';
                     $sTitle .= ' for individual';
+                    break;
+                case 'variants':
+                    $sObject = 'screenings';
+                    $sTitle .= ' for screening';
                     break;
             }
         }
