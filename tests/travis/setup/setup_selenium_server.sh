@@ -40,7 +40,7 @@ fi
 
 echo "Downloading geckodriver from ${geckoDriverURL}";
 geckoDriverArchive=${geckoDriverURL##*/}
-curl -L -O ${geckoDriverURL}
+curl -sLO ${geckoDriverURL}
 if [ ! -f ${geckoDriverArchive} ]; then
     echo "Download of $geckoDriverURL failed. Aborting."
     exit 1
