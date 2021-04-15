@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2021-01-06
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-15
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -380,8 +380,39 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     // Get UD from mutalyzer.
                     $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
                     if (!$sRefseqUD) {
+                        // The future is VV. However, as we're currently still using
+                        //  Mutalyzer for mapping, only use VV when Mutalyzer fails.
+                        $_BAR->setMessage('Collecting all available transcripts...');
+                        $_BAR->setProgress($nProgress += 17);
+                        require ROOT_PATH . 'class/variant_validator.php';
+                        $_VV = new LOVD_VV();
+                        $aData = $_VV->getTranscriptsByGene($sSymbol);
+                        $aTranscripts = array();
+                        foreach ($aData['data'] as $sTranscript => $aTranscript) {
+                            // Look for transcripts with genomic locations on this build.
+                            if (!$aTranscript['genomic_positions'] || !isset($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome])) {
+                                continue;
+                            }
+                            $aTranscripts[$sTranscript] = array(
+                                'name' => $aTranscript['name'],
+                                'id_protein_ncbi' => $aTranscript['id_ncbi_protein'],
+                                'position_g_mrna_start' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['start'],
+                                'position_g_mrna_end' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['end'],
+                                'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                                'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                                'position_c_cds_end' => $aTranscript['transcript_positions']['cds_length'],
+                            );
+                        }
+                        if ($aTranscripts) {
+                            $sRefseqUD = 'VV';
+                        }
+                    }
+                    if (!$sRefseqUD) {
                         // Function may return false or an empty string. For instance a type of gene we don't support.
                         // To prevent further problems (getting transcripts), let's handle this nicely, shall we?
+                        // Going through the previous symbols won't make sense here because
+                        //  downstream functions will also need to know that old name.
+                        // We're not investing in this Mutalyzer connection anymore.
                         $_BAR->setMessage('Failed to retrieve gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
                         $_BAR->setMessageVisibility('done', true);
                         die('</BODY>' . "\n" .
@@ -389,12 +420,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     }
                 }
 
-                // Get all transcripts and info.
-                // FIXME: When changing code here, check in transcripts?create if you need to make changes there, too.
-                $_BAR->setMessage('Collecting all available transcripts...');
-                $_BAR->setProgress($nProgress += 17);
+                if ($sRefseqUD != 'VV') {
+                    // Get all transcripts and info.
+                    // FIXME: When changing code here, check in transcripts?create if you need to make changes there, too.
+                    $_BAR->setMessage('Collecting all available transcripts...');
+                    $_BAR->setProgress($nProgress += 17);
 
-                $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
+                    $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
+                }
 
                 $_BAR->setProgress(100);
                 $_BAR->setMessage('Information collected, now building form...');
@@ -409,16 +442,42 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                                                   'id_entrez' => $sEntrez,
                                                                   'id_omim' => $nOmim,
                                                                   'genomic_references' => $aRefseqGenomic,
-                                                                  'refseq_UD' => $sRefseqUD,
+                                                                  'refseq_UD' => ($sRefseqUD == 'VV'? array_pop($aRefseqGenomic) : $sRefseqUD), // FIXME: When we get rid of Mutalyzer, get rid of this.
                                                                 );
                 if (!empty($aTranscripts)) {
-                    $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array_merge($_SESSION['work'][$sPath][$_POST['workID']]['values'], array(
-                                                                  'transcripts' => $aTranscripts['id'],
-                                                                  'transcriptMutalyzer' => $aTranscripts['mutalyzer'],
-                                                                  'transcriptsProtein' => $aTranscripts['protein'],
-                                                                  'transcriptNames' => $aTranscripts['name'],
-                                                                  'transcriptPositions' => $aTranscripts['positions'],
-                                                                ));
+                    if ($sRefseqUD == 'VV') {
+                        // FIXME: When we're switching to VV, fix this ridiculous format.
+                        $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcripts'] = array_keys($aTranscripts);
+                        $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array_merge($_SESSION['work'][$sPath][$_POST['workID']]['values'], array(
+                            'transcriptMutalyzer' => array(),
+                            'transcriptsProtein' => array(),
+                            'transcriptNames' => array(),
+                            'transcriptPositions' => array(),
+                        ));
+
+                        foreach ($aTranscripts as $sTranscript => $aTranscript) {
+                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptMutalyzer'][$sTranscript] = 0;
+                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptsProtein'][$sTranscript] = $aTranscript['id_protein_ncbi'];
+                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptNames'][$sTranscript] = $aTranscript['name'];
+                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptPositions'][$sTranscript] = array(
+                                'chromTransStart' => $aTranscript['position_g_mrna_start'],
+                                'chromTransEnd' => $aTranscript['position_g_mrna_end'],
+                                'cTransStart' => $aTranscript['position_c_mrna_start'],
+                                'cTransEnd' => $aTranscript['position_c_mrna_end'],
+                                'cCDSStop' => $aTranscript['position_c_cds_end'],
+                            );
+                        }
+
+                    } else {
+                        // FIXME: This data format makes no sense. Redo this once we're switching to VV.
+                        $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array_merge($_SESSION['work'][$sPath][$_POST['workID']]['values'], array(
+                            'transcripts' => $aTranscripts['id'],
+                            'transcriptMutalyzer' => $aTranscripts['mutalyzer'],
+                            'transcriptsProtein' => $aTranscripts['protein'],
+                            'transcriptNames' => $aTranscripts['name'],
+                            'transcriptPositions' => $aTranscripts['positions'],
+                        ));
+                    }
                 }
 
                 print('<SCRIPT type="text/javascript">' . "\n" .
