@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2020-11-06
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-15
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -274,10 +274,10 @@ class LOVD_VV
                             $aGenomicPositions[$sBuild] = array();
                         }
                         $aGenomicPositions[$sBuild][$sChromosome] = array(
-                            'start' => ($aTranscript['orientation'] == 1?
+                            'start' => ($aTranscript['genomic_spans'][$sRefSeq]['orientation'] == 1?
                                 $aTranscript['genomic_spans'][$sRefSeq]['start_position'] :
                                 $aTranscript['genomic_spans'][$sRefSeq]['end_position']),
-                            'end' => ($aTranscript['orientation'] == 1?
+                            'end' => ($aTranscript['genomic_spans'][$sRefSeq]['orientation'] == 1?
                                 $aTranscript['genomic_spans'][$sRefSeq]['end_position'] :
                                 $aTranscript['genomic_spans'][$sRefSeq]['start_position']),
                         );
