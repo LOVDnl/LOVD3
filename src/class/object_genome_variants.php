@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2021-03-25
+ * Modified    : 2021-04-16
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,7 +70,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                                            'a.name AS allele_, ' .
                                            'GROUP_CONCAT(DISTINCT i.id, ";", i.statusid SEPARATOR ";;") AS __individuals, ' .
                                            'GROUP_CONCAT(s2v.screeningid SEPARATOR "|") AS screeningids, ' .
-                                           'GROUP_CONCAT(DISTINCT IFNULL(i.license, IFNULL(iuc.default_license, uc.default_license)) SEPARATOR ";") AS license, ' .
+                                           'GROUP_CONCAT(DISTINCT IFNULL(i.license, IFNULL(iuc.default_license, uc.default_license)) SEPARATOR ";;") AS license, ' .
                                            'uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
