@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2021-04-15
+ * Modified    : 2021-04-16
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -270,11 +270,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genes.php';
-    // FIXME: This is just to use two functions of the object that don't actually use the object. Better put them elsewhere.
     require ROOT_PATH . 'class/object_transcripts.php';
     require ROOT_PATH . 'inc-lib-form.php';
     $_DATA['Genes'] = new LOVD_Gene();
-    // FIXME: This is just to use two functions of the object that don't actually use the object. Better put them elsewhere.
     $_DATA['Transcript'] = new LOVD_transcript();
 
     $sPath = CURRENT_PATH . '?' . ACTION;
@@ -304,13 +302,11 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
                 // When numeric, we search the id_hgnc field. When not, we search the id (gene symbol) field.
-                $sSQL = 'SELECT id, id_hgnc FROM ' . TABLE_GENES . ' WHERE id' . (!ctype_digit($_POST['hgnc_id'])? '' : '_hgnc') . ' = ?';
-                $aSQL = array($_POST['hgnc_id']);
-                $result = $_DB->query($sSQL, $aSQL)->fetchObject();
+                $zGene = $_DB->query(
+                    'SELECT id, id_hgnc FROM ' . TABLE_GENES . ' WHERE id' . (!ctype_digit($_POST['hgnc_id'])? '' : '_hgnc') . ' = ?',
+                    array($_POST['hgnc_id']))->fetchAssoc();
 
-                if ($result !== false) {
-                    lovd_errorAdd('hgnc_id', sprintf('This gene entry (%s, HGNC-ID=%d) is already present in this LOVD installation.', $result->id, $result->id_hgnc));
-                } else {
+                if ($zGene === false) {
                     // This call already makes the needed lovd_errorAdd() calls.
                     $aGeneInfo = lovd_getGeneInfoFromHGNC($_POST['hgnc_id']);
                     if (!empty($aGeneInfo)) {
@@ -320,7 +316,18 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         $sChromLocation = $aGeneInfo['location'];
                         $sEntrez = $aGeneInfo['entrez_id'];
                         $nOmim = $aGeneInfo['omim_id'];
+
+                        if (!ctype_digit($_POST['hgnc_id'])) {
+                            // Check again if we have this gene already, perhaps under a different name.
+                            $zGene = $_DB->query(
+                                'SELECT id, id_hgnc FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?',
+                                array($aGeneInfo['hgnc_id']))->fetchAssoc();
+                        }
                     }
+                }
+
+                if ($zGene !== false) {
+                    lovd_errorAdd('hgnc_id', sprintf('This gene entry (%s, HGNC-ID=%d) is already present in this LOVD installation.', $zGene['id'], $zGene['id_hgnc']));
                 }
             }
 
