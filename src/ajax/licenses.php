@@ -129,35 +129,45 @@ function lovd_showLicense ()
 
 $aFields = array(
     'commercial' => array(
-        'Do you want to allow others to use your work commercially?<BR><I>Selecting \'yes\' will allow LOVD to seek financial support by sharing your data.</I>',
-        'yes' => '<B>Yes.</B> Others can use my work, even for commercial purposes.',
-        'no' => '<B>No.</B> Others can not use my work for commercial purposes.',
+        'Do you want to allow others to use your public data commercially?',
+        'yes' => '<B>Yes.</B> Others can use my public data, even for commercial purposes.',
+        'no' => '<B>No.</B> Others can not use my public data for commercial purposes.',
     ),
     'derivatives' => array(
-        'Do you want to allow adaptations of your work to be shared?<BR><I>Selecting \'no\' may prevent your data to be used in studies or shared with genome browsers.</I>',
-        'yes' => '<B>Yes.</B> Others can adapt, or build upon my work and share this.',
-        'yes-sa' => '<B>Yes.</B> Others can adapt, or build upon my work, as long as they share using the same CC license.',
-        'no' => '<B>No.</B> Others may only share my work in unadapted form.',
+        'Do you want to allow adaptations of your public data to be shared?<BR><I>Selecting \'no\' may prevent your data to be used in studies.</I>',
+        'yes' => '<B>Yes.</B> Others can adapt, or build upon my public data and share this.',
+        'yes-sa' => '<B>Yes.</B> Others can adapt, or build upon my public data, as long as they share using the same CC license.',
+        'no' => '<B>No.</B> Others may only share my public data in unadapted form.',
     ),
+    '<DIV id=\'selected_license\' style=\'text-align: center; background: #DEEDF7; border: 1px solid #AED0EA; display: none;\'><H1>Selected license:</H1><BR><H3 id=\'selected_license_name\' style=\'width: 450px; margin: auto;\'></H3><BR><SPAN id=\'selected_license_icons\'></SPAN></DIV><BR>',
 );
 
 
 
 $sFormEdit = '<FORM id=\'licenses_edit_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'><INPUT type=\'hidden\' name=\'license\' value=\'\'>' .
-    'Please fill out the form below to select the license you wish to apply to your data.<BR><BR>' .
-    '<B>Please note that in all cases, others using your data must give you attribution.</B><BR><BR>';
+    'Please fill out the form below to select the license you wish to apply to your data submissions.<BR><BR>' .
+    '<B>Please note that in all cases, others using your data must acknowledge you.</B><BR><BR>';
 foreach ($aFields as $sField => $aItems) {
-    $sQuestion = array_shift($aItems);
-    $sFormEdit .= '<TABLE style=\'background: #DEEDF7;\' cellspacing=\'4\' width=\'100%\'><TR><TD colspan=\'2\'><B>' . $sQuestion . '</B></TD></TR>';
-    foreach ($aItems as $sValue => $sText) {
-        $sFormEdit .= '<TR valign=\'top\'><TD><INPUT type=\'radio\' name=\'' . $sField . '\' value=\'' . $sValue . '\'></TD>' .
-            '<TD>' . $sText . '</TD></TR>';
+    if (is_array($aItems)) {
+        $sQuestion = array_shift($aItems);
+        $sFormEdit .= '<TABLE style=\'background: #DEEDF7;\' cellspacing=\'4\' width=\'100%\'>';
+        if (count($aItems)) {
+            $sFormEdit .= '<TR><TD colspan=\'2\'><B>' . $sQuestion . '</B></TD></TR>';
+            foreach ($aItems as $sValue => $sText) {
+                $sFormEdit .= '<TR valign=\'top\'><TD><INPUT type=\'radio\' name=\'' . $sField . '\' value=\'' . $sValue . '\'></TD>' .
+                    '<TD>' . $sText . '</TD></TR>';
+            }
+        } else {
+            $sFormEdit .= '<TR valign=\'top\'>' .
+                '<TD><INPUT type=\'checkbox\' name=\'' . $sField . '\' value=\'1\'></TD>' .
+                '<TD><B>' . $sQuestion . '</B></TD></TR>';
+        }
+        $sFormEdit .= '</TABLE><BR>';
+    } else {
+        $sFormEdit .= $aItems;
     }
-    $sFormEdit .= '</TABLE><BR>';
 }
-$sFormEdit .= '</TABLE><BR></FORM>';
-// Add a license result div.
-$sFormEdit .= '<DIV id=\'selected_license\' style=\'text-align: center; background: #DEEDF7; border: 1px solid #AED0EA; display: none;\'><H1>Selected license:</H1><BR><H3 id=\'selected_license_name\' style=\'width: 450px; margin: auto;\'></H3><BR><SPAN id=\'selected_license_icons\'></SPAN></DIV>';
+$sFormEdit .= '</FORM>';
 
 // Set JS variables and objects.
 print('
@@ -231,7 +241,7 @@ if (ACTION == 'edit' && GET) {
 
     // Display the form, and put the right buttons in place.
     print('
-    $("#licenses_dialog").html("' . $sFormEdit . '<BR>");
+    $("#licenses_dialog").html("' . $sFormEdit . '");
 
     // Select the right buttons.
     $("#licenses_dialog").dialog({buttons: $.extend({}, oButtonFormEdit, oButtonCancel)});
