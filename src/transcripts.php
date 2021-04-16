@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-10-28
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-15
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -275,6 +275,34 @@ if (ACTION == 'create') {
                                                                   'transcriptPositions' => $aTranscripts['positions'],
                                                                   'transcriptsAdded' => $aTranscripts['added'],
                                                                 );
+
+        if (!$aTranscripts['id']) {
+            // Mutalyzer doesn't see any transcripts at all.
+            // The future is VV. However, as we're currently still using
+            //  Mutalyzer for mapping, only use VV when Mutalyzer fails.
+            require ROOT_PATH . 'class/variant_validator.php';
+            $_VV = new LOVD_VV();
+            $aData = $_VV->getTranscriptsByGene($zGene['id']);
+            $aTranscripts = array();
+            foreach ($aData['data'] as $sTranscript => $aTranscript) {
+                // Look for transcripts with genomic locations on this build.
+                if (!$aTranscript['genomic_positions'] || !isset($aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']])) {
+                    continue;
+                }
+                // FIXME: When we're switching to VV, fix this ridiculous format.
+                $_SESSION['work'][$sPathBase][$_POST['workID']]['values']['transcripts'][] = $sTranscript;
+                $_SESSION['work'][$sPathBase][$_POST['workID']]['values']['transcriptMutalyzer'][$sTranscript] = 0;
+                $_SESSION['work'][$sPathBase][$_POST['workID']]['values']['transcriptsProtein'][$sTranscript] = $aTranscript['id_ncbi_protein'];
+                $_SESSION['work'][$sPathBase][$_POST['workID']]['values']['transcriptNames'][$sTranscript] = $aTranscript['name'];
+                $_SESSION['work'][$sPathBase][$_POST['workID']]['values']['transcriptPositions'][$sTranscript] = array(
+                    'chromTransStart' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']]['start'],
+                    'chromTransEnd' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']]['end'],
+                    'cTransStart' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                    'cTransEnd' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                    'cCDSStop' => $aTranscript['transcript_positions']['cds_length'],
+                );
+            }
+        }
 
         $_BAR->setProgress(100);
         $_BAR->setMessage('Information collected, now building form...');

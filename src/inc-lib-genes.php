@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2019-01-22
- * For LOVD    : 3.0-22
+ * Modified    : 2021-04-15
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -419,7 +419,7 @@ function lovd_getUDForGene ($sBuild, $sGene)
     // Let's get the mapping information.
     $aResponse = lovd_callMutalyzer('getGeneLocation', array('build' => $sBuild, 'gene' => $sGene));
     // If this is false, Mutalyzer returned a HTTP 500. On screen you'd get a reason and error message perhaps, but lovd_callMutalyzer() just returns false.
-    if ($aResponse) {
+    if ($aResponse && array_keys($aResponse) != array('faultcode', 'faultstring')) {
         $sChromosome = $_SETT['human_builds'][$sBuild]['ncbi_sequences'][substr($aResponse['chromosome_name'], 3)];
         $nStart = $aResponse['start'] - ($aResponse['orientation'] == 'forward'? 5000 : 2000);
         $nEnd = $aResponse['stop'] + ($aResponse['orientation'] == 'forward'? 2000 : 5000);
