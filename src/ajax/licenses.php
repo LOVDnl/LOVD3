@@ -68,6 +68,14 @@ if (!$rObject) {
 }
 list($sObjectID, $sLicense, $sCreatorName) = $rObject;
 
+// The license contains both the license for the world as well as the license for LOVD.
+$aLicenses = explode(';', $sLicense);
+if (count($aLicenses) == 1) {
+    // This only happens in dev, this situation was never released.
+    array_push($aLicenses, null);
+}
+list($sLicense, $nLOVDLicense) = $aLicenses;
+
 // If we get here, we want to show the dialog for sure.
 print('// Make sure we have and show the dialog.
 if (!$("#licenses_dialog").length) {
@@ -140,6 +148,9 @@ $aFields = array(
         'no' => '<B>No.</B> Others may only share my public data in unadapted form.',
     ),
     '<DIV id=\'selected_license\' style=\'text-align: center; background: #DEEDF7; border: 1px solid #AED0EA; display: none;\'><H1>Selected license:</H1><BR><H3 id=\'selected_license_name\' style=\'width: 450px; margin: auto;\'></H3><BR><SPAN id=\'selected_license_icons\'></SPAN></DIV><BR>',
+    'LOVD' => array(
+        'Allow LOVD to seek financial support by sharing parts of your public data with researchers, variant annotation platforms, and diagnostic labs.',
+    ),
 );
 
 
@@ -253,6 +264,10 @@ if (ACTION == 'edit' && GET) {
     });
 
     // Fill in preselected settings.');
+    if ($nLOVDLicense === null || $nLOVDLicense) {
+        print('
+    $("#licenses_edit_form input[name=LOVD]").click();');
+    }
     if ($sLicense) {
         print('
     $("#licenses_edit_form input[name=commercial][value=' . (strpos($sLicense, '-nc')? 'no' : 'yes') . ']").click();
@@ -277,21 +292,29 @@ if (ACTION == 'edit' && POST) {
         die('alert("Please answer both questions on the form to select the correct license.");');
     }
 
+    if (empty($_POST['LOVD'])) {
+        $_POST['LOVD'] = '0';
+    }
+    $sLicense = implode(';', array($_POST['license'], $_POST['LOVD']));
+    $sLicenseText = str_replace(array(';0', ';1'), array(' (no', ' (with'),
+            str_replace(array('_', ' 4.0'), array(' ', ''),
+                strtoupper($sLicense))) . ' additional permissions for LOVD)';
+
     // Update!
     if ($sObject == 'individual') {
         if (!$_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET license = ? WHERE id = ?',
-            array($_POST['license'], $nID), false)) {
+            array($sLicense, $nID), false)) {
             die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
         }
         // If we get here, the changes have been saved successfully!
-        lovd_writeLog('Event', 'IndividualLicenseEdit', 'Successfully set license to ' . $_POST['license'] . ' for individual #' . $nID);
+        lovd_writeLog('Event', 'IndividualLicenseEdit', 'Successfully set license to ' . $sLicenseText . ' for individual #' . $nID);
     } elseif ($sObject == 'user') {
         if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET default_license = ? WHERE id = ?',
-            array($_POST['license'], $nID), false)) {
+            array($sLicense, $nID), false)) {
             die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
         }
         // If we get here, the changes have been saved successfully!
-        lovd_writeLog('Event', 'UserLicenseEdit', 'Successfully set default license to ' . $_POST['license'] . ' for user #' . $nID);
+        lovd_writeLog('Event', 'UserLicenseEdit', 'Successfully set default license to ' . $sLicenseText . ' for user #' . $nID);
     }
 
     // Reload the dialog, and put the right buttons in place.
