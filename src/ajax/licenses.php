@@ -79,6 +79,21 @@ if (count($aLicenses) == 1) {
 }
 list($sLicense, $nLOVDLicense) = $aLicenses;
 
+// When reminding the user to select a license,
+//  make sure we store that we showed the dialog.
+if (ACTION == 'remind' && !empty($_COOKIE['lovd_settings'])) {
+    // Overwrite the settings, so we'll hide this dialog after this.
+    setcookie(
+        'lovd_settings',
+        json_encode(
+            array(
+                'default_license_dialog_last_seen' => time()
+            ) + $_COOKIE['lovd_settings']),
+        strtotime('+1 year'),
+        lovd_getInstallURL(false)
+    );
+}
+
 // If we get here, we want to show the dialog for sure.
 print('// Make sure we have and show the dialog.
 if (!$("#licenses_dialog").length) {
