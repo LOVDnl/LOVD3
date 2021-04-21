@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-03-23
+ * Modified    : 2021-04-21
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -856,6 +856,7 @@ if (!defined('NOT_INSTALLED')) {
 
     // Also set cookies for session-independent settings.
     $aCookieSettingsDefaults = array(
+        'default_license_dialog_last_seen' => 0,
         'donation_dialog_last_seen' => 0,
     );
     if (!isset($_COOKIE['lovd_settings'])) {
