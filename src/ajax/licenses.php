@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2021-04-16
+ * Modified    : 2021-04-21
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,12 +32,15 @@ define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
-// URL: /ajax/licenses.php/individual/00000001
-// URL: /ajax/licenses.php/user/00001
+// URL: /ajax/licenses.php/individual/00000001?view
+// URL: /ajax/licenses.php/individual/00000001?edit
+// URL: /ajax/licenses.php/user/00001?remind
+// URL: /ajax/licenses.php/user/00001?view
+// URL: /ajax/licenses.php/user/00001?edit
 
 // Check for basic format.
 if (PATH_COUNT != 4 || !in_array($_PE[2], array('individual', 'user'))
-    || !ctype_digit($_PE[3]) || !in_array(ACTION, array('edit', 'view'))) {
+    || !ctype_digit($_PE[3]) || !in_array(ACTION, array('edit', 'remind', 'view'))) {
     die('alert("Error while sending data.");');
 }
 
@@ -84,7 +87,24 @@ if (!$("#licenses_dialog").length) {
 if (!$("#licenses_dialog").hasClass("ui-dialog-content") || !$("#licenses_dialog").dialog("isOpen")) {
     $("#licenses_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true});
 }
+');
 
+
+
+if (ACTION == 'remind' && $sObject == 'user' && GET && !$sLicense) {
+    // Remind user to pick a default license.
+    print('
+$("#licenses_dialog").html("<B>You have not yet selected a default license for your data submissions.</B> This means that they are currently not freely reusable. Selecting a default license for your data allows you to precisely control how it may be used by others.<BR><BR><B>Please select a license by using the button below.</B> If you wish to select a license later, you can do so from your account page (&quot;Your account&quot; at the top right of the screen).");
+$("#licenses_dialog").dialog({buttons: {"Select data license":function () { $.get("' . CURRENT_PATH . '?edit"); }}});
+');
+    exit;
+}
+
+
+
+
+
+print('
 function lovd_reloadVE (sObject)
 {
     // Reloads the VE if we\'ve changed the token info.
