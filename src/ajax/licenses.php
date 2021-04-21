@@ -123,6 +123,11 @@ print('
 function lovd_reloadVE (sObject)
 {
     // Reloads the VE if we\'ve changed the token info.
+    // But first check if we\'re on that page at all, because we might not be
+    //  (users get reminder to fill in their settings on any page).
+    if (!$("#viewentryDiv table").length || $("#viewentryDiv td").first().html() != "' . $nID . '") {
+        return
+    }
     $.get("ajax/viewentry.php", { object: sObject, id: "' . $nID . '" },
         function (sData) {
             if (sData.length > 2) {
