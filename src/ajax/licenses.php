@@ -198,7 +198,21 @@ $aFields = array(
     'LOVD' => array(
         'Allow LOVD to seek financial support by sharing parts of your public data with researchers, variant annotation platforms, and diagnostic labs.',
     ),
+    'overwrite' => array(
+        'Apply this license also to my data submissions that now have a different license set.',
+    ),
 );
+
+if ($sObject == 'individual') {
+    unset($aFields['overwrite']);
+} else {
+    // Determine whether there are submissions manually set at all.
+    $n = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE created_by = ? AND license IS NOT NULL',
+        array($nID))->fetchColumn();
+    if (!$n) {
+        unset($aFields['overwrite']);
+    }
+}
 
 
 
@@ -360,8 +374,14 @@ if (ACTION == 'edit' && POST) {
             array($sLicense, $nID), false)) {
             die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
         }
+        // Reset manually set licenses, if requested.
+        if (!empty($_POST['overwrite'])) {
+            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET license = NULL WHERE created_by = ?',
+                array($nID), false);
+        }
         // If we get here, the changes have been saved successfully!
-        lovd_writeLog('Event', 'UserLicenseEdit', 'Successfully set default license to ' . $sLicenseText . ' for user #' . $nID);
+        lovd_writeLog('Event', 'UserLicenseEdit', 'Successfully set default license to ' . $sLicenseText . ' for user #' . $nID .
+            (empty($_POST['overwrite'])? '' : ' and reset all manually set licenses'));
     }
 
     // Reload the dialog, and put the right buttons in place.
