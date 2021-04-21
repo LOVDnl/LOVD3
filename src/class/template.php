@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2021-02-25
+ * Modified    : 2021-04-21
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -628,6 +628,16 @@ function lovd_mapVariants ()
     // Donation dialog last seen ' . date('Y-m-d H:i:s', $_COOKIE['lovd_settings']['donation_dialog_last_seen']) . ', show again.
     $.get("ajax/donate.php");
 ');
+
+            } elseif ($_AUTH && !isset($_AUTH['default_license'])) {
+                // Determine whether or not to show the dialog to remind the user to choose a license.
+                $nTimeToShow = strtotime('+1 day', $_COOKIE['lovd_settings']['default_license_dialog_last_seen']);
+                if ($nTimeToShow <= time()) {
+                    print('
+    // Dialog to remind user to choose a default license last seen ' . date('Y-m-d H:i:s', $_COOKIE['lovd_settings']['default_license_dialog_last_seen']) . ', show again.
+    $.get("ajax/licenses.php/user/' . $_AUTH['id'] . '?remind");
+');
+                }
             }
         }
 ?>
