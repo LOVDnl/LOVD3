@@ -100,7 +100,14 @@ if (!$("#licenses_dialog").length) {
     $("body").append("<DIV id=\'licenses_dialog\' title=\'License settings for ' . $sObjectID . '\'></DIV>");
 }
 if (!$("#licenses_dialog").hasClass("ui-dialog-content") || !$("#licenses_dialog").dialog("isOpen")) {
-    $("#licenses_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true});
+    $("#licenses_dialog").dialog({draggable:false,resizable:false,minWidth:600,show:"fade",closeOnEscape:true,hide:"fade",modal:true,
+        open: function (event, ui) {
+            // Remove the focus off of the first button.
+            // Blur() doesn\'t remove the focus as many suggest. This does work.
+            // Thanks to scott.gonzalez @ https://forum.jquery.com/topic/dialog-close-button-is-focused-on-open
+            $(this).parents(".ui-dialog").attr("tabindex", -1)[0].focus();
+        }
+    });
 }
 ');
 
