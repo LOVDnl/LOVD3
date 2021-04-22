@@ -128,7 +128,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 'average_frequency_' => 'Average frequency (gnomAD v.2.1.1)',
                 'owned_by_' => 'Owner',
                 'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
-                'license_' => 'License',
+                'license_' => 'Database submission license',
                 'created_by_' => 'Created by',
                 'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
                 'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),

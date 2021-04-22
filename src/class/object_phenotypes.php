@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2021-03-25
+ * Modified    : 2021-04-22
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -105,7 +105,7 @@ class LOVD_Phenotype extends LOVD_Custom
                  array(
                         'owned_by_' => 'Owner name',
                         'status' => array('Phenotype data status', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'license_' => 'License',
+                        'license_' => 'Database submission license',
                         'created_by_' => 'Created by',
                         'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
