@@ -200,6 +200,7 @@ class LOVD_API
                 }
                 array_shift($aURLElements); // Take the version off.
             }
+            $this->aResponse['version'] = $this->nVersion;
 
             // Next, should be resource.
             $this->sResource = array_shift($aURLElements);
