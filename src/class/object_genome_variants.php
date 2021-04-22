@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2021-04-16
+ * Modified    : 2021-04-22
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -484,9 +484,12 @@ class LOVD_GenomeVariant extends LOVD_Custom
             // While in principle a variant should only be connected to one patient, due to database model limitations, through several screenings, one could link a variant to more individuals.
             foreach ($zData['individuals'] as $aIndividual) {
                 list($nID, $nStatusID) = $aIndividual;
-                $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
                 if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
-                    $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($nStatusID) . '">(' . $_SETT['data_status'][$nStatusID] . ')</SPAN>';
+                    $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') .
+                        '<A href="individuals/' . $nID . '">' . $nID . '</A> ' .
+                        '<SPAN style="color: #' . $this->getStatusColor($nStatusID) . '">(' . $_SETT['data_status'][$nStatusID] . ')</SPAN>';
+                } elseif ($nStatusID >= STATUS_MARKED) {
+                    $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') . '<A href="individuals/' . $nID . '">' . $nID . '</A>';
                 }
             }
             if (empty($zData['individualid_'])) {
