@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2021-03-23
+ * Modified    : 2021-04-22
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,7 +83,7 @@ $aTableSQL =
     api_settings TEXT,
     phpsessid CHAR(32),
     saved_work TEXT,
-    default_license VARCHAR(15),
+    default_license VARCHAR(20),
     level TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
     allowed_ip VARCHAR(255) NOT NULL DEFAULT "*",
     login_attempts TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
@@ -276,7 +276,7 @@ $aTableSQL =
     motherid MEDIUMINT(8) UNSIGNED ZEROFILL,
     panelid MEDIUMINT(8) UNSIGNED ZEROFILL,
     panel_size MEDIUMINT(8) UNSIGNED NOT NULL DEFAULT 1,
-    license VARCHAR(15),
+    license VARCHAR(20),
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
     statusid TINYINT(1) UNSIGNED,
     created_by SMALLINT(5) UNSIGNED ZEROFILL,

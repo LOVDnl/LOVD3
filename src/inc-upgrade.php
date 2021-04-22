@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2021-03-23
+ * Modified    : 2021-04-22
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -811,7 +811,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-26b' => array(
                      'UPDATE ' . TABLE_COLS . ' SET mysql_type = "FLOAT" WHERE mysql_type = "FLOAT UNSIGNED"',
                      'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN default_license VARCHAR(15) AFTER saved_work',
-                     'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN license VARCHAR(15) AFTER panel_size',
+                     'ALTER TABLE ' . TABLE_INDIVIDUALS . ' ADD COLUMN license VARCHAR(20) AFTER panel_size',
                  ),
                  '3.0-26c' => array(
                      'ALTER TABLE ' . TABLE_LOGS . ' MODIFY COLUMN event VARCHAR(25) NOT NULL',
