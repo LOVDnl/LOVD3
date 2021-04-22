@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2020-11-03
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-22
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -46,7 +46,6 @@ class LOVD_API
     public $nID = '';         // The ID of the requested resource.
     public $sGene = '';       // The LOVD2-style API often has the gene symbol in the URL, since it's gene-specific.
 
-    protected $aAcceptedOutput = array(); // Parsed array of accepted outputs, taken from the Accept header.
     protected $sFormatOutput = '';        // The output format, may be a decision based on the request.
 
     public $aResponse = array( // The standard response body.
@@ -60,6 +59,7 @@ class LOVD_API
 
     // Currently supported resources (resource => array(methods)):
     private $aResourcesSupported = array(
+        'ga4gh' => array('GET', 'HEAD'),
         'submissions' => array('POST'),
     );
 
@@ -91,7 +91,7 @@ class LOVD_API
         $aAcceptsRaw = explode(',', $sAcceptsRaw);
         $aAccepts = array();
 
-        foreach ($aAcceptsRaw as $nKey => $sAcceptRaw) {
+        foreach ($aAcceptsRaw as $sAcceptRaw) {
             // Split the optional quality separator off. We're currently
             //  ignoring it; if it's not present, this is a preferred output
             //  format, if it is present and lower than 1, it's less preferred.
@@ -107,7 +107,7 @@ class LOVD_API
             // Client requested a format, but all formats requested are rejected
             //  and client didn't add */* as an option. So, we complain.
             $this->sFormatOutput = $this->aFormatsAccepted[0]; // Pick our default output.
-            $this->aResponse['errors'][] = 'The format you requested is not available. Pick from ' . implode(', ', $this->aFormatsAccepted);
+            $this->aResponse['errors'][] = 'The format you requested is not available. Pick from ' . implode(', ', $this->aFormatsAccepted) . '.';
             $this->sendHeader(406, true); // Send 406 Not Acceptable, print response, and quit.
 
         } elseif ($aAccepts) {
@@ -206,6 +206,15 @@ class LOVD_API
             if (!isset($this->aResourcesSupported[$this->sResource])) {
                 $this->aResponse['errors'][] = 'Requested resource is unknown.';
                 $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+            }
+
+            // Additional requirement; request APIs don't allow text/plain.
+            if ($this->sResource != 'submissions' && $this->sFormatOutput == 'text/plain') {
+                $this->aFormatsAccepted = array_filter($this->aFormatsAccepted, function ($sValue) {
+                    return (preg_match('/^(application|\*)\//', $sValue));
+                });
+                $this->aResponse['errors'][] = 'The format you requested is not available for this resource. Pick from ' . implode(', ', $this->aFormatsAccepted) . '.';
+                $this->sendHeader(406, true); // Send 406 Not Acceptable, print response, and quit.
             }
 
             // From here, it's optional.
