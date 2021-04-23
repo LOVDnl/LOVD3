@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-04-22
+ * Modified    : 2021-04-23
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -218,14 +218,24 @@ class LOVD_API
                 $this->sendHeader(406, true); // Send 406 Not Acceptable, print response, and quit.
             }
 
-            // From here, it's optional.
-            $this->nID = array_shift($aURLElements);
+            if ($this->sResource == 'submissions') {
+                // From here, it's optional.
+                $this->nID = array_shift($aURLElements);
 
-            // Rest of the URL should be empty at this point.
-            if (implode('', $aURLElements)) {
-                // URL still had more data. At this point, that can't be right.
-                $this->aResponse['errors'][] = 'Could not parse requested URL.';
-                $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+                // Rest of the URL should be empty at this point.
+                if (implode('', $aURLElements)) {
+                    // URL still had more data. At this point, that can't be right.
+                    $this->aResponse['errors'][] = 'Could not parse requested URL.';
+                    $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+                }
+
+            } elseif ($this->sResource == 'ga4gh') {
+                // GA4GH only available from v2.
+                if ($this->nVersion < 2) {
+                    $this->aResponse['errors'][] = 'GA4GH data connect is available only from LOVD API version 2 and up.' . "\n" .
+                        'Please repeat your call, requesting a higher API version.';
+                    $this->sendHeader(400, true); // Send 400 Bad Request, print response, and quit.
+                }
             }
 
             // Verify method. This depends on the resource.
