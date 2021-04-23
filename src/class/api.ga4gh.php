@@ -78,10 +78,13 @@ class LOVD_API_GA4GH
 
         // Check URL structure.
         if (count($this->aURLElements) > 3
-            || ($this->aURLElements[0] == 'tables' && $aURLElements[1])
-            || ($this->aURLElements[0] == 'table' && $this->aURLElements[1] != 'variants')) {
+            || ($this->aURLElements[0] == 'tables' && $aURLElements[1])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
             $this->API->aResponse['errors'][] = 'Could not parse requested URL.';
+            return false;
+        } elseif (($this->aURLElements[0] == 'table' && $this->aURLElements[1] != 'variants')) {
+            $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
+            $this->API->aResponse['errors'][] = 'Table name not recognized. Be sure to user lowercase letters only.';
             return false;
         }
 
