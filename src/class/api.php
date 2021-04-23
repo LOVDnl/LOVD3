@@ -359,7 +359,11 @@ class LOVD_API
 
         // Response header...
         header('HTTP/1.0 ' . $nStatus, true, $nStatus);
-        // Add the WWW-Authenticate, if needed.
+        // Add the Location header, if needed.
+        if ($nStatus == 302 && substr($this->aResponse['messages'][0], 0, 9) == 'Location:') {
+            header($this->aResponse['messages'][0]);
+        }
+        // Add the WWW-Authenticate header, if needed.
         if ($nStatus == 401) {
             header('WWW-Authenticate: LOVDAuthToken realm="LOVD ' . $_SETT['system']['version'] . ' API. See the LOVD documentation on how to get access."');
         }
