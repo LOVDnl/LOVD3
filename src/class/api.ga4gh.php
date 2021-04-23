@@ -101,8 +101,36 @@ class LOVD_API_GA4GH
             return false;
         }
 
-        // STUB; Actually handle the request.
+        // Now actually handle the request.
+        if ($aURLElements[0] == 'tables') {
+            return $this->showTables();
+        }
 
+        // If we end up here, we didn't handle the request well.
+        return false;
+    }
+
+
+
+
+
+    private function showTables ()
+    {
+        // Shows all tables in GA4GH Data Connect.
+
+        $aOutput = array(
+            'tables' => array(
+                array(
+                    'name' => 'variants',
+                    'data_model' => array(
+                        '$ref' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/variants.json',
+                    ),
+                ),
+            ),
+            'pagination' => array(),
+        );
+
+        $this->API->aResponse = $aOutput;
         return true;
     }
 }
