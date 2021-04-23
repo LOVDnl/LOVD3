@@ -45,6 +45,7 @@ class LOVD_API_GA4GH
         'variants' => array(
             'description' => 'Aggregated variant data, when available also containing information on individuals, their phenotypes, and their other variants.',
             'data_model' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/variants.json',
+            'first_page' => 'data:chr1',
         ),
     );
 
@@ -115,10 +116,36 @@ class LOVD_API_GA4GH
             return $this->showTables();
         } elseif ($aURLElements[0] == 'table' && $aURLElements[2] == 'info') {
             return $this->showTableInfo($aURLElements[1]);
+        } elseif ($aURLElements[0] == 'table' && $aURLElements[2] == 'data') {
+            return $this->showTableData($aURLElements[1]);
         }
 
         // If we end up here, we didn't handle the request well.
         return false;
+    }
+
+
+
+
+
+    private function showTableData ($sTableName)
+    {
+        // Shows table data view, first page only.
+        // This doesn't actually list data yet, it's easier for us to implement
+        //  it through pagination.
+
+        $aOutput = array(
+            'data_model' => array(
+                '$ref' => $this->aTables[$sTableName]['data_model'],
+            ),
+            'data' => array(),
+            'pagination' => array(
+                'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/' . rawurlencode($this->aTables[$sTableName]['first_page']),
+            ),
+        );
+
+        $this->API->aResponse = $aOutput;
+        return true;
     }
 
 
