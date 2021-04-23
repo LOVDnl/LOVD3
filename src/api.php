@@ -32,6 +32,7 @@
  *  3.0-22       /api/rest.php/*****?format=application/json   (JSON output for whole LOVD2-style API)
  *  3.0-27 (v2)  /api/v#/ga4gh (GET) (redirects)
  *  3.0-27 (v2)  /api/v#/ga4gh/tables (GET)
+ *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/info (GET)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/

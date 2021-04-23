@@ -104,10 +104,32 @@ class LOVD_API_GA4GH
         // Now actually handle the request.
         if ($aURLElements[0] == 'tables') {
             return $this->showTables();
+        } elseif ($aURLElements[0] == 'table' && $aURLElements[2] == 'info') {
+            return $this->showTableInfo($aURLElements[1]);
         }
 
         // If we end up here, we didn't handle the request well.
         return false;
+    }
+
+
+
+
+
+    private function showTableInfo ($sTableName)
+    {
+        // Shows table info.
+        // Let's not make this too hard, the data model is on GitHub.
+
+        $aOutput = array(
+            'name' => $sTableName,
+            'data_model' => array(
+                '$ref' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/' . $sTableName . '.json',
+            ),
+        );
+
+        $this->API->aResponse = $aOutput;
+        return true;
     }
 
 
