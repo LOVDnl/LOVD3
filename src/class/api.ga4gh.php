@@ -87,11 +87,13 @@ class LOVD_API_GA4GH
         if (count($this->aURLElements) > 3
             || ($this->aURLElements[0] == 'tables' && $aURLElements[1])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
-            $this->API->aResponse['errors'][] = 'Could not parse requested URL.';
+            $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
             return false;
         } elseif ($this->aURLElements[0] == 'table' && !isset($this->aTables[$this->aURLElements[1]])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
-            $this->API->aResponse['errors'][] = 'Table name not recognized. Choose from: ' . implode(', ', array_keys($this->aTables)) . '.';
+            $this->API->aResponse = array('errors' => array(
+                    'title' => 'Table name not recognized.',
+                    'detail' => 'Table name not recognized. Choose from: \'' . implode("', '", array_keys($this->aTables)) . '\'.'));
             return false;
         }
 
@@ -107,7 +109,7 @@ class LOVD_API_GA4GH
             && !in_array($this->aURLElements[2], array('info', 'data'))
             && !preg_match('/^data:hg[0-9]{2}:chr([XYM]|[0-9]{1,2})(:[0-9]+)$/', $this->aURLElements[2])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
-            $this->API->aResponse['errors'][] = 'Could not parse requested URL.';
+            $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
             return false;
         }
 
