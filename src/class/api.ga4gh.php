@@ -41,6 +41,12 @@ class LOVD_API_GA4GH
 
     private $API;                     // The API object.
     private $aURLElements = array();  // The current URL broken in parts.
+    private $aTables = array(
+        'variants' => array(
+            'description' => 'Aggregated variant data, when available also containing information on individuals, their phenotypes, and their other variants.',
+            'data_model' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/variants.json',
+        ),
+    );
 
 
 
@@ -82,9 +88,9 @@ class LOVD_API_GA4GH
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
             $this->API->aResponse['errors'][] = 'Could not parse requested URL.';
             return false;
-        } elseif (($this->aURLElements[0] == 'table' && $this->aURLElements[1] != 'variants')) {
+        } elseif ($this->aURLElements[0] == 'table' && !isset($this->aTables[$this->aURLElements[1]])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
-            $this->API->aResponse['errors'][] = 'Table name not recognized. Be sure to user lowercase letters only.';
+            $this->API->aResponse['errors'][] = 'Table name not recognized. Choose from: ' . implode(', ', array_keys($this->aTables)) . '.';
             return false;
         }
 
@@ -126,8 +132,9 @@ class LOVD_API_GA4GH
 
         $aOutput = array(
             'name' => $sTableName,
+            'description' => $this->aTables[$sTableName]['description'],
             'data_model' => array(
-                '$ref' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/' . $sTableName . '.json',
+                '$ref' => $this->aTables[$sTableName]['data_model'],
             ),
         );
 
@@ -144,16 +151,17 @@ class LOVD_API_GA4GH
         // Shows all tables in GA4GH Data Connect.
 
         $aOutput = array(
-            'tables' => array(
-                array(
-                    'name' => 'variants',
-                    'data_model' => array(
-                        '$ref' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/variants.json',
-                    ),
-                ),
-            ),
-            'pagination' => array(),
+            'tables' => array(),
         );
+        foreach ($this->aTables as $sTable => $aTable) {
+            $aOutput['tables'][] = array(
+                'name' => $sTable,
+                'description' => $aTable['description'],
+                'data_model' => array(
+                    '$ref' => $aTable['data_model'],
+                ),
+            );
+        }
 
         $this->API->aResponse = $aOutput;
         return true;
