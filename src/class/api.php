@@ -258,8 +258,10 @@ class LOVD_API
             // If we're at version 1 or higher, let this new API handle it.
             // Since each method requires very specific code, the methods are
             //  handled separately.
-            $bReturn = false;
-            if (POST) {
+            $bReturn = null;
+            if (GET) {
+                $bReturn = $this->processGET($aURLElements);
+            } elseif (POST) {
                 $bReturn = $this->processPOST();
             }
 
@@ -326,6 +328,24 @@ class LOVD_API
         }
 
         return $sResponse;
+    }
+
+
+
+
+
+    private function processGET ($aURLElements)
+    {
+        // Processes the GET calls to the API.
+
+        // Currently only handling the 'ga4gh' resource, for GA4GH Data Connect.
+        if ($this->sResource == 'ga4gh') {
+            require_once 'class/api.ga4gh.php';
+            $o = new LOVD_API_GA4GH($this);
+            // This should process the request, return false on failure,
+            //  true on success, and void otherwise (bugs).
+            return $o->processGET($aURLElements);
+        }
     }
 
 
