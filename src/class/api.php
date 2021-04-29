@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-04-23
+ * Modified    : 2021-04-29
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -385,7 +385,14 @@ class LOVD_API
         }
         // Add the WWW-Authenticate header, if needed.
         if ($nStatus == 401) {
-            header('WWW-Authenticate: LOVDAuthToken realm="LOVD ' . $_SETT['system']['version'] . ' API. See the LOVD documentation on how to get access."');
+            header('WWW-Authenticate: ' .
+                ($this->sResource == 'submissions'? 'LOVDAuthToken' : 'Bearer') .
+                ' realm="LOVD ' . $_SETT['system']['version'] . ' API. See the LOVD documentation on how to get access."' .
+                // We're guessing here that we got an invalid token if
+                //  we throw a 401 with an Authorization already sent.
+                // It would be a better solution to have these headers set by the API?
+                ($this->sResource == 'submissions' || !in_array('Authorization', array_keys(getallheaders()))? '' : ', error="invalid_token"')
+            );
         }
         // Add the Allow header, if needed.
         if ($nStatus == 405 && $this->sResource && isset($this->aResourcesSupported[$this->sResource])) {
