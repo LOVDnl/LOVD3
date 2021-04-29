@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-04-23
+ * Modified    : 2021-04-29
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -90,7 +90,7 @@ class LOVD_API_GA4GH
             $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
             return false;
         } elseif ($this->aURLElements[0] == 'table' && !isset($this->aTables[$this->aURLElements[1]])) {
-            $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
+            $this->API->nHTTPStatus = 404; // Send 404 Not Found.
             $this->API->aResponse = array('errors' => array(
                     'title' => 'Table name not recognized.',
                     'detail' => 'Table name not recognized. Choose from: \'' . implode("', '", array_keys($this->aTables)) . '\'.'));
