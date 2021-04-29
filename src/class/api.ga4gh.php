@@ -73,6 +73,28 @@ class LOVD_API_GA4GH
     public function processGET ($aURLElements)
     {
         // Handle GET requests for GA4GH Data Connect.
+        global $_SETT, $_STAT;
+
+        // We currently require authorization. This needs to be sent over an
+        //  Authorization HTTP request header.
+        $aHeaders = getallheaders();
+        if (!isset($aHeaders['Authorization']) || substr($aHeaders['Authorization'], 0, 7) != 'Bearer ') {
+            $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
+            $this->API->aResponse = array('errors' => array(
+                'title' => 'Access denied.',
+                'detail' => 'Please provide authorization for this resource. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
+            return false;
+
+        } else {
+            $sToken = substr($aHeaders['Authorization'], 7);
+            if ($sToken != md5($_STAT['signature'])) {
+                $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
+                $this->API->aResponse = array('errors' => array(
+                    'title' => 'Access denied.',
+                    'detail' => 'The given token is not correct. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
+                return false;
+            }
+        }
 
         $this->aURLElements = array_pad($aURLElements, 3, '');
 
