@@ -45,7 +45,7 @@ class LOVD_API_GA4GH
         'variants' => array(
             'description' => 'Aggregated variant data, when available also containing information on individuals, their phenotypes, and their other variants.',
             'data_model' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/variants.json',
-            'first_page' => 'data:chr1',
+            'first_page' => 'data:{{refseq_build}}:chr1',
         ),
     );
 
@@ -159,6 +159,7 @@ class LOVD_API_GA4GH
         // Shows table data view, first page only.
         // This doesn't actually list data yet, it's easier for us to implement
         //  it through pagination.
+        global $_CONF;
 
         $aOutput = array(
             'data_model' => array(
@@ -166,7 +167,8 @@ class LOVD_API_GA4GH
             ),
             'data' => array(),
             'pagination' => array(
-                'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/' . rawurlencode($this->aTables[$sTableName]['first_page']),
+                'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/' .
+                    rawurlencode(str_replace('{{refseq_build}}', $_CONF['refseq_build'], $this->aTables[$sTableName]['first_page'])),
             ),
         );
 
