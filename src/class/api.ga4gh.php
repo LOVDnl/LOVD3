@@ -260,5 +260,83 @@ class LOVD_API_GA4GH
         $this->API->aResponse = $aOutput;
         return true;
     }
+
+
+
+
+
+    private function showVariantDataPage ($sBuild, $sChr, $nPosition)
+    {
+        // Shows variant data page.
+        global $_DB;
+        $sTableName = 'variants';
+        $nLimit = 1000; // Get 1000 variants max in one go.
+
+        // Check for required, and wanted columns.
+        $aRequiredCols = array(
+            'VariantOnGenome/DNA',
+            'VariantOnTranscript/DNA',
+            'VariantOnTranscript/RNA',
+            'VariantOnTranscript/Protein',
+        );
+        $aColsToCheck = array_merge($aRequiredCols, array(
+            'VariantOnGenome/DNA/hg38',
+            'VariantOnGenome/ClinicalClassification',
+            'VariantOnGenome/dbSNP',
+            'VariantOnGenome/Genetic_origin',
+            'VariantOnGenome/Reference',
+        ));
+        $aCols = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid IN (?' . str_repeat(', ?', count($aColsToCheck) - 1) . ')',
+            $aColsToCheck)->fetchAllColumn();
+
+        foreach ($aRequiredCols as $sCol) {
+            if (!in_array($sCol, $aCols)) {
+                $this->API->nHTTPStatus = 500; // Send 500 Internal Server Error.
+                $this->API->aResponse = array('errors' => array(
+                    'title' => 'Missing required columns.',
+                    'detail' => 'Missing required columns; this LOVD instance is missing one or more columns required for this API to operate. Required fields: \'' . implode("', '", $aRequiredCols) . '\'.'));
+                return false;
+            }
+        }
+
+        // Fetch data. We do this in two steps; first the basic variant
+        //  information and after that the full submission data.
+        $sQ = 'SELECT
+                 vog.chromosome,
+                 vog.position_g_start,
+                 vog.position_g_end,
+                 GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
+                 vog.`VariantOnGenome/DNA` AS DNA
+               FROM ' . TABLE_VARIANTS . ' AS vog
+               WHERE vog.chromosome = ? AND vog.position_g_start >= ? AND vog.statusid >= ?';
+        $aQ = array(
+            (string) $sChr,
+            (int) $nPosition,
+            STATUS_MARKED
+        );
+        // FIXME: This is where searching will be implemented.
+        $sQ .= '
+               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`
+               ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`
+               LIMIT ' . $nLimit;
+        $zData = $_DB->query($sQ, $aQ)->fetchAllAssoc();
+        $n = count($zData);
+
+        // Set next seek window.
+        $nNextPosition = $zData[$n-1]['position_g_start'] + 1;
+
+        $aOutput = array(
+            'data_model' => array(
+                '$ref' => $this->aTables[$sTableName]['data_model'],
+            ),
+            'data' => $zData,
+            'pagination' => array(
+                'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/data' . rawurlencode(':' . $sBuild . ':chr' . $sChr . ':' . $nNextPosition),
+            ),
+        );
+
+        $this->API->aResponse = $aOutput;
+        return true;
+    }
 }
 ?>
