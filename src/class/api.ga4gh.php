@@ -322,6 +322,39 @@ class LOVD_API_GA4GH
         $zData = $_DB->query($sQ, $aQ)->fetchAllAssoc();
         $n = count($zData);
 
+
+
+        // Make all transformations.
+        $aData = array_map(function ($zData) use ($sBuild, $sChr)
+        {
+            global $_SETT;
+
+            // Format fields for VarioML-JSON payload.
+            $aReturn = array(
+                'type' => 'DNA',
+                'genes' => array(),
+                'ref_seq' => array(
+                    'source' => 'genbank',
+                    'accession' => $_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr],
+                ),
+                'name' => array(
+                    'scheme' => 'HGVS',
+                    'value' => $zData['DNA'],
+                ),
+                'aliases' => array(),
+                'pathogenicities' => array(),
+                'panel' => array(
+                    'individuals' => array(),
+                    'panels' => array(),
+                    'variants' => array(),
+                ),
+            );
+
+            return $aReturn;
+        }, $zData);
+
+
+
         // Set next seek window.
         $nNextPosition = $zData[$n-1]['position_g_start'] + 1;
 
@@ -329,7 +362,7 @@ class LOVD_API_GA4GH
             'data_model' => array(
                 '$ref' => $this->aTables[$sTableName]['data_model'],
             ),
-            'data' => $zData,
+            'data' => $aData,
             'pagination' => array(
                 'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/data' . rawurlencode(':' . $sBuild . ':chr' . $sChr . ':' . $nNextPosition),
             ),
