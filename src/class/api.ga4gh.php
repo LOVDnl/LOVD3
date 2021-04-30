@@ -129,7 +129,7 @@ class LOVD_API_GA4GH
         // Check URL structure some more.
         if ($this->aURLElements[0] == 'table'
             && !in_array($this->aURLElements[2], array('info', 'data'))
-            && !preg_match('/^data:hg[0-9]{2}:chr([XYM]|[0-9]{1,2})(:[0-9]+)?$/', $this->aURLElements[2])) {
+            && !preg_match('/^data:hg[0-9]{2}(:chr([XYM]|[0-9]{1,2})(:[0-9]+)?)?$/', $this->aURLElements[2])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
             $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
             return false;
@@ -142,7 +142,7 @@ class LOVD_API_GA4GH
             return $this->showTableInfo($aURLElements[1]);
         } elseif ($aURLElements[0] == 'table' && $aURLElements[2] == 'data') {
             return $this->showTableData($aURLElements[1]);
-        } elseif ($aURLElements[0] == 'table' && preg_match('/^data:(hg[0-9]{2}):chr([XYM]|[0-9]{1,2})(?::([0-9]+))?$/', $aURLElements[2], $aRegs)) {
+        } elseif ($aURLElements[0] == 'table' && preg_match('/^data:(hg[0-9]{2})(?::chr([XYM]|[0-9]{1,2})(?::([0-9]+))?)?$/', $aURLElements[2], $aRegs)) {
             return $this->showTableDataPage($aURLElements[1], $aRegs);
         }
 
@@ -186,7 +186,7 @@ class LOVD_API_GA4GH
         global $_CONF, $_SETT;
 
         if ($sTableName == 'variants') {
-            list(, $sBuild, $sChr, $nPosition) = array_pad($aPage, 4, '0');
+            list(, $sBuild, $sChr, $nPosition) = array_pad($aPage, 4, '1');
 
             if ($sBuild != $_CONF['refseq_build']) {
                 // We don't support this yet, because we can't use an index on a
