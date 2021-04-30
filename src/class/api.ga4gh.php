@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-04-29
+ * Modified    : 2021-04-30
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -129,7 +129,7 @@ class LOVD_API_GA4GH
         // Check URL structure some more.
         if ($this->aURLElements[0] == 'table'
             && !in_array($this->aURLElements[2], array('info', 'data'))
-            && !preg_match('/^data:hg[0-9]{2}:chr([XYM]|[0-9]{1,2})(:[0-9]+)$/', $this->aURLElements[2])) {
+            && !preg_match('/^data:hg[0-9]{2}:chr([XYM]|[0-9]{1,2})(:[0-9]+)?$/', $this->aURLElements[2])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
             $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
             return false;
@@ -142,6 +142,8 @@ class LOVD_API_GA4GH
             return $this->showTableInfo($aURLElements[1]);
         } elseif ($aURLElements[0] == 'table' && $aURLElements[2] == 'data') {
             return $this->showTableData($aURLElements[1]);
+        } elseif ($aURLElements[0] == 'table' && preg_match('/^data:(hg[0-9]{2}):chr([XYM]|[0-9]{1,2})(?::([0-9]+))?$/', $aURLElements[2], $aRegs)) {
+            return $this->showTableDataPage($aURLElements[1], $aRegs);
         }
 
         // If we end up here, we didn't handle the request well.
