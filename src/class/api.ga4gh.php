@@ -180,6 +180,45 @@ class LOVD_API_GA4GH
 
 
 
+    private function showTableDataPage ($sTableName, $aPage)
+    {
+        // Shows table data page.
+        global $_CONF, $_SETT;
+
+        if ($sTableName == 'variants') {
+            list(, $sBuild, $sChr, $nPosition) = array_pad($aPage, 4, '0');
+
+            if ($sBuild != $_CONF['refseq_build']) {
+                // We don't support this yet, because we can't use an index on a
+                //  search on the other genome build. Wait for LOVD 3.1.
+                $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
+                if (!isset($_SETT['human_builds'][$sBuild])) {
+                    $this->API->aResponse = array('errors' => array('title' => 'Unrecognized genome build.'));
+                } else {
+                    $this->API->aResponse = array('errors' => array('title' => 'Unsupported genome build.'));
+                }
+                $this->API->aResponse['errors']['detail'] = 'We can not use genome build ' . $sBuild . '. Please choose from: \'' . $_CONF['refseq_build'] . '\'.';
+                return false;
+
+            } elseif (!isset($_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr])) {
+                // We don't know this chromosome.
+                $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
+                $this->API->aResponse = array('errors' => array(
+                    'title' => 'Unrecognized chromosome.',
+                    'detail' => 'Unrecognized chromosome. Choose from: \'' . implode("', '", array_keys($_SETT['human_builds'][$sBuild]['ncbi_sequences'])) . '\'.'));
+                return false;
+            }
+
+            return $this->showVariantDataPage($sBuild, $sChr, $nPosition);
+        }
+
+        return false;
+    }
+
+
+
+
+
     private function showTableInfo ($sTableName)
     {
         // Shows table info.
