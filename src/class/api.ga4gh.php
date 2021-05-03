@@ -316,14 +316,15 @@ class LOVD_API_GA4GH
                      CONCAT(vog.id, "||"' .
             (!$bDNA38? '' : ',
                        IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
-                       (SELECT
-                          GROUP_CONCAT(
-                            CONCAT(
-                              t.geneid, "|vot|", t.id_ncbi, "|vot|", vot.`VariantOnTranscript/DNA`, "|vot|", vot.`VariantOnTranscript/RNA`, "|vot|", vot.`VariantOnTranscript/Protein`)
-                            SEPARATOR ";vot;")
-                        FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
-                          INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                        WHERE vot.id = vog.id)
+                       IFNULL(
+                         (SELECT
+                            GROUP_CONCAT(
+                              CONCAT(
+                                t.geneid, "|vot|", t.id_ncbi, "|vot|", vot.`VariantOnTranscript/DNA`, "|vot|", vot.`VariantOnTranscript/RNA`, "|vot|", vot.`VariantOnTranscript/Protein`)
+                              SEPARATOR ";vot;")
+                         FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                           INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                         WHERE vot.id = vog.id), "")
                      )
                    ) SEPARATOR ";;") AS variants
                FROM ' . TABLE_VARIANTS . ' AS vog
@@ -402,40 +403,38 @@ class LOVD_API_GA4GH
 
             // Further annotate the entries.
             $aSubmissions = array();
-            if (!empty($zData['variants'])) {
-                foreach (explode(';;', $zData['variants']) as $sVariant) {
-                    if (ctype_digit($sVariant)) {
-                        // An Individual ID. We don't know yet whether this is an
-                        //  Individual or a Panel.
-                        $aSubmissions[] = $sVariant;
-                    } else {
-                        // Full variant data, which means there was no Individual.
-                        list($nID, $sDNA38, $sVOTs) = explode('||', $sVariant);
-                        $aVariant = array(
-                            'type' => 'DNA',
+            foreach (explode(';;', $zData['variants']) as $sVariant) {
+                if (ctype_digit($sVariant)) {
+                    // An Individual ID. We don't know yet whether this is an
+                    //  Individual or a Panel.
+                    $aSubmissions[] = $sVariant;
+                } else {
+                    // Full variant data, which means there was no Individual.
+                    list($nID, $sDNA38, $sVOTs) = explode('||', $sVariant);
+                    $aVariant = array(
+                        'type' => 'DNA',
+                        'ref_seq' => array(
+                            'source' => 'genbank',
+                            'accession' => $_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr],
+                        ),
+                        'name' => array(
+                            'scheme' => 'HGVS',
+                            'value' => $zData['DNA'],
+                        ),
+                        'aliases' => (!$sDNA38? '' : array(
                             'ref_seq' => array(
                                 'source' => 'genbank',
-                                'accession' => $_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr],
+                                'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
                             ),
                             'name' => array(
                                 'scheme' => 'HGVS',
-                                'value' => $zData['DNA'],
+                                'value' => $sDNA38,
                             ),
-                            'aliases' => (!$sDNA38? '' : array(
-                                'ref_seq' => array(
-                                    'source' => 'genbank',
-                                    'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
-                                ),
-                                'name' => array(
-                                    'scheme' => 'HGVS',
-                                    'value' => $sDNA38,
-                                ),
-                            )),
-                            'pathogenicities' => array(),
-                        );
+                        )),
+                        'pathogenicities' => array(),
+                    );
 
-                        $aReturn['panel']['variants'][] = $aVariant;
-                    }
+                    $aReturn['panel']['variants'][] = $aVariant;
                 }
             }
 
