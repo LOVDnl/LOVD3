@@ -320,14 +320,14 @@ class LOVD_API_GA4GH
                          (SELECT
                             GROUP_CONCAT(
                               CONCAT(
-                                t.geneid, "|vot|", t.id_ncbi, "|vot|", vot.`VariantOnTranscript/DNA`, "|vot|", vot.`VariantOnTranscript/RNA`, "|vot|", vot.`VariantOnTranscript/Protein`)
-                              SEPARATOR ";vot;")
+                                t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", vot.`VariantOnTranscript/Protein`)
+                              SEPARATOR "$$")
                          FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                            INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
                          WHERE vot.id = vog.id), ""), "||",
                        IFNULL(
                          CONCAT(
-                           IFNULL(uo.orcid_id, ""), "|uo|", uo.name, "|uo|", uo.email
+                           IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                          ), "")
                      )
                    ) SEPARATOR ";;") AS variants
@@ -441,8 +441,8 @@ class LOVD_API_GA4GH
                     );
                     if ($sVOTs) {
                         $aVariant['seq_changes']['variants'] = array();
-                        foreach (explode(';vot;', $sVOTs) as $sVOT) {
-                            list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtein) = explode('|vot|', $sVOT);
+                        foreach (explode('$$', $sVOTs) as $sVOT) {
+                            list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtein) = explode('##', $sVOT);
                             $aVariant['seq_changes']['variants'][] = array(
                                 'type' => 'cDNA',
                                 'gene' => array(
@@ -479,7 +479,7 @@ class LOVD_API_GA4GH
                         }
                     }
                     if ($sOwner) {
-                        list($sORCID, $sName, $sEmail) = explode('|uo|', $sOwner);
+                        list($sORCID, $sName, $sEmail) = explode('##', $sOwner);
                         $aEmails = explode("\r\n", $sEmail);
                         $aContact = array(
                             'role' => 'owner',
