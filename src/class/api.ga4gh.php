@@ -324,7 +324,11 @@ class LOVD_API_GA4GH
                               SEPARATOR ";vot;")
                          FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                            INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                         WHERE vot.id = vog.id), "")
+                         WHERE vot.id = vog.id), ""), "||",
+                       IFNULL(
+                         CONCAT(
+                           IFNULL(uo.orcid_id, ""), "|uo|", uo.name, "|uo|", uo.email
+                         ), "")
                      )
                    ) SEPARATOR ";;") AS variants
                FROM ' . TABLE_VARIANTS . ' AS vog
@@ -333,6 +337,8 @@ class LOVD_API_GA4GH
                  LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
                  LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ?)
+                 LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
+                 LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
                WHERE vog.chromosome = ? AND vog.position_g_start >= ? AND vog.statusid >= ?';
         $aQ = array(
             STATUS_MARKED,
@@ -410,7 +416,7 @@ class LOVD_API_GA4GH
                     $aSubmissions[] = $sVariant;
                 } else {
                     // Full variant data, which means there was no Individual.
-                    list($nID, $sDNA38, $sVOTs) = explode('||', $sVariant);
+                    list($nID, $sDNA38, $sVOTs, $sOwner) = explode('||', $sVariant);
                     $aVariant = array(
                         'type' => 'DNA',
                         'ref_seq' => array(
@@ -471,6 +477,29 @@ class LOVD_API_GA4GH
                                 )
                             );
                         }
+                    }
+                    if ($sOwner) {
+                        list($sORCID, $sName, $sEmail) = explode('|uo|', $sOwner);
+                        $aEmails = explode("\r\n", $sEmail);
+                        $aContact = array(
+                            'role' => 'owner',
+                            'name' => $sName,
+                            'email' => (count($aEmails) == 1? $sEmail : $aEmails),
+                        );
+                        if ($sORCID) {
+                            $aContact['db_xrefs'] = array(
+                                array(
+                                    'source' => 'orcid',
+                                    'accession' => $sORCID,
+                                )
+                            );
+                        }
+
+                        $aVariant['source'] = array(
+                            'contacts' => array(
+                                $aContact,
+                            ),
+                        );
                     }
 
                     $aReturn['panel']['variants'][] = $aVariant;
