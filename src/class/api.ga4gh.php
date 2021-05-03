@@ -433,6 +433,45 @@ class LOVD_API_GA4GH
                         )),
                         'pathogenicities' => array(),
                     );
+                    if ($sVOTs) {
+                        $aVariant['seq_changes']['variants'] = array();
+                        foreach (explode(';vot;', $sVOTs) as $sVOT) {
+                            list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtein) = explode('|vot|', $sVOT);
+                            $aVariant['seq_changes']['variants'][] = array(
+                                'type' => 'cDNA',
+                                'gene' => array(
+                                    'source' => 'HGNC',
+                                    'accession' => $sGene,
+                                ),
+                                'ref_seq' => array(
+                                    'source' => 'genbank',
+                                    'accession' => $sRefSeq,
+                                ),
+                                'name' => array(
+                                    'scheme' => 'HGVS',
+                                    'value' => $sDNA,
+                                ),
+                                'seq_changes' => array(
+                                    'variants' => array(
+                                        'type' => 'RNA',
+                                        'name' => array(
+                                            'scheme' => 'HGVS',
+                                            'value' => $sRNA,
+                                        ),
+                                        'seq_changes' => array(
+                                            'variants' => array(
+                                                'type' => 'AA',
+                                                'name' => array(
+                                                    'scheme' => 'HGVS',
+                                                    'value' => $sProtein,
+                                                ),
+                                            )
+                                        )
+                                    )
+                                )
+                            );
+                        }
+                    }
 
                     $aReturn['panel']['variants'][] = $aVariant;
                 }
