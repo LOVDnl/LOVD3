@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-04-30
+ * Modified    : 2021-05-03
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -298,6 +298,7 @@ class LOVD_API_GA4GH
                 return false;
             }
         }
+        $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
@@ -325,9 +326,9 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr)
+        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bDNA38)
         {
-            global $_SETT;
+            global $_DB, $_SETT;
 
             // Format fields for VarioML-JSON payload.
             $aReturn = array(
@@ -349,6 +350,41 @@ class LOVD_API_GA4GH
                     'variants' => array(),
                 ),
             );
+
+            // Further annotate the entries.
+            $aIDs = explode(';', $zData['ids']);
+            $aSubmissions = $_DB->query(
+                'SELECT
+                   GROUP_CONCAT(
+                     CONCAT(vog.id' .
+                (!$bDNA38? '' : ', "||",
+                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . '
+                     ) SEPARATOR ";;") AS variants
+                 FROM ' . TABLE_VARIANTS . ' AS vog
+                 WHERE vog.id IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
+                   AND vog.statusid >= ?', array_merge($aIDs, array(STATUS_MARKED)))->fetchAllAssoc();
+
+            foreach ($aSubmissions as $aSubmission) {
+                $aVariants = explode(';;', $aSubmission['variants']);
+                foreach ($aVariants as $aVariant) {
+                    list($nID, $sDNA38) = explode('||', $aVariant);
+                    if ($sDNA38) {
+                        $aReturn['aliases'][] = array(
+                            'ref_seq' => array(
+                                'source' => 'genbank',
+                                'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
+                            ),
+                            'name' => array(
+                                'scheme' => 'HGVS',
+                                'value' => $sDNA38,
+                            ),
+                        );
+                    }
+                }
+            }
+
+            sort($aReturn['aliases']);
+            $aReturn['aliases'] = array_unique($aReturn['aliases'], SORT_REGULAR);
 
             return $aReturn;
         }, $zData);
