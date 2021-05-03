@@ -310,12 +310,31 @@ class LOVD_API_GA4GH
                  vog.`VariantOnGenome/DNA` AS DNA' .
             (!$bDNA38? '' : ',
                  GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
-                 GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes
+                 GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes,
+                 GROUP_CONCAT(DISTINCT
+                   IFNULL(i.id,
+                     CONCAT(vog.id, "||"' .
+            (!$bDNA38? '' : ',
+                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       (SELECT
+                          GROUP_CONCAT(
+                            CONCAT(
+                              t.geneid, "|vot|", t.id_ncbi, "|vot|", vot.`VariantOnTranscript/DNA`, "|vot|", vot.`VariantOnTranscript/RNA`, "|vot|", vot.`VariantOnTranscript/Protein`)
+                            SEPARATOR ";vot;")
+                        FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                          INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                        WHERE vot.id = vog.id)
+                     )
+                   ) SEPARATOR ";;") AS variants
                FROM ' . TABLE_VARIANTS . ' AS vog
                  LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
                  LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                 LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid)
+                 LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
+                 LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ?)
                WHERE vog.chromosome = ? AND vog.position_g_start >= ? AND vog.statusid >= ?';
         $aQ = array(
+            STATUS_MARKED,
             (string) $sChr,
             (int) $nPosition,
             STATUS_MARKED
@@ -380,25 +399,6 @@ class LOVD_API_GA4GH
                     );
                 }
             }
-
-            // Further annotate the entries.
-            $aIDs = explode(';', $zData['ids']);
-            $aSubmissions = $_DB->query(
-                'SELECT
-                   GROUP_CONCAT(
-                     CONCAT(vog.id, "||",
-                       (SELECT
-                          GROUP_CONCAT(
-                            CONCAT(
-                              t.geneid, "|vot|", t.id_ncbi, "|vot|", vot.`VariantOnTranscript/DNA`, "|vot|", vot.`VariantOnTranscript/RNA`, "|vot|", vot.`VariantOnTranscript/Protein`)
-                            SEPARATOR ";vot;")
-                        FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
-                          INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
-                        WHERE vot.id = vog.id)
-                     ) SEPARATOR ";;") AS variants
-                 FROM ' . TABLE_VARIANTS . ' AS vog
-                 WHERE vog.id IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
-                   AND vog.statusid >= ?', array_merge($aIDs, array(STATUS_MARKED)))->fetchAllAssoc();
 
             return $aReturn;
         }, $zData);
