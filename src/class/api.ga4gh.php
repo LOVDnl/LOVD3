@@ -358,16 +358,23 @@ class LOVD_API_GA4GH
                    GROUP_CONCAT(
                      CONCAT(vog.id' .
                 (!$bDNA38? '' : ', "||",
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . '
+                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       (SELECT
+                          GROUP_CONCAT(
+                            CONCAT(
+                              t.geneid, "|vot|", t.id_ncbi, "|vot|", vot.`VariantOnTranscript/DNA`, "|vot|", vot.`VariantOnTranscript/RNA`, "|vot|", vot.`VariantOnTranscript/Protein`)
+                            SEPARATOR ";vot;")
+                        FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                          INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                        WHERE vot.id = vog.id)
                      ) SEPARATOR ";;") AS variants
                  FROM ' . TABLE_VARIANTS . ' AS vog
                  WHERE vog.id IN (?' . str_repeat(', ?', count($aIDs) - 1) . ')
                    AND vog.statusid >= ?', array_merge($aIDs, array(STATUS_MARKED)))->fetchAllAssoc();
 
             foreach ($aSubmissions as $aSubmission) {
-                $aVariants = explode(';;', $aSubmission['variants']);
-                foreach ($aVariants as $aVariant) {
-                    list($nID, $sDNA38) = explode('||', $aVariant);
+                foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
+                    list($nID, $sDNA38, $sVOTs) = explode('||', $sVariant);
                     if ($sDNA38) {
                         $aReturn['aliases'][] = array(
                             'ref_seq' => array(
@@ -380,9 +387,20 @@ class LOVD_API_GA4GH
                             ),
                         );
                     }
+                    foreach (explode(';vot;', $sVOTs) as $sVOT) {
+                        if ($sVOT) {
+                            list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtein) = explode('|vot|', $sVOT);
+                            $aReturn['genes'][] = array(
+                                'source' => 'HGNC',
+                                'accession' => $sGene,
+                            );
+                        }
+                    }
                 }
             }
 
+            sort($aReturn['genes']);
+            $aReturn['genes'] = array_unique($aReturn['genes'], SORT_REGULAR);
             sort($aReturn['aliases']);
             $aReturn['aliases'] = array_unique($aReturn['aliases'], SORT_REGULAR);
 
