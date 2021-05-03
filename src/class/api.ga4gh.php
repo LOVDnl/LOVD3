@@ -307,7 +307,9 @@ class LOVD_API_GA4GH
                  vog.position_g_start,
                  vog.position_g_end,
                  GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
-                 vog.`VariantOnGenome/DNA` AS DNA
+                 vog.`VariantOnGenome/DNA` AS DNA' .
+            (!$bDNA38? '' : ',
+                 GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . '
                FROM ' . TABLE_VARIANTS . ' AS vog
                WHERE vog.chromosome = ? AND vog.position_g_start >= ? AND vog.statusid >= ?';
         $aQ = array(
@@ -326,7 +328,7 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bDNA38)
+        $aData = array_map(function ($zData) use ($sBuild, $sChr)
         {
             global $_DB, $_SETT;
 
@@ -351,14 +353,27 @@ class LOVD_API_GA4GH
                 ),
             );
 
+            if (!empty($zData['DNA38'])) {
+                foreach (explode(';', $zData['DNA38']) as $sDNA38) {
+                    $aReturn['aliases'][] = array(
+                        'ref_seq' => array(
+                            'source' => 'genbank',
+                            'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
+                        ),
+                        'name' => array(
+                            'scheme' => 'HGVS',
+                            'value' => $sDNA38,
+                        ),
+                    );
+                }
+            }
+
             // Further annotate the entries.
             $aIDs = explode(';', $zData['ids']);
             $aSubmissions = $_DB->query(
                 'SELECT
                    GROUP_CONCAT(
-                     CONCAT(vog.id' .
-                (!$bDNA38? '' : ', "||",
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                     CONCAT(vog.id, "||",
                        (SELECT
                           GROUP_CONCAT(
                             CONCAT(
@@ -374,19 +389,7 @@ class LOVD_API_GA4GH
 
             foreach ($aSubmissions as $aSubmission) {
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
-                    list($nID, $sDNA38, $sVOTs) = explode('||', $sVariant);
-                    if ($sDNA38) {
-                        $aReturn['aliases'][] = array(
-                            'ref_seq' => array(
-                                'source' => 'genbank',
-                                'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
-                            ),
-                            'name' => array(
-                                'scheme' => 'HGVS',
-                                'value' => $sDNA38,
-                            ),
-                        );
-                    }
+                    list($nID, $sVOTs) = explode('||', $sVariant);
                     foreach (explode(';vot;', $sVOTs) as $sVOT) {
                         if ($sVOT) {
                             list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtein) = explode('|vot|', $sVOT);
@@ -401,8 +404,6 @@ class LOVD_API_GA4GH
 
             sort($aReturn['genes']);
             $aReturn['genes'] = array_unique($aReturn['genes'], SORT_REGULAR);
-            sort($aReturn['aliases']);
-            $aReturn['aliases'] = array_unique($aReturn['aliases'], SORT_REGULAR);
 
             return $aReturn;
         }, $zData);
