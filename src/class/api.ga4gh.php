@@ -400,6 +400,45 @@ class LOVD_API_GA4GH
                 }
             }
 
+            // Further annotate the entries.
+            $aSubmissions = array();
+            if (!empty($zData['variants'])) {
+                foreach (explode(';;', $zData['variants']) as $sVariant) {
+                    if (ctype_digit($sVariant)) {
+                        // An Individual ID. We don't know yet whether this is an
+                        //  Individual or a Panel.
+                        $aSubmissions[] = $sVariant;
+                    } else {
+                        // Full variant data, which means there was no Individual.
+                        list($nID, $sDNA38, $sVOTs) = explode('||', $sVariant);
+                        $aVariant = array(
+                            'type' => 'DNA',
+                            'ref_seq' => array(
+                                'source' => 'genbank',
+                                'accession' => $_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr],
+                            ),
+                            'name' => array(
+                                'scheme' => 'HGVS',
+                                'value' => $zData['DNA'],
+                            ),
+                            'aliases' => (!$sDNA38? '' : array(
+                                'ref_seq' => array(
+                                    'source' => 'genbank',
+                                    'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
+                                ),
+                                'name' => array(
+                                    'scheme' => 'HGVS',
+                                    'value' => $sDNA38,
+                                ),
+                            )),
+                            'pathogenicities' => array(),
+                        );
+
+                        $aReturn['panel']['variants'][] = $aVariant;
+                    }
+                }
+            }
+
             return $aReturn;
         }, $zData);
 
