@@ -494,7 +494,17 @@ class LOVD_API_GA4GH
                         foreach (explode(';', str_replace('}', '};', $sRefs)) as $sRef) {
                             $sRef = trim($sRef);
                             if ($sRef) {
-                                if (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
+                                if (preg_match('/^\{PMID:([^}]+):([0-9]+)\}$/', $sRef, $aRegs)) {
+                                    if (!isset($aVariant['db_xrefs'])) {
+                                        $aVariant['db_xrefs'] = array();
+                                    }
+                                    $aVariant['db_xrefs'][] =
+                                        array(
+                                            'source' => 'pubmed',
+                                            'accession' => $aRegs[2],
+                                            'name' => $aRegs[1],
+                                        );
+                                } elseif (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
                                     if (!isset($aVariant['db_xrefs'])) {
                                         $aVariant['db_xrefs'] = array();
                                     }
