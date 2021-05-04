@@ -300,6 +300,7 @@ class LOVD_API_GA4GH
         }
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
+        $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
@@ -312,7 +313,9 @@ class LOVD_API_GA4GH
             (!$bDNA38? '' : ',
                  GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') .
             (!$bdbSNP? '' : ',
-                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/dbSNP`, "") ORDER BY vog.`VariantOnGenome/dbSNP` SEPARATOR ";") AS dbSNP') . ',
+                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/dbSNP`, "") ORDER BY vog.`VariantOnGenome/dbSNP` SEPARATOR ";") AS dbSNP') .
+            (!$bVOGReference? '' : ',
+                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/Reference`, "") ORDER BY vog.`VariantOnGenome/Reference` SEPARATOR ";") AS refs') . ',
                  GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes,
                  GROUP_CONCAT(DISTINCT
                    IFNULL(i.id,
@@ -393,6 +396,27 @@ class LOVD_API_GA4GH
                             'accession' => $sRSID,
                         );
                     }, explode(';', $zData['dbSNP']));
+            }
+
+            if (!empty($zData['refs'])) {
+                foreach (explode(';', str_replace('}', '};', $zData['refs'])) as $sRef) {
+                    $sRef = trim($sRef);
+                    if ($sRef) {
+                        if (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
+                            if (!isset($aReturn['db_xrefs'])) {
+                                $aReturn['db_xrefs'] = array();
+                            }
+                            $aReturn['db_xrefs'][] =
+                                array(
+                                    'source' => 'dbsnp',
+                                    'accession' => $aRegs[1],
+                                );
+                        }
+                    }
+                }
+                if (isset($aReturn['db_xrefs'])) {
+                    $aReturn['db_xrefs'] = array_unique($aReturn['db_xrefs'], SORT_REGULAR);
+                }
             }
 
             if (!empty($zData['genes'])) {
