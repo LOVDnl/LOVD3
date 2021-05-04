@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-05-03
+ * Modified    : 2021-05-04
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -299,6 +299,7 @@ class LOVD_API_GA4GH
             }
         }
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
+        $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
@@ -309,7 +310,9 @@ class LOVD_API_GA4GH
                  GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
                  vog.`VariantOnGenome/DNA` AS DNA' .
             (!$bDNA38? '' : ',
-                 GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
+                 GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') .
+            (!$bdbSNP? '' : ',
+                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/dbSNP`, "") ORDER BY vog.`VariantOnGenome/dbSNP` SEPARATOR ";") AS dbSNP') . ',
                  GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes,
                  GROUP_CONCAT(DISTINCT
                    IFNULL(i.id,
@@ -381,6 +384,16 @@ class LOVD_API_GA4GH
                     'variants' => array(),
                 ),
             );
+
+            if (!empty($zData['dbSNP'])) {
+                $aReturn['db_xrefs'] = array_map(
+                    function ($sRSID) {
+                        return array(
+                            'source' => 'dbsnp',
+                            'accession' => $sRSID,
+                        );
+                    }, explode(';', $zData['dbSNP']));
+            }
 
             if (!empty($zData['genes'])) {
                 $aReturn['genes'] = array_map(
