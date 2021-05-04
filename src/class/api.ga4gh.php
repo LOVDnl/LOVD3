@@ -321,7 +321,11 @@ class LOVD_API_GA4GH
                    IFNULL(i.id,
                      CONCAT(vog.id, "||"' .
             (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||"' .
+            (!$bdbSNP? '' : ',
+                       IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
+            (!$bVOGReference? '' : ',
+                       IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||",
                        IFNULL(
                          (SELECT
                             GROUP_CONCAT(
@@ -453,7 +457,7 @@ class LOVD_API_GA4GH
                     $aSubmissions[] = $sVariant;
                 } else {
                     // Full variant data, which means there was no Individual.
-                    list($nID, $sDNA38, $sVOTs, $sOwner) = explode('||', $sVariant);
+                    list($nID, $sDNA38, $sRSID, $sRefs, $sVOTs, $sOwner) = explode('||', $sVariant);
                     $aVariant = array(
                         'type' => 'DNA',
                         'ref_seq' => array(
@@ -476,6 +480,37 @@ class LOVD_API_GA4GH
                         )),
                         'pathogenicities' => array(),
                     );
+
+                    if ($sRSID) {
+                        $aVariant['db_xrefs'] = array(
+                            array(
+                                'source' => 'dbsnp',
+                                'accession' => $sRSID,
+                            ),
+                        );
+                    }
+
+                    if ($sRefs) {
+                        foreach (explode(';', str_replace('}', '};', $sRefs)) as $sRef) {
+                            $sRef = trim($sRef);
+                            if ($sRef) {
+                                if (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
+                                    if (!isset($aVariant['db_xrefs'])) {
+                                        $aVariant['db_xrefs'] = array();
+                                    }
+                                    $aVariant['db_xrefs'][] =
+                                        array(
+                                            'source' => 'dbsnp',
+                                            'accession' => $aRegs[1],
+                                        );
+                                }
+                            }
+                        }
+                        if (isset($aVariant['db_xrefs'])) {
+                            $aVariant['db_xrefs'] = array_unique($aVariant['db_xrefs'], SORT_REGULAR);
+                        }
+                    }
+
                     if ($sVOTs) {
                         $aVariant['seq_changes']['variants'] = array();
                         foreach (explode('$$', $sVOTs) as $sVOT) {
