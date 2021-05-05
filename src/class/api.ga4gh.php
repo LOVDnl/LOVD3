@@ -48,6 +48,16 @@ class LOVD_API_GA4GH
             'first_page' => 'data:{{refseq_build}}:chr1',
         ),
     );
+    private $aValueMappings = array(
+        'gender' => array(
+            '' => '0',
+            '?' => '0',
+            'F' => '2',
+            'M' => '1',
+            'rF' => '2',
+            'rM' => '1',
+        ),
+    );
 
 
 
@@ -280,6 +290,7 @@ class LOVD_API_GA4GH
             'VariantOnTranscript/Protein',
         );
         $aColsToCheck = array_merge($aRequiredCols, array(
+            'Individual/Gender',
             'VariantOnGenome/DNA/hg38',
             'VariantOnGenome/ClinicalClassification',
             'VariantOnGenome/dbSNP',
@@ -298,6 +309,7 @@ class LOVD_API_GA4GH
                 return false;
             }
         }
+        $bIndGender = in_array('Individual/Gender', $aCols);
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
@@ -367,7 +379,7 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr)
+        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender)
         {
             global $_DB, $_SETT;
 
@@ -589,7 +601,9 @@ class LOVD_API_GA4GH
             }
 
             $aSubmissions = $_DB->query('
-                SELECT i.id, i.panel_size
+                SELECT i.id, i.panel_size' .
+                (!$bIndGender? '' : ',
+                  i.`Individual/Gender` AS gender') . '
                 FROM ' . TABLE_INDIVIDUALS . ' AS i
                 WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
                   AND i.statusid >= ?
@@ -600,6 +614,28 @@ class LOVD_API_GA4GH
                     'phenotypes' => array(),
                     'variants' => array(),
                 );
+                if (isset($aSubmission['gender'])) {
+                    $nCode = (!isset($this->aValueMappings['gender'][$aSubmission['gender']])?
+                        $this->aValueMappings['gender'][''] :
+                        $this->aValueMappings['gender'][$aSubmission['gender']]);
+                    // Add the gender as the first field in the JSON (aesthetics, I know).
+                    $aIndividual = array_merge(
+                        array(
+                            'gender' => array(
+                                'code' => $nCode,
+                            )
+                        ),
+                        $aIndividual
+                    );
+                    // If we didn't find a match, put the original term in the description.
+                    if (!isset($this->aValueMappings['gender'][$aSubmission['gender']])) {
+                        $aIndividual['gender']['description'] = array(
+                            'term' => $aSubmission['gender'],
+                        );
+                    }
+                }
+
+                // Store in output.
                 if ($aSubmission['panel_size'] > 1) {
                     // Add the size as the first field in the JSON (aesthetics, I know).
                     $aIndividual = array_merge(
