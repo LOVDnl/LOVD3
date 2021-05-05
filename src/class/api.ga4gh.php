@@ -603,8 +603,11 @@ class LOVD_API_GA4GH
             $aSubmissions = $_DB->query('
                 SELECT i.id, i.panel_size' .
                 (!$bIndGender? '' : ',
-                  i.`Individual/Gender` AS gender') . '
+                  i.`Individual/Gender` AS gender') . ',
+                  GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
                 FROM ' . TABLE_INDIVIDUALS . ' AS i
+                  LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
+                  LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
                 WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
                   AND i.statusid >= ?
                 GROUP BY i.id', array_merge($aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
@@ -633,6 +636,24 @@ class LOVD_API_GA4GH
                             'term' => $aSubmission['gender'],
                         );
                     }
+                }
+                foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
+                    list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
+                    $aPhenotype = array(
+                        'term' => $sName,
+                    );
+                    if ($nOMIMID) {
+                        $aPhenotype['source'] = 'OMIM';
+                        $aPhenotype['accession'] = $nOMIMID;
+                    }
+                    if ($sInheritance) {
+                        // FIXME: We'll need a standard dictionary for this.
+                        //  These are OMIM terms with HPO terms added.
+                        $aPhenotype['inheritance_pattern'] = array(
+                            'term' => $sInheritance,
+                        );
+                    }
+                    $aIndividual['phenotypes'][] = $aPhenotype;
                 }
 
                 // Store in output.
