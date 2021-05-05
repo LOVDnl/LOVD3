@@ -588,6 +588,30 @@ class LOVD_API_GA4GH
                 }
             }
 
+            $aSubmissions = $_DB->query('
+                SELECT i.id, i.panel_size
+                FROM ' . TABLE_INDIVIDUALS . ' AS i
+                WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
+                  AND i.statusid >= ?
+                GROUP BY i.id', array_merge($aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
+
+            foreach ($aSubmissions as $aSubmission) {
+                $aIndividual = array(
+                    'phenotypes' => array(),
+                    'variants' => array(),
+                );
+                if ($aSubmission['panel_size'] > 1) {
+                    // Add the size as the first field in the JSON (aesthetics, I know).
+                    $aIndividual = array_merge(
+                        array('size' => $aSubmission['panel_size']),
+                        $aIndividual
+                    );
+                    $aReturn['panel']['panels'][] = $aIndividual;
+                } else {
+                    $aReturn['panel']['individuals'][] = $aIndividual;
+                }
+            }
+
             return $aReturn;
         }, $zData);
 
