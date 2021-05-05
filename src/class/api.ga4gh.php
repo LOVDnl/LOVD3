@@ -600,17 +600,19 @@ class LOVD_API_GA4GH
                 }
             }
 
-            $aSubmissions = $_DB->query('
-                SELECT i.id, i.panel_size' .
-                (!$bIndGender? '' : ',
-                  i.`Individual/Gender` AS gender') . ',
-                  GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
-                FROM ' . TABLE_INDIVIDUALS . ' AS i
-                  LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
-                  LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
-                WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
-                  AND i.statusid >= ?
-                GROUP BY i.id', array_merge($aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
+            if ($aSubmissions) {
+                $aSubmissions = $_DB->query('
+                    SELECT i.id, i.panel_size' .
+                    (!$bIndGender? '' : ',
+                      i.`Individual/Gender` AS gender') . ',
+                      GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
+                    FROM ' . TABLE_INDIVIDUALS . ' AS i
+                      LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
+                      LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
+                    WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
+                      AND i.statusid >= ?
+                    GROUP BY i.id', array_merge($aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
+            }
 
             foreach ($aSubmissions as $aSubmission) {
                 $aIndividual = array(
