@@ -468,7 +468,7 @@ class LOVD_API_GA4GH
                             'scheme' => 'HGVS',
                             'value' => $zData['DNA'],
                         ),
-                        'aliases' => (!$sDNA38? '' : array(
+                        'aliases' => (!$sDNA38? array() : array(
                             'ref_seq' => array(
                                 'source' => 'genbank',
                                 'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
