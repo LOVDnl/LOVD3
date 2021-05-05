@@ -639,23 +639,25 @@ class LOVD_API_GA4GH
                         );
                     }
                 }
-                foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
-                    list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
-                    $aPhenotype = array(
-                        'term' => $sName,
-                    );
-                    if ($nOMIMID) {
-                        $aPhenotype['source'] = 'OMIM';
-                        $aPhenotype['accession'] = $nOMIMID;
-                    }
-                    if ($sInheritance) {
-                        // FIXME: We'll need a standard dictionary for this.
-                        //  These are OMIM terms with HPO terms added.
-                        $aPhenotype['inheritance_pattern'] = array(
-                            'term' => $sInheritance,
+                if ($aSubmission['diseases']) {
+                    foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
+                        list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
+                        $aPhenotype = array(
+                            'term' => $sName,
                         );
+                        if ($nOMIMID) {
+                            $aPhenotype['source'] = 'OMIM';
+                            $aPhenotype['accession'] = $nOMIMID;
+                        }
+                        if ($sInheritance) {
+                            // FIXME: We'll need a standard dictionary for this.
+                            //  These are OMIM terms with HPO terms added.
+                            $aPhenotype['inheritance_pattern'] = array(
+                                'term' => $sInheritance,
+                            );
+                        }
+                        $aIndividual['phenotypes'][] = $aPhenotype;
                     }
-                    $aIndividual['phenotypes'][] = $aPhenotype;
                 }
 
                 // Store in output.
