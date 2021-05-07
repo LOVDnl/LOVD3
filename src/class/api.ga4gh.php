@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-05-05
+ * Modified    : 2021-05-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,6 +56,94 @@ class LOVD_API_GA4GH
             'M' => '1',
             'rF' => '2',
             'rM' => '1',
+        ),
+        'inheritance' => array(
+            'AD' => array(
+                'term' => 'autosomal dominant',
+                'source' => 'HPO',
+                'accession' => '0000006',
+            ),
+            'PI' => array(
+                'term' => 'autosomal dominant with paternal imprinting',
+                'source' => 'HPO',
+                'accession' => '0012274',
+            ),
+            'MI' => array(
+                'term' => 'autosomal dominant with maternal imprinting',
+                'source' => 'HPO',
+                'accession' => '0012275',
+            ),
+            'AR' => array(
+                'term' => 'autosomal recessive',
+                'source' => 'HPO',
+                'accession' => '0000007',
+            ),
+            // FIXME: We have taken these two terms from OMIM,
+            //  but OMIM doesn't have accession numbers or URIs for them.
+            // HPO has "digenic" (0010984), which we currently don't have.
+            'DD' => array(
+                'term' => 'digenic dominant',
+                'source' => 'OMIM',
+            ),
+            'DR' => array(
+                'term' => 'digenic recessive',
+                'source' => 'OMIM',
+            ),
+            'IC' => array(
+                'term' => 'sporadic',
+                'source' => 'HPO',
+                'accession' => '0003745',
+            ),
+            'Mi' => array(
+                'term' => 'mitochondrial',
+                'source' => 'HPO',
+                'accession' => '0001427',
+            ),
+            'Mu' => array(
+                'term' => 'multifactorial',
+                'source' => 'HPO',
+                'accession' => '0001426',
+            ),
+            'SMo' => array(
+                'term' => 'somatic mosaicism',
+                'source' => 'HPO',
+                'accession' => '0001442',
+            ),
+            'SMu' => array(
+                'term' => 'somatic',
+                'source' => 'HPO',
+                'accession' => '0001428',
+            ),
+            'OG' => array(
+                'term' => 'oligogenic',
+                'source' => 'HPO',
+                'accession' => '0010983',
+            ),
+            'PG' => array(
+                'term' => 'polygenic',
+                'source' => 'HPO',
+                'accession' => '0010982',
+            ),
+            'XL' => array(
+                'term' => 'X-linked',
+                'source' => 'HPO',
+                'accession' => '0001417',
+            ),
+            'XLD' => array(
+                'term' => 'X-linked dominant',
+                'source' => 'HPO',
+                'accession' => '0001423',
+            ),
+            'XLR' => array(
+                'term' => 'X-linked recessive',
+                'source' => 'HPO',
+                'accession' => '0001419',
+            ),
+            'YL' => array(
+                'term' => 'Y-linked',
+                'source' => 'HPO',
+                'accession' => '0001450',
+            ),
         ),
     );
 
@@ -650,11 +738,13 @@ class LOVD_API_GA4GH
                             $aPhenotype['accession'] = $nOMIMID;
                         }
                         if ($sInheritance) {
-                            // FIXME: We'll need a standard dictionary for this.
-                            //  These are OMIM terms with HPO terms added.
-                            $aPhenotype['inheritance_pattern'] = array(
-                                'term' => $sInheritance,
-                            );
+                            if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
+                                $aPhenotype['inheritance_pattern'] = $this->aValueMappings['inheritance'][$sInheritance];
+                            } else {
+                                $aPhenotype['inheritance_pattern'] = array(
+                                    'term' => $sInheritance,
+                                );
+                            }
                         }
                         $aIndividual['phenotypes'][] = $aPhenotype;
                     }
