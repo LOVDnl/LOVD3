@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2021-04-21
+ * Modified    : 2021-05-10
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -116,7 +116,7 @@ if (!$("#licenses_dialog").hasClass("ui-dialog-content") || !$("#licenses_dialog
 if (ACTION == 'remind' && $sObject == 'user' && GET && !$sLicense) {
     // Remind user to pick a default license.
     print('
-$("#licenses_dialog").html("<B>You have not yet selected a default license for your data submissions.</B> This means that they are currently not freely reusable. Selecting a default license for your data allows you to precisely control how it may be used by others.<BR><BR><B>Please select a license by using the button below.</B> If you wish to select a license later, you can do so from your account page (&quot;Your account&quot; at the top right of the screen).");
+$("#licenses_dialog").html("<B>You have not yet selected a default license for your submissions.</B> This means that they are currently not freely reusable. Selecting a default license for your data allows you to precisely control how it may be used by others.<BR><BR><B>Please select a license by using the button below.</B> If you wish to select a license later, you can do so from your account page (&quot;Your account&quot; at the top right of the screen).");
 $("#licenses_dialog").dialog({buttons: {"Select data license":function () { $.get("' . CURRENT_PATH . '?edit"); }}});
 ');
     exit;
@@ -184,22 +184,22 @@ function lovd_showLicense ()
 
 $aFields = array(
     'commercial' => array(
-        'Do you want to allow others to use your public data commercially?',
+        'Do you want to allow others to use your public data for commercial purposes?<BR><I>Selecting \'no\' prohibit uses primarily intended for or directed toward commercial advantage or monetary compensation.</I>',
         'yes' => '<B>Yes.</B> Others can use my public data, even for commercial purposes.',
         'no' => '<B>No.</B> Others can not use my public data for commercial purposes.',
     ),
     'derivatives' => array(
-        'Do you want to allow adaptations of your public data to be shared?<BR><I>Selecting \'no\' may prevent your data to be used in studies.</I>',
-        'yes' => '<B>Yes.</B> Others can adapt, or build upon my public data and share this.',
-        'yes-sa' => '<B>Yes.</B> Others can adapt, or build upon my public data, as long as they share using the same CC license.',
-        'no' => '<B>No.</B> Others may only share my public data in unadapted form.',
+        'Do you want to allow adaptations or derivatives of your public data to be shared?<BR><I>Selecting \'no\' prevents others from, e.g., aggregating your submissions in other databases.</I>',
+        'yes' => '<B>Yes.</B> Others can adapt or build upon my public data and share this.',
+        'yes-sa' => '<B>Yes.</B> Others can adapt or build upon my public data, as long as they share using the same CC license.',
+        'no' => '<B>No.</B> Others may only share my public data in an unadapted form.',
     ),
     '<DIV id=\'selected_license\' style=\'text-align: center; background: #DEEDF7; border: 1px solid #AED0EA; display: none;\'><H1>Selected license:</H1><BR><H3 id=\'selected_license_name\' style=\'width: 450px; margin: auto;\'></H3><BR><SPAN id=\'selected_license_icons\'></SPAN></DIV><BR>',
     'LOVD' => array(
-        'Allow LOVD to seek financial support by sharing parts of your public data with researchers, variant annotation platforms, and diagnostic labs.',
+        'Allow the LOVD project to seek financial support by sharing parts of your public data with researchers, variant annotation platforms, and diagnostic labs.',
     ),
     'overwrite' => array(
-        'Apply this license also to my data submissions that now have a different license set.',
+        'Apply this license also to my submissions that now have a different license set.',
     ),
 );
 
@@ -217,7 +217,7 @@ if ($sObject == 'individual') {
 
 
 $sFormEdit = '<FORM id=\'licenses_edit_form\'><INPUT type=\'hidden\' name=\'csrf_token\' value=\'{{CSRF_TOKEN}}\'><INPUT type=\'hidden\' name=\'license\' value=\'\'>' .
-    'Please fill out the form below to select the license you wish to apply to your data submissions.<BR><BR>' .
+    'Please fill out the form below to select the license you wish to apply to your submissions.<BR><BR>' .
     '<B>Please note that in all cases, others using your data must acknowledge you.</B><BR><BR>';
 foreach ($aFields as $sField => $aItems) {
     if (is_array($aItems)) {
