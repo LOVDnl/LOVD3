@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-02-22
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-21
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -174,7 +174,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-26',
+                            'version' => '3.0-26c',
                           ),
                 'user_levels' =>
                      array(
@@ -296,6 +296,14 @@ $_SETT = array(
                         4 => 'Medium priority',
                         9 => 'High priority',
                     ),
+                'licenses' => array(
+                    'cc_by_4.0' => 'Creative Commons Attribution 4.0 International',
+                    'cc_by-nc_4.0' => 'Creative Commons Attribution-NonCommercial 4.0 International',
+                    'cc_by-nc-nd_4.0' => 'Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International',
+                    'cc_by-nc-sa_4.0' => 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International',
+                    'cc_by-nd_4.0' => 'Creative Commons Attribution-NoDerivatives 4.0 International',
+                    'cc_by-sa_4.0' => 'Creative Commons Attribution-ShareAlike 4.0 International',
+                ),
                 'update_levels' =>
                      array(
                             1 => 'Optional',
@@ -848,6 +856,7 @@ if (!defined('NOT_INSTALLED')) {
 
     // Also set cookies for session-independent settings.
     $aCookieSettingsDefaults = array(
+        'default_license_dialog_last_seen' => 0,
         'donation_dialog_last_seen' => 0,
     );
     if (!isset($_COOKIE['lovd_settings'])) {

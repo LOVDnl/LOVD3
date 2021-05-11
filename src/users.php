@@ -108,6 +108,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
 
+    // Added the DIV to allow us reloading the VE using JS.
     print('      <DIV id="viewentryDiv">' . "\n");
     $zData = $_DATA->viewEntry($nID);
     print('      </DIV>' . "\n\n");

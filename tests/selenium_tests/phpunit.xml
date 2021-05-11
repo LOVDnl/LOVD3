@@ -5,6 +5,7 @@
                  Takes ~5 minutes. -->
             <file>shared_tests/check_PHP_version.php</file>
             <file>shared_tests/install_LOVD.php</file>
+            <file>shared_tests/set_default_license.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
             <file>shared_tests/create_disease_IVA.php</file>
             <file>shared_tests/create_user_manager.php</file>
@@ -137,6 +138,7 @@
             <file>shared_tests/create_submission_individual_with_IVA.php</file>
             <file>shared_tests/manage_transcripts_for_variant.php</file>
             <file>shared_tests/add_more_data_to_existing_submission.php</file>
+            <file>shared_tests/set_license_for_submission.php</file>
             <file>shared_tests/create_summary_data_upload_seattleseq_not_authorized.php</file>
             <file>shared_tests/create_summary_data_upload_vcf_not_authorized.php</file>
             <file>shared_tests/create_summary_variant_located_within_gene_not_authorized.php</file>

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2019-12-19
- * For LOVD    : 3.0-23
+ * Modified    : 2021-04-20
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -587,9 +587,65 @@ class LOVD_Custom extends LOVD_Object
                 }
             }
         }
-        // Mark the status, if shown on the page.
-        if ($sView == 'entry' && isset($zData['statusid'])) {
-            $zData['status'] = '<SPAN style="color : #' . $this->getStatusColor($zData['statusid']) . '">' . $_SETT['data_status'][$zData['statusid']] . '</SPAN>';
+        if ($sView == 'entry') {
+            // Mark the status, if shown on the page.
+            if (isset($zData['statusid'])) {
+                $zData['status'] = '<SPAN style="color : #' . $this->getStatusColor($zData['statusid']) . '">' . $_SETT['data_status'][$zData['statusid']] . '</SPAN>';
+            }
+
+            // License information.
+            if (isset($this->aColumnsViewEntry['license_'])) {
+                if (empty($zData['license'])) {
+                    $zData['license_'] = 'No license selected';
+
+                } elseif (strpos($zData['license'], ';;') !== false) {
+                    // Variants are special cases, they can be linked to multiple individuals.
+                    // This is not an LOVD feature, but a consequence of the data model chosen.
+                    // In some cases, this may mean various licenses apply.
+                    $zData['license_'] = 'Multiple licenses, see links to submissions above.';
+
+                } else {
+                    // Normal case, one license only (but still possibly from multiple individuals).
+                    // The license contains both the license for the world as well as the license for LOVD.
+                    $zData['license'] = strstr($zData['license'], ';', true);
+                    $sLicenseName = substr($zData['license'], 3, -4);
+                    $sLicenseVersion = substr($zData['license'], -3);
+
+                    if ($this->sObject == 'Genome_Variant') {
+                        if (count($zData['individuals']) > 1) {
+                            // We need to pick one, to link to it. We'll pick the public IDs first.
+                            foreach (array(STATUS_OK, STATUS_MARKED, STATUS_HIDDEN, STATUS_PENDING) as $nStatus) {
+                                foreach ($zData['individuals'] as list($nIndividualID, $nIndStatus)) {
+                                    if ($nStatus == $nIndStatus) {
+                                        break 2;
+                                    }
+                                }
+                            }
+                        } else {
+                            $nIndividualID = $zData['individuals'][0][0];
+                        }
+                    } elseif ($this->sObject == 'Individual') {
+                        $nIndividualID = $zData['id'];
+                    } elseif (in_array($this->sObject, array('Phenotype', 'Screening'))) {
+                        $nIndividualID = $zData['individualid'];
+                    } else {
+                        $nIndividualID = false;
+                    }
+
+                    $zData['license_'] =
+                        '<A rel="license" href="https://creativecommons.org/licenses/' . $sLicenseName . '/' . $sLicenseVersion . '/" target="_blank" onclick="$.get(\'ajax/licenses.php/' . ($nIndividualID? 'individual/' . $nIndividualID : 'user/' . $zData['created_by']) . '?view\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">' .
+                        '<SPAN style="display: none;">' . $_SETT['licenses'][$zData['license']] . '</SPAN>' .
+                        '<IMG src="gfx/' . str_replace($sLicenseVersion, '80x15', $zData['license']) . '.png" alt="Creative Commons License" title="' . $_SETT['licenses'][$zData['license']] . '" border="0">' .
+                        '</A> ';
+                    // Also annotate the HTML.
+                    $this->aColumnsViewEntry['license_'] = '<SPAN xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Dataset" property="dct:title" rel="dct:type">Database submission</SPAN> license';
+                    // NOTE: We're using our created_by here, but the license has been set perhaps by somebody else (the Individual's creator).
+                    // This isn't very important as this is just annotation. The detailed view of the license will list the correct name.
+                    $zData['created_by_'] = '<SPAN xmlns:cc="http://creativecommons.org/ns#" property="cc:attributionName">' . $zData['created_by_'] . '</SPAN>';
+
+                    // A tool to change the license is only given on the Individuals VE, which has the ability to be reloaded.
+                }
+            }
         }
         return $zData;
     }
