@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-05-07
+ * Modified    : 2021-05-20
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -437,6 +437,10 @@ class LOVD_API_GA4GH
                          WHERE vot.id = vog.id), ""), "||",
                        IFNULL(
                          CONCAT(
+                           IFNULL(uc.orcid_id, ""), "##", uc.name, "##", uc.email
+                         ), ""), "||",
+                       IFNULL(
+                         CONCAT(
                            IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                          ), "")
                      )
@@ -557,7 +561,7 @@ class LOVD_API_GA4GH
                     $aSubmissions[] = $sVariant;
                 } else {
                     // Full variant data, which means there was no Individual.
-                    list($nID, $sDNA38, $sRSID, $sRefs, $sVOTs, $sOwner) = explode('||', $sVariant);
+                    list($nID, $sDNA38, $sRSID, $sRefs, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
                     $aVariant = array(
                         'type' => 'DNA',
                         'ref_seq' => array(
@@ -660,28 +664,42 @@ class LOVD_API_GA4GH
                             );
                         }
                     }
-                    if ($sOwner) {
-                        list($sORCID, $sName, $sEmail) = explode('##', $sOwner);
-                        $aEmails = explode("\r\n", $sEmail);
-                        $aContact = array(
-                            'role' => 'owner',
-                            'name' => $sName,
-                            'email' => (count($aEmails) == 1? $sEmail : $aEmails),
-                        );
-                        if ($sORCID) {
-                            $aContact['db_xrefs'] = array(
-                                array(
-                                    'source' => 'orcid',
-                                    'accession' => $sORCID,
-                                )
-                            );
-                        }
-
-                        $aVariant['source'] = array(
-                            'contacts' => array(
-                                $aContact,
+                    foreach (
+                        array(
+                            array(
+                                $sCreator,
+                                'submitter',
                             ),
-                        );
+                            array(
+                                $sOwner,
+                                'owner',
+                            )
+                        ) as $aContact) {
+                        list($sContact, $sRole) = $aContact;
+                        if ($sContact) {
+                            list($sORCID, $sName, $sEmail) = explode('##', $sContact);
+                            $aEmails = explode("\r\n", $sEmail);
+                            $aContact = array(
+                                'role' => $sRole,
+                                'name' => $sName,
+                                'email' => (count($aEmails) == 1? $sEmail : $aEmails),
+                            );
+                            if ($sORCID) {
+                                $aContact['db_xrefs'] = array(
+                                    array(
+                                        'source' => 'orcid',
+                                        'accession' => $sORCID,
+                                    )
+                                );
+                            }
+
+                            if (!isset($aVariant['source'])) {
+                                $aVariant['source'] = array(
+                                    'contacts' => array(),
+                                );
+                            }
+                            $aVariant['source']['contacts'][] = $aContact;
+                        }
                     }
 
                     $aReturn['panel']['variants'][] = $aVariant;
