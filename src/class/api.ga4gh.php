@@ -146,6 +146,8 @@ class LOVD_API_GA4GH
             ),
         ),
     );
+    private $bAuthorized = false;
+    private $bVarCache = false;
 
 
 
@@ -158,8 +160,12 @@ class LOVD_API_GA4GH
         if (!is_object($oAPI) || !is_a($oAPI, 'LOVD_API')) {
             return false;
         }
-
         $this->API = $oAPI;
+
+        // If we're being called by varcache.
+        $aHeaders = getallheaders();
+        $this->bVarCache = (isset($aHeaders['User-Agent'])
+            && substr($aHeaders['User-Agent'], 0, 9) == 'varcache/');
 
         return true;
     }
@@ -187,11 +193,17 @@ class LOVD_API_GA4GH
                     'uri' => 'https://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion,
                 ),
             );
-            return $aReturn;
-        }
 
-        if ($bLOVDPermission) {
-            // We need to indicate to varcache that they have access, but only when varcache is calling us.
+            if ($bLOVDPermission && $this->bVarCache) {
+                // We need to indicate to varcache that they have access,
+                // but only when varcache is calling us.
+                $aReturn['sharing_policy']['comments'] = array(
+                    'texts' => array(
+                        'value' => 'Additional permissions for LOVD project.',
+                    ),
+                );
+            }
+            return $aReturn;
         }
 
         return false;
@@ -226,6 +238,7 @@ class LOVD_API_GA4GH
                 return false;
             }
         }
+        $this->bAuthorized = true;
 
         $this->aURLElements = array_pad($aURLElements, 3, '');
 
