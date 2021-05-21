@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-05-20
+ * Modified    : 2021-05-21
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -162,6 +162,39 @@ class LOVD_API_GA4GH
         $this->API = $oAPI;
 
         return true;
+    }
+
+
+
+
+
+    private function convertLicenseToVML($sLicense)
+    {
+        // Converts license string into VarioML license data.
+        global $_SETT;
+        $aReturn = array();
+
+        list($sLicense, $bLOVDPermission) = explode(';', $sLicense);
+        if (substr($sLicense, 0, 3) == 'cc_') {
+            $sLicenseCode = substr($sLicense, 3, -4);
+            $sLicenseVersion = substr($sLicense, -3);
+            $aReturn['sharing_policy'] = array(
+                'type' => ($sLicenseCode == 'by'? 'OpenAccess' : 'RestrictedAccess'),
+                'use_permission' => array(
+                    'term' => $_SETT['licenses'][$sLicense],
+                    'source' => 'CC',
+                    'accession' => $sLicense,
+                    'uri' => 'https://creativecommons.org/licenses/' . $sLicenseCode . '/' . $sLicenseVersion,
+                ),
+            );
+            return $aReturn;
+        }
+
+        if ($bLOVDPermission) {
+            // We need to indicate to varcache that they have access, but only when varcache is calling us.
+        }
+
+        return false;
     }
 
 
@@ -419,7 +452,7 @@ class LOVD_API_GA4GH
                  GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes,
                  GROUP_CONCAT(DISTINCT
                    IFNULL(i.id,
-                     CONCAT(vog.id, "||"' .
+                     CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||"' .
             (!$bDNA38? '' : ',
                        IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||"' .
             (!$bdbSNP? '' : ',
@@ -561,7 +594,7 @@ class LOVD_API_GA4GH
                     $aSubmissions[] = $sVariant;
                 } else {
                     // Full variant data, which means there was no Individual.
-                    list($nID, $sDNA38, $sRSID, $sRefs, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
+                    list($nID, $sLicense, $sDNA38, $sRSID, $sRefs, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
                     $aVariant = array(
                         'type' => 'DNA',
                         'ref_seq' => array(
@@ -664,6 +697,8 @@ class LOVD_API_GA4GH
                             );
                         }
                     }
+
+                    // Data creator and owner.
                     foreach (
                         array(
                             array(
@@ -702,6 +737,13 @@ class LOVD_API_GA4GH
                         }
                     }
 
+                    // Data licensing, if known.
+                    if ($sLicense) {
+                        $aLicense = $this->convertLicenseToVML($sLicense);
+                        if ($aLicense) {
+                            $aVariant = array_merge($aVariant, $aLicense);
+                        }
+                    }
                     $aReturn['panel']['variants'][] = $aVariant;
                 }
             }
