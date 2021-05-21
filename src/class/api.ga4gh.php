@@ -174,6 +174,34 @@ class LOVD_API_GA4GH
 
 
 
+    private function convertContactToVML ($sRole, $sContact)
+    {
+        // Converts contact string into VarioML contact data.
+
+        list($sORCID, $sName, $sEmail) = explode('##', $sContact);
+        $aEmails = explode("\r\n", $sEmail);
+
+        $aReturn = array(
+            'role' => $sRole,
+            'name' => $sName,
+            'email' => (count($aEmails) == 1? $sEmail : $aEmails),
+        );
+        if ($sORCID) {
+            $aReturn['db_xrefs'] = array(
+                array(
+                    'source' => 'orcid',
+                    'accession' => $sORCID,
+                )
+            );
+        }
+
+        return $aReturn;
+    }
+
+
+
+
+
     private function convertLicenseToVML($sLicense)
     {
         // Converts license string into VarioML license data.
@@ -725,21 +753,7 @@ class LOVD_API_GA4GH
                         ) as $aContact) {
                         list($sContact, $sRole) = $aContact;
                         if ($sContact) {
-                            list($sORCID, $sName, $sEmail) = explode('##', $sContact);
-                            $aEmails = explode("\r\n", $sEmail);
-                            $aContact = array(
-                                'role' => $sRole,
-                                'name' => $sName,
-                                'email' => (count($aEmails) == 1? $sEmail : $aEmails),
-                            );
-                            if ($sORCID) {
-                                $aContact['db_xrefs'] = array(
-                                    array(
-                                        'source' => 'orcid',
-                                        'accession' => $sORCID,
-                                    )
-                                );
-                            }
+                            $aContact = $this->convertContactToVML($sRole, $sContact);
 
                             if (!isset($aVariant['source'])) {
                                 $aVariant['source'] = array(
