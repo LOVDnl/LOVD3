@@ -241,22 +241,27 @@ class LOVD_API_GA4GH
 
 
 
-    private function convertReferenceToVML ($sReference)
+    private function convertReferenceToVML ($sReference, $aOptions = array())
     {
         // Converts reference string into VarioML DbXRef data.
+        if (!$aOptions) {
+            $aOptions = array('dbsnp', 'pubmed');
+        }
         $aReturn = array();
 
         foreach (explode(';', str_replace('}', '};', $sReference)) as $sRef) {
             $sRef = trim($sRef);
             if ($sRef) {
-                if (preg_match('/^\{PMID:([^}]+):([0-9]+)\}$/', $sRef, $aRegs)) {
+                if (preg_match('/^\{PMID:([^}]+):([0-9]+)\}$/', $sRef, $aRegs)
+                    && in_array('pubmed', $aOptions)) {
                     $aReturn[] =
                         array(
                             'source' => 'pubmed',
                             'accession' => $aRegs[2],
                             'name' => $aRegs[1],
                         );
-                } elseif (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
+                } elseif (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)
+                    && in_array('dbsnp', $aOptions)) {
                     $aReturn[] =
                         array(
                             'source' => 'dbsnp',
@@ -617,23 +622,21 @@ class LOVD_API_GA4GH
             }
 
             if (!empty($zData['refs'])) {
-                foreach (explode(';', str_replace('}', '};', $zData['refs'])) as $sRef) {
-                    $sRef = trim($sRef);
-                    if ($sRef) {
-                        if (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
-                            if (!isset($aReturn['db_xrefs'])) {
-                                $aReturn['db_xrefs'] = array();
-                            }
-                            $aReturn['db_xrefs'][] =
-                                array(
-                                    'source' => 'dbsnp',
-                                    'accession' => $aRegs[1],
-                                );
-                        }
+                $aRefs = $this->convertReferenceToVML($zData['refs'], array('dbsnp'));
+                if ($aRefs) {
+                    if (!isset($aReturn['db_xrefs'])) {
+                        $aReturn['db_xrefs'] = array();
                     }
-                }
-                if (isset($aReturn['db_xrefs'])) {
-                    $aReturn['db_xrefs'] = array_unique($aReturn['db_xrefs'], SORT_REGULAR);
+                    // Merge, unique, and reset the array.
+                    // We need to rebuild the keys to prevent
+                    //  a JSON array from becoming a JSON object.
+                    $aReturn['db_xrefs'] = array_values(
+                        array_unique(
+                            array_merge(
+                                $aReturn['db_xrefs'],
+                                $aRefs),
+                            SORT_REGULAR)
+                    );
                 }
             }
 
@@ -710,11 +713,16 @@ class LOVD_API_GA4GH
                             if (!isset($aVariant['db_xrefs'])) {
                                 $aVariant['db_xrefs'] = array();
                             }
-                            $aVariant['db_xrefs'] = array_unique(
-                                array_merge(
-                                    $aVariant['db_xrefs'],
-                                    $aRefs),
-                                SORT_REGULAR);
+                            // Merge, unique, and reset the array.
+                            // We need to rebuild the keys to prevent
+                            //  a JSON array from becoming a JSON object.
+                            $aVariant['db_xrefs'] = array_values(
+                                array_unique(
+                                    array_merge(
+                                        $aVariant['db_xrefs'],
+                                        $aRefs),
+                                    SORT_REGULAR)
+                            );
                         }
                     }
 
