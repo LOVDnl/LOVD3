@@ -245,7 +245,7 @@ class LOVD_API_GA4GH
     {
         // Converts reference string into VarioML DbXRef data.
         if (!$aOptions) {
-            $aOptions = array('dbsnp', 'pubmed');
+            $aOptions = array('dbsnp', 'doi', 'pubmed');
         }
         $aReturn = array();
 
@@ -257,6 +257,14 @@ class LOVD_API_GA4GH
                     $aReturn[] =
                         array(
                             'source' => 'pubmed',
+                            'accession' => $aRegs[2],
+                            'name' => $aRegs[1],
+                        );
+                } elseif (preg_match('/^\{DOI:([^}]+):([^:}]+)\}$/', $sRef, $aRegs)
+                    && in_array('doi', $aOptions)) {
+                    $aReturn[] =
+                        array(
+                            'source' => 'doi',
                             'accession' => $aRegs[2],
                             'name' => $aRegs[1],
                         );
@@ -862,7 +870,7 @@ class LOVD_API_GA4GH
                 }
 
                 if ($aSubmission['reference']) {
-                    $aRefs = $this->convertReferenceToVML($aSubmission['reference'], array('pubmed'));
+                    $aRefs = $this->convertReferenceToVML($aSubmission['reference'], array('doi', 'pubmed'));
                     if ($aRefs) {
                         if (!isset($aIndividual['db_xrefs'])) {
                             $aIndividual['db_xrefs'] = array();
