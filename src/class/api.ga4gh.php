@@ -821,22 +821,13 @@ class LOVD_API_GA4GH
             }
 
             foreach ($aSubmissions as $aSubmission) {
-                $aIndividual = array(
-                    'phenotypes' => array(),
-                    'variants' => array(),
-                );
+                $aIndividual = array();
                 if (isset($aSubmission['gender'])) {
                     $nCode = (!isset($this->aValueMappings['gender'][$aSubmission['gender']])?
                         $this->aValueMappings['gender'][''] :
                         $this->aValueMappings['gender'][$aSubmission['gender']]);
-                    // Add the gender as the first field in the JSON (aesthetics, I know).
-                    $aIndividual = array_merge(
-                        array(
-                            'gender' => array(
-                                'code' => $nCode,
-                            )
-                        ),
-                        $aIndividual
+                    $aIndividual['gender'] = array(
+                        'code' => $nCode,
                     );
                     // If we didn't find a match, put the original term in the description.
                     if (!isset($this->aValueMappings['gender'][$aSubmission['gender']])) {
@@ -845,6 +836,8 @@ class LOVD_API_GA4GH
                         );
                     }
                 }
+
+                $aIndividual['phenotypes'] = array();
                 if ($aSubmission['diseases']) {
                     foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
                         list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
@@ -886,6 +879,8 @@ class LOVD_API_GA4GH
                         );
                     }
                 }
+
+                $aIndividual['variants'] = array();
 
                 // Store in output.
                 if ($aSubmission['panel_size'] > 1) {
