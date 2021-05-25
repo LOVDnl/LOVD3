@@ -819,10 +819,18 @@ class LOVD_API_GA4GH
                       i.`Individual/Gender` AS gender') . ',
                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
                     (!$bIndReference? '' : ',
-                      i.`Individual/Reference` AS reference') . '
+                      i.`Individual/Reference` AS reference') . ',
+                      CONCAT(
+                        IFNULL(uc.orcid_id, ""), "##", uc.name, "##", uc.email
+                      ),
+                      CONCAT(
+                        IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
+                      )
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
+                      LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
+                      LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id)
                     WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
                       AND i.statusid >= ?
                     GROUP BY i.id', array_merge($aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
@@ -885,6 +893,31 @@ class LOVD_API_GA4GH
                                     $aRefs),
                                 SORT_REGULAR)
                         );
+                    }
+                }
+
+                // Data creator and owner.
+                foreach (
+                    array(
+                        array(
+                            $sCreator,
+                            'submitter',
+                        ),
+                        array(
+                            $sOwner,
+                            'owner',
+                        )
+                    ) as $aContact) {
+                    list($sContact, $sRole) = $aContact;
+                    if ($sContact) {
+                        $aContact = $this->convertContactToVML($sRole, $sContact);
+
+                        if (!isset($aVariant['source'])) {
+                            $aIndividual['source'] = array(
+                                'contacts' => array(),
+                            );
+                        }
+                        $aIndividual['source']['contacts'][] = $aContact;
                     }
                 }
 
