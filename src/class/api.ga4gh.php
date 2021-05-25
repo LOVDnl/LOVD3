@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-05-21
+ * Modified    : 2021-05-25
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -202,7 +202,7 @@ class LOVD_API_GA4GH
 
 
 
-    private function convertLicenseToVML($sLicense)
+    private function convertLicenseToVML ($sLicense)
     {
         // Converts license string into VarioML license data.
         global $_SETT;
@@ -231,6 +231,42 @@ class LOVD_API_GA4GH
                     ),
                 );
             }
+            return $aReturn;
+        }
+
+        return false;
+    }
+
+
+
+
+
+    private function convertReferenceToVML ($sReference)
+    {
+        // Converts reference string into VarioML DbXRef data.
+        $aReturn = array();
+
+        foreach (explode(';', str_replace('}', '};', $sReference)) as $sRef) {
+            $sRef = trim($sRef);
+            if ($sRef) {
+                if (preg_match('/^\{PMID:([^}]+):([0-9]+)\}$/', $sRef, $aRegs)) {
+                    $aReturn[] =
+                        array(
+                            'source' => 'pubmed',
+                            'accession' => $aRegs[2],
+                            'name' => $aRegs[1],
+                        );
+                } elseif (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
+                    $aReturn[] =
+                        array(
+                            'source' => 'dbsnp',
+                            'accession' => $aRegs[1],
+                        );
+                }
+            }
+        }
+
+        if ($aReturn) {
             return $aReturn;
         }
 
@@ -669,33 +705,16 @@ class LOVD_API_GA4GH
                     }
 
                     if ($sRefs) {
-                        foreach (explode(';', str_replace('}', '};', $sRefs)) as $sRef) {
-                            $sRef = trim($sRef);
-                            if ($sRef) {
-                                if (preg_match('/^\{PMID:([^}]+):([0-9]+)\}$/', $sRef, $aRegs)) {
-                                    if (!isset($aVariant['db_xrefs'])) {
-                                        $aVariant['db_xrefs'] = array();
-                                    }
-                                    $aVariant['db_xrefs'][] =
-                                        array(
-                                            'source' => 'pubmed',
-                                            'accession' => $aRegs[2],
-                                            'name' => $aRegs[1],
-                                        );
-                                } elseif (preg_match('/^\{dbSNP:(rs[0-9]+)\}$/', $sRef, $aRegs)) {
-                                    if (!isset($aVariant['db_xrefs'])) {
-                                        $aVariant['db_xrefs'] = array();
-                                    }
-                                    $aVariant['db_xrefs'][] =
-                                        array(
-                                            'source' => 'dbsnp',
-                                            'accession' => $aRegs[1],
-                                        );
-                                }
+                        $aRefs = $this->convertReferenceToVML($sRefs);
+                        if ($aRefs) {
+                            if (!isset($aVariant['db_xrefs'])) {
+                                $aVariant['db_xrefs'] = array();
                             }
-                        }
-                        if (isset($aVariant['db_xrefs'])) {
-                            $aVariant['db_xrefs'] = array_unique($aVariant['db_xrefs'], SORT_REGULAR);
+                            $aVariant['db_xrefs'] = array_unique(
+                                array_merge(
+                                    $aVariant['db_xrefs'],
+                                    $aRefs),
+                                SORT_REGULAR);
                         }
                     }
 
