@@ -494,6 +494,7 @@ class LOVD_API_GA4GH
         );
         $aColsToCheck = array_merge($aRequiredCols, array(
             'Individual/Gender',
+            'Individual/Reference',
             'VariantOnGenome/DNA/hg38',
             'VariantOnGenome/ClinicalClassification',
             'VariantOnGenome/dbSNP',
@@ -513,6 +514,7 @@ class LOVD_API_GA4GH
             }
         }
         $bIndGender = in_array('Individual/Gender', $aCols);
+        $bIndReference = in_array('Individual/Reference', $aCols);
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
@@ -586,7 +588,7 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender)
+        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender, $bIndReference)
         {
             global $_DB, $_SETT;
 
@@ -807,7 +809,9 @@ class LOVD_API_GA4GH
                     SELECT i.id, i.panel_size' .
                     (!$bIndGender? '' : ',
                       i.`Individual/Gender` AS gender') . ',
-                      GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
+                      GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
+                    (!$bIndReference? '' : ',
+                      i.`Individual/Reference` AS reference') . '
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
@@ -861,6 +865,25 @@ class LOVD_API_GA4GH
                             }
                         }
                         $aIndividual['phenotypes'][] = $aPhenotype;
+                    }
+                }
+
+                if ($aSubmission['reference']) {
+                    $aRefs = $this->convertReferenceToVML($aSubmission['reference'], array('pubmed'));
+                    if ($aRefs) {
+                        if (!isset($aIndividual['db_xrefs'])) {
+                            $aIndividual['db_xrefs'] = array();
+                        }
+                        // Merge, unique, and reset the array.
+                        // We need to rebuild the keys to prevent
+                        //  a JSON array from becoming a JSON object.
+                        $aIndividual['db_xrefs'] = array_values(
+                            array_unique(
+                                array_merge(
+                                    $aIndividual['db_xrefs'],
+                                    $aRefs),
+                                SORT_REGULAR)
+                        );
                     }
                 }
 
