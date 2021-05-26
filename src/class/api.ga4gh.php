@@ -503,6 +503,7 @@ class LOVD_API_GA4GH
         $aColsToCheck = array_merge($aRequiredCols, array(
             'Individual/Gender',
             'Individual/Reference',
+            'Phenotype/Additional',
             'VariantOnGenome/DNA/hg38',
             'VariantOnGenome/ClinicalClassification',
             'VariantOnGenome/dbSNP',
@@ -523,6 +524,7 @@ class LOVD_API_GA4GH
         }
         $bIndGender = in_array('Individual/Gender', $aCols);
         $bIndReference = in_array('Individual/Reference', $aCols);
+        $bPhenotypeAdditional = in_array('Phenotype/Additional', $aCols);
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
@@ -596,7 +598,7 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender, $bIndReference)
+        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender, $bIndReference, $bPhenotypeAdditional)
         {
             global $_DB, $_SETT;
 
@@ -819,7 +821,9 @@ class LOVD_API_GA4GH
                       i.`Individual/Gender` AS gender') . ',
                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
                     (!$bIndReference? '' : ',
-                      i.`Individual/Reference` AS reference') . ',
+                      i.`Individual/Reference` AS reference') .
+                    (!$bPhenotypeAdditional? '' : ',
+                      GROUP_CONCAT(DISTINCT IFNULL(p.`Phenotype/Additional`, "") SEPARATOR ";;") AS phenotypes') . ',
                       CONCAT(
                         IFNULL(uc.orcid_id, ""), "##", uc.name, "##", uc.email
                       ),
@@ -829,6 +833,7 @@ class LOVD_API_GA4GH
                       IFNULL(i.license, uc.default_license) AS license
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
+                      LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
                       LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id)
@@ -838,6 +843,7 @@ class LOVD_API_GA4GH
             }
 
             foreach ($aSubmissions as $aSubmission) {
+                // Loop through Individuals and Panels.
                 $aIndividual = array();
                 if (isset($aSubmission['gender'])) {
                     $nCode = (!isset($this->aValueMappings['gender'][$aSubmission['gender']])?
@@ -877,6 +883,55 @@ class LOVD_API_GA4GH
                         $aIndividual['phenotypes'][] = $aPhenotype;
                     }
                 }
+                if ($aSubmission['phenotypes']) {
+                    foreach (preg_split('/[;,\r\n]+/', $aSubmission['phenotypes']) as $sPhenotype) {
+                        // Phenotype information is probably the most diverse
+                        //  and unstructured data within LOVD. Trying to make
+                        //  sense of it, returning it as structured data.
+                        $sPhenotype = trim($sPhenotype, '( )');
+                        if (preg_match('/^(.+)?\(([?-])?HP:([0-9]+)$/i', $sPhenotype, $aRegs)) {
+                            // term (HP:0000000).
+                            // term (-HP:0000000).
+                            // term (?HP:0000000).
+                            // So absent HPO terms (-HP:...) could be marked
+                            //  with a modifier (Excluded (HP:0040285)), but
+                            //  VarioML has no way of storing this.
+                            // Unknown HPO terms (?HP:...) can't be marked with
+                            //  a modifier because HPO has none.
+                            // So both of these are ignored and *not* exported.
+                            if (!$aRegs[2]) {
+                                $aPhenotype = array(
+                                    'term' => trim($aRegs[1]),
+                                    'source' => 'HPO',
+                                    'accession' => $aRegs[3],
+                                );
+                            }
+                        } elseif (preg_match('/^([?-])?HP:([0-9]+) *\((.+)?$/i', $sPhenotype, $aRegs)) {
+                            // HP:0000000 (term).
+                            // Old format coming from the submission API.
+                            if (!$aRegs[1]) {
+                                $aPhenotype = array(
+                                    'term' => trim($aRegs[3]),
+                                    'source' => 'HPO',
+                                    'accession' => $aRegs[2],
+                                );
+                            }
+                        } else {
+                            // Unrecognized. Just pass on.
+                            $aPhenotype = array(
+                                'term' => trim($sPhenotype),
+                            );
+                        }
+                        $aIndividual['phenotypes'][] = $aPhenotype;
+                    }
+                }
+                // Unique and reset the array. We need to rebuild the keys to
+                //  prevent a JSON array from becoming a JSON object.
+                $aIndividual['phenotypes'] = array_values(
+                    array_unique(
+                        $aIndividual['phenotypes'],
+                        SORT_REGULAR)
+                );
 
                 if ($aSubmission['reference']) {
                     $aRefs = $this->convertReferenceToVML($aSubmission['reference'], array('doi', 'pubmed'));
