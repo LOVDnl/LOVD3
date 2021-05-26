@@ -57,6 +57,19 @@ class LOVD_API_GA4GH
             'rF' => '2',
             'rM' => '1',
         ),
+        'inheritance_long' => array(
+            'unknown' => '',
+            'familial' => 'familial',
+            'familial autosomal dominant' => 'AD',
+            'familial autosomal recessive' => 'AR',
+            'familial x-linked dominant' => 'XLD',
+            'familial x-linked dominant, male sparing' => 'XL',
+            'familial x-linked recessive' => 'XLR',
+            'paternal y-linked' => 'YL',
+            'maternal mitochondrial' => 'Mi',
+            'isolated (sporadic)' => 'IC',
+            'complex' => 'Mu',
+        ),
         'inheritance' => array(
             'AD' => array(
                 'term' => 'autosomal dominant',
@@ -504,6 +517,7 @@ class LOVD_API_GA4GH
             'Individual/Gender',
             'Individual/Reference',
             'Phenotype/Additional',
+            'Phenotype/Inheritance',
             'VariantOnGenome/DNA/hg38',
             'VariantOnGenome/ClinicalClassification',
             'VariantOnGenome/dbSNP',
@@ -525,6 +539,7 @@ class LOVD_API_GA4GH
         $bIndGender = in_array('Individual/Gender', $aCols);
         $bIndReference = in_array('Individual/Reference', $aCols);
         $bPhenotypeAdditional = in_array('Phenotype/Additional', $aCols);
+        $bPhenotypeInheritance = in_array('Phenotype/Inheritance', $aCols);
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
@@ -598,7 +613,7 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender, $bIndReference, $bPhenotypeAdditional)
+        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender, $bIndReference, $bPhenotypeAdditional, $bPhenotypeInheritance)
         {
             global $_DB, $_SETT;
 
@@ -823,7 +838,9 @@ class LOVD_API_GA4GH
                     (!$bIndReference? '' : ',
                       i.`Individual/Reference` AS reference') .
                     (!$bPhenotypeAdditional? '' : ',
-                      GROUP_CONCAT(DISTINCT IFNULL(p.`Phenotype/Additional`, "") SEPARATOR ";;") AS phenotypes') . ',
+                      GROUP_CONCAT(DISTINCT ' .
+                        (!$bPhenotypeInheritance? '' : 'REPLACE(p.`Phenotype/Inheritance`, ",", ""), ') . '"||",
+                        IFNULL(p.`Phenotype/Additional`, "") SEPARATOR ";;") AS phenotypes') . ',
                       CONCAT(
                         IFNULL(uc.orcid_id, ""), "##", uc.name, "##", uc.email
                       ),
@@ -884,11 +901,30 @@ class LOVD_API_GA4GH
                     }
                 }
                 if ($aSubmission['phenotypes']) {
+                    $sInheritance = '';
                     foreach (preg_split('/[;,\r\n]+/', $aSubmission['phenotypes']) as $sPhenotype) {
                         // Phenotype information is probably the most diverse
                         //  and unstructured data within LOVD. Trying to make
                         //  sense of it, returning it as structured data.
                         $sPhenotype = trim($sPhenotype, '( )');
+                        if (strpos($sPhenotype, '||') !== false) {
+                            // We've received an inheritance pattern.
+                            list($sInheritance, $sPhenotype) = explode('||', $sPhenotype, 2);
+                            if ($sInheritance) {
+                                // Long terms to short terms.
+                                if (isset($this->aValueMappings['inheritance_long'][strtolower($sInheritance)])) {
+                                    $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($sInheritance)];
+                                }
+                                // Convert into HPO term or just a single term without a source.
+                                if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
+                                    $aInheritance = $this->aValueMappings['inheritance'][$sInheritance];
+                                } else {
+                                    $aInheritance = array(
+                                        'term' => $sInheritance,
+                                    );
+                                }
+                            }
+                        }
                         if (preg_match('/^(.+)?\(([?-])?HP:([0-9]+)$/i', $sPhenotype, $aRegs)) {
                             // term (HP:0000000).
                             // term (-HP:0000000).
@@ -905,6 +941,9 @@ class LOVD_API_GA4GH
                                     'source' => 'HPO',
                                     'accession' => $aRegs[3],
                                 );
+                                if ($sInheritance) {
+                                    $aPhenotype['inheritance_pattern'] = $aInheritance;
+                                }
                             }
                         } elseif (preg_match('/^([?-])?HP:([0-9]+) *\((.+)?$/i', $sPhenotype, $aRegs)) {
                             // HP:0000000 (term).
@@ -915,12 +954,18 @@ class LOVD_API_GA4GH
                                     'source' => 'HPO',
                                     'accession' => $aRegs[2],
                                 );
+                                if ($sInheritance) {
+                                    $aPhenotype['inheritance_pattern'] = $aInheritance;
+                                }
                             }
                         } else {
                             // Unrecognized. Just pass on.
                             $aPhenotype = array(
                                 'term' => trim($sPhenotype),
                             );
+                            if ($sInheritance) {
+                                $aPhenotype['inheritance_pattern'] = $aInheritance;
+                            }
                         }
                         $aIndividual['phenotypes'][] = $aPhenotype;
                     }
