@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-05-25
+ * Modified    : 2021-05-26
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -825,7 +825,8 @@ class LOVD_API_GA4GH
                       ),
                       CONCAT(
                         IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
-                      )
+                      ),
+                      IFNULL(i.license, uc.default_license) AS license
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
@@ -918,6 +919,14 @@ class LOVD_API_GA4GH
                             );
                         }
                         $aIndividual['source']['contacts'][] = $aContact;
+                    }
+                }
+
+                // Data licensing, if known.
+                if ($aSubmission['license']) {
+                    $aLicense = $this->convertLicenseToVML($aSubmission['license']);
+                    if ($aLicense) {
+                        $aIndividual = array_merge($aIndividual, $aLicense);
                     }
                 }
 
