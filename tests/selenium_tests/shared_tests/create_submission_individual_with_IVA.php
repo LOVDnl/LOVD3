@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-15
- * Modified    : 2020-10-06
- * For LOVD    : 3.0-25
+ * Modified    : 2020-11-27
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -159,8 +159,18 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     public function testAddScreening ($nUserID)
     {
         $this->assertContains('/src/submit/individual/0000', $this->driver->getCurrentURL());
-        $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="option"]//td[contains(., "I want to add a variant screening")]'))->click();
+
+        // This click often timeouts for no reason.
+        $oLocator = WebDriverBy::xpath(
+            '//table[@class="option"]//td[contains(., "I want to add a variant screening")]');
+        for ($i = 0; $i < 5; $i ++) {
+            if ($this->isElementPresent($oLocator)) {
+                $this->driver->findElement($oLocator)->click();
+                sleep(1);
+            } else {
+                break;
+            }
+        }
 
         $this->waitForURLContains('/src/screenings?create&target=0000');
         // selectValue() allows for multiple selection.
@@ -197,8 +207,18 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     public function testAddVariantWithinIVD ($nUserID)
     {
         $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
-        $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
+
+        // This click often timeouts for no reason.
+        $oLocator = WebDriverBy::xpath(
+            '//table[@class="option"]//td[contains(., "I want to add a variant to")]');
+        for ($i = 0; $i < 5; $i ++) {
+            if ($this->isElementPresent($oLocator)) {
+                $this->driver->findElement($oLocator)->click();
+                sleep(1);
+            } else {
+                break;
+            }
+        }
 
         $this->waitForURLContains('/src/variants?create&target=0000');
         $this->driver->findElement(WebDriverBy::xpath(
@@ -256,8 +276,18 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     public function testAddVariantOnGenomicLevel ($nUserID)
     {
         $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
-        $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="option"]//td[contains(., "I want to add a variant to")]'))->click();
+
+        // This click often timeouts for no reason.
+        $oLocator = WebDriverBy::xpath(
+            '//table[@class="option"]//td[contains(., "I want to add a variant to")]');
+        for ($i = 0; $i < 5; $i ++) {
+            if ($this->isElementPresent($oLocator)) {
+                $this->driver->findElement($oLocator)->click();
+                sleep(1);
+            } else {
+                break;
+            }
+        }
 
         $this->waitForURLContains('/src/variants?create&target=0000');
         $this->driver->findElement(WebDriverBy::xpath(
@@ -298,8 +328,18 @@ class CreateSubmissionIndividualWithIVATest extends LOVDSeleniumWebdriverBaseTes
     public function testFinishSubmission ()
     {
         $this->assertContains('/src/submit/screening/0000', $this->driver->getCurrentURL());
-        $this->driver->findElement(WebDriverBy::xpath(
-            '//table[@class="option"]//td[contains(., "I want to finish this submission")]'))->click();
+
+        // This click often timeouts for no reason.
+        $oLocator = WebDriverBy::xpath(
+            '//table[@class="option"]//td[contains(., "I want to finish this submission")]');
+        for ($i = 0; $i < 5; $i ++) {
+            if ($this->isElementPresent($oLocator)) {
+                $this->driver->findElement($oLocator)->click();
+                sleep(1);
+            } else {
+                break;
+            }
+        }
 
         $this->waitForURLContains('/src/submit/finish/individual/0000');
         $this->assertStringStartsWith('Successfully processed your submission',

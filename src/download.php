@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2020-08-11
- * For LOVD    : 3.0-25
+ * Modified    : 2021-01-06
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -317,7 +317,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             $aObjects['Genes']['hide_columns'] =
                 array(
                     'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage', 'url_external',
-                    'allow_download', 'show_hgmd', 'show_genecards', 'show_genetests',
+                    'allow_download', 'show_hgmd', 'show_genecards', 'show_genetests', 'show_orphanet',
                     'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer', 'disclaimer_text',
                     'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
                     'edited_by', 'edited_date', 'updated_by', 'updated_date',
@@ -490,7 +490,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
             $aObjects['Genes']['hide_columns'] =
                 array(
                     'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage', 'url_external',
-                    'allow_download', 'show_hgmd', 'show_genecards', 'show_genetests',
+                    'allow_download', 'show_hgmd', 'show_genecards', 'show_genetests', 'show_orphanet',
                     'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer', 'disclaimer_text',
                     'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
                     'edited_by', 'edited_date', 'updated_by', 'updated_date',

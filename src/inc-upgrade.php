@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-09-30
- * For LOVD    : 3.0-25
+ * Modified    : 2021-02-02
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -794,7 +794,21 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-24c' => array(
                      'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN md_apikey VARCHAR(50) NOT NULL DEFAULT "" AFTER mutalyzer_soap_url',
                  ),
-                 '3.0-25b' => array_merge(
+                 '3.0-25b' => array(
+                     'UPDATE ' . TABLE_VARIANTS . ' SET average_frequency = NULL',
+                 ),
+                 '3.0-25c' => array(
+                     'ALTER TABLE ' . TABLE_GENES . ' ADD COLUMN show_orphanet BOOLEAN NOT NULL DEFAULT 0 AFTER show_genetests',
+                     'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("orphanet", "https://www.orpha.net/consor/cgi-bin/OC_Exp.php?lng=en&Gene={{ ID }}")',
+                 ),
+                 '3.0-25d' => array(
+                     'UPDATE ' . TABLE_SOURCES . ' SET URL = "https://hpo.jax.org/app/browse/disease/OMIM:{{ ID }}" WHERE id = "hpo_disease" and URL = "http://compbio.charite.de/hpoweb/showterm?disease=OMIM:{{ ID }}"',
+                 ),
+                 '3.0-25e' => array(
+                     'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN donate_dialog_allow BOOLEAN NOT NULL DEFAULT 0 AFTER logo_uri',
+                     'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN donate_dialog_months_hidden TINYINT(2) UNSIGNED NOT NULL DEFAULT 1 AFTER donate_dialog_allow',
+                 ),
+                 '3.0-26b' => array_merge(
                      array(
                          'CREATE TABLE IF NOT EXISTS ' . TABLE_SUMMARY_ANNOTATIONS . ' (
                             id VARCHAR(50) NOT NULL,

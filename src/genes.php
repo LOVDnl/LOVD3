@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2020-08-25
- * For LOVD    : 3.0-25
+ * Modified    : 2021-01-06
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -214,7 +214,9 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && !ACTION)
             $aNavigation[$_PE[0] . '/' . $sID . '?sortCurators'] = array('', 'Sort/hide curator names', 1);
         }
         $aNavigation[$_PE[0] . '/' . $sID . '?empty']            = array('menu_empty.png', 'Empty this gene database', (bool) ($zData['variants']));
-        $aNavigation[$_PE[0] . '/' . $sID . '/graphs']           = array('menu_graphs.png', 'View graphs about this gene database', 1);
+        if ($_SETT['customization_settings']['graphs_enable']) {
+            $aNavigation[$_PE[0] . '/' . $sID . '/graphs'] = array('menu_graphs.png', 'View graphs about this gene database', 1);
+        }
         $aNavigation[$_PE[0] . '/' . $sID . '/columns']          = array('menu_columns.png', 'View enabled variant columns', 1);
         $aNavigation[$_PE[0] . '/' . $sID . '/columns?order']    = array('menu_columns.png', 'Re-order enabled variant columns', 1);
         $aNavigation['columns/VariantOnTranscript']      = array('menu_columns.png', 'View all available variant columns', 1);
@@ -476,7 +478,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $aFields = array(
                                 'id', 'name', 'chromosome', 'chrom_band', 'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage',
                                 'url_external', 'allow_download', 'id_hgnc', 'id_entrez', 'id_omim', 'show_hgmd',
-                                'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer',
+                                'show_genecards', 'show_genetests', 'show_orphanet', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer',
                                 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
                                 );
 
@@ -718,7 +720,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
             // Fields to be used.
             $aFields = array(
                             'name', 'chrom_band', 'imprinting', 'refseq_genomic', 'reference', 'url_homepage', 'url_external', 'allow_download',
-                            'show_hgmd', 'show_genecards', 'show_genetests', 'note_index', 'note_listing', 'refseq',
+                            'show_hgmd', 'show_genecards', 'show_genetests', 'show_orphanet', 'note_index', 'note_listing', 'refseq',
                             'refseq_url', 'disclaimer', 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_date',
                             'edited_by', 'edited_date',
                             );
@@ -727,6 +729,22 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                 $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
                 $_POST['refseq_UD'] = $sRefseqUD;
                 $aFields[] = 'refseq_UD';
+            }
+
+            // In case this gene misses some IDs that should have been added
+            //  when it was created, see if we can find these now.
+            $aGeneInfo = null;
+            foreach (array('id_entrez', 'id_omim') as $sField) {
+                if (empty($zData[$sField]) && max($zData['created_date'], $zData['edited_date']) < date('Y-m-d H:i:s', strtotime('-1 week'))) {
+                    if (!isset($aGeneInfo)) {
+                        $aGeneInfo = lovd_getGeneInfoFromHGNC($zData['id_hgnc']);
+                    }
+                    $sHGNCField = substr(strstr($sField, '_'), 1) . '_id';
+                    if (!empty($aGeneInfo[$sHGNCField])) {
+                        $_POST[$sField] = $aGeneInfo[$sHGNCField];
+                        $aFields[] = $sField;
+                    }
+                }
             }
 
             // Prepare values.
@@ -1379,7 +1397,8 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
 
 
 
-if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] == 'graphs' && !ACTION) {
+if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]))
+    && $_PE[2] == 'graphs' && !ACTION && $_SETT['customization_settings']['graphs_enable']) {
     // URL: /genes/DMD/graphs
     // Show different graphs about this gene; variant type (DNA, RNA & Protein level), ...
 

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-06-08
- * For LOVD    : 3.0-24
+ * Modified    : 2021-01-28
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -85,53 +85,55 @@ class LOVD_GenomeVariant extends LOVD_Custom
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (vog.edited_by = ue.id)';
         $this->aSQLViewEntry['GROUP_BY'] = 'vog.id';
 
-        // SQL code for viewing the list of variants
-        // FIXME: we should implement this in a different way
-        $this->aSQLViewList['SELECT']   = 'vog.*, ' .
-                                          // FIXME; de , is niet de standaard.
-                                          'GROUP_CONCAT(s2v.screeningid SEPARATOR ",") AS screeningids, ' .
-                                          'a.name AS allele_, ' .
-                                          'e.name AS effect, ' .
-                                          'uo.name AS owned_by_, ' .
-                                          'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
-                                          'ds.name AS status';
-        $this->aSQLViewList['FROM']     = TABLE_VARIANTS . ' AS vog ' .
-                                // Added so that Curators and Collaborators can view the variants for which they have viewing rights in the genomic variant viewlist.
-                                ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
-                                          'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
-                                        : '') .
-                                          'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
-                                          'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
+        // SQL code for viewing the list of variants.
+        $this->aSQLViewList['SELECT'] =
+            'vog.*, ' .
+            'a.name AS allele_, ' .
+            'e.name AS effect, ' .
+            'uo.name AS owned_by_, ' .
+            'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
+            'ds.name AS status';
+        $this->aSQLViewList['FROM'] =
+            TABLE_VARIANTS . ' AS vog ' .
+            // Added so that Curators and Collaborators can view the variants for which they have
+            // viewing rights in the genomic variant VL.
+            // The WHERE condition is set in object_custom.php.
+            ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
+                'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
+                'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
+            : '') .
+            'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) ' .
+            'LEFT OUTER JOIN ' . TABLE_ALLELES . ' AS a ON (vog.allele = a.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_EFFECT . ' AS e ON (vog.effectid = e.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id) ' .
+            'LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS ds ON (vog.statusid = ds.id)';
         $this->aSQLViewList['GROUP_BY'] = 'vog.id';
 
         parent::__construct();
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-                 array(
-                        'individualid_' => 'Individual ID',
-                        'chromosome' => 'Chromosome',
-                        'allele_' => 'Allele',
-                        'effect_reported' => 'Affects function (as reported)',
-                        'effect_concluded' => 'Affects function (by curator)',
-                        'curation_status_' => 'Curation status',
-                        'confirmation_status_' => 'Confirmation status',
-                      ),
-                 $this->buildViewEntry(),
-                 array(
-                        'mapping_flags_' => array('Automatic mapping', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'average_frequency_' => 'Average frequency (large NGS studies)',
-                        'owned_by_' => 'Owner',
-                        'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
-                      ));
+            array(
+                'individualid_' => 'Individual ID',
+                'chromosome' => 'Chromosome',
+                'allele_' => 'Allele',
+                'effect_reported' => 'Affects function (as reported)',
+                'effect_concluded' => 'Affects function (by curator)',
+                'curation_status_' => 'Curation status',
+                'confirmation_status_' => 'Confirmation status',
+            ),
+            $this->buildViewEntry(),
+            array(
+                'mapping_flags_' => array('Automatic mapping', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'average_frequency_' => 'Average frequency (gnomAD v.2.1.1)',
+                'owned_by_' => 'Owner',
+                'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
+            )
+        );
         if (!LOVD_plus) {
             unset($this->aColumnsViewEntry['curation_status_']);
             unset($this->aColumnsViewEntry['confirmation_status_']);
@@ -139,52 +141,69 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
-                 array(
-                        'screeningids' => array(
-                                    'view' => false,
-                                    'db'   => array('screeningids', 'ASC', 'TEXT')),
-                        'id_' => array(
-                                    'view' => array('Variant ID', 90, 'style="text-align : right;"'),
-                                    'db'   => array('vog.id', 'ASC', true)),
-                        'effect' => array(
-                                    'view' => array('Effect', 70),
-                                    'db'   => array('e.name', 'ASC', true),
-                                    'legend' => array('The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
-                        'allele_' => array(
-                                    'view' => array('Allele', 120),
-                                    'db'   => array('a.name', 'ASC', true),
-                                    'legend' => array('On which allele is the variant located? Does not necessarily imply inheritance!',
-                                                      'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
-                        'chromosome' => array(
-                                    'view' => array('Chr', 50),
-                                    'db'   => array('vog.chromosome', 'ASC', true)),
-                        'position_g_start' => array(
-                                    'view' => false,
-                                    'db'   => array('vog.position_g_start', 'ASC', true)),
-                        'position_g_end' => array(
-                                     'view' => false,
-                                    'db'   => array('vog.position_g_end', 'ASC', true)),
-                      ),
-                 $this->buildViewList(),
-                 array(
-                        'owned_by_' => array(
-                                    'view' => array('Owner', 160),
-                                    'db'   => array('uo.name', 'ASC', true)),
-                        'owner_countryid' => array(
-                                    'view' => false,
-                                    'db'   => array('uo.countryid', 'ASC', true)),
-                        'status' => array(
-                                    'view' => array('Status', 70),
-                                    'db'   => array('ds.name', false, true),
-                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_by' => array(
-                                    'view' => false,
-                                    'db'   => array('vog.created_by', false, true)),
-                        'created_date' => array(
-                                    'view' => false,
-                                    'db'   => array('vog.created_date', 'ASC', true)),
-                      ));
+            array(
+                'id' => array(
+                    'view' => false,
+                    'db'   => array('vog.id', 'ASC', true)),
+                'screeningids' => array(
+                    'view' => false,
+                    'db'   => array('s2v.screeningid', 'ASC', true)),
+                'id_' => array(
+                    'auth' => LEVEL_CURATOR,
+                    'view' => array('Variant ID', 75, 'style="text-align : right;"'),
+                    'db'   => array('vog.id', 'ASC', true)),
+                'effect' => array(
+                    'view' => array('Effect', 70),
+                    'db'   => array('e.name', 'ASC', true),
+                    'legend' => array(
+                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
+                'allele_' => array(
+                    'view' => array('Allele', 120),
+                    'db'   => array('a.name', 'ASC', true),
+                    'legend' => array(
+                        'On which allele is the variant located? Does not necessarily imply inheritance!',
+                        'On which allele is the variant located? Does not necessarily imply inheritance! \'Paternal\' (confirmed or inferred), \'Maternal\' (confirmed or inferred), \'Parent #1\' or #2 for compound heterozygosity without having screened the parents, \'Unknown\' for heterozygosity without having screened the parents, \'Both\' for homozygozity.')),
+                'chromosome' => array(
+                    'view' => array('Chr', 50),
+                    'db'   => array('vog.chromosome', 'ASC', true)),
+                'position_g_start' => array(
+                    'view' => false,
+                    'db'   => array('vog.position_g_start', 'ASC', true)),
+                'position_g_end' => array(
+                    'view' => false,
+                    'db'   => array('vog.position_g_end', 'ASC', true)),
+            ),
+            $this->buildViewList(),
+            array(
+                'owned_by_' => array(
+                    'view' => array('Owner', 160),
+                    'db'   => array('uo.name', 'ASC', true)),
+                'owner_countryid' => array(
+                    'view' => false,
+                    'db'   => array('uo.countryid', 'ASC', true)),
+                'status' => array(
+                    'view' => array('Status', 70),
+                    'db'   => array('ds.name', false, true),
+                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_by' => array(
+                    'view' => false,
+                    'db'   => array('vog.created_by', false, true)),
+                'created_date' => array(
+                    'view' => false,
+                    'db'   => array('vog.created_date', 'ASC', true)),
+            )
+        );
+
+        if ($_SETT['customization_settings']['variants_hide_observation_features']) {
+            foreach (array('allele_', 'owned_by_', 'status') as $sCol) {
+                unset($this->aColumnsViewEntry[$sCol]);
+                unset($this->aColumnsViewList[$sCol]);
+            }
+        }
+        if (!$_SETT['customization_settings']['variants_VL_show_effect']) {
+            unset($this->aColumnsViewList['effect']);
+        }
 
         $this->sSortDefault = 'VariantOnGenome/DNA';
 
@@ -538,7 +557,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             } elseif ($zData['average_frequency'] === '0') {
                 $zData['average_frequency_'] = 'Variant not found in online data sets';
             } else {
-                $zData['average_frequency_'] = round($zData['average_frequency'], 5) . ' <SPAN style="float: right"><A href="http://databases.lovd.nl/whole_genome/variants/chr' . $zData['chromosome'] . '?search_VariantOnGenome/DNA=' . $zData['VariantOnGenome/DNA'] . '" title="" target="_blank">View details</A></SPAN>';
+                $zData['average_frequency_'] = round($zData['average_frequency'], 5) . ' <SPAN style="float: right"><A href="https://gnomad.broadinstitute.org/region/' . $zData['chromosome'] . '-' . $zData['position_g_start'] . '-' . $zData['position_g_end'] . '?dataset=gnomad_r2_1" target="_blank">View details</A></SPAN>';
             }
             if (LOVD_plus && !empty($zData['curation_status_'])) {
                 // Add a link to the curation status to show the curation status history for this variant.

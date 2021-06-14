@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2020-02-04
- * For LOVD    : 3.0-23
+ * Modified    : 2020-10-23
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -416,12 +416,12 @@ class LOVD_Column extends LOVD_Object
             if ($zData['category'] == 'VariantOnTranscript') {
                 // Show genes for which this column is activated.
                 $this->aColumnsViewEntry['parent_objects'] = 'Column activated for genes';
-                $zData['parent_objects'] = $this->lovd_getObjectLinksHTML($zData['genes'], 'genes/%s');
+                $zData['parent_objects'] = $this->getObjectLinksHTML($zData['genes'], 'genes/%s');
 
             } elseif ($zData['category'] == 'Phenotype') {
                 // Show diseases for which this column is activated.
                 $this->aColumnsViewEntry['parent_objects'] = "Column activated for diseases";
-                $zData['parent_objects'] = $this->lovd_getObjectLinksHTML($zData['diseases'], 'diseases/%s');
+                $zData['parent_objects'] = $this->getObjectLinksHTML($zData['diseases'], 'diseases/%s');
             } else {
                 unset($this->aColumnsViewEntry['parent_objects']);
             }

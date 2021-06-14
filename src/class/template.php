@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2020-10-07
- * For LOVD    : 3.0-25
+ * Modified    : 2021-02-03
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -234,6 +234,11 @@ class LOVD_Template
             unset($this->aMenu['configuration_']);
         }
 
+        if (!$_SETT['customization_settings']['graphs_enable']) {
+            // Hide link to graphs for current gene.
+            unset($this->aMenu['genes_']['/genes/' . $_SESSION['currdb'] . '/graphs']);
+        }
+
         if (LOVD_plus) {
             // Unset unneeded tabs for Diagnostics.
             unset($this->aMenu['genes']);
@@ -259,6 +264,16 @@ class LOVD_Template
             unset($this->aMenu['genes_']['/gene_panels?create']);
             unset($this->aMenu['genes_'][0]);
             unset($this->aMenu['genes_']['/gene_statistics']);
+        }
+
+        if (LOVD_light) {
+            unset($this->aMenu['variants_']['/variants/in_gene']);
+            unset($this->aMenu['variants_']['/variants/' . $_SESSION['currdb'] . '/unique']);
+            unset($this->aMenu['transcripts'], $this->aMenu['transcripts_']);
+            unset($this->aMenu['diseases'], $this->aMenu['diseases_']);
+            unset($this->aMenu['individuals'], $this->aMenu['individuals_']);
+            unset($this->aMenu['screenings'], $this->aMenu['screenings_']);
+            unset($this->aMenu['submit'], $this->aMenu['submit_']);
         }
 
         return true;
@@ -348,7 +363,7 @@ class LOVD_Template
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2020 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2021 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -392,8 +407,10 @@ class LOVD_Template
 <SCRIPT type="text/javascript">
   <!--
 <?php
-        if (!LOVD_plus && !((ROOT_PATH == '../' && !(defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) || defined('NOT_INSTALLED'))) {
-            // In install directory.
+        if ($_SETT['customization_settings']['variant_mapping_in_background'] && !defined('NOT_INSTALLED')
+            && !(ROOT_PATH == '../' && defined('TAB_SELECTED') && TAB_SELECTED == 'docs')) {
+            // Allow variant mapping to happen in the background (either manually or
+            // automatically triggered).
             print('
 function lovd_mapVariants ()
 {
@@ -557,13 +574,6 @@ function lovd_mapVariants ()
             $sCurrSymbol = $_SESSION['currdb'];
             $sCurrGene = $_SETT['currdb']['name'];
         }
-
-        // FIXME; how will we handle this? (if we'll handle this)
-        // During submission, show the gene we're submitting to instead of the currently selected gene.
-        //if (lovd_getProjectFile() == '/submit.php' && !empty($_POST['gene']) && $_POST['gene'] != $_SESSION['currdb']) {
-        //    // Fetch gene's info from db... we don't have it anywhere yet.
-        //    list($sCurrSymbol, $sCurrGene) = $_DB->query('SELECT id, gene FROM ' . TABLE_DBS . ' WHERE id = ?', array($_POST['gene']))->fetchRow();
-        //}
 ?>
 
   <SCRIPT type="text/javascript">
@@ -609,7 +619,16 @@ function lovd_mapVariants ()
             document.location.href = sURL.replace('{{GENE}}', $('#select_gene_dropdown').val());
         }
     }
-
+<?php
+    // Determine whether or not to show the donation dialog.
+    $nTimeToShow = strtotime('+' . ($_CONF['donate_dialog_months_hidden'] < 1? 1 : $_CONF['donate_dialog_months_hidden']) . ' months', $_COOKIE['lovd_settings']['donation_dialog_last_seen']);
+    if ($_CONF['donate_dialog_allow'] && $nTimeToShow <= time()) {
+        print('
+    // Donation dialog last seen ' . date('Y-m-d H:i:s', $_COOKIE['lovd_settings']['donation_dialog_last_seen']) . ', show again.
+    $.get("ajax/donate.php");
+');
+    }
+?>
   </SCRIPT>
   <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.css">
 </HEAD>
@@ -800,7 +819,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
             if ($_SESSION['currdb']) {
                 if (in_array($sPrefix, array('configuration', 'genes', 'transcripts', 'variants', 'screenings', 'individuals'))) {
                     $sURL = $sPrefix . '/' . $_SESSION['currdb'];
-                    if ($sPrefix == 'variants') {
+                    if ($sPrefix == 'variants' && isset($this->aMenu[$sPrefix . '_']['/' . $sURL . '/unique'])) {
                         $sURL .= '/unique';
                     }
                 } elseif ($sPrefix == 'diseases') {

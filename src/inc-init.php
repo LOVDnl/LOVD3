@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-10-22
- * For LOVD    : 3.0-25
+ * Modified    : 2021-02-22
+ * For LOVD    : 3.0-26
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -151,6 +151,10 @@ define('ON_WINDOWS', (strtoupper(substr(PHP_OS, 0, 3) == 'WIN')));
 // LOVD and LOVD+, simply define if we're active or not.
 @define('LOVD_plus', false);
 
+// Flag LOVD_light disables certain features to streamline LOVD for high
+// quantities of variants but no or few individuals or diseases.
+define('LOVD_light', false);
+
 // For the installation process (and possibly later somewhere else, too).
 $aRequired =
          array(
@@ -170,7 +174,7 @@ $aRequired =
 $_SETT = array(
                 'system' =>
                      array(
-                            'version' => '3.0-25',
+                            'version' => '3.0-26',
                           ),
                 'user_levels' =>
                      array(
@@ -196,12 +200,25 @@ $_SETT = array(
                     'genepanels_manage_genes' => LEVEL_MANAGER,
                     // The see_nonpublic_data setting currently also defines the visibility
                     //  of the status, created* and edited* fields.
-                    'see_nonpublic_data' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
+                    'see_nonpublic_data' => ((LOVD_plus || LOVD_light)? LEVEL_SUBMITTER : LEVEL_COLLABORATOR),
                     'set_concluded_effect' => (LOVD_plus? LEVEL_MANAGER : LEVEL_CURATOR),
                     'submit_new_data' => (LOVD_plus? LEVEL_MANAGER : LEVEL_SUBMITTER),
                     'summary_annotation_create' => (LOVD_plus? LEVEL_ANALYZER : LEVEL_CURATOR),
                     'summary_annotation_edit' => (LOVD_plus? LEVEL_ANALYZER : LEVEL_CURATOR),
                     'summary_annotation_view_history' => LEVEL_SUBMITTER,
+                ),
+                'customization_settings' => // Miscellaneous configuration settings.
+                array(
+                    'genes_show_meta_data' => !(LOVD_plus || LOVD_light),
+                    'genes_VE_show_unique_variant_counts' => !LOVD_light,
+                    'genes_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    'graphs_enable' => !LOVD_light,
+                    'transcripts_VL_show_variant_counts' => !(LOVD_plus || LOVD_light),
+                    'variant_mapping_in_background' => !(LOVD_plus || LOVD_light),
+                    'variants_hide_observation_features' => LOVD_light,
+                    'variants_VL_per_chromosome_only' => (LOVD_plus || LOVD_light),
+                    'variants_VL_quick_dirty_sort' => (LOVD_plus || LOVD_light),
+                    'variants_VL_show_effect' => !LOVD_light,
                 ),
                 'gene_imprinting' =>
                      array(
@@ -291,7 +308,7 @@ $_SETT = array(
                             8 => '<SPAN style="color:red;">Important</SPAN>',
                             9 => '<SPAN style="color:red;"><B>Critical</B></SPAN>',
                           ),
-                'upstream_URL' => 'http://www.LOVD.nl/',
+                'upstream_URL' => 'https://www.LOVD.nl/',
                 'upstream_BTS_URL' => 'https://github.com/LOVDnl/LOVD3/issues/',
                 'upstream_BTS_URL_new_ticket' => 'https://github.com/LOVDnl/LOVD3/issues/new',
                 'list_sizes' =>
@@ -832,6 +849,22 @@ if (!defined('NOT_INSTALLED')) {
         // (In principle, it can also happen when an existing message is edited
         //   to lock the installation.)
         $_AUTH = false;
+    }
+
+    // Also set cookies for session-independent settings.
+    $aCookieSettingsDefaults = array(
+        'donation_dialog_last_seen' => 0,
+    );
+    if (!isset($_COOKIE['lovd_settings'])) {
+        // @ is to suppress errors in Travis test.
+        @setcookie('lovd_settings', json_encode($aCookieSettingsDefaults), strtotime('+1 year'), lovd_getInstallURL(false));
+        $_COOKIE['lovd_settings'] = $aCookieSettingsDefaults;
+    } else {
+        $aCookieSettings = @json_decode($_COOKIE['lovd_settings'], true);
+        if (!$aCookieSettings) {
+            $aCookieSettings = array();
+        }
+        $_COOKIE['lovd_settings'] = $aCookieSettings + $aCookieSettingsDefaults;
     }
 
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.

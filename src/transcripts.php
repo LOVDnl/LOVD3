@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2020-08-12
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-28
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -64,7 +64,14 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]))
 
     require ROOT_PATH . 'class/object_transcripts.php';
     $_DATA = new LOVD_Transcript();
-    $_DATA->sSortDefault = ($sGene? 'variants' : 'geneid');
+    if ($sGene) {
+        // Standard sorting is on geneid, that is not useful. Choose an alternative.
+        if ($_SETT['customization_settings']['transcripts_VL_show_variant_counts']) {
+            $_DATA->sSortDefault = 'variants';
+        } else {
+            $_DATA->sSortDefault = 'id_ncbi';
+        }
+    }
     $aVLOptions = array(
         'cols_to_skip' => ($sGene? array('geneid') : array()),
         'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
@@ -113,7 +120,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
     $_DATA->setRowLink('VOT_for_T_VE', 'javascript:window.location.href=\'' . lovd_getInstallURL() . 'variants/{{ID}}#{{transcriptid}}\'; return false');
     $aVLOptions = array(
-        'cols_to_skip' => array('geneid', 'transcriptid', 'id_ncbi', 'id_'),
+        'cols_to_skip' => array('geneid', 'transcriptid', 'id_ncbi'),
     );
     $_DATA->viewList('VOT_for_T_VE', $aVLOptions);
 

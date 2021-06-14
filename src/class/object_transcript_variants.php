@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2020-06-08
- * For LOVD    : 3.0-24
+ * Modified    : 2020-12-28
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -103,19 +103,21 @@ class LOVD_TranscriptVariant extends LOVD_Custom
 
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry = array_merge(
-                 array(
-                        'geneid_' => 'Gene',
-                        'id_ncbi_' => 'Transcript ID',
-                        'effect_reported' => 'Affects function (as reported)',
-                        'effect_concluded' => 'Affects function (by curator)',
-                      ),
-                 (!LOVD_plus || !lovd_verifyInstance('mgha', false)? array() :
-                     // MGHA entry for the Genomizer link in the VOT ViewEntry.
-                     array(
-                         'genomizer_url_' => 'Genomizer',
-                         'clinvar_' => "ClinVar Description (dbNSFP)"
-                     )),
-                 $this->buildViewEntry());
+            array(
+                'geneid_' => 'Gene',
+                'id_ncbi_' => 'Transcript ID',
+                'effect_reported' => 'Affects function (as reported)',
+                'effect_concluded' => 'Affects function (by curator)',
+            ),
+            (!LOVD_plus || !lovd_verifyInstance('mgha', false)? array() :
+                // MGHA entry for the Genomizer link in the VOT ViewEntry.
+                array(
+                    'genomizer_url_' => 'Genomizer',
+                    'clinvar_' => "ClinVar Description (dbNSFP)"
+                )
+            ),
+            $this->buildViewEntry()
+        );
         if (LOVD_plus) {
             unset($this->aColumnsViewEntry['effect_reported']);
             unset($this->aColumnsViewEntry['effect_concluded']);
@@ -126,32 +128,38 @@ class LOVD_TranscriptVariant extends LOVD_Custom
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList = array_merge(
-                 array(
-                        'geneid' => array(
-                                    'view' => array('Gene', 70),
-                                    'db'   => array('t.geneid', 'ASC', true)),
-                        'transcriptid' => array(
-                                    'view' => array('Transcript ID', 90),
-                                    'db'   => array('vot.transcriptid', 'ASC', true)),
-                        'id_ncbi' => array(
-                                    'view' => array('Transcript', 120),
-                                    'db'   => array('t.id_ncbi', 'ASC', true)),
-                        'id_' => array(
-                                    'view' => array('Variant ID', 90),
-                                    'db'   => array('vot.id', 'ASC', true)),
-                        'effect' => array(
-                                    'view' => array('Affects function', 70),
-                                    'db'   => array('e.name', 'ASC', true),
-                                    'legend' => array('The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
-                      ),
-                 $this->buildViewList(),
-                 array(
-                        'status' => array(
-                                    'view' => array('Status', 70),
-                                    'db'   => array('ds.name', false, true),
-                                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
-                      ));
+            array(
+                'id' => array(
+                    'view' => false,
+                    'db'   => array('vot.id', 'ASC', true)),
+                'geneid' => array(
+                    'view' => array('Gene', 70),
+                    'db'   => array('t.geneid', 'ASC', true)),
+                'transcriptid' => array(
+                    'view' => array('Transcript ID', 50),
+                    'db'   => array('vot.transcriptid', 'ASC', true)),
+                'id_ncbi' => array(
+                    'view' => array('Transcript', 120),
+                    'db'   => array('t.id_ncbi', 'ASC', true)),
+                'id_' => array(
+                    'auth' => LEVEL_CURATOR,
+                    'view' => array('Variant ID', 75),
+                    'db'   => array('vot.id', 'ASC', true)),
+                'effect' => array(
+                    'view' => array('Affects function', 70),
+                    'db'   => array('e.name', 'ASC', true),
+                    'legend' => array(
+                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                        'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
+            ),
+            $this->buildViewList(),
+            array(
+                'status' => array(
+                    'view' => array('Status', 70),
+                    'db'   => array('ds.name', false, true),
+                    'auth' => $_SETT['user_level_settings']['see_nonpublic_data']),
+            )
+        );
         if (LOVD_plus) {
             unset($this->aColumnsViewList['effect']);
         }
@@ -536,7 +544,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
             $aSQL = array();
             foreach ($aGeneFields[$sGene] as $key => $sField) {
                 $sSQL .= (!$key? '' : ', ') . '`' . $sField . '` = ?';
-                if (substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3) == 'INT' && $aData[$sField] === '') {
+                if ($aData[$sField] === '' && in_array(substr(lovd_getColumnType(constant($this->sTable), $sField), 0, 3), array('INT', 'DAT', 'DEC', 'FLO'))) {
                     $aData[$sField] = NULL;
                 }
                 $aSQL[] = $aData[$sField];

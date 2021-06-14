@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2020-02-04
- * For LOVD    : 3.0-23
+ * Modified    : 2020-11-24
+ * For LOVD    : 3.0-26
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -174,6 +174,16 @@ class LOVD_SharedColumn extends LOVD_Object
 
         parent::checkFields($aData, $zData, $aOptions);
 
+        // Select_options.
+        if (!empty($aData['select_options'])) {
+            $aOptions = explode("\r\n", $aData['select_options']);
+            foreach ($aOptions as $n => $sOption) {
+                if (!preg_match('/^([^=;]+|[A-Z0-9 \/\()?._+-]+ *= *[^=;]+)$/i', $sOption)) {
+                    lovd_errorAdd('select_options', 'Select option #' . ($n + 1) . ' &quot;' . htmlspecialchars($sOption) . '&quot; not understood.');
+                }
+            }
+        }
+
         // Width can not be less than 20 or more than 500.
         // These numbers are also defined in object_columns.php and inc-js-columns.php.
         if (isset($aData['width']) && strlen($aData['width']) > 0) {
@@ -194,23 +204,33 @@ class LOVD_SharedColumn extends LOVD_Object
 
 
 
-    function getCount ($nID = false)
+    function entryExist ($sID = false)
     {
-        // Returns the number of entries in the database table.
-        // Redefine here since we don't have an id column, and we also need to select on the parent object.
-        // Note that $nID is actually wrong here, it's always $sID for us.
+        // Checks if any, or a specific, entry exists in the database table.
+        // ViewEntry() and ViewList() call this function to see if data exists.
+        // Redefine here since we don't have an id column, and we also need to
+        //  select on the parent object.
         global $_DB;
 
-        if ($nID) {
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE ' . $this->aTableInfo['unit'] . 'id = ? AND colid = ?', array($this->sObjectID, $nID))->fetchColumn();
+        if ($sID) {
+            $bEntryExists = $_DB->query('
+                SELECT 1
+                FROM ' . constant($this->sTable) . '
+                WHERE ' . $this->aTableInfo['unit'] . 'id = ? AND colid = ? LIMIT 1',
+                array($this->sObjectID, $sID))->fetchColumn();
+            return $bEntryExists;
         } else {
-            if ($this->nCount !== '') {
-                return $this->nCount;
+            if (isset($this->bEntryExists)) {
+                return $this->bEntryExists;
             }
-            $nCount = $_DB->query('SELECT COUNT(*) FROM ' . constant($this->sTable) . ' WHERE ' . $this->aTableInfo['unit'] . 'id = ?', array($this->sObjectID))->fetchColumn();
-            $this->nCount = $nCount;
+            $bEntryExists = $_DB->query('
+                SELECT 1
+                FROM ' . constant($this->sTable) . '
+                WHERE ' . $this->aTableInfo['unit'] . 'id = ? LIMIT 1',
+                array($this->sObjectID))->fetchColumn();
+            $this->bEntryExists = $bEntryExists;
+            return $this->bEntryExists;
         }
-        return $nCount;
     }
 
 
