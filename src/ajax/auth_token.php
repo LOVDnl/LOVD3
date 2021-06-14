@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-17
- * Modified    : 2017-12-11
- * For LOVD    : 3.0-21
+ * Modified    : 2020-09-25
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -151,7 +151,8 @@ if (ACTION == 'create' && POST) {
         die('alert("Failed to create new token.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been created and stored successfully!
-    lovd_writeLog('Event', 'AuthTokenCreate', 'Successfully created new API token, expires ' . $sAuthTokenExpires);
+    lovd_writeLog('Event', 'AuthTokenCreate', 'Successfully created new API token for user #' . $nID . ', ' .
+        (!$sAuthTokenExpires? 'never expires' : 'expires ' . $sAuthTokenExpires));
 
     // Display the form, and put the right buttons in place.
     print('
@@ -202,7 +203,7 @@ if (ACTION == 'revoke' && POST) {
         die('alert("Failed to revoke token.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been revoked successfully!
-    lovd_writeLog('Event', 'AuthTokenRevoke', 'Successfully revoked current API token');
+    lovd_writeLog('Event', 'AuthTokenRevoke', 'Successfully revoked current API token for user #' . $nID);
 
     // Display the form, and put the right buttons in place.
     print('

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-19
- * Modified    : 2020-06-15
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-07
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -68,7 +68,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->get(ROOT_URL . '/src/variants/chr15');
         $this->driver->findElement(WebDriverBy::xpath('//table[@class="data"]//td[.="g.40702876G>T"]'))->click();
 
-        $this->assertContains('/src/variants/0000', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/variants/0000');
         $this->assertEquals('No variants on transcripts found!',
             $this->driver->findElement(WebDriverBy::id('viewlistDiv_VOT_for_VOG_VE'))->getText());
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Variants'))->click();
@@ -84,7 +84,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testAddTranscript()
     {
-        $this->assertRegExp('/\/src\/variants\/[0-9]+\?map$/', $this->driver->getCurrentURL());
+        $this->waitForURLRegExp('/\/src\/variants\/[0-9]+\?map$/');
         $this->driver->findElement(WebDriverBy::xpath('//td[contains(text(), "NM_002225.3")]'))->click();
         $this->enterValue('password', 'test1234');
         $this->submitForm('Save transcript list');
@@ -102,9 +102,9 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testAddVOTAnnotation()
     {
-        $this->waitUntil(WebDriverExpectedCondition::urlMatches('/\/src\/variants\/[0-9]+\?edit\#[0-9]+$/'));
+        $this->waitForURLRegExp('/\/src\/variants\/[0-9]+\?edit\#[0-9]+$/');
         $this->driver->findElement(WebDriverBy::cssSelector('button.proteinChange'))->click();
-        $this->waitForElement(WebDriverBy::xpath('//input[contains(@name, "_VariantOnTranscript/RNA")][contains(@value, "r.")]'));
+        $this->waitForValueContains(WebDriverBy::xpath('//input[contains(@name, "_VariantOnTranscript/RNA")]'), 'r.');
         $this->enterValue('password', 'test1234');
         $this->submitForm('Edit variant entry');
 
@@ -121,7 +121,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testVerifyAddedTranscript()
     {
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants/0000'));
+        $this->waitForURLContains('/src/variants/0000');
         $this->driver->findElement(WebDriverBy::xpath('//td[text()="NM_002225.3"]'));
         $this->driver->findElement(WebDriverBy::xpath('//td[contains(text(), "p.(")]'));
         $this->driver->findElement(WebDriverBy::id('viewentryOptionsButton_Variants'))->click();
@@ -137,7 +137,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testRemoveTranscript()
     {
-        $this->assertRegExp('/\/src\/variants\/[0-9]+\?map$/', $this->driver->getCurrentURL());
+        $this->waitForURLRegExp('/\/src\/variants\/[0-9]+\?map$/');
         $this->driver->findElement(WebDriverBy::xpath('//tr[td[contains(text(), "NM_002225.3")]]/td/a'))->click();
         $this->assertStringStartsWith('You are about to remove the variant description of transcript NM_002225.3 from this variant.',
             $this->getConfirmation());
@@ -158,7 +158,7 @@ class ManageTranscriptsForVariantTest extends LOVDSeleniumWebdriverBaseTestCase
      */
     public function testVerifyRemovedTranscript()
     {
-        $this->waitUntil(WebDriverExpectedCondition::urlMatches('/\/src\/variants\/[0-9]+$/'));
+        $this->waitForURLRegExp('/\/src\/variants\/[0-9]+$/');
         $this->assertEquals('No variants on transcripts found!',
             $this->driver->findElement(WebDriverBy::id('viewlistDiv_VOT_for_VOG_VE'))->getText());
     }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2016-12-09
- * For LOVD    : 3.0-18
+ * Modified    : 2020-09-23
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -40,7 +40,7 @@ class LOVD_API
     // This class defines the LOVD API object, handling URL parsing and general
     //  handling of headers.
 
-    public $nVersion = 1;     // The API version. 0 for the LOVD2-style API. Higher versions are for the LOVD3-style REST API.
+    public $nVersion = 2;     // The API version. 0 for the LOVD2-style API. Higher versions are for the LOVD3-style REST API.
     public $sMethod = '';     // The used method (GET, POST, PUT, DELETE).
     public $sResource = '';   // The requested resource.
     public $nID = '';         // The ID of the requested resource.
@@ -154,8 +154,10 @@ class LOVD_API
             // This API also ignores the Accept header.
             $this->sFormatOutput = 'text/plain';
             // And, we only allow GET.
-            if (!GET) {
-                // Will only allow GET.
+            if (!GET && !HEAD) {
+                // Will only allow GET and HEAD.
+                // HEAD is necessary for the NCBI sequence viewer, which uses
+                //  HEAD to first check if the BED file is available.
                 // $this->aResponse['errors'][] = 'Method not allowed here.';
                 // $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
                 // This API is LOVD2-style and shouldn't have their output changed now that we're more advanced.

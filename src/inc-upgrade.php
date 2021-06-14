@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-07-09
- * For LOVD    : 3.0-24
+ * Modified    : 2020-09-30
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -788,7 +788,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                          'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://pubmed.ncbi.nlm.nih.gov/[2]\" target=\"_blank\">[1]</A>" WHERE name = "PubMed" AND replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>"',
                      )
                  ),
-                 '3.0-24b' => array_merge(
+                 '3.0-24b' => array(
+                     'ALTER TABLE ' . TABLE_USERS . ' ADD COLUMN api_settings TEXT AFTER auth_token_expires',
+                 ),
+                 '3.0-24c' => array(
+                     'ALTER TABLE ' . TABLE_CONFIG . ' ADD COLUMN md_apikey VARCHAR(50) NOT NULL DEFAULT "" AFTER mutalyzer_soap_url',
+                 ),
+                 '3.0-25b' => array_merge(
                      array(
                          'CREATE TABLE IF NOT EXISTS ' . TABLE_SUMMARY_ANNOTATIONS . ' (
                             id VARCHAR(50) NOT NULL,

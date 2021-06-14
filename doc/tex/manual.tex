@@ -5,7 +5,7 @@
 % To convert the manual to an html file use: pdf2htmlEX --zoom 1.3 --embed-css 2 manual.pdf
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-24}
+\setLOVDversion{3.0-25}
 \title{LOVD 3.0 user manual \\\vskip 0.2cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \setpointercolor{red}
@@ -137,6 +137,7 @@ All list views have search fields which can be used to search data.
 You can search for a complete word or you can search for a part of a search term.
 For example, when you search for ``AAM'' in the Symbol field of the genes listing,
  LOVD will not only find genes starting with ``AAM'', but also containing ``AAM'', like ``DAAM1'' and ``DAAM2''.
+To search for prefixes or suffixes, see the table further below.
 
 \begin{figure}[ht]
   \begin{shaded}
@@ -154,35 +155,57 @@ The up and down arrows next to the column name indicate the current sorting dire
 When sorting on any field other than the default, LOVD will sort secondarily on the default sort column.
 \vskip \baselineskip
 
-LOVD allows boolean search terms, meaning you can construct complex queries with AND, OR and NOT logic.
-Typing a space between search terms is treated as AND.
-OR is indicated with a pipe '|' with no spaces around it and NOT is indicated by an exclamation mark '!',
+LOVD allows boolean search terms, meaning you can construct complex queries with
+ \texttt{AND}, \texttt{OR} and \texttt{NOT} logic.
+Typing a space between search terms is treated as \texttt{AND}.
+\texttt{OR} is indicated with a pipe `|' with no spaces around it and
+ \texttt{NOT} is indicated by an exclamation mark `!',
  not followed by a space.
 If you enclose two or more words in double quotes,
  LOVD will search for the combination of those words only exactly in the order you specify.
 Note that search terms are case-insensitive and that wildcards such as * are treated as normal text!
 
 \noindent
-You can use different operators to specify your search request:\\
-\begin{tabular}{>{\bfseries}p{2.3cm} p{2.3cm} p{11.1cm}}
-  Operator & \textbf{Example} & \textbf{Description}\\ \hline \hline
-  space & AM DA & This gives results where both AM and DA are occuring.\\ \hline
-  | & AM|DA & This gives results where either AM or DA occurs.\\ \hline
-  ="" & ="AM" & Returns results which exactly matches AM.\\ \hline
-  ! & !AM & Returns results which does not contain AM.\\ \hline
-  !="" & !="AM" & Returns results which does not exactly match AM.\\ \hline
-  > & >23 & Filter for values higher than 23 (numeric and date columns).\\ \hline
-  < & <23 & Filter for values lower than 23 (numeric and date columns).\\ \hline
+You can use different operators to specify your search request:
+\vskip 0.5\baselineskip % This page is too crammed but if I don't do this, everything below goes to hell.
+\noindent
+\begin{tabular}{>{\bfseries}p{2.5cm} p{2.6cm} p{10.6cm}}
+  Operator & \textbf{Example} & \textbf{Matches}\\ \hline \hline
+  & Arg & Results containing `Arg'.\\ \hline
+  space & Arg Ser & Results containing both `Arg' and `Ser'.\\ \hline
+  | & Arg|Ser & Results containing `Arg' or `Ser'.\\ \hline
+  ! & !fs & Results not containing `fs'.\\ \hline
+  \^{} & \^{}p.(Arg & Results beginning with `p.(Arg' (prefix search).\\ \hline % I didn't like \textasciicircum.
+  \$ & Ser)\$ & Results ending with `Ser)' (suffix search).\\ \hline
+  ="" & ="" & Results with this field empty.\\ \hline
+  ="" & ="p.0" & Results exactly matching `p.0' (exact search).\\ \hline
+  !="" & !="" & Results with this field not empty.\\ \hline
+  !="" & !="p.0" & Results not exactly matching `p.0'.\\ \hline
+  combination & *|Ter !fs & Results containing `*' or `Ter' but not containing `fs'.\\ \hline
+  < & <2020 & Values before 2020 (date fields).\\ \hline
+  <= & <=2020-06 & Values on or before June, 2020 (date fields).\\ \hline
+  > & >2020-06 & Values after June, 2020 (date fields).\\ \hline
+  >= & >=2020-06-15 & Values on or after June 15th, 2020 (date fields).\\ \hline
+%  combination & 2019|2020 <2020-03 & Values in 2019 or 2020, and before March, 2020 (date fields).\\ \hline % Sorry, no space for this.
+  combination & >2009 <2020 & Values from 2010 to 2019 (date fields).\\ \hline
+  & 23 & Values exactly matching 23 (numeric fields).\\ \hline
+  < & <23 & Values lower than 23 (numeric fields).\\ \hline
+  <= & <=23 & Values lower than, or equal to, 23 (numeric fields).\\ \hline
+  > & >23 & Values higher than 23 (numeric fields).\\ \hline
+  >= & >=23 & Values higher than, or equal to, 23 (numeric fields).\\ \hline
+  combination & >=20 <30 !23 & Values from 20 to 29, but not equal to 23 (numeric fields).\\ \hline
 \end{tabular}
 \vskip \baselineskip
 
 \noindent
-Some more advanced examples:\\
-\begin{tabular}{>{\bfseries}p{5.4cm} p{10.7cm}}
-  Asian & Shows ``Asian'', but also ``Caucasian'' entries.\\ \hline
-  Asian !Caucasian & Shows ``Asian'', but no ``Caucasian'' entries.\\ \hline
-  Asian|African !Caucasian & Shows ``Asian'' or ``African'', but no ``Caucasian'' entries.\\ \hline
-  "South Asian" & Shows ``South Asian'', but no ``South East Asian'' entries.\\ \hline
+Some more advanced examples:
+\vskip 0.5\baselineskip % This page is too crammed but if I don't do this, everything below goes to hell.
+\noindent
+\begin{tabular}{>{\bfseries}p{5.3cm} p{10.8cm}}
+  Asian & Results containing `Asian', but also containing `Caucasian'.\\ \hline
+  Asian !Caucasian & Results containing `Asian', but not containing `Caucasian'.\\ \hline
+  Asian|African !Caucasian & Results containing `Asian' or `African', but not `Caucasian'.\\ \hline
+  "South Asian" & Results containing `South Asian', but not `South East Asian'.\\ \hline
 \end{tabular}
 
 
@@ -227,7 +250,7 @@ When a gene is selected (shown in the page header), the default page of the gene
 
 
 \section{Transcripts}
-\begin{wrapfigure}[5]{l}{7cm} % Wrap for 5 lines.
+\begin{wrapfigure}[5]{r}{7cm} % Wrap for 5 lines.
   \vspace{-25pt}
   \begin{shaded}
     \frame{\includegraphics[width=0.95\linewidth]{transcript_menu.png}}
@@ -238,7 +261,7 @@ When a gene is selected (shown in the page header), the default page of the gene
 When no gene is selected, the default page of the transcripts tab shows all transcripts.
 When a gene is selected (shown in the page header),
  the default page of the transcripts tab shows all transcripts of the selected gene.
-\clearpage
+\vskip 2\baselineskip
 
 \begin{description}
   \item [View all transcripts] \hfill \\
@@ -270,13 +293,13 @@ When a gene is selected (shown in the page header),
     \caption{Variants menu.}
   \end{shaded}
 \end{wrapfigure}
-When no gene is selected, the default page of the variants tab shows all genomic variants.
+When no gene is selected, the default page of the variants tab shows all variants on the genome level.
 When a gene is selected (shown in the page header),
  the default page of the variants tab shows all unique variants in the selected gene.
 
 \begin{description}
-  \item [View all genomic variants] \hfill \\
-  This view displays all genomic variants in this LOVD installation.
+  \item [View all variants] \hfill \\
+  This view displays all variants in this LOVD installation on the genome level.
   Variants within, but also outside of genes are shown.
   You can click on a variant to view its details.
   \item [View all variants affecting transcripts] \hfill \\
@@ -416,7 +439,7 @@ When a gene is selected (shown in the page header),
 
 
 \section{Screenings}
-\begin{wrapfigure}[9]{l}{7cm}
+\begin{wrapfigure}[8]{r}{7cm}
   \vspace{-25pt}
   \begin{shaded}
     \frame{\includegraphics[width=0.95\linewidth]{screening_menu.png}}
@@ -427,12 +450,15 @@ When a gene is selected (shown in the page header),
 When no gene is selected, the default page of the screenings tab shows all screenings.
 When a gene is selected (shown in the page header),
  the default page of the screenings tab shows all screenings that screened for variants in the selected gene.
-\clearpage
 
 \begin{description}
   \item [View all screenings] \hfill \\
   This view shows all the screenings in the database.
   You can click on a screening to view its details.
+\end{description}
+% You need an empty line here, otherwise LaTeX breaks. But I need to separate these lists to fix the crazy wrapping.
+
+\begin{description}
   \item [View all screenings for a gene] \hfill \\
   This view displays all screenings that screened for variants in the currently selected gene.
   You can click on a screening to view its details.
@@ -1760,7 +1786,7 @@ Clicking the entry will direct you to the gene's homepage.
 Once on the gene's homepage, the gene will be selected (its name will appear on the very top of the page),
  which allows faster navigation to information related to the gene of interest.
 For instance, when a gene is selected and you click the ``Variants'' tab, you are directed to the gene-specific variant overview.
-If no gene is selected, clicking on the same tab shows all genomic variants in the database.
+If no gene is selected, clicking on the same tab shows all variants in the database on the genome level.
 If you do not like this behavior, simply move your mouse over a tab, and select a different option from the dropdown menu.
 % TODO: STUB!
 % Add info about certain fields? Add info about the graphs? Add info about the transcripts shown? Add info about the menu? Maybe in a different subsection?

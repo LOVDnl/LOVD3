@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-08-26
- * Modified    : 2020-02-04
- * For LOVD    : 3.0-23
+ * Modified    : 2020-07-24
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -152,7 +152,7 @@ class LOVD_Announcement extends LOVD_Object
                 array('POST', '', '', '', '35%', '14', '65%'),
                 array('', '', 'print', '<B>Announcement details</B>'),
                 array('Announcement type', '', 'select', 'type', 1, $aTypes, false, false, false),
-                array('Announcement text', '', 'textarea', 'announcement', 60, 5),
+                array('Announcement text<BR>(HTML enabled)', '', 'textarea', 'announcement', 60, 5),
                 array('Start date', 'Use this field to create an announcement before it should be online. The announcement will be active only after this date and time. If you leave this field empty, the current time will be selected. To deactivate an announcement, put a date in the future, like 9999-12-31.', 'text', 'start_date', 20),
                 array('End date', 'Use this field to automatically let an announcement disappear at a certain date or time. If you leave this field empty, the end date will be set to 9999-12-31 23:59:59.', 'text', 'end_date', 20),
                 array('Make LOVD read-only?', 'Enabling this feature blocks logins and submitter registrations when this announcement is active. Only Managers and up will still be able to log into LOVD. Users of a lower level that are active when this announcement activates, will be logged out. A true read-only state is currently not enforced; Managers can still make changes to all data.<BR>Use this feature when the server is undergoing maintenance, for instance.', 'checkbox', 'lovd_read_only'),

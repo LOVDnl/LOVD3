@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-27
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-09
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -443,6 +443,70 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
 
 
 
+    protected function waitForURLContains ($sValue, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
+    {
+        // Convenience function to let the webdriver wait for a standard amount
+        //  of time for the URL to contain a certain value.
+        return $this->waitUntil(
+            WebDriverExpectedCondition::urlContains($sValue), $nTimeOut);
+    }
+
+
+
+
+
+    protected function waitForURLEndsWith ($sValue, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
+    {
+        // Convenience function to let the webdriver wait for a standard amount
+        //  of time for the URL to end with a certain value.
+        return $this->waitUntil(
+            WebDriverExpectedCondition::urlMatches('/' . preg_quote($sValue, '/') . '$/'), $nTimeOut);
+    }
+
+
+
+
+
+    protected function waitForURLEquals ($sValue, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
+    {
+        // Convenience function to let the webdriver wait for a standard amount
+        //  of time for the URL to have a certain value.
+        return $this->waitUntil(
+            WebDriverExpectedCondition::urlIs($sValue), $nTimeOut);
+    }
+
+
+
+
+
+    protected function waitForURLRegExp ($sPattern, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
+    {
+        // Convenience function to let the webdriver wait for a standard amount
+        //  of time for the URL to match a certain pattern.
+        return $this->waitUntil(
+            WebDriverExpectedCondition::urlMatches($sPattern), $nTimeOut);
+    }
+
+
+
+
+
+    protected function waitForValueContains ($oElement, $sValue, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
+    {
+        // Convenience function to let the webdriver wait for a standard amount
+        //  of time for an expected value in the given element.
+        if (is_string($oElement)) {
+            $oElement = WebDriverBy::xpath('//input[@name="' . $oElement . '"]');
+        }
+
+        return $this->waitUntil(
+            WebDriverExpectedCondition::elementValueContains($oElement, $sValue), $nTimeOut);
+    }
+
+
+
+
+
     protected function waitUntil ($condition, $nTimeOut = WEBDRIVER_MAX_WAIT_DEFAULT)
     {
         // Convenience function to let the webdriver wait for a standard amount
@@ -451,3 +515,4 @@ abstract class LOVDSeleniumWebdriverBaseTestCase extends PHPUnit_Framework_TestC
                             ->until($condition);
     }
 }
+?>

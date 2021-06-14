@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2016-10-17
- * For LOVD    : 3.0-18
+ * Modified    : 2020-09-17
+ * For LOVD    : 3.0-25
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -178,7 +178,7 @@ if (!empty($_POST)) {
 
         lovd_errorPrint();
 
-        print('      <FORM action="' . $_PE[0] . '?confirm" method="post">' . "\n" .
+        print('      <FORM action="' . CURRENT_PATH . '?confirm" method="post">' . "\n" .
               '        <TABLE border="0" cellpadding="0" cellspacing="0" width="300">' . "\n" .
               '          <TR align="right">' . "\n" .
               '            <TD width="125" style="padding-right : 5px;">Password</TD>' . "\n" .
@@ -201,7 +201,7 @@ if (empty($_POST)) {
 
 lovd_errorPrint();
 
-print('      <FORM action="' . $_PE[0] . '" method="post">' . "\n" .
+print('      <FORM action="' . CURRENT_PATH . '" method="post">' . "\n" .
       '        <TABLE border="0" cellpadding="0" cellspacing="0" width="300">' . "\n" .
       '          <TR align="right">' . "\n" .
       '            <TD width="125" style="padding-right : 5px;">Password</TD>' . "\n" .

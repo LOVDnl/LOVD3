@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-06-15
- * Modified    : 2020-06-15
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-09
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -54,10 +54,10 @@ class DeleteDiseaseIVANotAuthorizedTest extends LOVDSeleniumWebdriverBaseTestCas
     public function test ()
     {
         $this->driver->get(ROOT_URL . '/src/diseases/IVA');
+        $this->waitForURLContains('/src/diseases/0000');
         $this->assertFalse($this->isElementPresent(WebDriverBy::id('viewentryOptionsButton_Diseases')));
 
         $this->driver->get($this->driver->getCurrentURL() . '?delete');
-        $this->assertRegExp('/\/src\/diseases\/[0-9]+\?delete$/', $this->driver->getCurrentURL());
         $this->assertEquals('To access this area, you need at least Manager clearance.',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }

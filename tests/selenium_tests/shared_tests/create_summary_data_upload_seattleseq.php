@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2020-05-26
- * For LOVD    : 3.0-24
+ * Modified    : 2020-10-08
+ * For LOVD    : 3.0-25
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -64,12 +64,12 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
         $this->assertStringStartsWith('Please reconsider to submit individual data as well, as it makes the data you submit much more valuable!',
             $this->getConfirmation());
         $this->chooseOkOnNextConfirmation();
-        $this->waitUntil(WebDriverExpectedCondition::urlContains('/src/variants?create'));
+        $this->waitForURLEndsWith('/src/variants?create');
 
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to upload a file")]'))->click();
 
-        $this->assertStringEndsWith('/src/variants/upload?create', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/variants/upload?create');
         $this->driver->findElement(WebDriverBy::xpath(
             '//table[@class="option"]//td[contains(., "I want to upload a SeattleSeq Annotation file")]'))->click();
     }
@@ -83,7 +83,7 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
      */
     public function testUploadFile ()
     {
-        $this->assertStringEndsWith('/src/variants/upload?create&type=SeattleSeq', $this->driver->getCurrentURL());
+        $this->waitForURLEndsWith('/src/variants/upload?create&type=SeattleSeq');
         $this->enterValue('variant_file', ROOT_PATH . '../tests/test_data_files/ShortSeattleSeqAnnotation138v1.txt');
         $this->selectValue('hg_build', 'hg19');
         $this->selectValue('dbSNP_column', 'VariantOnGenome/Reference');
@@ -97,7 +97,7 @@ class CreateSummaryDataUploadSeattleseqTest extends LOVDSeleniumWebdriverBaseTes
             $this->driver->findElement(WebDriverBy::id('lovd__progress_message'))->getText());
         $this->submitForm('Continue');
 
-        $this->assertContains('/src/submit/finish/upload/', $this->driver->getCurrentURL());
+        $this->waitForURLContains('/src/submit/finish/upload/');
         $this->assertStringStartsWith('Successfully processed your submission',
             $this->driver->findElement(WebDriverBy::cssSelector('table[class=info]'))->getText());
     }
