@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2020-02-10
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,10 +42,10 @@ require_once ROOT_PATH . 'class/object_custom.php';
 
 
 
-class LOVD_Phenotype extends LOVD_Custom {
-    // This class extends the basic Object class and it handles the Link object.
+class LOVD_Phenotype extends LOVD_Custom
+{
+    // This class extends the Custom class and it handles the Phenotypes.
     var $sObject = 'Phenotype';
-    var $bShared = true;
 
 
 
@@ -56,15 +56,9 @@ class LOVD_Phenotype extends LOVD_Custom {
         // Default constructor.
         global $_SETT;
 
-        if (LOVD_plus) {
-            // We don't have shared custom columns in LOVD+.
-            $this->bShared = false;
-        }
-
         // SQL code for loading an entry for an edit form.
-        // FIXME; change owner to owned_by_ in the load entry query below.
         $this->sSQLLoadEntry = 'SELECT p.*, ' .
-                               'uo.name AS owner ' .
+                               'uo.name AS owned_by_ ' .
                                'FROM ' . TABLE_PHENOTYPES . ' AS p ' .
                                'LEFT JOIN ' . TABLE_USERS . ' AS uo ON (p.owned_by = uo.id) ' .
                                'WHERE p.id = ?';
@@ -73,7 +67,7 @@ class LOVD_Phenotype extends LOVD_Custom {
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
                                            'i.statusid AS individual_statusid, ' .
                                            'd.symbol AS disease, ' .
-                                           'uo.name AS owned_by_, ' .
+                                           'uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
         $this->aSQLViewEntry['FROM']     = TABLE_PHENOTYPES . ' AS p ' .

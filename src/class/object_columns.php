@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2019-11-12
+ * Modified    : 2020-02-04
  * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -42,8 +42,9 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Column extends LOVD_Object {
-    // This class extends the basic Object class and it handles the Column object.
+class LOVD_Column extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Custom Columns.
     var $sObject = 'Column';
     var $sTable  = 'TABLE_COLS';
 
@@ -121,9 +122,9 @@ class LOVD_Column extends LOVD_Object {
                         'allow_count_all_' => 'Include in search form',
                         'parent_objects' => 'Column activated for',
                         'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
+                        'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
+                        'edited_date_' => 'Date last edited',
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -394,7 +395,7 @@ class LOVD_Column extends LOVD_Object {
             // Remove unnecessary columns.
             if ($zData['edited_by'] == NULL) {
                 // Never been edited.
-                unset($this->aColumnsViewEntry['edited_by_'], $this->aColumnsViewEntry['edited_date']);
+                unset($this->aColumnsViewEntry['edited_by_'], $this->aColumnsViewEntry['edited_date_']);
             }
 
             // Remove columns based on form type?

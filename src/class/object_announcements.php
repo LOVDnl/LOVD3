@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-08-26
- * Modified    : 2017-10-26
- * For LOVD    : 3.0-21
+ * Modified    : 2020-02-04
+ * For LOVD    : 3.0-23
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -40,9 +40,10 @@ require_once ROOT_PATH . 'class/objects.php';
 
 
 
-class LOVD_Announcement extends LOVD_Object {
-// This class extends the basic Object class and it handles the Announcement object.
-var $sObject = 'Announcement';
+class LOVD_Announcement extends LOVD_Object
+{
+    // This class extends the basic Object class and it handles the Announcements.
+    var $sObject = 'Announcement';
 
 
 
@@ -68,13 +69,13 @@ var $sObject = 'Announcement';
                         'id' => 'Announcement ID',
                         'type' => 'Type',
                         'announcement' => 'Announcement text',
-                        'start_date' => 'Start date',
-                        'end_date' => 'End date',
+                        'start_date_' => 'Start date',
+                        'end_date_' => 'End date',
                         'lovd_read_only_' => 'Make LOVD read-only?',
                         'created_by_' => 'Created by',
-                        'created_date' => 'Date created',
+                        'created_date_' => 'Date created',
                         'edited_by_' => 'Last edited by',
-                        'edited_date' => 'Date last edited',
+                        'edited_date_' => 'Date last edited',
                       );
 
         // List of columns and (default?) order for viewing a list of entries.

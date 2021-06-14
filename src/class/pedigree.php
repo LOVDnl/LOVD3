@@ -7,7 +7,7 @@
  * Modified    : 2013-03-29
  * For LOVD    : 3.0-04
  *
- * Copyright   : 2004-2013 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -37,7 +37,8 @@ if (!defined('ROOT_PATH')) {
 
 
 
-class Pedigree {
+class Pedigree
+{
     // Creates a pedigree tree around the given individual, calculates withs, and prints it on the screen.
     private $individuals = array();
     private $tree = array();
@@ -131,7 +132,7 @@ class Pedigree {
             }
             $aIDs = array_merge($aIDs, $aSpouseIDs); // Should of course only be one spouse.
         }
-        
+
         // Get information about the individual(s) itself.
         $q = $_DB->query('SELECT i.id, i.`Individual/Name` AS name, i.`Individual/Gender` AS gender, i.`fatherid` AS father, i.`motherid` AS mother, GROUP_CONCAT(i2d.diseaseid SEPARATOR ";") AS _diseases FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i.id IN (?' . str_repeat(', ?', count($aIDs)-1) . ') GROUP BY i.id', $aIDs);
         while ($z = $q->fetchAssoc()) {
@@ -260,7 +261,7 @@ class Pedigree {
 
                     // Print individual itself.
                     foreach ($aIndividual['ids'] as $nKey => $nID) {
-                        $aI = $this->individuals[$nID]; 
+                        $aI = $this->individuals[$nID];
                         if ($nKey) {
                             // Not the first.
                             print('    <TD><IMG src="gfx/pedigree/' . ($this->sMode == 'pedigree'? '' : '100x100/') . 'l14.png"></TD>' . "\n");
@@ -300,7 +301,7 @@ class Pedigree {
                             } else {
                                 $nHeight = 100;
                             }
-                            
+
                             // FIXME: Display the name nicely (shorten in intelligent way).
                             $sName = $aI['name'];
                             print('    <TD align="center" style="position : relative;"><A href="#"' . "\n" . // Relative position is needed to have the DIV stick to the TD.
