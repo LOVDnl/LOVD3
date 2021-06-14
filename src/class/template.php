@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2021-02-03
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-21
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -620,14 +620,26 @@ function lovd_mapVariants ()
         }
     }
 <?php
-    // Determine whether or not to show the donation dialog.
-    $nTimeToShow = strtotime('+' . ($_CONF['donate_dialog_months_hidden'] < 1? 1 : $_CONF['donate_dialog_months_hidden']) . ' months', $_COOKIE['lovd_settings']['donation_dialog_last_seen']);
-    if ($_CONF['donate_dialog_allow'] && $nTimeToShow <= time()) {
-        print('
+        if (!defined('MISSING_CONF') && isset($_COOKIE['lovd_settings'])) {
+            // Determine whether or not to show the donation dialog.
+            $nTimeToShow = strtotime('+' . ($_CONF['donate_dialog_months_hidden'] < 1 ? 1 : $_CONF['donate_dialog_months_hidden']) . ' months', $_COOKIE['lovd_settings']['donation_dialog_last_seen']);
+            if ($_CONF['donate_dialog_allow'] && $nTimeToShow <= time()) {
+                print('
     // Donation dialog last seen ' . date('Y-m-d H:i:s', $_COOKIE['lovd_settings']['donation_dialog_last_seen']) . ', show again.
     $.get("ajax/donate.php");
 ');
-    }
+
+            } elseif ($_AUTH && !isset($_AUTH['default_license']) && substr(lovd_getProjectFile(), 0, 9) != '/install/') {
+                // Determine whether or not to show the dialog to remind the user to choose a license.
+                $nTimeToShow = strtotime('+1 day', $_COOKIE['lovd_settings']['default_license_dialog_last_seen']);
+                if ($nTimeToShow <= time()) {
+                    print('
+    // Dialog to remind user to choose a default license last seen ' . date('Y-m-d H:i:s', $_COOKIE['lovd_settings']['default_license_dialog_last_seen']) . ', show again.
+    $.get("ajax/licenses.php/user/' . $_AUTH['id'] . '?remind");
+');
+                }
+            }
+        }
 ?>
   </SCRIPT>
   <LINK rel="stylesheet" type="text/css" href="lib/jQuery/css/cupertino/jquery-ui.css">

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-28
- * Modified    : 2020-09-29
- * For LOVD    : 3.0-25
+ * Modified    : 2021-04-21
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -148,7 +148,8 @@ class LOVD_Log extends LOVD_Object
                 break;
             case 'IndividualCreate':
             case 'IndividualEdit':
-                $zData['entry'] = preg_replace('/(entry|individual) ([0-9]{8})( .+)?$/', '$1 <A href="individuals/$2">$2</A>$3', $zData['entry']);
+            case 'IndividualLicenseEdit':
+                $zData['entry'] = preg_replace('/(entry|individual) (#)?([0-9]{8})( .+)?$/', '$1 $2<A href="individuals/$3">$3</A>$4', $zData['entry']);
                 break;
             case 'LinkCreate':
             case 'LinkEdit':
@@ -183,6 +184,7 @@ class LOVD_Log extends LOVD_Object
             case 'UserBoot':
             case 'UserCreate':
             case 'UserEdit':
+            case 'UserLicenseEdit':
             case 'UserLock':
             case 'UserRegister':
             case 'UserResetPassword':

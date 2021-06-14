@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-02-18
- * For LOVD    : 3.0-26
+ * Modified    : 2021-04-06
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -767,11 +767,19 @@ function lovd_getCurrentID ()
 {
     // Gets the ID for the current page, formats it, and returns it.
     // E.g. /individuals/1 => 00000001.
-    global $_PE;
+    global $_PE, $_SETT;
 
     if (PATH_COUNT == 3 && $_PE[0] == 'phenotypes' && $_PE[1] == 'disease') {
         // Disease-specific list of phenotypes; /phenotypes/disease/00001.
         return $_PE[2];
+    } elseif (PATH_COUNT >= 3 && $_PE[0] == 'ajax') {
+        // Ajax scripts often have IDs in the URLs.
+        if (in_array($_PE[1], array('api_settings.php', 'auth_token.php'))) {
+            return sprintf('%0' . $_SETT['objectid_length']['users'] . 'd', $_PE[2]);
+        } elseif (PATH_COUNT == 4 && in_array($_PE[2], array('individual', 'user'))) {
+            return sprintf('%0' . $_SETT['objectid_length'][$_PE[2] . 's'] . 'd', $_PE[3]);
+        }
+
     } elseif (PATH_COUNT >= 2 && in_array($_PE[0], array('columns', 'references'))) {
         // For columns and references, the ID al all of $_PE.
         $sID = implode('/', array_slice($_PE, 1));
@@ -856,7 +864,12 @@ function lovd_getCurrentPageTitle ()
             switch ($sObject) {
                 case 'phenotypes':
                 case 'screenings':
+                    $sObject = 'individuals';
                     $sTitle .= ' for individual';
+                    break;
+                case 'variants':
+                    $sObject = 'screenings';
+                    $sTitle .= ' for screening';
                     break;
             }
         }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-09-22
- * Modified    : 2020-09-29
- * For LOVD    : 3.0-25
+ * Modified    : 2021-02-25
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -32,6 +32,8 @@ define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
+// URL: /ajax/api_settings.php/00001?edit
+
 // Check for basic format.
 if (PATH_COUNT != 3 || !ctype_digit($_PE[2]) || !in_array(ACTION, array('edit'))) {
     die('alert("Error while sending data.");');
@@ -44,10 +46,9 @@ if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER || !lovd_isAuthorized('user', $_P
 }
 
 // Let's download the user's data.
-$nID = sprintf('%0' . $_SETT['objectid_length']['users'] . 'd', $_PE[2]);
-$zUser = $_DB->query('SELECT id, username, api_settings FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+$nID = lovd_getCurrentID();
+$zUser = $_DB->query('SELECT id, username, api_settings FROM ' . TABLE_USERS . ' WHERE id > 0 AND id = ?', array($nID))->fetchAssoc();
 $zUser['api_settings'] = @json_decode($zUser['api_settings'], true);
-
 if (!$zUser) {
     // FIXME: Should we log this?
     die('alert("Data not found.");');
