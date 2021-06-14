@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-05-28
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -803,10 +803,10 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
         // Later, per section 'update_columns_not_allowed' is filled with additional fields which are not allowed to be updated, together with the error message when they are changed and the error type (soft or hard warning).
         $aParsed = array_fill_keys(
             array('Columns', 'Genes', 'Transcripts', 'Diseases', 'Genes_To_Diseases', 'Individuals', 'Individuals_To_Diseases', 'Phenotypes', 'Screenings', 'Screenings_To_Genes', 'Variants_On_Genome', 'Variants_On_Transcripts', 'Screenings_To_Variants'),
-            array('allowed_columns' => array(), 'columns' => array(), 'update_columns_not_allowed' => array('edited_by' => array('message' => 'Edited by field is set by LOVD', 'error_type' => 'soft'),
-                                                                                                            'edited_date' => array('message' => 'Edited date field is set by LOVD', 'error_type' => 'soft'),
-                                                                                                            'created_by' => array('message' => 'Created by field is set by LOVD', 'error_type' => 'soft'),
-                                                                                                            'created_date' => array('message' => 'Created date field is set by LOVD', 'error_type' => 'soft')), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
+            array('allowed_columns' => array(), 'columns' => array(), 'update_columns_not_allowed' => array('edited_by' => array('message' => 'Edited by field is set by LOVD.', 'error_type' => 'soft'),
+                                                                                                            'edited_date' => array('message' => 'Edited date field is set by LOVD.', 'error_type' => 'soft'),
+                                                                                                            'created_by' => array('message' => 'Created by field is set by LOVD.', 'error_type' => 'soft'),
+                                                                                                            'created_date' => array('message' => 'Created date field is set by LOVD.', 'error_type' => 'soft')), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
         $aParsed['Genes_To_Diseases'] = $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('allowed_columns' => array(), 'data' => array()); // Just the data, nothing else!
         $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
         $aImportFlags = array('max_errors' => 50);
@@ -1412,14 +1412,13 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     case 'Individuals_To_Diseases':
                     case 'Screenings_To_Genes':
                     case 'Screenings_To_Variants':
-                        reset($aLine);
-                        list($sCol1, $nID1) = each($aLine);
-                        list($sCol2, $nID2) = each($aLine);
+                        list($sCol1, $sCol2) = array_keys($aLine);
+                        list($nID1, $nID2) = array_values($aLine);
                         if (isset($nID1) && isset($nID2)) {
                             $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . $sCol1 . ' = ? AND ' . $sCol2 . ' = ?', array($nID1, $nID2))->fetchAssoc();
                         }
                         if (!$zData && !in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
-                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import <BR>', 'done');
+                            $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import.<BR>', 'done');
                             $nWarnings ++;
                             $aSectionsAlreadyWarnedFor[] = $sCurrentSection;
                         }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2019-07-24
- * For LOVD    : 3.0-22
+ * Modified    : 2020-05-07
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -54,37 +54,87 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             array('g.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
-                'type' => 'dup'
+                'type' => 'dup',
+                'warnings' => array(),
             )),
             array('c.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
-                'type' => 'dup'
+                'type' => 'dup',
+                'warnings' => array(),
             )),
             array('m.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
-                'type' => 'dup'
+                'type' => 'dup',
+                'warnings' => array(),
             )),
             array('n.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
-                'type' => 'dup'
+                'type' => 'dup',
+                'warnings' => array(),
             )),
             array('g.(?_112043201)_(112181937_?)del', array(
                 'position_start' => 112043201,
                 'position_end' => 112181937,
-                'type' => 'del'
+                'type' => 'del',
+                'warnings' => array(),
+            )),
+            array('g.(100_200)_(400_500)del', array(
+                'position_start' => 150,
+                'position_end' => 450,
+                'type' => 'del',
+                'warnings' => array(),
+            )),
+            array('g.100_(400_500)del', array(
+                'position_start' => 100,
+                'position_end' => 450,
+                'type' => 'del',
+                'warnings' => array(),
+            )),
+            array('g.(100_200)_500del', array(
+                'position_start' => 150,
+                'position_end' => 500,
+                'type' => 'del',
+                'warnings' => array(),
             )),
             array('g.100612527_100612529delinsAA', array(
                 'position_start' => 100612527,
                 'position_end' => 100612529,
-                'type' => 'delins'
-            ))
+                'type' => 'delins',
+                'warnings' => array(),
+            )),
+            array('g.100612529_100612527delinsAA', array(
+                'position_start' => 100612527,
+                'position_end' => 100612529,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WPOSITIONSSWAPPED' => 'Variant end position is higher than variant start position.',
+                ),
+            )),
+            array('g.100612529_100612527delinsAA', array(
+                'position_start' => 100612527,
+                'position_end' => 100612529,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WPOSITIONSSWAPPED' => 'Variant end position is higher than variant start position.',
+                ),
+            )),
+            array('c.10000000_10000000del', array(
+                'position_start' => 8388607,
+                'position_end' => 8388607,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: position_start, position_end.',
+                ),
+            )),
         );
     }
 }

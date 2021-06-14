@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2019-11-21
- * For LOVD    : 3.0-23
+ * Modified    : 2020-02-24
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -51,7 +51,7 @@ $aNeededLevel =
          array(
                 'Column' => LEVEL_CURATOR,
                 'Custom_ViewList' => 0,
-                'Custom_ViewListMOD' => 0, // LOVD+
+                'Custom_ViewListPLUS' => 0, // LOVD+
                 'Disease' => 0,
                 'Gene' => 0,
                 'Gene_Panel' => LEVEL_SUBMITTER, // LOVD+
@@ -60,12 +60,12 @@ $aNeededLevel =
                 'Gene_Statistic' => LEVEL_SUBMITTER, // LOVD+
                 'Genome_Variant' => 0,
                 'Individual' => 0,
-                'IndividualMOD' => 0, // LOVD+
+                'IndividualPLUS' => 0, // LOVD+
                 'Link' => LEVEL_MANAGER,
                 'Log' => (LOVD_plus? LEVEL_SUBMITTER : LEVEL_MANAGER),
                 'Phenotype' => 0,
                 'Screening' => 0,
-                'ScreeningMOD' => 0, // LOVD+
+                'ScreeningPLUS' => 0, // LOVD+
                 'Shared_Column' => LEVEL_CURATOR,
                 'Summary_Annotation_REV' => $_SETT['user_level_settings']['summary_annotation_view_history'],
                 'Transcript' => 0,
@@ -198,8 +198,8 @@ $sFile = ROOT_PATH . 'class/object_' . strtolower($sObject) . 's.php';
 // For revision tables.
 $sFile = str_replace('_revs.php', 's.rev.php', $sFile);
 // Exception for LOVD+.
-if (LOVD_plus && substr($_GET['object'], -3) == 'MOD') {
-    $sFile = str_replace('mods.', 's.mod.', $sFile);
+if (LOVD_plus && substr($_GET['object'], -4) == 'PLUS') {
+    $sFile = str_replace('pluss.', 's.plus.', $sFile);
 }
 
 if (!file_exists($sFile)) {

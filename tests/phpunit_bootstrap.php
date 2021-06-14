@@ -43,7 +43,7 @@ if (!isset($_INI['test']['root_url'])) {
     fputs(STDERR, 'Warning: failed to initialize ROOT_URL from ' . ROOT_PATH . 'config.ini.php' .
         PHP_EOL);
 } else {
-    define('ROOT_URL', $_INI['test']['root_url']);
+    define('ROOT_URL', rtrim($_INI['test']['root_url'], '/'));
 }
 
 // Check if XDebug session should be started.

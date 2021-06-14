@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-05-29
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -208,7 +208,7 @@ function lovd_convertBytesToHRSize ($nValue)
 {
     // This function takes integers and converts it to sizes like "128M".
 
-    if (!ctype_digit($nValue)) {
+    if (!ctype_digit($nValue) && !is_int($nValue)) {
         return false;
     }
 
@@ -776,7 +776,7 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
-function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
+function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = false)
 {
     // Parses the variant, and returns position fields (2 for genomic variants,
     //  4 for cDNA variants) and variant type.
@@ -786,6 +786,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     // $sTranscriptID contains the internal ID or NCBI ID of the transcript that
     //  this variant is on, and is only needed for processing 3' UTR variants,
     //  like c.*10del, since we'll need to have the CDS stop value for that.
+    // $bCheckHGVS contains a boolean that allows for using only part of this
+    //  function to just check if the variant is HGVS or not. It will in this
+    //  case be more stringent than the function normally is, checking the
+    //  variant further in details, but it will only return a boolean value.
     global $_DB;
 
     static $aTranscriptOffsets = array();
@@ -793,6 +797,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         'position_start' => 0,
         'position_end' => 0,
         'type' => '',
+        'warnings' => array(),
     );
 
     // If given, check if we already know this transcript.
@@ -803,20 +808,60 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             // Transcript not configured correctly.
             return false;
         }
+    } elseif ($sTranscriptID === false) {
+        // If the transcript ID is passed as false, we are asked to ignore not having the transcript.
+        // Some random number, high enough to not be smaller than position_start if that's not in the UTR.
+        $aTranscriptOffsets[0] = 1000000;
     }
 
     // Isolate the position(s) from the variant. We don't support combined variants.
     // We're not super picky, and would therefore approve of c.1_2A>C; we also
     //  don't check for the end of the variant, it may contain bases, or not.
-    if (preg_match('/^([cgmn])\.([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|del(ins)?|dup|inv|ins)/', $sVariant, $aRegs)) {
+    if (preg_match('/^([cgmn])\.(\()?([\-\*]?\d+)([-+](?:\d+|\?))?(?:_([\-\*]?\d+)([-+](?:\d+|\?))?)?([ACGT]>[ACGT]|con|del(?:ins)?|dup|inv|ins)(.*)(?(2)\))/', $sVariant, $aRegs)) {
         //             1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
-        //                       2 = Start position, might be negative or in the 3' UTR.
-        //                                   3 = Start position intronic offset, if available.
-        //                                                        4 = End position, might be negative or in the 3' UTR.
-        //                                                                    5 = End position intronic offset, if available.
-        //                                                                                       6 = The variant, which we'll use to determine the type.
+        //                       2 = Do we have an opening parenthesis?
+        //                            3 = Start position, might be negative or in the 3' UTR.
+        //                                        4 = Start position intronic offset, if available.
+        //                                                             5 = End position, might be negative or in the 3' UTR.
+        //                                                                         6 = End position intronic offset, if available.
+        //                                                                                            7 = The variant, which we'll use to determine the type.
+        //                                                                                                                                 8 = The suffix.
+        list(, $sPrefix,, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant, $sSuffix) = $aRegs;
 
-        list(, $sPrefix, $sStartPosition, $sStartPositionIntron, $sEndPosition, $sEndPositionIntron, $sVariant) = $aRegs;
+        if ($bCheckHGVS) {
+            // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
+            if (strpos($sVariant, '>') !== false && $sEndPosition) {
+                // Substitutions are not allowed to have a range.
+                return false;
+            }
+
+            if ($sSuffix) {
+                // Suffix not allowed in some cases.
+                if (strpos($sVariant, '>') !== false || $sVariant == 'inv') {
+                    // No suffix allowed for substitutions or inversions.
+                    return false;
+                } elseif ($sVariant == 'con' && !preg_match('/^([NX][CMR]_[0-9]{6}\.[0-9]+:)?([0-9]+|[0-9]+[+-][0-9]+)_([0-9]+|[0-9]+[+-][0-9]+)$/', $sSuffix)) {
+                    // Gene conversions require position fields.
+                    return false;
+                } elseif (in_array($sVariant, array('del', 'dup')) && !preg_match('/^[ACTG]+$/', $sSuffix)) {
+                    // Only allow bases as suffix for deletions and duplications.
+                    return false;
+                } elseif ($sVariant == 'delins' && !preg_match('/^([ACTG]+|\([0-9]+\))$/', $sSuffix)) {
+                    // Only allow bases or length as suffix for deletion-insertion events.
+                    // Position ranges for deletion-insertions are actually conversions.
+                    return false;
+                } elseif ($sVariant == 'ins' && !preg_match('/^([ACTG]+|\([0-9]+\)|[0-9]+_[0-9]+|\[NC_[0-9]{6}\.[0-9]+:[0-9]+_[0-9]+\])$/', $sSuffix)) {
+                    // Supported are insertions with bases, length, or with position fields.
+                    return false;
+                }
+            } else {
+                // Suffix is required in some cases.
+                if (in_array($sVariant, array('con', 'delins', 'ins'))) {
+                    return false;
+                }
+            }
+        }
+
         if ($sPrefix != 'c' && $sPrefix != 'n') {
             if ($sStartPositionIntron || $sEndPositionIntron) {
                 // Anything not c. or n. is regarded genomic, having a max of 2 positions.
@@ -831,7 +876,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
         // Convert 3' UTR notations into normal notations.
         if ($sStartPosition{0} == '*' || ($sEndPosition && $sEndPosition{0} == '*')) {
             // Check if a transcript ID has been provided.
-            if (!$sTranscriptID) {
+            if ($sTranscriptID === '') {
                 // No, but we'll need it.
                 return false;
             }
@@ -866,19 +911,47 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
     // If that didn't work, try matching variants with uncertain positions.
     // We're not super picky, and don't check the end of the variant.
-    } elseif (preg_match('/^([cgmn])\.\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)_\(([\-\*]?\d+|\?)([-+](?:\d+|\?))?_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\)(del(ins)?|dup|inv|ins)/', $sVariant, $aRegs)) {
+    } elseif (preg_match('/^([cgmn])\.(\()?([\-\*]?\d+|\?)([-+](?:\d+|\?))?(?(2)_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\))_(\()?([\-\*]?\d+|\?)([-+](?:\d+|\?))?(?(7)_([\-\*]?\d+|\?)([-+](?:\d+|\?))?\))(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
         //                   1 = Prefix; indicates what kind of positions we can expect, and what we'll output.
-        //                               2 = Earliest start position, might be a question mark.
-        //                                              3 = Earlier start position intronic offset, if available.
-        //                                                                4 = Latest start position, might be a question mark.
-        //                                                                               5 = Latest start position intronic offset, if available.
-        //                                                                                                     6 = Earliest end position, might be a question mark.
-        //                                                                                                                    7 = Earliest end position intronic offset, if available.
-        //                                                                                                                                      8 = Latest end position, might be a question mark.
-        //                                                                                                                                                     9 = Latest end position intronic offset, if available.
-        //                                                                                                                                                                        10 = The variant, which we'll use to determine the type.
+        //                             2 = Check for opening parenthesis in start position (which triggers it to be a range).
+        //                                  3 = Earliest start position, might be a question mark.
+        //                                                 4 = Earlier start position intronic offset, if available.
+        //                                                                        5 = Latest start position, might be a question mark.
+        //                                                                                       6 = Latest start position intronic offset, if available.
+        //                                                                                                            7 = Check for opening parenthesis in end position (which triggers it to be a range).
+        //                                                                                                                 8 = Earliest end position, might be a question mark.
+        //                                                                                                                                9 = Earliest end position intronic offset, if available.
+        //                                                                                                                                                       10 = Latest end position, might be a question mark.
+        //                                                                                                                                                                      11 = Latest end position intronic offset, if available.
+        //                                                                                                                                                                                          12 = The variant, which we'll use to determine the type.
+        //                                                                                                                                                                                                                       13 = The suffix.
+        list(, $sPrefix,, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron,, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant, $sSuffix) = $aRegs;
 
-        list(, $sPrefix, $sStartPositionEarly, $sStartPositionEarlyIntron, $sStartPositionLate, $sStartPositionLateIntron, $sEndPositionEarly, $sEndPositionEarlyIntron, $sEndPositionLate, $sEndPositionLateIntron, $sVariant) = $aRegs;
+        if ($bCheckHGVS) {
+            // This was quite a lossy check, sufficient to get positions and type, but we need a HGVS check now.
+            if ($sSuffix) {
+                // Suffix not allowed in some cases.
+                if (in_array($sVariant, array('del', 'dup', 'inv'))) {
+                    // No suffix allowed for uncertain deletions, duplications, or inversions.
+                    return false;
+                } elseif ($sVariant == 'con' && !preg_match('/^([NX][CMR]_[0-9]{6}\.[0-9]+:)?[0-9]+_[0-9]+$/', $sSuffix)) {
+                    // Gene conversions require position fields.
+                    return false;
+                } elseif ($sVariant == 'delins' && !preg_match('/^(\([0-9]+\))$/', $sSuffix)) {
+                    // Only allow length as suffix for deletion-insertion events.
+                    // Position ranges for deletion-insertions are actually conversions.
+                    return false;
+                } elseif ($sVariant == 'ins' && !preg_match('/^(\([0-9]+\)|[0-9]+_[0-9]+|\[NC_[0-9]{6}\.[0-9]+:[0-9]+_[0-9]+\])$/', $sSuffix)) {
+                    // Supported are insertions with length or with position fields.
+                    return false;
+                }
+            } else {
+                // Suffix is required in some cases.
+                if (in_array($sVariant, array('con', 'delins', 'ins'))) {
+                    return false;
+                }
+            }
+        }
 
         // Always at least create the intron fields for c. and n. variants.
         if ($sPrefix == 'c' || $sPrefix == 'n') {
@@ -891,18 +964,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
                 return false;
             } elseif (
                 (!ctype_digit($sStartPositionEarly) && $sStartPositionEarly != '?' ) ||
-                (!ctype_digit($sStartPositionLate) && $sStartPositionLate != '?') ||
+                (!ctype_digit($sStartPositionLate) && $sStartPositionLate != '?' && $sStartPositionLate) ||
                 (!ctype_digit($sEndPositionEarly) && $sEndPositionEarly != '?') ||
-                (!ctype_digit($sEndPositionLate) && $sEndPositionLate != '?')) {
+                (!ctype_digit($sEndPositionLate) && $sEndPositionLate != '?' && $sEndPositionLate)) {
                 // Non-numeric first character of the positions (- or *) is also impossible for genomic variants.
                 return false;
             }
         }
 
         // Convert 3' UTR notations into normal notations.
-        if ($sStartPositionEarly{0} == '*' || $sStartPositionLate{0} == '*' || $sEndPositionEarly{0} == '*' || $sEndPositionLate{0} == '*') {
+        if ($sStartPositionEarly{0} == '*' || ($sStartPositionLate && $sStartPositionLate{0} == '*')
+            || $sEndPositionEarly{0} == '*' || ($sEndPositionLate && $sEndPositionLate{0} == '*')) {
             // Check if a transcript ID has been provided.
-            if (!$sTranscriptID) {
+            if ($sTranscriptID === '') {
                 // No, but we'll need it.
                 return false;
             }
@@ -988,6 +1062,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
 
     // If a variant is described poorly with a start > end, then we'll swap the positions so we will store them correctly.
     if ($aResponse['position_start'] > $aResponse['position_end']) {
+        // Don't do this if we're checking the HGVS.
+        if ($bCheckHGVS) {
+            return false;
+        } else {
+            $aResponse['warnings']['WPOSITIONSSWAPPED'] = 'Variant end position is higher than variant start position.';
+        }
+
         // There's many ways of doing this, but this method is the simplest to read.
         $nTmp = $aResponse['position_start'];
         $aResponse['position_start'] = $aResponse['position_end'];
@@ -999,6 +1080,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
             $aResponse['position_start_intron'] = $aResponse['position_end_intron'];
             $aResponse['position_end_intron'] = $nTmp;
         }
+    }
+
+    // End of all checks. If we only wanted to know about the HGVS, then quit.
+    if ($bCheckHGVS) {
+        return true;
     }
 
     // Variant type.
@@ -1039,8 +1125,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '')
     if (isset($aMinMaxValues[$sPrefix])) {
         // If the min and max values are defined for this prefix, check the fields.
         foreach ($aMinMaxValues[$sPrefix] as $sField => $aMinMaxValue) {
+            $nOriValue = $aResponse[$sField];
             $aResponse[$sField] = max($aResponse[$sField], $aMinMaxValue[0]);
             $aResponse[$sField] = min($aResponse[$sField], $aMinMaxValue[1]);
+            if ($nOriValue != $aResponse[$sField]) {
+                if (!isset($aResponse['warnings']['WPOSITIONSLIMIT'])) {
+                    $aResponse['warnings']['WPOSITIONSLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sField . '.';
+                } else {
+                    // Append.
+                    $aResponse['warnings']['WPOSITIONSLIMIT'] =
+                        str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONSLIMIT'], '.')) . ', ' . $sField . '.';
+                }
+            }
         }
     }
 
@@ -1092,7 +1188,7 @@ function lovd_getTableInfoByCategory ($sCategory)
                     'table_sql' => TABLE_PHENOTYPES,
                     'table_name' => 'Phenotype',
                     'table_alias' => 'p',
-                    'shared' => true,
+                    'shared' => !LOVD_plus, // True for LOVD, false for LOVD+.
                     'unit' => 'disease', // Is also used to determine the key (diseaseid).
                 ),
             'Screening' =>
@@ -1116,7 +1212,7 @@ function lovd_getTableInfoByCategory ($sCategory)
                     'table_sql' => TABLE_VARIANTS_ON_TRANSCRIPTS,
                     'table_name' => 'Transcript Variant',
                     'table_alias' => 'vot',
-                    'shared' => true,
+                    'shared' => !LOVD_plus, // True for LOVD, false for LOVD+.
                     'unit' => 'gene', // Is also used to determine the key (geneid).
                 ),
             'SummaryAnnotation' =>
@@ -1921,7 +2017,7 @@ function lovd_requireAUTH ($nLevel = 0)
     // Creates friendly output message if $_AUTH does not exist (or level too
     // low), and exits.
     // $_AUTH is for authorization; $_SETT is needed for the user levels.
-    global $_AUTH, $_DB, $_SETT, $_T;
+    global $_AUTH, $_SETT, $_T;
 
     $aKeys = array_keys($_SETT['user_levels']);
     if ($nLevel !== 0 && !in_array($nLevel, $aKeys)) {

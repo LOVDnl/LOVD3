@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-09-10
- * Modified    : 2017-11-10
- * For LOVD    : 3.0-21
+ * Modified    : 2020-04-10
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -65,7 +65,7 @@ class ProgressBar
         if (FORMAT == 'text/html') {
             print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="440" id="lovd_' . $this->sID . '_progress_table" >' . "\n" .
                   '        <TR>' . "\n" .
-                  '          <TD width="400" style="border : 1px solid black; height : 15px;">' . "\n" .
+                  '          <TD width="400" style="border : 1px solid black; padding : 0px; height : 15px;">' . "\n" .
                   '            <IMG src="gfx/trans.png" alt="" title="0%" width="0%" height="15" id="lovd_' . $this->sID . '_progress_bar" style="background : #224488;"></TD>' . "\n" .
                   '          <TD width="40" align="right" id="lovd_' . $this->sID . '_progress_value">0%</TD></TR></TABLE>' . "\n\n" .
                   '      <DIV id="lovd_' . $this->sID . '_progress_message" style="margin-top : 0px;">' . "\n" .

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2020-02-18
- * For LOVD    : 3.0-23
+ * Modified    : 2020-07-09
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -43,6 +43,66 @@ $sCalcVersionDB = lovd_calculateVersion($_STAT['version']);
 
 
 
+function lovd_addConditionalSQL ($sCondition, $aConditionArgs, $sSQL)
+{
+    // This function returns the given SQL surrounded by SQL conditions.
+    // This allows for a quick way to write SQL to, for instance, add a column only if it doesn't exist yet.
+
+    if (!is_array($aConditionArgs)) {
+        return array(
+            // This will cause a query error.
+            'lovd_addConditionalSQL() error; $aConditionArgs not an array.'
+        );
+    }
+
+    $aReturn = array();
+    switch ($sCondition) {
+        case 'column_not_exists':
+            // Args: Table, Column.
+            if (count($aConditionArgs) != 2) {
+                return array(
+                    // This will cause a query error.
+                    'lovd_addConditionalSQL() error; $aConditionArgs does not exactly contain two arguments.'
+                );
+            }
+            list($sTable, $sColumn) = $aConditionArgs;
+            $aReturn = array(
+                'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $sTable . '" AND COLUMN_NAME = "' . $sColumn . '")',
+                'SET @sSQL := IF(@bExists > 0, \'SELECT "INFO: Column already exists."\', "' . $sSQL . '")',
+                'PREPARE Statement FROM @sSQL',
+                'EXECUTE Statement',
+            );
+            break;
+        case 'column_exists_has_no_key':
+            // Args: Table, Column.
+            if (count($aConditionArgs) != 2) {
+                return array(
+                    // This will cause a query error.
+                    'lovd_addConditionalSQL() error; $aConditionArgs does not exactly contain two arguments.'
+                );
+            }
+            list($sTable, $sColumn) = $aConditionArgs;
+            $aReturn = array(
+                'SET @bExists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $sTable . '" AND COLUMN_NAME = "' . $sColumn . '")',
+                'SET @bHasKey := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . $sTable . '" AND COLUMN_NAME = "' . $sColumn . '" AND COLUMN_KEY != "")',
+                'SET @sSQL := IF(@bExists = 0 OR @bHasKey = 1, \'SELECT "INFO: Column does not exists or already has key."\', "' . $sSQL . '")',
+                'PREPARE Statement FROM @sSQL',
+                'EXECUTE Statement',
+            );
+            break;
+        default:
+            return array(
+                // This will cause a query error.
+                'lovd_addConditionalSQL() error; $sCondition ' . $sCondition . ' not recognized.'
+            );
+    }
+    return $aReturn;
+}
+
+
+
+
+
 if ($sCalcVersionFiles != $sCalcVersionDB) {
     // Version of files are not equal to version of database backend.
 
@@ -61,6 +121,36 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
     $_T->printTitle();
 
     print('      Please wait while LOVD is upgrading the database backend from ' . $_STAT['version'] . ' to ' . $_SETT['system']['version'] . '.<BR><BR>' . "\n");
+
+    // Array of messages that should be displayed.
+    // Each item should be an array with arguments to the lovd_showInfoTable() function.
+    // Only the first argument is required, just like in the function itself.
+    $aUpdateMessages =
+        array(
+            '3.0-17m' => array(), // Placeholder for an LOVD+ message, defined below.
+            '3.0-17n' => array(), // Placeholder for an LOVD+ message, defined below.
+            '3.0-17o' => array(), // Placeholder for an LOVD+ message, defined below.
+        );
+
+    // LOVD+ messages should be built up separately, so that LOVDs won't show them.
+    if (LOVD_plus) {
+        $aUpdateMessages['3.0-17m'] = array(
+            'To complete the upgrade to 3.0-17m, it is <B>required</B> to run an upgrade script separately, that will convert your existing DBID values to the new format.<BR>The "hash_dbid.php" script is located in your scripts folder. Please wait for the upgrade below to finish, then click here to run the script.',
+            'stop',
+            '100%',
+            'lovd_openWindow(\'scripts/hash_dbid.php\')',
+        );
+        $aUpdateMessages['3.0-17n'] = array(
+            'If you have a cron job set up for the auto import feature, grepping for lines starting with a colon (:), then turn off this grep from now on. Output no longer is prefixed by a colon, and grepping is no longer needed because no HTML is output by the script anymore. LOVD now defaults to text/plain output for the auto importer, so you also don\'t need to request it anymore in the URL, either. See the updated INSTALL.txt for the new suggested cron job to use.',
+            'important',
+        );
+        $aUpdateMessages['3.0-17o'] = array(
+            'To complete the upgrade to 3.0-17o, you <B>should</B> run a data migration script separately, that will convert the existing gene panel history of your analyses to the new format.<BR>The "migrate_gp_filters_config.php" script is located in your scripts folder. Please wait for the upgrade below to finish, then click here to run the script.',
+            'stop',
+            '100%',
+            'lovd_openWindow(\'scripts/migrate_gp_filters_config.php\')',
+        );
+    }
 
     // Array of changes.
     $aUpdates =
@@ -688,7 +778,17 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                      'ALTER TABLE ' . TABLE_GENES . ' DROP COLUMN allow_index_wiki',
                      'ALTER TABLE ' . TABLE_USERS . ' DROP COLUMN reference',
                  ),
-                 '3.0-23b' => array_merge(
+                 '3.0-24' => array_merge(
+                     lovd_addConditionalSQL(
+                        'column_exists_has_no_key', array(TABLE_VARIANTS, 'VariantOnGenome/DBID'),
+                         'ALTER TABLE ' . TABLE_VARIANTS . ' ADD INDEX (`VariantOnGenome/DBID`)'
+                     ),
+                     array(
+                         'DELETE FROM ' . TABLE_EFFECT . ' WHERE id LIKE "6_" OR id LIKE "8_" OR id LIKE "_6" OR id LIKE "_8"',
+                         'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://pubmed.ncbi.nlm.nih.gov/[2]\" target=\"_blank\">[1]</A>" WHERE name = "PubMed" AND replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/pubmed/[2]\" target=\"_blank\">[1]</A>"',
+                     )
+                 ),
+                 '3.0-24b' => array_merge(
                      array(
                          'CREATE TABLE IF NOT EXISTS ' . TABLE_SUMMARY_ANNOTATIONS . ' (
                             id VARCHAR(50) NOT NULL,
@@ -803,6 +903,18 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
 
 
+
+
+
+    // First, print the messages belonging to the updates. Otherwise we'll have to work around the progress bar, that I don't want.
+    foreach ($aUpdateMessages as $sVersion => $aMessage) {
+        if (lovd_calculateVersion($sVersion) > $sCalcVersionDB && lovd_calculateVersion($sVersion) <= $sCalcVersionFiles && $aMessage) {
+            // Message should be displayed.
+            // Prepare default values for arguments.
+            $aMessage += array('', 'information', '100%', '', true);
+            lovd_showInfoTable($aMessage[0], $aMessage[1], $aMessage[2], $aMessage[3], $aMessage[4]);
+        }
+    }
 
     // To make sure we upgrade the database correctly, we add the current version to the list...
     if (!isset($aUpdates[$_SETT['system']['version']])) {

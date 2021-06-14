@@ -195,6 +195,7 @@
 5.3.0 bcrypt built into PHP (before that, availability depends on the system)
 5.3.3 PDO::inTransaction() (already in use, but we check for it)
 5.4.0 JSON_PRETTY_PRINT is available (now I'm using it if available)
+5.4.0 Short array notation is available; array() => [].
 =====-========
 5.3.0 REQUIRED
 

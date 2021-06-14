@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-09-27
- * Modified    : 2016-10-31
- * For LOVD    : 3.0-18
+ * Modified    : 2020-06-12
+ * For LOVD    : 3.0-24
  *
- * Copyright   : 2016 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -83,6 +84,12 @@ class RefreshingWebElement extends RemoteWebElement {
     }
 
 
+    public function getAttribute ($sAttribute)
+    {
+        return $this->tryWithRefresh('getAttribute', array($sAttribute));
+    }
+
+
     public function getText ()
     {
         return $this->tryWithRefresh('getText');
@@ -94,8 +101,6 @@ class RefreshingWebElement extends RemoteWebElement {
         // Refresh this element by re-running findElement() using the locator.
 
         if (isset($this->locator) && isset($this->driver)) {
-            fwrite(STDERR, 'Refreshing element, locator = "' . $this->locator->getValue() . '" (' .
-                $this->locator->getMechanism() . ')' . PHP_EOL);
             $newElement = $this->driver->findElement($this->locator);
 
             // Overwrite ID of current element with new one.

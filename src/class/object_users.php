@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-03-03
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -279,8 +279,7 @@ class LOVD_User extends LOVD_Object
         if (!empty($aData['allowed_ip'])) {
             // This function will throw an error itself (second argument).
             $bIP = lovd_matchIPRange($aData['allowed_ip'], 'allowed_ip');
-
-            if (lovd_getProjectFile() == '/install/index.php' || (ACTION == 'edit' && $_PE[1] == $_AUTH['id'])) {
+            if (lovd_getProjectFile() == '/install/index.php' || ACTION == 'register' || (ACTION == 'edit' && $_PE[1] == $_AUTH['id'])) {
                 // Check given security IP range.
                 if ($bIP && !lovd_validateIP($aData['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     // This IP range is not allowing the current IP to connect. This ain't right.

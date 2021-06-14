@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2020-02-10
- * For LOVD    : 3.0-23
+ * Modified    : 2020-06-08
+ * For LOVD    : 3.0-24
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -149,8 +149,8 @@ class LOVD_GenomeVariant extends LOVD_Custom
                         'effect' => array(
                                     'view' => array('Effect', 70),
                                     'db'   => array('e.name', 'ASC', true),
-                                    'legend' => array('The variant\'s effect on a protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
-                                                      'The variant\'s effect on a protein\'s function, in the format \'R/C\' where R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded' : 'reported by the source and C is the value concluded by the curator') . '; \'+\' indicating the variant affects function, \'+?\' probably affects function, \'+*\' affects function, not associated with individual\'s disease phenotype, \'#\' affects function, not associated with any known disease phenotype, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect not classified.')),
+                                    'legend' => array('The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded;' : 'reported by the source (publication, submitter) and C is the value concluded by the curator;') . ' values ranging from \'+\' (variant affects function) to \'-\' (does not affect function).',
+                                                      'The variant\'s effect on the function of the gene/protein, displayed in the format \'R/C\'. R is the value ' . (LOVD_plus? 'initially reported and C is the value finally concluded.' : 'reported by the source (publication, submitter) and this classification may vary between records. C is the value concluded by the curator. Note that in some database the curator uses Summary records to give details on the classification of the variant.') . 'Values used: \'+\' indicating the variant affects function, \'+?\' probably affects function, \'-\' does not affect function, \'-?\' probably does not affect function, \'?\' effect unknown, \'.\' effect was not classified.')),
                         'allele_' => array(
                                     'view' => array('Allele', 120),
                                     'db'   => array('a.name', 'ASC', true),
@@ -388,7 +388,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  on the genomic level will be determined by the "worst" effect on the
             //  transcript levels. Only if the currently set effect is non-concordant
             //  with the current effects on the transcripts and not set to
-            //  'not classifed' will the form field be shown, so that the user
+            //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectConcluded = false;
             $nVOGEffectConcluded = intval($zData['effectid']{1});
@@ -417,7 +417,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  on the genomic level will be determined by the "worst" effect on the
             //  transcript levels. Only if the currently set effect is non-concordant
             //  with the current effects on the transcripts and not set to
-            //  'not classifed' will the form field be shown, so that the user
+            //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectReported = false;
             $nVOGEffectReported = intval($zData['effectid']{0});
