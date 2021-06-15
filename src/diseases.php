@@ -464,7 +464,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         }
 
         if (!$bDelete) {
-            // Curator has no delete rights, throw him out.
+            // Curator has no delete rights, throw them out.
             lovd_requireAUTH(LEVEL_MANAGER);
         }
     } else {

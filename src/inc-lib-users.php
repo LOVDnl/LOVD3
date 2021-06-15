@@ -91,7 +91,7 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $sUs
                                  $aNewColleagues)
 {
     // Send an email to users with an ID in $aNewColleagues, letting them know
-    // the user denoted by $sUserID has shared access to his data with them.
+    // the user denoted by $sUserID has shared access to their data with them.
     require_once ROOT_PATH . 'inc-lib-form.php';
     global $_DB, $_SETT, $_AUTH;
 

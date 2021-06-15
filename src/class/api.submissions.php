@@ -1134,7 +1134,7 @@ class LOVD_API_Submissions
         // Loop through individual, checking minimal requirements.
         foreach ($aInput['lsdb']['individual'] as $iIndividual => $aIndividual) {
             // From now on, we won't return directly anymore if there are errors.
-            // We let them accumulate, to make it easier for the user to test his file.
+            // We let them accumulate, to make it easier for the user to test their file.
             $nIndividual = $iIndividual + 1; // We start counting at 1, like most humans do.
 
             // Required elements.

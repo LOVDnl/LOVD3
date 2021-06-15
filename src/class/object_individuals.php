@@ -105,7 +105,7 @@ class LOVD_Individual extends LOVD_Custom
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                           'ds.name AS status';
 
-        // Construct list of user IDs for current user and users who share access with him.
+        // Construct list of user IDs for current user and users who share access with them.
         $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
         $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 

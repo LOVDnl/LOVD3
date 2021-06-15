@@ -188,7 +188,7 @@
 5.0.0 file() with FILE_IGNORE_NEW_LINES.
 5.0.0 microtime() ondersteunt argument true.
 5.1.0 PDO built in.
-5.2.0 json_(de|en)code built in (there's only one LOVD3 user on 5.1 right now, and we haven't seen him in 3 months - 2012-10-29).
+5.2.0 json_(de|en)code built in (there's only one LOVD3 user on 5.1 right now, and we haven't seen them in 3 months - 2012-10-29).
 5.2.0 array_fill_keys() available.
 5.3.0 array_replace_recursive() available (already in use in users.php in two places and we have two current PHP 5.2 users! (cc1bd203e228f68f2c67bde49779ab54 (143.210.170.132 - viti.gene.le.ac.uk), 5a6a939312e611c2a72e662752f1418f (143.210.170.214 - lamp-api-22.rcs.le.ac.uk, and 143.210.56.79)))
 5.3.0 anonymous functions introduced. I got parse errors in inc-lib-form (needed to log in even!) so I now realize that 5.3.0 is required, which means we could use bcrypt as well!!!

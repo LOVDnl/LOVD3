@@ -76,7 +76,7 @@ class LOVD_Screening extends LOVD_Custom
                                            'uc.name AS created_by_, ' .
                                            'ue.name AS edited_by_';
 
-        // Construct list of user IDs for current user and users who share access with him.
+        // Construct list of user IDs for current user and users who share access with them.
         $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
         $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 

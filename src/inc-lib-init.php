@@ -1632,12 +1632,13 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     }
 
     if ($sType == 'user') {
-        // Base authorization on own level and other's level, if not requesting authorization on himself.
+        // Base authorization on own level and other's level,
+        //  if not requesting authorization on themself.
         if (is_array($Data)) {
             // Not supported on this data type.
             return false;
         } else {
-            // If viewing himself, always get authorization.
+            // If user is viewing themself, always get authorization.
             if ($Data == $_AUTH['id']) {
                 if ($bSetUserLevel && $_AUTH['level'] < LEVEL_OWNER) {
                     $_AUTH['level'] = LEVEL_OWNER;

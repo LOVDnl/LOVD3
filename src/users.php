@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2021-01-27
- * For LOVD    : 3.0-26
+ * Modified    : 2021-06-15
+ * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -87,7 +87,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_T->printTitle();
 
     // Require valid user.
-    // If not viewing himself, the user may see very little information (low level) or all data (high level).
+    // If not viewing themself, the user may see very little information (low level) or all data (high level).
     lovd_requireAUTH();
 
     // Enable LEVEL_COLLABORATOR and LEVEL_CURATOR for object_users.php.
@@ -114,7 +114,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     print('      </DIV>' . "\n\n");
 
     $aNavigation = array();
-    // Since we're faking the user's level to show some more columns when the user is viewing himself, we must put the check on the ID here.
+    // Since we're faking the user's level to show some more columns when the
+    //  user is viewing themself, we must put the check on the ID here.
     if ($_AUTH['id'] != $nID && $_AUTH['level'] >= LEVEL_MANAGER && $_AUTH['level'] > $zData['level']) {
         // Authorized user is logged in. Provide tools.
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Edit user', 1);
@@ -129,7 +130,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $aNavigation[CURRENT_PATH . '?delete'] = array('cross.png', 'Delete user', 1);
         $aNavigation['download/all/user/' . $nID]    = array('menu_save.png', 'Download all this user\'s data', 1);
     } elseif ($_AUTH['id'] == $nID) {
-        // Viewing himself!
+        // User is viewing themself!
         $aNavigation[CURRENT_PATH . '?edit'] = array('menu_edit.png', 'Update your registration', 1);
         $aNavigation['download/all/mine']    = array('menu_save.png', 'Download all my data', 1);
     } elseif ($_AUTH['level'] >= LEVEL_MANAGER) {
@@ -210,7 +211,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
             $_POST['orcid_id'] = 'none';
             $_SESSION['orcid_data'] = array();
         } else {
-            // Ask the user if he has an ORCID ID. If not, suggest him to register.
+            // Ask the user if they have an ORCID ID. If not, suggest them to register.
             if (POST) {
                 lovd_errorClean();
 
@@ -485,7 +486,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
             $nID = $_DATA->insertEntry($_POST, $aFields);
             if (ACTION == 'register') {
-                // Store that user has been created by himself.
+                // Store that user has been created by themself.
                 $_DB->query('UPDATE ' . TABLE_USERS . ' SET created_by = id WHERE id = ?', array($nID));
 
                 // Load authorization.
@@ -681,7 +682,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    // Require special clearance, if user is not editing himself.
+    // Require special clearance, if user is not editing themself.
     // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
@@ -795,7 +796,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'change_password') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    // Require special clearance, if user is not editing himself.
+    // Require special clearance, if user is not editing themself.
     // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
@@ -891,7 +892,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    // Require special clearance, user must be of higher level (and therefore automatically cannot delete himself).
+    // Require special clearance, user must be of higher level
+    //  (and therefore automatically cannot delete themself).
     if ($zData['level'] >= $_AUTH['level']) {
         // Simple solution: if level is not lower than what you have, you're out.
         // This is a hack-attempt.
@@ -926,7 +928,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
         // Mandatory fields.
         if (!isset($_GET['confirm'])) {
-            // User had to enter his/her password for authorization.
+            // User had to enter their password for authorization.
             if (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                 lovd_errorAdd('password', 'Please enter your correct password for authorization.');
             }
@@ -934,7 +936,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
         if (!lovd_error()) {
             if (isset($_GET['confirm'])) {
-                // User had to enter his/her password for authorization.
+                // User had to enter their password for authorization.
                 if (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
                     lovd_errorAdd('password', 'Please enter your correct password for authorization.');
                 }
@@ -1213,7 +1215,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
 
 if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // URL: /users/00001?share_access
-    // Let the user share access to his objects to other users.
+    // Let the user share access to their objects to other users.
 
     $nID = lovd_getCurrentID();
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
@@ -1238,7 +1240,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         exit;
     }
 
-    // Require special clearance, if user is not editing himself.
+    // Require special clearance, if user is not editing themself.
     // Necessary level depends on level of user. Special case.
     if ($nID != $_AUTH['id'] && $zData['level'] >= $_AUTH['level']) {
         // This is a hack-attempt.
@@ -1278,7 +1280,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
         if (empty($_POST['password'])) {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
         } elseif ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
-            // User had to enter his/her password for authorization.
+            // User had to enter their password for authorization.
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
 
@@ -1308,7 +1310,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     lovd_errorPrint();
 
     lovd_showInfoTable('To share access with other users, find the user in the list below, click on
-                       the user to add him to the selection. Then click <B>save</B> to save the
+                       the user to add them to the selection. Then click <B>save</B> to save the
                        changes.', 'information');
 
     // Set number of items per page for viewlist.
@@ -1332,7 +1334,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $_DATA->viewList($sUserListID, $aVLOptions);
 
     lovd_showInfoTable('<B>' . $zData['name'] . ' (' . $nID . ')</B> shares access to all
-                       data owned by him with the users listed below.', 'information');
+                       data owned by them with the users listed below.', 'information');
 
     print('<FORM action="users/' . $nID . '?share_access" method="post">' . "\n");
     // Array which will make up the form table.
