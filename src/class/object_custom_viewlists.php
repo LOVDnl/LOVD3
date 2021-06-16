@@ -271,7 +271,7 @@ class LOVD_CustomViewList extends LOVD_Object
 
                     // If user level not high enough, hide lines with hidden variants!
                     if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
-                        // Construct list of user IDs for current user and users who share access with him.
+                        // Construct list of user IDs for current user and users who share access with them.
                         $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                         $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 
@@ -476,7 +476,7 @@ class LOVD_CustomViewList extends LOVD_Object
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
                         // If user level not high enough, hide hidden individuals (from the join, don't hide the line)!
                         if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
-                            // Construct list of user IDs for current user and users who share access with him.
+                            // Construct list of user IDs for current user and users who share access with them.
                             $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
                             $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 

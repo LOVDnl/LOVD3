@@ -5,7 +5,7 @@
 % To convert the manual to an html file use: pdf2htmlEX --zoom 1.3 --embed-css 2 manual.pdf
 
 %%%%% SETTINGS FOR THE TITLE PAGE %%%%%
-\setLOVDversion{3.0-25}
+\setLOVDversion{3.0-27}
 \title{LOVD 3.0 user manual \\\vskip 0.2cm Build \LOVDversion}
 \author{Ivo F.A.C. Fokkema \\ Daan Asscheman}
 \setpointercolor{red}
@@ -914,7 +914,7 @@ In this section you can control some security settings of LOVD.
   \\
   This does \emph{not} affect the database administrator account.
   \item[Allow (locked) users to retrieve a new password?] \hfill \\
-  If a submitter, curator, or manager has lost his password, enabling this ``I forgot my password''
+  If a submitter, curator, or manager has lost their password, enabling this ``I forgot my password''
    feature allows them to receive a unlocking code in their email with which
     they can unlock their account and choose a new password.
   \item[Enable submitters to change data?] \hfill \\
@@ -1180,7 +1180,7 @@ Thus, to completely remove LOVD from the system, also remove the files from the 
 
 \chapter{Authorized users}
 In LOVD 3.0, \emph{authorized users} are everyone who registered for an account at the LOVD installation,
- including the database administrator who created his account during the installation process.
+ including the database administrator who created their account during the installation process.
 The authorized users come in five levels; the database administrator of which there is only one, managers, curators, collaborators and submitters.
 The different levels of users are described in more detail below.
 
@@ -1215,7 +1215,7 @@ A manager can only be created by the administrator and often assists the adminis
 
 \subsubsection{Curator}
 The curator level user is actually a submitter, which has been given curatorship of one or more genes.
-Therefore, a curator only has access to the gene databases he is appointed to, and not to the system-wide setup area.
+Therefore, a curator only has access to the gene databases they are appointed to, and not to the system-wide setup area.
 However, also the database administrator or a manager can act as a curator by being appointed to certain genes,
  but in this case there is of course no restriction in access.
 \vskip \baselineskip
@@ -1302,7 +1302,7 @@ If the information shown is not correct, click ``\guillemotleft{} No, this is no
 
 \pagebreak[4] % Break the page here (up to 4; 4 is very persistent)
 \subsection{User details}
-This part of the registration form contains the basic fields with which the user identifies himself.
+This part of the registration form contains the basic fields with which the user identifies themself.
 \begin{description}
   \item[Name] \hfill \\
   Please enter your name in the way you want to be referenced to; usually in the format ``<First name> <Last name>''.
@@ -1400,7 +1400,7 @@ This section contains one additional field, compared to the registration page.
 \begin{description}
   \item[Must change password at next logon] \hfill \\
   If you want to force the user to pick a new password after logging in for the first time, select this checkbox.
-  The user will not be able to work with LOVD until he has changed his password.
+  The user will not be able to work with LOVD until they have changed their password.
 \end{description}
 
 
@@ -1427,8 +1427,10 @@ This section contains more options when creating a new user account for a new us
 This option is only available while creating a new user, it's not shown on the submitter registration form.
 \begin{description}
   \item[Send email with account details to user] \hfill \\
-  When enabled, the user's details will be emailed to the email address(es) given, informing the user immediately about his account details.
-  The submitter registration form does not have this checkbox, but this feature is \emph{always} active for submitter registrations.
+  When enabled, the user's details will be emailed to the email address(es) given,
+   informing the user immediately about their account details.
+  The submitter registration form does not have this checkbox,
+   but this feature is \emph{always} active for submitter registrations.
 \end{description}
 
 
@@ -1546,7 +1548,7 @@ Finally, one can save changes to the bottom table by verifying their password an
 %
 %
 %
-%Since the user may have created or edited variants, patients, custom columns, custom links etc, permanently deleting the user from the system may leave some references in the database broken. Therefore, deleting a user only disables the user's account and removes the user as a curator from the genes he or she was a curator for, but does not permanently remove the account. A deleted user can therefore be 'revived' by editing the user and unchecking the 'deleted' checkbox.
+%Since the user may have created or edited variants, patients, custom columns, custom links etc, permanently deleting the user from the system may leave some references in the database broken. Therefore, deleting a user only disables the user's account and removes the user as a curator from the genes they were a curator for, but does not permanently remove the account. A deleted user can therefore be 'revived' by editing the user and unchecking the 'deleted' checkbox.
 %If the user is the only curator for one or more genes, and you delete the user, you inherit the curator rights on these 'orphaned' genes. If you want to prevent this, make sure the gene has at least one other curator.
 %
 %From the user's detailed view, a link named "Delete user" is available if the user has not already been deleted and you have the correct rights on the user account. After clicking that link, you need to confirm deleting the user with your password. Also, if you will take over any genes, this is reported on this confirmation form.
@@ -1908,8 +1910,8 @@ Also, you can sort the curators by dragging and dropping them in the list (see s
 The first checkbox indicates whether or not they are allowed to edit the data in this gene's database.
 Users allowed to edit the data, are curators.
 Unchecking this checkbox turns this user in a collaborator for this gene;
- he can still see all public and unpublic data in this gene database, but he can't edit it, like curators can.
-If the user is to be a curator, he will receive notifications of variant data submissions and submission updates.
+ they can still see all public and unpublic data in this gene database, but they can't edit it, like curators can.
+If the user is to be a curator, they will receive notifications of variant data submissions and submission updates.
 Collaborators do not receive such emails.
 
 The second checkbox indicates whether or not the user's name and email address is
@@ -2182,7 +2184,7 @@ Here the description of the new column is defined; its displayed name and the ex
   \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
   \\
   Describe the meaning of the column in short.
-  This will appear when a user moves his mouse over the column header in the data tables.
+  This will appear when a user moves their mouse over the column header in the data tables.
   \item[Description on full legend] (HTML enabled)\hfill \\
   \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
   \\
@@ -2240,7 +2242,7 @@ The next page shows you some additional options that depend on the type of field
   \item[Help text] (all field types)\hfill \\
   If you think the data field needs clarification for users, especially those who don't know this field well, add such clarification here.
   By filling in this field, LOVD will add a question mark icon next to the field on the data entry form.
-  When the user moves his mouse over the question mark icon, the text entered here is shown.
+  When the user moves their mouse over the question mark icon, the text entered here is shown.
   Since the text is shown as a highlight, it does not disrupt the structure of the data entry form, so feel free to type lengthy texts.
   \item[Notes on form] (all field types, HTML enabled)\hfill \\
   \emph{For shared columns, this value can be changed separately for each parent object this column has been added to.}
@@ -2805,7 +2807,7 @@ You can add more information to your submission at any later time, like new vari
  phenotype information or a new screening.
 If you are a submitter level user, all new data submissions have to be published by a curator
  before the data is visible to the public.
-When finishing a submission, the curator will receive an email notification, inviting him to publish the data.
+When finishing a submission, the curator(s) will receive an email notification, inviting them to publish the data.
 \vskip \baselineskip
 
 This chapter describes adding data to LOVD using the web forms.

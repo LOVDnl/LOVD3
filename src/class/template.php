@@ -448,7 +448,7 @@ function lovd_mapVariants ()
 
             // Not every page request should trigger the mapping...
             if (!empty($_SESSION['mapping']['time_complete']) && $_SESSION['mapping']['time_complete'] >= (time() - 60 * 60 * 24)) {
-                // If it is less than one day ago that mapping was complete, don't start it automatically, but allow the user to start it himself.
+                // If it is less than one day ago that mapping was complete, don't start it automatically, but allow the user to start it themself.
                 print('$("#mapping_progress").click(lovd_mapVariants);' . "\n");
             } elseif (!empty($_SESSION['mapping']['time_error']) && $_SESSION['mapping']['time_error'] >= (time() - 60 * 60)) {
                 // If it is less than one hour ago that an error occurred, don't start it either.

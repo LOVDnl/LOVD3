@@ -355,8 +355,8 @@
    Closes #98: "Configurable homepage".
  * Fixed bug; The variant mapper gets stuck when encountering variants with no
    position set.
- * Improved message that the curator sees, when he tries to disable a custom
-   column that has already been disabled for all his genes.
+ * Improved message that the curator sees, when they try to disable a custom
+   column that has already been disabled for all their genes.
    Closes #162: "Confusing message when curator disables custom column".
  * Added links to overviews of created entries on user page.
    Closes #190: "Add links to records created by user on user's profile page".
@@ -858,7 +858,7 @@
    variant mapper was sometimes incorrect.
  * Fixed typo in the data importer.
  * Fixed bug; Fixed fatal error when a user submits an individual with variants
-   for which is he both curator and submitter.
+   for which they are both curator and submitter.
  * Fixed bug; Diseases could not be linked to a big number of genes (hundreds).
  * Fixed bug; The ORCID integration during user registration had to be updated
    due to a discontinued service.
@@ -1500,10 +1500,10 @@
    should not have been applied to the 'description_form' field when editing
    shared columns, since it's not applied when creating the column, either.
  * Fixed bug; Submitter registration emails were sent to the database
-   administrator always, even if he indicated not wanting them.
+   administrator always, even if they indicated not wanting them.
  * After registering a submitter account, you are now forwarded to your account
    details instead of the gene list.
- * When creating a new user, you can have the account details mailed to him/her.
+ * When creating a new user, you can have the account details mailed to them.
  * Added support for non-coding genes with NR transcript reference sequences.
  * Fixed bug; Transcripts could not be added to variants not HGVS compliant on
    genomic level.

@@ -35,7 +35,7 @@ set_time_limit(0); // Can take a long time on large installations.
 
 if (!isset($_GET['icon'])) {
     // Only authorized people...
-    lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if he is one at all.
+    lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if they are one at all.
     lovd_requireAUTH(LEVEL_CURATOR);
 }
 // Now we unlock the session. We have to do this because otherwise the session data is

@@ -171,7 +171,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // List of phenotype entries associated with this person, per disease.
         $_GET['search_individualid'] = $nID;
         $_T->printTitle('Phenotypes', 'H4');
-        // Repeat searching for diseases, since this individual might have phenotype entry for a disease he doesn't have.
+        // Repeat searching for diseases, since this individual might have a
+        //  phenotype entry for a disease they don't have.
         $zData['diseases'] = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($zData['phenotypes'])-1) . ')', $zData['phenotypes'])->fetchAllRow();
         require ROOT_PATH . 'class/object_phenotypes.php';
         foreach($zData['diseases'] as $aDisease) {
@@ -560,7 +561,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
         }
 
-        // User had to enter his/her password for authorization.
+        // User had to enter their password for authorization.
         if ($_POST['password'] && !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
             lovd_errorAdd('password', 'Please enter your correct password for authorization.');
         }
