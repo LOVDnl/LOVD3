@@ -164,7 +164,7 @@ class LOVD_Custom extends LOVD_Object
                 $sAlias = strtolower($this->sCategory{0});
             }
 
-            // Construct list of user IDs for current user and users who share access with him.
+            // Construct list of user IDs for current user and users who share access with them.
             $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
             $sOwnerIDsSQL = join(', ', $aOwnerIDs);
 

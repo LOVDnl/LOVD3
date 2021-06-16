@@ -88,7 +88,7 @@ class LOVD_Transcript extends LOVD_Object
                                               // Speed optimization by skipping variant counts.
                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
                                               // If user is less than a collaborator, only show public variants and
-                                              // variants owned/created by him.
+                                              //  variants owned/created by them.
                                               ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                                                   ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog' .
                                                   '   ON (vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .

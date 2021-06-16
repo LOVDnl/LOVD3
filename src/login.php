@@ -60,7 +60,7 @@ if (!empty($_POST)) {
             if ($zUser) {
                 // The user exists, now check account unlocking, locked accounts, successful and unsuccessful logins.
 
-                // Instead of having inc-auth.php stop the user when his IP is not allowed to log in, it's better to do that here.
+                // Instead of having inc-auth.php stop the user when their IP is not allowed to log in, it's better to do that here.
                 if ($zUser['allowed_ip'] && !lovd_validateIP($zUser['allowed_ip'], $_SERVER['REMOTE_ADDR'])) {
                     lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') is not in IP allow list for ' . $_POST['username'] . ': "' . $zUser['allowed_ip'] . '"');
 
@@ -142,7 +142,7 @@ if (!empty($_POST)) {
                     // FIXME; This is temporary code; can be removed once the old authentication method has died out.
                     // Regenerate the new password hash, *but only if the user has upgraded the database already*!!!
                     if (strlen($zUser['password']) == 32 && $_STAT['version'] >= '3.0-alpha-02') {
-                        // User has logged in, so we have his password. Create salt and regenerate password hash for him.
+                        // User has logged in, so we have their password. Create salt and regenerate password hash for them.
                         $_SESSION['auth']['password'] = lovd_createPasswordHash($_POST['password']);
                         $_DB->query('UPDATE ' . TABLE_USERS . ' SET password = ?, password_autogen = "", phpsessid = ?, last_login = NOW(), login_attempts = 0 WHERE id = ?', array($_SESSION['auth']['password'], session_id(), $_AUTH['id']));
                     } else {
@@ -171,7 +171,7 @@ if (!empty($_POST)) {
                 lovd_writeLog('Auth', 'AuthError', $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried logging in using ' . $_POST['username'] . '/' . str_repeat('*', strlen($_POST['password'])));
                 lovd_errorAdd('', 'Invalid Username/Password combination.');
 
-                // This may not actually update (user misspelled his username) but we can call the query anyway.
+                // This may not actually update (user misspelled their username) but we can call the query anyway.
                 if ($_CONF['lock_users']) {
                     $_DB->query('UPDATE ' . TABLE_USERS . ' SET login_attempts = login_attempts + 1 WHERE username = ? AND level < ' . LEVEL_ADMIN, array($_POST['username']), false);
                 }

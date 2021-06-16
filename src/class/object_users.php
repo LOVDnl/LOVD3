@@ -120,14 +120,14 @@ class LOVD_User extends LOVD_Object
                         'username' => array('Username', LEVEL_MANAGER),
                         'password_force_change_' => array('Force change password', LEVEL_MANAGER),
                         'phpsessid' => array('Session ID', LEVEL_MANAGER),
-                        'auth_token_' => array('API token', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
-                        'auth_token_expires_' => array('API token expiration', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
+                        'auth_token_' => array('API token', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not themself or manager or up).
+                        'auth_token_expires_' => array('API token expiration', LEVEL_CURATOR), // Will be unset if user is not authorized on this user (i.e., not themself or manager or up).
                         'api_settings' => array('API settings', LEVEL_MANAGER),
                         'saved_work_' => array('Saved work', LEVEL_MANAGER),
                         'curates_' => 'Curator for',
                         'collaborates_' => array('Collaborator for', LEVEL_CURATOR),
-                        'entries_owned_by_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not himself or manager or up).
-                        'entries_created_by_' => 'Has created', // Will be unset if not viewing himself or manager or up.
+                        'entries_owned_by_' => 'Data owner for', // Will be unset if user is not authorized on this user (i.e., not themself or manager or up).
+                        'entries_created_by_' => 'Has created', // Will be unset if not viewing themself or manager or up.
                         'colleagues_' => '', // Other users that may access this user's data.
                         'default_license_' => 'Default license',
                         'level_' => array('User level', LEVEL_CURATOR),
@@ -419,7 +419,7 @@ class LOVD_User extends LOVD_Object
                         'skip',
       'change_other' => array('Enter your password for authorization', '', 'password', 'password', 20));
             if ($_PE[1] == $_AUTH['id']) {
-                // User is resetting password for him/herself.
+                // User is resetting password for themself.
                 unset($this->aFormData['change_other']);
                 // If user just logged in with an unlocking code, we will rename the "Current password" field.
                 if ($_AUTH['password'] == $_AUTH['password_autogen']) {
