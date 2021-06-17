@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-05-26
+ * Modified    : 2021-06-17
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -843,10 +843,10 @@ class LOVD_API_GA4GH
                         IFNULL(p.`Phenotype/Additional`, "") SEPARATOR ";;") AS phenotypes') . ',
                       CONCAT(
                         IFNULL(uc.orcid_id, ""), "##", uc.name, "##", uc.email
-                      ),
+                      ) AS creator,
                       CONCAT(
                         IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
-                      ),
+                      ) AS owner,
                       IFNULL(i.license, uc.default_license) AS license
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
@@ -1001,11 +1001,11 @@ class LOVD_API_GA4GH
                 foreach (
                     array(
                         array(
-                            $sCreator,
+                            $aSubmission['creator'],
                             'submitter',
                         ),
                         array(
-                            $sOwner,
+                            $aSubmission['owner'],
                             'owner',
                         )
                     ) as $aContact) {
