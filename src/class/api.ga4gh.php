@@ -613,7 +613,7 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bIndGender, $bIndReference, $bPhenotypeAdditional, $bPhenotypeInheritance)
+        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bdbSNP, $bDNA38, $bIndGender, $bIndReference, $bPhenotypeAdditional, $bPhenotypeInheritance, $bVOGReference)
         {
             global $_DB, $_SETT;
 
@@ -847,16 +847,41 @@ class LOVD_API_GA4GH
                       CONCAT(
                         IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                       ) AS owner,
-                      IFNULL(i.license, uc.default_license) AS license
+                      IFNULL(i.license, uc.default_license) AS license,
+                      GROUP_CONCAT(DISTINCT
+                        CONCAT(
+                          vog.id, "||",
+                          vog.chromosome, "||",
+                          vog.`VariantOnGenome/DNA`, "||"' .
+                    (!$bDNA38? '' : ',
+                          IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||"' .
+                    (!$bdbSNP? '' : ',
+                          IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
+                    (!$bVOGReference? '' : ',
+                          IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||",
+                          IFNULL(
+                            (SELECT
+                               GROUP_CONCAT(
+                                 CONCAT(
+                                   t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", vot.`VariantOnTranscript/Protein`)
+                                 SEPARATOR "$$")
+                             FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
+                               INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
+                             WHERE vot.id = vog.id), "")
+                        )
+                        SEPARATOR ";;") AS variants
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid AND p.statusid >= ?)
                       LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
+                      LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid)
+                      LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid)
+                      LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND vog.statusid >= ?)
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id)
                     WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
                       AND i.statusid >= ?
-                    GROUP BY i.id', array_merge(array(STATUS_MARKED), $aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
+                    GROUP BY i.id', array_merge(array(STATUS_MARKED, STATUS_MARKED), $aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
             }
 
             foreach ($aSubmissions as $aSubmission) {
@@ -1031,6 +1056,103 @@ class LOVD_API_GA4GH
                 }
 
                 $aIndividual['variants'] = array();
+
+                // Then add variants.
+                foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
+                    list($nID, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sVOTs) = explode('||', $sVariant);
+                    $aVariant = array(
+                        'type' => 'DNA',
+                        'ref_seq' => array(
+                            'source' => 'genbank',
+                            'accession' => $_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr],
+                        ),
+                        'name' => array(
+                            'scheme' => 'HGVS',
+                            'value' => $sDNA,
+                        ),
+                        'aliases' => (!$sDNA38? array() : array(
+                            'ref_seq' => array(
+                                'source' => 'genbank',
+                                'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
+                            ),
+                            'name' => array(
+                                'scheme' => 'HGVS',
+                                'value' => $sDNA38,
+                            ),
+                        )),
+                        'pathogenicities' => array(),
+                    );
+
+                    if ($sRSID) {
+                        $aVariant['db_xrefs'] = array(
+                            array(
+                                'source' => 'dbsnp',
+                                'accession' => $sRSID,
+                            ),
+                        );
+                    }
+
+                    if ($sRefs) {
+                        $aRefs = $this->convertReferenceToVML($sRefs);
+                        if ($aRefs) {
+                            if (!isset($aVariant['db_xrefs'])) {
+                                $aVariant['db_xrefs'] = array();
+                            }
+                            // Merge, unique, and reset the array.
+                            // We need to rebuild the keys to prevent
+                            //  a JSON array from becoming a JSON object.
+                            $aVariant['db_xrefs'] = array_values(
+                                array_unique(
+                                    array_merge(
+                                        $aVariant['db_xrefs'],
+                                        $aRefs),
+                                    SORT_REGULAR)
+                            );
+                        }
+                    }
+
+                    if ($sVOTs) {
+                        $aVariant['seq_changes']['variants'] = array();
+                        foreach (explode('$$', $sVOTs) as $sVOT) {
+                            list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtein) = explode('##', $sVOT);
+                            $aVariant['seq_changes']['variants'][] = array(
+                                'type' => 'cDNA',
+                                'gene' => array(
+                                    'source' => 'HGNC',
+                                    'accession' => $sGene,
+                                ),
+                                'ref_seq' => array(
+                                    'source' => 'genbank',
+                                    'accession' => $sRefSeq,
+                                ),
+                                'name' => array(
+                                    'scheme' => 'HGVS',
+                                    'value' => $sDNA,
+                                ),
+                                'seq_changes' => array(
+                                    'variants' => array(
+                                        'type' => 'RNA',
+                                        'name' => array(
+                                            'scheme' => 'HGVS',
+                                            'value' => $sRNA,
+                                        ),
+                                        'seq_changes' => array(
+                                            'variants' => array(
+                                                'type' => 'AA',
+                                                'name' => array(
+                                                    'scheme' => 'HGVS',
+                                                    'value' => $sProtein,
+                                                ),
+                                            )
+                                        )
+                                    )
+                                )
+                            );
+                        }
+                    }
+
+                    $aIndividual['variants'][] = $aVariant;
+                }
 
                 // Store in output.
                 if ($aSubmission['panel_size'] > 1) {
