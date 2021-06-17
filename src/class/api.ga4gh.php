@@ -850,13 +850,13 @@ class LOVD_API_GA4GH
                       IFNULL(i.license, uc.default_license) AS license
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
-                      LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
+                      LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid AND p.statusid >= ?)
                       LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (i2d.diseaseid = d.id)
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id)
                     WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
                       AND i.statusid >= ?
-                    GROUP BY i.id', array_merge($aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
+                    GROUP BY i.id', array_merge(array(STATUS_MARKED), $aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
             }
 
             foreach ($aSubmissions as $aSubmission) {
