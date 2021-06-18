@@ -859,6 +859,8 @@ class LOVD_API_GA4GH
                           IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
                     (!$bVOGReference? '' : ',
                           IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||",
+                          IFNULL(s.`Screening/Template`, ""), "||",
+                          IFNULL(s.`Screening/Technique`, ""), "||",
                           IFNULL(
                             (SELECT
                                GROUP_CONCAT(
@@ -1059,7 +1061,7 @@ class LOVD_API_GA4GH
 
                 // Then add variants.
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
-                    list($nID, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sVOTs) = explode('||', $sVariant);
+                    list($nID, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
                     $aVariant = array(
                         'type' => 'DNA',
                         'ref_seq' => array(
@@ -1108,6 +1110,84 @@ class LOVD_API_GA4GH
                                         $aRefs),
                                     SORT_REGULAR)
                             );
+                        }
+                    }
+
+                    if ($sTemplate || $sTechnique) {
+                        $aVariant['variant_detection'] = array();
+                        // It's obviously best if data is stored like
+                        //  (DNA, SEQ); (RNA, RT-PCR); but often it's not and
+                        //  it's (DNA;RNA,SEQ;RT-PCR). We'll have to guess which
+                        //  template belongs to which technique.
+                        $aTemplates = explode(';', $sTemplate);
+                        $nTemplates = count($aTemplates);
+                        $aTechniques = explode(';', $sTechnique);
+                        $nTechniques = count($aTechniques);
+                        foreach ($aTemplates as $sTemplate) {
+                            if ($nTechniques == 1 || $nTemplates == 1) {
+                                // Single technique, store it once per template,
+                                //  or one template only, put all techniques
+                                //  together.
+                                $aVariant['variant_detection'][] = array(
+                                    'template' => $sTemplate,
+                                    'technique' => $sTechnique,
+                                );
+                            } else {
+                                // More than one template, more than one
+                                //  technique. Try to figure out what belongs
+                                //  to what.
+                                if ($sTemplate == 'DNA') {
+                                    // Exclude known RNA and protein techniques.
+                                    $aVariant['variant_detection'][] = array(
+                                        'template' => $sTemplate,
+                                        'technique' => implode(';',
+                                            array_diff(
+                                                $aTechniques, array(
+                                                    'expr', // Not standard LOVD.
+                                                    'minigene', // Not standard LOVD.
+                                                    'MS', // Not standard LOVD.
+                                                    'Northern',
+                                                    'PTT',
+                                                    'RT-PCR',
+                                                    'Western',
+                                                ))),
+                                    );
+                                } elseif ($sTemplate == 'RNA') {
+                                    // Exclude known DNA and protein techniques.
+                                    $aVariant['variant_detection'][] = array(
+                                        'template' => $sTemplate,
+                                        'technique' => implode(';',
+                                            array_diff(
+                                                $aTechniques, array(
+                                                'FISH', // Not standard LOVD.
+                                                'FISHf', // Not standard LOVD.
+                                                'MAPH',
+                                                'MCA',
+                                                'microscope', // Not standard LOVD.
+                                                'MLPA',
+                                                'MLPA-ms', // Not standard LOVD.
+                                                'MS', // Not standard LOVD.
+                                                'PTT',
+                                                'SBE',
+                                                'SEQ',
+                                                'Southern',
+                                                'Western',
+                                            ))),
+                                    );
+                                } else {
+                                    // Only select known protein techniques.
+                                    $aVariant['variant_detection'][] = array(
+                                        'template' => $sTemplate,
+                                        'technique' => implode(';',
+                                            array_intersect(
+                                                $aTechniques, array(
+                                                'MS', // Not standard LOVD.
+                                                'PTT',
+                                                'Western',
+                                            ))),
+                                    );
+                                }
+                            }
                         }
                     }
 
