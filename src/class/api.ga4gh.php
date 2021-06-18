@@ -851,6 +851,7 @@ class LOVD_API_GA4GH
                       GROUP_CONCAT(DISTINCT
                         CONCAT(
                           vog.id, "||",
+                          vog.allele, "||",
                           vog.chromosome, "||",
                           vog.`VariantOnGenome/DNA`, "||"' .
                     (!$bDNA38? '' : ',
@@ -1061,8 +1062,9 @@ class LOVD_API_GA4GH
 
                 // Then add variants.
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
-                    list($nID, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
+                    list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
                     $aVariant = array(
+                        'copy_count' => ($nAllele == '3'? 2 : 1),
                         'type' => 'DNA',
                         'ref_seq' => array(
                             'source' => 'genbank',
