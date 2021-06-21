@@ -1066,7 +1066,9 @@ class LOVD_API_GA4GH
 
                 $aIndividual['variants'] = array();
 
-                // Then add variants.
+                // Then add variants. Note that variants can be repeated, when
+                //  more than one screening has been created and linked to the
+                //  same variant.
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
                     list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
                     $aVariant = array(
@@ -1196,6 +1198,30 @@ class LOVD_API_GA4GH
                                             ))),
                                     );
                                 }
+                            }
+                        }
+                    }
+
+                    // Up and until this part, we didn't even check yet if we've
+                    //  seen this variant before. That is possible when the
+                    //  individual has multiple screenings that are linked to
+                    //  the same variant. Check, possibly add the additional
+                    //  screening information, then skip the rest.
+                    if ($aIndividual['variants']) {
+                        foreach ($aIndividual['variants'] as $nKey => $aVar) {
+                            if ($aVar['id'] == $nID) {
+                                // We've seen this variant before.
+                                // The simplest is simply to take both arrays,
+                                //  merge them, and make them unique.
+                                $aIndividual['variants'][$nKey]['variant_detection'] =
+                                    array_unique(
+                                        array_merge(
+                                            $aIndividual['variants'][$nKey]['variant_detection'],
+                                            $aVariant['variant_detection']
+                                        ),
+                                        SORT_REGULAR
+                                    );
+                                continue 2;
                             }
                         }
                     }
