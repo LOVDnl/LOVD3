@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-06-18
+ * Modified    : 2021-06-21
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -889,7 +889,12 @@ class LOVD_API_GA4GH
 
             foreach ($aSubmissions as $aSubmission) {
                 // Loop through Individuals and Panels.
-                $aIndividual = array();
+                $aIndividual = array(
+                    'id' => $aSubmission['id'],
+                );
+                if ($aSubmission['panel_size'] > 1) {
+                    $aIndividual['size'] = $aSubmission['panel_size'];
+                }
                 if (isset($aSubmission['gender'])) {
                     $nCode = (!isset($this->aValueMappings['gender'][$aSubmission['gender']])?
                         $this->aValueMappings['gender'][''] :
@@ -1238,11 +1243,6 @@ class LOVD_API_GA4GH
 
                 // Store in output.
                 if ($aSubmission['panel_size'] > 1) {
-                    // Add the size as the first field in the JSON (aesthetics, I know).
-                    $aIndividual = array_merge(
-                        array('size' => $aSubmission['panel_size']),
-                        $aIndividual
-                    );
                     $aReturn['panel']['panels'][] = $aIndividual;
                 } else {
                     $aReturn['panel']['individuals'][] = $aIndividual;
