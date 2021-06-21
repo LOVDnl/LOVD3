@@ -703,6 +703,7 @@ class LOVD_API_GA4GH
                     // Full variant data, which means there was no Individual.
                     list($nID, $sLicense, $sDNA38, $sRSID, $sRefs, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
                     $aVariant = array(
+                        'id' => $nID,
                         'type' => 'DNA',
                         'ref_seq' => array(
                             'source' => 'genbank',
@@ -1069,6 +1070,7 @@ class LOVD_API_GA4GH
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
                     list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
                     $aVariant = array(
+                        'id' => $nID,
                         'copy_count' => ($nAllele == '3'? 2 : 1),
                         'type' => 'DNA',
                         'ref_seq' => array(
