@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-06-21
+ * Modified    : 2021-06-22
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -239,9 +239,13 @@ class LOVD_API_GA4GH
                 // We need to indicate to varcache that they have access,
                 // but only when varcache is calling us.
                 $aReturn['sharing_policy']['comments'] = array(
-                    'texts' => array(
-                        'value' => 'Additional permissions for LOVD project.',
-                    ),
+                    array(
+                        'texts' => array(
+                            array(
+                                'value' => 'Additional permissions for LOVD project.',
+                            ),
+                        ),
+                    )
                 );
             }
             return $aReturn;
@@ -1213,6 +1217,9 @@ class LOVD_API_GA4GH
                                 // We've seen this variant before.
                                 // The simplest is simply to take both arrays,
                                 //  merge them, and make them unique.
+                                // This may mean that templates are repeated,
+                                //  but it indicates multiple screenings exist
+                                //  in LOVD and varcache can merge it if needed.
                                 $aIndividual['variants'][$nKey]['variant_detection'] =
                                     array_unique(
                                         array_merge(
