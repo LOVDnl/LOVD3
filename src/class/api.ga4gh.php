@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-06-22
+ * Modified    : 2021-06-23
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,6 +56,13 @@ class LOVD_API_GA4GH
             'M' => '1',
             'rF' => '2',
             'rM' => '1',
+        ),
+        'genetic_origin' => array(
+            'de novo' => 'de novo',
+            'germline' => 'inherited',
+            'somatic' => 'somatic',
+            'uniparental disomy, maternal allele' => 'inherited',
+            'uniparental disomy, paternal allele' => 'inherited',
         ),
         'inheritance_long' => array(
             'unknown' => '',
@@ -546,6 +553,7 @@ class LOVD_API_GA4GH
         $bPhenotypeInheritance = in_array('Phenotype/Inheritance', $aCols);
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
+        $bGeneticOrigin = in_array('VariantOnGenome/Genetic_origin', $aCols);
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
 
         // Fetch data. We do this in two steps; first the basic variant
@@ -617,7 +625,13 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
-        $aData = array_map(function ($zData) use ($sBuild, $sChr, $bdbSNP, $bDNA38, $bIndGender, $bIndReference, $bPhenotypeAdditional, $bPhenotypeInheritance, $bVOGReference)
+        $aData = array_map(function ($zData)
+        use (
+            $sBuild, $sChr,
+            $bdbSNP, $bDNA38, $bGeneticOrigin,
+            $bIndGender, $bIndReference,
+            $bPhenotypeAdditional, $bPhenotypeInheritance,
+            $bVOGReference)
         {
             global $_DB, $_SETT;
 
@@ -861,6 +875,8 @@ class LOVD_API_GA4GH
                           vog.`VariantOnGenome/DNA`, "||"' .
                     (!$bDNA38? '' : ',
                           IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||"' .
+                    (!$bGeneticOrigin? '' : ',
+                          IFNULL(LOWER(vog.`VariantOnGenome/Genetic_origin`), "")') . ', "||"' .
                     (!$bdbSNP? '' : ',
                           IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
                     (!$bVOGReference? '' : ',
@@ -1074,7 +1090,7 @@ class LOVD_API_GA4GH
                 //  more than one screening has been created and linked to the
                 //  same variant.
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
-                    list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
+                    list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sOrigin, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
                     $aVariant = array(
                         'id' => $nID,
                         'copy_count' => ($nAllele == '3'? 2 : 1),
@@ -1099,6 +1115,51 @@ class LOVD_API_GA4GH
                         )),
                         'pathogenicities' => array(),
                     );
+
+                    if ($sOrigin && isset($this->aValueMappings['genetic_origin'][$sOrigin])) {
+                        $aVariant['genetic_origin'] = array(
+                            'term' => $this->aValueMappings['genetic_origin'][$sOrigin],
+                        );
+                        if ($nAllele >= 10) {
+                            $aVariant['genetic_origin']['genetic_source'] = array(
+                                'term' => ($nAllele < 20? 'paternal' : 'maternal'),
+                                'evidence_code' => (($nAllele % 10)? 'confirmed' : 'inferred')
+                            );
+                        }
+
+                        // Special actions for UPD.
+                        if (substr($sOrigin, 0, 18) == 'uniparental disomy') {
+                            // Set copy count to 2, if it is 1.
+                            if ($aVariant['copy_count'] == 1) {
+                                $aVariant['copy_count'] = 2;
+                            }
+
+                            // Add a description to not lose this info.
+                            $aVariant['genetic_origin']['description'] = $sOrigin;
+
+                            // Set the parent, if needed.
+                            list(,,$sAllele) = explode(' ', $sOrigin);
+                            if (empty($aVariant['genetic_origin']['genetic_source'])) {
+                                $aVariant['genetic_origin']['genetic_source'] = array(
+                                    'term' => $sAllele,
+                                );
+                            } elseif ($aVariant['genetic_origin']['genetic_source']['term'] != $sAllele) {
+                                // Strange, a conflict. Given allele value
+                                //  doesn't match given genetic_origin value.
+                                $aVariant['genetic_origin']['genetic_source']['comments'] = array(
+                                    array(
+                                        'texts' => array(
+                                            array(
+                                                'value' => 'Conflict in value for genetic_source: ' .
+                                                    $aVariant['genetic_origin']['genetic_source']['term'] .
+                                                    ' != ' . $sAllele . '.',
+                                            ),
+                                        ),
+                                    )
+                                );
+                            }
+                        }
+                    }
 
                     if ($sRSID) {
                         $aVariant['db_xrefs'] = array(
