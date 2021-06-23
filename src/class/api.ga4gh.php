@@ -535,6 +535,7 @@ class LOVD_API_GA4GH
             'VariantOnGenome/dbSNP',
             'VariantOnGenome/Genetic_origin',
             'VariantOnGenome/Reference',
+            'VariantOnGenome/Remarks',
         ));
         $aCols = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid IN (?' . str_repeat(', ?', count($aColsToCheck) - 1) . ')',
             $aColsToCheck)->fetchAllColumn();
@@ -557,6 +558,7 @@ class LOVD_API_GA4GH
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
         $bGeneticOrigin = in_array('VariantOnGenome/Genetic_origin', $aCols);
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
+        $bVOGRemarks = in_array('VariantOnGenome/Remarks', $aCols);
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
@@ -633,7 +635,7 @@ class LOVD_API_GA4GH
             $bdbSNP, $bDNA38, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
             $bPhenotypeAdditional, $bPhenotypeInheritance,
-            $bVOGReference)
+            $bVOGReference, $bVOGRemarks)
         {
             global $_DB, $_SETT;
 
@@ -884,7 +886,9 @@ class LOVD_API_GA4GH
                     (!$bdbSNP? '' : ',
                           IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
                     (!$bVOGReference? '' : ',
-                          IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||",
+                          IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||"' .
+                    (!$bVOGRemarks? '' : ',
+                          IFNULL(vog.`VariantOnGenome/Remarks`, "")') . ', "||",
                           IFNULL(s.`Screening/Template`, ""), "||",
                           IFNULL(s.`Screening/Technique`, ""), "||",
                           IFNULL(
@@ -1106,7 +1110,7 @@ class LOVD_API_GA4GH
                 //  more than one screening has been created and linked to the
                 //  same variant.
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
-                    list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sOrigin, $sRSID, $sRefs, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
+                    list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sOrigin, $sRSID, $sRefs, $sRemarks, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
                     $aVariant = array(
                         'id' => $nID,
                         'copy_count' => ($nAllele == '3'? 2 : 1),
@@ -1175,6 +1179,18 @@ class LOVD_API_GA4GH
                                 );
                             }
                         }
+                    }
+
+                    if ($sRemarks) {
+                        $aVariant['comments'] = array(
+                            array(
+                                'texts' => array(
+                                    array(
+                                        'value' => $sRemarks,
+                                    ),
+                                ),
+                            ),
+                        );
                     }
 
                     if ($sRSID) {
