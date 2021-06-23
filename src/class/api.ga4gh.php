@@ -583,7 +583,9 @@ class LOVD_API_GA4GH
             (!$bdbSNP? '' : ',
                        IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
             (!$bVOGReference? '' : ',
-                       IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||",
+                       IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||"' .
+            (!$bVOGRemarks? '' : ',
+                       IFNULL(vog.`VariantOnGenome/Remarks`, "")') . ', "||",
                        IFNULL(
                          (SELECT
                             GROUP_CONCAT(
@@ -723,7 +725,7 @@ class LOVD_API_GA4GH
                     $aSubmissions[] = $sVariant;
                 } else {
                     // Full variant data, which means there was no Individual.
-                    list($nID, $sLicense, $sDNA38, $sRSID, $sRefs, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
+                    list($nID, $sLicense, $sDNA38, $sRSID, $sRefs, $sRemarks, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
                     $aVariant = array(
                         'id' => $nID,
                         'type' => 'DNA',
@@ -747,6 +749,18 @@ class LOVD_API_GA4GH
                         )),
                         'pathogenicities' => array(),
                     );
+
+                    if ($sRemarks) {
+                        $aVariant['comments'] = array(
+                            array(
+                                'texts' => array(
+                                    array(
+                                        'value' => $sRemarks,
+                                    ),
+                                ),
+                            ),
+                        );
+                    }
 
                     if ($sRSID) {
                         $aVariant['db_xrefs'] = array(
