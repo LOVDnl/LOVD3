@@ -527,6 +527,7 @@ class LOVD_API_GA4GH
         $aColsToCheck = array_merge($aRequiredCols, array(
             'Individual/Gender',
             'Individual/Reference',
+            'Individual/Remarks',
             'Phenotype/Additional',
             'Phenotype/Inheritance',
             'VariantOnGenome/DNA/hg38',
@@ -549,6 +550,7 @@ class LOVD_API_GA4GH
         }
         $bIndGender = in_array('Individual/Gender', $aCols);
         $bIndReference = in_array('Individual/Reference', $aCols);
+        $bIndRemarks = in_array('Individual/Remarks', $aCols);
         $bPhenotypeAdditional = in_array('Phenotype/Additional', $aCols);
         $bPhenotypeInheritance = in_array('Phenotype/Inheritance', $aCols);
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
@@ -629,7 +631,7 @@ class LOVD_API_GA4GH
         use (
             $sBuild, $sChr,
             $bdbSNP, $bDNA38, $bGeneticOrigin,
-            $bIndGender, $bIndReference,
+            $bIndGender, $bIndReference, $bIndRemarks,
             $bPhenotypeAdditional, $bPhenotypeInheritance,
             $bVOGReference)
         {
@@ -856,6 +858,8 @@ class LOVD_API_GA4GH
                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
                     (!$bIndReference? '' : ',
                       i.`Individual/Reference` AS reference') .
+                    (!$bIndRemarks? '' : ',
+                      i.`Individual/Remarks` AS remarks') .
                     (!$bPhenotypeAdditional? '' : ',
                       GROUP_CONCAT(DISTINCT ' .
                         (!$bPhenotypeInheritance? '' : 'REPLACE(p.`Phenotype/Inheritance`, ",", ""), ') . '"||",
@@ -1031,6 +1035,18 @@ class LOVD_API_GA4GH
                         $aIndividual['phenotypes'],
                         SORT_REGULAR)
                 );
+
+                if ($aSubmission['remarks']) {
+                    $aIndividual['comments'] = array(
+                        array(
+                            'texts' => array(
+                                array(
+                                    'value' => $aSubmission['remarks'],
+                                ),
+                            ),
+                        ),
+                    );
+                }
 
                 if ($aSubmission['reference']) {
                     $aRefs = $this->convertReferenceToVML($aSubmission['reference'], array('doi', 'pubmed'));
