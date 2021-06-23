@@ -194,6 +194,29 @@ class LOVD_API_GA4GH
 
 
 
+    private function addComment ($aComments, $Text)
+    {
+        // Adds a comment to an existing array of comments.
+
+        if (!is_array($Text)) {
+            $Text = array(
+                'value' => $Text
+            );
+        }
+
+        $aComments[] = array(
+            'texts' => array(
+                $Text,
+            ),
+        );
+
+        return $aComments;
+    }
+
+
+
+
+
     private function convertContactToVML ($sRole, $sContact)
     {
         // Converts contact string into VarioML contact data.
@@ -751,15 +774,7 @@ class LOVD_API_GA4GH
                     );
 
                     if ($sRemarks) {
-                        $aVariant['comments'] = array(
-                            array(
-                                'texts' => array(
-                                    array(
-                                        'value' => $sRemarks,
-                                    ),
-                                ),
-                            ),
-                        );
+                        $aVariant['comments'] = $this->addComment(array(), $sRemarks);
                     }
 
                     if ($sRSID) {
@@ -1055,15 +1070,7 @@ class LOVD_API_GA4GH
                 );
 
                 if ($aSubmission['remarks']) {
-                    $aIndividual['comments'] = array(
-                        array(
-                            'texts' => array(
-                                array(
-                                    'value' => $aSubmission['remarks'],
-                                ),
-                            ),
-                        ),
-                    );
+                    $aIndividual['comments'] = $this->addComment(array(), $aSubmission['remarks']);
                 }
 
                 if ($aSubmission['reference']) {
@@ -1180,31 +1187,17 @@ class LOVD_API_GA4GH
                             } elseif ($aVariant['genetic_origin']['genetic_source']['term'] != $sAllele) {
                                 // Strange, a conflict. Given allele value
                                 //  doesn't match given genetic_origin value.
-                                $aVariant['genetic_origin']['genetic_source']['comments'] = array(
-                                    array(
-                                        'texts' => array(
-                                            array(
-                                                'value' => 'Conflict in value for genetic_source: ' .
-                                                    $aVariant['genetic_origin']['genetic_source']['term'] .
-                                                    ' != ' . $sAllele . '.',
-                                            ),
-                                        ),
-                                    )
-                                );
+                                $aVariant['genetic_origin']['genetic_source']['comments'] = $this->addComment(
+                                    array(),
+                                    'Conflict in value for genetic_source: ' .
+                                        $aVariant['genetic_origin']['genetic_source']['term'] .
+                                        ' != ' . $sAllele . '.');
                             }
                         }
                     }
 
                     if ($sRemarks) {
-                        $aVariant['comments'] = array(
-                            array(
-                                'texts' => array(
-                                    array(
-                                        'value' => $sRemarks,
-                                    ),
-                                ),
-                            ),
-                        );
+                        $aVariant['comments'] = $this->addComment(array(), $sRemarks);
                     }
 
                     if ($sRSID) {
