@@ -560,8 +560,15 @@ class LOVD_API_GA4GH
             'VariantOnGenome/Reference',
             'VariantOnGenome/Remarks',
         ));
-        $aCols = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid IN (?' . str_repeat(', ?', count($aColsToCheck) - 1) . ')',
-            $aColsToCheck)->fetchAllColumn();
+        // Select columns only if they're *globally* set to public.
+        // Note that this means, for VOT and Phenotype columns, the gene- and
+        //  disease-specific settings are ignored.
+        $aCols = $_DB->query('
+            SELECT colid
+            FROM ' . TABLE_ACTIVE_COLS . ' AS ac
+              INNER JOIN ' . TABLE_COLS . ' AS c ON (ac.colid = c.id)
+            WHERE c.id IN (?' . str_repeat(', ?', count($aColsToCheck) - 1) . ')
+              AND c.public_view = 1', $aColsToCheck)->fetchAllColumn();
 
         foreach ($aRequiredCols as $sCol) {
             if (!in_array($sCol, $aCols)) {
