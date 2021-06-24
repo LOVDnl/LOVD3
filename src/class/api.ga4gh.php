@@ -591,6 +591,24 @@ class LOVD_API_GA4GH
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
         $bVOGRemarks = in_array('VariantOnGenome/Remarks', $aCols);
 
+        // Not all data can be shown in full. Only data licensed freely can have
+        //  its details shared, all other data can only show summary data.
+        $aLicenses = array(
+            '' => 0, // Not having a license selected, summary data only.
+            'cc_by_4.0;0' => 1,
+            'cc_by_4.0;1' => 1,
+            'cc_by-nc_4.0;0' => 1,
+            'cc_by-nc_4.0;1' => 1,
+            'cc_by-nc-nd_4.0;0' => 0, // We can not show details of ND licenses.
+            'cc_by-nc-nd_4.0;1' => (int) ($this->bVarCache),
+            'cc_by-nc-sa_4.0;0' => 1,
+            'cc_by-nc-sa_4.0;1' => 1,
+            'cc_by-nd_4.0;0' => 0, // We can not show details of ND licenses.
+            'cc_by-nd_4.0;1' => (int) ($this->bVarCache),
+            'cc_by-sa_4.0;0' => 1,
+            'cc_by-sa_4.0;1' => 1,
+        );
+
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
         $sQ = 'SELECT
@@ -664,7 +682,7 @@ class LOVD_API_GA4GH
         // Make all transformations.
         $aData = array_map(function ($zData)
         use (
-            $sBuild, $sChr,
+            $aLicenses, $sBuild, $sChr,
             $bdbSNP, $bDNA38, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
             $bPhenotypeAdditional, $bPhenotypeInheritance,
@@ -757,6 +775,15 @@ class LOVD_API_GA4GH
                 } else {
                     // Full variant data, which means there was no Individual.
                     list($nID, $sLicense, $sDNA38, $sRSID, $sRefs, $sRemarks, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
+
+                    // Ignore the full variant entry when the license isn't
+                    //  compatible; we're not allowed to show the details then.
+                    if (empty($aLicenses[$sLicense])) {
+                        // License isn't set (shouldn't happen) or is set to 0
+                        //  (= don't share details).
+                        continue;
+                    }
+
                     $aVariant = array(
                         'id' => $nID,
                         'type' => 'DNA',
