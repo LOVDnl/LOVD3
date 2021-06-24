@@ -608,6 +608,8 @@ class LOVD_API_GA4GH
             'cc_by-sa_4.0;0' => 1,
             'cc_by-sa_4.0;1' => 1,
         );
+        // Now what licenses will only allow us to return summary data?
+        $aLicensesSummaryData = array_keys(array_diff($aLicenses, array(1)));
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
@@ -682,7 +684,7 @@ class LOVD_API_GA4GH
         // Make all transformations.
         $aData = array_map(function ($zData)
         use (
-            $aLicenses, $sBuild, $sChr,
+            $aLicenses, $aLicensesSummaryData, $sBuild, $sChr,
             $bdbSNP, $bDNA38, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
             $bPhenotypeAdditional, $bPhenotypeInheritance,
@@ -977,7 +979,13 @@ class LOVD_API_GA4GH
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id)
                     WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
                       AND i.statusid >= ?
-                    GROUP BY i.id', array_merge(array(STATUS_MARKED, STATUS_MARKED), $aSubmissions, array(STATUS_MARKED)))->fetchAllAssoc();
+                      AND IFNULL(i.license, IFNULL(uc.default_license, "")) NOT IN (?' . str_repeat(', ?', count($aLicensesSummaryData) - 1) . ')
+                    GROUP BY i.id',
+                    array_merge(
+                        array(STATUS_MARKED, STATUS_MARKED),
+                        $aSubmissions,
+                        array(STATUS_MARKED),
+                        $aLicensesSummaryData))->fetchAllAssoc();
             }
 
             foreach ($aSubmissions as $aSubmission) {
