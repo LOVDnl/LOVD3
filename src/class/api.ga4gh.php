@@ -765,6 +765,8 @@ class LOVD_API_GA4GH
                         ),
                     );
                 }
+            } else {
+                unset($aReturn['aliases']);
             }
 
             // Further annotate the entries.
@@ -811,6 +813,10 @@ class LOVD_API_GA4GH
                         )),
                         'pathogenicities' => array(),
                     );
+
+                    if (!$aVariant['aliases']) {
+                        unset($aVariant['aliases']);
+                    }
 
                     if ($sRemarks) {
                         $aVariant['comments'] = $this->addComment(array(), $sRemarks);
@@ -1207,6 +1213,10 @@ class LOVD_API_GA4GH
                         )),
                         'pathogenicities' => array(),
                     );
+
+                    if (!$aVariant['aliases']) {
+                        unset($aVariant['aliases']);
+                    }
 
                     if ($sOrigin && isset($this->aValueMappings['genetic_origin'][$sOrigin])) {
                         $aVariant['genetic_origin'] = array(
