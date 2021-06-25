@@ -1006,7 +1006,7 @@ class LOVD_API_GA4GH
                     'id' => $aSubmission['id'],
                 );
                 if ($aSubmission['panel_size'] > 1) {
-                    $aIndividual['size'] = $aSubmission['panel_size'];
+                    $aIndividual['size'] = (int) $aSubmission['panel_size'];
                 }
                 if (isset($aSubmission['gender'])) {
                     $nCode = (!isset($this->aValueMappings['gender'][$aSubmission['gender']])?
