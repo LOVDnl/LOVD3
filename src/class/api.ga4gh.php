@@ -1211,7 +1211,9 @@ class LOVD_API_GA4GH
                         if ($nAllele >= 10) {
                             $aVariant['genetic_origin']['genetic_source'] = array(
                                 'term' => ($nAllele < 20? 'paternal' : 'maternal'),
-                                'evidence_code' => (($nAllele % 10)? 'confirmed' : 'inferred')
+                                'evidence_code' => array(
+                                    'term' => (($nAllele % 10)? 'confirmed' : 'inferred'),
+                                ),
                             );
                         }
 
