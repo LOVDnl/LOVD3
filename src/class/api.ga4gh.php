@@ -798,13 +798,15 @@ class LOVD_API_GA4GH
                             'value' => $zData['DNA'],
                         ),
                         'aliases' => (!$sDNA38? array() : array(
-                            'ref_seq' => array(
-                                'source' => 'genbank',
-                                'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
-                            ),
-                            'name' => array(
-                                'scheme' => 'HGVS',
-                                'value' => $sDNA38,
+                            array(
+                                'ref_seq' => array(
+                                    'source' => 'genbank',
+                                    'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
+                                ),
+                                'name' => array(
+                                    'scheme' => 'HGVS',
+                                    'value' => $sDNA38,
+                                ),
                             ),
                         )),
                         'pathogenicities' => array(),
@@ -1188,13 +1190,15 @@ class LOVD_API_GA4GH
                             'value' => $sDNA,
                         ),
                         'aliases' => (!$sDNA38? array() : array(
-                            'ref_seq' => array(
-                                'source' => 'genbank',
-                                'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
-                            ),
-                            'name' => array(
-                                'scheme' => 'HGVS',
-                                'value' => $sDNA38,
+                            array(
+                                'ref_seq' => array(
+                                    'source' => 'genbank',
+                                    'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
+                                ),
+                                'name' => array(
+                                    'scheme' => 'HGVS',
+                                    'value' => $sDNA38,
+                                ),
                             ),
                         )),
                         'pathogenicities' => array(),
