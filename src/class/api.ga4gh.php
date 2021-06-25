@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-06-24
+ * Modified    : 2021-06-25
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -898,12 +898,12 @@ class LOVD_API_GA4GH
                         if ($sContact) {
                             $aContact = $this->convertContactToVML($sRole, $sContact);
 
-                            if (!isset($aVariant['source'])) {
-                                $aVariant['source'] = array(
+                            if (!isset($aVariant['data_source'])) {
+                                $aVariant['data_source'] = array(
                                     'contacts' => array(),
                                 );
                             }
-                            $aVariant['source']['contacts'][] = $aContact;
+                            $aVariant['data_source']['contacts'][] = $aContact;
                         }
                     }
 
@@ -1151,12 +1151,12 @@ class LOVD_API_GA4GH
                     if ($sContact) {
                         $aContact = $this->convertContactToVML($sRole, $sContact);
 
-                        if (!isset($aIndividual['source'])) {
-                            $aIndividual['source'] = array(
+                        if (!isset($aIndividual['data_source'])) {
+                            $aIndividual['data_source'] = array(
                                 'contacts' => array(),
                             );
                         }
-                        $aIndividual['source']['contacts'][] = $aContact;
+                        $aIndividual['data_source']['contacts'][] = $aContact;
                     }
                 }
 
