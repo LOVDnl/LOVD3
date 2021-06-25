@@ -864,18 +864,22 @@ class LOVD_API_GA4GH
                                 ),
                                 'seq_changes' => array(
                                     'variants' => array(
-                                        'type' => 'RNA',
-                                        'name' => array(
-                                            'scheme' => 'HGVS',
-                                            'value' => $sRNA,
-                                        ),
-                                        'seq_changes' => array(
-                                            'variants' => array(
-                                                'type' => 'AA',
-                                                'name' => array(
-                                                    'scheme' => 'HGVS',
-                                                    'value' => $sProtein,
-                                                ),
+                                        array(
+                                            'type' => 'RNA',
+                                            'name' => array(
+                                                'scheme' => 'HGVS',
+                                                'value' => $sRNA,
+                                            ),
+                                            'seq_changes' => array(
+                                                'variants' => array(
+                                                    array(
+                                                        'type' => 'AA',
+                                                        'name' => array(
+                                                            'scheme' => 'HGVS',
+                                                            'value' => $sProtein,
+                                                        ),
+                                                    )
+                                                )
                                             )
                                         )
                                     )
@@ -1402,18 +1406,22 @@ class LOVD_API_GA4GH
                                 ),
                                 'seq_changes' => array(
                                     'variants' => array(
-                                        'type' => 'RNA',
-                                        'name' => array(
-                                            'scheme' => 'HGVS',
-                                            'value' => $sRNA,
-                                        ),
-                                        'seq_changes' => array(
-                                            'variants' => array(
-                                                'type' => 'AA',
-                                                'name' => array(
-                                                    'scheme' => 'HGVS',
-                                                    'value' => $sProtein,
-                                                ),
+                                        array(
+                                            'type' => 'RNA',
+                                            'name' => array(
+                                                'scheme' => 'HGVS',
+                                                'value' => $sRNA,
+                                            ),
+                                            'seq_changes' => array(
+                                                'variants' => array(
+                                                    array(
+                                                        'type' => 'AA',
+                                                        'name' => array(
+                                                            'scheme' => 'HGVS',
+                                                            'value' => $sProtein,
+                                                        ),
+                                                    )
+                                                )
                                             )
                                         )
                                     )
