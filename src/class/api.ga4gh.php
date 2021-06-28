@@ -661,7 +661,8 @@ class LOVD_API_GA4GH
                  GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
                  vog.`VariantOnGenome/DNA` AS DNA' .
             (!$bDNA38? '' : ',
-                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') .
+                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
+                 GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", vog.effectid) ORDER BY vog.id SEPARATOR ";") AS effectids' .
             (!$bdbSNP? '' : ',
                  GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/dbSNP`, "") ORDER BY vog.`VariantOnGenome/dbSNP` SEPARATOR ";") AS dbSNP') .
             (!$bVOGReference? '' : ',
@@ -809,6 +810,8 @@ class LOVD_API_GA4GH
             } else {
                 unset($aReturn['aliases']);
             }
+
+            $aReturn['pathogenicities'] = array_values($this->convertEffectsToVML($zData['effectids']));
 
             // Further annotate the entries.
             $aSubmissions = array();
