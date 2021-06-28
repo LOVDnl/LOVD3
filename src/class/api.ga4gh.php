@@ -656,6 +656,7 @@ class LOVD_API_GA4GH
             'Phenotype/Inheritance',
             'VariantOnGenome/DNA/hg38',
             'VariantOnGenome/ClinicalClassification',
+            'VariantOnGenome/ClinicalClassification/Method',
             'VariantOnGenome/dbSNP',
             'VariantOnGenome/Genetic_origin',
             'VariantOnGenome/Reference',
@@ -686,6 +687,8 @@ class LOVD_API_GA4GH
         $bPhenotypeAdditional = in_array('Phenotype/Additional', $aCols);
         $bPhenotypeInheritance = in_array('Phenotype/Inheritance', $aCols);
         $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
+        $bClassification = in_array('VariantOnGenome/ClinicalClassification', $aCols);
+        $bClassificationMethod = in_array('VariantOnGenome/ClinicalClassification/Method', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
         $bGeneticOrigin = in_array('VariantOnGenome/Genetic_origin', $aCols);
         $bVOGReference = in_array('VariantOnGenome/Reference', $aCols);
@@ -722,6 +725,10 @@ class LOVD_API_GA4GH
             (!$bDNA38? '' : ',
                  GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", vog.effectid) ORDER BY vog.id SEPARATOR ";") AS effectids' .
+            (!$bClassification? '' : ',
+                 GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", NULLIF(vog.`VariantOnGenome/ClinicalClassification`, ""), ":"' .
+                (!$bClassificationMethod? '' : ', IFNULL(vog.`VariantOnGenome/ClinicalClassification/Method`, "")') .
+                ') ORDER BY vog.id SEPARATOR ";") AS classifications') .
             (!$bdbSNP? '' : ',
                  GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/dbSNP`, "") ORDER BY vog.`VariantOnGenome/dbSNP` SEPARATOR ";") AS dbSNP') .
             (!$bVOGReference? '' : ',
@@ -870,7 +877,10 @@ class LOVD_API_GA4GH
                 unset($aReturn['aliases']);
             }
 
-            $aReturn['pathogenicities'] = array_values($this->convertEffectsToVML($zData['effectids']));
+            $aReturn['pathogenicities'] = array_merge(
+                array_values($this->convertEffectsToVML($zData['effectids'])),
+                array_values($this->convertClassificationToVML($zData['classifications']))
+            );
 
             // Further annotate the entries.
             $aSubmissions = array();
