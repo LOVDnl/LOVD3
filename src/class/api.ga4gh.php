@@ -49,6 +49,23 @@ class LOVD_API_GA4GH
         ),
     );
     private $aValueMappings = array(
+        'classifications' => array(
+            'ACMG' => array(
+                'benign' => 'benign',
+                'likely benign' => 'likely benign',
+                'VUS' => 'uncertain significance',
+                'likely pathogenic' => 'likely pathogenic',
+                'pathogenic' => 'pathogenic',
+            ),
+            'ENIGMA' => array(
+                'benign' => 'Class 1',
+                'likely benign' => 'Class 2',
+                'VUS' => 'Class 3',
+                'likely pathogenic' => 'Class 4',
+                'pathogenic' => 'Class 5',
+            ),
+        ),
+        'effect' => array(), // Defined in the constructor.
         'gender' => array(
             '' => '0',
             '?' => '0',
@@ -57,7 +74,6 @@ class LOVD_API_GA4GH
             'rF' => '2',
             'rM' => '1',
         ),
-        'effect' => array(), // Defined in the constructor.
         'genetic_origin' => array(
             'de novo' => 'de novo',
             'germline' => 'inherited',
@@ -222,6 +238,49 @@ class LOVD_API_GA4GH
 
 
 
+    private function convertClassificationToVML ($sClassifications)
+    {
+        // Converts classifications into VarioML pathogenicities.
+
+        $aReturn = array();
+        foreach (explode(';', $sClassifications) as $sIDClassificationMethod) {
+            if ($sIDClassificationMethod) {
+                list($nID, $sClassification, $sMethod) = explode(':', $sIDClassificationMethod);
+                if ($sClassification && $sClassification != 'unclassified') {
+                    $aReturn[$nID] = array(
+                        'scope' => 'individual', // Always the same for us.
+                        'term' => trim(preg_replace('/\s\([a-z!]+\)$/i', '', $sClassification)),
+                        'data_source' => array(
+                            'name' => 'submitter',
+                        ),
+                    );
+                    if ($sMethod && in_array($sMethod, array('ACMG', 'ENIGMA'))) {
+                        $aReturn[$nID]['source'] = $sMethod;
+                        // Unrecognized methods we'll simply not store.
+                        // VarioML has a dictionary for this field and we don't
+                        //  want unrecognized values in there.
+                        if (isset($this->aValueMappings['classifications'][$sMethod])) {
+                            // Some conversions required. Also, values not in
+                            //  the list will be removed (like 'association').
+                            if (!isset($this->aValueMappings['classifications'][$sMethod][$aReturn[$nID]['term']])) {
+                                // Unset the whole thing.
+                                unset($aReturn[$nID]);
+                            } else {
+                                $aReturn[$nID]['term'] = $this->aValueMappings['classifications'][$sMethod][$aReturn[$nID]['term']];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $aReturn;
+    }
+
+
+
+
+
     private function convertContactToVML ($sRole, $sContact)
     {
         // Converts contact string into VarioML contact data.
@@ -252,7 +311,7 @@ class LOVD_API_GA4GH
 
     private function convertEffectsToVML ($sEffects)
     {
-        // Converts variant effects into VarioML contact data.
+        // Converts variant effects into VarioML pathogenicities.
 
         $aReturn = array();
         foreach (explode(';', $sEffects) as $sIDEffect) {
