@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-06-25
+ * Modified    : 2021-06-28
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,6 +57,7 @@ class LOVD_API_GA4GH
             'rF' => '2',
             'rM' => '1',
         ),
+        'effect' => array(), // Defined in the constructor.
         'genetic_origin' => array(
             'de novo' => 'de novo',
             'germline' => 'inherited',
@@ -176,6 +177,7 @@ class LOVD_API_GA4GH
     function __construct (&$oAPI)
     {
         // Links the API to the private variable.
+        global $_SETT;
 
         if (!is_object($oAPI) || !is_a($oAPI, 'LOVD_API')) {
             return false;
@@ -186,6 +188,9 @@ class LOVD_API_GA4GH
         $aHeaders = getallheaders();
         $this->bVarCache = (isset($aHeaders['User-Agent'])
             && substr($aHeaders['User-Agent'], 0, 9) == 'varcache/');
+
+        // To not duplicate code.
+        $this->aValueMappings['effect'] = $_SETT['var_effect_api'];
 
         return true;
     }
@@ -236,6 +241,42 @@ class LOVD_API_GA4GH
                     'accession' => $sORCID,
                 )
             );
+        }
+
+        return $aReturn;
+    }
+
+
+
+
+
+    private function convertEffectsToVML ($sEffects)
+    {
+        // Converts variant effects into VarioML contact data.
+
+        $aReturn = array();
+        foreach (explode(';', $sEffects) as $sIDEffect) {
+            if ($sIDEffect) {
+                list($nID, $nEffectID) = explode(':', $sIDEffect);
+                if ($nEffectID{0}) {
+                    $aReturn[$nID] = array(
+                        'scope' => 'individual', // Always the same for us.
+                        'term' => $this->aValueMappings['effect'][(int) $nEffectID{0}],
+                        'data_source' => array(
+                            'name' => 'submitter',
+                        ),
+                    );
+                }
+                if ($nEffectID{1}) {
+                    $aReturn[$nID] = array(
+                        'scope' => 'individual', // Always the same for us.
+                        'term' => $this->aValueMappings['effect'][(int) $nEffectID{1}],
+                        'data_source' => array(
+                            'name' => 'curator',
+                        ),
+                    );
+                }
+            }
         }
 
         return $aReturn;
