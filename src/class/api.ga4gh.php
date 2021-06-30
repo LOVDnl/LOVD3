@@ -265,10 +265,16 @@ class LOVD_API_GA4GH
                             if (!isset($this->aValueMappings['classifications'][$sMethod][$aReturn[$nID]['term']])) {
                                 // Unset the whole thing.
                                 unset($aReturn[$nID]);
+                                continue;
                             } else {
                                 $aReturn[$nID]['term'] = $this->aValueMappings['classifications'][$sMethod][$aReturn[$nID]['term']];
                             }
                         }
+                    }
+                    // Values like "pathogenic (!)" require a comment.
+                    if (substr($sClassification, -3) == '(!)') {
+                        $aReturn[$nID]['comments']= $this->addComment(array(),
+                            '[IEXCL]: This classification is marked as an exceptional case, see the full entry.');
                     }
                 }
             }
