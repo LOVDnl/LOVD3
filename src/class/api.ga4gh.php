@@ -328,8 +328,9 @@ class LOVD_API_GA4GH
         foreach (explode(';', $sEffects) as $sIDEffect) {
             if ($sIDEffect) {
                 list($nID, $nEffectID) = explode(':', $sIDEffect);
+                $aReturn[$nID] = array();
                 if ($nEffectID{0}) {
-                    $aReturn[$nID] = array(
+                    $aReturn[$nID][] = array(
                         'scope' => 'individual', // Always the same for us.
                         'source' => 'LOVD',
                         'term' => $this->aValueMappings['effect'][(int) $nEffectID{0}],
@@ -339,7 +340,7 @@ class LOVD_API_GA4GH
                     );
                 }
                 if ($nEffectID{1}) {
-                    $aReturn[$nID] = array(
+                    $aReturn[$nID][] = array(
                         'scope' => 'individual', // Always the same for us.
                         'source' => 'LOVD',
                         'term' => $this->aValueMappings['effect'][(int) $nEffectID{1}],
@@ -884,7 +885,7 @@ class LOVD_API_GA4GH
             }
 
             $aReturn['pathogenicities'] = array_merge(
-                array_values($this->convertEffectsToVML($zData['effectids'])),
+                call_user_func_array('array_merge', $this->convertEffectsToVML($zData['effectids'])),
                 array_values($this->convertClassificationToVML($zData['classifications']))
             );
 
