@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-06-28
+ * Modified    : 2021-06-30
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -368,15 +368,8 @@ class LOVD_API_GA4GH
             if ($bLOVDPermission && $this->bVarCache) {
                 // We need to indicate to varcache that they have access,
                 // but only when varcache is calling us.
-                $aReturn['sharing_policy']['comments'] = array(
-                    array(
-                        'texts' => array(
-                            array(
-                                'value' => 'Additional permissions for LOVD project.',
-                            ),
-                        ),
-                    )
-                );
+                $aReturn['sharing_policy']['comments'] = $this->addComment(array(),
+                    'Additional permissions for LOVD project.');
             }
             return $aReturn;
         }
