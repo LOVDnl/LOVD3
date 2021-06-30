@@ -375,7 +375,7 @@ class LOVD_API_GA4GH
                 // We need to indicate to varcache that they have access,
                 // but only when varcache is calling us.
                 $aReturn['sharing_policy']['comments'] = $this->addComment(array(),
-                    'Additional permissions for LOVD project.');
+                    '[IPERMLOVD]: Additional permissions for LOVD project.');
             }
             return $aReturn;
         }
@@ -1364,7 +1364,7 @@ class LOVD_API_GA4GH
                                 //  doesn't match given genetic_origin value.
                                 $aVariant['genetic_origin']['genetic_source']['comments'] = $this->addComment(
                                     array(),
-                                    'Conflict in value for genetic_source: ' .
+                                    '[WCONFLICT]: Conflict in value for genetic_source: ' .
                                         $aVariant['genetic_origin']['genetic_source']['term'] .
                                         ' != ' . $sAllele . '.');
                             }
