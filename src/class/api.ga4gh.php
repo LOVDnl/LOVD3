@@ -274,7 +274,7 @@ class LOVD_API_GA4GH
                     // Values like "pathogenic (!)" require a comment.
                     if (substr($sClassification, -3) == '(!)') {
                         $aReturn[$nID]['comments']= $this->addComment(array(),
-                            '[IEXCL]: This classification is marked as an exceptional case, see the full entry.');
+                            '[IEXCEPTION]: This classification is marked as an exceptional case, see the full entry.');
                     }
                 }
             }
@@ -375,7 +375,7 @@ class LOVD_API_GA4GH
                 // We need to indicate to varcache that they have access,
                 // but only when varcache is calling us.
                 $aReturn['sharing_policy']['comments'] = $this->addComment(array(),
-                    '[IPERMLOVD]: Additional permissions for LOVD project.');
+                    '[ILICENSE4LOVD]: Additional permissions for LOVD project.');
             }
             return $aReturn;
         }
