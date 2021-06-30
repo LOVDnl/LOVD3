@@ -331,6 +331,7 @@ class LOVD_API_GA4GH
                 if ($nEffectID{0}) {
                     $aReturn[$nID] = array(
                         'scope' => 'individual', // Always the same for us.
+                        'source' => 'LOVD',
                         'term' => $this->aValueMappings['effect'][(int) $nEffectID{0}],
                         'data_source' => array(
                             'name' => 'submitter',
@@ -340,6 +341,7 @@ class LOVD_API_GA4GH
                 if ($nEffectID{1}) {
                     $aReturn[$nID] = array(
                         'scope' => 'individual', // Always the same for us.
+                        'source' => 'LOVD',
                         'term' => $this->aValueMappings['effect'][(int) $nEffectID{1}],
                         'data_source' => array(
                             'name' => 'curator',
