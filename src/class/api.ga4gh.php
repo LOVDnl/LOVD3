@@ -215,7 +215,7 @@ class LOVD_API_GA4GH
 
 
 
-    private function addComment ($aComments, $Text)
+    private function addComment ($aComments, $Text, $sTerm = '')
     {
         // Adds a comment to an existing array of comments.
 
@@ -225,11 +225,14 @@ class LOVD_API_GA4GH
             );
         }
 
-        $aComments[] = array(
-            'texts' => array(
-                $Text,
-            ),
+        $aReturn = array();
+        if ($sTerm) {
+            $aReturn['term'] = $sTerm;
+        }
+        $aReturn['texts'] = array(
+            $Text,
         );
+        $aComments[] = $aReturn;
 
         return $aComments;
     }
