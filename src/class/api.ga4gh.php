@@ -745,7 +745,12 @@ class LOVD_API_GA4GH
                    IFNULL(i.id,
                      CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||"' .
             (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||"' .
+                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       vog.effectid, "||"' .
+            (!$bClassification? '' : ',
+                       IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
+            (!$bClassificationMethod? '' : ',
+                       IFNULL(vog.`VariantOnGenome/ClinicalClassification/Method`, "")') . ', "||"' .
             (!$bdbSNP? '' : ',
                        IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
             (!$bVOGReference? '' : ',
@@ -898,7 +903,20 @@ class LOVD_API_GA4GH
                     $aSubmissions[] = $sVariant;
                 } else {
                     // Full variant data, which means there was no Individual.
-                    list($nID, $sLicense, $sDNA38, $sRSID, $sRefs, $sRemarks, $sVOTs, $sCreator, $sOwner) = explode('||', $sVariant);
+                    list(
+                        $nID,
+                        $sLicense,
+                        $sDNA38,
+                        $sEffects,
+                        $sClassification,
+                        $sClassificationMethod,
+                        $sRSID,
+                        $sRefs,
+                        $sRemarks,
+                        $sVOTs,
+                        $sCreator,
+                        $sOwner
+                    ) = explode('||', $sVariant);
 
                     // Ignore the full variant entry when the license isn't
                     //  compatible; we're not allowed to show the details then.
@@ -937,6 +955,11 @@ class LOVD_API_GA4GH
                     if (!$aVariant['aliases']) {
                         unset($aVariant['aliases']);
                     }
+
+                    $aVariant['pathogenicities'] = array_merge(
+                        current($this->convertEffectsToVML($nID . ':' . $sEffects)),
+                        array_values($this->convertClassificationToVML($nID . ':' . $sClassification . ':' . $sClassificationMethod))
+                    );
 
                     if ($sRemarks) {
                         $aVariant['comments'] = $this->addComment(array(), $sRemarks);
