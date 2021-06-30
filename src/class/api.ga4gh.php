@@ -277,7 +277,9 @@ class LOVD_API_GA4GH
                     // Values like "pathogenic (!)" require a comment.
                     if (substr($sClassification, -3) == '(!)') {
                         $aReturn[$nID]['comments']= $this->addComment(array(),
-                            '[IEXCEPTION]: This classification is marked as an exceptional case, see the full entry.');
+                            'This classification is marked as an exceptional case, see the full entry.',
+                            'IEXCEPTION'
+                        );
                     }
                 }
             }
@@ -378,7 +380,7 @@ class LOVD_API_GA4GH
                 // We need to indicate to varcache that they have access,
                 // but only when varcache is calling us.
                 $aReturn['sharing_policy']['comments'] = $this->addComment(array(),
-                    '[ILICENSE4LOVD]: Additional permissions for LOVD project.');
+                    'Additional permissions for LOVD project.', 'ILICENSE4LOVD');
             }
             return $aReturn;
         }
@@ -1367,9 +1369,11 @@ class LOVD_API_GA4GH
                                 //  doesn't match given genetic_origin value.
                                 $aVariant['genetic_origin']['genetic_source']['comments'] = $this->addComment(
                                     array(),
-                                    '[WCONFLICT]: Conflict in value for genetic_source: ' .
+                                    'Conflict in value for genetic_source: ' .
                                         $aVariant['genetic_origin']['genetic_source']['term'] .
-                                        ' != ' . $sAllele . '.');
+                                        ' != ' . $sAllele . '.',
+                                    'WCONFLICT'
+                                );
                             }
                         }
                     }
