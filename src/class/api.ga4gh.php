@@ -780,7 +780,9 @@ class LOVD_API_GA4GH
                            IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                          ), "")
                      )
-                   ) SEPARATOR ";;") AS variants
+                   ) SEPARATOR ";;") AS variants,
+                 MIN(vog.created_date) AS created_date,
+                 MAX(vog.edited_date) AS edited_date
                FROM ' . TABLE_VARIANTS . ' AS vog
                  LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
                  LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
@@ -831,6 +833,8 @@ class LOVD_API_GA4GH
                 ),
                 'aliases' => array(),
                 'pathogenicities' => array(),
+                'creation_date' => date('c', strtotime($zData['created_date'])),
+                'modification_date' => date('c', strtotime($zData['edited_date'])),
                 'panel' => array(
                     'individuals' => array(),
                     'panels' => array(),
