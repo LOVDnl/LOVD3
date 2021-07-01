@@ -810,7 +810,7 @@ class LOVD_API_GA4GH
         $aData = array_map(function ($zData)
         use (
             $aLicenses, $aLicensesSummaryData, $sBuild, $sChr,
-            $bdbSNP, $bDNA38, $bGeneticOrigin,
+            $bdbSNP, $bDNA38, $bClassification, $bClassificationMethod, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
             $bPhenotypeAdditional, $bPhenotypeInheritance,
             $bVOGReference, $bVOGRemarks)
@@ -1106,7 +1106,12 @@ class LOVD_API_GA4GH
                           vog.chromosome, "||",
                           vog.`VariantOnGenome/DNA`, "||"' .
                     (!$bDNA38? '' : ',
-                          IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||"' .
+                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       vog.effectid, "||"' .
+                    (!$bClassification? '' : ',
+                       IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
+                    (!$bClassificationMethod? '' : ',
+                       IFNULL(vog.`VariantOnGenome/ClinicalClassification/Method`, "")') . ', "||"' .
                     (!$bGeneticOrigin? '' : ',
                           IFNULL(LOWER(vog.`VariantOnGenome/Genetic_origin`), "")') . ', "||"' .
                     (!$bdbSNP? '' : ',
@@ -1334,7 +1339,23 @@ class LOVD_API_GA4GH
                 //  more than one screening has been created and linked to the
                 //  same variant.
                 foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
-                    list($nID, $nAllele, $sChr, $sDNA, $sDNA38, $sOrigin, $sRSID, $sRefs, $sRemarks, $sTemplate, $sTechnique, $sVOTs) = explode('||', $sVariant);
+                    list(
+                        $nID,
+                        $nAllele,
+                        $sChr,
+                        $sDNA,
+                        $sDNA38,
+                        $sEffects,
+                        $sClassification,
+                        $sClassificationMethod,
+                        $sOrigin,
+                        $sRSID,
+                        $sRefs,
+                        $sRemarks,
+                        $sTemplate,
+                        $sTechnique,
+                        $sVOTs
+                    ) = explode('||', $sVariant);
                     $aVariant = array(
                         'id' => $nID,
                         'copy_count' => ($nAllele == '3'? 2 : 1),
@@ -1365,6 +1386,11 @@ class LOVD_API_GA4GH
                     if (!$aVariant['aliases']) {
                         unset($aVariant['aliases']);
                     }
+
+                    $aVariant['pathogenicities'] = array_merge(
+                        current($this->convertEffectsToVML($nID . ':' . $sEffects)),
+                        array_values($this->convertClassificationToVML($nID . ':' . $sClassification . ':' . $sClassificationMethod))
+                    );
 
                     if ($sOrigin && isset($this->aValueMappings['genetic_origin'][$sOrigin])) {
                         $aVariant['genetic_origin'] = array(
