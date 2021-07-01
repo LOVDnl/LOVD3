@@ -364,6 +364,34 @@ class LOVD_API_GA4GH
 
 
 
+    private function convertGeneToVML ($sSymbol)
+    {
+        // Converts gene symbol into VarioML.
+        global $_DB;
+        static $aGenes = array();
+
+        if (!isset($aGenes[$sSymbol])) {
+            $aGenes[$sSymbol] = $_DB->query('
+                SELECT id_hgnc, id_omim FROM ' . TABLE_GENES . ' WHERE id = ?',
+                array($sSymbol))->fetchAssoc();
+        }
+
+        return array(
+            'source' => 'HGNC',
+            'accession' => $aGenes[$sSymbol]['id_hgnc'],
+            'db_xrefs' => array(
+                array(
+                    'source' => 'HGNC.symbol',
+                    'accession' => $sSymbol,
+                ),
+            )
+        );
+    }
+
+
+
+
+
     private function convertLicenseToVML ($sLicense)
     {
         // Converts license string into VarioML license data.
@@ -873,12 +901,7 @@ class LOVD_API_GA4GH
 
             if (!empty($zData['genes'])) {
                 $aReturn['genes'] = array_map(
-                    function ($sSymbol) {
-                        return array(
-                            'source' => 'HGNC',
-                            'accession' => $sSymbol,
-                        );
-                    }, explode(';', $zData['genes']));
+                    array($this, 'convertGeneToVML'), explode(';', $zData['genes']));
             }
 
             if (!empty($zData['DNA38'])) {
