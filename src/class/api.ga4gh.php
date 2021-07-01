@@ -384,6 +384,10 @@ class LOVD_API_GA4GH
                     'source' => 'HGNC.symbol',
                     'accession' => $sSymbol,
                 ),
+                array(
+                    'source' => 'MIM',
+                    'accession' => $aGenes[$sSymbol]['id_omim'],
+                ),
             )
         );
     }
@@ -1209,7 +1213,7 @@ class LOVD_API_GA4GH
                             'term' => $sName,
                         );
                         if ($nOMIMID) {
-                            $aPhenotype['source'] = 'OMIM';
+                            $aPhenotype['source'] = 'MIM';
                             $aPhenotype['accession'] = $nOMIMID;
                         }
                         if ($sInheritance) {
