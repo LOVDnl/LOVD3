@@ -865,8 +865,12 @@ class LOVD_API_GA4GH
                 ),
                 'aliases' => array(),
                 'pathogenicities' => array(),
-                'creation_date' => date('c', strtotime($zData['created_date'])),
-                'modification_date' => date('c', strtotime($zData['edited_date'])),
+                'creation_date' => array(
+                    'value' => date('c', strtotime($zData['created_date'])),
+                ),
+                'modification_date' => array(
+                    'value' => date('c', strtotime($zData['edited_date'])),
+                ),
                 'panel' => array(
                     'individuals' => array(),
                     'panels' => array(),
