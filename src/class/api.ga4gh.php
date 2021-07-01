@@ -894,10 +894,8 @@ class LOVD_API_GA4GH
                 unset($aReturn['aliases']);
             }
 
-            $aReturn['pathogenicities'] = array_merge(
-                call_user_func_array('array_merge', $this->convertEffectsToVML($zData['effectids'])),
-                array_values($this->convertClassificationToVML($zData['classifications']))
-            );
+            $aReturn['effectids'] = $this->convertEffectsToVML($zData['effectids']);
+            $aReturn['classifications'] = $this->convertClassificationToVML($zData['classifications']);
 
             // Further annotate the entries.
             $aSubmissions = array();
@@ -1383,6 +1381,19 @@ class LOVD_API_GA4GH
                         'pathogenicities' => array(),
                     );
 
+                    // Copy the phenotypes to this variant's aggregate pathogenicities.
+                    if (!empty($aIndividual['phenotypes'])) {
+                        if (isset($aReturn['effectids'][$nID][0])) {
+                            $aReturn['effectids'][$nID][0]['phenotypes'] = $aIndividual['phenotypes'];
+                        }
+                        if (isset($aReturn['effectids'][$nID][1])) {
+                            $aReturn['effectids'][$nID][0]['phenotypes'] = $aIndividual['phenotypes'];
+                        }
+                        if (isset($aReturn['classifications'][$nID])) {
+                            $aReturn['classifications'][$nID]['phenotypes'] = $aIndividual['phenotypes'];
+                        }
+                    }
+
                     if (!$aVariant['aliases']) {
                         unset($aVariant['aliases']);
                     }
@@ -1626,6 +1637,13 @@ class LOVD_API_GA4GH
                     $aReturn['panel']['individuals'][] = $aIndividual;
                 }
             }
+
+            // The aggregate pathogenicities aren't stored well yet.
+            $aReturn['pathogenicities'] = array_merge(
+                call_user_func_array('array_merge', $aReturn['effectids']),
+                array_values($aReturn['classifications'])
+            );
+            unset($aReturn['effectids'], $aReturn['classifications']);
 
             return $aReturn;
         }, $zData);
