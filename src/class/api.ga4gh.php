@@ -1164,7 +1164,7 @@ class LOVD_API_GA4GH
                             (SELECT
                                GROUP_CONCAT(
                                  CONCAT(
-                                   t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", vot.`VariantOnTranscript/Protein`)
+                                   t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
                                  SEPARATOR "$$")
                              FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                                INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
@@ -1626,7 +1626,7 @@ class LOVD_API_GA4GH
                     if ($sVOTs) {
                         $aVariant['seq_changes']['variants'] = array();
                         foreach (explode('$$', $sVOTs) as $sVOT) {
-                            list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtein) = explode('##', $sVOT);
+                            list($sGene, $sRefSeq, $sDNA, $sRNA, $sProtRefSeq, $sProtein) = explode('##', $sVOT);
                             $aVariant['seq_changes']['variants'][] = array(
                                 'type' => 'cDNA',
                                 'gene' => array(
@@ -1653,6 +1653,10 @@ class LOVD_API_GA4GH
                                                 'variants' => array(
                                                     array(
                                                         'type' => 'AA',
+                                                        'ref_seq' => array(
+                                                            'source' => 'genbank',
+                                                            'accession' => $sProtRefSeq,
+                                                        ),
                                                         'name' => array(
                                                             'scheme' => 'HGVS',
                                                             'value' => $sProtein,
@@ -1664,6 +1668,11 @@ class LOVD_API_GA4GH
                                     )
                                 )
                             );
+
+                            // Remove protein NCBI ID when not available.
+                            if (!$sProtRefSeq) {
+                                unset($aVariant['seq_changes']['variants'][count($aVariant['seq_changes']['variants'])-1]['seq_changes']['variants'][0]['seq_changes']['variants'][0]['ref_seq']);
+                            }
                         }
                     }
 
