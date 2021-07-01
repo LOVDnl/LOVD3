@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-06-30
+ * Modified    : 2021-07-01
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -276,9 +276,14 @@ class LOVD_API_GA4GH
                     }
                     // Values like "pathogenic (!)" require a comment.
                     if (substr($sClassification, -3) == '(!)') {
-                        $aReturn[$nID]['comments']= $this->addComment(array(),
+                        $aReturn[$nID]['comments'] = $this->addComment(array(),
                             'This classification is marked as an exceptional case, see the full entry.',
                             'IEXCEPTION'
+                        );
+                    } elseif (substr($sClassification, -8) == 'aternal)') {
+                        $aReturn[$nID]['comments'] = $this->addComment(array(),
+                            'This classification is marked as ' . substr($sClassification, -9, -1) . ' genomic imprinting.',
+                            'IIMPRINTING'
                         );
                     }
                 }
