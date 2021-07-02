@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-01
+ * Modified    : 2021-07-02
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -44,7 +44,7 @@ class LOVD_API_GA4GH
     private $aTables = array(
         'variants' => array(
             'description' => 'Aggregated variant data, when available also containing information on individuals, their phenotypes, and their other variants.',
-            'data_model' => 'https://github.com/VarioML/VarioML/blob/master/json/schemas/v.2.0/variants.json',
+            'data_model' => 'https://raw.githubusercontent.com/VarioML/VarioML/master/json/schemas/v.2.0/variant.json',
             'first_page' => 'data:{{refseq_build}}:chr1',
         ),
     );
