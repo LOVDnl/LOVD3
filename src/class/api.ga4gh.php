@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-02
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -757,6 +757,9 @@ class LOVD_API_GA4GH
         );
         // Now what licenses will only allow us to return summary data?
         $aLicensesSummaryData = array_keys(array_diff($aLicenses, array(1)));
+
+        // We'll need lots of space for GROUP_CONCAT().
+        $_DB->query('SET group_concat_max_len = 200000');
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
