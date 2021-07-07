@@ -33,6 +33,8 @@
  *  3.0-27 (v2)  /api/v#/ga4gh (GET) (redirects)
  *  3.0-27 (v2)  /api/v#/ga4gh/tables (GET)
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/info (GET)
+ *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data (GET)
+ *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data:hg19:chr1:123456 (GET)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
