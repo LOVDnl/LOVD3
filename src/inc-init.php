@@ -876,7 +876,7 @@ if (!defined('NOT_INSTALLED')) {
     //  If there are arguments with ../ in there, this will take effect and arguments or even the path itself is eaten.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
     $sPath = strip_tags($sPath); // XSS tag removal on entire string (and no longer on individual parts).
-    $sPath = strstr($sPath, '?', true); // Cut off the Query string, that will be handled later.
+    $sPath = strstr($sPath . '?', '?', true); // Cut off the Query string, that will be handled later.
     if (strpos($sPath, '"') !== false) {
         // XSS attack. Filter everything out.
         $sPath = strstr($sPath, '"', true);
