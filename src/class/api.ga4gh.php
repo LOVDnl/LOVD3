@@ -1015,6 +1015,21 @@ class LOVD_API_GA4GH
                                 }
                                 return $aPathogenicity;
                             }, $aVariant['pathogenicities']);
+
+                        // Also overwrite the values collected for the
+                        //  aggregated variant entry.
+                        if (!empty($aReturn['effectids'][$nID])) {
+                            $aReturn['effectids'][$nID] = array_map(
+                                function ($aPathogenicity) {
+                                    if (isset($aPathogenicity['data_source'])) {
+                                        $aPathogenicity['data_source']['name'] = 'curator';
+                                    }
+                                    return $aPathogenicity;
+                                }, $aReturn['effectids'][$nID]);
+                        }
+                        if (!empty($aReturn['classifications'][$nID]['data_source'])) {
+                            $aReturn['classifications'][$nID]['data_source']['name'] = 'curator';
+                        }
                     }
 
                     if ($sRemarks) {
