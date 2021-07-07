@@ -1174,7 +1174,7 @@ class LOVD_API_GA4GH
                       CONCAT(
                         IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                       ) AS owner,
-                      IFNULL(i.license, uc.default_license) AS license,
+                      IFNULL(NULLIF(i.license, ""), uc.default_license) AS license,
                       GROUP_CONCAT(DISTINCT
                         CONCAT(
                           vog.id, "||",
@@ -1220,7 +1220,7 @@ class LOVD_API_GA4GH
                       LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id)
                     WHERE i.id IN (?' . str_repeat(', ?', count($aSubmissions) - 1) . ')
                       AND i.statusid >= ?
-                      AND IFNULL(i.license, IFNULL(uc.default_license, "")) NOT IN (?' . str_repeat(', ?', count($aLicensesSummaryData) - 1) . ')
+                      AND IFNULL(NULLIF(i.license, ""), IFNULL(uc.default_license, "")) NOT IN (?' . str_repeat(', ?', count($aLicensesSummaryData) - 1) . ')
                     GROUP BY i.id',
                     array_merge(
                         array(STATUS_MARKED, STATUS_MARKED),

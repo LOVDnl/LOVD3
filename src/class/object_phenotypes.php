@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2021-04-22
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,7 +65,7 @@ class LOVD_Phenotype extends LOVD_Custom
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'p.*, ' .
-                                           'IFNULL(i.license, iuc.default_license) AS license, ' .
+                                           'IFNULL(NULLIF(i.license, ""), iuc.default_license) AS license, ' .
                                            'i.statusid AS individual_statusid, ' .
                                            'd.symbol AS disease, ' .
                                            'uo.name AS owned_by_, CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .

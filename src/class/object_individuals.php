@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2021-04-22
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -72,7 +72,7 @@ class LOVD_Individual extends LOVD_Custom
 
         // SQL code for viewing an entry.
         $this->aSQLViewEntry['SELECT']   = 'i.*, ' .
-                                           'IFNULL(i.license, uc.default_license) AS license, ' .
+                                           'IFNULL(NULLIF(i.license, ""), uc.default_license) AS license, ' .
                                            'GROUP_CONCAT(DISTINCT d.id SEPARATOR ";") AS _diseaseids, ' .
                                            'GROUP_CONCAT(DISTINCT d.id, ";", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, d.symbol), ";", d.name ORDER BY (d.symbol != "" AND d.symbol != "-") DESC, d.symbol, d.name SEPARATOR ";;") AS __diseases, ' .
                                            'GROUP_CONCAT(DISTINCT p.diseaseid SEPARATOR ";") AS _phenotypes, ' .
