@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2021-04-21
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -729,7 +729,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
             $nCurators = count($aCurators);
             foreach ($aCurators as $i => $z) {
                 $i ++;
-                $sCurators .= ($sCurators? ($i == $nCurators? ' and ' : ', ') : '') . '<A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($z['email'])) . '">' . $z['name'] . '</A>';
+                $sCurators .= ($sCurators? ($i == $nCurators? ($i == 2? '' : ',') . ' and ' : ', ') : '') . '<A href="mailto:' . str_replace(array("\r\n", "\r", "\n"), ', ', trim($z['email'])) . '">' . $z['name'] . '</A>';
             }
 
             if ($sCurators) {
