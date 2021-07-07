@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-04-21
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -876,8 +876,15 @@ if (!defined('NOT_INSTALLED')) {
     //  If there are arguments with ../ in there, this will take effect and arguments or even the path itself is eaten.
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
     $sPath = strip_tags($sPath); // XSS tag removal on entire string (and no longer on individual parts).
-    $aPath = explode('?', $sPath); // Cut off the Query string, that will be handled later.
-    $_PE = explode('/', rtrim($aPath[0], '/')); // array('login') or array('genes') or array('users', '00001')
+    $sPath = strstr($sPath, '?', true); // Cut off the Query string, that will be handled later.
+    if (strpos($sPath, '"') !== false) {
+        // XSS attack. Filter everything out.
+        $sPath = strstr($sPath, '"', true);
+        // Also overwrite $_SERVER['REQUEST_URI'] as it's used more often (e.g., gene switcher) and we want it cleaned.
+        $_SERVER['REQUEST_URI'] = strstr($_SERVER['REQUEST_URI'], '%22', true) .
+            (empty($_SERVER['QUERY_STRING'])? '' : '?' . $_SERVER['QUERY_STRING']);
+    }
+    $_PE = explode('/', rtrim($sPath, '/')); // array('login') or array('genes') or array('users', '00001')
 
     if (isset($_SETT['objectid_length'][$_PE[0]]) && isset($_PE[1]) && ctype_digit($_PE[1])) {
         $_PE[1] = sprintf('%0' . $_SETT['objectid_length'][$_PE[0]] . 'd', $_PE[1]);
