@@ -681,7 +681,8 @@ class LOVD_API_GA4GH
     private function showVariantDataPage ($sBuild, $sChr, $nPosition)
     {
         // Shows variant data page.
-        global $_DB;
+        global $_DB, $_CONF, $_SETT;
+
         $sTableName = 'variants';
         $nLimit = 1000; // Get 1000 variants max in one go.
 
@@ -1738,6 +1739,20 @@ class LOVD_API_GA4GH
 
         // Set next seek window.
         $nNextPosition = $zData[$n-1]['position_g_start'] + 1;
+        if ($n < $nLimit) {
+            // We didn't receive everything. This must be because we're at the
+            //  end of the chromosome. Let's look at the next.
+            // The easiest way to find the "next" chromosome is by our list.
+            $aChrs = array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
+            $nIndex = array_search($sChr, $aChrs);
+            $nIndex ++;
+            if (isset($aChrs[$nIndex])) {
+                $sChr = $aChrs[$nIndex];
+                $nNextPosition = 1;
+            } else {
+                $sChr = false;
+            }
+        }
 
         $aOutput = array(
             'data_model' => array(
@@ -1748,6 +1763,11 @@ class LOVD_API_GA4GH
                 'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/data' . rawurlencode(':' . $sBuild . ':chr' . $sChr . ':' . $nNextPosition),
             ),
         );
+
+        // If we're at the end, make sure we let them know.
+        if (!$sChr) {
+            unset($aOutput['pagination']['next_page_url']);
+        }
 
         $this->API->aResponse = $aOutput;
         return true;
