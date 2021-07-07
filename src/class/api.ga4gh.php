@@ -791,6 +791,8 @@ class LOVD_API_GA4GH
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
             (!$bClassificationMethod? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification/Method`, "")') . ', "||"' .
+            (!$bGeneticOrigin? '' : ',
+                       IFNULL(LOWER(vog.`VariantOnGenome/Genetic_origin`), "")') . ', "||"' .
             (!$bdbSNP? '' : ',
                        IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
             (!$bVOGReference? '' : ',
@@ -951,6 +953,7 @@ class LOVD_API_GA4GH
                         $sEffects,
                         $sClassification,
                         $sClassificationMethod,
+                        $sOrigin,
                         $sRSID,
                         $sRefs,
                         $sRemarks,
@@ -1001,6 +1004,18 @@ class LOVD_API_GA4GH
                         current($this->convertEffectsToVML($nID . ':' . $sEffects)),
                         array_values($this->convertClassificationToVML($nID . ':' . $sClassification . ':' . $sClassificationMethod))
                     );
+
+                    // For GV shared type "SUMMARY records", overwrite the data_source.
+                    if ($sOrigin && $sOrigin == 'summary record') {
+                        // These entries are made by curators.
+                        $aVariant['pathogenicities'] = array_map(
+                            function ($aPathogenicity) {
+                                if (isset($aPathogenicity['data_source'])) {
+                                    $aPathogenicity['data_source']['name'] = 'curator';
+                                }
+                                return $aPathogenicity;
+                            }, $aVariant['pathogenicities']);
+                    }
 
                     if ($sRemarks) {
                         $aVariant['comments'] = $this->addComment(array(), $sRemarks);
