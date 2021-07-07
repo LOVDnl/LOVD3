@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2021-04-20
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -610,6 +610,7 @@ class LOVD_Custom extends LOVD_Object
                     $zData['license'] = strstr($zData['license'], ';', true);
                     $sLicenseName = substr($zData['license'], 3, -4);
                     $sLicenseVersion = substr($zData['license'], -3);
+                    $nIndividualID = false;
 
                     if ($this->sObject == 'Genome_Variant') {
                         if (count($zData['individuals']) > 1) {
@@ -621,15 +622,13 @@ class LOVD_Custom extends LOVD_Object
                                     }
                                 }
                             }
-                        } else {
+                        } elseif ($zData['individuals']) {
                             $nIndividualID = $zData['individuals'][0][0];
                         }
                     } elseif ($this->sObject == 'Individual') {
                         $nIndividualID = $zData['id'];
                     } elseif (in_array($this->sObject, array('Phenotype', 'Screening'))) {
                         $nIndividualID = $zData['individualid'];
-                    } else {
-                        $nIndividualID = false;
                     }
 
                     $zData['license_'] =
