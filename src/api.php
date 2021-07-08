@@ -31,6 +31,7 @@
  *  3.0-beta-10  /api/rest.php/genes?search_position=chrX:3200000_4000000&position_match=exact|exclusive|partial
  *  3.0-22       /api/rest.php/*****?format=application/json   (JSON output for whole LOVD2-style API)
  *  3.0-27 (v2)  /api/v#/ga4gh (GET) (redirects)
+ *  3.0-27 (v2)  /api/v#/ga4gh/service-info
  *  3.0-27 (v2)  /api/v#/ga4gh/tables (GET)
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/info (GET)
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data (GET)

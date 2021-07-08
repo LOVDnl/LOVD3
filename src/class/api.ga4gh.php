@@ -514,7 +514,7 @@ class LOVD_API_GA4GH
         // No further elements given, then forward to the table list.
         if (!implode('', $this->aURLElements)) {
             $this->API->nHTTPStatus = 302; // Send 302 Moved Temporarily (302 Found in HTTP 1.1).
-            $this->API->aResponse['messages'][] = 'Location: ' . lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/tables';
+            $this->API->aResponse['messages'][] = 'Location: ' . lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/service-info';
             return true;
         }
 
