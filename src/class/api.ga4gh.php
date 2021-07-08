@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-07
+ * Modified    : 2021-07-08
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -542,7 +542,7 @@ class LOVD_API_GA4GH
         // Check URL structure some more.
         if ($this->aURLElements[0] == 'table'
             && !in_array($this->aURLElements[2], array('info', 'data'))
-            && !preg_match('/^data:hg[0-9]{2}(:chr([XYM]|[0-9]{1,2})(:[0-9]+)?)?$/', $this->aURLElements[2])) {
+            && !preg_match('/^data:hg[0-9]{2}(:chr([XYM]|[0-9]{1,2})(:[0-9]+(-[0-9]+)?)?)?$/', $this->aURLElements[2])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
             $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
             return false;
@@ -555,7 +555,7 @@ class LOVD_API_GA4GH
             return $this->showTableInfo($aURLElements[1]);
         } elseif ($aURLElements[0] == 'table' && $aURLElements[2] == 'data') {
             return $this->showTableData($aURLElements[1]);
-        } elseif ($aURLElements[0] == 'table' && preg_match('/^data:(hg[0-9]{2})(?::chr([XYM]|[0-9]{1,2})(?::([0-9]+))?)?$/', $aURLElements[2], $aRegs)) {
+        } elseif ($aURLElements[0] == 'table' && preg_match('/^data:(hg[0-9]{2})(?::chr([XYM]|[0-9]{1,2})(?::([0-9]+(?:-[0-9]+)?))?)?$/', $aURLElements[2], $aRegs)) {
             return $this->showTableDataPage($aURLElements[1], $aRegs);
         }
 
@@ -599,7 +599,7 @@ class LOVD_API_GA4GH
         global $_CONF, $_SETT;
 
         if ($sTableName == 'variants') {
-            list(, $sBuild, $sChr, $nPosition) = array_pad($aPage, 4, '1');
+            list(, $sBuild, $sChr, $sPosition) = array_pad($aPage, 4, '1');
 
             if ($sBuild != $_CONF['refseq_build']) {
                 // We don't support this yet, because we can't use an index on a
@@ -622,7 +622,7 @@ class LOVD_API_GA4GH
                 return false;
             }
 
-            return $this->showVariantDataPage($sBuild, $sChr, $nPosition);
+            return $this->showVariantDataPage($sBuild, $sChr, $sPosition);
         }
 
         return false;
@@ -678,7 +678,7 @@ class LOVD_API_GA4GH
 
 
 
-    private function showVariantDataPage ($sBuild, $sChr, $nPosition)
+    private function showVariantDataPage ($sBuild, $sChr, $sPosition)
     {
         // Shows variant data page.
         global $_DB, $_CONF, $_SETT;
@@ -833,7 +833,7 @@ class LOVD_API_GA4GH
         $aQ = array(
             STATUS_MARKED,
             (string) $sChr,
-            (int) $nPosition,
+            (int) $sPosition,
             STATUS_MARKED
         );
         // FIXME: This is where searching will be implemented.
