@@ -1746,7 +1746,10 @@ class LOVD_API_GA4GH
 
         // Set next seek window.
         $nNextPosition = (!$zData? 0 : $zData[$n-1]['position_g_start'] + 1);
-        if ($n < $nLimit) {
+        if ($nPositionEnd) {
+            // We were looking in a closed range. Continue with the next window.
+            $nNextPosition = $nPositionEnd + 1;
+        } elseif ($n < $nLimit) {
             // We didn't receive everything. This must be because we're at the
             //  end of the chromosome. Let's look at the next.
             // The easiest way to find the "next" chromosome is by our list.
