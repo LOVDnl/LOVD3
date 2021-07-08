@@ -249,7 +249,7 @@ class LOVD_API_GA4GH
         foreach (explode(';', $sClassifications) as $sIDClassificationMethod) {
             if ($sIDClassificationMethod) {
                 list($nID, $sClassification, $sMethod) = explode(':', $sIDClassificationMethod);
-                if ($sClassification && $sClassification != 'unclassified') {
+                if ($sClassification && !in_array($sClassification, array('NA', 'unclassified'))) {
                     $aReturn[$nID] = array(
                         'scope' => 'individual', // Always the same for us.
                         'term' => trim(preg_replace('/\s\([a-z!]+\)$/i', '', $sClassification)),
