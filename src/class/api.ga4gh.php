@@ -520,6 +520,7 @@ class LOVD_API_GA4GH
 
         // Check URL structure.
         if (count($this->aURLElements) > 3
+            || ($this->aURLElements[0] == 'service-info' && $aURLElements[1])
             || ($this->aURLElements[0] == 'tables' && $aURLElements[1])) {
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
             $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
@@ -549,7 +550,9 @@ class LOVD_API_GA4GH
         }
 
         // Now actually handle the request.
-        if ($aURLElements[0] == 'tables') {
+        if ($aURLElements[0] == 'service-info') {
+            return $this->showServiceInfo();
+        } elseif ($aURLElements[0] == 'tables') {
             return $this->showTables();
         } elseif ($aURLElements[0] == 'table' && $aURLElements[2] == 'info') {
             return $this->showTableInfo($aURLElements[1]);
@@ -561,6 +564,35 @@ class LOVD_API_GA4GH
 
         // If we end up here, we didn't handle the request well.
         return false;
+    }
+
+
+
+
+
+    private function showServiceInfo ()
+    {
+        // Shows service info.
+        global $_STAT;
+
+        $aOutput = array(
+            'id' => 'nl.lovd.ga4gh.' . md5(md5($_STAT['signature'])), // Note, a double md5(), to not leak the LSDB ID nor the signature.
+            'name' => 'GA4GH Data Connect API for LOVD instance ' . md5(md5($_STAT['signature'])),
+            'type' => array(
+                'group' => 'org.ga4gh',
+                'artifact' => 'service-registry',
+                'version' => '1.0.0'
+            ),
+            'description' => 'Implementation of the GA4GH Data Connect API on top of this LOVD instance. Supports export of aggregated variant records (table: "variants"). See /tables for more information.',
+            'organization' => array(
+                'name' => 'Leiden Open Variation Database (LOVD)',
+                'url' => 'https://lovd.nl/',
+            ),
+            'version' => '1.0.0',
+        );
+
+        $this->API->aResponse = $aOutput;
+        return true;
     }
 
 
