@@ -685,6 +685,8 @@ class LOVD_API_GA4GH
 
         $sTableName = 'variants';
         $nLimit = 1000; // Get 1000 variants max in one go.
+        // Split position fields (append hyphen to prevent notice).
+        list($nPositionStart, $nPositionEnd) = explode('-', $sPosition . '-');
 
         // Check for required, and wanted columns.
         $aRequiredCols = array(
@@ -829,13 +831,18 @@ class LOVD_API_GA4GH
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ?)
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
-               WHERE vog.chromosome = ? AND vog.position_g_start >= ? AND vog.statusid >= ?';
+               WHERE vog.chromosome = ?
+                 AND vog.position_g_start >= ?' . (!$nPositionEnd? '' : ' AND vog.position_g_end <= ?') . '
+                 AND vog.statusid >= ?';
         $aQ = array(
             STATUS_MARKED,
             (string) $sChr,
-            (int) $sPosition,
-            STATUS_MARKED
+            (int) $nPositionStart
         );
+        if ($nPositionEnd) {
+            $aQ[] = (int) $nPositionEnd;
+        }
+        $aQ[] = STATUS_MARKED;
         // FIXME: This is where searching will be implemented.
         $sQ .= '
                GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`
