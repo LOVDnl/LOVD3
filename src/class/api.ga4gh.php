@@ -1771,6 +1771,14 @@ class LOVD_API_GA4GH
             );
             unset($aReturn['effectids'], $aReturn['classifications']);
 
+            // Clean "individuals", "panels" and "variants" when empty.
+            // VarioML wants them gone when empty.
+            foreach (array('individuals', 'panels', 'variants') as $sIndex) {
+                if (!count($aReturn['panel'][$sIndex])) {
+                    unset($aReturn['panel'][$sIndex]);
+                }
+            }
+
             return $aReturn;
         }, $zData);
 
