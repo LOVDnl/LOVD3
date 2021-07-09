@@ -287,6 +287,15 @@ class LOVD_API_GA4GH
                             'This classification is marked as ' . substr($sClassification, -9, -1) . ' genomic imprinting.',
                             'IIMPRINTING'
                         );
+                    } elseif (in_array(substr($sClassification, -10), array('recessive)', '(dominant)'))) {
+                        // VarioML states we need to store inheritance within a phenotype.
+                        // But that's difficult to do in the code, and not all variants
+                        //  have phenotypes (summary records, classification records).
+                        $sInheritance = str_replace('(', '', substr($sClassification, -10, -1));
+                        $aReturn[$nID]['comments'] = $this->addComment(array(),
+                            'This classification is marked as ' . $sInheritance . ' inheritance.',
+                            'I' . strtoupper($sInheritance)
+                        );
                     }
                 }
             }
