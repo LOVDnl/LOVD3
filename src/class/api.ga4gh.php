@@ -1344,6 +1344,9 @@ class LOVD_API_GA4GH
                             $aPhenotype['accession'] = $nOMIMID;
                         }
                         if ($sInheritance) {
+                            // Inheritance can contain multiple values, but
+                            //  VarioML allows for only one. Combined values
+                            //  will therefore just be stored as a term.
                             if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
                                 $aPhenotype['inheritance_pattern'] = $this->aValueMappings['inheritance'][$sInheritance];
                             } else {
