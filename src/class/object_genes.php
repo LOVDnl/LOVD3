@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2021-05-10
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -615,10 +615,10 @@ class LOVD_Gene extends LOVD_Object
                 // 2013-06-05; 3.0-06; There should be no link for users not logged in; they can't access these anyways.
                 if ($_AUTH) {
                     // Use links, hidden curators possibly in the list (depends on exact user level).
-                    $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ' and ' : ', ')) . ($nOrder? '<B><A href="users/' . $nUserID . '">' . $sName . '</A></B>' : '<I><A href="users/' . $nUserID . '">' . $sName . '</A> (hidden)</I>');
+                    $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ($i == 2? '' : ',') . ' and ' : ', ')) . ($nOrder? '<B><A href="users/' . $nUserID . '">' . $sName . '</A></B>' : '<I><A href="users/' . $nUserID . '">' . $sName . '</A> (hidden)</I>');
                 } else {
                     // Don't use links, and we never see hidden users anyways.
-                    $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ' and ' : ', ')) . '<B>' . $sName . '</B>';
+                    $zData['curators_'] .= ($i == 1? '' : ($i == $nCurators? ($i == 2? '' : ',') . ' and ' : ', ')) . '<B>' . $sName . '</B>';
                 }
             }
             $this->aColumnsViewEntry['curators_'] .= ' (' . $nCurators . ')';
@@ -628,7 +628,7 @@ class LOVD_Gene extends LOVD_Object
                 $i = 0;
                 foreach ($aCollaborators as $nUserID => $sName) {
                     $i ++;
-                    $zData['collaborators_'] .= ($i == 1? '' : ($i == $nCollaborators? ' and ' : ', ')) . '<A href="users/' . $nUserID . '">' . $sName . '</A>';
+                    $zData['collaborators_'] .= ($i == 1? '' : ($i == $nCollaborators? ($i == 2? '' : ',') . ' and ' : ', ')) . '<A href="users/' . $nUserID . '">' . $sName . '</A>';
                 }
                 $this->aColumnsViewEntry['collaborators_'][0] .= ' (' . $nCollaborators . ')';
             }

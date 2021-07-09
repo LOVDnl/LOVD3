@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2021-05-10
+ * Modified    : 2021-07-07
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,7 +55,7 @@ $nID = lovd_getCurrentID();
 $sObject = $_PE[2];
 if ($sObject == 'individual') {
     $rObject = $_DB->query('
-        SELECT CONCAT("individual #", i.id), IFNULL(i.license, uc.default_license), uc.name
+        SELECT CONCAT("individual #", i.id), IFNULL(NULLIF(i.license, ""), uc.default_license), uc.name
         FROM ' . TABLE_INDIVIDUALS . ' AS i
           INNER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
         WHERE i.id = ?', array($nID))->fetchRow();
