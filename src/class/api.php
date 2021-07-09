@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-07-08
+ * Modified    : 2021-07-09
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -261,6 +261,8 @@ class LOVD_API
             $bReturn = null;
             if (GET) {
                 $bReturn = $this->processGET($aURLElements);
+            } elseif (HEAD) {
+                $bReturn = $this->processHEAD($aURLElements);
             } elseif (POST) {
                 $bReturn = $this->processPOST();
             }
@@ -337,7 +339,7 @@ class LOVD_API
 
 
 
-    private function processGET ($aURLElements)
+    private function processGET ($aURLElements, $bReturnBody = true)
     {
         // Processes the GET calls to the API.
 
@@ -347,8 +349,21 @@ class LOVD_API
             $o = new LOVD_API_GA4GH($this);
             // This should process the request, return false on failure,
             //  true on success, and void otherwise (bugs).
-            return $o->processGET($aURLElements);
+            return $o->processGET($aURLElements, $bReturnBody);
         }
+    }
+
+
+
+
+
+    private function processHEAD ($aURLElements)
+    {
+        // Processes the HEAD calls to the API.
+        // Even though HEAD is often not implemented, it should return the same
+        //  headers as GET does. So basically, it should do all checks.
+
+        return $this->processGET($aURLElements, false);
     }
 
 
@@ -377,7 +392,7 @@ class LOVD_API
     public function sendHeader ($nStatus, $bHalt = false)
     {
         // Sends the HTTP header as requested, and optionally halts. If it does,
-        //  it will send the response as well.
+        //  it will send the response as well if we're not using HEAD.
         global $_SETT;
 
         // Response header...
@@ -404,7 +419,9 @@ class LOVD_API
         // Content type...
         header('Content-type: ' . $this->sFormatOutput . '; charset=UTF-8');
         if ($bHalt) {
-            print($this->formatReponse() . "\n");
+            if (!HEAD) {
+                print($this->formatReponse() . "\n");
+            }
             exit;
         }
 

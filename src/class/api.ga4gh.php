@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-08
+ * Modified    : 2021-07-09
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -184,6 +184,7 @@ class LOVD_API_GA4GH
         ),
     );
     private $bAuthorized = false;
+    private $bReturnBody = true;
     private $bVarCache = false;
 
 
@@ -481,10 +482,16 @@ class LOVD_API_GA4GH
 
 
 
-    public function processGET ($aURLElements)
+    public function processGET ($aURLElements, $bReturnBody)
     {
-        // Handle GET requests for GA4GH Data Connect.
+        // Handle GET and HEAD requests for GA4GH Data Connect.
+        // For HEAD requests, we won't print any output.
+        // We could just check for the HEAD constant but this way the code will
+        //  be more independent on the rest of the infrastructure.
+        // Note that LOVD API's sendHeaders() function does check for HEAD and
+        //  automatically won't print any contents if HEAD is used.
         global $_SETT, $_STAT;
+        $this->bReturnBody = $bReturnBody;
 
         // We currently require authorization. This needs to be sent over an
         //  Authorization HTTP request header.
@@ -654,6 +661,9 @@ class LOVD_API_GA4GH
                 return false;
             }
 
+            if (!$this->bReturnBody) {
+                return true;
+            }
             return $this->showVariantDataPage($sBuild, $sChr, $sPosition);
         }
 
