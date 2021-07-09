@@ -564,6 +564,12 @@ class LOVD_API_GA4GH
         if (isset($aHeaders['If-Modified-Since']) && $tIfModifiedSince = strtotime($aHeaders['If-Modified-Since'])) {
             // strtotime() took care of timezone differences.
             $this->aFilters['modified_since'] = date('Y-m-d H:i:s', $tIfModifiedSince);
+            // Also implement the "Last-Modified" response header.
+            // We shouldn't pick the last edited_date that we see, since we
+            //  don't know if data has been deleted or edited "out" of this view
+            //  since (i.e., its edit removed it from this view).
+            $oDate = new DateTime('now', new DateTimeZone('GMT'));
+            $this->API->aHTTPHeaders['Last-Modified'] = str_replace('+0000', 'GMT', $oDate->format('r'));
         }
 
         // Now actually handle the request.
@@ -1828,6 +1834,13 @@ class LOVD_API_GA4GH
             } else {
                 $sChr = false;
             }
+        }
+
+        // If we were filtering using If-Modified-Since but we didn't have any
+        //  results, that means nothing had been modified and we should let the
+        //  user know. Unfortunately, HEAD requests don't reach here.
+        if (isset($this->aFilters['modified_since']) && !$zData) {
+            $this->API->nHTTPStatus = 304; // Send 304 Not Modified.
         }
 
         $aOutput = array(
