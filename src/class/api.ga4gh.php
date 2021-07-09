@@ -895,9 +895,15 @@ class LOVD_API_GA4GH
             $aQ[] = (int) $nPositionEnd;
         }
         $aQ[] = STATUS_MARKED;
-        // FIXME: This is where searching will be implemented.
         $sQ .= '
-               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`
+               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`';
+        // If-Modified-Since filter must be on HAVING as it must be done *after* grouping.
+        if (isset($this->aFilters['modified_since'])) {
+            $sQ .= '
+               HAVING edited_date >= ?';
+            $aQ[] = $this->aFilters['modified_since'];
+        }
+        $sQ .= '
                ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`
                LIMIT ' . $nLimit;
         $zData = $_DB->query($sQ, $aQ)->fetchAllAssoc();
