@@ -874,7 +874,7 @@ class LOVD_API_GA4GH
                      )
                    ) SEPARATOR ";;") AS variants,
                  MIN(vog.created_date) AS created_date,
-                 MAX(vog.edited_date) AS edited_date
+                 MAX(IFNULL(vog.edited_date, vog.created_date)) AS edited_date
                FROM ' . TABLE_VARIANTS . ' AS vog
                  LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
                  LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
