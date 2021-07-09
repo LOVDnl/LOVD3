@@ -56,6 +56,7 @@ class LOVD_API
         'data' => array(),
     );
     public $nHTTPStatus = 0;   // The HTTP status that should be send back to the user.
+    public $aHTTPHeaders = array(); // The HTTP response headers to send.
 
     // Currently supported resources (resource => array(methods)):
     private $aResourcesSupported = array(
@@ -418,6 +419,10 @@ class LOVD_API
         }
         // Content type...
         header('Content-type: ' . $this->sFormatOutput . '; charset=UTF-8');
+        // Other headers...
+        foreach ($this->aHTTPHeaders as $sHeader => $sContent) {
+            header($sHeader . ': ' . $sContent);
+        }
         if ($bHalt) {
             if (!HEAD) {
                 print($this->formatReponse() . "\n");
