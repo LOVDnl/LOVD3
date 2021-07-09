@@ -41,6 +41,7 @@ class LOVD_API_GA4GH
 
     private $API;                     // The API object.
     private $aURLElements = array();  // The current URL broken in parts.
+    private $aFilters = array();      // Filters active on the data.
     private $aTables = array(
         'variants' => array(
             'description' => 'Aggregated variant data, when available also containing information on individuals, their phenotypes, and their other variants.',
@@ -554,6 +555,15 @@ class LOVD_API_GA4GH
             $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
             $this->API->aResponse = array('errors' => array('title' => 'Could not parse requested URL.'));
             return false;
+        }
+
+        // Process filters.
+        // Supported: "If-Modified-Since" for selecting only data recently edited.
+        // HTTP has a very strict definition of how this field should look,
+        //  but we're happy with whatever strtotime() recognizes.
+        if (isset($aHeaders['If-Modified-Since']) && $tIfModifiedSince = strtotime($aHeaders['If-Modified-Since'])) {
+            // strtotime() took care of timezone differences.
+            $this->aFilters['modified_since'] = date('Y-m-d H:i:s', $tIfModifiedSince);
         }
 
         // Now actually handle the request.
