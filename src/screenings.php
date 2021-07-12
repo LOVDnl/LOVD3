@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2020-10-28
- * For LOVD    : 3.0-26
+ * Modified    : 2021-07-12
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -718,9 +718,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     if (POST) {
         lovd_errorClean();
 
-        // Preventing notices...
-        // $_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']['checked'] stores the IDs of the variants that are supposed to be present in TABLE_SCR2VAR.
-        if (isset($_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']['checked'])) {
+        if (empty($_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']['checked'])) {
+            // No variants selected.
+            lovd_errorAdd('', 'Please select at least one variant to remove.');
+        } else {
             // Check if all checked variants are actually from this screening.
             $aDiff = array_diff($_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']['checked'], $aValidVariants);
             if (!empty($aDiff)) {
