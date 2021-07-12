@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2021-07-12
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -225,7 +225,7 @@ class LOVD_Disease extends LOVD_Object
                                     'db'   => array('d.id_omim', 'ASC', true)),
                         'inheritance' => array(
                                     'view' => array('Inheritance', 75),
-                                    'db'   => array('inheritance', 'ASC', true),
+                                    'db'   => array('d.inheritance', 'ASC', true),
                                     'legend' => array('Abbreviations:' . strip_tags(str_replace('<TR>', "\n", preg_replace('/\s+/', ' ', $sInheritanceLegend))),
                                         'Values based on OMIM\'s and HPO\'s values for inheritance.<BR>' . str_replace(array("\r", "\n"), '', $sInheritanceLegend),
                                     )),
