@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2020-12-28
- * For LOVD    : 3.0-26
+ * Modified    : 2021-07-12
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -571,7 +571,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         global $_DB;
 
         list($nID, $nTranscriptID) = explode(',', $nID);
-        $this->aSQLViewEntry['WHERE'] .= (empty($this->aSQLViewEntry['WHERE'])? '' : ' AND ') . 'vot.transcriptid = \'' . $nTranscriptID . '\'';
+        $this->aSQLViewEntry['WHERE'] .= (empty($this->aSQLViewEntry['WHERE'])? '' : ' AND ') . 'vot.transcriptid = ' . (int) $nTranscriptID;
 
         // Before passing this on to parent::viewEntry(), perform a standard count() check on the transcript ID,
         // to make sure that we won't get a query error when the combination of VariantID/TranscriptID does not yield
