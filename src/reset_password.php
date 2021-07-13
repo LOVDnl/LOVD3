@@ -52,6 +52,11 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     if (POST && !empty($_POST['username'])) {
         lovd_errorClean();
 
+        // Sleep a second to prevent this script from being run
+        //  too many times in sequence. Run it here so people can't see the
+        //  difference between a successful attempt or a failure.
+        sleep(1);
+
         // Find account.
         $zData = array($_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?',
             array($_POST['username']))->fetchAssoc());
@@ -83,10 +88,6 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
         if (!lovd_error()) {
             // Found account... unlock and generate new passwd.
-
-            // Sleep a second to prevent this script from being run
-            //  too many times in sequence.
-            sleep(1);
 
             $aChars =
                      array(
