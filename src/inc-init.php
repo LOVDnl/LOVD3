@@ -874,7 +874,7 @@ if (!defined('NOT_INSTALLED')) {
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.
     // FIXME: Running lovd_cleanDirName() on the entire URI causes it to run also on the arguments.
     //  If there are arguments with ../ in there, this will take effect and arguments or even the path itself is eaten.
-    $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
+    $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(html_entity_decode(rawurldecode($_SERVER['REQUEST_URI']), ENT_HTML5))); // 'login' or 'genes?create' or 'users/00001?edit'
     $sPath = strip_tags($sPath); // XSS tag removal on entire string (and no longer on individual parts).
     $sPath = strstr($sPath . '?', '?', true); // Cut off the Query string, that will be handled later.
     foreach (array("'", '"', '`', '+') as $sChar) {
