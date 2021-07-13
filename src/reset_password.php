@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2021-04-14
+ * Modified    : 2021-07-13
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,6 +83,10 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
 
         if (!lovd_error()) {
             // Found account... unlock and generate new passwd.
+
+            // Sleep a second to prevent this script from being run
+            //  too many times in sequence.
+            sleep(1);
 
             $aChars =
                      array(
