@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-07-07
+ * Modified    : 2021-07-13
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -877,12 +877,15 @@ if (!defined('NOT_INSTALLED')) {
     $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(rawurldecode($_SERVER['REQUEST_URI']))); // 'login' or 'genes?create' or 'users/00001?edit'
     $sPath = strip_tags($sPath); // XSS tag removal on entire string (and no longer on individual parts).
     $sPath = strstr($sPath . '?', '?', true); // Cut off the Query string, that will be handled later.
-    if (strpos($sPath, '"') !== false) {
-        // XSS attack. Filter everything out.
-        $sPath = strstr($sPath, '"', true);
-        // Also overwrite $_SERVER['REQUEST_URI'] as it's used more often (e.g., gene switcher) and we want it cleaned.
-        $_SERVER['REQUEST_URI'] = strstr($_SERVER['REQUEST_URI'], '%22', true) .
-            (empty($_SERVER['QUERY_STRING'])? '' : '?' . $_SERVER['QUERY_STRING']);
+    foreach (array("'", '"', '`', '+') as $sChar) {
+        // All these kind of quotes that we'll never have unless somebody is messing with us.
+        if (strpos($sPath, $sChar) !== false) {
+            // XSS attack. Filter everything out.
+            $sPath = strstr($sPath, $sChar, true);
+            // Also overwrite $_SERVER['REQUEST_URI'] as it's used more often (e.g., gene switcher) and we want it cleaned.
+            $_SERVER['REQUEST_URI'] = strstr($_SERVER['REQUEST_URI'], rawurlencode($sChar), true) .
+                (empty($_SERVER['QUERY_STRING'])? '' : '?' . $_SERVER['QUERY_STRING']);
+        }
     }
     $_PE = explode('/', rtrim($sPath, '/')); // array('login') or array('genes') or array('users', '00001')
 
