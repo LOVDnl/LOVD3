@@ -927,8 +927,12 @@ if (!defined('NOT_INSTALLED')) {
 
         // Load DB admin data; needed by sending messages.
         if ($_AUTH && $_AUTH['level'] == LEVEL_ADMIN) {
-            // Saves me quering the database!
-            $_SETT['admin'] = array('name' => $_AUTH['name'], 'email' => $_AUTH['email']);
+            // Saves me querying the database!
+            $_SETT['admin'] = array(
+                'name' => $_AUTH['name'],
+                'email' => $_AUTH['email'],
+                'address_formatted' => $_AUTH['name'] . ' <' . str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_AUTH['email'])) . '>',
+            );
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
             list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
