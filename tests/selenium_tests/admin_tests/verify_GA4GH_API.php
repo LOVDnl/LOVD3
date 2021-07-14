@@ -104,5 +104,39 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
             'url' => 'https://lovd.nl/',
         ), $aResult['organization']);
     }
+
+
+
+
+
+    /**
+     * @depends testServiceInfo
+     */
+    public function testTables ()
+    {
+        $sResult = file_get_contents(
+            ROOT_URL . '/src/api/ga4gh/tables', false, stream_context_create(
+            array(
+                'http' => array(
+                    'method' => 'GET',
+                    'user_agent' => 'LOVD/phpunit',
+                    'follow_location' => 0,
+                ))));
+        $aResult = json_decode($sResult, true);
+
+        $this->assertRegExp('/^HTTP\/1\.. 200 OK$/', $http_response_header[0]);
+        $this->assertArrayHasKey('tables', $aResult);
+        $this->assertCount(1, $aResult['tables']);
+        $this->assertEquals('variants', $aResult['tables'][0]['name']);
+        $this->assertArrayHasKey('data_model', $aResult['tables'][0]);
+        $this->assertArrayHasKey('$ref', $aResult['tables'][0]['data_model']);
+        $sDataModel = @file_get_contents($aResult['tables'][0]['data_model']['$ref']);
+        $this->assertStringStartsWith('{', $sDataModel);
+        $aDataModel = @json_decode($sDataModel, true);
+        $this->assertTrue(is_array($aDataModel));
+        $this->assertArrayHasKey('$schema', $aDataModel);
+        $this->assertArrayHasKey('title', $aDataModel);
+        $this->assertEquals('Variant', $aDataModel['title']);
+    }
 }
 ?>
