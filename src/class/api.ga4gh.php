@@ -515,7 +515,7 @@ class LOVD_API_GA4GH
 
         } else {
             $sToken = substr($aHeaders['Authorization'], 7);
-            if ($sToken != md5($_STAT['signature'])) {
+            if ($sToken != md5('auth:' . $_STAT['signature'])) {
                 $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
                 $this->API->aResponse = array('errors' => array(
                     'title' => 'Access denied.',
@@ -608,8 +608,8 @@ class LOVD_API_GA4GH
         global $_STAT;
 
         $aOutput = array(
-            'id' => 'nl.lovd.ga4gh.' . md5(md5($_STAT['signature'])), // Note, a double md5(), to not leak the LSDB ID nor the signature.
-            'name' => 'GA4GH Data Connect API for LOVD instance ' . md5(md5($_STAT['signature'])),
+            'id' => 'nl.lovd.ga4gh.' . md5($_STAT['signature']),
+            'name' => 'GA4GH Data Connect API for LOVD instance ' . md5($_STAT['signature']),
             'type' => array(
                 'group' => 'org.ga4gh',
                 'artifact' => 'service-registry',
