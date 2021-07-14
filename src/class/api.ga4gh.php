@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-09
+ * Modified    : 2021-07-14
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1563,6 +1563,26 @@ class LOVD_API_GA4GH
                         current($this->convertEffectsToVML($nID . ':' . $sEffects)),
                         array_values($this->convertClassificationToVML($nID . ':' . $sClassification . ':' . $sClassificationMethod))
                     );
+                    if ($sChr == 'M') {
+                        // The GV shared sometimes uses "pathogenic (maternal)"
+                        //  for chrM variants, which makes no sense. These
+                        //  values are meant to indicate imprinting,
+                        //  so this should be removed here.
+                        $aVariant['pathogenicities'] = array_map(function ($aPathogenicity) {
+                            if (isset($aPathogenicity['comments'])) {
+                                foreach ($aPathogenicity['comments'] as $nKey => $aComment) {
+                                    if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
+                                        // Delete this.
+                                        unset($aPathogenicity['comments'][$nKey]);
+                                    }
+                                }
+                                if (!count($aPathogenicity['comments'])) {
+                                    unset($aPathogenicity['comments']);
+                                }
+                            }
+                            return $aPathogenicity;
+                        }, $aVariant['pathogenicities']);
+                    }
 
                     if ($sOrigin && isset($this->aValueMappings['genetic_origin'][$sOrigin])) {
                         $aVariant['genetic_origin'] = array(
