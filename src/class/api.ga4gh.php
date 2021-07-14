@@ -185,6 +185,7 @@ class LOVD_API_GA4GH
         ),
     );
     private $bAuthorized = false;
+    private $bLocal = false;
     private $bReturnBody = true;
     private $bVarCache = false;
 
@@ -506,12 +507,15 @@ class LOVD_API_GA4GH
         // We currently require authorization. This needs to be sent over an
         //  Authorization HTTP request header.
         $aHeaders = getallheaders();
+        $this->bLocal = in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1', '::1'));
         if (!isset($aHeaders['Authorization']) || substr($aHeaders['Authorization'], 0, 7) != 'Bearer ') {
-            $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
-            $this->API->aResponse = array('errors' => array(
-                'title' => 'Access denied.',
-                'detail' => 'Please provide authorization for this resource. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
-            return false;
+            if (!$this->bLocal) {
+                $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
+                $this->API->aResponse = array('errors' => array(
+                    'title' => 'Access denied.',
+                    'detail' => 'Please provide authorization for this resource. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
+                return false;
+            }
 
         } else {
             $sToken = substr($aHeaders['Authorization'], 7);
@@ -521,10 +525,11 @@ class LOVD_API_GA4GH
                     'title' => 'Access denied.',
                     'detail' => 'The given token is not correct. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
                 return false;
+            } else {
+                $this->bAuthorized = true;
             }
         }
-        $this->bAuthorized = true;
-        $this->bVarCache = ($this->bVarCache && $this->bAuthorized);
+        $this->bVarCache = ($this->bVarCache && ($this->bAuthorized || $this->bLocal));
 
         $this->aURLElements = array_pad($aURLElements, 3, '');
 
