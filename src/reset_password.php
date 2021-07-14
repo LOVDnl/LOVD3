@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2021-04-14
+ * Modified    : 2021-07-13
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -52,6 +52,11 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
     if (POST && !empty($_POST['username'])) {
         lovd_errorClean();
 
+        // Sleep a second to prevent this script from being run
+        //  too many times in sequence. Run it here so people can't see the
+        //  difference between a successful attempt or a failure.
+        sleep(1);
+
         // Find account.
         $zData = array($_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ?',
             array($_POST['username']))->fetchAssoc());
@@ -68,9 +73,9 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $_T->printHeader();
             $_T->printTitle();
             lovd_writeLog('Auth', LOG_EVENT, $_SERVER['REMOTE_ADDR'] . ' (' . lovd_php_gethostbyaddr($_SERVER['REMOTE_ADDR']) . ') tried to reset password for non-existent account ' . $_POST['username']);
-            print('      If you entered the username or email address correctly, we have successfully reset your password and we have sent you an email.' . "\n" .
+            print('      If you entered the username or email address correctly, we have successfully reset your password and we have sent you an email containing your new password.' . "\n" .
                   '      With this new password, you can <A href="' . ROOT_PATH . 'login">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
-                  '      If you don\'t receive this email, it is possible that the username or email address that you entered is not correct. Please double-check it. Another possibility is that you registered at a different LOVD installation. Accounts are not shared between different LOVD installations, so please double-check where you are registered.<BR><BR>' . "\n\n");
+                  '      If you don\'t receive this email, it is possible that the username or email address that you entered was not correct. In that case, please double-check it. Another possibility is that you registered at a different LOVD installation. Accounts are not shared between different LOVD installations, so please double-check where you are registered.<BR><BR>' . "\n\n");
             $_T->printFooter();
             exit;
 
@@ -149,8 +154,9 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $_T->printTitle();
 
             if ($bMail) {
-                print('      Successfully reset your password.<BR>' . "\n" .
-                      '      We\'ve sent you an email containing your new password. With this new password, you can <A href="' . ROOT_PATH . 'login.php">unlock your account</A> and choose a new password.<BR><BR>' . "\n\n");
+                print('      If you entered the username or email address correctly, we have successfully reset your password and we have sent you an email containing your new password.' . "\n" .
+                      '      With this new password, you can <A href="' . ROOT_PATH . 'login">unlock your account</A> and choose a new password.<BR><BR>' . "\n" .
+                      '      If you don\'t receive this email, it is possible that the username or email address that you entered was not correct. In that case, please double-check it. Another possibility is that you registered at a different LOVD installation. Accounts are not shared between different LOVD installations, so please double-check where you are registered.<BR><BR>' . "\n\n");
             } else {
                 // Couldn't send confirmation...
                 lovd_writeLog('Error', LOG_EVENT, 'Error sending email for account ' . $_AUTH['username'] . ' (' . $zData['name'] . ')');

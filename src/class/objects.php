@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-07-12
+ * Modified    : 2021-07-13
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3102,9 +3102,9 @@ FROptions
                 // FIXME; This code is sort of duplicated, some 100 lines below we also print this, *if* results are found.
                 print('</TABLE><BR>' . "\n"); // <BR> is necessary to keep the InfoTable apart from the data headers.
                 if ($aOptions['show_navigation']) {
-                    print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
-                          '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
-                          '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n");
+                    print('        <INPUT type="hidden" name="total" value="' . (int) $nTotal . '" disabled>' . "\n" .
+                          '        <INPUT type="hidden" name="page_size" value="' . (int) $_GET['page_size'] . '">' . "\n" .
+                          '        <INPUT type="hidden" name="page" value="' . (int) $_GET['page'] . '">' . "\n");
                 }
                 lovd_showInfoTable($sMessage, 'stop');
                 print('      </DIV></FORM>' . "\n\n");
