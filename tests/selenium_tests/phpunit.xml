@@ -26,6 +26,7 @@
             <file>shared_tests/create_summary_data_upload_vcf.php</file>
             <file>shared_tests/submission_API.php</file>
             <file>admin_tests/verify_full_download.php</file>
+            <file>admin_tests/verify_GA4GH_API.php</file>
             <file>admin_tests/multi_value_search.php</file>
             <file>admin_tests/find_and_replace.php</file>
             <file>shared_tests/check_all_authorization_levels.php</file>
