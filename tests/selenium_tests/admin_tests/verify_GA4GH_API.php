@@ -138,5 +138,32 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertArrayHasKey('title', $aDataModel);
         $this->assertEquals('Variant', $aDataModel['title']);
     }
+
+
+
+
+
+    /**
+     * @depends testTables
+     */
+    public function testTableVariants ()
+    {
+        $sResult = file_get_contents(
+            ROOT_URL . '/src/api/ga4gh/table/variants', false, stream_context_create(
+            array(
+                'http' => array(
+                    'method' => 'GET',
+                    'user_agent' => 'LOVD/phpunit',
+                    'follow_location' => 0,
+                ))));
+        $aResult = json_decode($sResult, true);
+
+        $this->assertRegExp('/^HTTP\/1\.. 302 (Moved Temporarily|Found)$/', $http_response_header[0]);
+        $this->assertEquals(array(), $aResult['warnings']);
+        $this->assertEquals(array(), $aResult['errors']);
+        $this->assertEquals(array(), $aResult['data']);
+        $this->assertRegExp('/^Location: ' . preg_quote(ROOT_URL, '/') . '\/src\/api\/v[0-9]\/ga4gh\/table\/variants\/data$/',
+            $aResult['messages'][0]);
+    }
 }
 ?>
