@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-14
+ * Modified    : 2021-07-15
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1021,7 +1021,9 @@ class LOVD_API_GA4GH
             }
 
             $aReturn['effectids'] = $this->convertEffectsToVML($zData['effectids']);
-            $aReturn['classifications'] = $this->convertClassificationToVML($zData['classifications']);
+            if (!empty($zData['classifications'])) {
+                $aReturn['classifications'] = $this->convertClassificationToVML($zData['classifications']);
+            }
 
             // Further annotate the entries.
             $aSubmissions = array();
@@ -1834,10 +1836,13 @@ class LOVD_API_GA4GH
             }
 
             // The aggregate pathogenicities aren't stored well yet.
-            $aReturn['pathogenicities'] = array_merge(
-                call_user_func_array('array_merge', $aReturn['effectids']),
-                array_values($aReturn['classifications'])
-            );
+            $aReturn['pathogenicities'] = call_user_func_array('array_merge', $aReturn['effectids']);
+            if (!empty($aReturn['classifications'])) {
+                $aReturn['pathogenicities'] = array_merge(
+                    $aReturn['pathogenicities'],
+                    array_values($aReturn['classifications'])
+                );
+            }
             unset($aReturn['effectids'], $aReturn['classifications']);
 
             // Clean "individuals", "panels" and "variants" when empty.
