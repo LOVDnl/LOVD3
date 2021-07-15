@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-07-14
- * Modified    : 2021-07-14
+ * Modified    : 2021-07-15
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,7 +36,6 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testSetUp ()
     {
-$this->login('admin', 'test1234');
         // A normal setUp() runs for every test in this file. We only need this once,
         //  so we disguise this setUp() as a test that we depend on just once.
         $this->driver->get(ROOT_URL . '/src/genes/IVD');
