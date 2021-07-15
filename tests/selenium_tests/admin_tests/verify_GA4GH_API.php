@@ -191,5 +191,35 @@ $this->login('admin', 'test1234');
         $this->assertEquals('variants', $aResult['name']);
         $this->assertArrayHasKey('data_model', $aResult);
     }
+
+
+
+
+
+    /**
+     * @depends testTableVariantsInfo
+     */
+    public function testTableVariantsData ()
+    {
+        $sResult = file_get_contents(
+            ROOT_URL . '/src/api/ga4gh/table/variants/data', false, stream_context_create(
+            array(
+                'http' => array(
+                    'method' => 'GET',
+                    'user_agent' => 'LOVD/phpunit',
+                    'follow_location' => 0,
+                ))));
+        $aResult = json_decode($sResult, true);
+
+        $this->assertRegExp('/^HTTP\/1\.. 200 OK$/', $http_response_header[0]);
+        $this->assertArrayHasKey('data_model', $aResult);
+        $this->assertArrayHasKey('data', $aResult);
+        $this->assertCount(0, $aResult['data']);
+        $this->assertArrayHasKey('pagination', $aResult);
+        $this->assertArrayHasKey('next_page_url', $aResult['pagination']);
+        $this->assertCount(1, $aResult['pagination']);
+        $this->assertRegExp('/^' . preg_quote(ROOT_URL, '/') . '\/src\/api\/v[0-9]\/ga4gh\/table\/variants\/data%3Ahg[0-9]{2}%3Achr1$/',
+            $aResult['pagination']['next_page_url']);
+    }
 }
 ?>
