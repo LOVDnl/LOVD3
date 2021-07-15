@@ -36,6 +36,7 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
 {
     public function testSetUp ()
     {
+$this->login('admin', 'test1234');
         // A normal setUp() runs for every test in this file. We only need this once,
         //  so we disguise this setUp() as a test that we depend on just once.
         $this->driver->get(ROOT_URL . '/src/genes/IVD');
@@ -164,6 +165,31 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertEquals(array(), $aResult['data']);
         $this->assertRegExp('/^Location: ' . preg_quote(ROOT_URL, '/') . '\/src\/api\/v[0-9]\/ga4gh\/table\/variants\/data$/',
             $aResult['messages'][0]);
+    }
+
+
+
+
+
+    /**
+     * @depends testTableVariants
+     */
+    public function testTableVariantsInfo ()
+    {
+        $sResult = file_get_contents(
+            ROOT_URL . '/src/api/ga4gh/table/variants/info', false, stream_context_create(
+            array(
+                'http' => array(
+                    'method' => 'GET',
+                    'user_agent' => 'LOVD/phpunit',
+                    'follow_location' => 0,
+                ))));
+        $aResult = json_decode($sResult, true);
+
+        $this->assertRegExp('/^HTTP\/1\.. 200 OK$/', $http_response_header[0]);
+        $this->assertArrayHasKey('name', $aResult);
+        $this->assertEquals('variants', $aResult['name']);
+        $this->assertArrayHasKey('data_model', $aResult);
     }
 }
 ?>
