@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-07-14
- * Modified    : 2021-07-15
+ * Modified    : 2021-07-16
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -251,9 +251,12 @@ class VerifyGA4GHAPITest extends LOVDSeleniumWebdriverBaseTestCase
             $aResult['pagination']['next_page_url']);
 
         // Now compare the two files.
+        // Removing \/git from the path of next_page_url to make sure
+        //  that local tests and remote tests have the same string.
         $this->assertEquals(
             trim(file_get_contents(ROOT_PATH . '../tests/test_data_files/AdminTestSuiteResult-GA4GH.txt')),
-            preg_replace('/\b[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}\b/', '0000-00-00T00:00:00+00:00', trim($sResult))
+            str_replace('\/git', '',
+                preg_replace('/\b[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}\b/', '0000-00-00T00:00:00+00:00', trim($sResult)))
         );
     }
 }

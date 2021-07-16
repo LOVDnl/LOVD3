@@ -536,6 +536,6 @@
         }
     ],
     "pagination": {
-        "next_page_url": "http:\/\/localhost\/git\/LOVD3\/src\/api\/v2\/ga4gh\/table\/variants\/data%3Ahg19%3Achr16%3A1"
+        "next_page_url": "http:\/\/localhost\/LOVD3\/src\/api\/v2\/ga4gh\/table\/variants\/data%3Ahg19%3Achr16%3A1"
     }
 }
