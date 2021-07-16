@@ -453,7 +453,7 @@ class LOVD_API_GA4GH
         $aReturn = array();
 
         foreach (explode(';', str_replace('}', '};', $sReference)) as $sRef) {
-            $sRef = trim($sRef);
+            $sRef = trim($sRef, ', ');
             if ($sRef) {
                 if (preg_match('/^\{PMID:([^}]+):([0-9]+)\}$/', $sRef, $aRegs)
                     && in_array('pubmed', $aOptions)) {
