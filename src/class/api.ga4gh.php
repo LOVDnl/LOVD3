@@ -834,7 +834,7 @@ class LOVD_API_GA4GH
         $aLicensesSummaryData = array_keys(array_diff($aLicenses, array(1)));
 
         // We'll need lots of space for GROUP_CONCAT().
-        $_DB->query('SET group_concat_max_len = 200000');
+        $_DB->query('SET group_concat_max_len = 1000000');
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
