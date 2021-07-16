@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-15
+ * Modified    : 2021-07-16
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -871,9 +871,9 @@ class LOVD_API_GA4GH
             (!$bdbSNP? '' : ',
                        IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
             (!$bVOGReference? '' : ',
-                       IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||"' .
+                       REPLACE(IFNULL(vog.`VariantOnGenome/Reference`, ""), ";", ",")') . ', "||"' .
             (!$bVOGRemarks? '' : ',
-                       IFNULL(vog.`VariantOnGenome/Remarks`, "")') . ', "||",
+                       REPLACE(IFNULL(vog.`VariantOnGenome/Remarks`, ""), ";", ",")') . ', "||",
                        IFNULL(
                          (SELECT
                             GROUP_CONCAT(
@@ -1280,9 +1280,9 @@ class LOVD_API_GA4GH
                     (!$bdbSNP? '' : ',
                           IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
                     (!$bVOGReference? '' : ',
-                          IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||"' .
+                          REPLACE(IFNULL(vog.`VariantOnGenome/Reference`, ""), ";", ",")') . ', "||"' .
                     (!$bVOGRemarks? '' : ',
-                          IFNULL(vog.`VariantOnGenome/Remarks`, "")') . ', "||",
+                          REPLACE(IFNULL(vog.`VariantOnGenome/Remarks`, ""), ";", ",")') . ', "||",
                           IFNULL(s.`Screening/Template`, ""), "||",
                           IFNULL(s.`Screening/Technique`, ""), "||",
                           IFNULL(
