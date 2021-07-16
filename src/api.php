@@ -33,6 +33,7 @@
  *  3.0-27 (v2)  /api/v#/ga4gh (GET/HEAD) (redirects)
  *  3.0-27 (v2)  /api/v#/ga4gh/service-info (GET/HEAD)
  *  3.0-27 (v2)  /api/v#/ga4gh/tables (GET/HEAD)
+ *  3.0-27 (v2)  /api/v#/ga4gh/table/variants (GET/HEAD) (redirects)
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/info (GET/HEAD)
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data (GET/HEAD)
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data:hg19:chr1:123456 (GET/HEAD)

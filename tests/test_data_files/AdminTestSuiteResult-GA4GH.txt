@@ -1,0 +1,541 @@
+{
+    "data_model": {
+        "$ref": "https:\/\/raw.githubusercontent.com\/VarioML\/VarioML\/master\/json\/schemas\/v.2.0\/variant.json"
+    },
+    "data": [
+        {
+            "type": "DNA",
+            "genes": [
+                {
+                    "source": "HGNC",
+                    "accession": "6186",
+                    "db_xrefs": [
+                        {
+                            "source": "HGNC.symbol",
+                            "accession": "IVD"
+                        },
+                        {
+                            "source": "MIM",
+                            "accession": "607036"
+                        }
+                    ]
+                }
+            ],
+            "ref_seq": {
+                "source": "genbank",
+                "accession": "NC_000015.9"
+            },
+            "name": {
+                "scheme": "HGVS",
+                "value": "g.40698142A>T"
+            },
+            "pathogenicities": [
+                {
+                    "scope": "individual",
+                    "source": "LOVD",
+                    "term": "functionNotAffected",
+                    "data_source": {
+                        "name": "submitter"
+                    },
+                    "phenotypes": [
+                        {
+                            "term": "isovaleric acidemia (IVA)",
+                            "source": "MIM",
+                            "accession": "243500"
+                        },
+                        {
+                            "term": "Additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        },
+                        {
+                            "term": "More additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "scope": "individual",
+                    "source": "LOVD",
+                    "term": "functionNotAffected",
+                    "data_source": {
+                        "name": "curator"
+                    }
+                }
+            ],
+            "creation_date": {
+                "value": "0000-00-00T00:00:00+00:00"
+            },
+            "modification_date": {
+                "value": "0000-00-00T00:00:00+00:00"
+            },
+            "panel": {
+                "individuals": [
+                    {
+                        "id": "00000001",
+                        "phenotypes": [
+                            {
+                                "term": "isovaleric acidemia (IVA)",
+                                "source": "MIM",
+                                "accession": "243500"
+                            },
+                            {
+                                "term": "Additional information.",
+                                "inheritance_pattern": {
+                                    "term": "familial"
+                                }
+                            },
+                            {
+                                "term": "More additional information.",
+                                "inheritance_pattern": {
+                                    "term": "familial"
+                                }
+                            }
+                        ],
+                        "db_xrefs": [
+                            {
+                                "source": "pubmed",
+                                "accession": "21520333",
+                                "name": "Fokkema et al (2011)"
+                            }
+                        ],
+                        "data_source": {
+                            "contacts": [
+                                {
+                                    "role": "submitter",
+                                    "name": "LOVD3 Admin",
+                                    "email": "test@lovd.nl"
+                                },
+                                {
+                                    "role": "owner",
+                                    "name": "Test Owner",
+                                    "email": "owner@lovd.nl"
+                                }
+                            ]
+                        },
+                        "sharing_policy": {
+                            "type": "OpenAccess",
+                            "use_permission": {
+                                "term": "Creative Commons Attribution 4.0 International",
+                                "source": "CC",
+                                "accession": "cc_by_4.0",
+                                "uri": "https:\/\/creativecommons.org\/licenses\/by\/4.0"
+                            }
+                        },
+                        "variants": [
+                            {
+                                "id": "0000000001",
+                                "copy_count": 1,
+                                "type": "DNA",
+                                "ref_seq": {
+                                    "source": "genbank",
+                                    "accession": "NC_000015.9"
+                                },
+                                "name": {
+                                    "scheme": "HGVS",
+                                    "value": "g.40698142A>T"
+                                },
+                                "pathogenicities": [
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "functionNotAffected",
+                                        "data_source": {
+                                            "name": "submitter"
+                                        }
+                                    },
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "functionNotAffected",
+                                        "data_source": {
+                                            "name": "curator"
+                                        }
+                                    }
+                                ],
+                                "db_xrefs": [
+                                    {
+                                        "source": "pubmed",
+                                        "accession": "21520333",
+                                        "name": "Fokkema et al (2011)"
+                                    }
+                                ],
+                                "variant_detection": [
+                                    {
+                                        "template": "DNA",
+                                        "technique": "SEQ"
+                                    },
+                                    {
+                                        "template": "RNA",
+                                        "technique": "RT-PCR"
+                                    }
+                                ],
+                                "seq_changes": {
+                                    "variants": [
+                                        {
+                                            "type": "cDNA",
+                                            "gene": {
+                                                "source": "HGNC",
+                                                "accession": "IVD"
+                                            },
+                                            "ref_seq": {
+                                                "source": "genbank",
+                                                "accession": "NM_002225.3"
+                                            },
+                                            "name": {
+                                                "scheme": "HGVS",
+                                                "value": "c.123A>T"
+                                            },
+                                            "seq_changes": {
+                                                "variants": [
+                                                    {
+                                                        "type": "RNA",
+                                                        "name": {
+                                                            "scheme": "HGVS",
+                                                            "value": "r.(=)"
+                                                        },
+                                                        "seq_changes": {
+                                                            "variants": [
+                                                                {
+                                                                    "type": "AA",
+                                                                    "ref_seq": {
+                                                                        "source": "genbank",
+                                                                        "accession": "NP_002216.2"
+                                                                    },
+                                                                    "name": {
+                                                                        "scheme": "HGVS",
+                                                                        "value": "p.(=)"
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "0000000002",
+                                "copy_count": 1,
+                                "type": "DNA",
+                                "ref_seq": {
+                                    "source": "genbank",
+                                    "accession": "NC_000015.9"
+                                },
+                                "name": {
+                                    "scheme": "HGVS",
+                                    "value": "g.40702876G>T"
+                                },
+                                "pathogenicities": [
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "unknown",
+                                        "data_source": {
+                                            "name": "submitter"
+                                        }
+                                    },
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "unknown",
+                                        "data_source": {
+                                            "name": "curator"
+                                        }
+                                    }
+                                ],
+                                "db_xrefs": [
+                                    {
+                                        "source": "pubmed",
+                                        "accession": "21520333",
+                                        "name": "Fokkema et al (2011)"
+                                    }
+                                ],
+                                "variant_detection": [
+                                    {
+                                        "template": "DNA",
+                                        "technique": "SEQ"
+                                    },
+                                    {
+                                        "template": "RNA",
+                                        "technique": "RT-PCR"
+                                    },
+                                    {
+                                        "template": "Protein",
+                                        "technique": "Western"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "type": "DNA",
+            "genes": [],
+            "ref_seq": {
+                "source": "genbank",
+                "accession": "NC_000015.9"
+            },
+            "name": {
+                "scheme": "HGVS",
+                "value": "g.40702876G>T"
+            },
+            "pathogenicities": [
+                {
+                    "scope": "individual",
+                    "source": "LOVD",
+                    "term": "unknown",
+                    "data_source": {
+                        "name": "submitter"
+                    },
+                    "phenotypes": [
+                        {
+                            "term": "isovaleric acidemia (IVA)",
+                            "source": "MIM",
+                            "accession": "243500"
+                        },
+                        {
+                            "term": "Additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        },
+                        {
+                            "term": "More additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "scope": "individual",
+                    "source": "LOVD",
+                    "term": "unknown",
+                    "data_source": {
+                        "name": "curator"
+                    }
+                }
+            ],
+            "creation_date": {
+                "value": "0000-00-00T00:00:00+00:00"
+            },
+            "modification_date": {
+                "value": "0000-00-00T00:00:00+00:00"
+            },
+            "panel": {
+                "individuals": [
+                    {
+                        "id": "00000001",
+                        "phenotypes": [
+                            {
+                                "term": "isovaleric acidemia (IVA)",
+                                "source": "MIM",
+                                "accession": "243500"
+                            },
+                            {
+                                "term": "Additional information.",
+                                "inheritance_pattern": {
+                                    "term": "familial"
+                                }
+                            },
+                            {
+                                "term": "More additional information.",
+                                "inheritance_pattern": {
+                                    "term": "familial"
+                                }
+                            }
+                        ],
+                        "db_xrefs": [
+                            {
+                                "source": "pubmed",
+                                "accession": "21520333",
+                                "name": "Fokkema et al (2011)"
+                            }
+                        ],
+                        "data_source": {
+                            "contacts": [
+                                {
+                                    "role": "submitter",
+                                    "name": "LOVD3 Admin",
+                                    "email": "test@lovd.nl"
+                                },
+                                {
+                                    "role": "owner",
+                                    "name": "Test Owner",
+                                    "email": "owner@lovd.nl"
+                                }
+                            ]
+                        },
+                        "sharing_policy": {
+                            "type": "OpenAccess",
+                            "use_permission": {
+                                "term": "Creative Commons Attribution 4.0 International",
+                                "source": "CC",
+                                "accession": "cc_by_4.0",
+                                "uri": "https:\/\/creativecommons.org\/licenses\/by\/4.0"
+                            }
+                        },
+                        "variants": [
+                            {
+                                "id": "0000000001",
+                                "copy_count": 1,
+                                "type": "DNA",
+                                "ref_seq": {
+                                    "source": "genbank",
+                                    "accession": "NC_000015.9"
+                                },
+                                "name": {
+                                    "scheme": "HGVS",
+                                    "value": "g.40698142A>T"
+                                },
+                                "pathogenicities": [
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "functionNotAffected",
+                                        "data_source": {
+                                            "name": "submitter"
+                                        }
+                                    },
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "functionNotAffected",
+                                        "data_source": {
+                                            "name": "curator"
+                                        }
+                                    }
+                                ],
+                                "db_xrefs": [
+                                    {
+                                        "source": "pubmed",
+                                        "accession": "21520333",
+                                        "name": "Fokkema et al (2011)"
+                                    }
+                                ],
+                                "variant_detection": [
+                                    {
+                                        "template": "DNA",
+                                        "technique": "SEQ"
+                                    },
+                                    {
+                                        "template": "RNA",
+                                        "technique": "RT-PCR"
+                                    }
+                                ],
+                                "seq_changes": {
+                                    "variants": [
+                                        {
+                                            "type": "cDNA",
+                                            "gene": {
+                                                "source": "HGNC",
+                                                "accession": "IVD"
+                                            },
+                                            "ref_seq": {
+                                                "source": "genbank",
+                                                "accession": "NM_002225.3"
+                                            },
+                                            "name": {
+                                                "scheme": "HGVS",
+                                                "value": "c.123A>T"
+                                            },
+                                            "seq_changes": {
+                                                "variants": [
+                                                    {
+                                                        "type": "RNA",
+                                                        "name": {
+                                                            "scheme": "HGVS",
+                                                            "value": "r.(=)"
+                                                        },
+                                                        "seq_changes": {
+                                                            "variants": [
+                                                                {
+                                                                    "type": "AA",
+                                                                    "ref_seq": {
+                                                                        "source": "genbank",
+                                                                        "accession": "NP_002216.2"
+                                                                    },
+                                                                    "name": {
+                                                                        "scheme": "HGVS",
+                                                                        "value": "p.(=)"
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "0000000002",
+                                "copy_count": 1,
+                                "type": "DNA",
+                                "ref_seq": {
+                                    "source": "genbank",
+                                    "accession": "NC_000015.9"
+                                },
+                                "name": {
+                                    "scheme": "HGVS",
+                                    "value": "g.40702876G>T"
+                                },
+                                "pathogenicities": [
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "unknown",
+                                        "data_source": {
+                                            "name": "submitter"
+                                        }
+                                    },
+                                    {
+                                        "scope": "individual",
+                                        "source": "LOVD",
+                                        "term": "unknown",
+                                        "data_source": {
+                                            "name": "curator"
+                                        }
+                                    }
+                                ],
+                                "db_xrefs": [
+                                    {
+                                        "source": "pubmed",
+                                        "accession": "21520333",
+                                        "name": "Fokkema et al (2011)"
+                                    }
+                                ],
+                                "variant_detection": [
+                                    {
+                                        "template": "DNA",
+                                        "technique": "SEQ"
+                                    },
+                                    {
+                                        "template": "RNA",
+                                        "technique": "RT-PCR"
+                                    },
+                                    {
+                                        "template": "Protein",
+                                        "technique": "Western"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "pagination": {
+        "next_page_url": "http:\/\/localhost\/LOVD3\/src\/api\/v2\/ga4gh\/table\/variants\/data%3Ahg19%3Achr16%3A1"
+    }
+}

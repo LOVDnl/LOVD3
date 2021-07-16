@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-09
+ * Modified    : 2021-07-16
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -185,6 +185,7 @@ class LOVD_API_GA4GH
         ),
     );
     private $bAuthorized = false;
+    private $bLocal = false;
     private $bReturnBody = true;
     private $bVarCache = false;
 
@@ -452,7 +453,7 @@ class LOVD_API_GA4GH
         $aReturn = array();
 
         foreach (explode(';', str_replace('}', '};', $sReference)) as $sRef) {
-            $sRef = trim($sRef);
+            $sRef = trim($sRef, ', ');
             if ($sRef) {
                 if (preg_match('/^\{PMID:([^}]+):([0-9]+)\}$/', $sRef, $aRegs)
                     && in_array('pubmed', $aOptions)) {
@@ -506,25 +507,29 @@ class LOVD_API_GA4GH
         // We currently require authorization. This needs to be sent over an
         //  Authorization HTTP request header.
         $aHeaders = getallheaders();
+        $this->bLocal = in_array($_SERVER['REMOTE_ADDR'], array('127.0.0.1', '::1'));
         if (!isset($aHeaders['Authorization']) || substr($aHeaders['Authorization'], 0, 7) != 'Bearer ') {
-            $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
-            $this->API->aResponse = array('errors' => array(
-                'title' => 'Access denied.',
-                'detail' => 'Please provide authorization for this resource. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
-            return false;
+            if (!$this->bLocal) {
+                $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
+                $this->API->aResponse = array('errors' => array(
+                    'title' => 'Access denied.',
+                    'detail' => 'Please provide authorization for this resource. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
+                return false;
+            }
 
         } else {
             $sToken = substr($aHeaders['Authorization'], 7);
-            if ($sToken != md5($_STAT['signature'])) {
+            if ($sToken != md5('auth:' . $_STAT['signature'])) {
                 $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
                 $this->API->aResponse = array('errors' => array(
                     'title' => 'Access denied.',
                     'detail' => 'The given token is not correct. To request access, contact the admin: ' . $_SETT['admin']['address_formatted'] . '.'));
                 return false;
+            } else {
+                $this->bAuthorized = true;
             }
         }
-        $this->bAuthorized = true;
-        $this->bVarCache = ($this->bVarCache && $this->bAuthorized);
+        $this->bVarCache = ($this->bVarCache && ($this->bAuthorized || $this->bLocal));
 
         $this->aURLElements = array_pad($aURLElements, 3, '');
 
@@ -608,8 +613,8 @@ class LOVD_API_GA4GH
         global $_STAT;
 
         $aOutput = array(
-            'id' => 'nl.lovd.ga4gh.' . md5(md5($_STAT['signature'])), // Note, a double md5(), to not leak the LSDB ID nor the signature.
-            'name' => 'GA4GH Data Connect API for LOVD instance ' . md5(md5($_STAT['signature'])),
+            'id' => 'nl.lovd.ga4gh.' . md5($_STAT['signature']),
+            'name' => 'GA4GH Data Connect API for LOVD instance ' . md5($_STAT['signature']),
             'type' => array(
                 'group' => 'org.ga4gh',
                 'artifact' => 'service-registry',
@@ -829,7 +834,7 @@ class LOVD_API_GA4GH
         $aLicensesSummaryData = array_keys(array_diff($aLicenses, array(1)));
 
         // We'll need lots of space for GROUP_CONCAT().
-        $_DB->query('SET group_concat_max_len = 200000');
+        $_DB->query('SET group_concat_max_len = 1000000');
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
@@ -866,9 +871,9 @@ class LOVD_API_GA4GH
             (!$bdbSNP? '' : ',
                        IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
             (!$bVOGReference? '' : ',
-                       IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||"' .
+                       REPLACE(IFNULL(vog.`VariantOnGenome/Reference`, ""), ";", ",")') . ', "||"' .
             (!$bVOGRemarks? '' : ',
-                       IFNULL(vog.`VariantOnGenome/Remarks`, "")') . ', "||",
+                       REPLACE(IFNULL(vog.`VariantOnGenome/Remarks`, ""), ";", ",")') . ', "||",
                        IFNULL(
                          (SELECT
                             GROUP_CONCAT(
@@ -1016,7 +1021,9 @@ class LOVD_API_GA4GH
             }
 
             $aReturn['effectids'] = $this->convertEffectsToVML($zData['effectids']);
-            $aReturn['classifications'] = $this->convertClassificationToVML($zData['classifications']);
+            if (!empty($zData['classifications'])) {
+                $aReturn['classifications'] = $this->convertClassificationToVML($zData['classifications']);
+            }
 
             // Further annotate the entries.
             $aSubmissions = array();
@@ -1273,9 +1280,9 @@ class LOVD_API_GA4GH
                     (!$bdbSNP? '' : ',
                           IFNULL(vog.`VariantOnGenome/dbSNP`, "")') . ', "||"' .
                     (!$bVOGReference? '' : ',
-                          IFNULL(vog.`VariantOnGenome/Reference`, "")') . ', "||"' .
+                          REPLACE(IFNULL(vog.`VariantOnGenome/Reference`, ""), ";", ",")') . ', "||"' .
                     (!$bVOGRemarks? '' : ',
-                          IFNULL(vog.`VariantOnGenome/Remarks`, "")') . ', "||",
+                          REPLACE(IFNULL(vog.`VariantOnGenome/Remarks`, ""), ";", ",")') . ', "||",
                           IFNULL(s.`Screening/Template`, ""), "||",
                           IFNULL(s.`Screening/Technique`, ""), "||",
                           IFNULL(
@@ -1563,6 +1570,26 @@ class LOVD_API_GA4GH
                         current($this->convertEffectsToVML($nID . ':' . $sEffects)),
                         array_values($this->convertClassificationToVML($nID . ':' . $sClassification . ':' . $sClassificationMethod))
                     );
+                    if ($sChr == 'M') {
+                        // The GV shared sometimes uses "pathogenic (maternal)"
+                        //  for chrM variants, which makes no sense. These
+                        //  values are meant to indicate imprinting,
+                        //  so this should be removed here.
+                        $aVariant['pathogenicities'] = array_map(function ($aPathogenicity) {
+                            if (isset($aPathogenicity['comments'])) {
+                                foreach ($aPathogenicity['comments'] as $nKey => $aComment) {
+                                    if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
+                                        // Delete this.
+                                        unset($aPathogenicity['comments'][$nKey]);
+                                    }
+                                }
+                                if (!count($aPathogenicity['comments'])) {
+                                    unset($aPathogenicity['comments']);
+                                }
+                            }
+                            return $aPathogenicity;
+                        }, $aVariant['pathogenicities']);
+                    }
 
                     if ($sOrigin && isset($this->aValueMappings['genetic_origin'][$sOrigin])) {
                         $aVariant['genetic_origin'] = array(
@@ -1809,10 +1836,13 @@ class LOVD_API_GA4GH
             }
 
             // The aggregate pathogenicities aren't stored well yet.
-            $aReturn['pathogenicities'] = array_merge(
-                call_user_func_array('array_merge', $aReturn['effectids']),
-                array_values($aReturn['classifications'])
-            );
+            $aReturn['pathogenicities'] = call_user_func_array('array_merge', $aReturn['effectids']);
+            if (!empty($aReturn['classifications'])) {
+                $aReturn['pathogenicities'] = array_merge(
+                    $aReturn['pathogenicities'],
+                    array_values($aReturn['classifications'])
+                );
+            }
             unset($aReturn['effectids'], $aReturn['classifications']);
 
             // Clean "individuals", "panels" and "variants" when empty.
