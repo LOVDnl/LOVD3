@@ -1859,6 +1859,10 @@ class LOVD_API_GA4GH
                     unset($aReturn['panel'][$sIndex]);
                 }
             }
+            if (!count($aReturn['panel'])) {
+                // Nothing licensed to show.
+                unset($aReturn['panel']);
+            }
 
             return $aReturn;
         }, $zData);
