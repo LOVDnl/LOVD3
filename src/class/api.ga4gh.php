@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-16
+ * Modified    : 2021-07-19
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -955,6 +955,13 @@ class LOVD_API_GA4GH
                     'value' => $zData['DNA'],
                 ),
                 'aliases' => array(),
+                'locations' => array(
+                    array(
+                        'chr' => $sChr,
+                        'start' => (int) $zData['position_g_start'],
+                        'end' => (int) $zData['position_g_end'],
+                    ),
+                ),
                 'pathogenicities' => array(),
                 'creation_date' => array(
                     'value' => date('c', strtotime($zData['created_date'])),
