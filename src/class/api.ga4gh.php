@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-19
+ * Modified    : 2021-07-21
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -756,7 +756,7 @@ class LOVD_API_GA4GH
         global $_DB, $_CONF, $_SETT;
 
         $sTableName = 'variants';
-        $nLimit = 1000; // Get 1000 variants max in one go.
+        $nLimit = 100; // Get 100 variants max in one go.
         // Split position fields (append hyphen to prevent notice).
         list($nPositionStart, $nPositionEnd) = explode('-', $sPosition . '-');
 
