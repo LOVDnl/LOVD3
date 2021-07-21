@@ -756,6 +756,7 @@ class LOVD_API_GA4GH
         global $_DB, $_CONF, $_SETT;
 
         $sTableName = 'variants';
+        $nTimeLimit = 15; // After 15 seconds, just send what you have.
         $nLimit = 100; // Get 100 variants max in one go.
         // Split position fields (append hyphen to prevent notice).
         list($nPositionStart, $nPositionEnd) = explode('-', $sPosition . '-');
@@ -932,8 +933,10 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
+        $tStart = microtime(true);
         $aData = array_map(function ($zData)
         use (
+            $tStart, $nTimeLimit,
             $aLicenses, $aLicensesSummaryData, $sBuild, $sChr,
             $bdbSNP, $bDNA38, $bClassification, $bClassificationMethod, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
@@ -941,6 +944,12 @@ class LOVD_API_GA4GH
             $bVOGReference, $bVOGRemarks)
         {
             global $_DB, $_SETT;
+
+            // If we've been busy for too long, stop working.
+            if ((microtime(true) - $tStart) > $nTimeLimit) {
+                // This will just continue to the next item, but will speed up the execution a lot.
+                return false;
+            }
 
             // Format fields for VarioML-JSON payload.
             $aReturn = array(
@@ -1869,10 +1878,28 @@ class LOVD_API_GA4GH
 
 
 
+        // If we've gone over time, we have 'false' values in the data.
+        $bOverTime = false;
+        foreach (array_keys($aData) as $nKey) {
+            if (!$aData[$nKey]) {
+                unset($aData[$nKey]);
+                $bOverTime = true;
+            }
+        }
+
         // Set next seek window.
         // We're not sure if we're done with this last position, so start there.
         $nNextPosition = (!$zData? 0 : $zData[$n-1]['position_g_start']);
-        if ($nPositionEnd) {
+        if ($bOverTime) {
+            if (!$aData) {
+                // We have removed everything. Try again.
+                $nNextPosition = $zData[0]['position_g_start'];
+            } else {
+                // Continue with the position of the last item.
+                $nNextPosition = $zData[count($aData)-1]['position_g_start'];
+            }
+
+        } elseif ($nPositionEnd) {
             // We were looking in a closed range.
             if ($n < $nLimit) {
                 // We're done; continue after window.
