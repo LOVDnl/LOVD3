@@ -1870,10 +1870,19 @@ class LOVD_API_GA4GH
 
 
         // Set next seek window.
-        $nNextPosition = (!$zData? 0 : $zData[$n-1]['position_g_start'] + 1);
+        // We're not sure if we're done with this last position, so start there.
+        $nNextPosition = (!$zData? 0 : $zData[$n-1]['position_g_start']);
         if ($nPositionEnd) {
-            // We were looking in a closed range. Continue with the next window.
-            $nNextPosition = $nPositionEnd + 1;
+            // We were looking in a closed range.
+            if ($n < $nLimit) {
+                // We're done; continue after window.
+                $nNextPosition = $nPositionEnd + 1;
+            } else {
+                // We're not sure if we're done.
+                // Continue in this window.
+                $nNextPosition .= '-' . $nPositionEnd;
+            }
+
         } elseif ($n < $nLimit) {
             // We didn't receive everything. This must be because we're at the
             //  end of the chromosome. Let's look at the next.
