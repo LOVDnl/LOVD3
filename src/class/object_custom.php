@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2021-07-07
+ * Modified    : 2021-07-27
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -607,7 +607,7 @@ class LOVD_Custom extends LOVD_Object
                 } else {
                     // Normal case, one license only (but still possibly from multiple individuals).
                     // The license contains both the license for the world as well as the license for LOVD.
-                    $zData['license'] = strstr($zData['license'], ';', true);
+                    $zData['license'] = strstr($zData['license'] . ';', ';', true);
                     $sLicenseName = substr($zData['license'], 3, -4);
                     $sLicenseVersion = substr($zData['license'], -3);
                     $nIndividualID = false;
