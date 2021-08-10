@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-07-13
+ * Modified    : 2021-08-10
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -268,6 +268,7 @@ $_SETT = array(
                         'PI' => 'Autosomal dominant with paternal imprinting',
                         'MI' => 'Autosomal dominant with maternal imprinting',
                         'AR' => 'Autosomal recessive',
+                        'Di' => 'Digenic', // HPO 0010984, OMIM doesn't have this.
                         'DD' => 'Digenic dominant',
                         'DR' => 'Digenic recessive',
                         'IC' => 'Isolated Cases (Sporadic)',
