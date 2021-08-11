@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2020-11-24
- * For LOVD    : 3.0-26
+ * Modified    : 2021-08-11
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -755,7 +755,9 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
         if (function_exists('mime_content_type')) {
             $sType = mime_content_type($_FILES['import']['tmp_name']);
         }
-        if ($sType && substr($sType, 0, 5) != 'text/') { // Not all systems report the regular files as "text/plain"; also reported was "text/x-pascal; charset=us-ascii".
+        if ($sType && substr($sType, 0, 5) != 'text/' && $sType != 'application/octet-stream') {
+            // Not all systems report the regular files as "text/plain"; also reported was "text/x-pascal; charset=us-ascii".
+            // Others getting application/octet-stream here. It does seem to depend on the browser, but it's a hard to kill issue.
             lovd_errorAdd('import', 'The upload file is not a tab-delimited text file and cannot be imported. It seems to be of type "' . htmlspecialchars($sType) . '".');
 
         } else {
