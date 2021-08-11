@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2021-07-07
+ * Modified    : 2021-08-11
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -207,7 +207,7 @@ if ($sObject == 'individual') {
     unset($aFields['overwrite']);
 } else {
     // Determine whether there are submissions manually set at all.
-    $n = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE created_by = ? AND license IS NOT NULL',
+    $n = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE created_by = ? AND NULLIF(license, "") IS NOT NULL',
         array($nID))->fetchColumn();
     if (!$n) {
         unset($aFields['overwrite']);
