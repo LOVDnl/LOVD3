@@ -1514,6 +1514,8 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     'explode_strings' => true,      // Multiple selection lists are input as simple strings here.
                     'show_select_alts' => true,     // Show alternatives in errors for select fields.
                 );
+                // $aLine may get overwritten here for selection lists; spaces
+                //  around select values are removed by checkFields().
                 $aSection['object']->checkFields($aLine, $zData, $aCheckFieldsOptions);
                 for ($i = $nErrors; isset($_ERROR['messages'][$i]); $i++) {
                     // When updating, if a error is triggered by a field that is

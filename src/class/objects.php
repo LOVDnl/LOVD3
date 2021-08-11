@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-07-27
+ * Modified    : 2021-08-11
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -468,8 +468,22 @@ class LOVD_Object
                         $aData[$sName] = array();
                     }
                 }
-                // Simple check on non-custom columns (custom columns have their own function for this) to see if the given value is actually allowed.
-                // 0 is a valid entry for the check for mandatory fields, so we should also check if 0 is a valid entry in the selection list!
+
+                if ($aOptions['explode_strings'] && !is_array($aData[$sName])
+                    && isset($GLOBALS['aLine'][$sName]) && $GLOBALS['aLine'][$sName] == $aData[$sName]) {
+                    // Selection lists imported with spaces around their values
+                    //  (e.g., "PCR; SEQ") will be checked *without* the space, but
+                    //  imported *with* the space. Fix that.
+                    // Selection values can't contain an ";", so this is safe.
+                    $GLOBALS['aLine'][$sName] = $aData[$sName] =
+                        implode(';', array_map('trim', explode(';', $aData[$sName])));
+                }
+
+                // Simple check on non-custom columns (custom columns have
+                //  checkSelectedInput() for this) to see if the given value is
+                //  actually allowed. "0" is a valid entry for the check for
+                //  mandatory fields, so we should also check if "0" is a valid
+                //  entry in the selection list!
                 if (strpos($sName, '/') === false && isset($aData[$sName]) && $aData[$sName] !== '') {
                     $Val = $aData[$sName];
                     $aSelectOptions = array_keys($aField[5]);
