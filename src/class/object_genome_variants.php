@@ -250,12 +250,13 @@ class LOVD_GenomeVariant extends LOVD_Custom
                       );
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            // This still allows for "Unclassified", which anyway is the default.
             $this->aCheckMandatory[] = 'effect_concluded';
         }
 
         if (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
-            // `effect_reported` is not allowed to be '0' (Not classified) when user is a submitter
-            // or when the variant has status '9' (Public).
+            // `effect_reported` is not allowed to be '0' (Not classified)
+            //  when user is a submitter or when the variant is set to Marked or Public.
             if ($_AUTH['level'] < LEVEL_CURATOR) {
                 // Remove the mandatory `effect_reported` field to throw an error.
                 unset($aData['effect_reported']);
