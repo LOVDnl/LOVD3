@@ -2897,23 +2897,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
           '    <TH>Transcript</TH>' . "\n" .
           '    <TH>Position</TH>' . "\n" .
           '    <TH>DNA&nbsp;change</TH>' . "\n" .
-          '    <TH>DB-ID</TH>' . "\n" .
           '    <TH>LOVD&nbsp;location</TH>' . "\n" .
           '  </TR>' . "\n");
     $aHeaders = explode("\"\t\"", trim(array_shift($aData), '"'));
-
-    // Remove all-zero DBIDs from the array.
-    $aDataCleaned = array();
-    foreach ($aData as $sHit) {
-        $aHit = array_combine($aHeaders, explode("\"\t\"", trim($sHit, '"')));
-        if (!preg_match('/_0?00000$/', $aHit['variant_id'])) {
-            $aDataCleaned[] = $sHit;
-        }
-    }
-    if (!empty($aDataCleaned)) {
-        // We've still got variants left, so let's use the cleaned array. We wouldn't want to use a 'cleaned' array if that means we cleared it!
-        $aData = $aDataCleaned;
-    }
 
     foreach ($aData as $sHit) {
         $aHit = array_combine($aHeaders, explode("\"\t\"", trim($sHit, '"')));
@@ -2923,7 +2909,6 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
               '    <TD>' . $aHit['nm_accession'] . '</TD>' . "\n" .
               '    <TD>' . $aHit['g_position'] . '</TD>' . "\n" .
               '    <TD>' . $aHit['DNA'] . '</TD>' . "\n" .
-              '    <TD>' . $aHit['variant_id'] . '</TD>' . "\n" .
               '    <TD>' . substr($aHit['url'], 0, strpos($aHit['url'], '/variants.php')) . '</TD>' . "\n" .
               '  </TR>' . "\n");
     }
