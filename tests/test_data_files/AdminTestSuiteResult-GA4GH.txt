@@ -29,6 +29,13 @@
                 "scheme": "HGVS",
                 "value": "g.40698142A>T"
             },
+            "locations": [
+                {
+                    "chr": "15",
+                    "start": 40698142,
+                    "end": 40698142
+                }
+            ],
             "pathogenicities": [
                 {
                     "scope": "individual",
@@ -287,6 +294,13 @@
                 "scheme": "HGVS",
                 "value": "g.40702876G>T"
             },
+            "locations": [
+                {
+                    "chr": "15",
+                    "start": 40702876,
+                    "end": 40702876
+                }
+            ],
             "pathogenicities": [
                 {
                     "scope": "individual",
