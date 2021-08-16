@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2021-07-12
+ * Modified    : 2021-08-12
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -226,7 +226,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
     {
         // Checks fields before submission of data.
         // Loop through all transcripts to have each transcript's set of columns checked.
-        global $_AUTH;
+        global $_AUTH, $_SETT;
 
         // Reset mandatory fields, because import.php calls checkFields() multiple times
         // and we don't want this list to grow forever.
@@ -254,10 +254,21 @@ class LOVD_TranscriptVariant extends LOVD_Custom
             }
             $this->aCheckMandatory[] = $sPrefix . 'effect_reported';
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
+                // This still allows for "Unclassified", which anyway is the default.
                 $this->aCheckMandatory[] = $sPrefix . 'effect_concluded';
-            } elseif (isset($aData[$sPrefix . 'effect_reported']) && $aData[$sPrefix . 'effect_reported'] === '0') {
-                // Submitters must fill in the variant effect field; '0' is not allowed for them.
-                unset($aData[$sPrefix . 'effect_reported']);
+            }
+            if (isset($aData[$sPrefix . 'effect_reported']) && $aData[$sPrefix . 'effect_reported'] === '0') {
+                // `effect_reported` is not allowed to be '0' (Not classified)
+                //  when user is a submitter or when the variant is set to Marked or Public.
+                if ($_AUTH['level'] < LEVEL_CURATOR) {
+                    // Remove the mandatory `effect_reported` field to throw an error.
+                    unset($aData[$sPrefix . 'effect_reported']);
+                } elseif (isset($aData['statusid']) && $aData['statusid'] >= STATUS_MARKED) {
+                    // Show error for curator/manager trying to publish variant without effect.
+                    lovd_errorAdd($sPrefix . 'effect_reported', 'The \'Affects function (as reported)\' field ' .
+                        'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' .
+                        $_SETT['data_status'][STATUS_MARKED] . '" or "' . $_SETT['data_status'][STATUS_OK] . '".');
+                }
             }
         }
 

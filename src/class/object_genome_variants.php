@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2021-07-07
+ * Modified    : 2021-08-12
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -250,19 +250,21 @@ class LOVD_GenomeVariant extends LOVD_Custom
                       );
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
+            // This still allows for "Unclassified", which anyway is the default.
             $this->aCheckMandatory[] = 'effect_concluded';
         }
 
         if (isset($aData['effect_reported']) && $aData['effect_reported'] === '0') {
-            // `effect_reported` is not allowed to be '0' (Not classified) when user is a submitter
-            // or when the variant has status '9' (Public).
+            // `effect_reported` is not allowed to be '0' (Not classified)
+            //  when user is a submitter or when the variant is set to Marked or Public.
             if ($_AUTH['level'] < LEVEL_CURATOR) {
                 // Remove the mandatory `effect_reported` field to throw an error.
                 unset($aData['effect_reported']);
-            } elseif (isset($aData['statusid']) && $aData['statusid'] == STATUS_OK) {
+            } elseif (isset($aData['statusid']) && $aData['statusid'] >= STATUS_MARKED) {
                 // Show error for curator/manager trying to publish variant without effect.
                 lovd_errorAdd('effect_reported', 'The \'Affects function (as reported)\' field ' .
-                    'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' . $_SETT['data_status'][STATUS_OK] . '".');
+                    'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' .
+                    $_SETT['data_status'][STATUS_MARKED] . '" or "' . $_SETT['data_status'][STATUS_OK] . '".');
             }
         }
 
