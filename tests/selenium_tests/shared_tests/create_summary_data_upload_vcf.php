@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-02-17
- * Modified    : 2021-04-14
+ * Modified    : 2021-08-16
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -112,7 +112,7 @@ class CreateSummaryDataUploadVCFTest extends LOVDSeleniumWebdriverBaseTestCase
             //  because the mapping apparently did not complete.
             // For now, log the output that we get. Maybe there's a pattern.
             $sBody = rtrim($this->driver->findElement(WebDriverBy::tagName('body'))->getText());
-            fwrite(STDERR, PHP_EOL . 'Mapping output: ' . $sBody . PHP_EOL);
+            fwrite(STDERR, PHP_EOL . 'Mapping output: ' . $sBody);
 
             // We sometimes get failures, when LOVD says we're done mapping,
             //  but we're actually not.
