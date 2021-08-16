@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-10
- * Modified    : 2020-05-21
- * For LOVD    : 3.0-24
+ * Modified    : 2021-08-16
+ * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -45,6 +45,9 @@ class MultiValueSearchTest extends LOVDSeleniumWebdriverBaseTestCase
         }
         if (preg_match('/No such ID!/', $sBody)) {
             $this->markTestSkipped('Gene does not exist yet.');
+        }
+        if (!$this->isElementPresent(WebDriverBy::id('tab_setup'))) {
+            $this->markTestSkipped('User was not authorized.');
         }
     }
 
