@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-16
+ * Modified    : 2021-07-21
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -756,7 +756,8 @@ class LOVD_API_GA4GH
         global $_DB, $_CONF, $_SETT;
 
         $sTableName = 'variants';
-        $nLimit = 1000; // Get 1000 variants max in one go.
+        $nTimeLimit = 15; // After 15 seconds, just send what you have.
+        $nLimit = 100; // Get 100 variants max in one go.
         // Split position fields (append hyphen to prevent notice).
         list($nPositionStart, $nPositionEnd) = explode('-', $sPosition . '-');
 
@@ -932,8 +933,10 @@ class LOVD_API_GA4GH
 
 
         // Make all transformations.
+        $tStart = microtime(true);
         $aData = array_map(function ($zData)
         use (
+            $tStart, $nTimeLimit,
             $aLicenses, $aLicensesSummaryData, $sBuild, $sChr,
             $bdbSNP, $bDNA38, $bClassification, $bClassificationMethod, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
@@ -941,6 +944,12 @@ class LOVD_API_GA4GH
             $bVOGReference, $bVOGRemarks)
         {
             global $_DB, $_SETT;
+
+            // If we've been busy for too long, stop working.
+            if ((microtime(true) - $tStart) > $nTimeLimit) {
+                // This will just continue to the next item, but will speed up the execution a lot.
+                return false;
+            }
 
             // Format fields for VarioML-JSON payload.
             $aReturn = array(
@@ -955,6 +964,13 @@ class LOVD_API_GA4GH
                     'value' => $zData['DNA'],
                 ),
                 'aliases' => array(),
+                'locations' => array(
+                    array(
+                        'chr' => $sChr,
+                        'start' => (int) $zData['position_g_start'],
+                        'end' => (int) $zData['position_g_end'],
+                    ),
+                ),
                 'pathogenicities' => array(),
                 'creation_date' => array(
                     'value' => date('c', strtotime($zData['created_date'])),
@@ -1852,17 +1868,48 @@ class LOVD_API_GA4GH
                     unset($aReturn['panel'][$sIndex]);
                 }
             }
+            if (!count($aReturn['panel'])) {
+                // Nothing licensed to show.
+                unset($aReturn['panel']);
+            }
 
             return $aReturn;
         }, $zData);
 
 
 
+        // If we've gone over time, we have 'false' values in the data.
+        $bOverTime = false;
+        foreach (array_keys($aData) as $nKey) {
+            if (!$aData[$nKey]) {
+                unset($aData[$nKey]);
+                $bOverTime = true;
+            }
+        }
+
         // Set next seek window.
-        $nNextPosition = (!$zData? 0 : $zData[$n-1]['position_g_start'] + 1);
-        if ($nPositionEnd) {
-            // We were looking in a closed range. Continue with the next window.
-            $nNextPosition = $nPositionEnd + 1;
+        // We're not sure if we're done with this last position, so start there.
+        $nNextPosition = (!$zData? 0 : $zData[$n-1]['position_g_start']);
+        if ($bOverTime) {
+            if (!$aData) {
+                // We have removed everything. Try again.
+                $nNextPosition = $zData[0]['position_g_start'];
+            } else {
+                // Continue with the position of the last item.
+                $nNextPosition = $zData[count($aData)-1]['position_g_start'];
+            }
+
+        } elseif ($nPositionEnd) {
+            // We were looking in a closed range.
+            if ($n < $nLimit) {
+                // We're done; continue after window.
+                $nNextPosition = $nPositionEnd + 1;
+            } else {
+                // We're not sure if we're done.
+                // Continue in this window.
+                $nNextPosition .= '-' . $nPositionEnd;
+            }
+
         } elseif ($n < $nLimit) {
             // We didn't receive everything. This must be because we're at the
             //  end of the chromosome. Let's look at the next.
