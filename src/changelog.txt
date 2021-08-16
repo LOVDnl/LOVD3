@@ -6,6 +6,75 @@
 
 /***************************
  * 3.0 Build 26 (tag:3.0-26)
+ * 2021-08-17
+ *********/
+ * Redefined all FLOAT UNSIGNED columns as FLOAT, since MySQL 8 has deprecated
+   FLOAT UNSIGNED columns.
+ * Fixed bug in page titles when creating a new variant for a screening.
+   Closes #505: "Page titles not always correct".
+ * Fixed bugs in the password reset feature. The password reset didn't work well
+   when the email address was used to reset the password.
+   Closes #507: "Resetting password doesn't unlock account".
+ * Fixed problems with genes not supported by Mutalyzer by using VV as a backup.
+   Prevent notices when Mutalyzer doesn't recognize a gene. Started the
+   migration by using VV as a backup for Mutalyzer when creating genes and
+   adding transcripts to existing genes. There are too many "unsupported" genes
+   right now, that have changed their symbol and therefore are no longer
+   supported by Mutalyzer. VV can handle them just fine. For now, call VV only
+   when Mutalyzer fails to generate a UD or when Mutalyzer fails to find
+   transcripts at all.
+   Closes #513: "Invalid transcripts for G6PC1".
+ * When creating a gene by its symbol, recheck if we don't already have it. When
+   creating a gene by its HGNC ID, LOVD checks if we already have that HGNC ID
+   in the database. LOVD didn't do that if you use the symbol, it only checked
+   if we have that symbol already. So for genes who've changed symbol, it was
+   possible to open the create gene form using its new symbol, after which you
+   would get a query error.
+   Closes #515: "Creating a gene that already exists under a different symbol
+   can cause a query error".
+ * Implemented data licensing. Data submissions can now be licensed by data
+   owners, so it is clear for every user of LOVD what can, and what can not, be
+   done with the data deposited in LOVD.
+   Closes #502: "Allow submitters to choose license applying to their data".
+ * Removed all gender-specific pronouns and replaced them with "they", "them",
+   or "their". Fixed both the documentation as well as the software.
+   Part of #97: "Use singular 'they' everywhere instead of 'he', or 'he/she'".
+ * Fixed various security issues. After running a "bug bounty program" for a
+   week, several minor and a two major possible security vulnerabilities have
+   been identified in the LOVD website and the LOVD software. Amongst others,
+   vulnerabilities were reported by Preet Bhoir, Chirag Mistry, K0t, Taha Smily,
+   Vijay Farswan, and Warbid. They have all been fixed.
+ * Added the GA4GH Data Discovery API to LOVD3. This is a full LOVD3-specific
+   implementation of the GA4GH Data Discovery standards without the use of other
+   libraries. This endpoint currently requires authorization. The data is shared
+   using the VarioML aggregated variant format, which was developed in parallel
+   to the development of this API. No other format is available or supported.
+   This format allows for the export of virtually all standard fields in LOVD.
+   Closes #518: "Build GA4GH Data Connect API".
+ * Fix several errors collected from the system logs.
+   Closes #527: "Query error: 'Invalid parameter number: number of bound
+   variables does not match number of tokens'".
+ * Improved security in various ways. Improved URL parsing. Sleep for one second
+   when resetting a password. Also synced the two different messages printed to
+   the screen when resetting a password.
+ * Fixed display of LOVD owned records. The owner field was displayed as empty
+   for data owned by LOVD.
+   Closes #533: "Entries owned by LOVD don't show an owner".
+ * Explain inheritance codes on the Diseases detailed view, instead of showing
+   the abbreviations only. Also add Digenic as an inheritance mode for Diseases.
+   Closes #537: "Improve the inheritance in the Diseases VE".
+ * Fixed issues with importing data.
+   Closes #539: "Selection list values surrounded with spaces are not cleaned
+   when importing".
+ * Don't allow Curators and up to publish Variants without effects.
+   Closes #484: "Curators and up can create variant submissions without
+   classification".
+ * Warn users when editing other user's data.
+   Closes #542: "Warn Curators not to overwrite data from Submitters".
+
+
+/***************************
+ * 3.0 Build 26 (tag:3.0-26)
  * 2021-02-22
  *********/
  * Changed rules when variant ID columns are shown, and restyled them a bit.
