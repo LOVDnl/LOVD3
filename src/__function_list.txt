@@ -216,6 +216,7 @@ MySQL:
 4.1.00  BOOLEAN column type
 4.1. 1  VALUES() in: INSERT INTO ... ON DUPLICATE KEY UPDATE ... VALUES()
 4.1. 2  ENGINE (instead of TYPE) not really necessary but since we're at 4.1.1 already...
+8.0.00  REGEXP_REPLACE() - should make F&R so much easier to implement...
 =======-========
 4.1. 2  REQUIRED
 

@@ -622,7 +622,7 @@ function lovd_mapVariants ()
 <?php
         if (!defined('MISSING_CONF') && isset($_COOKIE['lovd_settings'])) {
             // Determine whether or not to show the donation dialog.
-            $nTimeToShow = strtotime('+' . ($_CONF['donate_dialog_months_hidden'] < 1 ? 1 : $_CONF['donate_dialog_months_hidden']) . ' months', $_COOKIE['lovd_settings']['donation_dialog_last_seen']);
+            $nTimeToShow = strtotime('+' . ($_CONF['donate_dialog_months_hidden'] < 1? 1 : $_CONF['donate_dialog_months_hidden']) . ' months', $_COOKIE['lovd_settings']['donation_dialog_last_seen']);
             if ($_CONF['donate_dialog_allow'] && $nTimeToShow <= time()) {
                 print('
     // Donation dialog last seen ' . date('Y-m-d H:i:s', $_COOKIE['lovd_settings']['donation_dialog_last_seen']) . ', show again.
