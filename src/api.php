@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2021-08-12
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-14
+ * For LOVD    : 3.0-28
  *
  * Supported URIs:
  *  3.0-26       /api/rest.php/get_frequencies (POST)
@@ -356,15 +356,15 @@ if ($sDataType == 'variants') {
                             }
                         } else {
                             // This does a first match; trying to find the position at the start of the DNA field. Later this match will be made more accurate!
-                            $sQ .= ' AND REPLACE(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "[", ""), "(", ""), ")", ""), "?", "") LIKE "' . $_DB->quote($_GET['search_' . $sField]) . '%"';
+                            $sQ .= ' AND REPLACE(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "[", ""), "(", ""), ")", ""), "?", "") LIKE ' . $_DB->quote($_GET['search_' . $sField] . '%');
                         }
                     } elseif ($sField == 'Variant/DNA') {
                         // This matches regardless of the characters (, ) and ?.
-                        $sQ .= ' AND REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = "' . str_replace(array('(', ')', '?'), ' ', $_DB->quote($_GET['search_' . $sField])) . '"';
+                        $sQ .= ' AND REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ' . str_replace(array('(', ')', '?'), ' ', $_DB->quote($_GET['search_' . $sField]));
                     } elseif ($sField == 'Variant/DBID') {
-                        $sQ .= ' AND vog.`VariantOnGenome/DBID` LIKE "' . $_DB->quote($_GET['search_' . $sField]) . '%"';
+                        $sQ .= ' AND vog.`VariantOnGenome/DBID` LIKE ' . $_DB->quote($_GET['search_' . $sField] . '%');
                     } else {
-                        $sQ .= ' AND vot.`' . $sField . '` = "' . $_DB->quote($_GET['search_' . $sField]) . '"';
+                        $sQ .= ' AND vot.`' . $sField . '` = ' . $_DB->quote($_GET['search_' . $sField]);
                     }
                 }
             }
