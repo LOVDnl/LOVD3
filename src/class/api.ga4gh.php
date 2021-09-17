@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-07-21
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-17
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -388,7 +388,7 @@ class LOVD_API_GA4GH
                 array($sSymbol))->fetchAssoc();
         }
 
-        return array(
+        $aGene = array(
             'source' => 'HGNC',
             'accession' => $aGenes[$sSymbol]['id_hgnc'],
             'db_xrefs' => array(
@@ -396,12 +396,15 @@ class LOVD_API_GA4GH
                     'source' => 'HGNC.symbol',
                     'accession' => $sSymbol,
                 ),
-                array(
-                    'source' => 'MIM',
-                    'accession' => $aGenes[$sSymbol]['id_omim'],
-                ),
             )
         );
+        if (!empty($aGenes[$sSymbol]['id_omim'])) {
+            $aGene['db_xrefs'][] = array(
+                'source' => 'MIM',
+                'accession' => $aGenes[$sSymbol]['id_omim'],
+            );
+        }
+        return $aGene;
     }
 
 
