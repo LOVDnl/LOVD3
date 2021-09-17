@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2021-09-14
+ * Modified    : 2021-09-17
  * For LOVD    : 3.0-28
  *
  * Supported URIs:
@@ -282,7 +282,7 @@ if ($sDataType == 'variants') {
                    ORDER BY t.id_ncbi
                    SEPARATOR ";"
                  ) AS _position_mRNA,
-                 ' . (!$bDNA38? '' : 'vog.chromosome, vog.`VariantOnGenome/DNA/hg38` AS `DNA/hg38`, ') . '
+                 ' . (!$bDNA38? '' : 'vog.chromosome, GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") SEPARATOR ";") AS `DNA/hg38`, ') . '
                  CONCAT("chr", vog.chromosome, ":", 
                    IF(
                      vog.position_g_start = vog.position_g_end,
@@ -623,6 +623,9 @@ if ($sDataType == 'variants') {
         // GV shared and future LOVDs; if we have hg38 data, add that.
         if (FORMAT == 'application/json' && $_CONF['refseq_build'] != 'hg38'
             && $bDNA38 && $zData['DNA/hg38']) {
+            // We asked for a list, so we might get different values.
+            // Just pick the first that's filled in.
+            $zData['DNA/hg38'] = strstr(trim($zData['DNA/hg38'], ';') . ';', ';', true);
             $aPositions = lovd_getVariantInfo($zData['DNA/hg38']);
             $aReturn['position_genomic']['hg38'] = 'chr' . $zData['chromosome'] .
                 ':' . $aPositions['position_start'] .
