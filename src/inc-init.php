@@ -633,6 +633,7 @@ $_TABLES =
                 'TABLE_COUNTRIES' => TABLEPREFIX . '_countries',
                 'TABLE_USERS' => TABLEPREFIX . '_users',
                 'TABLE_COLLEAGUES' => TABLEPREFIX . '_colleagues',
+                'TABLE_GENOME_BUILDS' => TABLEPREFIX . '_genome_builds',
                 'TABLE_CHROMOSOMES' => TABLEPREFIX . '_chromosomes',
                 'TABLE_GENES' => TABLEPREFIX . '_genes',
                 'TABLE_CURATES' => TABLEPREFIX . '_users2genes',
