@@ -117,12 +117,12 @@ $aTableSQL =
          , 'TABLE_GENOME_BUILDS' =>
              'CREATE TABLE ' . TABLE_GENOME_BUILDS . ' (
     id VARCHAR(4) NOT NULL,
-    name VARCHAR(6) NOT NULL DEFAULT 0,
+    name VARCHAR(20) NOT NULL,
     column_suffix VARCHAR(6) NOT NULL,
-    created_by SMALLINT(5) NOT NULL,
+    created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
-    PRIMARY KEY (id)),
-    CONSTRAINT ' . TABLE_GENOME_BUILDS . ' _fk_created_by FOREIGN KEY (created_by)  REFERENCES' . TABLE_USERS . ' (id) ON DELETE CASCADE ON UPDATE CASCADE)
+    PRIMARY KEY (id),
+    CONSTRAINT ' . TABLE_GENOME_BUILDS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)    
     ' . $sSettings
 
         , 'TABLE_CHROMOSOMES' =>
