@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2021-08-12
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-17
+ * For LOVD    : 3.0-28
  *
  * Supported URIs:
  *  3.0-26       /api/rest.php/get_frequencies (POST)
@@ -282,7 +282,7 @@ if ($sDataType == 'variants') {
                    ORDER BY t.id_ncbi
                    SEPARATOR ";"
                  ) AS _position_mRNA,
-                 ' . (!$bDNA38? '' : 'vog.chromosome, vog.`VariantOnGenome/DNA/hg38` AS `DNA/hg38`, ') . '
+                 ' . (!$bDNA38? '' : 'vog.chromosome, GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") SEPARATOR ";") AS `DNA/hg38`, ') . '
                  CONCAT("chr", vog.chromosome, ":", 
                    IF(
                      vog.position_g_start = vog.position_g_end,
@@ -356,15 +356,15 @@ if ($sDataType == 'variants') {
                             }
                         } else {
                             // This does a first match; trying to find the position at the start of the DNA field. Later this match will be made more accurate!
-                            $sQ .= ' AND REPLACE(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "[", ""), "(", ""), ")", ""), "?", "") LIKE "' . $_DB->quote($_GET['search_' . $sField]) . '%"';
+                            $sQ .= ' AND REPLACE(REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "[", ""), "(", ""), ")", ""), "?", "") LIKE ' . $_DB->quote($_GET['search_' . $sField] . '%');
                         }
                     } elseif ($sField == 'Variant/DNA') {
                         // This matches regardless of the characters (, ) and ?.
-                        $sQ .= ' AND REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = "' . str_replace(array('(', ')', '?'), ' ', $_DB->quote($_GET['search_' . $sField])) . '"';
+                        $sQ .= ' AND REPLACE(REPLACE(REPLACE(vot.`VariantOnTranscript/DNA`, "(", ""), ")", ""), "?", "") = ' . str_replace(array('(', ')', '?'), ' ', $_DB->quote($_GET['search_' . $sField]));
                     } elseif ($sField == 'Variant/DBID') {
-                        $sQ .= ' AND vog.`VariantOnGenome/DBID` LIKE "' . $_DB->quote($_GET['search_' . $sField]) . '%"';
+                        $sQ .= ' AND vog.`VariantOnGenome/DBID` LIKE ' . $_DB->quote($_GET['search_' . $sField] . '%');
                     } else {
-                        $sQ .= ' AND vot.`' . $sField . '` = "' . $_DB->quote($_GET['search_' . $sField]) . '"';
+                        $sQ .= ' AND vot.`' . $sField . '` = ' . $_DB->quote($_GET['search_' . $sField]);
                     }
                 }
             }
@@ -623,6 +623,9 @@ if ($sDataType == 'variants') {
         // GV shared and future LOVDs; if we have hg38 data, add that.
         if (FORMAT == 'application/json' && $_CONF['refseq_build'] != 'hg38'
             && $bDNA38 && $zData['DNA/hg38']) {
+            // We asked for a list, so we might get different values.
+            // Just pick the first that's filled in.
+            $zData['DNA/hg38'] = strstr(trim($zData['DNA/hg38'], ';') . ';', ';', true);
             $aPositions = lovd_getVariantInfo($zData['DNA/hg38']);
             $aReturn['position_genomic']['hg38'] = 'chr' . $zData['chromosome'] .
                 ':' . $aPositions['position_start'] .
