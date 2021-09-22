@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-09-21
- * Modified    : 2021-09-21
+ * Modified    : 2021-09-22
  * For LOVD    : 3.5-pre-01
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -41,7 +41,7 @@ require_once ROOT_PATH . 'class/objects.php';
 class LOVD_GenomeBuild extends LOVD_Object
 {
     // This class extends the basic Object class and it handles the GenomeBuilds.
-    var $sObject = 'GenomeBuild';
+    var $sObject = 'Genome_Build';
     var $sTable = 'TABLE_GENOME_BUILDS';
 
 
