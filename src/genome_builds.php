@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-09-21
- * Modified    : 2021-09-21
+ * Modified    : 2021-09-22
  * For LOVD    : 3.5-pre-01
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               L. Werkman <l.werkman@lumc.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -41,7 +41,7 @@ if ($_AUTH) {
 // URL: /genome_builds
 // View all genome builds.
 
-const PAGE_TITLE = 'Genome builds';
+define('PAGE_TITLE', 'Genome builds');
 $_T->printHeader();
 $_T->printTitle();
 
