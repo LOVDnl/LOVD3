@@ -38,23 +38,25 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-// URL: /genome_builds
-// View all genome builds.
-
-define('PAGE_TITLE', 'Genome builds');
-$_T->printHeader();
-$_T->printTitle();
-
-lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
 
+if (PATH_COUNT == 1 && !ACTION) {
+    // URL: /genome_builds
+    // View all genome builds.
 
-require ROOT_PATH . 'class/object_genome_builds.php';
-$_DATA = new LOVD_GenomeBuild();
+    define('PAGE_TITLE', 'Genome builds');
+    $_T->printHeader();
+    $_T->printTitle();
 
-$_DATA->viewList('GenomeBuilds', array());
+    lovd_requireAUTH(LEVEL_MANAGER);
 
-$_T->printFooter();
+    require ROOT_PATH . 'class/object_genome_builds.php';
+    $_DATA = new LOVD_GenomeBuild();
+    $_DATA->viewList('GenomeBuilds', array());
+
+    $_T->printFooter();
+    exit;
+}
 ?>
