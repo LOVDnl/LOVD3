@@ -40,7 +40,7 @@ require_once ROOT_PATH . 'class/objects.php';
 
 class LOVD_GenomeBuild extends LOVD_Object
 {
-    // This class extends the basic Object class and it handles the Logs.
+    // This class extends the basic Object class and it handles the GenomeBuilds.
     var $sObject = 'GenomeBuild';
     var $sTable = 'TABLE_GENOME_BUILDS';
 
@@ -51,7 +51,8 @@ class LOVD_GenomeBuild extends LOVD_Object
 
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'gb.*, u.name AS created_by_';
-        $this->aSQLViewList['FROM']     = TABLE_GENOME_BUILDS . ' AS gb LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (gb.created_by = u.id)';
+        $this->aSQLViewList['FROM']     = TABLE_GENOME_BUILDS . ' AS gb LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ' .
+                                          'ON (gb.created_by = u.id)';
         $this->aSQLViewList['ORDER_BY'] = 'id';
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -73,10 +74,28 @@ class LOVD_GenomeBuild extends LOVD_Object
                                     'view' => array('Column suffix', 100),
                                     'db'   => array('gb.column_suffix', 'ASC', true))
                       );
+
+        // SQL code for viewing an entry.
+        $this->aSQLViewEntry['SELECT']   = 'gb.*, u.name AS created_by_';
+
+        $this->aSQLViewEntry['FROM']     = TABLE_GENOME_BUILDS . ' AS gb ' .
+            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (gb.created_by = u.id) ';
+        $this->aSQLViewEntry['GROUP_BY'] = 'gb.id';
+
+        // List of columns and (default?) order for viewing an entry.
+        $this->aColumnsViewEntry =
+            array(
+                'TableHeader_General' => 'General information',
+                'id' => 'Genome build ID',
+                'name' => 'Genome build name',
+                'column_suffix' => 'Column suffix',
+                'created_by' => 'Created by',
+                'created_date' => 'Date created'
+            );
+
         $this->sSortDefault = 'id';
 
         parent::__construct();
     }
 }
-
 ?>
