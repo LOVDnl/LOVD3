@@ -9,7 +9,7 @@
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               L. Werkman <l.werkman@lumc.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -40,20 +40,40 @@ require_once ROOT_PATH . 'class/objects.php';
 
 class LOVD_GenomeBuild extends LOVD_Object
 {
-    // This class extends the basic Object class and it handles the GenomeBuilds.
+    // This class extends the basic Object class and it handles the Genome Builds.
     var $sObject = 'Genome_Build';
     var $sTable = 'TABLE_GENOME_BUILDS';
+
+
+
 
 
     function __construct ()
     {
         // Default constructor.
 
+        // SQL code for viewing an entry.
+        $this->aSQLViewEntry['SELECT']   = 'gb.*, u.name AS created_by_';
+        $this->aSQLViewEntry['FROM']     = TABLE_GENOME_BUILDS . ' AS gb ' .
+            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (gb.created_by = u.id) ';
+        $this->aSQLViewEntry['GROUP_BY'] = 'gb.id';
+
         // SQL code for viewing a list of entries.
         $this->aSQLViewList['SELECT']   = 'gb.*, u.name AS created_by_';
         $this->aSQLViewList['FROM']     = TABLE_GENOME_BUILDS . ' AS gb LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ' .
                                           'ON (gb.created_by = u.id)';
         $this->aSQLViewList['ORDER_BY'] = 'id';
+
+        // List of columns and (default?) order for viewing an entry.
+        $this->aColumnsViewEntry =
+            array(
+                'TableHeader_General' => 'General information',
+                'id' => 'Genome build ID',
+                'name' => 'Genome build name',
+                'column_suffix' => 'Column suffix',
+                'created_by' => 'Created by',
+                'created_date' => 'Date created'
+            );
 
         // List of columns and (default?) order for viewing a list of entries.
         $this->aColumnsViewList =
@@ -74,25 +94,6 @@ class LOVD_GenomeBuild extends LOVD_Object
                                     'view' => array('Column suffix', 100),
                                     'db'   => array('gb.column_suffix', 'ASC', true))
                       );
-
-        // SQL code for viewing an entry.
-        $this->aSQLViewEntry['SELECT']   = 'gb.*, u.name AS created_by_';
-
-        $this->aSQLViewEntry['FROM']     = TABLE_GENOME_BUILDS . ' AS gb ' .
-            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (gb.created_by = u.id) ';
-        $this->aSQLViewEntry['GROUP_BY'] = 'gb.id';
-
-        // List of columns and (default?) order for viewing an entry.
-        $this->aColumnsViewEntry =
-            array(
-                'TableHeader_General' => 'General information',
-                'id' => 'Genome build ID',
-                'name' => 'Genome build name',
-                'column_suffix' => 'Column suffix',
-                'created_by' => 'Created by',
-                'created_date' => 'Date created'
-            );
-
         $this->sSortDefault = 'id';
 
         parent::__construct();
