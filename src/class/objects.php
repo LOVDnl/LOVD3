@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-08-11
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-22
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1676,7 +1676,14 @@ class LOVD_Object
                     //  and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
                     $sOwnedBy .= (!$sOwnedBy? '' : ', ') .
                         '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
-                        addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') .
+                        addslashes(
+                            '<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' .
+                            ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') .
+                            '</TD></TR><TR><TH valign=top>Name</TH><TD>' . htmlspecialchars($sName) .
+                            '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) .
+                            '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . htmlspecialchars($sInstitute) .
+                            '</TD></TR><TR><TH valign=top>Department</TH><TD>' . htmlspecialchars($sDepartment) .
+                            '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') .
                         '\', this, [' . ($sView == 'list'? '-200' : '0') . ', 0]);">' . $sName . '</SPAN>';
                 }
             }
