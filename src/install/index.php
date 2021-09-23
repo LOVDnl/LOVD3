@@ -664,7 +664,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
                 $_GB = new LOVD_GenomeBuild();
                 $aGenomeBuild = array(
                     'id' => $_POST['refseq_build'],
-                    'name' => $_POST['refseq_build'] . ' / ' . $_SETT['human_builds'][$_POST['refseq_build']],
+                    'name' => $_POST['refseq_build'] . ' / ' . $_SETT['human_builds'][$_POST['refseq_build']]['ncbi_name'],
                     'created_by' => 0,
                     'created_date' => date('Y-m-d H:i:s')
                 );
