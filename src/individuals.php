@@ -558,6 +558,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
+    $aVariantsRemovable = $_DB->query('
+        SELECT s2v.variantid, MAX(s2.individualid)
+        FROM lovd_v3_screenings AS s
+          INNER JOIN lovd_v3_screenings2variants AS s2v ON (s.id = s2v.screeningid)
+          LEFT OUTER JOIN lovd_v3_screenings2variants AS s2v2 ON (s2v.variantid = s2v2.variantid AND s2v.screeningid != s2v2.screeningid)
+          LEFT OUTER JOIN lovd_v3_screenings AS s2 ON (s2v2.screeningid = s2.id AND s2.individualid != ?)
+        WHERE s.individualid = ?
+        GROUP BY s2v.variantid
+        HAVING MAX(s2.individualid) IS NULL', array($nID, $nID))->fetchAllColumn();
+    $nVariantsRemovable = count($aVariantsRemovable);
+
     if (!empty($_POST)) {
         lovd_errorClean();
 
@@ -587,11 +598,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             }
 
             if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
-                $aOutput = $_DB->query('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ?', array($nID))->fetchAllColumn();
-                if (count($aOutput)) {
-                    // This also deletes the entries in TABLE_SCR2VAR.
-                    $_DB->query('DELETE vog FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aOutput) - 1) . ')', $aOutput);
-                }
+                // This also deletes the entries in TABLE_SCR2VAR.
+                $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
             }
 
             // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENE.
@@ -634,22 +642,26 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     $nVariants = $_DB->query('SELECT COUNT(DISTINCT s2v.variantid) FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s.individualid = ? GROUP BY s.individualid', array($nID))->fetchColumn();
-    $aOptions = array('remove' => 'Also remove all variants attached to this individual', 'keep' => 'Keep all attached variants as separate entries');
+    $aOptions = array('remove' => 'Yes, remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' attached to only this individual', 'keep' => 'No, keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
 
     // Array which will make up the form table.
     $aForm = array_merge(
                  array(
-                        array('POST', '', '', '', '45%', '14', '55%'),
+                        array('POST', '', '', '', '40%', '14', '60%'),
                         array('Deleting individual information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')</B>'),
                         'skip',
                         array('', '', 'print', 'This individual entry has ' . ($nVariants? $nVariants : 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
-          'variants' => array('What should LOVD do with the attached variants?', '', 'select', 'remove_variants', 1, $aOptions, false, false, false),
+'variants_removable' => array('', '', 'print', (!$nVariantsRemovable? 'No variants will be removed.' : '<B>' . $nVariantsRemovable . ' variant' . ($nVariantsRemovable == 1? '' : 's') . ' will be removed, because ' . ($nVariantsRemovable == 1? 'it is' : 'these are'). ' not attached to other individuals!!!</B>')),
+          'variants' => array('Should LOVD remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these ' . $nVariantsRemovable . ' variants') . '?', '', 'select', 'remove_variants', 1, $aOptions, false, false, false),
                         array('', '', 'note', '<B>All phenotypes and screenings attached to this individual will be automatically removed' . ($nVariants? ' regardless' : '') . '!!!</B>'),
      'variants_skip' => 'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete individual information entry'),
                       ));
-    if (!$nVariants) {
+    if (!$nVariantsRemovable) {
+        if (!$nVariants) {
+            unset($aForm['variants_removable']);
+        }
         unset($aForm['variants'], $aForm['variants_skip']);
     }
 
