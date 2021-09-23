@@ -71,7 +71,7 @@ if (PATH_COUNT == 2 && !ACTION) {
     $_T->printTitle();
 
     // Load appropriate user level for this genome build.
-    lovd_isAuthorized('genome build', $sID);
+    lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genome_builds.php';
     $_DATA = new LOVD_GenomeBuild();
