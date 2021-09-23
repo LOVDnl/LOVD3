@@ -657,6 +657,20 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
             }
 
             $b = $_SYSSETTING->insertEntry($_POST, $aFields, false);
+
+            if ($b) {
+                // Insert First Genome Build into database
+                require ROOT_PATH . 'class/object_genome_builds.php';
+                $_GB = new LOVD_GenomeBuild();
+                $aGenomeBuild = array(
+                    'id' => $_POST['refseq_build'],
+                    'name' => $_POST['refseq_build'] . ' / ' . $_SETT['human_builds'][$_POST['refseq_build']],
+                    'created_by' => 0,
+                    'created_date' => date('Y-m-d H:i:s')
+                );
+                $b = $_GB->insertEntry($aGenomeBuild, array_keys($aGenomeBuild), false);
+            }
+
             if (!$b) {
                 // Error when running query.
                 print('      Error during install while storing the settings.<BR>' . "\n" .
