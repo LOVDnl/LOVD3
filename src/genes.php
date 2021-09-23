@@ -1787,7 +1787,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
             $_GET['search_userid'] = '!0';
         }
         $_GET['page_size'] = 10;
-        $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}", level: "{{zData_level}}"}, lovd_authorizeUser); return false;');
+        $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow(\'{{ViewListID}}\', \'{{ID}}\', {id: \'{{ID}}\', name: \'{{zData_name}}\', level: \'{{zData_level}}\'}, lovd_authorizeUser); return false;');
         $aVLOptions = array(
             'cols_to_skip' => array('orcid_id_', 'status_', 'last_login_', 'created_date_'),
             'track_history' => false,

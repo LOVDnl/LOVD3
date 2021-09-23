@@ -1593,6 +1593,9 @@ class LOVD_Object
         if ($sView == 'list') {
             // By default, we put anchors in the id_ and DNA fields, if present.
             if ($zData['row_link']) {
+                if (substr($zData['row_link'], 0, 11) == 'javascript:') {
+                    $zData['row_link'] = htmlspecialchars(rawurldecode($zData['row_link']));
+                }
                 if (isset($this->aColumnsViewList['id_']) && $zData['id']) {
                     $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
                 }
@@ -3190,8 +3193,8 @@ FROptions
                     foreach ($zData as $key => $val) {
                         // Also allow data from $zData to be put into the row link & row id.
                         // FIXME; This is a temporary ugly solution, so we need to fix this later!!!!
-                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
-                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
                     }
                 } else {
                     $zData['row_link'] = '';
