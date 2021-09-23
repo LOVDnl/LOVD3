@@ -826,8 +826,13 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                         PRIMARY KEY (id),
                         CONSTRAINT ' . TABLE_GENOME_BUILDS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)    
                         ENGINE=InnoDB,
-                        DEFAULT CHARACTER SET utf8'
-                 )
+                        DEFAULT CHARACTER SET utf8',
+                 ),
+                 '3.5-pre-02' => array(
+                     'INSERT INTO ' . TABLE_GENOME_BUILDS . '(id, name, created_by, created_date)
+                      VALUES ("' . $_CONF['refseq_build'] . '", "' . $_CONF['refseq_build'] . ' / ' .
+                              $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '", 0, NOW() )'
+                )
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
