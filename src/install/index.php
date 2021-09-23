@@ -657,9 +657,8 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
             }
 
             $b = $_SYSSETTING->insertEntry($_POST, $aFields, false);
-
             if ($b) {
-                // Insert First Genome Build into database
+                // Insert first Genome Build into the database.
                 require ROOT_PATH . 'class/object_genome_builds.php';
                 $_GB = new LOVD_GenomeBuild();
                 $aGenomeBuild = array(
