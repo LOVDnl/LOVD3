@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-09-21
- * Modified    : 2021-09-22
+ * Modified    : 2021-09-23
  * For LOVD    : 3.5-pre-01
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -91,7 +91,7 @@ class LOVD_GenomeBuild extends LOVD_Object
                                      'db'   => array('u.name', 'ASC', true)),
                         'created_date' => array(
                                     'view' => array('Date created', 130),
-                                    'db'   => array('gb.created_by', 'DESC', 'DATETIME'))
+                                    'db'   => array('gb.created_date', 'DESC', true))
                       );
         $this->sSortDefault = 'id';
 
