@@ -71,7 +71,7 @@ class LOVD_GenomeBuild extends LOVD_Object
                 'name' => 'Genome build name',
                 'column_suffix' => 'Column suffix',
                 'created_by_' => 'Created by',
-                'created_date' => 'Date created'
+                'created_date_' => 'Date created'
             );
 
         // List of columns and (default?) order for viewing a list of entries.
