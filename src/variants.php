@@ -2808,7 +2808,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             }
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);

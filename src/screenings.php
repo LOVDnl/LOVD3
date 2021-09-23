@@ -899,7 +899,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             $_DB->commit();
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals/' . $zData['individualid']);
@@ -928,7 +928,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     $nVariants = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
-    $aOptions = array('remove' => 'Yes, Remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' from this screening', 'keep' => 'No, Keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
+    $aOptions = array('remove' => 'Yes, remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' attached to only this screening', 'keep' => 'No, keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
 
     // Array which will make up the form table.
     $aForm = array_merge(
