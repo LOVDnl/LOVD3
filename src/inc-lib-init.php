@@ -850,7 +850,7 @@ function lovd_getCurrentPageTitle ()
     }
 
     // Capitalize the first letter, trim off the last 's' from the data object.
-    $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
+    $sTitle = ucfirst($sTitle . substr(str_replace('_', ' ', $sObject), 0, -1));
 
     if ($sObject == 'users' && ACTION != 'boot') {
         $sTitle .= ' account';
@@ -885,7 +885,7 @@ function lovd_getCurrentPageTitle ()
         // We're accessing just one entry.
         if ($sObject == 'genes') {
             $sTitle = preg_replace('/gene$/', ' the ' . $ID . ' gene', $sTitle);
-        } elseif ($sObject == 'columns') {
+        } elseif ($sObject == 'columns' || $sObject == 'genome_builds') {
             $sTitle .= ' ' . $ID;
         } else {
             $sTitle .= ' #' . $ID;

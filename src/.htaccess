@@ -35,6 +35,7 @@ php_value suhosin.request.max_vars 15000
     RewriteRule ^genes(.*)$ genes.php
     RewriteRule ^gene_statistics(.*)$ gene_statistics.php
     RewriteRule ^gene_panels(.*)$ gene_panels.php
+    RewriteRule ^genome_builds(.*)$ genome_builds.php
     RewriteRule ^import(.*)$ import.php
 #    RewriteRule ^install(.*)$ install/index.php # I'm having trouble using /install?etc because Apache is redirecting to /install/?etc which loses the $_POST info. Very annoying.
     RewriteRule ^individuals(.*)$ individuals.php

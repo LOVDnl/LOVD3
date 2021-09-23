@@ -816,6 +816,18 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  '3.0-26c' => array(
                      'ALTER TABLE ' . TABLE_LOGS . ' MODIFY COLUMN event VARCHAR(25) NOT NULL',
                  ),
+                 '3.5-pre-01' => array(
+                     'CREATE TABLE ' . TABLE_GENOME_BUILDS . ' (
+                        id VARCHAR(4) NOT NULL,
+                        name VARCHAR(20) NOT NULL,
+                        column_suffix VARCHAR(6) NOT NULL,
+                        created_by SMALLINT(5) UNSIGNED ZEROFILL,
+                        created_date DATETIME NOT NULL,
+                        PRIMARY KEY (id),
+                        CONSTRAINT ' . TABLE_GENOME_BUILDS . '_fk_created_by FOREIGN KEY (created_by) REFERENCES ' . TABLE_USERS . ' (id) ON DELETE SET NULL ON UPDATE CASCADE)    
+                        ENGINE=InnoDB,
+                        DEFAULT CHARACTER SET utf8'
+                 )
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {
