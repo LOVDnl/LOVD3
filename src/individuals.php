@@ -572,31 +572,32 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         }
 
         if (!lovd_error()) {
-            // FIXME: All of this doesn't look right. We should first check which genes are linked to the *public variants*, if we're deleting them OR if this Ind is public.
-            //  Only then can you delete the variants when requested. Now it's the other way around, and the selection isn't done right.
             // Query text.
-            // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENE.
             $_DB->beginTransaction();
+
+            // Search for effected genes before the deletion, else we can't find the link.
+            // Get genes which are modified only when individual and variant status is marked or public.
+            if ($zData['statusid'] >= STATUS_MARKED) {
+                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                    'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                    'WHERE vog.statusid >= ? AND s.individualid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+            }
+
             if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
                 $aOutput = $_DB->query('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ?', array($nID))->fetchAllColumn();
                 if (count($aOutput)) {
+                    // This also deletes the entries in TABLE_SCR2VAR.
                     $_DB->query('DELETE vog FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aOutput) - 1) . ')', $aOutput);
                 }
             }
 
-            // Get genes which are modified only when individual and variant status is marked or public.
-            if ($_POST['statusid'] >= STATUS_MARKED) {
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                      'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                      'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                      'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                      'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
-                                      'WHERE vog.statusid >= ? AND s.individualid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
-            }
-
+            // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENE.
             $_DATA->deleteEntry($nID);
 
-            if ($_POST['statusid'] >= STATUS_MARKED && $aGenes) {
+            if ($zData['statusid'] >= STATUS_MARKED && $aGenes) {
                 // Change updated date for genes.
                 lovd_setUpdatedDate($aGenes);
             }
