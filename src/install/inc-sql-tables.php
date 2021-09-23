@@ -118,7 +118,7 @@ $aTableSQL =
              'CREATE TABLE ' . TABLE_GENOME_BUILDS . ' (
     id VARCHAR(4) NOT NULL,
     name VARCHAR(20) NOT NULL,
-    column_suffix VARCHAR(6) NOT NULL,
+    column_suffix VARCHAR(6) NOT NULL DEFAULT "",
     created_by SMALLINT(5) UNSIGNED ZEROFILL,
     created_date DATETIME NOT NULL,
     PRIMARY KEY (id),
