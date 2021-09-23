@@ -67,11 +67,10 @@ class LOVD_GenomeBuild extends LOVD_Object
         // List of columns and (default?) order for viewing an entry.
         $this->aColumnsViewEntry =
             array(
-                'TableHeader_General' => 'General information',
                 'id' => 'Genome build ID',
                 'name' => 'Genome build name',
                 'column_suffix' => 'Column suffix',
-                'created_by' => 'Created by',
+                'created_by_' => 'Created by',
                 'created_date' => 'Date created'
             );
 
@@ -79,20 +78,20 @@ class LOVD_GenomeBuild extends LOVD_Object
         $this->aColumnsViewList =
                  array(
                         'id' => array(
-                                    'view' => array('ID', 50),
+                                    'view' => array('Genome build ID', 50),
                                     'db'   => array('gb.id', 'ASC', true)),
                         'name' => array(
-                                    'view' => array('name', 50),
+                                    'view' => array('Name', 160),
                                     'db'   => array('gb.name', 'ASC', true)),
+                         'column_suffix' => array(
+                                     'view' => array('Column suffix', 50),
+                                     'db'   => array('gb.column_suffix', 'ASC', true)),
+                         'created_by_' => array(
+                                     'view' => array('Created by', 100),
+                                     'db'   => array('u.name', 'ASC', true)),
                         'created_date' => array(
-                                    'view' => array('created on', 130),
-                                    'db'   => array('gb.created_by', 'DESC', 'DATETIME')),
-                        'created_by_' => array(
-                                    'view' => array('User', 160),
-                                    'db'   => array('u.name', 'ASC', true)),
-                        'column_suffix' => array(
-                                    'view' => array('Column suffix', 100),
-                                    'db'   => array('gb.column_suffix', 'ASC', true))
+                                    'view' => array('Date created', 130),
+                                    'db'   => array('gb.created_by', 'DESC', 'DATETIME'))
                       );
         $this->sSortDefault = 'id';
 

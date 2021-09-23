@@ -59,4 +59,25 @@ if (PATH_COUNT == 1 && !ACTION) {
     $_T->printFooter();
     exit;
 }
+
+
+if (PATH_COUNT == 2 && !ACTION) {
+    // URL: /genomebuilds/hg19
+    // View specific genome build.
+
+    $sID = lovd_getCurrentID();
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+    $_T->printHeader();
+    $_T->printTitle();
+
+    // Load appropriate user level for this genome build.
+    lovd_isAuthorized('genome build', $sID);
+
+    require ROOT_PATH . 'class/object_genome_builds.php';
+    $_DATA = new LOVD_GenomeBuild();
+    $zData = $_DATA->viewEntry($sID);
+
+    $_T->printFooter();
+    exit;
+}
 ?>
