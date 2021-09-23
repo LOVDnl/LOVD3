@@ -78,24 +78,45 @@ class LOVD_GenomeBuild extends LOVD_Object
         $this->aColumnsViewList =
                  array(
                         'id' => array(
-                                    'view' => array('Genome build ID', 50),
+                                    'view' => array('Genome build ID', 130),
                                     'db'   => array('gb.id', 'ASC', true)),
                         'name' => array(
                                     'view' => array('Name', 160),
                                     'db'   => array('gb.name', 'ASC', true)),
                          'column_suffix' => array(
-                                     'view' => array('Column suffix', 50),
+                                     'view' => array('Column suffix', 120),
                                      'db'   => array('gb.column_suffix', 'ASC', true)),
                          'created_by_' => array(
-                                     'view' => array('Created by', 100),
+                                     'view' => array('Created by', 160),
                                      'db'   => array('u.name', 'ASC', true)),
-                        'created_date' => array(
-                                    'view' => array('Date created', 130),
+                        'created_date_' => array(
+                                    'view' => array('Date created', 100),
                                     'db'   => array('gb.created_date', 'DESC', true))
                       );
         $this->sSortDefault = 'id';
 
         parent::__construct();
+    }
+
+
+
+
+
+    function prepareData ($zData = '', $sView = 'list')
+    {
+        // Prepares the data by "enriching" the variable received with links, pictures, etc.
+
+        if (!in_array($sView, array('list', 'entry'))) {
+            $sView = 'list';
+        }
+
+        // Makes sure it's an array and htmlspecialchars() all the values.
+        $zData = parent::prepareData($zData, $sView);
+
+        if ($sView == 'list') {
+            $zData['created_date_'] = substr($zData['created_date'], 0, 10);
+        }
+        return $zData;
     }
 }
 ?>
