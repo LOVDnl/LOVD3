@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-09-22
+ * Modified    : 2021-09-24
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3195,6 +3195,8 @@ FROptions
                         // FIXME; This is a temporary ugly solution, so we need to fix this later!!!!
                         $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
                         $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
+                        // But don't break C>G notation, variants can't be searched using row links otherwise.
+                        $zData['row_link'] = str_replace('%26gt%3B', '%3E', $zData['row_link']);
                     }
                 } else {
                     $zData['row_link'] = '';
