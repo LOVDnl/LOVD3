@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2021-08-13
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-22
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -593,7 +593,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting phenotype information entry', '', 'print', $nID . ' (Owner: ' . $zData['owned_by_'] . ')'),
+                        array('Deleting phenotype information entry', '', 'print', $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete phenotype information entry'),

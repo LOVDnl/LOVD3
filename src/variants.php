@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2021-08-13
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-22
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -2808,7 +2808,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             }
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
@@ -2839,7 +2839,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting variant entry', '', 'print', $nID . ' (Owner: ' . $zData['owned_by_'] . ')'),
+                        array('Deleting variant entry', '', 'print', $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete variant entry'),

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-01-27
- * For LOVD    : 3.0-26
+ * Modified    : 2021-09-24
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -174,10 +174,11 @@ function lovd_checkXSS ($aInput = '')
     foreach ($aInput as $key => $val) {
         if (is_array($val)) {
             $bSuccess = $bSuccess && lovd_checkXSS($val);
-        } elseif (!empty($val) && preg_match('/<.*>/s', $val)) {
-            // Disallowed tag found.
+        } elseif (strpos($val, '<') !== false) {
+            // Just disallow any use of <; it can introduce XSS even without a matching >.
             $bSuccess = false;
-            lovd_errorAdd($key, 'Disallowed tag found in form field' . (is_numeric($key)? '.' : ' "' . htmlspecialchars($key) . '".') . ' XSS attack?');
+            lovd_errorAdd($key, 'The use of \'&lt;\' in form fields is now allowed.' .
+                (is_numeric($key)? '.' : ' Please remove it from the "' . htmlspecialchars($key) . '" field.'));
         }
     }
     return $bSuccess;
