@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2020-09-10
- * For LOVD    : 3.0-25
+ * Modified    : 2021-09-24
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2014-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2014-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -1275,7 +1275,7 @@ function lovd_showConversionForm ($nMaxSizeLOVD, $nMaxSize)
     // Show viewlist for searching and selecting a transcript.
     print('<H2>Select transcript</H2>');
     $_DATA = new LOVD_Transcript();
-    $_DATA->setRowLink('Transcripts', 'javascript: $("input[name=\'transcriptid\']").val("{{ID}}"); return false;');
+    $_DATA->setRowLink('Transcripts', 'javascript: $(\'input[name=transcriptid]\').val(\'{{ID}}\'); return false;');
     $_GET['page_size'] = 10;
     $_DATA->viewList('Transcripts_convert_LOVD2', array('cols_to_skip' => array('id_', 'variants')));
 
