@@ -114,6 +114,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
 
     $_GET['search_transcriptid'] = $nID;
     print('<BR><BR>' . "\n\n");
+    print('<BUTTON ID="vis-scale-change">Change visualization scale</BUTTON>');
+    print('<DIV ID="variants-visualization" data-ncbi="' . $zData['id_ncbi'] . '"></DIV>');
+    print('<BR><BR>' . "\n\n");
     $_T->printTitle('Variants', 'H4');
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
@@ -125,6 +128,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $_DATA->viewList('VOT_for_T_VE', $aVLOptions);
 
     $_T->printFooter();
+
+    lovd_includeJS('lib/visualization/d3.v4.min.js');
+    lovd_includeJS('lib/visualization/visualization.js');
     exit;
 }
 
