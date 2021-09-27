@@ -38,7 +38,7 @@ if ($_AUTH) {
     require ROOT_PATH . 'inc-upgrade.php';
 }
 
-
+lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
@@ -47,8 +47,6 @@ if (PATH_COUNT == 1 && !ACTION) {
     // View all genome builds.
 
     define('PAGE_TITLE', 'Genome builds');
-
-    lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genome_builds.php';
 
@@ -73,8 +71,6 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'GenomeBuildAdd');
 
-    lovd_requireAUTH(LEVEL_MANAGER); // TODO: Place to top of file
-
     require ROOT_PATH . 'inc-lib-form.php';
     require ROOT_PATH . 'class/object_genome_builds.php';
     $_DATA = new LOVD_GenomeBuild();
@@ -83,7 +79,13 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
     if (POST) {
         lovd_errorClean();
 
-        // TODO: Add checks: Formulier moet zijn ingevuld, ID moet bestaan
+        if (empty($_POST)) {
+            // Raise error if ID is empty or not addable
+            lovd_errorAdd('id', 'Please select a genome build.');
+        }
+
+        // TODO: Ask Ivo how to use var $aAddableGBs up OR how to use $_POST below,
+        // TODO: to be able to throw an error when a user tries to add an unaddable GB
 
         if (!lovd_error()) {
             // Fields to be used.
@@ -98,11 +100,42 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             // Add new genome build as new row into GenomeBuilds table.
             $_DATA->insertEntry($_POST, $aFields);
 
+            // Add custom DNA column.
+            $aQueries = array_slice(lovd_getActivateCustomColumnQuery(array('VariantOnGenome/DNA')), 0, 2);
+            $aQueries = array_map(function ($s) {
+                return str_replace(
+                    'VariantOnGenome/DNA',
+                    'VariantOnGenome/DNA/' . $_POST['column_suffix'],
+                    $s
+                );
+            }, $aQueries);
+
+            $aActiveColumns = $_DB->query('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS . '" AND COLUMN_NAME IN (?,?,?)',
+                array('VariantOnGenome/DNA/' . $_POST['column_suffix'], 'position_g_start_' . $_POST['column_suffix'], 'position_g_end_' . $_POST['column_suffix']))->fetchAllColumn();
+
+            if (count($aActiveColumns) < 3) {
+                $sSQL = 'ALTER TABLE ' . TABLE_VARIANTS;
+                if (!in_array('VariantOnGenome/DNA/' . $_POST['column_suffix'], $aActiveColumns)) {
+                    $sSQL .= ' ADD COLUMN ' . '`VariantOnGenome/DNA/' . $_POST['column_suffix'] . '` VARCHAR(255),';
+                }
+                if (!in_array('position_g_start_' . $_POST['column_suffix'], $aActiveColumns)) {
+                    $sSQL .= ' ADD COLUMN ' . 'position_g_start_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_end,';
+                }
+                if (!in_array('position_g_end_' . $_POST['column_suffix'], $aActiveColumns)) {
+                    $sSQL .= ' ADD COLUMN ' . 'position_g_end_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_start_' . $_POST['column_suffix'] . ',';
+                }
+                $aQueries[] = rtrim($sSQL, ',');
+            }
+
+            foreach ($aQueries as $sSQL) {
+                $_DB->query($sSQL);
+            }
+
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Added new Genome Build ' . $_POST['id']);
 
 
-            // Thank the user...
+            // Thank the user, and send them to the page of the new GB.
             header('Refresh: 5; url=' . lovd_getInstallURL(). CURRENT_PATH . '/' . $_POST['id']);
 
             $_T->printHeader();
@@ -117,10 +150,11 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
     $_T->printHeader();
     $_T->printTitle();
 
-    // Array which will make up the form table.
+    // Find out which genome builds are, and which organism is, currently active.
     $aActiveBuilds = $_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchAllColumn();
     $sPrefix = substr($aActiveBuilds[0], 0, 2);
 
+    // Prepare array for the form.
     $aAddableGenomeBuilds = array();
     foreach ($_SETT['human_builds'] as $sBuild => $aBuild) {
         if (substr($sBuild, 0, 2) == $sPrefix &&  !in_array($sBuild, $aActiveBuilds)) {
@@ -128,11 +162,8 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
         }
     };
 
-    sort($aActiveBuilds);
-    sort($aAddableGenomeBuilds);
-
-    if ($aActiveBuilds == array_keys($aAddableGenomeBuilds)) {
     // Check to see if there are any inactive yet available genome builds left.
+    if (!$aAddableGenomeBuilds) {
         print('There is nothing to add. All available reference genomes of your organism are loaded into the database.');
 
     } else {
@@ -141,6 +172,8 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             print('Please select the genome build you want to add to your database.<BR><BR>');
         }
     }
+
+    lovd_errorPrint();
 
     // Tooltip JS code.
     lovd_includeJS('inc-js-tooltip.php');
@@ -171,13 +204,11 @@ if (PATH_COUNT == 2 && !ACTION) {
     // URL: /genome_builds/hg19
     // View specific genome build.
 
-    $sID = lovd_getCurrentID();
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
+
+    $sID = lovd_getCurrentID();
     $_T->printHeader();
     $_T->printTitle();
-
-    // Load appropriate user level for this genome build.
-    lovd_requireAUTH(LEVEL_MANAGER);
 
     require ROOT_PATH . 'class/object_genome_builds.php';
     $_DATA = new LOVD_GenomeBuild();
