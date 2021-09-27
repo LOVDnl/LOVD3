@@ -128,10 +128,18 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
         }
     };
 
-    // TODO: Only show form when there are still addable yet inactive GBs left
-    
-    if (GET) {
-        print('Please select the genome build you want to add to your database.<BR><BR>');
+    sort($aActiveBuilds);
+    sort($aAddableGenomeBuilds);
+
+    if ($aActiveBuilds == array_keys($aAddableGenomeBuilds)) {
+    // Check to see if there are any inactive yet available genome builds left.
+        print('There is nothing to add. All available reference genomes of your organism are loaded into the database.');
+
+    } else {
+        // Only show the form when there are still genome builds inactive yet available.
+        if (GET) {
+            print('Please select the genome build you want to add to your database.<BR><BR>');
+        }
     }
 
     // Tooltip JS code.
