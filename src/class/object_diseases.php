@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2021-08-10
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-27
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -319,7 +319,7 @@ class LOVD_Disease extends LOVD_Object
         }
 
         // XSS attack prevention. Deny input of HTML.
-        lovd_checkXSS();
+        lovd_checkXSS($aData);
     }
 
 

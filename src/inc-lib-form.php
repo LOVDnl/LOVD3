@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-09-24
+ * Modified    : 2021-09-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -174,7 +174,12 @@ function lovd_checkXSS ($aInput = '')
     foreach ($aInput as $key => $val) {
         if (is_array($val)) {
             $bSuccess = $bSuccess && lovd_checkXSS($val);
-        } elseif (strpos($val, '<') !== false) {
+        } elseif (!empty($val) && strpos($key, '/') !== false && preg_match('/<.*>/s', $val)) {
+            // Disallowed tag found. This check is for custom columns, that often contain < characters.
+            $bSuccess = false;
+            lovd_errorAdd($key, 'Disallowed tag found in form field' . (is_numeric($key)? '.' : ' "' . htmlspecialchars($key) . '".') . ' XSS attack?');
+        } elseif (strpos($key, '/') === false && strpos($val, '<') !== false) {
+            // This check is for any fixed field, such as the registration form.
             // Just disallow any use of <; it can introduce XSS even without a matching >.
             $bSuccess = false;
             lovd_errorAdd($key, 'The use of \'&lt;\' in form fields is now allowed.' .
