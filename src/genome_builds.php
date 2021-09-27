@@ -42,6 +42,8 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 
+
+
 if (PATH_COUNT == 1 && !ACTION) {
     // URL: /genome_builds
     // View all genome builds.
@@ -100,7 +102,8 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             // Add new genome build as new row into GenomeBuilds table.
             $_DATA->insertEntry($_POST, $aFields);
 
-            // Add custom DNA column.
+
+            // Add custom DNA column into VOG table.
             $aQueries = array_slice(lovd_getActivateCustomColumnQuery(array('VariantOnGenome/DNA')), 0, 2);
             $aQueries = array_map(function ($s) {
                 return str_replace(
@@ -130,6 +133,39 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             foreach ($aQueries as $sSQL) {
                 $_DB->query($sSQL);
             }
+
+
+            // Add custom DNA column into VOT table.
+            $aQueries = array_slice(lovd_getActivateCustomColumnQuery(array('VariantOnTranscript/DNA')), 0, 2);
+            $aQueries = array_map(function ($s) {
+                return str_replace(
+                    'VariantOnTranscript/DNA',
+                    'VariantOnTranscript/DNA/' . $_POST['column_suffix'],
+                    $s
+                );
+            }, $aQueries);
+
+            $aActiveColumns = $_DB->query('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME IN (?,?,?)',
+                array('VariantOnTranscript/DNA/' . $_POST['column_suffix'], 'position_c_start_' . $_POST['column_suffix'], 'position_c_end_' . $_POST['column_suffix']))->fetchAllColumn();
+
+            if (count($aActiveColumns) < 3) {
+                $sSQL = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS;
+                if (!in_array('VariantOnTranscript/DNA/' . $_POST['column_suffix'], $aActiveColumns)) {
+                    $sSQL .= ' ADD COLUMN ' . '`VariantOnTranscript/DNA/' . $_POST['column_suffix'] . '` VARCHAR(255),';
+                }
+                if (!in_array('position_c_start_' . $_POST['column_suffix'], $aActiveColumns)) {
+                    $sSQL .= ' ADD COLUMN ' . 'position_c_start_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_c_start_intron,';
+                }
+                if (!in_array('position_c_end_' . $_POST['column_suffix'], $aActiveColumns)) {
+                    $sSQL .= ' ADD COLUMN ' . 'position_c_end_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_c_end_intron,';
+                }
+                $aQueries[] = rtrim($sSQL, ',');
+            }
+
+            foreach ($aQueries as $sSQL) {
+                $_DB->query($sSQL);
+            }
+
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Added new Genome Build ' . $_POST['id']);
