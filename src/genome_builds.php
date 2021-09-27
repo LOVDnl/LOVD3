@@ -166,6 +166,9 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
     if (!$aAddableGenomeBuilds) {
         print('There is nothing to add. All available reference genomes of your organism are loaded into the database.');
 
+        $_T->printFooter();
+        exit;
+
     } else {
         // Only show the form when there are still genome builds inactive yet available.
         if (GET) {
