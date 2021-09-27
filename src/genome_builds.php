@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-09-21
- * Modified    : 2021-09-22
- * For LOVD    : 3.5-pre-01
+ * Modified    : 2021-09-27
+ * For LOVD    : 3.5-pre-02
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -81,8 +81,8 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
     if (POST) {
         lovd_errorClean();
 
-        if (empty($_POST)) {
-            // Raise error if ID is empty or not addable
+        if (empty($_POST['id'])) {
+            // Raise error if ID is empty or not addable.
             lovd_errorAdd('id', 'Please select a genome build.');
         }
 
@@ -102,8 +102,7 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             // Add new genome build as new row into GenomeBuilds table.
             $_DATA->insertEntry($_POST, $aFields);
 
-
-            // Add custom DNA column into VOG table.
+            // Register the new DNA column for the VOG table (TABLE_COLS and TABLE_ACTIVE_COLS).
             $aQueries = array_slice(lovd_getActivateCustomColumnQuery(array('VariantOnGenome/DNA')), 0, 2);
             $aQueries = array_map(function ($s) {
                 return str_replace(
@@ -113,38 +112,37 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
                 );
             }, $aQueries);
 
-            $aActiveColumns = $_DB->query('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS . '" AND COLUMN_NAME IN (?,?,?)',
-                array('VariantOnGenome/DNA/' . $_POST['column_suffix'], 'position_g_start_' . $_POST['column_suffix'], 'position_g_end_' . $_POST['column_suffix']))->fetchAllColumn();
-
+            // Add the DNA field and the position fields to the VOG table.
+            $aActiveColumns = $_DB->query('
+                SELECT COLUMN_NAME
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = "' . TABLE_VARIANTS . '"
+                  AND COLUMN_NAME IN (?,?,?)',
+                array(
+                    'VariantOnGenome/DNA/' . $_POST['column_suffix'],
+                    'position_g_start_' . $_POST['column_suffix'],
+                    'position_g_end_' . $_POST['column_suffix']
+                ))->fetchAllColumn();
             if (count($aActiveColumns) < 3) {
                 $sSQL = 'ALTER TABLE ' . TABLE_VARIANTS;
                 if (!in_array('VariantOnGenome/DNA/' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN ' . '`VariantOnGenome/DNA/' . $_POST['column_suffix'] . '` VARCHAR(255),';
+                    $sSQL .= ' ADD COLUMN `VariantOnGenome/DNA/' . $_POST['column_suffix'] . '` VARCHAR(255),';
                 }
                 if (!in_array('position_g_start_' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN ' . 'position_g_start_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_end,';
+                    $sSQL .= ' ADD COLUMN position_g_start_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_end,';
                 }
                 if (!in_array('position_g_end_' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN ' . 'position_g_end_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_start_' . $_POST['column_suffix'] . ',';
+                    $sSQL .= ' ADD COLUMN position_g_end_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_start_' . $_POST['column_suffix'] . ',';
                 }
                 $aQueries[] = rtrim($sSQL, ',');
             }
-
             foreach ($aQueries as $sSQL) {
                 $_DB->query($sSQL);
             }
 
-
-            // Add custom DNA column into VOT table.
-            $aQueries = array_slice(lovd_getActivateCustomColumnQuery(array('VariantOnTranscript/DNA')), 0, 2);
-            $aQueries = array_map(function ($s) {
-                return str_replace(
-                    'VariantOnTranscript/DNA',
-                    'VariantOnTranscript/DNA/' . $_POST['column_suffix'],
-                    $s
-                );
-            }, $aQueries);
-
+            // Add new position fields to the Transcripts table.
+            /*
             $aActiveColumns = $_DB->query('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME IN (?,?,?)',
                 array('VariantOnTranscript/DNA/' . $_POST['column_suffix'], 'position_c_start_' . $_POST['column_suffix'], 'position_c_end_' . $_POST['column_suffix']))->fetchAllColumn();
 
@@ -165,11 +163,10 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             foreach ($aQueries as $sSQL) {
                 $_DB->query($sSQL);
             }
-
+            */
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Added new Genome Build ' . $_POST['id']);
-
 
             // Thank the user, and send them to the page of the new GB.
             header('Refresh: 5; url=' . lovd_getInstallURL(). CURRENT_PATH . '/' . $_POST['id']);
