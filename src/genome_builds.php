@@ -98,8 +98,7 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
         if (empty($_POST['id'])) {
             // Raise error if ID is empty (not given).
             lovd_errorAdd('id', 'Please select a genome build.');
-        } elseif (in_array($_POST['id'], $aAddableGenomeBuilds)) {
-            // TODO: Why is this the other way around?
+        } elseif (!isset($aAddableGenomeBuilds[$_POST['id']])) {
             // Raise error if ID can not be added or is unknown.
             lovd_errorAdd('id', 'Please select a valid genome build.');
         }
