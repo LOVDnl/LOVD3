@@ -132,68 +132,37 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
                 $_DB->query($sSQL);
             }
 
-            // Prepare array to easily add necessary columns into VOG and transcripts table.
-            $aActiveColumnsVariants = $_DB->query('
-                SELECT COLUMN_NAME
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = DATABASE()
-                  AND TABLE_NAME = "' . TABLE_VARIANTS . '"
-                  AND COLUMN_NAME IN (?,?,?)',
-                array(
-                    'VariantOnGenome/DNA/' . $_POST['column_suffix'],
-                    'position_g_start_' . $_POST['column_suffix'],
-                    'position_g_end_' . $_POST['column_suffix']
-                ))->fetchAllColumn();
-            $aActiveColumnsTranscripts = $_DB->query('
-                SELECT COLUMN_NAME
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = DATABASE()
-                  AND TABLE_NAME = "' . TABLE_TRANSCRIPTS . '"
-                  AND COLUMN_NAME IN (?,?)',
-                array(
-                    'position_g_mrna_start_' . $_POST['column_suffix'],
-                    'position_g_mrna_end_' . $_POST['column_suffix']))->fetchAllColumn();
-
+            // Prepare an array to more easily add the required columns into the
+            //  VOG and transcripts tables.
             $aTablesAndTheirColumns = array(
                 TABLE_VARIANTS => array(
-                    '`VariantOnGenome/DNA/' . $_POST['column_suffix'] . '`' => array(
-                        'type' => 'VARCHAR(255)',
-                        'active' => in_array(
-                            'VariantOnGenome/DNA/' . $_POST['column_suffix'],
-                            $aActiveColumnsVariants)
-                    ),
-                    'position_g_start_' . $_POST['column_suffix'] => array(
-                        'type' => 'INT(10) UNSIGNED AFTER position_g_end',
-                        'active' => in_array('position_g_start_' . $_POST['column_suffix'], $aActiveColumnsVariants),
-                    ),
-                    'position_g_end_' . $_POST['column_suffix'] => array(
-                        'type' => 'INT(10) UNSIGNED AFTER position_g_start_' . $_POST['column_suffix'],
-                        'active' => in_array('position_g_end_' . $_POST['column_suffix'], $aActiveColumnsVariants)
-                    ),
+                    'VariantOnGenome/DNA/' . $_POST['column_suffix'] => 'VARCHAR(255)',
+                    'position_g_start_' . $_POST['column_suffix'] => 'INT(10) UNSIGNED AFTER position_g_end',
+                    'position_g_end_' . $_POST['column_suffix'] => 'INT(10) UNSIGNED AFTER position_g_start_' . $_POST['column_suffix'],
                 ),
                 TABLE_TRANSCRIPTS => array(
-                    // TODO: Ask Ivo whether or not the mrna positions should be NOT NULL
-                    'position_g_mrna_start_' . $_POST['column_suffix'] => array(
-                        'type' => 'INT(10) UNSIGNED AFTER position_g_mrna_start',
-                        'active' => in_array('position_g_mrna_start_' . $_POST['column_suffix'], $aActiveColumnsTranscripts)
-                    ),
-                    'position_g_mrna_end_' . $_POST['column_suffix'] => array(
-                        'type' => 'INT(10) UNSIGNED AFTER position_g_mrna_end',
-                        'active' => in_array('position_g_mrna_end_' . $_POST['column_suffix'], $aActiveColumnsTranscripts)
-                    ),
+                    'position_g_mrna_start_' . $_POST['column_suffix'] => 'INT(10) UNSIGNED AFTER position_g_mrna_end',
+                    'position_g_mrna_end_' . $_POST['column_suffix'] => 'INT(10) UNSIGNED AFTER position_g_mrna_start_' . $_POST['column_suffix'],
                 ),
             );
 
-            // Add columns to VOG and Transcripts tables.
-            foreach (array_keys($aTablesAndTheirColumns) as $sTable) {
-                $bToAdd = False;
+            // Add the columns to the VOG and Transcripts tables.
+            foreach ($aTablesAndTheirColumns as $sTable => $aTable) {
+                $aActiveColumns = $_DB->query('
+                    SELECT COLUMN_NAME
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = ?
+                      AND COLUMN_NAME IN (' . implode(',', array_fill(0, count($aTable), '?')) . ')',
+                    array_merge(array($sTable), array_keys($aTable)))->fetchAllColumn();
+
+                $bToAdd = false;
                 $sSQL = 'ALTER TABLE ' . $sTable;
 
-                foreach (array_keys($aTablesAndTheirColumns[$sTable]) as $sColumn) {
-                    $aColumn = $aTablesAndTheirColumns[$sTable][$sColumn];
-                    if (!$aColumn['active']) {
-                        $bToAdd = True;
-                        $sSQL .= ' ADD COLUMN ' . $sColumn . ' ' . $aColumn['type'] . ',';
+                foreach ($aTable as $sColumn => $sColumnSQL) {
+                    if (!in_array($sColumn, $aActiveColumns)) {
+                        $bToAdd = true;
+                        $sSQL .= ' ADD COLUMN `' . $sColumn . '` ' . $sColumnSQL . ',';
                     }
                 }
 
