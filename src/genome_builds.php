@@ -227,15 +227,13 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
     // Check to see if there are any inactive yet available genome builds left.
     // Only show the form when there are still genome builds inactive yet available.
     if (!$aAddableGenomeBuilds) {
-        print('There is nothing to add. All available reference genomes of your organism are loaded into the database.');
-
+        lovd_showInfoTable('There is nothing to add. All reference genomes of your organism that are known to the system are already enabled.');
         $_T->printFooter();
         exit;
 
-    } else {
-        if (GET) {
-            print('Please select the genome build you want to add to your database.<BR><BR>');
-        }
+    } elseif (GET) {
+        print('Please select the genome build that you want to enable in the system.<BR>' .
+              'Once enabled, the new genome build can be used for database submissions and data queries.<BR><BR>' . "\n\n");
     }
 
     lovd_errorPrint();
@@ -248,8 +246,8 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
 
     $aForm =
         array(
-            array('POST', '', '', '', '0%', '14', '100%'),
-            array('', '', 'select', 'id', count($aAddableGenomeBuilds), $aAddableGenomeBuilds, false, false, false),
+            array('POST', '', '', '', '25%', '14', '75%'),
+            array('Genome build to add', '', 'select', 'id', count($aAddableGenomeBuilds), $aAddableGenomeBuilds, false, false, false),
             'skip',
             array('', '', 'submit', 'Add selected genome build'),
         );
