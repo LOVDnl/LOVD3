@@ -77,6 +77,18 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
     require ROOT_PATH . 'class/object_genome_builds.php';
     $_DATA = new LOVD_GenomeBuild();
 
+    // Find out which genome builds are, and which organism is, currently active.
+    $aActiveBuilds = $_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchAllColumn();
+    $sPrefix = substr($aActiveBuilds[0], 0, 2);
+
+    // Prepare array for the form.
+    $aAddableGenomeBuilds = array();
+    foreach ($_SETT['human_builds'] as $sBuild => $aBuild) {
+        if (substr($sBuild, 0, 2) == $sPrefix &&  !in_array($sBuild, $aActiveBuilds)) {
+            $aAddableGenomeBuilds[$sBuild] = $sBuild . ' / ' . $aBuild['ncbi_name'];
+        }
+    };
+
     // Apply the choices as filled into the form.
     if (POST) {
         lovd_errorClean();
@@ -85,9 +97,11 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             // Raise error if ID is empty or not addable.
             lovd_errorAdd('id', 'Please select a genome build.');
         }
-
-        // TODO: Ask Ivo how to use var $aAddableGBs up OR how to use $_POST below,
-        // TODO: to be able to throw an error when a user tries to add an unaddable GB
+        elseif (in_array($_POST['id'], $aAddableGenomeBuilds)) {
+            // TODO: Why is this the other way around?
+            // Raise error if ID is not addable.
+        lovd_errorAdd('id', 'Please select an addable genome build.');
+        }
 
         if (!lovd_error()) {
             // Fields to be used.
@@ -99,21 +113,24 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
-            // Add new genome build as new row into GenomeBuilds table.
-            $_DATA->insertEntry($_POST, $aFields);
+            // The new genome build will be inserted into the genome build table AFTER inserting the necessary columns
+            // into the VOG and transcripts table, to avoid fatal errors when not all actions can be completed.
 
             // Register the new DNA column for the VOG table (TABLE_COLS and TABLE_ACTIVE_COLS).
-            $aQueries = array_slice(lovd_getActivateCustomColumnQuery(array('VariantOnGenome/DNA')), 0, 2);
             $aQueries = array_map(function ($s) {
                 return str_replace(
                     'VariantOnGenome/DNA',
                     'VariantOnGenome/DNA/' . $_POST['column_suffix'],
                     $s
                 );
-            }, $aQueries);
+            }, array_slice(lovd_getActivateCustomColumnQuery(array('VariantOnGenome/DNA')), 0, 2));
 
-            // Add the DNA field and the position fields to the VOG table.
-            $aActiveColumns = $_DB->query('
+            foreach($aQueries as $sSQL) {
+                $_DB->query($sSQL);
+            }
+
+            // Prepare array to easily add necessary columns into VOG and transcripts table.
+            $aActiveColumnsVariants = $_DB->query('
                 SELECT COLUMN_NAME
                 FROM information_schema.COLUMNS
                 WHERE TABLE_SCHEMA = DATABASE()
@@ -124,46 +141,69 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
                     'position_g_start_' . $_POST['column_suffix'],
                     'position_g_end_' . $_POST['column_suffix']
                 ))->fetchAllColumn();
-            if (count($aActiveColumns) < 3) {
-                $sSQL = 'ALTER TABLE ' . TABLE_VARIANTS;
-                if (!in_array('VariantOnGenome/DNA/' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN `VariantOnGenome/DNA/' . $_POST['column_suffix'] . '` VARCHAR(255),';
+            $aActiveColumnsTranscripts = $_DB->query('
+                SELECT COLUMN_NAME
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = "' . TABLE_TRANSCRIPTS . '"
+                  AND COLUMN_NAME IN (?,?)',
+                array(
+                    'position_g_mrna_start_' . $_POST['column_suffix'],
+                    'position_g_mrna_end_' . $_POST['column_suffix']))->fetchAllColumn();
+
+            $aTablesAndTheirColumns = array(
+                TABLE_VARIANTS => array(
+                    '`VariantOnGenome/DNA/' . $_POST['column_suffix'] . '`' => array(
+                        'type' => 'VARCHAR(255)',
+                        'active' => in_array(
+                            'VariantOnGenome/DNA/' . $_POST['column_suffix'],
+                            $aActiveColumnsVariants)
+                    ),
+                    'position_g_start_' . $_POST['column_suffix'] => array(
+                        'type' => 'INT(10) UNSIGNED AFTER position_g_end',
+                        'active' => in_array('position_g_start_' . $_POST['column_suffix'], $aActiveColumnsVariants),
+                    ),
+                    'position_g_end_' . $_POST['column_suffix'] => array(
+                        'type' => 'INT(10) UNSIGNED AFTER position_g_start_' . $_POST['column_suffix'],
+                        'active' => in_array('position_g_end_' . $_POST['column_suffix'], $aActiveColumnsVariants)
+                    ),
+                ),
+                TABLE_TRANSCRIPTS => array(
+                    // TODO: Ask Ivo whether or not the mrna positions should be NOT NULL
+                    'position_g_mrna_start_' . $_POST['column_suffix'] => array(
+                        'type' => 'INT(10) UNSIGNED AFTER position_g_mrna_start',
+                        'active' => in_array('position_g_mrna_start_' . $_POST['column_suffix'], $aActiveColumnsTranscripts)
+                    ),
+                    'position_g_mrna_end_' . $_POST['column_suffix'] => array(
+                        'type' => 'INT(10) UNSIGNED AFTER position_g_mrna_end',
+                        'active' => in_array('position_g_mrna_end_' . $_POST['column_suffix'], $aActiveColumnsTranscripts)
+                    ),
+                ),
+            );
+
+            // Add columns to VOG and Transcripts tables.
+            foreach (array_keys($aTablesAndTheirColumns) as $sTable) {
+                $bToAdd = False;
+                $sSQL = 'ALTER TABLE ' . $sTable;
+
+                foreach (array_keys($aTablesAndTheirColumns[$sTable]) as $sColumn) {
+                    $aColumn = $aTablesAndTheirColumns[$sTable][$sColumn];
+                    if (!$aColumn['active']) {
+                        $bToAdd = True;
+                        $sSQL .= ' ADD COLUMN ' . $sColumn . ' ' . $aColumn['type'] . ',';
+                    }
                 }
-                if (!in_array('position_g_start_' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN position_g_start_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_end,';
+
+                if ($bToAdd) {
+                    $_DB->query(rtrim($sSQL, ','));
                 }
-                if (!in_array('position_g_end_' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN position_g_end_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_g_start_' . $_POST['column_suffix'] . ',';
-                }
-                $aQueries[] = rtrim($sSQL, ',');
-            }
-            foreach ($aQueries as $sSQL) {
-                $_DB->query($sSQL);
             }
 
-            // Add new position fields to the Transcripts table.
-            /*
-            $aActiveColumns = $_DB->query('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "' . TABLE_VARIANTS_ON_TRANSCRIPTS . '" AND COLUMN_NAME IN (?,?,?)',
-                array('VariantOnTranscript/DNA/' . $_POST['column_suffix'], 'position_c_start_' . $_POST['column_suffix'], 'position_c_end_' . $_POST['column_suffix']))->fetchAllColumn();
+            // The new row is inserted into the genome build table AFTER inserting the necessary columns
+            // into the variants and transcripts table, to avoid fatal errors when not all actions can be completed.
 
-            if (count($aActiveColumns) < 3) {
-                $sSQL = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS;
-                if (!in_array('VariantOnTranscript/DNA/' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN ' . '`VariantOnTranscript/DNA/' . $_POST['column_suffix'] . '` VARCHAR(255),';
-                }
-                if (!in_array('position_c_start_' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN ' . 'position_c_start_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_c_start_intron,';
-                }
-                if (!in_array('position_c_end_' . $_POST['column_suffix'], $aActiveColumns)) {
-                    $sSQL .= ' ADD COLUMN ' . 'position_c_end_' . $_POST['column_suffix'] . ' INT(10) UNSIGNED AFTER position_c_end_intron,';
-                }
-                $aQueries[] = rtrim($sSQL, ',');
-            }
-
-            foreach ($aQueries as $sSQL) {
-                $_DB->query($sSQL);
-            }
-            */
+            // Add new genome build as new row into GenomeBuilds table
+            $_DATA->insertEntry($_POST, $aFields);
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Added new Genome Build ' . $_POST['id']);
@@ -182,18 +222,6 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
 
     $_T->printHeader();
     $_T->printTitle();
-
-    // Find out which genome builds are, and which organism is, currently active.
-    $aActiveBuilds = $_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchAllColumn();
-    $sPrefix = substr($aActiveBuilds[0], 0, 2);
-
-    // Prepare array for the form.
-    $aAddableGenomeBuilds = array();
-    foreach ($_SETT['human_builds'] as $sBuild => $aBuild) {
-        if (substr($sBuild, 0, 2) == $sPrefix &&  !in_array($sBuild, $aActiveBuilds)) {
-            $aAddableGenomeBuilds[$sBuild] = $sBuild . ' / ' . $aBuild['ncbi_name'];
-        }
-    };
 
     // Check to see if there are any inactive yet available genome builds left.
     if (!$aAddableGenomeBuilds) {
