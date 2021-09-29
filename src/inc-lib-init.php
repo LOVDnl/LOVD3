@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-04-06
- * For LOVD    : 3.0-27
+ * Modified    : 2021-09-27
+ * For LOVD    : 3.5-pre-02
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -429,6 +429,9 @@ function lovd_getActivateCustomColumnQuery ($aColumns = array(), $bActivate = tr
 {
     // Create custom columns based on the columns listed in inc-sql-columns.php file.
     global $_INI; // $_INI is needed for inc-sql-columns.php.
+
+    // When running this function more than once, make sure we keep $aColSQL.
+    static $aColSQL;
 
     // This defines $aColSQL.
     require_once ROOT_PATH . 'install/inc-sql-columns.php';

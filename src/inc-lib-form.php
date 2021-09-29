@@ -875,7 +875,7 @@ function lovd_viewForm ($a,
      * Display HTML form according to input array containing settings and field
      * descriptions.
      *
-     * Sytax for values of input array :
+     * Syntax for values of input array :
      *
      * array('GET|POST', 'header_class_name', 'help_class_name', 'data_class_name', 'header_width', 'help_width', 'data_width'),
      * 'skip',
