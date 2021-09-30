@@ -275,9 +275,8 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
 
     // Perform initial checks.
     $sReason = '';
-    $aActiveBuilds = $_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchAllColumn();
+    $aActiveBuilds = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
     $sID = lovd_getCurrentID();
-    $sColumnSuffix = $sID;
 
     if (count($aActiveBuilds) < 2) {
         // Check to make sure there would be a genome build left after the removal.
@@ -290,19 +289,15 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
     } else {
         // Check to make sure that all variants are safely stored on the
         //  genome builds that will remain active.
-        $sSQL = 'SELECT COUNT(id) FROM ' . TABLE_VARIANTS .
-            ' WHERE `VariantOnGenome/DNA/' . $sColumnSuffix . '` IS NOT NULL';
+        $sSQL = 'SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE 1 = 1';
 
-        $aRemainingActiveBuilds = $aActiveBuilds;
-        if (($key = array_search($sID, $aRemainingActiveBuilds)) !== false) {
-            unset($aRemainingActiveBuilds[$key]);
+        foreach(array_diff_key($aActiveBuilds, array($sID => '_')) as $sBuild => $sColumnSuffix) {
+            $sColumnSuffix = ($sColumnSuffix) ? '/' . $sColumnSuffix : '';
+            $sSQL .= ' AND (`VariantOnGenome/DNA' . $sColumnSuffix . '` IS NULL OR
+                            `VariantOnGenome/DNA' . $sColumnSuffix . '` = "")';
         }
 
-        foreach($aRemainingActiveBuilds as $aRemainingActiveBuild) {
-            $sSQL .= ' AND `VariantOnGenome/DNA/' . $aRemainingActiveBuild . '` IS NULL';
-        }
-
-        $bVariantsLostAfterRemovingGenomeBuild = $_DB->query($sSQL)->fetch()['COUNT(id)'] != 0;
+        $bVariantsLostAfterRemovingGenomeBuild = (bool) $_DB->query($sSQL)->fetchColumn();
 
         if ($bVariantsLostAfterRemovingGenomeBuild) {
             $sReason = 'not all variants that are mapped on this reference genome are safely mapped on a second build.';
@@ -338,23 +333,28 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
 
         // Accept and realise removal of the genome build after passing the checks.
         if ($bValidPassword) {
-            $sColumnSuffix = $sID;
 
             // Remove genome build from database.
             $_DB->query('DELETE FROM ' . TABLE_GENOME_BUILDS .
-                        ' WHERE id = "' . $sID . '"');
+                        ' WHERE id = ?', array($sID));
+
+            // Prepare a slash and underscore only if needed.
+            // The default genome build does not have a column suffix, so
+            //  in this case we also do not want a slash and/or underscore.
+            $sSlash = ($aActiveBuilds[$sID]) ? '/' : '';
+            $sUnderscore = ($aActiveBuilds[$sID]) ? '_' : '';
 
             // Prepare an array to more easily remove the columns from the
             //  VOG and transcripts tables.
             $aTablesAndTheirColumns = array(
                 TABLE_VARIANTS => array(
-                    'VariantOnGenome/DNA/' . $sColumnSuffix,
-                    'position_g_start_' . $sColumnSuffix,
-                    'position_g_end_' . $sColumnSuffix,
+                    'VariantOnGenome/DNA' . $sSlash . $aActiveBuilds[$sID],
+                    'position_g_start' . $sUnderscore . $aActiveBuilds[$sID],
+                    'position_g_end' . $sUnderscore . $aActiveBuilds[$sID],
                 ),
                 TABLE_TRANSCRIPTS => array(
-                    'position_g_mrna_start_' . $sColumnSuffix,
-                    'position_g_mrna_end_' . $sColumnSuffix,
+                    'position_g_mrna_start' . $sUnderscore . $aActiveBuilds[$sID],
+                    'position_g_mrna_end' . $sUnderscore . $aActiveBuilds[$sID],
                 ),
             );
 
@@ -384,8 +384,9 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
             }
 
             // Deactivate custom DNA column.
+            // TODO: Colsuffix / dependant
             $_DB->query('DELETE FROM ' . TABLE_ACTIVE_COLS .
-                ' WHERE colid = "VariantOnGenome/DNA/' . $sID . '"');
+                ' WHERE colid = "VariantOnGenome/DNA' . $sSlash . $aActiveBuilds[$sID] . '"');
 
 
             // Write to log...
