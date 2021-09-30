@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-09-21
- * Modified    : 2021-09-28
+ * Modified    : 2021-09-30
  * For LOVD    : 3.5-pre-02
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -68,7 +68,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
 if (PATH_COUNT == 1 && ACTION == 'add') {
     // URL: /genome_builds?add
-    // Enable a new genome builds.
+    // Enable a new genome build.
 
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'GenomeBuildAdd');
@@ -244,7 +244,193 @@ if (PATH_COUNT == 2 && !ACTION) {
     $_DATA = new LOVD_GenomeBuild();
     $zData = $_DATA->viewEntry($sID);
 
+    // Show the option to deactivate the genome build if there are more than one active.
+    $aAmountOfActiveGBs = count($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchAllColumn());
+
+    if ($aAmountOfActiveGBs > 1) {
+        $aNavigation = array(
+            CURRENT_PATH . '?remove' => array('cross.png', 'Deactivate this genome build', 1),
+        );
+        lovd_showJGNavigation($aNavigation, 'genome_builds');
+    }
+
     $_T->printFooter();
     exit;
 }
+
+
+
+
+
+if (PATH_COUNT == 2 && ACTION == 'remove') {
+    // URL: /genome_builds/hg19?remove
+    // Deactivate one of the active genome builds.
+
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
+    define('LOG_EVENT', 'GenomeBuildRemove');
+
+    require ROOT_PATH . 'inc-lib-form.php';
+    require ROOT_PATH . 'class/object_genome_builds.php';
+
+
+    // Perform initial checks.
+    $sReason = '';
+    $aActiveBuilds = $_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchAllColumn();
+    $sID = lovd_getCurrentID();
+    $sColumnSuffix = $sID;
+
+    if (count($aActiveBuilds) < 2) {
+        // Check to make sure there would be a genome build left after the removal.
+        $sReason = 'there must be at least one reference genome left after the removal.';
+
+    } elseif (!in_array($sID, $aActiveBuilds)) {
+        // Check whether the given ID is one of the active IDs in the database.
+        $sReason = 'an invalid genome build was given.';
+
+    } else {
+        // Check to make sure that all variants are safely stored on the
+        //  genome builds that will remain active.
+        $sSQL = 'SELECT COUNT(id) FROM ' . TABLE_VARIANTS .
+            ' WHERE `VariantOnGenome/DNA/' . $sColumnSuffix . '` IS NOT NULL';
+
+        $aRemainingActiveBuilds = $aActiveBuilds;
+        if (($key = array_search($sID, $aRemainingActiveBuilds)) !== false) {
+            unset($aRemainingActiveBuilds[$key]);
+        }
+
+        foreach($aRemainingActiveBuilds as $aRemainingActiveBuild) {
+            $sSQL .= ' AND `VariantOnGenome/DNA/' . $aRemainingActiveBuild . '` IS NULL';
+        }
+
+        $bVariantsLostAfterRemovingGenomeBuild = $_DB->query($sSQL)->fetch()['COUNT(id)'] != 0;
+
+        if ($bVariantsLostAfterRemovingGenomeBuild) {
+            $sReason = 'not all variants that are mapped on this reference genome are safely mapped on a second build.';
+        }
+    }
+
+    // Throw error if any was found.
+    if ($sReason) {
+        lovd_showInfoTable('The genome build cannot be deactivated, since ' . $sReason, 'warning');
+        $_T->printFooter();
+        exit;
+    }
+
+
+    if (POST) {
+        lovd_errorClean();
+
+        // Check whether user has submitted and confirmed the form/action.
+        $bValidPassword = false;
+
+        if (empty($_POST['password'])) {
+            lovd_errorAdd('password', 'Please fill in the \'Enter your password for authorization\' field.');
+
+        } elseif (!lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+            lovd_errorAdd('password', 'Please enter your correct password for authorization.');
+
+        } else {
+            $bValidPassword = true;
+        }
+
+        // Remove password from default values shown in confirmation form.
+        unset($_POST['password']);
+
+        // Accept and realise removal of the genome build after passing the checks.
+        if ($bValidPassword) {
+            $sColumnSuffix = $sID;
+
+            // Remove genome build from database.
+            $_DB->query('DELETE FROM ' . TABLE_GENOME_BUILDS .
+                        ' WHERE id = "' . $sID . '"');
+
+            // Prepare an array to more easily remove the columns from the
+            //  VOG and transcripts tables.
+            $aTablesAndTheirColumns = array(
+                TABLE_VARIANTS => array(
+                    'VariantOnGenome/DNA/' . $sColumnSuffix,
+                    'position_g_start_' . $sColumnSuffix,
+                    'position_g_end_' . $sColumnSuffix,
+                ),
+                TABLE_TRANSCRIPTS => array(
+                    'position_g_mrna_start_' . $sColumnSuffix,
+                    'position_g_mrna_end_' . $sColumnSuffix,
+                ),
+            );
+
+            // Remove the columns to the VOG and Transcripts tables.
+            foreach ($aTablesAndTheirColumns as $sTable => $aTable) {
+                $aActiveColumns = $_DB->query('
+                    SELECT COLUMN_NAME
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = DATABASE()
+                      AND TABLE_NAME = ?
+                      AND COLUMN_NAME IN (' . implode(',', array_fill(0, count($aTable), '?')) . ')',
+                    array_merge(array($sTable), $aTable))->fetchAllColumn();
+
+                $bToRemove = false;
+                $sSQL = 'ALTER TABLE ' . $sTable;
+
+                foreach ($aTable as $sColumn) {
+                    if (in_array($sColumn, $aActiveColumns)) {
+                        $bToRemove = true;
+                        $sSQL .= ' DROP COLUMN `' . $sColumn . '`,';
+                    }
+                }
+
+                if ($bToRemove) {
+                    $_DB->query(rtrim($sSQL, ','));
+                }
+            }
+
+            // Deactivate custom DNA column.
+            $_DB->query('DELETE FROM ' . TABLE_ACTIVE_COLS .
+                ' WHERE colid = "VariantOnGenome/DNA/' . $sID . '"');
+
+
+            // Write to log...
+            lovd_writeLog('Event', LOG_EVENT, 'Removed Genome Build ' . $sID);
+
+            // Thank the user, and send them to the page of the currently active GBs.
+            header('Refresh: 5; url=' . lovd_getInstallURL() . 'genome_builds');
+
+            $_T->printHeader();
+            $_T->printTitle();
+            lovd_showInfoTable('Successfully removed the chosen genome build!', 'success');
+            $_T->printFooter();
+            exit;
+        }
+    }
+
+
+
+    $_T->printHeader();
+    $_T->printTitle();
+
+    $sName = $sID . ' / ' . $_SETT['human_builds'][$sID]['ncbi_name'];
+
+    lovd_showInfoTable('This will deactivate genome build ' . $sName . ' from your database.', 'warning');
+
+    lovd_errorPrint();
+
+    // Tooltip JS code.
+    lovd_includeJS('inc-js-tooltip.php');
+
+    // Table.
+    print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
+
+    $aForm = array(
+        array('POST', '', '', '', '45%', '14', '55%'),
+        array('Genome build to deactivate', '', 'print', $sName),
+        'skip',
+        array('Enter your password for authorization', '', 'password', 'password', 20),
+        array('', '', 'submit', 'Remove genome build'),
+    );
+    lovd_viewForm($aForm);
+
+    print('</FORM>' . "\n\n");
+    $_T->printFooter();
+    exit;
+}
+
 ?>
