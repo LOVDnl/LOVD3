@@ -206,9 +206,6 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
 
     lovd_errorPrint();
 
-    // Tooltip JS code.
-    lovd_includeJS('inc-js-tooltip.php');
-
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
@@ -288,8 +285,7 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
     } else {
         // Check to make sure that all variants are safely stored on the
         //  genome builds that will remain active.
-        $sSQL = 'SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE 1 = 1';
-
+        $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE 1 = 1';
         foreach(array_diff_key($aActiveBuilds, array($sID => '_')) as $sBuild => $sColumnSuffix) {
             $sColumnSuffix = (!$sColumnSuffix? '' : '/' . $sColumnSuffix);
             $sSQL .= ' AND (`VariantOnGenome/DNA' . $sColumnSuffix . '` IS NULL OR
@@ -325,26 +321,25 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
         // Accept and realise removal of the genome build after passing the checks.
         if (!lovd_error()) {
             // Remove genome build from database.
-            $_DB->query('DELETE FROM ' . TABLE_GENOME_BUILDS .
-                        ' WHERE id = ?', array($sID));
+            $_DB->query('DELETE FROM ' . TABLE_GENOME_BUILDS . ' WHERE id = ?', array($sID));
 
             // Prepare a slash and underscore only if needed.
             // The default genome build does not have a column suffix, so
             //  in this case we also do not want a slash and/or underscore.
-            $sSlash = (!$aActiveBuilds[$sID]? '' : '/');
-            $sUnderscore = (!$aActiveBuilds[$sID]? '' : '_');
+            $sSuffixWithSlash = (!$aActiveBuilds[$sID]? '' : '/' . $aActiveBuilds[$sID]);
+            $sSuffixWithUnderscore = (!$aActiveBuilds[$sID]? '' : '_' . $aActiveBuilds[$sID]);
 
             // Prepare an array to more easily remove the columns from the
             //  VOG and transcripts tables.
             $aTablesAndTheirColumns = array(
                 TABLE_VARIANTS => array(
-                    'VariantOnGenome/DNA' . $sSlash . $aActiveBuilds[$sID],
-                    'position_g_start' . $sUnderscore . $aActiveBuilds[$sID],
-                    'position_g_end' . $sUnderscore . $aActiveBuilds[$sID],
+                    'VariantOnGenome/DNA' . $sSuffixWithSlash,
+                    'position_g_start' . $sSuffixWithUnderscore,
+                    'position_g_end' . $sSuffixWithUnderscore,
                 ),
                 TABLE_TRANSCRIPTS => array(
-                    'position_g_mrna_start' . $sUnderscore . $aActiveBuilds[$sID],
-                    'position_g_mrna_end' . $sUnderscore . $aActiveBuilds[$sID],
+                    'position_g_mrna_start' . $sSuffixWithUnderscore,
+                    'position_g_mrna_end' . $sSuffixWithUnderscore,
                 ),
             );
 
@@ -374,9 +369,8 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
             }
 
             // Deactivate custom DNA column.
-            // TODO: Colsuffix / dependant
             $_DB->query('DELETE FROM ' . TABLE_ACTIVE_COLS .
-                ' WHERE colid = "VariantOnGenome/DNA' . $sSlash . $aActiveBuilds[$sID] . '"');
+                ' WHERE colid = "VariantOnGenome/DNA' . $sSuffixWithSlash . '"');
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Removed Genome Build ' . $sID);
@@ -407,9 +401,6 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
 
     lovd_errorPrint();
 
-    // Tooltip JS code.
-    lovd_includeJS('inc-js-tooltip.php');
-
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
@@ -426,5 +417,4 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
     $_T->printFooter();
     exit;
 }
-
 ?>
