@@ -367,7 +367,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                         array('', '', 'print', '<B>Genomic variant information</B>'),
                         'hr',
                         array('Allele', '', 'select', 'allele', 1, $aSelectAllele, false, false, false),
-                        array('', '', 'note', 'If you wish to report an homozygous variant, please select "Both (homozygous)" here.'),
+                        array('', '', 'note', 'If you wish to report a homozygous variant, please select "Both (homozygous)" here.'),
                         $aFormChromosome,
                       ),
                  $this->buildForm(),
