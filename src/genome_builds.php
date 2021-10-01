@@ -271,7 +271,7 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
 
     // Perform initial checks.
     $sReason = '';
-    $aActiveBuilds = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
+    $aActiveBuilds = $_DB->query('SELECT id, name, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllGroupAssoc();
 
     if (count($aActiveBuilds) < 2) {
         // Check to make sure there would be a genome build left after the removal.
@@ -285,8 +285,8 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
         // Check to make sure that all variants are safely stored on the
         //  genome builds that will remain active.
         $sSQL = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE 1 = 1';
-        foreach(array_diff_key($aActiveBuilds, array($sID => '_')) as $sBuild => $sColumnSuffix) {
-            $sColumnSuffix = (!$sColumnSuffix? '' : '/' . $sColumnSuffix);
+        foreach(array_diff_key($aActiveBuilds, array($sID => '_')) as $sBuild => $aBuild) {
+            $sColumnSuffix = (!$aBuild['column_suffix']? '' : '/' . $aBuild['column_suffix']);
             $sSQL .= ' AND (`VariantOnGenome/DNA' . $sColumnSuffix . '` IS NULL OR
                             `VariantOnGenome/DNA' . $sColumnSuffix . '` = "")';
         }
@@ -325,11 +325,10 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
             // Remove genome build from database.
             $_DB->query('DELETE FROM ' . TABLE_GENOME_BUILDS . ' WHERE id = ?', array($sID));
 
-            // Prepare a slash and underscore only if needed.
-            // The default genome build does not have a column suffix, so
-            //  in this case we also do not want a slash and/or underscore.
-            $sSuffixWithSlash = (!$aActiveBuilds[$sID]? '' : '/' . $aActiveBuilds[$sID]);
-            $sSuffixWithUnderscore = (!$aActiveBuilds[$sID]? '' : '_' . $aActiveBuilds[$sID]);
+            // Prepare the build's suffix. The suffix is sometimes separated
+            //  from the column name with an underscore and sometimes with a slash.
+            $sSuffixWithSlash = (!$aActiveBuilds[$sID]['column_suffix']? '' : '/' . $aActiveBuilds[$sID]['column_suffix']);
+            $sSuffixWithUnderscore = (!$aActiveBuilds[$sID]['column_suffix']? '' : '_' . $aActiveBuilds[$sID]['column_suffix']);
 
             // Prepare an array to more easily remove the columns from the
             //  VOG and transcripts tables.
@@ -397,9 +396,7 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
     $_T->printHeader();
     $_T->printTitle();
 
-    $sName = $sID . ' / ' . $_SETT['human_builds'][$sID]['ncbi_name'];
-
-    lovd_showInfoTable('This will deactivate genome build ' . $sName . ' from your database.', 'warning');
+    lovd_showInfoTable('This will deactivate genome build ' . $aActiveBuilds[$sID]['name'] . ' from your database.', 'warning');
 
     lovd_errorPrint();
 
@@ -408,7 +405,7 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
 
     $aForm = array(
         array('POST', '', '', '', '45%', '14', '55%'),
-        array('Genome build to deactivate', '', 'print', $sName),
+        array('Genome build to deactivate', '', 'print', $aActiveBuilds[$sID]['name']),
         'skip',
         array('Enter your password for authorization', '', 'password', 'password', 20),
         array('', '', 'submit', 'Remove genome build'),
