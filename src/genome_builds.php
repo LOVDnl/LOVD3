@@ -371,8 +371,8 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
             }
 
             // Deactivate custom DNA column.
-            $_DB->query('DELETE FROM ' . TABLE_ACTIVE_COLS .
-                ' WHERE colid = "VariantOnGenome/DNA' . $sSuffixWithSlash . '"');
+            $_DB->query('DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?',
+                array('VariantOnGenome/DNA' . $sSuffixWithSlash));
 
             // Write to log...
             lovd_writeLog('Event', LOG_EVENT, 'Removed Genome Build ' . $sID);
