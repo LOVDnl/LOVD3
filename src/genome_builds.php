@@ -277,7 +277,7 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
         // Check to make sure there would be a genome build left after the removal.
         $sReason = 'there must be at least one reference genome left after the removal.';
 
-    } elseif (!in_array($sID, $aActiveBuilds)) {
+    } elseif (!isset($aActiveBuilds[$sID])) {
         // Check whether the given ID is one of the active IDs in the database.
         $sReason = 'an invalid genome build was given.';
 
