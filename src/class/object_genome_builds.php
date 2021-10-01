@@ -70,8 +70,9 @@ class LOVD_GenomeBuild extends LOVD_Object
                 'id' => 'Genome build ID',
                 'name' => 'Genome build name',
                 'column_suffix' => 'Column suffix',
+                'percentage_complete' => 'Percentage complete',
                 'created_by_' => 'Created by',
-                'created_date_' => 'Date created'
+                'created_date_' => 'Date created',
             );
 
         // List of columns and (default?) order for viewing a list of entries.
@@ -115,6 +116,33 @@ class LOVD_GenomeBuild extends LOVD_Object
 
         if ($sView == 'list') {
             $zData['created_date_'] = substr($zData['created_date'], 0, 10);
+
+        } elseif ($sView == 'entry') {
+            global $_DB;
+
+            $sSlash = ($zData['column_suffix']) ? '/' : '';
+
+            $iPercentComplete = $_DB->query(
+                'SELECT (mapped_variants / all_variants) * 100 FROM
+                    (SELECT COUNT(id) AS mapped_variants FROM lovd_variants
+                     WHERE `VariantOnGenome/DNA' . $sSlash . $zData['column_suffix'] . '` IS NOT NULL) mv,
+                    (SELECT COUNT(id) AS all_variants FROM lovd_variants) v')->fetchAllColumn();
+
+            if ($iPercentComplete[0] == null) {
+                $iPercentComplete = 0;
+            }
+
+            $sCompletionBar = '' .
+                '      <TABLE border="0" cellpadding="0" cellspacing="0" width="200"' .
+                '        <TR>' .
+                '          <TD width="200" style="border : 1px solid black; padding : 0px;">' .
+                '            <IMG src="gfx/trans.png" alt="" width="' . $iPercentComplete . '%" height="11"' .
+                '             style="background : #224488;"></TD>' .
+                '          <TD id="lovd_progress_value" style="font-size:10px">' . $iPercentComplete . '%</TD>' .
+                '        </TR>' .
+                '      </TABLE>';
+
+            $zData['percentage_complete'] = $sCompletionBar;
         }
         return $zData;
     }
