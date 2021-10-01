@@ -242,9 +242,8 @@ if (PATH_COUNT == 2 && !ACTION) {
     $zData = $_DATA->viewEntry($sID);
 
     // Show the option to deactivate the genome build if there are more than one active.
-    $aAmountOfActiveGBs = count($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchAllColumn());
-
-    if ($aAmountOfActiveGBs > 1) {
+    $nAmountOfActiveGBs = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENOME_BUILDS)->fetchColumn();
+    if ($nAmountOfActiveGBs > 1) {
         $aNavigation = array(
             CURRENT_PATH . '?remove' => array('cross.png', 'Deactivate this genome build', 1),
         );
