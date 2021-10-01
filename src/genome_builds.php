@@ -291,16 +291,19 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
                             `VariantOnGenome/DNA' . $sColumnSuffix . '` = "")';
         }
 
-        $bVariantsLostAfterRemovingGenomeBuild = (bool) $_DB->query($sSQL)->fetchColumn();
-
-        if ($bVariantsLostAfterRemovingGenomeBuild) {
-            $sReason = 'not all variants that are mapped on this reference genome are safely mapped on a second build.';
+        $nVariantsLostAfterRemovingGenomeBuild = $_DB->query($sSQL)->fetchColumn();
+        if ($nVariantsLostAfterRemovingGenomeBuild > 0) {
+            $sReason = 'not all variants mapped on this reference genome are also mapped on another genome build.<BR>' .
+                'Therefore, removing this genome build will break ' . ($nVariantsLostAfterRemovingGenomeBuild == 1? 'this ' : 'these ') .
+                 $nVariantsLostAfterRemovingGenomeBuild . ' variant' . ($nVariantsLostAfterRemovingGenomeBuild == 1? '' : 's') .
+                ' as they will no longer have a genomic DNA description.<BR>' .
+                'Make sure all variants are mapped to at least one other genome build.';
         }
     }
 
     // Throw error if any was found.
     if ($sReason) {
-        lovd_showInfoTable('The genome build cannot be deactivated, since ' . $sReason, 'warning');
+        lovd_showInfoTable('The genome build cannot be deactivated since ' . $sReason, 'warning');
         $_T->printFooter();
         exit;
     }
