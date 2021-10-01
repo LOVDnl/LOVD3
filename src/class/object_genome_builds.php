@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-09-21
- * Modified    : 2021-09-23
- * For LOVD    : 3.5-pre-01
+ * Modified    : 2021-10-01
+ * For LOVD    : 3.5-pre-02
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -70,7 +70,7 @@ class LOVD_GenomeBuild extends LOVD_Object
                 'id' => 'Genome build ID',
                 'name' => 'Genome build name',
                 'column_suffix' => 'Column suffix',
-                'percentage_complete' => 'Percentage complete',
+                'percentage_mapped' => 'Variants mapped on this build',
                 'created_by_' => 'Created by',
                 'created_date_' => 'Date created',
             );
@@ -106,6 +106,7 @@ class LOVD_GenomeBuild extends LOVD_Object
     function prepareData ($zData = '', $sView = 'list')
     {
         // Prepares the data by "enriching" the variable received with links, pictures, etc.
+        global $_DB;
 
         if (!in_array($sView, array('list', 'entry'))) {
             $sView = 'list';
@@ -118,31 +119,24 @@ class LOVD_GenomeBuild extends LOVD_Object
             $zData['created_date_'] = substr($zData['created_date'], 0, 10);
 
         } elseif ($sView == 'entry') {
-            global $_DB;
+            // Check how many variants have been mapped to this genome build, to show its "completeness".
+            $sDNAColumn = 'VariantOnGenome/DNA' . (!$zData['column_suffix']? '' : '/') . $zData['column_suffix'];
+            $nPercentComplete = (int) $_DB->query(
+                'SELECT ROUND(
+                   (SELECT COUNT(*) FROM ' . TABLE_VARIANTS. '
+                    WHERE `' . $sDNAColumn . '` IS NOT NULL AND
+                      `' . $sDNAColumn . '` != "") / (
+                    SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ') * 100)')->fetchColumn();
 
-            $sSlash = ($zData['column_suffix']) ? '/' : '';
-
-            $iPercentComplete = $_DB->query(
-                'SELECT (mapped_variants / all_variants) * 100 FROM
-                    (SELECT COUNT(id) AS mapped_variants FROM lovd_variants
-                     WHERE `VariantOnGenome/DNA' . $sSlash . $zData['column_suffix'] . '` IS NOT NULL) mv,
-                    (SELECT COUNT(id) AS all_variants FROM lovd_variants) v')->fetchAllColumn()[0];
-
-            if ($iPercentComplete == null) {
-                $iPercentComplete = 0;
-            }
-
-            $sCompletionBar = '' .
-                '      <TABLE border="0" cellpadding="0" cellspacing="0" width="200"' .
+            $zData['percentage_mapped'] =
+                '      <TABLE border="0" cellpadding="0" cellspacing="0" width="200">' .
                 '        <TR>' .
-                '          <TD width="200" style="border : 1px solid black; padding : 0px; height=10px">' .
-                '            <IMG src="gfx/trans.png" alt="" width="' . $iPercentComplete . '%" height="11"' .
-                '             style="background : #224488;"></TD>' .
-                '          <TD id="lovd_progress_value" style="font-size:11px">' . round($iPercentComplete) . '%</TD>' .
+                '          <TD width="200" style="border : 1px solid black; padding : 0px; height : 10px">' .
+                '            <IMG src="gfx/trans.png" alt="" width="' . $nPercentComplete .
+                              '%" height="11" style="background : #224488;"></TD>' .
+                '          <TD style="font-size : 11px">' . $nPercentComplete . '%</TD>' .
                 '        </TR>' .
                 '      </TABLE>';
-
-            $zData['percentage_complete'] = $sCompletionBar;
         }
         return $zData;
     }
