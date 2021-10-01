@@ -4,14 +4,15 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2020-07-23
- * For LOVD    : 3.0-25
+ * Modified    : 2020-10-01
+ * For LOVD    : 3.5-pre-02
  *
  * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -32,7 +33,7 @@
  *************/
 
 header('Content-type: text/javascript; charset=UTF-8');
-header('Expires: ' . date('r', time()+(180*60)));
+// header('Expires: ' . date('r', time()+(180*60)));
 
 define('AJAX_FALSE', '0');
 define('AJAX_TRUE', '1');
@@ -179,6 +180,19 @@ function lovd_convertPosition (oElement)
     // Function that can map a variant to other transcripts or the genome.
 
     var oThisDNA = $(oElement).siblings('input:first');
+    var oVariantSource = $('input[name$="source"]');
+    if (oVariantSource.val() == "") {
+        var sSource = "";
+        alert(oThisDNA.attr("name"));
+        alert(oThisDNA.attr("name").indexOf("VariantOnTranscript"));
+        if (oThisDNA.attr("name").indexOf("VariantOnTranscript") >= 0) {
+            sSource = "VOT";
+        } else {
+            pos = oThisDNA.attr("name").lastIndexOf("/");
+            sSource = oThisDNA.attr("name").substr(pos + 1);
+        }
+        oVariantSource.val(sSource);
+    }
     var oAllDNA = $('input[name$="_VariantOnTranscript/DNA"]');
     $(oAllDNA).removeClass().siblings('img:first').attr({
         src: 'gfx/trans.png',
