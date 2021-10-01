@@ -135,10 +135,10 @@ class LOVD_GenomeBuild extends LOVD_Object
             $sCompletionBar = '' .
                 '      <TABLE border="0" cellpadding="0" cellspacing="0" width="200"' .
                 '        <TR>' .
-                '          <TD width="200" style="border : 1px solid black; padding : 0px;">' .
+                '          <TD width="200" style="border : 1px solid black; padding : 0px; height=10px">' .
                 '            <IMG src="gfx/trans.png" alt="" width="' . $iPercentComplete . '%" height="11"' .
                 '             style="background : #224488;"></TD>' .
-                '          <TD id="lovd_progress_value" style="font-size:10px">' . $iPercentComplete . '%</TD>' .
+                '          <TD id="lovd_progress_value" style="font-size:11px">' . $iPercentComplete . '%</TD>' .
                 '        </TR>' .
                 '      </TABLE>';
 
