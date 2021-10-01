@@ -126,9 +126,9 @@ class LOVD_GenomeBuild extends LOVD_Object
                 'SELECT (mapped_variants / all_variants) * 100 FROM
                     (SELECT COUNT(id) AS mapped_variants FROM lovd_variants
                      WHERE `VariantOnGenome/DNA' . $sSlash . $zData['column_suffix'] . '` IS NOT NULL) mv,
-                    (SELECT COUNT(id) AS all_variants FROM lovd_variants) v')->fetchAllColumn();
+                    (SELECT COUNT(id) AS all_variants FROM lovd_variants) v')->fetchAllColumn()[0];
 
-            if ($iPercentComplete[0] == null) {
+            if ($iPercentComplete == null) {
                 $iPercentComplete = 0;
             }
 
@@ -138,7 +138,7 @@ class LOVD_GenomeBuild extends LOVD_Object
                 '          <TD width="200" style="border : 1px solid black; padding : 0px; height=10px">' .
                 '            <IMG src="gfx/trans.png" alt="" width="' . $iPercentComplete . '%" height="11"' .
                 '             style="background : #224488;"></TD>' .
-                '          <TD id="lovd_progress_value" style="font-size:11px">' . $iPercentComplete . '%</TD>' .
+                '          <TD id="lovd_progress_value" style="font-size:11px">' . round($iPercentComplete) . '%</TD>' .
                 '        </TR>' .
                 '      </TABLE>';
 
