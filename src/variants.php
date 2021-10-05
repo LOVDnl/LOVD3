@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2021-08-13
- * For LOVD    : 3.0-27
+ * Modified    : 2021-10-05
+ * For LOVD    : 3.5-pre-03
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -14,6 +14,7 @@
  *               Zuotian Tatum <Z.Tatum@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -805,7 +806,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'effectid', 'chromosome', 'position_g_start', 'type', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'created_date'),
+                                array('allele', 'effectid', 'chromosome', 'position_g_start', 'type', 'source', 'position_g_end', 'owned_by', 'statusid', 'created_by', 'created_date'),
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
@@ -821,6 +822,29 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_POST['position_g_start'] = 0;
                 $_POST['position_g_end'] = 0;
                 $_POST['type'] = NULL;
+            }
+
+            // Add the source of the variant if a source can be found.
+            if (empty($_POST['source'])) {
+                // If nothing is given, the source is set to null, meaning that the source is unknown.
+                unset($aFieldsGenome[array_search('source', $aFieldsGenome)]);
+
+            } elseif ($_POST['source'] == 'VOT') {
+                // If the source is a transcript, we describe it with an empty string.
+                $_POST['source'] = '';
+
+            } else {
+                // If the source of the variant is not a transcript, it is a genome build.
+                //  We will then send the ID of this genome build to the database.
+                // We have received the last piece of the field used, which may
+                //  be a genome build (from VOG/DNA/hg38) or "DNA" (from VOG/DNA).
+                $sColumnSuffix = ($_POST['source'] == 'DNA'? '' : $_POST['source']);
+
+                // Get the ID by its column suffix and give this as the source.
+                $sID = $_DB->query(
+                    'SELECT id FROM ' . TABLE_GENOME_BUILDS . '
+                     WHERE column_suffix = ?', array($sColumnSuffix))->fetchColumn();
+                $_POST['source'] = $sID;
             }
 
             $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
@@ -932,7 +956,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     lovd_includeJS('inc-js-custom_links.php');
 
     // Table.
-    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?create&amp;reference=' . $_GET['reference'] . (isset($sGene)? '&amp;geneid=' . rawurlencode($sGene) : '') . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n");
+    print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?create&amp;reference=' . $_GET['reference'] . (isset($sGene)? '&amp;geneid=' . rawurlencode($sGene) : '') . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n" .
+          '        <INPUT name="source" type="hidden" value="' . (empty($_POST['source'])? '' : $_POST['source']) . '"> ' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

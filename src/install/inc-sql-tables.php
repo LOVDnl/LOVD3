@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-22
- * Modified    : 2021-04-22
- * For LOVD    : 3.0-27
+ * Modified    : 2021-10-01
+ * For LOVD    : 3.5-pre-02
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -351,6 +352,7 @@ $aTableSQL =
     position_g_start INT(10) UNSIGNED,
     position_g_end INT(10) UNSIGNED,
     type VARCHAR(10),
+    source VARCHAR(4),
     mapping_flags TINYINT(3) UNSIGNED NOT NULL DEFAULT 0,
     average_frequency FLOAT,
     owned_by SMALLINT(5) UNSIGNED ZEROFILL,
