@@ -835,9 +835,9 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  ),
                  '3.5-pre-03' => array(
                      'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN source VARCHAR(4) AFTER type',
-                     'UPDATE ' . TABLE_VARIANTS . ' AS vog' .
-                     ' SET source = (SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE column_suffix = "")' .
-                     ' WHERE vog.id NOT IN (SELECT id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ')',
+                     'UPDATE ' . TABLE_VARIANTS . ' AS vog
+                        SET source = (SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE column_suffix = "")
+                      WHERE vog.id NOT IN (SELECT id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ')',
                  ),
              );
 

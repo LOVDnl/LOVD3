@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2021-10-01
- * For LOVD    : 3.5-pre-02
+ * Modified    : 2021-10-05
+ * For LOVD    : 3.5-pre-03
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -836,12 +836,14 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             } else {
                 // If the source of the variant is not a transcript, it is a genome build.
                 //  We will then send the ID of this genome build to the database.
+                // We have received the last piece of the field used, which may
+                //  be a genome build (from VOG/DNA/hg38) or "DNA" (from VOG/DNA).
                 $sColumnSuffix = ($_POST['source'] == 'DNA'? '' : $_POST['source']);
 
                 // Get the ID by its column suffix and give this as the source.
                 $sID = $_DB->query(
-                    'SELECT id FROM ' . TABLE_GENOME_BUILDS .
-                    'WHERE column_suffix = ?', array($sColumnSuffix))->fetchColumn();
+                    'SELECT id FROM ' . TABLE_GENOME_BUILDS . '
+                     WHERE column_suffix = ?', array($sColumnSuffix))->fetchColumn();
                 $_POST['source'] = $sID;
             }
 
