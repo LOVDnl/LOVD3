@@ -183,8 +183,6 @@ function lovd_convertPosition (oElement)
     var oVariantSource = $('input[name$="source"]');
     if (oVariantSource.val() == "") {
         var sSource = "";
-        alert(oThisDNA.attr("name"));
-        alert(oThisDNA.attr("name").indexOf("VariantOnTranscript"));
         if (oThisDNA.attr("name").indexOf("VariantOnTranscript") >= 0) {
             sSource = "VOT";
         } else {

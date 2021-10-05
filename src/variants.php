@@ -830,17 +830,13 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 unset($aFieldsGenome[array_search('source', $aFieldsGenome)]);
 
             } elseif ($_POST['source'] == 'VOT') {
-                // If the source is not a genome, but there is something given, we know it is a transcript.
-                // A transcript is described by adding an empty string as the source of the variant.
+                // If the source is a transcript, we describe it with an empty string.
                 $_POST['source'] = '';
 
             } else {
                 // If the source of the variant is not a transcript, it is a genome build.
                 //  We will then send the ID of this genome build to the database.
-                $sColumnSuffix = substr(strrchr($_POST['source'], '/'), 1);
-                if ($sColumnSuffix == 'DNA') {
-                    $sColumnSuffix = '';
-                }
+                $sColumnSuffix = ($_POST['source'] == 'DNA'? '' : $_POST['source']);
 
                 // Get the ID by its column suffix and give this as the source.
                 $sID = $_DB->query(

@@ -834,12 +834,10 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                               $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '", 0, NOW())',
                  ),
                  '3.5-pre-03' => array(
-                     'ALTER TABLE ' . TABLE_VARIANTS .
-                     'ADD COLUMN source VARCHAR(4) ',
-                     'UPDATE ' . TABLE_VARIANTS . 'AS v' .
-                     ' SET source = (SELECT id FROM ' . TABLE_GENOME_BUILDS .
-                                    ' WHERE column_suffix = "")' .
-                     ' WHERE v.id NOT IN (SELECT id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ')',
+                     'ALTER TABLE ' . TABLE_VARIANTS . ' ADD COLUMN source VARCHAR(4) AFTER type',
+                     'UPDATE ' . TABLE_VARIANTS . ' AS vog' .
+                     ' SET source = (SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE column_suffix = "")' .
+                     ' WHERE vog.id NOT IN (SELECT id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ')',
                  ),
              );
 
