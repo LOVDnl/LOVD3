@@ -833,6 +833,14 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                       VALUES ("' . $_CONF['refseq_build'] . '", "' . $_CONF['refseq_build'] . ' / ' .
                               $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '", 0, NOW())',
                  ),
+                 '3.5-pre-03' => array(
+                     'ALTER TABLE ' . TABLE_VARIANTS .
+                     'ADD COLUMN source VARCHAR(4) ',
+                     'UPDATE ' . TABLE_VARIANTS . 'AS v' .
+                     ' SET source = (SELECT id FROM ' . TABLE_GENOME_BUILDS .
+                                    ' WHERE column_suffix = "")' .
+                     ' WHERE v.id NOT IN (SELECT id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ')',
+                 ),
              );
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-01')) {

@@ -33,7 +33,7 @@
  *************/
 
 header('Content-type: text/javascript; charset=UTF-8');
-// header('Expires: ' . date('r', time()+(180*60)));
+header('Expires: ' . date('r', time()+(180*60)));
 
 define('AJAX_FALSE', '0');
 define('AJAX_TRUE', '1');
