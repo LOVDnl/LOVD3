@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2021-03-31
- * For LOVD    : 3.0-27
+ * Modified    : 2021-10-06
+ * For LOVD    : 3.5-pre-03
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -209,6 +209,11 @@ print('          </TD>' . "\n" .
 
 $aItems =
     array(
+        'Genome builds' =>
+            array(
+                array('genome_builds?add', 'lovd_genome_builds_add.png', 'Add a new genome build', 'Add a new genome build.'),
+                array('genome_builds', 'lovd_genome_builds.png', 'View all enabled genome builds', 'View all enabled genome builds.'),
+            ),
         'Gene panels' =>
             array(
                 array('gene_panels?create', 'lovd_genes_create.png', 'Create new gene panel', 'Create a new gene panel.'),
