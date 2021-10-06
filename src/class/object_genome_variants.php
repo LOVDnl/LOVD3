@@ -352,8 +352,11 @@ class LOVD_GenomeVariant extends LOVD_Custom
         }
 
         // Add genome build name to VOG/DNA field.
-        $this->aColumns['VariantOnGenome/DNA']['description_form'] = '<B>Relative to ' . $_CONF['refseq_build'] . ' / ' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '.</B>' .
-            (!$this->aColumns['VariantOnGenome/DNA']['description_form']? '' : '<BR>' . $this->aColumns['VariantOnGenome/DNA']['description_form']);
+        $aActiveBuilds = $_DB->query('SELECT id, name, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllGroupAssoc();
+        foreach($aActiveBuilds as $sBuild => $aBuild) {
+            $sSuffixWithSlash = (!$aBuild['column_suffix']? '' : '/' . $aBuild['column_suffix']);
+            $this->aColumns['VariantOnGenome/DNA' . $sSuffixWithSlash]['description_form'] = '<B>Relative to ' . $aBuild['name'] . '.</B>';
+        }
 
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
         // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.
