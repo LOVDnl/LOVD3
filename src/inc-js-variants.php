@@ -33,7 +33,7 @@
  *************/
 
 header('Content-type: text/javascript; charset=UTF-8');
-header('Expires: ' . date('r', time()+(180*60)));
+// header('Expires: ' . date('r', time()+(180*60))); TODO: Weer aanzetten voor je commit!
 
 define('AJAX_FALSE', '0');
 define('AJAX_TRUE', '1');
@@ -44,6 +44,7 @@ define('AJAX_DATA_ERROR', '9');
 
 $_SETT = array('objectid_length' => array('transcripts' => 8));
 ?>
+
 
 function lovd_checkHGVS (e)
 {
@@ -186,8 +187,9 @@ function lovd_convertPosition (oElement)
         if (oThisDNA.attr("name").indexOf("VariantOnTranscript") >= 0) {
             sSource = "VOT";
         } else {
-            pos = oThisDNA.attr("name").lastIndexOf("/");
-            sSource = oThisDNA.attr("name").substr(pos + 1);
+            sSource = oThisDNA.data('genomeBuild');
+            // pos = oThisDNA.attr("name").lastIndexOf("/");
+            // sSource = oThisDNA.attr("name").substr(pos + 1);
         }
         oVariantSource.val(sSource);
     }
