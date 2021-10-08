@@ -1011,8 +1011,8 @@ function lovd_viewForm ($a,
                     $GLOBALS['_' . $sMethod][$sName] = '';
                 }
 
-                // When element data is given, it will be added into the HTML code in a 'data-...' format,
-                //  so that HTML recognises it. This way, JavaScript can see and use this data.
+                // When $aElementData is given, it will be added into the HTML code in a 'data-...' format,
+                //  so that jQuery can easily extract it and use it.
                 array_walk($aElementData, function (&$sVal, $sKey) {
                     $sVal = 'data-' . str_replace('_', '-', $sKey) . '="' . htmlspecialchars($sVal) . '"';
                 });
