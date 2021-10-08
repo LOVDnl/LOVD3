@@ -340,11 +340,11 @@ class LOVD_GenomeVariant extends LOVD_Custom
         // Add genome build name and element data to VOG/DNA fields, and add in the link to the HGVS website.
         $aActiveBuilds = $_DB->query('SELECT id, name, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllGroupAssoc();
         foreach ($aActiveBuilds as $sBuild => $aBuild) {
-            $sSuffixWithSlash = (!$aBuild['column_suffix']? '' : '/' . $aBuild['column_suffix']);
-            $this->aColumns['VariantOnGenome/DNA' . $sSuffixWithSlash]['description_form'] = '<B>Relative to ' . $aBuild['name'] . '.</B>' .
-                (!$this->aColumns['VariantOnGenome/DNA' . $sSuffixWithSlash]['description_form']? '' : '<BR>' . $this->aColumns['VariantOnGenome/DNA' . $sSuffixWithSlash]['description_form']);
-            $this->aColumns['VariantOnGenome/DNA' . $sSuffixWithSlash]['element_data'] = array('genome_build' => $sBuild);
-            $this->aColumns['VariantOnGenome/DNA' . $sSuffixWithSlash]['form_type'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $this->aColumns['VariantOnGenome/DNA' . $sSuffixWithSlash]['form_type'][0]);
+            $sColumn = 'VariantOnGenome/DNA' . (!$aBuild['column_suffix']? '' : '/' . $aBuild['column_suffix']);
+            $this->aColumns[$sColumn]['description_form'] = '<B>Relative to ' . $aBuild['name'] . '.</B>' .
+                (!$this->aColumns[$sColumn]['description_form']? '' : '<BR>' . $this->aColumns[$sColumn]['description_form']);
+            $this->aColumns[$sColumn]['element_data'] = array('genome_build' => $sBuild);
+            $this->aColumns[$sColumn]['form_type'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $this->aColumns[$sColumn]['form_type'][0]);
         }
 
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
