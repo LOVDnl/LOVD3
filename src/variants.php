@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2021-09-22
+ * Modified    : 2021-10-12
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2679,7 +2679,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     $_T->printTitle();
 
     // If we're not the creator nor the owner, warn.
-    if ($_POST['created_by'] != $_AUTH['id'] && $_POST['owned_by'] != $_AUTH['id']) {
+    if ($zData['created_by'] != $_AUTH['id'] && $zData['owned_by'] != $_AUTH['id']) {
         lovd_showInfoTable('Warning: You are editing data not created or owned by you. You are free to correct errors such as data inserted into the wrong field or typographical errors, but make sure that all other edits are made in consultation with the submitter. If you disagree with the submitter\'s findings, add a remark rather than removing or overwriting data. In particular, do not overwrite the submitter\'s reported variant effect if you disagree, rather add your own variant effect.', 'warning', 760);
     }
 

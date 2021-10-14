@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2021-09-22
+ * Modified    : 2021-10-14
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -699,7 +699,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
               '    </TD>' . "\n" .
               '    <TD valign="top" align="right" style="padding-right : 5px; padding-top : 2px; white-space: nowrap; padding-left: 20px;">' . "\n" .
               '      LOVD v.' . $_STAT['tree'] . ' Build ' . $_STAT['build'] .
-              (!defined('NOT_INSTALLED')? ' [ <A href="status">Current LOVD status</A> ]' : '') .
+              (defined('NOT_INSTALLED') || empty($_SETT['customization_settings']['graphs_enable'])? '' : ' [ <A href="status">Current LOVD status</A> ]') .
               '<BR>' . "\n");
         if (!(defined('NOT_INSTALLED') || (ROOT_PATH == '../' && substr(lovd_getProjectFile(), 0, 9) == '/install/'))) {
             if ($_AUTH) {
