@@ -45,6 +45,28 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     }
 
 
+
+
+
+    /**
+     * @dataProvider dataProviderGetVariantInfo
+     */
+    public function testGetVariantInfoHGVS ($sInput, $aOutput)
+    {
+        // Test lovd_getVariantInfo with data from
+        // dataProviderGetVariantInfo(), but only as an HGVS check.
+        if (empty($aOutput['warnings']) || array_keys($aOutput['warnings']) == array('WPOSITIONSLIMIT')) {
+            $bHGVS = true;
+        } else {
+            $bHGVS = false;
+        }
+        $this->assertEquals($bHGVS, lovd_getVariantInfo($sInput, false, true));
+    }
+
+
+
+
+
     public static function dataProviderGetVariantInfo ()
     {
         // Data provider for testGetVariantInfo().
