@@ -106,6 +106,12 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
             )),
+            array('g.(112043201_?)_(?_112181937)insAAA', array(
+                'position_start' => 112043201,
+                'position_end' => 112181937,
+                'type' => 'ins',
+                'warnings' => array(),
+            )),
             array('g.(100_200)_(400_500)del', array(
                 'position_start' => 150,
                 'position_end' => 450,
@@ -118,13 +124,31 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
             )),
+            array('g.?_(400_500)del', array(
+                'position_start' => 0,
+                'position_end' => 450,
+                'type' => 'del',
+                'warnings' => array(),
+            )),
             array('g.(100_200)_500del', array(
                 'position_start' => 150,
                 'position_end' => 500,
                 'type' => 'del',
                 'warnings' => array(),
             )),
+            array('g.(100_200)_?del', array(
+                'position_start' => 150,
+                'position_end' => 4294967295,
+                'type' => 'del',
+                'warnings' => array(),
+            )),
             array('g.100612527_100612529delinsAA', array(
+                'position_start' => 100612527,
+                'position_end' => 100612529,
+                'type' => 'delins',
+                'warnings' => array(),
+            )),
+            array('g.(100612527_100612529delinsAA)', array(
                 'position_start' => 100612527,
                 'position_end' => 100612529,
                 'type' => 'delins',
@@ -156,6 +180,39 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: position_start, position_end.',
                 ),
             )),
+            array('c.=', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => NULL,
+                'warnings' => array(),
+            )),
+            array('c.?', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => NULL,
+                'warnings' => array(),
+            )),
+            array('g.1delA', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSEQUENCEGIVEN' => 'Variant sequence given (e.g., delA instead of del) where none should be used.',
+                ),
+            )),
+            array('g.1insA', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WINVALIDHGVS' => 'This is not a valid HGVS variant description.'
+                ),
+            )),
         );
     }
 }
+?>
