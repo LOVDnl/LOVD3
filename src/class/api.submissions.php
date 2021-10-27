@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-10-26
+ * Modified    : 2021-10-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -516,6 +516,12 @@ class LOVD_API_Submissions
                             $aClassificationMethods = explode("\r\n", $sClassificationMethods);
                             // Isolate only the option values.
                             $aClassificationMethods = preg_replace('/\s*(=.*)?$/', '', $aClassificationMethods);
+                        }
+
+                        // Load the method from the source, if given.
+                        if (isset($aVariant['pathogenicity'][0]['@source'])
+                            && in_array($aVariant['pathogenicity'][0]['@source'], $aClassificationMethods)) {
+                            $aVOG['VariantOnGenome/ClinicalClassification/Method'] = $aVariant['pathogenicity'][0]['@source'];
                         }
                     }
                 }
