@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-01-07
- * For LOVD    : 3.0-26
+ * Modified    : 2021-10-27
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -509,6 +509,20 @@ class LOVD_API_Submissions
                     // Activate the method, too.
                     if ($this->addColumn('VariantOnGenome/ClinicalClassification/Method')) {
                         $aVOG['VariantOnGenome/ClinicalClassification/Method'] = '';
+
+                        if (!isset($aClassificationMethods)) {
+                            $sClassificationMethods = $_DB->query('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?',
+                                array('VariantOnGenome/ClinicalClassification/Method'))->fetchColumn();
+                            $aClassificationMethods = explode("\r\n", $sClassificationMethods);
+                            // Isolate only the option values.
+                            $aClassificationMethods = preg_replace('/\s*(=.*)?$/', '', $aClassificationMethods);
+                        }
+
+                        // Load the method from the source, if given.
+                        if (isset($aVariant['pathogenicity'][0]['@source'])
+                            && in_array($aVariant['pathogenicity'][0]['@source'], $aClassificationMethods)) {
+                            $aVOG['VariantOnGenome/ClinicalClassification/Method'] = $aVariant['pathogenicity'][0]['@source'];
+                        }
                     }
                 }
 
@@ -546,14 +560,6 @@ class LOVD_API_Submissions
                                     // Isolate first word.
                                     if (preg_match('/^([A-Za-z-]+)/', $sEntry, $aRegs)) {
                                         $sWord = $aRegs[1];
-
-                                        if (!isset($aClassificationMethods)) {
-                                            $sClassificationMethods = $_DB->query('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?',
-                                                array('VariantOnGenome/ClinicalClassification/Method'))->fetchColumn();
-                                            $aClassificationMethods = explode("\r\n", $sClassificationMethods);
-                                            // Isolate only the option values.
-                                            $aClassificationMethods = preg_replace('/\s*(=.*)?$/', '', $aClassificationMethods);
-                                        }
 
                                         if (in_array($sWord, $aClassificationMethods)) {
                                             $aVOG['VariantOnGenome/ClinicalClassification/Method'] = $sWord;
