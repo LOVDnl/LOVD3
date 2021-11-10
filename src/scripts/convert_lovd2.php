@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2021-09-24
+ * Modified    : 2021-11-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2014-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -556,7 +556,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
     // Walk through lines until header is found, then parse the header.
     foreach ($aData as $i => $sLine) {
         $sLine = trim($sLine);
-        if (empty($sLine) || $sLine{0} == '#') {
+        if (empty($sLine) || $sLine[0] == '#') {
             // Ignore blank lines and comments.
             continue;
         }
@@ -926,7 +926,7 @@ function lovd_parseData ($aData, $zTranscript, $aFieldLinks, $aInputHeaders, $aO
         $oProgressBar->setMessage('Converting record ' . strval($nCounter) . ' of ' .
             strval($nNumLines) . '...');
 
-        if (empty($sLine) || $sLine{0} == '#' || preg_match('/^"?{{.*/', $sLine)) {
+        if (empty($sLine) || $sLine[0] == '#' || preg_match('/^"?{{.*/', $sLine)) {
             // Ignore blank lines, comments and the header line.
             continue;
         }

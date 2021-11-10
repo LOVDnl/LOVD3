@@ -4,16 +4,16 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-09-28 (based on Reading Frame Checker 1.9/2009-03-03)
- * Modified    : 2019-07-25
+ * Modified    : 2021-11-10
  * Version     : 1.4
- * For LOVD    : 3.0-22
+ * For LOVD    : 3.0-28
  *
  * Access      : Public
  * Purpose     : Provide information on effect of whole-exon changes of a gene,
  *               based on the gene structure table, created by the Reference
  *               Sequence Parser.
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -140,7 +140,7 @@ if (is_readable($sFilePath)) {
                             $nStart = 0; // For easier calculation of "End - Start".
                         }
                     }
-                    if (!$nStopExon && $nEnd{0} == '*') {
+                    if (!$nStopExon && $nEnd[0] == '*') {
                         $nStopExon = $nExon;
                     }
                     $aReadingFrame[$nExon] = ($aReadingFrame[$nExon - 1] + $nLength)%3;
