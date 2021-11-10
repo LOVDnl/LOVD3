@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-10-27
+ * Modified    : 2021-11-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -308,7 +308,7 @@ class LOVD_API_Submissions
         if (is_array($aInput)) {
             foreach ($aInput as $sKey => $Value) {
                 // Attributes or text values can never be repeated, so check only possible arrays.
-                if ($sKey{0} != '@' && $sKey{0} != '#') {
+                if ($sKey[0] != '@' && $sKey[0] != '#') {
                     // Check if this key is listed as one that can be repeated.
                     if (in_array((string) $sKey, $this->aRepeatableElements['varioml'])) {
                         // This element can be repeated. Make sure it's a proper array of values.
@@ -977,7 +977,7 @@ class LOVD_API_Submissions
         $sInputClean = trim(preg_replace('/\/\*.+\*\//Us', '', $sInput));
 
         // Then, check the first character. Should be an '{'.
-        if ($sInputClean{0} != '{') {
+        if ($sInputClean[0] != '{') {
             // Can't be JSON...
             $this->API->aResponse['errors'][] = 'Unsupported media type. Expecting: application/json.';
             $this->API->nHTTPStatus = 415; // Send 415 Unsupported Media Type.

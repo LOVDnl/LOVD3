@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2021-09-27
+ * Modified    : 2021-11-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -413,13 +413,13 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectConcluded = false;
-            $nVOGEffectConcluded = intval($zData['effectid']{1});
+            $nVOGEffectConcluded = intval($zData['effectid'][1]);
             if ($nVOGEffectConcluded === 0) {
                 // Set to "Not classified", we'll fill it in.
                 $bHideEffectConcluded = true;
             } else {
                 $nMaxEffectReported = max(array_map(function ($sEffectID) {
-                    return intval($sEffectID{1});
+                    return intval($sEffectID[1]);
                 }, $aTranscriptEffects));
                 if ($nVOGEffectConcluded == $nMaxEffectReported) {
                     $bHideEffectConcluded = true;
@@ -442,13 +442,13 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectReported = false;
-            $nVOGEffectReported = intval($zData['effectid']{0});
+            $nVOGEffectReported = intval($zData['effectid'][0]);
             if ($nVOGEffectReported === 0) {
                 // Set to "Not classified", we'll fill it in.
                 $bHideEffectReported = true;
             } else {
                 $nMaxEffectReported = max(array_map(function ($sEffectID) {
-                    return intval($sEffectID{0});
+                    return intval($sEffectID[0]);
                 }, $aTranscriptEffects));
                 if ($nVOGEffectReported == $nMaxEffectReported) {
                     $bHideEffectReported = true;
@@ -497,8 +497,8 @@ class LOVD_GenomeVariant extends LOVD_Custom
             if (empty($zData['individualid_'])) {
                 unset($this->aColumnsViewEntry['individualid_']);
             }
-            $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
-            $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
+            $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid'][0]];
+            $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid'][1]];
 
             if (!empty($zData['VariantOnGenome/DBID'])) {
                 // Allow linking to view of all these variants.
