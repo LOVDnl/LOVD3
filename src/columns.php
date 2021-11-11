@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2020-11-24
- * For LOVD    : 3.0-26
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -385,7 +385,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
         }
 
         // Check regexp syntax.
-        if (!empty($_POST['preg_pattern']) && ($_POST['preg_pattern']{0} != '/' || @preg_match($_POST['preg_pattern'], '') === false)) {
+        if (!empty($_POST['preg_pattern']) && ($_POST['preg_pattern'][0] != '/' || @preg_match($_POST['preg_pattern'], '') === false)) {
             lovd_errorAdd('preg_pattern', 'The \'Regular expression pattern\' field does not seem to contain valid PHP Perl compatible regexp syntax.');
         }
 

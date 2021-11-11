@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2020-03-31
- * For LOVD    : 3.0-22
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -510,7 +510,7 @@ if ($_GET['step'] == 2) {
             $_POST['gene'] = $_DB->query('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
 
             for ($i = 0; $i < strlen($sSeq); $i ++) {
-                $s = $sSeq{$i};
+                $s = $sSeq[$i];
                 // We will need to loop through the sequence to provided detailed error messages.
                 // up and downstream are first considered introns (first and last elements of the
                 // intron array $aIntron)
@@ -1265,7 +1265,7 @@ if ($_GET['step'] == 3) {
             $_POST['gene'] = $_DB->query('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
 
             for ($i = 0; $i < strlen($sSeq); $i ++) {
-                $s = $sSeq{$i};
+                $s = $sSeq[$i];
                 // We will need to loop through the sequence to provided detailed error messages
                 if (!$started) {
                     // We are still before the translation
@@ -1762,7 +1762,7 @@ if ($_GET['step'] == 3) {
                         $sPrntFinl .= $c_prnt;
 
                         // Create number at the right of the sequence.
-                        if ($l_prnt{0} != '*') {
+                        if ($l_prnt[0] != '*') {
                             // Maybe this is a weird check. Will there ever be no $c_prnt?
                             $l_prnt = ($c_prnt? $l_prnt+1 : $l_prnt);
                         } elseif ($c_prnt) {
@@ -1890,7 +1890,7 @@ if ($_GET['step'] == 3) {
                     if (isset($n_break)) {
                         $n_break = LENGTH_LINE - $n_break;
                         $i -= $n_break;
-                        if ($l_prnt{1} == '*') {
+                        if ($l_prnt[1] == '*') {
                             $l_prnt = (substr($l_prnt, 1) - $n_break);
                         } else {
                             $l_prnt = '*0';
