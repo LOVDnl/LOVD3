@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-09-27
+ * Modified    : 2021-11-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -141,7 +141,7 @@ function lovd_checkORCIDChecksum ($sID)
     $sBaseDigits = ltrim(str_replace('-', '', substr($sID, 0, -1)), '0'); // '0000-0002-1368-1939' => 21368193
     $nTotal = 0;
     for ($i = 0; $i < strlen($sBaseDigits); $i++) {
-        $nDigit = (int) $sBaseDigits{$i};
+        $nDigit = (int) $sBaseDigits[$i];
         $nTotal = ($nTotal + $nDigit) * 2;
     }
     $nRemainder = $nTotal % 11;
@@ -857,7 +857,7 @@ function lovd_trimField ($sVal)
     // Instead, we check if the field is surrounded by quotes. If so, we take the first and last character off and return the field.
 
     $sVal = trim($sVal);
-    if ($sVal && $sVal{0} == '"' && substr($sVal, -1) == '"') {
+    if ($sVal && $sVal[0] == '"' && substr($sVal, -1) == '"') {
         $sVal = substr($sVal, 1, -1); // Just trim the first and last quote off, nothing else!
     }
     return trim($sVal);
@@ -1138,7 +1138,7 @@ function lovd_wrapText ($s, $l = 70, $sCut = ' ')
     if (empty($sCut) || !is_string($sCut)) {
         $sCut = ' ';
     } elseif (strlen($sCut) > 1) {
-        $sCut = $sCut{0};
+        $sCut = $sCut[0];
     }
     if ($sCut != ' ') {
         // If it's not a space, we will add it to the end of each line as well, so we use extra space.

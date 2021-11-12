@@ -4,12 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2016-09-01
- * For LOVD    : 3.0-17
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmers : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- *               Ing. Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
  *
@@ -59,7 +59,7 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
 
         // Decode saved work.
         // FIXME; Later when we add a decent json_decode library, we want to remove the unserialize() part.
-        $_AUTH['saved_work'] = (!empty($_AUTH['saved_work'])? ($_AUTH['saved_work']{0} == 'a'? unserialize($_AUTH['saved_work']) : json_decode($_AUTH['saved_work'])) : array());
+        $_AUTH['saved_work'] = (!empty($_AUTH['saved_work'])? ($_AUTH['saved_work'][0] == 'a'? unserialize($_AUTH['saved_work']) : json_decode($_AUTH['saved_work'])) : array());
 
         // Get an array of IDs of users that share their permissions with current user.
         $q = $_DB->query('SELECT userid_from, allow_edit FROM ' . TABLE_COLLEAGUES .

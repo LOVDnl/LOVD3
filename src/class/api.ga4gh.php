@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-09-17
+ * Modified    : 2021-11-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -346,21 +346,21 @@ class LOVD_API_GA4GH
             if ($sIDEffect) {
                 list($nID, $nEffectID) = explode(':', $sIDEffect);
                 $aReturn[$nID] = array();
-                if ($nEffectID{0}) {
+                if ($nEffectID[0]) {
                     $aReturn[$nID][] = array(
                         'scope' => 'individual', // Always the same for us.
                         'source' => 'LOVD',
-                        'term' => $this->aValueMappings['effect'][(int) $nEffectID{0}],
+                        'term' => $this->aValueMappings['effect'][(int) $nEffectID[0]],
                         'data_source' => array(
                             'name' => 'submitter',
                         ),
                     );
                 }
-                if ($nEffectID{1}) {
+                if ($nEffectID[1]) {
                     $aReturn[$nID][] = array(
                         'scope' => 'individual', // Always the same for us.
                         'source' => 'LOVD',
-                        'term' => $this->aValueMappings['effect'][(int) $nEffectID{1}],
+                        'term' => $this->aValueMappings['effect'][(int) $nEffectID[1]],
                         'data_source' => array(
                             'name' => 'curator',
                         ),

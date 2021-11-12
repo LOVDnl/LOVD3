@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-09-24
+ * Modified    : 2021-11-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -244,20 +244,20 @@ class LOVD_Object
     function autoExplode ($zData)
     {
         // Automatically explode GROUP_CONCAT values based on their name.
-        foreach ($zData as $key => $val) {
-            if ($key{0} == '_') {
-                unset($zData[$key]);
-                if (!empty($val)) {
-                    if ($key{1} == '_') {
+        foreach ($zData as $sKey => $sVal) {
+            if ($sKey[0] == '_') {
+                unset($zData[$sKey]);
+                if (!empty($sVal)) {
+                    if ($sKey[1] == '_') {
                         // Explode GROUP_CONCAT nested array
-                        $aValues = explode(';;', $val);
-                        $zData[ltrim($key, '_')] = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
+                        $aValues = explode(';;', $sVal);
+                        $zData[ltrim($sKey, '_')] = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
                     } else {
                         // Explode GROUP_CONCAT array
-                        $zData[ltrim($key, '_')] = explode(';', $val);
+                        $zData[ltrim($sKey, '_')] = explode(';', $sVal);
                     }
                 } else {
-                    $zData[ltrim($key, '_')] = array();
+                    $zData[ltrim($sKey, '_')] = array();
                 }
             }
         }
@@ -1633,7 +1633,7 @@ class LOVD_Object
 
             // Handle JSON data (well, in a VL, we hide it).
             foreach ($zData as $sKey => $Value) {
-                if (is_string($Value) && $Value && $Value{0} == '{'
+                if (is_string($Value) && $Value && $Value[0] == '{'
                     && is_array(json_decode(htmlspecialchars_decode($Value), true))) {
                     // We don't show JSON data in the VLs.
                     $zData[$sKey] = '<I>(data)</I>';
@@ -1653,7 +1653,7 @@ class LOVD_Object
 
             // Handle JSON well.
             foreach ($zData as $sKey => $Value) {
-                if (is_string($Value) && $Value && $Value{0} == '{'
+                if (is_string($Value) && $Value && $Value[0] == '{'
                     && is_array(json_decode(htmlspecialchars_decode($Value), true))) {
                     // Restructure the JSON.
                     $zData[$sKey] = $this->formatArrayToTable(json_decode(htmlspecialchars_decode($Value), true));
