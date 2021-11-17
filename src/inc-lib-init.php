@@ -1104,7 +1104,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'errors'         => array(),
     );
 
-    if (preg_match('/^[NX][MR]_[0-9]{6,9}\.[0-9]+:[cn]/')) {
+    if (preg_match('/^[NX][MR]_[0-9]{6,9}\.[0-9]+:[cn]/', $sVariant)) {
         if (is_numeric($sTranscriptID)) {
             $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
                 array($sTranscriptID)) ->fetchColumn();
@@ -1177,6 +1177,17 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     if (!isset($aVariant['complete']) || $aVariant['complete'] != $sVariant) {
         // If the complete match from getHGVSpatternFromVariant is not set or does not equal the given variant,
         //  the variant is not HGVS, and we cannot extract any information from it.
+        $aUnsupported = array('qter', 'pter', 'cen', '::');
+        foreach ($aUnsupported as $sUnsupported) {
+            if (strpos($sVariant, $sUnsupported)) {
+                $aResponse['errors']['ENOTSUPPORTED'] =
+                    'Currently, "' . $sUnsupported . '" is not yet supported by this HGVS check.';
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                return $aResponse;
+            }
+        }
         return false;
     }
 

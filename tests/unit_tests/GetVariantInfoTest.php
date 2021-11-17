@@ -59,9 +59,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_getVariantInfo with data from
         // dataProviderGetVariantInfo(), but only as an HGVS check.
-        if (empty($aOutput['errors']) &&
-                (empty($aOutput['warnings']) || array_diff(array_keys($aOutput['warnings']),
-                        array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTTRANSCRIPT'))
+        if (empty($aOutput['errors']) && (empty($aOutput['warnings']) || empty(array_diff(array_keys($aOutput['warnings']),
+                        array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTTRANSCRIPT')))
             )) {
             $bHGVS = true;
         } else {
@@ -738,6 +737,44 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                ),
+            )),
+            
+            // Descriptions that are currently unsupported
+            array('[g.1_qter]del', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'warnings' => array(),
+                'errors' => array(
+                    'ENOTSUPPORTED' => 'Currently, "qter" is not yet supported by this HGVS check.',
+                ),
+            )),
+            array('[g.1_cen]del', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'warnings' => array(),
+                'errors' => array(
+                    'ENOTSUPPORTED' => 'Currently, "cen" is not yet supported by this HGVS check.',
+                ),
+            )),
+            array('[g.1_pter]del', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'warnings' => array(),
+                'errors' => array(
+                    'ENOTSUPPORTED' => 'Currently, "pter" is not yet supported by this HGVS check.',
+                ),
+            )),
+            array('n.5-2::10-3', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'warnings' => array(),
+                'errors' => array(
+                    'ENOTSUPPORTED' => 'Currently, "::" is not yet supported by this HGVS check.',
                 ),
             )),
         );
