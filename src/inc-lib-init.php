@@ -1177,14 +1177,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     if (!isset($aVariant['complete']) || $aVariant['complete'] != $sVariant) {
         // If the complete match from getHGVSpatternFromVariant is not set or does not equal the given variant,
         //  the variant is not HGVS, and we cannot extract any information from it.
-        $aUnsupported = array('qter', 'pter', 'cen', '::');
-        foreach ($aUnsupported as $sUnsupported) {
+        if ($bCheckHGVS) {
+            return false;
+        }
+        foreach (array('qter', 'pter', 'cen', '::', 'sup', 'bsr', 'rer') as $sUnsupported) {
             if (strpos($sVariant, $sUnsupported)) {
                 $aResponse['errors']['ENOTSUPPORTED'] =
                     'Currently, "' . $sUnsupported . '" is not yet supported by this HGVS check.';
-                if ($bCheckHGVS) {
-                    return false;
-                }
                 return $aResponse;
             }
         }
