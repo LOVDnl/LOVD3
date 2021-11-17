@@ -60,10 +60,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
         // Test lovd_getVariantInfo with data from
         // dataProviderGetVariantInfo(), but only as an HGVS check.
         if (empty($aOutput['errors']) &&
-                (empty($aOutput['warnings']) ||
-                    array_keys($aOutput['warnings']) == array('WPOSITIONSLIMIT') ||
-                    array_keys($aOutput['warnings']) == array('WNOTSUPPORTED') ||
-                    array_keys($aOutput['warnings']) == array('WNOTSUPPORTED', 'WPOSITIONSLIMIT')
+                (empty($aOutput['warnings']) || array_diff(array_keys($aOutput['warnings']),
+                        array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTTRANSCRIPT'))
             )) {
             $bHGVS = true;
         } else {

@@ -1104,6 +1104,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'errors'         => array(),
     );
 
+    if (preg_match('/^[NX][MR]_[0-9]{6,9}\.[0-9]+:[cn]/')) {
+        if (is_numeric($sTranscriptID)) {
+            $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
+                array($sTranscriptID)) ->fetchColumn();
+        } else {
+            $sNCBIID = $sTranscriptID;
+        }
+
+        if ($sNCBIID == strstr($sVariant, ':', true)) {
+            $aResponse['warnings']['WTRANSCRIPTFOUND'] = 'Transcript ID found in the DNA description.';
+        } else {
+            $aResponse['warnings']['WDIFFERENTTRANSCRIPT'] =
+                'The transcript found in the DNA description does not match the configured transcript.';
+        }
+
+        $sVariant = substr(strstr($sVariant, ':'), 1);
+    }
+    
     // All information of interest will be placed into an associative array.
     // Notes: -All positions are filled by 0 if no position was matched.
     //        -For now, the regular expression only works for c., g., n., and m. variants.
@@ -1131,7 +1149,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position
         '\)))?' .
 
-        '([ACGT]+>[ACGT]+|([ACTG]+\[[0-9]+])+' . //  | (substitution | repeat sequence)
+        '([ACGT]+>[ACGTRYSWKMBDHVN]+|' .         //  | (substitution)
+        '([ACTG]+\[[0-9]+])+' .                  //  | (repeat sequence)
         '|ins|dup|delins|del|inv|[=?]' .         //  V
         '|\|(gom|lom|met=))' .                   // 20. Type of variant
 
