@@ -1304,7 +1304,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Storing the positions.
     // After discussing the issue, it is decided to use to inner positions in cases where the positions are
     //  unknown. This means that e.g. c.(1_2)_(5_6)del will be returned as having a position_start of 2, and
-    //  a position_end of 5.
+    //  a position_end of 5. However, if we find a variant such as c.(1_?)_(?_6)del, we will save the outer
+    //  positions (so a position_start of 1 and a position_end of 6).
+    // We only cast the positions to integers if they are not question marks, since we will need this
+    //  information later on.
     $aResponse['position_start'] =
         (!$aVariant['latest_start'] || $aVariant['latest_start'] == '?'? $aVariant['earliest_start'] : $aVariant['latest_start']);
     $aResponse['position_start'] = ($aResponse['position_start'] == '?'? '?' : (int)$aResponse['position_start']);
