@@ -1237,7 +1237,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif ($sTranscriptID == false) {
         // If the transcript ID is passed as false, we are asked to ignore not having the transcript.
         // Some random number, high enough to not be smaller than position_start if that's not in the UTR.
-        $aTranscriptOffsets[$sTranscriptID] = 1000000;
+        $aTranscriptOffsets[$sTranscriptID] = 1_000_000;
     }
     
     
@@ -1261,7 +1261,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             }
             // We add the length of the transcript to the position if a '*' has been found.
-            $aVariant[$sPosition] = (int)substr($sPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
+            $aVariant[$sPosition] = (int)substr($aVariant[$sPosition], 1) + $aTranscriptOffsets[$sTranscriptID];
 
         } elseif ($aVariant[$sPosition] == '?') {
             $aResponse['messages']['IUNKNOWNPOSITIONS'] = 'This variant contains unknown positions.';
@@ -1535,9 +1535,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
         
     } elseif ($aVariant['suffix']) {
-        if (!isset($aResponse['messages']['IPOSITIONRANGE']) ||
-            in_array($aResponse['type'], array('subst', 'repeat'))) {
-            // If the variants are of a type that is not ins or delins, they should not have a suffix.
+        if (!isset($aResponse['messages']['IPOSITIONRANGE']) || in_array($aResponse['type'], array('subst', 'repeat'))) {
+            // If the variants are of a type that is not ins or delins, they should not have a suffix,
+            //  except for if they were given a position range, in which case some variants can actually get
+            //  information in their suffix regarding the length of the variant.
             if ($bCheckHGVS) {
                 return false;
             }
