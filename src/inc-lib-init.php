@@ -1103,6 +1103,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'warnings'       => array(),
         'errors'         => array(),
     );
+    
+    $sVariant = trim($sVariant);
 
     if (preg_match('/^[NX][MR]_[0-9]{6,9}\.[0-9]+:[cn]/', $sVariant)) {
         if (is_numeric($sTranscriptID)) {
@@ -1149,12 +1151,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position
         '\)))?' .
 
-        '([ACGT]+>[ACGTRYSWKMBDHVN]+|' .         //  | (substitution)
-        '([ACTG]+\[[0-9]+])+' .                  //  | (repeat sequence)
-        '|ins|dup|delins|del|inv|[=?]' .         //  V
-        '|\|(gom|lom|met=))' .                   // 20. Type of variant
+        '([ACGT]+>[ACGTRYSWKMBDHVN]+' .                  //  | (substitution)
+        '|([ACTG]+\[[0-9]+])+' .                         //  | (repeat sequence)
+        '|[ACTG]*=(\/{1,2}[ACGT]*>[ACGTRYSWKMBDHVN]+)?' . //  | (wildtypes, mosaics, or chimerics)
+        '|ins|dup|delins|del|inv|\?' .                   //  V
+        '|\|(gom|lom|met=))' .                           // 20. Type of variant
 
-        '(.*)))/',                               // 23. Suffix
+        '(.*)))/',                                       // 24. Suffix
 
         $sVariant, $aMatches);
 
@@ -1171,12 +1174,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'latest_end'              => (!isset($aMatches[17])?  0 : $aMatches[17]),
         'latest_intronic_end'     => (!isset($aMatches[18])?  0 : (int)str_replace('?', '1', $aMatches[18])),
         'type'                    => (!isset($aMatches[20])? '' : $aMatches[20]),
-        'suffix'                  => (!isset($aMatches[23])? '' : $aMatches[23]),
+        'suffix'                  => (!isset($aMatches[24])? '' : $aMatches[24]),
     ));
 
     if (!isset($aVariant['complete']) || $aVariant['complete'] != $sVariant) {
         // If the complete match from getHGVSpatternFromVariant is not set or does not equal the given variant,
-        //  the variant is not HGVS, and we cannot extract any information from it.
+        //  the variant is not HGVS, and we cannot extract any information from it.        
         if ($bCheckHGVS) {
             return false;
         }
@@ -1194,16 +1197,31 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Storing the variant type.
     if (!$aVariant['type']) {
         // If no type is given, we can be sure that the variant is either a full wildtype or a full
-        //  unknown variant; so either g.= or g.? . In this case, we do not need to go over all tests.
+        //  unknown variant; so either g.= or g.? . In this case, we do not need to go over632 all tests.
         if (in_array($aVariant['prefix'], array('c', 'n'))) {
             $aResponse['position_end_intron'] = 0;
             $aResponse['position_start_intron'] = 0;
         }
-        $aResponse['type'] = (substr($aVariant['complete'], 2, 3) == '='? '=' : NULL);
-        return $bCheckHGVS? true : $aResponse;
+        $aResponse['type'] = (substr($aVariant['complete'], -1) == '='? '=' : NULL);
+        
+        if ($aResponse['type'] == '=') {
+            $aResponse['errors']['EMISSINGPOSITIONS'] =
+                'When using "=", always provide the position(s).';
+            return ($bCheckHGVS? false : $aResponse);
+        }
+        return ($bCheckHGVS? true : $aResponse);
         
         
-    } elseif (strpos($aVariant['type'], '>')) {
+    } elseif (strpos($aVariant['type'], '=') !== false) {
+        if (substr_count($sVariant, '/') == 1) {
+            $aResponse['type'] = 'mosaic';
+        } elseif (substr_count($sVariant, '/') == 2) {
+            $aResponse['type'] = 'chimeric';
+        } else {
+            $aResponse['type'] = '=';
+        }
+
+    } elseif (strpos($aVariant['type'], '>') !== false) {
         $aResponse['type'] = 'subst';
         
     } elseif (substr($aVariant['type'], -1) == ']') {
@@ -1216,9 +1234,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif ($aVariant['type'] == '?') {
         $aResponse['type'] = NULL;
-
-    } elseif ($aVariant['type'] == '=') {
-        $aResponse['type'] = '=';
 
     } else {
         $aResponse['type'] = $aVariant['type'];
@@ -1381,6 +1396,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     }
 
     
+    // Making sure wild types are not provided with nucleotides
+    // (e.g. c.123A=, which should be c.123=).
+    if ($aResponse['type'] == '=' && similar_text($sVariant, 'ACTG')) {
+        if ($bCheckHGVS) {
+            return false;
+        }
+        $aResponse['warnings']['WBASESONWILDTYPE'] = 'Unnecessary nucleotides provided for variant type "=".';
+    }
+
+    
     // Making sure no redundant '?'s are given as positions.
     if ($aVariant['latest_start'] . $aVariant['latest_start'] .
          $aVariant['earliest_end'] . $aVariant['latest_end'] == '????') {
@@ -1534,6 +1559,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
         }
         
+        
     } elseif ($aVariant['suffix']) {
         if (!isset($aResponse['messages']['IPOSITIONRANGE']) || in_array($aResponse['type'], array('subst', 'repeat'))) {
             // If the variants are of a type that is not ins or delins, they should not have a suffix,
@@ -1550,8 +1576,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['WSUFFIXFORMAT'] = 'The affected sequence is not formatted conform the HGVS guidelines.';
+            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                'The length of the variant is not formatted conform the HGVS guidelines.';
         }
+    
+        
+    } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])) {
+        // If no suffix was found for a variant which took place within a given range,
+        //  the variant is not HGVS.
+        if ($bCheckHGVS) {
+            return false;
+        }
+        $aResponse['errors']['ESUFFIXMISSING'] =
+            'The length of the variant must be provided when it took place within a certain range.';
     }
 
 

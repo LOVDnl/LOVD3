@@ -332,6 +332,22 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            
+            // Mosaicism and chimerism
+            array('g.123=/A>G', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'mosaic',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.123=//A>G', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'chimeric',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
 
             // Wildtypes
             array('g.=', array(
@@ -339,7 +355,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 0,
                 'type' => '=',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EMISSINGPOSITIONS' => 'When using "=", always provide the position(s).',
+                ),
             )),
             array('g.123=', array(
                 'position_start' => 123,
@@ -447,7 +465,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions (?_?) to ?.',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'ESUFFIXMISSING' => 'The length of the variant must be provided when it took place within a certain range.',
+                ),
                 'messages' => array(
                     'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.',
                     'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
@@ -680,9 +700,21 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The affected sequence is not formatted conform the HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted conform the HGVS guidelines.',
                 ),
                 'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                ),
+            )),
+            array('g.(1_100)del', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXMISSING' => 'The length of the variant must be provided when it took place within a certain range.',
+                ),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
                 ),
