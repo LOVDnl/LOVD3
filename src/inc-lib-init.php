@@ -1425,6 +1425,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
         $aResponse['warnings']['WWRONGTYPE'] = 'A deletion-insertion of one base to one base should be a substitution.';
         
+        
     } elseif ($aVariant['type'] == 'ins') {
         if (!($aVariant['earliest_start'] == '?' || $aVariant['latest_start'] || $aVariant['earliest_end'])) {
             if ($bCheckHGVS) {
@@ -1438,7 +1439,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             }
             $aResponse['warnings']['WPOSITIONFORMAT'] = 'Insertions should not have more than two positions.';
+        
+        } elseif ($aVariant['earliest_start'] != '?' && $aVariant['earliest_end'] != '?' &&
+                    ($aVariant['earliest_end'] - $aVariant['earliest_start'] > 1 &&
+                        !($aVariant['earliest_start'] == -1 && $aVariant['earliest_end'] == 1))) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['warnings']['WPOSITIONFORMAT'] =
+                'An insertion must have taken place between two neighbouring positions. ' .
+                'If the exact location is unknown, please indicate this by placing brackets around the positions.';
+        
+        } elseif (isset($aResponse['messages']['IPOSITIONRANGE']) && 
+                    $aVariant['latest_start'] - $aVariant['earliest_start'] == 1) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['warnings']['WPOSITIONFORMAT'] =
+                'The two positions do not indicate a range. Please remove the parentheses if the positions are certain.';
         }
+        
     
     } elseif ($aResponse['type'] == 'subst') {
         $aSubstitution = explode('>', $aVariant['type']);
@@ -1457,6 +1477,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['errors']['EPOSITIONFORMAT'] = 'Too many positions are given for variant type substitution.';
             return $aResponse;
         }
+        
         
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
         foreach(explode('[', $aVariant['type']) as $sRepeat) {

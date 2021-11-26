@@ -271,6 +271,40 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions or deletion-insertions.',
                 ),
             )),
+            array('g.(1_2)insA', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' =>
+                        'The two positions do not indicate a range. Please remove the parentheses if the positions are certain.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                ),
+            )),
+            array('g.(1_10)insA', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                ),
+            )),
+            array('g.1_10insA', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' =>
+                        'An insertion must have taken place between two neighbouring positions. If the exact ' .
+                        'location is unknown, please indicate this by placing brackets around the positions.',
+                ),
+                'errors' => array(),
+            )),
 
             // Deletion-insertions
             array('g.1_5delinsACT', array(
