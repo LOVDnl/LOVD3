@@ -249,7 +249,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WPOSITIONMISSING' => 'An insertion must be provided with the two positions between which the insertion has taken place.',
+                    'EPOSITIONMISSING' =>
+                        'An insertion must be provided with the two positions between which the insertion has taken place.',
                 ),
                 'errors' => array(),
             )),
@@ -276,7 +277,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WPOSITIONFORMAT' =>
+                    'EPOSITIONFORMAT' =>
                         'The two positions do not indicate a range. Please remove the parentheses if the positions are certain.',
                 ),
                 'errors' => array(),
@@ -299,7 +300,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 10,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WPOSITIONFORMAT' =>
+                    'EPOSITIONFORMAT' =>
                         'An insertion must have taken place between two neighbouring positions. If the exact ' .
                         'location is unknown, please indicate this by placing brackets around the positions.',
                 ),
