@@ -115,7 +115,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'warnings' => array(),
                 'errors' => array(
-                    'EFALSEUTR' => 'Only variants of type coding (c) or non-coding (n) can hold \'*\'s in their positions.',
+                    'EFALSEUTR' => 'Only variants of type coding (c) can hold \'*\'s in their positions.',
                 ),
             )),
             array('m.123+4_124-20dup', array(

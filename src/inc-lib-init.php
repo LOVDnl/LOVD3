@@ -1084,19 +1084,25 @@ function lovd_getInstallURL ($bFull = true)
 
 function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = false)
 {
-    // Goes through the variant, finds the type and positions and returns
-    //  them in an associative array. If no positions can be found, the
-    //  function returns false. If any HGVS syntax issues are found,
+    // Parses the variant, and returns the position fields (2 for genomic
+    //  variants, 4 for cDNA variants) in an associative array. If no
+    //  positions can be found, the function returns false.
+    // $sVariant stores the HGVS description of the variant. 
+    // $sTranscriptID stores the internal ID or NCBI ID of the transcript,
+    //  as needed to process 3' UTR variants (such as c.*10del).
+    // $bCheckHGVS holds the boolean which, if set to true, will change
+    //  the functionality to return either true or false, depending on
+    //  whether the variant matches the syntax of HGVS nomenclature.
+    // If $bCheckHGVS is set to false, and any HGVS syntax issues are found,
     //  this information will be added to the response array in the form
     //  of warnings (if not fatal) or errors (when the syntax issues are
     //  such that they make the variant ambiguous or implausible).
-    // When $bCheckHGVS is set to true, the functionality will change to
-    //  return either true or false, depending on whether the variant
-    //  matches the syntax of HGVS nomenclature.
     global $_DB;
 
     static $aTranscriptOffsets = array();
     $aResponse = array(
+        // This array will store all the information which we will
+        //  return to the user later on in this function.
         'position_start' => 0,
         'position_end'   => 0,
         'type'           => '',
@@ -1123,15 +1129,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     }
     
     // All information of interest will be placed into an associative array.
-    // Notes: -All positions are filled by 0 if no position was matched.
-    //        -For now, the regular expression only works for c., g., n., and m. variants.
-    //        -If no information was matched for the variant type, parentheses and suffix,
-    //         these are filled by an empty string.
-    //        -Positions that were not given are cast to 0.
+    // Note: For now, the regular expression only works for c., g., n., and m. variants.
     preg_match(
         '/^([cngm])\.' .                  // 1.  Prefix
 
-        '([?=]$|(' .
+        '([?=]$|(' .                             // 2. '?' or '=' (e.g. c.=) 
         '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses
         '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position
         '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position
@@ -1158,10 +1160,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         $sVariant, $aMatches);
 
-    $aVariant = (!isset($aMatches[0]) ? [] : array(
+    $aVariant = (!isset($aMatches[0]) ? array() : array(
+        // All information of the variant is stored into this associative array.
+        // Notes: -If the information was not found, the positions are cast to 0
+        //         and the variant type, parentheses, and suffix, are cast to an
+        //         empty string. (e.g. c.?)
+        //        -If an intronic position is given a question mark, its position
+        //         is cast to 1 in case of +? and -1 for -?. (e.g. c.10-?del)
         'complete'                => $aMatches[0],
         'prefix'                  => (!isset($aMatches[1])?  '' : $aMatches[1]),
-        'starting_parentheses'    => (!isset($aMatches[4])?  '' : $aMatches[4]), // The parentheses are given as a courtesy, to make additional checks easier.
+        'starting_parentheses'    => (!isset($aMatches[4])?  '' : $aMatches[4]), // The parentheses are given to make additional checks later on in the function easier.
         'earliest_start'          => (!isset($aMatches[5])?   0 : $aMatches[5]), // These are not cast to integers, since they can still hold an informative '*'.
         'earliest_intronic_start' => (!isset($aMatches[6])?   0 : (int)str_replace('?', '1', $aMatches[6])),
         'latest_start'            => (!isset($aMatches[9])?   0 : $aMatches[9]),
@@ -1175,7 +1183,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     ));
 
     if (!isset($aVariant['complete']) || $aVariant['complete'] != $sVariant) {
-        // If the complete match from getHGVSpatternFromVariant is not set or does not equal the given variant,
+        // If the complete match is not set or does not equal the given variant,
         //  the variant is not HGVS, and we cannot extract any information from it.
         if ($bCheckHGVS) {
             return false;
@@ -1193,14 +1201,27 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // Storing the variant type.
     if (!$aVariant['type']) {
-        // If no type is given, we can be sure that the variant is either a full wildtype or a full
-        //  unknown variant; so either g.= or g.? . In this case, we do not need to go over all tests.
+        // If no type was matched, we can be sure that the variant is either
+        //  a full wildtype or a full unknown variant; so either g.= or g.? .
+        // In this case, we do not need to go over all tests, since there is
+        //  simply a lot less information to test. We will do a few tests
+        //  and add all necessary information, and then return our response
+        //  right away.
         if (in_array($aVariant['prefix'], array('c', 'n'))) {
+            // Intronic positions must be set to zero for (non-)coding DNA.
             $aResponse['position_end_intron'] = 0;
             $aResponse['position_start_intron'] = 0;
         }
-        $aResponse['type'] = (substr($aVariant['complete'], 2, 3) == '='? '=' : NULL);
-        return $bCheckHGVS? true : $aResponse;
+        $aResponse['type'] = (substr($aVariant['complete'], -1) == '='? '=' : NULL);
+        // For unknown variants (c.?), the type is set to NULL.
+        
+        if ($aResponse['type'] == '=') {
+            // HGVS requires wild types to always hold positions.
+            $aResponse['errors']['EMISSINGPOSITIONS'] =
+                'When using "=", always provide the position(s).';
+            return ($bCheckHGVS? false : $aResponse);
+        }
+        return ($bCheckHGVS? true : $aResponse);
         
         
     } elseif (strpos($aVariant['type'], '>')) {
@@ -1209,7 +1230,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif (substr($aVariant['type'], -1) == ']') {
         $aResponse['type'] = 'repeat';
         $aResponse['warnings']['WNOTSUPPORTED'] =
-            'Repeat variants are currently not supported for mapping and validation.';
+            'Repeat variants are currently not supported for mapping and validation, as' .
+            ' external tools do not recognise them.';
         
     } elseif ($aVariant['type'][0] == '|') {
         $aResponse['type'] = 'met';
@@ -1244,15 +1266,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Converting 3' UTR notations ('*' in the position fields) to normal notations,
     //  and also checking for '?'.
     foreach (array('earliest_start', 'latest_start', 'earliest_end', 'latest_end') as $sPosition) {
-        if (isset($aVariant[$sPosition][0]) && $aVariant[$sPosition][0] === '*') {
-            if (!in_array($aVariant['prefix'], array('c', 'n'))) {
-                //  If the '*' is given, the DNA must be of type coding (prefix = c) or non-coding (prefix = n).
+        if (substr($aVariant[$sPosition], 0, 1) === '*') {
+            if ($aVariant['prefix'] != 'c') {
+                //  If the '*' is given, the DNA must be of type coding (prefix = c).
                 if ($bCheckHGVS) {
                     return false;
                 }
                 $aResponse['errors']['EFALSEUTR'] =
-                    'Only variants of type coding (c) or non-coding (n) can hold \'*\'s in their positions.';
-                return $aResponse; // Fixme; take another look at this.
+                    'Only variants of type coding (c) can hold \'*\'s in their positions.';
+                return $aResponse;
             }
             if ($sTranscriptID === '') {
                 // If the '*' symbol is given, we must also have a transcript.
@@ -1310,6 +1332,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
                 } elseif ($sIntronicFirst == $sIntronicLast) {
                     if ($aVariant['type'] == 'ins') {
+                        // Insertions must receive the two neighbouring positions
+                        //  between which they have taken place.
+                        // If both positions are the same, this makes the variant
+                        //  unclear to the extent that it cannot be interpreted.
                         $aResponse['errors']['EPOSITIONFORMAT'] = 'The early and late positions should not be the same.';
                         if ($bCheckHGVS) {
                             return false;
