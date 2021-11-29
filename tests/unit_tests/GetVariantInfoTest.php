@@ -4,12 +4,13 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2021-10-19
+ * Modified    : 2021-11-29
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Loes Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -77,7 +78,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     {
         // Data provider for testGetVariantInfo().
         return array(
-            // Prefixes
+            // Prefixes.
             array('g.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -115,7 +116,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'warnings' => array(),
                 'errors' => array(
-                    'EFALSEUTR' => 'Only variants of type coding (c) can hold \'*\'s in their positions.',
+                    'EFALSEUTR' => 'Only coding variants can describe positions in the UTR. Position "*123" is therefore invalid when using the "g" prefix.',
                 ),
             )),
             array('m.123+4_124-20dup', array(
@@ -124,11 +125,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'warnings' => array(),
                 'errors' => array(
-                    'EFALSEINTRONIC' => 'Only variants of DNA type coding (c) or non-coding (n) can hold intronic positions.',
+                    'EFALSEINTRONIC' => 'Only transcript-based variants (c. or n. prefixes) can describe intronic positions.',
                 ),
             )),
 
-            // Substitutions
+            // Substitutions.
             array('g.123A>C', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -165,7 +166,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Duplications
+            // Duplications.
             array('g.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -190,7 +191,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Deletions
+            // Deletions.
             array('g.1_300del', array(
                 'position_start' => 1,
                 'position_end' => 300,
@@ -208,7 +209,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Insertions
+            // Insertions.
             array('g.1_2insA', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -260,7 +261,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'warnings' => array(),
                 'errors' => array(
-                    'EPOSITIONFORMAT' => 'The early and late positions should not be the same.',
+                    'EPOSITIONFORMAT' => 'The start and end positions of any range should not be the same.',
                 ),
             )),
             array('g.1_2ins', array(
@@ -301,13 +302,13 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'warnings' => array(
                     'EPOSITIONFORMAT' =>
-                        'An insertion must have taken place between two neighbouring positions. If the exact ' .
-                        'location is unknown, please indicate this by placing brackets around the positions.',
+                        'An insertion must have taken place between two neighboring positions. If the exact ' .
+                        'location is unknown, please indicate this by placing parentheses around the positions.',
                 ),
                 'errors' => array(),
             )),
 
-            // Deletion-insertions
+            // Deletion-insertions.
             array('g.1_5delinsACT', array(
                 'position_start' => 1,
                 'position_end' => 5,
@@ -320,12 +321,12 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'delins',
                 'warnings' => array(
-                    'WWRONGTYPE' => 'A deletion-insertion of one base to one base should be a substitution.',
+                    'WWRONGTYPE' => 'A deletion-insertion of one base to one base should be described as a substitution.',
                 ),
                 'errors' => array(),
             )),
 
-            // Repeat sequences
+            // Repeat sequences.
             array('g.1_2ACT[20]', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -354,7 +355,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'repeat',
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
-                    'WREPEATOUTOFFRAME' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
+                    'WINVALIDREPEATLENGTH' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
                 ),
                 'errors' => array(),
             )),
@@ -368,13 +369,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Wildtypes
+            // Wildtypes.
             array('g.=', array(
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '=',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EMISSINGPOSITIONS' => 'When using "=", always provide the position(s) that are unchanged.',
+                ),
             )),
             array('g.123=', array(
                 'position_start' => 123,
@@ -384,7 +387,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Unknown variants
+            // Unknown variants.
             array('c.?', array(
                 'position_start' => 0,
                 'position_end' => 0,
@@ -404,7 +407,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Unsure variants
+            // Unsure variants.
             array('g.(1_2ins(50))', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -427,12 +430,12 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WPARENTHESES' => 'One or more parentheses are not closed or opened.'
+                    'WPARENTHESES' => 'The variant description contains unbalanced parentheses.'
                 ),
                 'errors' => array(),
             )),
 
-            // Positions with question marks
+            // Positions with question marks.
             array('g.?del', array(
                 'position_start' => 1,
                 'position_end' => 4294967295,  // Fixme; Are we sure about this?
@@ -587,7 +590,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
             )),
 
-            // Challenging positions
+            // Challenging positions.
             array('g.(100_200)_(400_500)del', array(
                 'position_start' => 200,
                 'position_end' => 400,
@@ -614,7 +617,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONFORMAT' => 'Two of the positions are the same.'
+                    'WPOSITIONFORMAT' => 'The start and end positions of any range should not be the same.'
                 ),
                 'errors' => array(),
             )),
@@ -623,7 +626,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONFORMAT' => 'The position fields were not sorted properly.'
+                    'WPOSITIONFORMAT' => 'The positions are not given in the correct order.'
                 ),
                 'errors' => array(),
             )),
@@ -639,7 +642,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Challenging insertions
+            // Challenging insertions.
             array('g.1_2ins(5_10)', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -695,12 +698,12 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'A square bracket from the inserted sequence is never opened or closed.',
+                    'WSUFFIXFORMAT' => 'The inserted sequence contains unbalanced square brackets.',
                 ),
                 'errors' => array(),
             )),
 
-            // Other affected sequences as suffixes
+            // Other affected sequences as suffixes.
             array('g.1delA', array(
                 'position_start' => 1,
                 'position_end' => 1,
@@ -774,15 +777,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
                 ),
             )),
-            
-            // Descriptions that are currently unsupported
+
+            // Descriptions that are currently unsupported.
             array('[g.1_qter]del', array(
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, "qter" is not yet supported by this HGVS check.',
+                    'ENOTSUPPORTED' => 'Currently, variants using "qter" are not yet supported.',
                 ),
             )),
             array('[g.1_cen]del', array(
@@ -791,7 +794,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, "cen" is not yet supported by this HGVS check.',
+                    'ENOTSUPPORTED' => 'Currently, variants using "cen" are not yet supported.',
                 ),
             )),
             array('[g.1_pter]del', array(
@@ -800,7 +803,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, "pter" is not yet supported by this HGVS check.',
+                    'ENOTSUPPORTED' => 'Currently, variants using "pter" are not yet supported.',
                 ),
             )),
             array('n.5-2::10-3', array(
@@ -809,7 +812,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, "::" is not yet supported by this HGVS check.',
+                    'ENOTSUPPORTED' => 'Currently, variants using "::" are not yet supported.',
                 ),
             )),
         );

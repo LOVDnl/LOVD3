@@ -1338,7 +1338,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 } elseif ($sIntronicFirst == $sIntronicLast) {
                     $sPositionWarning = 'The start and end positions of any range should not be the same.';
                     if ($aVariant['type'] == 'ins') {
-                        // Insertions must receive the two neighbouring positions
+                        // Insertions must receive the two neighboring positions
                         //  between which they have taken place.
                         // If both positions are the same, this makes the variant
                         //  unclear to the extent that it cannot be interpreted.
@@ -1487,7 +1487,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             }
             $aResponse['warnings']['EPOSITIONFORMAT'] =
-                'An insertion must have taken place between two neighbouring positions. ' .
+                'An insertion must have taken place between two neighboring positions. ' .
                 'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
         
         } elseif (isset($aResponse['messages']['IPOSITIONRANGE']) && 
