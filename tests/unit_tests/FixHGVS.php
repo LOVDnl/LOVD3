@@ -49,7 +49,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
     {
         // Data provider for testFixHGVS().
         return array(
-            // > VARIANTS WHICH DON'T NEED FIXING.
+            // VARIANTS THAT DON'T NEED FIXING.
             array('g.123dup', 'g.123dup'),
             array('g.1_300del', array(
                 'position_start' => 1,
@@ -144,61 +144,61 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
                 ),
             )),
-            
-            
-            // > FIXABLE VARIANTS.
-            
-            // Missing prefixes
+
+
+
+            // FIXABLE VARIANTS.
+            // Missing prefixes.
             array('123dup', 'g.123dup'),
             array('.123dup', 'c.123dup'),
             array('123-5dup', 'c.123-5dup'),
-            
-            // Wrong prefixes
+
+            // Wrong prefixes.
             array('g.123-5dup', 'c.123-5dup'),
             array('m.123-5dup', 'n.123-5dup'),
             array('m.*1_*2del', 'n.*1_*2del'),
-            
-            // Added white spaces
+
+            // Added whitespace.
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
-            
-            // Lowercase nucleotides
+
+            // Lowercase nucleotides.
             array('g.123insactg', 'g.123insACTG'),
             array('g.123a>g', 'g.123A>G'),
-            
-            // U given instead of T
+
+            // U given instead of T.
             array('g.123insAUG', 'g.123insATG'),
 
             // Conversions and substitutions which should be delins variants.
             array('g.123conACTG', 'g.123delinsACTG'),
             array('g.123A>C', 'g.123A>G'),
             array('g.123A>GC', 'g.123delinsGC'),
-            
-            // Added bases for wildtype
+
+            // Added bases for wildtype.
             array('c.123T=', 'c.123='),
             array('c.123_124TG=', 'c.123_124='),
-            
-            // Floating parentheses
+
+            // Floating parentheses.
             array('c.((123_125)insA', 'c.(123_125)insA'),
             array('(c.(123_125)insA', 'c.(123_125)insA'),
-            
-            // Misplaced parentheses
+
+            // Misplaced parentheses.
             array('(c.(123_125)insA)', 'c.((123_125)insA)'),
-            
-            // Redundant parentheses
+
+            // Redundant parentheses.
             array('c.(1_2)insA', 'c.1_2insA'),
             array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins[A]', 'c.1_2insA'),
 
-            // Missing parentheses
+            // Missing parentheses.
             array('c.1_100insA', 'c.(1_100)insA'),
             array('c.1_100del(10)', 'c.(1_100)del(10)'),
 
-            // Wrongly placed suffixes
+            // Wrongly placed suffixes.
             array('c.123delA', 'c.123del'),
             array('c.(1_100)del(20)', 'c.(1_100)del(20)'),
 
-            // Redundant question marks
+            // Redundant question marks.
             array('g.?del', 'g.?del'),
             array('g.1_?del', 'g.1_?del'),
             array('g.?_100del', 'g.?_100del'),  // Fixme; have another look.
@@ -214,7 +214,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.(5_?)_(?_10)del', 'g.(5_10)del'),
             array('g.(?_?)_(?_?)del', 'g.?del'),
 
-            // Challenging positions
+            // Challenging positions.
             array('g.(100_200)_(400_500)del', array(
                 'position_start' => 200,
                 'position_end' => 400,
@@ -272,9 +272,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.1_(7_5)dup', 'g.1_(5_7)dup'),
             array('g.(7_5)_1dup', 'g.1_(5_7)dup'),
             array('c.5+1_5-1dup', 'g.5-1_5+1dup'),
-            
 
-            // > UNFIXABLE VARIANTS
+
+
+            // UNFIXABLE VARIANTS.
             array('g.1delinsA', false), // Fixme; take another look.
             array('c.1_2AC[20]', false),
             array('c.1_2A>G', false),
@@ -285,3 +286,4 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
         );
     }
 }
+?>
