@@ -50,238 +50,112 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
         // Data provider for testFixHGVS().
         return array(
             // > VARIANTS WHICH DON'T NEED FIXING.
-            array('g.123dup', 'g.123dup'),
-            array('g.1_300del', array(
-                'position_start' => 1,
-                'position_end' => 300,
-                'type' => 'del',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2insA', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ins(50)', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ins5_10', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ins[NC_123456.1:g.1_10]', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_5delinsACT', array(
-                'position_start' => 1,
-                'position_end' => 5,
-                'type' => 'delins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ACT[20]', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'repeat',
-                'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
-                ),
-                'errors' => array(),
-            )),
-            array('g.=', array(
-                'position_start' => 0,
-                'position_end' => 0,
-                'type' => '=',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.123=', array(
-                'position_start' => 123,
-                'position_end' => 123,
-                'type' => '=',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('c.?', array(
-                'position_start' => 0,
-                'position_end' => 0,
-                'position_start_intron' => 0,
-                'position_end_intron' => 0,
-                'type' => NULL,
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('c.123?', array(
-                'position_start' => 123,
-                'position_end' => 123,
-                'position_start_intron' => 0,
-                'position_end_intron' => 0,
-                'type' => NULL,
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.((1_5)ins(50))', array(
-                'position_start' => 1,
-                'position_end' => 5,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-                'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
-                ),
-            )),
-            
-            
+            array('g.123dup','g.123dup'),
+            array('g.1_300del', 'g.1_300del'),
+            array('g.1_2insA', 'g.1_2insA'),
+            array('g.1_2ins(50)', 'g.1_2ins(50)'),
+            array('g.1_2ins5_10', 'g.1_2ins5_10'),
+            array('g.1_2ins[NC_123456.1:g.1_10]', 'g.1_2ins[NC_123456.1:g.1_10]'),
+            array('g.1_5delinsACT', 'g.1_5delinsACT'),
+            array('g.1_2ACT[20]', 'g.1_2ACT[20]'),
+            array('g.=', 'g.='),
+            array('g.123=', 'g.123='),
+            array('c.?', 'c.?'),
+            array('c.123?', 'c.123?'),
+            array('g.((1_5)ins(50))', 'g.((1_5)ins(50))'),
+            array('c.(1_100)del(20)', 'c.(1_100)del(20)'),
+
+
             // > FIXABLE VARIANTS.
-            
+
             // Missing prefixes
             array('123dup', 'g.123dup'),
-            array('.123dup', 'c.123dup'),
+            array('.123dup', 'g.123dup'),
             array('123-5dup', 'c.123-5dup'),
-            
+
             // Wrong prefixes
             array('g.123-5dup', 'c.123-5dup'),
-            array('m.123-5dup', 'n.123-5dup'),
-            array('m.*1_*2del', 'n.*1_*2del'),
-            
+            array('m.123-5dup', 'c.123-5dup'),
+            array('g.*1_*2del', 'c.*1_*2del'),
+
             // Added white spaces
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
-            
+
             // Lowercase nucleotides
             array('g.123insactg', 'g.123insACTG'),
             array('g.123a>g', 'g.123A>G'),
-            
+
             // U given instead of T
             array('g.123insAUG', 'g.123insATG'),
 
             // Conversions and substitutions which should be delins variants.
             array('g.123conACTG', 'g.123delinsACTG'),
-            array('g.123A>C', 'g.123A>G'),
+            array('g.123A>C', 'g.123A>C'),
             array('g.123A>GC', 'g.123delinsGC'),
-            
+
             // Added bases for wildtype
             array('c.123T=', 'c.123='),
             array('c.123_124TG=', 'c.123_124='),
-            
+
             // Floating parentheses
             array('c.((123_125)insA', 'c.(123_125)insA'),
             array('(c.(123_125)insA', 'c.(123_125)insA'),
-            
+
             // Misplaced parentheses
             array('(c.(123_125)insA)', 'c.((123_125)insA)'),
-            
-            // Redundant parentheses
-            array('c.(1_2)insA', 'c.1_2insA'),
-            array('c.1_2ins(A)', 'c.1_2insA'),
-            array('c.1_2ins[A]', 'c.1_2insA'),
 
-            // Missing parentheses
-            array('c.1_100insA', 'c.(1_100)insA'),
-            array('c.1_100del(10)', 'c.(1_100)del(10)'),
+            // Redundant parentheses
+            array('c.1_2ins(A)', 'c.1_2insA'),
 
             // Wrongly placed suffixes
             array('c.123delA', 'c.123del'),
-            array('c.(1_100)del(20)', 'c.(1_100)del(20)'),
+
+            // Wrongly formatted suffixes
+            array('c.1_2ins[A]', 'c.1_2insA'),
 
             // Redundant question marks
             array('g.?del', 'g.?del'),
             array('g.1_?del', 'g.1_?del'),
-            array('g.?_100del', 'g.?_100del'),  // Fixme; have another look.
+            array('g.?_100del', 'g.?_100del'),
             array('g.?_?del', 'g.?del'),
             array('g.(?_?)del', 'g.?del'),
-            array('g.(?_5)_10del', 'g.(?_5)_10'),
-            array('g.(5_?)_10del', 'g.(5_?)_10del'), // Fixme; have another look.
-            array('g.(?_?)_10del', 'g.?_10del'),
-            array('g.5_(10_?)del', 'g.5_(10_?)del'),
-            array('g.5_(?_10)del', 'g.5_(?_10)del'), // Fixme; have another look.
-            array('g.5_(?_?)del', 'g.5_?del'),
-            array('g.(?_5)_(10_?)del', 'g.(?_5)_(10_?)del'),
-            array('g.(5_?)_(?_10)del', 'g.(5_10)del'),
-            array('g.(?_?)_(?_?)del', 'g.?del'),
 
-            // Challenging positions
-            array('g.(100_200)_(400_500)del', array(
-                'position_start' => 200,
-                'position_end' => 400,
-                'type' => 'del',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.100_(400_500)del', array(
-                'position_start' => 100,
-                'position_end' => 400,
-                'type' => 'del',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.(100_200)_500del', array(
-                'position_start' => 200,
-                'position_end' => 500,
-                'type' => 'del',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_1del', array (
-                'position_start' => 1,
-                'position_end' => 1,
-                'type' => 'del',
-                'warnings' => array(
-                    'WPOSITIONFORMAT' => 'Two of the positions are the same.'
-                ),
-                'errors' => array(),
-            )),
-            array('g.2_1del', array (
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'del',
-                'warnings' => array(
-                    'WPOSITIONFORMAT' => 'The position fields were not sorted properly.'
-                ),
-                'errors' => array(),
-            )),
-            array('c.10000000_10000001del', array(
-                'position_start' => 8388607,
-                'position_end' => 8388607,
-                'position_start_intron' => 0,
-                'position_end_intron' => 0,
-                'type' => 'del',
-                'warnings' => array(
-                    'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: position_start, position_end.',
-                ),
-                'errors' => array(),
-            )),
+            array('g.(?_5)_10del', 'g.(?_5)_10del'),
+            array('g.(5_?)_10del', 'g.(5_?)_10del'),
+            array('g.(5_?)_?del', 'g.(5_?)del'),
+            array('g.(?_?)_10del', 'g.?_10del'),
+
+            array('g.5_(10_?)del', 'g.5_(10_?)del'),
+            array('g.5_(?_10)del', 'g.5_(?_10)del'),
+            array('g.?_(?_10)del', 'g.(?_10)del'),
+            array('g.5_(?_?)del', 'g.5_?del'),
+
+            array('g.(?_5)_(10_?)del', 'g.(?_5)_(10_?)del'),
+            array('g.(5_?)_(?_10)del', 'g.(5_?)_(?_10)del'),
+            array('g.(5_?)_(?_10)del(3)', 'g.(5_10)del(3)'),
+
+            array('g.(?_?)_(?_?)del', 'g.?del'),
 
             // Swaps positions when needed.
             array('g.2_1dup', 'g.1_2dup'),
-            array('g.(5_1)_6dup', 'g.(1_5)_6dup'),
+            array('g.(5_1)_10dup', 'g.(1_5)_10dup'),
             array('g.1_(7_5)dup', 'g.1_(5_7)dup'),
             array('g.(7_5)_1dup', 'g.1_(5_7)dup'),
-            array('c.5+1_5-1dup', 'g.5-1_5+1dup'),
-            
+            array('c.5+1_5-1dup', 'c.5-1_5+1dup'),
+
 
             // > UNFIXABLE VARIANTS
-            array('g.1delinsA', false), // Fixme; take another look.
-            array('c.1_2AC[20]', false),
-            array('c.1_2A>G', false),
-            array('c.1insA', false),
-            array('c.1_2ins', false),
-            array('c.1_10insA', false),
-            array('c.1_20insBLA', false),
+            array('g.1delinsA', 'g.1delinsA'), // Fixme; take another look.
+            array('c.1_2AC[20]', 'c.1_2AC[20]'),
+            array('c.1_2A>G', 'c.1_2A>G'),
+            array('c.1insA', 'c.1insA'),
+            array('c.1_2ins', 'c.1_2ins'),
+            array('c.1_10insA', 'c.1_10insA'),
+            array('c.(1_2)insA', 'c.(1_2)insA'),
+            array('c.1_20insBLA', 'c.1_20insBLA'),
+            array('c.1_100insA', 'c.1_100insA'),
+            array('c.1_100del(10)', 'c.1_100del'), // Fixme; take another look!!
         );
     }
 }

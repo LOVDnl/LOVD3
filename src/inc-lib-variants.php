@@ -290,11 +290,17 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
             if ($aPositions['C'] . $aPositions['D'] == '??') {
                 // e.g. c.1_(?_?)del
                 $aPositions['D'] = '';
-            
+
+                // Fixme; have another look at the next three statements (range vs suffix).
+            } elseif ($aPositions['A'] . $aPositions['C'] == '??' && !$aPositions['B']) {
+                // e.g. c.?_(?_10)del
+                $aPositions['C'] = '';
+                $sBefore = $sBefore . '(';
+                
             } elseif ($aPositions['B'] . $aPositions['C'] == '??' && !$aPositions['D']) {
                 // e.g. c.(1_?)_?del
                 $aPositions['B'] = '';
-                $aPositions['D'] = '';
+                $sAfter = ')' . $sAfter;
                 
             } elseif ($aPositions['B'] . $aPositions['C'] == '??' && $aPositions['A'] != '?' &&
                       !in_array($aPositions['D'], array('', '?'))) {
@@ -305,16 +311,13 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
                 //  of the variant. If a suffix is given: good, we can send the
                 //  variant in. If no suffix has been given, there is nothing
                 //  we can do to turn this into a clean variant.
-                // Fixme; have another look.
-                if (isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
-                    $aPositions['B'] = '';
-                    $aPositions['C'] = $aPositions['D'];
-                    $aPositions['D'] = '';
-                    $sAfter = ')' . $sAfter;
-                
-                } else {
-                    return $sVariant; // Not HGVS.
+                if (!isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
+                    return $sVariant; // not HGVS.
                 }
+                $aPositions['B'] = '';
+                $aPositions['C'] = $aPositions['D'];
+                $aPositions['D'] = '';
+                $sAfter = ')' . $sAfter;
                 
             } else {
                 // e.g. c.?_?del
