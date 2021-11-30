@@ -1217,7 +1217,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         
         if ($aResponse['type'] == '=') {
             // HGVS requires wild types to always hold positions.
-            $aResponse['errors']['EMISSINGPOSITIONS'] =
+            $aResponse['errors']['EPOSITIONSMISSING'] =
                 'When using "=", always provide the position(s).';
             return ($bCheckHGVS? false : $aResponse);
         }
@@ -1230,8 +1230,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif (substr($aVariant['type'], -1) == ']') {
         $aResponse['type'] = 'repeat';
         $aResponse['warnings']['WNOTSUPPORTED'] =
-            'Repeat variants are currently not supported for mapping and validation, as' .
-            ' external tools do not recognise them.';
+            'Repeat variants are currently not supported for mapping and validation,' .
+            ' because external tools do not recognise them yet.';
         
     } elseif ($aVariant['type'][0] == '|') {
         $aResponse['type'] = 'met';
@@ -1410,28 +1410,46 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Making sure no redundant '?'s are given as positions.
     if ($aVariant['latest_start'] . $aVariant['latest_start'] .
          $aVariant['earliest_end'] . $aVariant['latest_end'] == '????') {
+        // e.g. c.(?_?)_(?_?)del -> c.?del
         $sQuestionMarkWarning = 'Please rewrite the positions (?_?)_(?_?) to ?.';
         
     } elseif (($aVariant['latest_start'] . $aVariant['earliest_end'] == '??')) {
+        // e.g. c.(2_?)_(?_10)del -> c.(2_10)del
         $sQuestionMarkWarning =
             'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_(?_' . $aVariant['latest_end'] .
-            ') to (' . $aVariant['earliest_start'] . '_' . $aVariant['latest_end'] . ').'; // (1_?)_(?_2) > (1_2)
+            ') to (' . $aVariant['earliest_start'] . '_' . $aVariant['latest_end'] . ').';
         
     } elseif ($aVariant['earliest_start'] . $aVariant['latest_start'] == '??' && $aVariant['earliest_end']) {
+        // e.g. c.(?_?)_10del -> c.?_10del
         $sQuestionMarkWarning = 'Please rewrite the positions (?_?)_' . $aVariant['earliest_end'] .
-            ' to ?_' . $aVariant['earliest_end'] . '.'; // (?_?)_2 > ?_2
+            ' to ?_' . $aVariant['earliest_end'] . '.';
 
     } elseif ($aVariant['earliest_end'] . $aVariant['latest_end'] == '??') {
+        // e.g. c.2_(?_?)del -> c.2_?del
         $sQuestionMarkWarning = 'Please rewrite the positions ' . $aVariant['earliest_start'] . '_(?_?) to '
-            . $aVariant['earliest_start'] . '_?.'; // 1_(?_?) > 1_?
+            . $aVariant['earliest_start'] . '_?.';
     
     } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??' &&
                 !$aVariant['latest_start'] && !$aVariant['latest_end']) {
+        // e.g. c.?_?del -> c.?del
         $sQuestionMarkWarning = 'Please rewrite the positions ?_? to ?.';
     
     } elseif ($aVariant['earliest_start'] . $aVariant['latest_start'] == '??' &&
                 isset($aResponse['messages']['IPOSITIONRANGE'])) {
+        // e.g. c.(?_?)del -> c.?del
         $sQuestionMarkWarning = 'Please rewrite the positions (?_?) to ?.';
+    
+    } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??' &&
+                !$aVariant['latest_start'] && $aVariant['latest_end']) {
+        // e.g. c.?_(?_10)del -> c.(?_10)del
+        $sQuestionMarkWarning =
+            'Please rewrite the positions ?_(?_' . $aVariant['latest_end'] . ') to ?_' . $aVariant['latest_end'] . '.';
+        
+    } elseif ($aVariant['earliest_start'] && !$aVariant['latest_end'] &&
+                $aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
+        // e.g. c.(2_?)_?del -> c.(2_?)del
+        $sQuestionMarkWarning =
+            'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_? to (' . $aVariant['earliest_start'] . '_?).';
     }
     
     if (isset($sQuestionMarkWarning)) {

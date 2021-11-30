@@ -331,7 +331,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
                 ),
                 'errors' => array(),
             )),
@@ -342,7 +342,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
                 ),
                 'errors' => array(),
             )),
@@ -353,7 +353,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
                     'WREPEATOUTOFFRAME' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
                 ),
                 'errors' => array(),
@@ -363,7 +363,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
                 ),
                 'errors' => array(),
             )),
@@ -374,7 +374,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 0,
                 'type' => '=',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EPOSITIONSMISSING' => 'When using "=", always provide the position(s).'
+                ),
             )),
             array('g.123=', array(
                 'position_start' => 123,
@@ -756,7 +758,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
                 ),
                 'errors' => array(),
@@ -766,7 +768,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
                 ),
                 'errors' => array(),
