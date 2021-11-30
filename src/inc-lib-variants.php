@@ -135,7 +135,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     }
     
     // Make sure no unnecessary bases are given for wild types (c.123A= -> c.123=).
-    if (strpos($sVariant, '=') !== false) {
+    if (strpos($sVariant, '=') !== false && similar_text($sVariant, 'ACTG')) {
         return lovd_fixHGVS(str_replace(array('=', 'A', 'C', 'T', 'G'), '', $sVariant) . '=', $sType);
     }
     
@@ -171,9 +171,10 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
 
     
     // Remove the suffix if it is given to a variant type which should not hold one.
-    if (isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
+    if (isset($aVariantInfo['warnings']['WSUFFIXGIVEN']) && !isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])) {
         // The warning message stores the spot of the variant after which the suffix is given.
         // We find this spot by taking the part within the double quotes.
+        // Fixme; send variant including suffix to VariantValidator as an additional check.
         preg_match('/\".+\"/', $aVariantInfo['warnings']['WSUFFIXGIVEN'], $aMatches);
         $sBeforeSuffix = str_replace('"', '', $aMatches[0]);
         return lovd_fixHGVS(explode($sBeforeSuffix, $sVariant)[0] . $sBeforeSuffix, $sType);
@@ -192,11 +193,11 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         
         if (in_array($aVariantInfo['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
-            
-            if (preg_match('/^\([0-9]*_[0-9]*\)$/', $sSuffix)) {
+
+            if (preg_match('/^\([0-9]*_[0-9]*\)$/', $sSuffix) || preg_match('/^\([ACTG]*\)$/', $sSuffix)) {
                 // Remove redundant parentheses.
                 return lovd_fixHGVS(
-                    $sBeforeSuffix . $aVariantInfo['type']. str_replace(array('(', ')'), '', $sSuffix), $sType);
+                    $sBeforeSuffix . $aVariantInfo['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
             } elseif (preg_match('/^\[[^NX][^;]*]$/', $sSuffix)) {
                 // Remove redundant square brackets.
@@ -213,16 +214,16 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     
     
     // Swap positions if necessary.
-    if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT'])) {
+    if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT']) || isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])) {
         $aPositions = array();
         
         preg_match('/([cgmn]\.(\()?)' .
             '(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)' .
             '(?(2)_(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)\))(_' .
             '(\()?(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)' .
-            '(?(12)_(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)\)))?([A-Za-z|]+)/',
+            '(?(12)_(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)\)))?([A-Za-z|]+.*)/',
             $sVariant, $aMatches);
-        // (1+1_2-2)_(3+3)_(4-4) -> (A_B)_(C_D)
+        // c.(1+1_2-2)_(3+3)_(4-4)del -> c.(A_B)_(C_D)del
         $sBefore  = $aMatches[1];
         $sAfter   = $aMatches[21];
         
@@ -235,86 +236,101 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         $aPositions['D']       = $aMatches[18];
         $aPositions['DIntron'] = $aMatches[20];
         
-        if (($aPositions['C'] &&
-             $aPositions['A'] + ($aPositions['B']? : $aPositions['A']) >
-             $aPositions['C'] + ($aPositions['D']? : $aPositions['C']))) {
-            // If this is the case, the positions are swapped in groups,
-            //  i.e., c.(6_10)_(1_5)del. We will fix this as follows:
-            list($aPositions['A'], $aPositions['B'], $aPositions['AIntron'], $aPositions['BIntron'],
-                 $aPositions['C'], $aPositions['D'], $aPositions['CIntron'], $aPositions['DIntron']) =
-                array($aPositions['C'], $aPositions['D'], $aPositions['CIntron'], $aPositions['DIntron'],
-                      $aPositions['A'], $aPositions['B'], $aPositions['AIntron'], $aPositions['BIntron']);
         
-        } else {
-            // If the above is not the case, the positions are swapped more
-            //  intricately. This will be checked and fixed one by one.
-            foreach (array(array('A', 'B'), array('C', 'D'), array('A', 'C'), array('B', 'D')) as $aFirstAndLast) {
-                list($sFirst, $sLast) = $aFirstAndLast;
+        if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT'])) {
+            if (($aPositions['C'] &&
+                $aPositions['A'] + ($aPositions['B'] ?: $aPositions['A']) >
+                $aPositions['C'] + ($aPositions['D'] ?: $aPositions['C']))) {
+                // If this is the case, the positions are swapped in groups,
+                //  i.e., c.(6_10)_(1_5)del. We will fix this as follows:
+                list($aPositions['A'], $aPositions['B'], $aPositions['AIntron'], $aPositions['BIntron'],
+                    $aPositions['C'], $aPositions['D'], $aPositions['CIntron'], $aPositions['DIntron']) =
+                    array($aPositions['C'], $aPositions['D'], $aPositions['CIntron'], $aPositions['DIntron'],
+                        $aPositions['A'], $aPositions['B'], $aPositions['AIntron'], $aPositions['BIntron']);
 
-                if ($aPositions[$sFirst] && $aPositions[$sLast] && $aPositions[$sFirst] != '?' && $aPositions[$sLast] != '?') {
-                    // We only check the positions if the first and last value are
-                    //  not empty strings or question marks.
-                    $sIntronicFirst = $sFirst . 'Intron';
-                    $sIntronicLast = $sLast . 'Intron';
+            } else {
+                // If the above is not the case, the positions are swapped more
+                //  intricately. This will be checked and fixed one by one.
+                foreach (array(array('A', 'B'), array('C', 'D'), array('A', 'C'), array('B', 'D')) as $aFirstAndLast) {
+                    list($sFirst, $sLast) = $aFirstAndLast;
 
-                    if ($aPositions[$sFirst] > $aPositions[$sLast]) {
-                        list($aPositions[$sFirst], $aPositions[$sLast]) =
-                            array($aPositions[$sLast], $aPositions[$sFirst]);
+                    if ($aPositions[$sFirst] && $aPositions[$sLast] && $aPositions[$sFirst] != '?' && $aPositions[$sLast] != '?') {
+                        // We only check the positions if the first and last value are
+                        //  not empty strings or question marks.
+                        $sIntronicFirst = $sFirst . 'Intron';
+                        $sIntronicLast = $sLast . 'Intron';
 
-                    } elseif ($aPositions[$sFirst] == $aPositions[$sLast]) {
-                        if (!in_array($sType, array('n', 'c'))) {
-                            // INSERT SOLUTION
+                        if ($aPositions[$sFirst] > $aPositions[$sLast]) {
+                            list($aPositions[$sFirst], $aPositions[$sLast]) =
+                                array($aPositions[$sLast], $aPositions[$sFirst]);
 
-                        } elseif ($aPositions[$sIntronicFirst] > $aPositions[$sIntronicLast]) {
-                            list($aPositions[$sIntronicFirst], $aPositions[$sIntronicLast]) =
-                                array($aPositions[$sIntronicLast], $aPositions[$sIntronicFirst]);
+                        } elseif ($aPositions[$sFirst] == $aPositions[$sLast]) {
+                            if (!in_array($sType, array('n', 'c'))) {
+                                // INSERT SOLUTION
 
-                        } elseif ($sIntronicFirst == $sIntronicLast) {
-                            // INSERT SOLUTION
+                            } elseif ($aPositions[$sIntronicFirst] > $aPositions[$sIntronicLast]) {
+                                list($aPositions[$sIntronicFirst], $aPositions[$sIntronicLast]) =
+                                    array($aPositions[$sIntronicLast], $aPositions[$sIntronicFirst]);
+
+                            } elseif ($sIntronicFirst == $sIntronicLast) {
+                                // INSERT SOLUTION
+                            }
                         }
                     }
                 }
             }
+        
+        } else {
+            // In this case, a WTOOMUCHUNKNOWN warning was thrown.
+            // This means that question marks where given to the variant in
+            //  places where they do not bring any additional value. We
+            //  shall remove this redundancy by replacing the question marks
+            //  by empty strings, thus removing them from the variant.
+            
+            if ($aPositions['C'] . $aPositions['D'] == '??') {
+                // e.g. c.1_(?_?)del
+                $aPositions['D'] = '';
+            
+            } elseif ($aPositions['B'] . $aPositions['C'] == '??' && !$aPositions['D']) {
+                // e.g. c.(1_?)_?del
+                $aPositions['B'] = '';
+                $aPositions['D'] = '';
+                
+            } elseif ($aPositions['B'] . $aPositions['C'] == '??' && $aPositions['A'] != '?' &&
+                      !in_array($aPositions['D'], array('', '?'))) {
+                // e.g. c.(2_?)_(?_10)del
+                // In this case, a type of variant has been found which should
+                //  be placed in a range from the first to the last position.
+                // Only, variants placed in ranges need to be given the length
+                //  of the variant. If a suffix is given: good, we can send the
+                //  variant in. If no suffix has been given, there is nothing
+                //  we can do to turn this into a clean variant.
+                // Fixme; have another look.
+                if (isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
+                    $aPositions['B'] = '';
+                    $aPositions['C'] = $aPositions['D'];
+                    $aPositions['D'] = '';
+                    $sAfter = ')' . $sAfter;
+                
+                } else {
+                    return $sVariant; // Not HGVS.
+                }
+                
+            } else {
+                // e.g. c.?_?del
+                $aPositions['B'] = ($aPositions['B'] == '?'? '' : $aPositions['B']);
+                $aPositions['C'] = ($aPositions['C'] == '?'? '' : $aPositions['C']);
+            }
         }
         
         return lovd_fixHGVS($sBefore .
-            $aPositions['A'] . ($aPositions['AIntron']? : '') .
-            ($aPositions['B']? '_' . $aPositions['B'] . ($aPositions['BIntron']? : '') . ')' : '') .
-            ($aPositions['C']? '_' . ($aPositions['D']? '(' : '') . $aPositions['C'] . ($aPositions['CIntron']? : '') : '') . 
-            ($aPositions['D']? '_' . $aPositions['D'] . ($aPositions['CIntron']? : '') . ')' : '') .
+            $aPositions['A'] . ($aPositions['AIntron']?: '') .
+            ($aPositions['B']? '_' . $aPositions['B'] . ($aPositions['BIntron']?: '') . ')' : '') .
+            ($aPositions['C']? '_' . ($aPositions['D']? '(' : '') . $aPositions['C'] . ($aPositions['CIntron']?: '') : '') .
+            ($aPositions['D']? '_' . $aPositions['D'] . ($aPositions['CIntron']?: '') . ')' : '') .
             $sAfter,
             $sType);
     }
-    
-//    // Swap positions if they are wrong.
-//    echo 'ik ben hier: ' . $sVariant;
-//    if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT'])) {
-//        // Swap positions in the description as well.
-//        if (preg_match('/\.(\()?([0-9?_*+-]+)(?(1)\))_(\()?([0-9?_*+-]+)(?(3)\))[A-Za-z]/', $sVariant, $aRegs)) {
-//            // Precise swapping, supporting uncertain positions.
-//            list(, $bStartParentheses, $sPositionStart, $bEndParentheses, $sPositionEnd) = $aRegs;
-//            return lovd_fixHGVS(str_replace(
-//                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')') . '_' .
-//                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')'),
-//                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')') . '_' .
-//                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')'), $sVariant), $sType);
-//
-//        } else {
-//            // Fallback, in case the match above fails. (can it?)
-//            $sPositionStart = $aVariantInfo['position_start'] .
-//                (!isset($aVariantInfo['position_start_intron'])? '' :
-//                    ($aVariantInfo['position_start_intron'] < 0? '' : '+') .
-//                    $aVariantInfo['position_start_intron']);
-//            $sPositionEnd = $aVariantInfo['position_end'] .
-//                (!isset($aVariantInfo['position_end_intron'])? '' :
-//                    ($aVariantInfo['position_end_intron'] < 0? '' : '+') .
-//                    $aVariantInfo['position_end_intron']);
-//
-//            return lovd_fixHGVS(str_replace(
-//                $sPositionEnd . '_' . $sPositionStart,
-//                $sPositionStart . '_' . $sPositionEnd, $sVariant), $sType);
-//        }
-//    }
     
     
     return $sVariant; // Not HGVS.
