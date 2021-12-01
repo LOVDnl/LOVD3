@@ -49,106 +49,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
     {
         // Data provider for testFixHGVS().
         return array(
-            // VARIANTS THAT DON'T NEED FIXING.
-            array('g.123dup', 'g.123dup'),
-            array('g.1_300del', array(
-                'position_start' => 1,
-                'position_end' => 300,
-                'type' => 'del',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2insA', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ins(50)', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ins5_10', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ins[NC_123456.1:g.1_10]', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_5delinsACT', array(
-                'position_start' => 1,
-                'position_end' => 5,
-                'type' => 'delins',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.1_2ACT[20]', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'repeat',
-                'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
-                ),
-                'errors' => array(),
-            )),
-            array('g.=', array(
-                'position_start' => 0,
-                'position_end' => 0,
-                'type' => '=',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.123=', array(
-                'position_start' => 123,
-                'position_end' => 123,
-                'type' => '=',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('c.?', array(
-                'position_start' => 0,
-                'position_end' => 0,
-                'position_start_intron' => 0,
-                'position_end_intron' => 0,
-                'type' => NULL,
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('c.123?', array(
-                'position_start' => 123,
-                'position_end' => 123,
-                'position_start_intron' => 0,
-                'position_end_intron' => 0,
-                'type' => NULL,
-                'warnings' => array(),
-                'errors' => array(),
-            )),
-            array('g.((1_5)ins(50))', array(
-                'position_start' => 1,
-                'position_end' => 5,
-                'type' => 'ins',
-                'warnings' => array(),
-                'errors' => array(),
-                'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
-                ),
-            )),
-
-
-
-            // FIXABLE VARIANTS.
-            // Missing prefixes.
             // > VARIANTS WHICH DON'T NEED FIXING.
             array('g.123dup','g.123dup'),
             array('g.1_300del', 'g.1_300del'),
@@ -158,7 +58,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.1_2ins[NC_123456.1:g.1_10]', 'g.1_2ins[NC_123456.1:g.1_10]'),
             array('g.1_5delinsACT', 'g.1_5delinsACT'),
             array('g.1_2ACT[20]', 'g.1_2ACT[20]'),
-            array('g.=', 'g.='),
             array('g.123=', 'g.123='),
             array('c.?', 'c.?'),
             array('c.123?', 'c.123?'),
@@ -175,7 +74,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Wrong prefixes.
             array('g.123-5dup', 'c.123-5dup'),
-            array('m.123-5dup', 'c.123-5dup'),
+            array('m.123-5dup', 'c.123-5dup'), // Fixme; take another look.
             array('g.*1_*2del', 'c.*1_*2del'),
 
             // Added whitespace.
@@ -249,6 +148,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.1delinsA', 'g.1delinsA'), // Fixme; take another look.
             array('c.1_2AC[20]', 'c.1_2AC[20]'),
             array('c.1_2A>G', 'c.1_2A>G'),
+            array('g.=', 'g.='),
             array('c.1insA', 'c.1insA'),
             array('c.1_2ins', 'c.1_2ins'),
             array('c.1_10insA', 'c.1_10insA'),
