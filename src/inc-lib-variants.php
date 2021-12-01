@@ -236,8 +236,8 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
 
         if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT'])) {
             if (($aPositions['C'] &&
-                $aPositions['A'] + ($aPositions['B']?: $aPositions['A']) >
-                $aPositions['C'] + ($aPositions['D']?: $aPositions['C']))) {
+                $aPositions['A'] + ($aPositions['B'] ?: $aPositions['A']) >
+                $aPositions['C'] + ($aPositions['D'] ?: $aPositions['C']))) {
                 // If this is the case, the positions are swapped in groups,
                 //  i.e., c.(6_10)_(1_5)del. We will fix this as follows:
                 list($aPositions['A'], $aPositions['B'], $aPositions['AIntron'], $aPositions['BIntron'],
@@ -269,11 +269,57 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
                                 list($aPositions[$sIntronicFirst], $aPositions[$sIntronicLast]) =
                                     array($aPositions[$sIntronicLast], $aPositions[$sIntronicFirst]);
 
-                        } elseif ($sIntronicFirst == $sIntronicLast) {
-                            // INSERT SOLUTION
+                            } elseif ($sIntronicFirst == $sIntronicLast) {
+                                // INSERT SOLUTION
+                            }
                         }
                     }
                 }
+            }
+        
+        } else {
+            // In this case, a WTOOMUCHUNKNOWN warning was thrown.
+            // This means that question marks where given to the variant in
+            //  places where they do not bring any additional value. We
+            //  shall remove this redundancy by replacing the question marks
+            //  by empty strings, thus removing them from the variant.
+            
+            if ($aPositions['C'] . $aPositions['D'] == '??') {
+                // e.g. c.1_(?_?)del
+                $aPositions['D'] = '';
+
+                // Fixme; have another look at the next three statements (range vs suffix).
+            } elseif ($aPositions['A'] . $aPositions['C'] == '??' && !$aPositions['B']) {
+                // e.g. c.?_(?_10)del
+                $aPositions['C'] = '';
+                $sBefore = $sBefore . '(';
+                
+            } elseif ($aPositions['B'] . $aPositions['C'] == '??' && !$aPositions['D']) {
+                // e.g. c.(1_?)_?del
+                $aPositions['B'] = '';
+                $sAfter = ')' . $sAfter;
+                
+            } elseif ($aPositions['B'] . $aPositions['C'] == '??' && $aPositions['A'] != '?' &&
+                      !in_array($aPositions['D'], array('', '?'))) {
+                // e.g. c.(2_?)_(?_10)del
+                // In this case, a type of variant has been found which should
+                //  be placed in a range from the first to the last position.
+                // Only, variants placed in ranges need to be given the length
+                //  of the variant. If a suffix is given: good, we can send the
+                //  variant in. If no suffix has been given, there is nothing
+                //  we can do to turn this into a clean variant.
+                if (!isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
+                    return $sVariant; // not HGVS.
+                }
+                $aPositions['B'] = '';
+                $aPositions['C'] = $aPositions['D'];
+                $aPositions['D'] = '';
+                $sAfter = ')' . $sAfter;
+                
+            } else {
+                // e.g. c.?_?del
+                $aPositions['B'] = ($aPositions['B'] == '?'? '' : $aPositions['B']);
+                $aPositions['C'] = ($aPositions['C'] == '?'? '' : $aPositions['C']);
             }
         }
 
