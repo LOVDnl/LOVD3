@@ -76,12 +76,12 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         } elseif (substr_count($sVariant, '(') == 1 && substr_count($sVariant, '))')) {
             // e.g. c.(1_10))insA
             return lovd_fixHGVS(str_replace('))', ')', $sVariant), $sType);
-            
+
         } elseif ($sVariant[0] == '(' && strpos($sVariant, ')')  === false ||
             substr_count($sVariant, '(') > substr_count($sVariant, ')')) {
             // e.g. (c.(123_124)insA or (c.1_2insA
             return lovd_fixHGVS(substr($sVariant, 1), $sType);
-        
+
         } else {
             // The parentheses are formatted in a more difficult way than
             //  is worth handling. We will return the variant, which is sadly
@@ -96,7 +96,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
             // The variant is written as (c.1_2insA). We will rewrite this as c.(1_2insA).
             return lovd_fixHGVS(
                 $sType . '.(' . substr($sVariant, 3), $sType);
-        
+
         }
     }
 
@@ -149,8 +149,9 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         // FIXME; This is not always the case; see variants like g.157097179-157100787del.
         $sType = 'c';
         return lovd_fixHGVS($sType . substr($sVariant, 1), $sType);
-    
-    } elseif (!empty($aVariantInfo['errors'])) {
+
+    } elseif (!empty($aVariantInfo['errors'] &&
+                !(isset($aVariantInfo['errors']['ESUFFIXMISSING']) && isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])))) {
         return $sVariant; // Not HGVS.
     }
 
@@ -185,7 +186,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
             return lovd_fixHGVS(
                 $sBeforeSuffix . $aVariantInfo['type']. '(' . $sSuffix . ')', $sType);
         }
-        
+
         if (in_array($aVariantInfo['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
@@ -194,7 +195,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
                 return lovd_fixHGVS(
                     $sBeforeSuffix . $aVariantInfo['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
-            } elseif (preg_match('/^\[[^NX][^;]+\]$/', $sSuffix)) {
+            } elseif (preg_match('/^\[[^NX][^;]*]$/', $sSuffix)) {
                 // Remove redundant square brackets,
                 //  these are only needed when refseqs are given.
                 return lovd_fixHGVS(
@@ -213,7 +214,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     // Swap positions if necessary.
     if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT']) || isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])) {
         $aPositions = array();
-        
+
         preg_match('/([cgmn]\.(\()?)' .
             '(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)' .
             '(?(2)_(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)\))(_' .
@@ -223,7 +224,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         // c.(1+1_2-2)_(3+3)_(4-4)del -> c.(A_B)_(C_D)del
         $sBefore  = $aMatches[1];
         $sAfter   = $aMatches[21];
-        
+
         $aPositions['A']       = $aMatches[4];
         $aPositions['AIntron'] = $aMatches[6];
         $aPositions['B']       = $aMatches[8];
@@ -276,14 +277,14 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
                     }
                 }
             }
-        
+
         } else {
             // In this case, a WTOOMUCHUNKNOWN warning was thrown.
             // This means that question marks where given to the variant in
             //  places where they do not bring any additional value. We
             //  shall remove this redundancy by replacing the question marks
             //  by empty strings, thus removing them from the variant.
-            
+
             if ($aPositions['C'] . $aPositions['D'] == '??') {
                 // e.g. c.1_(?_?)del
                 $aPositions['D'] = '';
@@ -293,12 +294,12 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
                 // e.g. c.?_(?_10)del
                 $aPositions['C'] = '';
                 $sBefore = $sBefore . '(';
-                
+
             } elseif ($aPositions['B'] . $aPositions['C'] == '??' && !$aPositions['D']) {
                 // e.g. c.(1_?)_?del
                 $aPositions['B'] = '';
                 $sAfter = ')' . $sAfter;
-                
+
             } elseif ($aPositions['B'] . $aPositions['C'] == '??' && $aPositions['A'] != '?' &&
                       !in_array($aPositions['D'], array('', '?'))) {
                 // e.g. c.(2_?)_(?_10)del
@@ -315,7 +316,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
                 $aPositions['C'] = $aPositions['D'];
                 $aPositions['D'] = '';
                 $sAfter = ')' . $sAfter;
-                
+
             } else {
                 // e.g. c.?_?del
                 $aPositions['B'] = ($aPositions['B'] == '?'? '' : $aPositions['B']);
@@ -331,8 +332,8 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
             $sAfter,
             $sType);
     }
-    
-    
+
+
     return $sVariant; // Not HGVS.
 }
 
