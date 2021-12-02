@@ -67,7 +67,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // > FIXABLE VARIANTS.
 
-            // Missing prefixes
+            // Missing prefixes.
             array('123dup', 'g.123dup'),
             array('.123dup', 'g.123dup'),
             array('123-5dup', 'c.123-5dup'),
@@ -110,7 +110,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Wrongly placed suffixes.
             array('c.123delA', 'c.123del'),
 
-            // Wrongly formatted suffixes
+            // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
 
             // Redundant question marks.
@@ -144,7 +144,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.5+1_5-1dup', 'c.5-1_5+1dup'),
 
 
-            // > UNFIXABLE VARIANTS
+            // > UNFIXABLE VARIANTS.
             array('g.1delinsA', 'g.1delinsA'), // Fixme; take another look.
             array('c.1_2AC[20]', 'c.1_2AC[20]'),
             array('c.1_2A>G', 'c.1_2A>G'),
