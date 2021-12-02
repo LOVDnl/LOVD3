@@ -162,6 +162,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "A>C".',
+                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -332,7 +333,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -343,7 +344,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -364,7 +365,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -485,7 +486,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions (?_?) to ?.',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'ESUFFIXMISSING' => 'The length must be provided for variants which took place within a range.',
+                ),
                 'messages' => array(
                     'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.',
                     'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
@@ -648,7 +651,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -657,7 +660,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -680,7 +683,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -689,7 +692,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -698,7 +701,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted sequence contains unbalanced square brackets.',
+                    'WSUFFIXFORMAT' => 'The inserted/affected sequence contains unbalanced square brackets.',
                 ),
                 'errors' => array(),
             )),
@@ -718,7 +721,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The affected sequence is not formatted conform the HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted conform the HGVS guidelines.',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -759,7 +762,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
                 ),
                 'errors' => array(),
@@ -769,7 +772,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation, because external tools do not recognise them yet.',
+                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
                 ),
                 'errors' => array(),
