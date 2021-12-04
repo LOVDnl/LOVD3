@@ -1110,6 +1110,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'errors'         => array(),
     );
 
+    // Trim the variant and remove whitespaces.
+    $sVariant = preg_replace('/\s+/', '', $sVariant);
+
     if (preg_match('/^[NX][MR]_[0-9]{6,9}\.[0-9]+:[cn]/', $sVariant)) {
         if (is_numeric($sTranscriptID)) {
             $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
