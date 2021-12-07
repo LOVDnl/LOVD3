@@ -59,23 +59,20 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         return $sVariant;
     }
 
-    // Replace the outdated "con" type with "delins".
-    if (strpos($sVariant, 'con') !== false) {
-        return lovd_fixHGVS(str_replace('con', 'delins', $sVariant), $sType);
-    }
-
     // Move or remove wrongly placed parentheses.
-    if (substr_count($sVariant, '(') != substr_count($sVariant, ')')) {
-        // There were more opening parentheses than there were parentheses closed.
-        // We won't be looking all the way into the variant, since that is simply
-        //  too much effort for the reward. However, we will take a look at the
-        //  simplest and most common mistakes.
-        if (substr_count($sVariant, '((') && substr_count($sVariant, ')') == 1) {
-            // e.g. c.((1_10)insA
+    $nOpening = substr_count($sVariant, '(');
+    $nClosing = substr_count($sVariant, ')');
+    if ($nOpening != $nClosing) {
+        // There are more parentheses opening than closing.
+        // We won't be looking all the way into the variant, since that is
+        //  simply too much effort for the reward. However, we will take a look
+        //  at the simplest and most common mistakes.
+        if (strpos($sVariant, '((') !== false && ($nOpening - $nClosing) == 1) {
+            // e.g., g.((123_234)_(345_456)del.
             return lovd_fixHGVS(str_replace('((', '(', $sVariant), $sType);
 
-        } elseif (substr_count($sVariant, '(') == 1 && substr_count($sVariant, '))')) {
-            // e.g. c.(1_10))insA
+        } elseif (($nClosing - $nOpening) == 1 && strpos($sVariant, '))')) {
+            // e.g. g.(123_234)_(345_456))del.
             return lovd_fixHGVS(str_replace('))', ')', $sVariant), $sType);
 
         } else {
@@ -99,6 +96,11 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     // Add prefix in case it is missing.
     if (!in_array($sVariant[0], array('c', 'g', 'm', 'n'))) {
         return lovd_fixHGVS($sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
+    }
+
+    // Replace the outdated "con" type with "delins".
+    if (strpos($sVariant, 'con') !== false) {
+        return lovd_fixHGVS(str_replace('con', 'delins', $sVariant), $sType);
     }
 
     // Remove redundant prefixes due to copy/paste errors (g.12_g.23del to g.12_23del).

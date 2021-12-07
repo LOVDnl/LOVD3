@@ -41,7 +41,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_fixHGVS() with data from
         // dataProviderFixHGVS().
-        $this->assertEquals(lovd_fixHGVS($sInput), $sOutput);
+        $this->assertEquals($sOutput, lovd_fixHGVS($sInput));
     }
 
 
@@ -98,7 +98,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.123_124TG=', 'c.123_124='),
 
             // Floating parentheses.
-            array('c.((123_125)insA', 'c.(123_125)insA'),
+            array('g.((123_234)_(345_456)del', 'g.(123_234)_(345_456)del'),
+            array('g.(123_234)_(345_456))del', 'g.(123_234)_(345_456)del'),
 
             // Misplaced parentheses.
             array('(c.(123_125)insA)', 'c.((123_125)insA)'),
