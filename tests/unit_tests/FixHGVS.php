@@ -99,7 +99,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Floating parentheses.
             array('c.((123_125)insA', 'c.(123_125)insA'),
-            array('(c.(123_125)insA', 'c.(123_125)insA'),
 
             // Misplaced parentheses.
             array('(c.(123_125)insA)', 'c.((123_125)insA)'),

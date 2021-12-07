@@ -1,16 +1,17 @@
-<?php /** @noinspection PhpStrFunctionsInspection */
+<?php
 /*******************************************************************************
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-11-10
+ * Modified    : 2021-12-07
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               Loes Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -49,7 +50,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         $sType = 'g';
     }
 
-    // Trim the variant and remove whitespaces.
+    // Trim the variant and remove whitespace.
     $sVariant = preg_replace('/\s+/', '', $sVariant);
 
     // Do a quick HGVS check.
@@ -76,11 +77,6 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         } elseif (substr_count($sVariant, '(') == 1 && substr_count($sVariant, '))')) {
             // e.g. c.(1_10))insA
             return lovd_fixHGVS(str_replace('))', ')', $sVariant), $sType);
-
-        } elseif ($sVariant[0] == '(' && strpos($sVariant, ')')  === false ||
-            substr_count($sVariant, '(') > substr_count($sVariant, ')')) {
-            // e.g. (c.(123_124)insA or (c.1_2insA
-            return lovd_fixHGVS(substr($sVariant, 1), $sType);
 
         } else {
             // The parentheses are formatted in a more difficult way than
