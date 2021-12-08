@@ -172,44 +172,43 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
 
     // Remove the suffix if it is given to a variant type which should not hold one.
     if (isset($aVariantInfo['warnings']['WSUFFIXGIVEN']) && !isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])) {
-        // The warning message stores the spot of the variant after which the suffix is given.
-        // We find this spot by taking the part within the double quotes.
+        // The warning message indicates where the unwanted suffix starts.
+        // We take this string by isolating the part between the double quotes.
         // Fixme; send variant including suffix to VariantValidator as an additional check.
-        preg_match('/\".+\"/', $aVariantInfo['warnings']['WSUFFIXGIVEN'], $aMatches);
-        $sBeforeSuffix = str_replace('"', '', $aMatches[0]);
-        return lovd_fixHGVS(explode($sBeforeSuffix, $sVariant)[0] . $sBeforeSuffix, $sType);
+        list(,$sVariantType) = explode('"', $aVariantInfo['warnings']['WSUFFIXGIVEN']);
+        return lovd_fixHGVS(strstr($sVariant, $sVariantType, true) . $sVariantType, $sType);
     }
 
 
 
     // Reformat wrongly described suffixes.
     if (isset($aVariantInfo['warnings']['WSUFFIXFORMAT'])) {
-        list($sBeforeSuffix, $sSuffix) = explode($aVariantInfo['type'], $sVariant);
+        list($sBeforeSuffix, $sSuffix) = explode($aVariantInfo['type'], $sVariant, 2);
 
-        if (preg_match('/^[0-9]*$/', $sSuffix)) {
+        if (ctype_digit($sSuffix)) {
             // Add parentheses in case they were forgotten.
             return lovd_fixHGVS(
-                $sBeforeSuffix . $aVariantInfo['type']. '(' . $sSuffix . ')', $sType);
+                $sBeforeSuffix . $aVariantInfo['type'] . '(' . $sSuffix . ')', $sType);
         }
 
         if (in_array($aVariantInfo['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
-            if (preg_match('/^\([0-9]*_[0-9]*\)$/', $sSuffix) || preg_match('/^\([ACTG]*\)$/', $sSuffix)) {
+            if (preg_match('/^\([0-9]+_[0-9]+\)$/', $sSuffix) || preg_match('/^\([ACTG]+\)$/', $sSuffix)) {
                 // Remove redundant parentheses.
                 return lovd_fixHGVS(
                     $sBeforeSuffix . $aVariantInfo['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
-            } elseif (preg_match('/^\[[^NX][^;]*]$/', $sSuffix)) {
+            } elseif (preg_match('/^\[[^NX][^;\]]*]$/', $sSuffix)) {
                 // Remove redundant square brackets,
-                //  these are only needed when refseqs are given.
+                //  these are only needed when RefSeqs are given.
                 return lovd_fixHGVS(
-                    $sBeforeSuffix . $aVariantInfo['type']. str_replace(array('[', ']'), '', $sSuffix), $sType);
+                    $sBeforeSuffix . $aVariantInfo['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
 
-            } elseif (preg_match('/^[NX][CMR]/', $sSuffix) || strpos($sSuffix, ';')) {
-                // Square brackets were forgotten, refseqs are given.
+            } elseif (preg_match('/^[NX][CGMR]_[0-9]+/', $sSuffix) || strpos($sSuffix, ';')) {
+                // Square brackets were forgotten, RefSeqs are given.
                 return lovd_fixHGVS(
-                    $sBeforeSuffix . $aVariantInfo['type']. '[' . $sSuffix . ']', $sType);
+                    $sBeforeSuffix . $aVariantInfo['type'] . '[' . $sSuffix . ']', $sType);
             }
         }
     }
@@ -238,7 +237,6 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         $aPositions['CIntron'] = $aMatches[16];
         $aPositions['D']       = $aMatches[18];
         $aPositions['DIntron'] = $aMatches[20];
-
 
         if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT'])) {
             if (($aPositions['C'] &&
