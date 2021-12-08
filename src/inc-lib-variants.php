@@ -154,15 +154,16 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         $sType = 'c';
         return lovd_fixHGVS($sType . substr($sVariant, 1), $sType);
 
-    } elseif (!empty($aVariantInfo['errors'] &&
-                !(isset($aVariantInfo['errors']['ESUFFIXMISSING']) && isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])))) {
+    } elseif (!empty($aVariantInfo['errors']
+        && !isset($aVariantInfo['errors']['ESUFFIXMISSING'])
+        && isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN']))) {
         return $sVariant; // Not HGVS.
     }
 
     // Change the variant type (if possible) if the wrong type was chosen.
     if (isset($aVariantInfo['warnings']['WWRONGTYPE'])) {
         if ($aVariantInfo['type'] == 'subst') {
-            return lovd_fixHGVS(preg_replace('/[ACTG]>/', 'delins', $sVariant), $sType);
+            return lovd_fixHGVS(preg_replace('/[ACTG]+>/', 'delins', $sVariant), $sType);
         }
         if ($aVariantInfo['type'] == 'delins') {
             return $sVariant; // Not HGVS. Fixme; take another look.
