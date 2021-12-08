@@ -69,6 +69,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Missing prefixes.
             array('123dup', 'g.123dup'),
+            array('(123dup)', 'g.(123dup)'),
             array('.123dup', 'g.123dup'),
             array('123-5dup', 'c.123-5dup'),
 

@@ -79,17 +79,21 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
             // The parentheses are formatted in a more difficult way than
             //  is worth handling. We will return the variant, which is sadly
             //  still not HGVS.
-            return $sVariant; // Not HGVS. Fixme; take another look.
+            return $sVariant; // Not HGVS.
         }
 
     } elseif ($sVariant[0] == '(') {
-        // The amount of opening parentheses equals the amount of the closing ones,
-        //  but the user did start the variant with one, which isn't an option.
-        if  (substr($sVariant, -1) == ')') {
+        // All opening parentheses are closed, but the description starts with
+        //  one, which isn't an option. Don't just assume a prefix is there or
+        //  not, check.
+        if (!preg_match('/\b[cgmn]\./', $sVariant)) {
+            // No prefix found. Add one.
+            return lovd_fixHGVS(
+                $sType . '.(' . substr($sVariant, 1), $sType);
+        } elseif (preg_match('/^\(([cgmn]\.)/', $sVariant, $aRegs)) {
             // The variant is written as (c.1_2insA). We will rewrite this as c.(1_2insA).
             return lovd_fixHGVS(
-                $sType . '.(' . substr($sVariant, 3), $sType);
-
+                $aRegs[1] . '(' . substr($sVariant, 3), $sType);
         }
     }
 
