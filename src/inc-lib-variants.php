@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-12-07
+ * Modified    : 2021-12-08
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -103,6 +103,8 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     }
 
     // Replace the outdated "con" type with "delins".
+    // This used to check also if the delins needed square brackets around the
+    //  insertion, but we moved that code to generalize it.
     if (strpos($sVariant, 'con') !== false) {
         return lovd_fixHGVS(str_replace('con', 'delins', $sVariant), $sType);
     }

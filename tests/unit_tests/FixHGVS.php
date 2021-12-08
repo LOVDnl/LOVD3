@@ -91,6 +91,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Conversions and substitutions which should be delins variants.
             array('g.123conACTG', 'g.123delinsACTG'),
+            array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:100_200]'),
             array('g.123A>C', 'g.123A>C'),
             array('g.123A>GC', 'g.123delinsGC'),
 
