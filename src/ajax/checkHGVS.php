@@ -107,29 +107,41 @@ if ($_REQUEST['method'] == 'list') {
 
     $bAllIsHGVS = true;
 
-    $sTable = '<HTML><TABLE border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\" id=\"resultTable\">' .
-              '<TR><TH>Variant</TH><TH>Is HGVS? (T/F)</TH><TH>Fixed variant</TH><TH>Warnings and errors</TH></TR>';
+    $sTable = '<HTML><TABLE border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\">' .
+              '<TR><TH style=\"background : #90E090;\">Variant</TH><TH style=\"background : #90E090;\">Is HGVS? (T/F)</TH><TH style=\"background : #90E090;\">Fixed variant</TH><TH style=\"background : #90E090;\">Warnings and errors</TH></TR>';
 
     foreach (explode("\n", $sVariants) as $sVariant) {
         if ($sVariant == '') {
             $sTable .= '<TR></TR>';
+
         } else {
             $sVariant = rtrim($sVariant); // Removing floating whitespaces.
             $bIsHGVS = lovd_getVariantInfo($sVariant, false, true);
-            $aVariantInfo = array();
+            $sColour = 'green';
+
             if (!$bIsHGVS) {
                 $bAllIsHGVS = false;
                 $aVariantInfo = lovd_getVariantInfo($sVariant, false);
                 $sFixedVariant = lovd_fixHGVS($sVariant);
+                $bFixedIsHGVS = lovd_getVariantInfo($sFixedVariant, false, true);
+
+                // Colour = red if the variant could not be improved, green
+                // if it was fully fixed and orange if it was partially fixed.
+                $sColour = ($sVariant == $sFixedVariant || !$bFixedIsHGVS? 'red' : 'orange');
             }
-            $sTable .= '<TR valign=\"top\" >' .
-                            '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
-                            '<TD>' . ($bIsHGVS? 'T' : 'F') . '</TD>' .
-                            '<TD>' . ($bIsHGVS || !lovd_getVariantInfo($sFixedVariant, false, true)? '' : htmlspecialchars($sFixedVariant)) . '</TD>' .
-                            '<TD>' . ($bIsHGVS || empty($aVariantInfo['errors'])? '' : '<B>Errors: - </B>' .  htmlspecialchars(implode(' - ', array_values($aVariantInfo['errors'])))) .
-                                     ($bIsHGVS || !($aVariantInfo['warnings'] && $aVariantInfo['errors'])? '' : '<BR>') .
-                                     ($bIsHGVS || empty($aVariantInfo['warnings'])? '' :  '<B>Warnings: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['warnings'])))) . '</TD>' .
-                        '</TR>';
+
+            $sTable .= '<TR valign=\"top\" class=\"col' . ucfirst($sColour) .'\">' .
+                '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
+                '<TD>' . ($bIsHGVS? 'T' : 'F') . '</TD>' .
+                '<TD >' . htmlspecialchars(($bIsHGVS || !$bFixedIsHGVS? $sVariant : $sFixedVariant)) . '</TD>';
+
+            if (!$bIsHGVS) {
+                $sTable .= '<TD>' . (empty($aVariantInfo['errors'])? '' : '<B>Errors: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['errors'])))) .
+                                    (!$aVariantInfo['warnings'] || !$aVariantInfo['errors']? '' : '<BR>') .
+                                    (empty($aVariantInfo['warnings'])? '' : '<B>Warnings: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['warnings'])))) . '</TD></TR>';
+            } else {
+                $sTable .= '<TD></TD>';
+            }
         }
     }
 
