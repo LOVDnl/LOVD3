@@ -56,7 +56,7 @@ if ($_REQUEST['method'] == 'single') {
     // First check to see if the variant is HGVS.
     $bIsHGVS = lovd_getVariantInfo($sVariant, false, true);
 
-    $sResponse .= 'The given variant is ' . ($bIsHGVS ? '' : 'not') . ' HGVS.<br><br>';
+    $sResponse .= 'The given variant is ' . ($bIsHGVS ? '' : 'not ') . 'HGVS.<br><br>';
 
     // Show whether the variant was correct through a check or a cross.
     print('$("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png"); ');
@@ -147,7 +147,7 @@ if ($_REQUEST['method'] == 'list') {
 
     $sTable .= '</TABLE></HTML>';
 
-    $sResponse .= 'The variants are ' . ($bAllIsHGVS ? '' : 'not') . ' all clean HGVS description.<br><br>';
+    $sResponse .= 'The variants are ' . ($bAllIsHGVS ? '' : 'not ') . 'all clean HGVS description.<br><br>';
 
     if (!$bAllIsHGVS) {
         $sResponse .= $sTable;
