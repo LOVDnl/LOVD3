@@ -143,7 +143,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(),
                 'errors' => array(
-                    'EPOSITIONFORMAT' => 'Too many positions are given for variant type substitution.'
+                    'ETOOMANYPOSITIONS' => 'Too many positions are given for variant type substitution.'
                 ),
             )),
             array('g.123A>GC', array(
@@ -262,7 +262,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'warnings' => array(),
                 'errors' => array(
-                    'EPOSITIONFORMAT' => 'The start and end positions of any range should not be the same.',
+                    'EPOSITIONFORMAT' => 'No two positions should be the same.',
                 ),
             )),
             array('g.1_2ins', array(
@@ -620,7 +620,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONFORMAT' => 'The start and end positions of any range should not be the same.'
+                    'WPOSITIONFORMAT' => 'No two positions should be the same.'
                 ),
                 'errors' => array(),
             )),
