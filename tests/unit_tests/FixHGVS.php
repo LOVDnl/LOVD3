@@ -71,12 +71,13 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('123dup', 'g.123dup'),
             array('(123dup)', 'g.(123dup)'),
             array('.123dup', 'g.123dup'),
-            array('123-5dup', 'c.123-5dup'),
-
+            array('123-5dup', 'g.123-5dup'), // The prefix will be filled in according to its type, so in reality
+                                             //  this will be a c.123-5dup if it was filled in the transcript field.
             // Wrong prefixes.
-            array('g.123-5dup', 'c.123-5dup'),
-            array('m.123-5dup', 'c.123-5dup'), // Fixme; take another look.
-            array('g.*1_*2del', 'c.*1_*2del'),
+            array('g.140712592-140712592C>T', 'g.140712592C>T'),
+            array('g.123-5dup', 'g.123-5dup'),
+            array('m.123-5dup', 'm.123-5dup'),
+            array('g.*1_*2del', 'g.*1_*2del'),
 
             // Added whitespace.
             array('g. 123_124insA', 'g.123_124insA'),
@@ -90,7 +91,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123insAUG', 'g.123insATG'),
 
             // Conversions and substitutions which should be delins variants.
-            array('g.123conACTG', 'g.123delinsACTG'),
+            array('g.100_200con400_500', 'g.100_200delins400_500'),
             array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:100_200]'),
             array('g.123A>C', 'g.123A>C'),
             array('g.123A>GC', 'g.123delinsGC'),
@@ -120,13 +121,13 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.?del', 'g.?del'),
             array('g.1_?del', 'g.1_?del'),
             array('g.?_100del', 'g.?_100del'),
-//            array('g.?_?del', 'g.?del'), // Fails.
-//            array('g.(?_?)del', 'g.?del'), // Fails.
+            array('g.?_?del', 'g.?del'),
+            array('g.(?_?)del', 'g.?del'),
 
             array('g.(?_5)_10del', 'g.(?_5)_10del'),
             array('g.(5_?)_10del', 'g.(5_?)_10del'),
             array('g.(5_?)_?del', 'g.(5_?)del'),
-//            array('g.(?_?)_10del', 'g.?_10del'), // Fails.
+            array('g.(?_?)_10del', 'g.?_10del'),
 
             array('g.5_(10_?)del', 'g.5_(10_?)del'),
             array('g.5_(?_10)del', 'g.5_(?_10)del'),
@@ -134,17 +135,17 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.5_(?_?)del', 'g.5_?del'),
 
             array('g.(?_5)_(10_?)del', 'g.(?_5)_(10_?)del'),
-            array('g.(5_?)_(?_10)del', 'g.(5_?)_(?_10)del'),
+            array('g.(5_?)_(?_10)del', 'g.(5_10)del'),
             array('g.(5_?)_(?_10)del(3)', 'g.(5_10)del(3)'),
 
-//            array('g.(?_?)_(?_?)del', 'g.?del'), // Fails.
+            array('g.(?_?)_(?_?)del', 'g.?del'),
 
             // Swaps positions when needed.
             array('g.2_1dup', 'g.1_2dup'),
             array('g.(5_1)_10dup', 'g.(1_5)_10dup'),
-//            array('g.1_(7_5)dup', 'g.1_(5_7)dup'), // Fails.
-//            array('g.(7_5)_1dup', 'g.1_(5_7)dup'), // Fails.
-//            array('c.5+1_5-1dup', 'c.5-1_5+1dup'), // Endless loop.
+            array('g.1_(7_5)dup', 'g.1_(5_7)dup'),
+            array('g.(7_5)_1dup', 'g.1_(5_7)dup'),
+            array('c.5+1_5-1dup', 'c.5-1_5+1dup'),
 
 
 
