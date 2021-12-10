@@ -143,16 +143,16 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     // The basic steps have all been taken. From this point forward, we
     //  can use the warning and error messages of lovd_getVariantInfo() to check
     //  and fix the variant.
-    $aVariantInfo = lovd_getVariantInfo($sVariant, false);
-    if ($aVariantInfo === false) {
+    $aVariant = lovd_getVariantInfo($sVariant, false);
+    if ($aVariant === false) {
         return $sVariant; // Not HGVS.
 
-    } elseif (isset($aVariantInfo['errors']['EFALSEUTR']) || isset($aVariantInfo['errors']['EFALSEINTRONIC'])) {
+    } elseif (isset($aVariant['errors']['EFALSEUTR']) || isset($aVariant['errors']['EFALSEINTRONIC'])) {
         // The wrong prefix was given. In other words: intronic positions or UTR
         //  notations were found for genomic DNA.
         if ($sVariant[0] == $sType) {
-            if (isset($aVariantInfo['errors']['EFALSEUTR'])
-                || ($aVariantInfo['position_start'] < 250000 && $aVariantInfo['position_start_intronic'] < 250000)) {
+            if (isset($aVariant['errors']['EFALSEUTR'])
+                || ($aVariant['position_start'] < 250000 && $aVariant['position_start_intronic'] < 250000)) {
                 // If the prefix equals the expected type, there is nothing
                 //  much that we can do about receiving a false UTR.
                 // If variants hold false intronic positions, it might be that
@@ -172,67 +172,67 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
             return lovd_fixHGVS($sType . substr($sVariant, 1), $sType);
         }
 
-    } elseif (!empty($aVariantInfo['errors']
-        && !isset($aVariantInfo['errors']['ESUFFIXMISSING'])
-        && isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN']))) {
+    } elseif (!empty($aVariant['errors']
+        && !isset($aVariant['errors']['ESUFFIXMISSING'])
+        && isset($aVariant['warnings']['WTOOMUCHUNKNOWN']))) {
         return $sVariant; // Not HGVS.
     }
 
     // Change the variant type (if possible) if the wrong type was chosen.
-    if (isset($aVariantInfo['warnings']['WWRONGTYPE'])) {
-        if ($aVariantInfo['type'] == 'subst') {
+    if (isset($aVariant['warnings']['WWRONGTYPE'])) {
+        if ($aVariant['type'] == 'subst') {
             return lovd_fixHGVS(preg_replace('/[ACTG]+>/', 'delins', $sVariant), $sType);
         }
-        if ($aVariantInfo['type'] == 'delins') {
+        if ($aVariant['type'] == 'delins') {
             return $sVariant; // Not HGVS. Fixme; take another look.
         }
     }
 
     // Remove the suffix if it is given to a variant type which should not hold one.
-    if (isset($aVariantInfo['warnings']['WSUFFIXGIVEN']) && !isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])) {
+    if (isset($aVariant['warnings']['WSUFFIXGIVEN']) && !isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
         // The warning message indicates where the unwanted suffix starts.
         // We take this string by isolating the part between the double quotes.
         // Fixme; send variant including suffix to VariantValidator as an additional check.
-        list(,$sVariantType) = explode('"', $aVariantInfo['warnings']['WSUFFIXGIVEN']);
+        list(,$sVariantType) = explode('"', $aVariant['warnings']['WSUFFIXGIVEN']);
         return lovd_fixHGVS(strstr($sVariant, $sVariantType, true) . $sVariantType, $sType);
     }
 
 
 
     // Reformat wrongly described suffixes.
-    if (isset($aVariantInfo['warnings']['WSUFFIXFORMAT'])) {
-        list($sBeforeSuffix, $sSuffix) = explode($aVariantInfo['type'], $sVariant, 2);
+    if (isset($aVariant['warnings']['WSUFFIXFORMAT'])) {
+        list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
 
         if (ctype_digit($sSuffix)) {
             // Add parentheses in case they were forgotten.
             return lovd_fixHGVS(
-                $sBeforeSuffix . $aVariantInfo['type'] . '(' . $sSuffix . ')', $sType);
+                $sBeforeSuffix . $aVariant['type'] . '(' . $sSuffix . ')', $sType);
         }
 
-        if (in_array($aVariantInfo['type'], array('ins', 'delins'))) {
+        if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
             if (preg_match('/^\([0-9]+_[0-9]+\)$/', $sSuffix) || preg_match('/^\([ACTG]+\)$/', $sSuffix)) {
                 // Remove redundant parentheses.
                 return lovd_fixHGVS(
-                    $sBeforeSuffix . $aVariantInfo['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
+                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
             } elseif (preg_match('/^\[[^NX][^;\]]*]$/', $sSuffix)) {
                 // Remove redundant square brackets,
                 //  these are only needed when RefSeqs are given.
                 return lovd_fixHGVS(
-                    $sBeforeSuffix . $aVariantInfo['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
+                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
 
             } elseif (preg_match('/^[NX][CGMR]_[0-9]+/', $sSuffix) || strpos($sSuffix, ';')) {
                 // Square brackets were forgotten, RefSeqs are given.
                 return lovd_fixHGVS(
-                    $sBeforeSuffix . $aVariantInfo['type'] . '[' . $sSuffix . ']', $sType);
+                    $sBeforeSuffix . $aVariant['type'] . '[' . $sSuffix . ']', $sType);
             }
         }
     }
 
     // Fix variants which hold two of the same positions.
-    if ($aVariantInfo['type'] == 'subst' && isset($aVariantInfo['warnings']['WTOOMANYPOSITIONS'])) {
+    if ($aVariant['type'] == 'subst' && isset($aVariant['warnings']['WTOOMANYPOSITIONS'])) {
         // In this case, a variant of type substitution has been given
         //  two positions. In getVariantInfo, these cases are passed
         //  as errors if the positions are not the same, and as warnings
@@ -245,7 +245,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
 
 
     // Swap positions if necessary.
-    if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT']) || isset($aVariantInfo['warnings']['WTOOMUCHUNKNOWN'])) {
+    if (isset($aVariant['warnings']['WPOSITIONFORMAT']) || isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
         $aPositions = array();
 
         preg_match('/([cgmn]\.)(\()?' .
@@ -269,7 +269,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         $aPositions['D']       = $aMatches[18];
         $aPositions['DIntron'] = $aMatches[20];
 
-        if (isset($aVariantInfo['warnings']['WPOSITIONFORMAT'])) {
+        if (isset($aVariant['warnings']['WPOSITIONFORMAT'])) {
             if ($aPositions['C']
                 && max($aPositions['A'], $aPositions['B']) > max($aPositions['C'], $aPositions['D'])) {
                 // If this is the case, the positions are swapped in groups,
