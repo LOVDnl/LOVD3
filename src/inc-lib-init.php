@@ -1334,6 +1334,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                  array('earliest_start',   'latest_start'),
                  array('earliest_end',     'latest_end'),
                  array('earliest_start',   'earliest_end'),
+                 array('latest_start',     'earliest_end'),
                  array('latest_start',     'latest_end')
              ) as $aFirstAndLast) {
 
@@ -1345,16 +1346,17 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $sIntronicLast  = str_replace('_', '_intronic_', $sLast);
 
             if ($aVariant[$sFirst] > $aVariant[$sLast]) {
-                list($aVariant[$sFirst], $aVariant[$sLast]) = array($aVariant[$sLast], $aVariant[$sFirst]);
+                list($aVariant[$sFirst], $aVariant[$sIntronicFirst], $aVariant[$sLast], $aVariant[$sIntronicLast]) =
+                    array($aVariant[$sLast], $aVariant[$sIntronicLast], $aVariant[$sFirst], $aVariant[$sIntronicFirst]);
                 $sPositionWarning = 'The positions are not given in the correct order.';
 
             } elseif ($aVariant[$sFirst] == $aVariant[$sLast]) {
-                if (!in_array($aVariant['prefix'], array('n', 'c'))) {
-                    $sPositionWarning = 'The start and end positions of any range should not be the same.';
+                if (!isset($aVariant[$sIntronicFirst])) {
+                    if ($bCheckHGVS) {
+                        return false;
+                    }
+                    $sPositionWarning = 'No two positions should be the same.';
                     if ($aVariant['type'] == 'ins') {
-                        if ($bCheckHGVS) {
-                            return false;
-                        }
                         $aResponse['errors']['EPOSITIONFORMAT'] = $sPositionWarning;
                         break;
                     }
@@ -1363,16 +1365,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     list($aVariant[$sIntronicFirst], $aVariant[$sIntronicLast]) = array($aVariant[$sIntronicLast], $aVariant[$sIntronicFirst]);
                     $sPositionWarning = 'The intronic positions are not given in the correct order.';
 
-                } elseif ($sIntronicFirst == $sIntronicLast) {
-                    $sPositionWarning = 'The start and end positions of any range should not be the same.';
+                } elseif ($aVariant[$sIntronicFirst] == $aVariant[$sIntronicLast]) {
+                    if ($bCheckHGVS) {
+                        return false;
+                    }
+                    $sPositionWarning = 'No two positions should be the same.';
                     if ($aVariant['type'] == 'ins') {
                         // Insertions must receive the two neighboring positions
                         //  between which they have taken place.
                         // If both positions are the same, this makes the variant
                         //  unclear to the extent that it cannot be interpreted.
-                        if ($bCheckHGVS) {
-                            return false;
-                        }
                         $aResponse['errors']['EPOSITIONFORMAT'] = $sPositionWarning;
                         break;
                     }
@@ -1560,8 +1562,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['EPOSITIONFORMAT'] = 'Too many positions are given for variant type substitution.';
-            return $aResponse;
+            if ($aVariant['earliest_start'] != $aVariant['earliest_end']) {
+                // If the two positions are not the same, the variant is not fixable.
+                $aResponse['errors']['ETOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
+                return $aResponse;
+            }
+            // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
+            $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
         }
 
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
