@@ -46,7 +46,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_getVariantInfo with data from
         // dataProviderGetVariantInfo().
-        $this->assertEquals($aOutput, lovd_getVariantInfo($sInput));
+        $this->assertEquals($aOutput, lovd_getVariantInfo($sInput, false));
     }
 
 
@@ -817,6 +817,119 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variants using "::" are not yet supported.',
                 ),
+            )),
+
+            // Descriptions holding reference sequences.
+            array('NM_123456.1:c.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('NM_123456.1:c.1-1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => -1,
+                'position_end_intron' => -1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'EMISSINGREFERENCE' =>
+                        'The variant is missing a required genomic reference sequence to verify the intronic positions.',
+                ),
+            )),
+            array('NC_123456.1(NM_123456.1):c.1-1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => -1,
+                'position_end_intron' => -1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('ENST12345678911.1:c.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('LRG_123t1:c.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+
+            array('LRG_123t1:n.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('LRG_123:n.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('NR_123456.1:n.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('NM_123456.1:n.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n).',
+                ),
+            )),
+
+            array('NM_123456.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (g).',
+                ),
+            )),
+            array('NC_123456.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('ENSG12345678911.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
             )),
         );
     }
