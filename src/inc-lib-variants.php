@@ -167,7 +167,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         //  notations were found for genomic DNA.
         if ($sVariant[0] == $sType) {
             if (isset($aVariant['errors']['EFALSEINTRONIC'])
-                && ($aVariant['position_start'] >= 250000 || $aVariant['position_start_intronic'] >= 250000)) {
+                && ($aVariant['position_start'] >= 250000 || $aVariant['position_start_intron'] >= 250000)) {
                 // If variants hold false intronic positions, it might be that
                 //  the user accidentally wrote down '-' while meaning '_'.
                 // We will fix this only if we can be really sure this is the case,

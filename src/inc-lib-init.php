@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-11-10
+ * Modified    : 2021-12-15
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1482,6 +1482,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['errors']['EFALSEINTRONIC'] .=
                     ' Did you perhaps try to indicate a range?';
             }
+            // Before we return this, also add the intronic positions. This'll
+            //  allow us to make some guesstimate on whether or not this may
+            //  have been a typo.
+            $aResponse['position_start_intron'] = (int) ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
+            $aResponse['position_end_intron']   = (int) ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
             return $aResponse;
 
         } else {
