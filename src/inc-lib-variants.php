@@ -70,7 +70,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
     // Check for a reference sequence.
     if ($sReference !== false) {
         if ($sReference == '') {
-            if (preg_match('/^[NX][CGMR]_[0-9]{6,9}\.[0-9]+:/', $sVariant)) {
+            if (preg_match('/^(\(?(LRG|ENS[GT]|[NX][CGMRTW])_?[0-9]+([.t][0-9]+)?\)?){1,2}:/', $sVariant)) {
                 list($sReference, $sVariant) = explode(':', $sVariant);
                 $sReference .= ':'; // We add the ':' to ease the concatenation later on.
             } else {
