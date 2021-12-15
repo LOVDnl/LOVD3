@@ -931,6 +931,25 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+
+            array('NC_12345.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised.',
+                ),
+            )),
+            array('LRG:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised.',
+                ),
+            )),
         );
     }
 }
