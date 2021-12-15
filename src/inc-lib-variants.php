@@ -45,6 +45,14 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
     // This function tries to recognize common errors in the HGVS nomenclature,
     //  and fix the variants in such a way, that they will be recognizable and
     //  usable.
+    // Variable $sType will store the DNA type to allow for this function to
+    //  see when the wrong or right prefixes were given.
+    // Variable $sReference holds the reference sequence which comes before
+    //  the variant (the NC part of NC_...:g.1del as seperated by the ':').
+    // $sReference should always be an empty string on the first run of this
+    //  function. It will be filled by either false (in case no reference
+    //  sequence was found) or by the sequence ID itself when the function
+    //  runs recursively.
 
     if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
         $sType = 'g';
@@ -64,9 +72,11 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         if ($sReference == '') {
             if (preg_match('/^[NX][CGMR]_[0-9]{6,9}\.[0-9]+:/', $sVariant)) {
                 list($sReference, $sVariant) = explode(':', $sVariant);
-                $sReference .= ':'; // To easy the concatenation.
+                $sReference .= ':'; // We add the ':' to ease the concatenation later on.
             } else {
-                // No reference was found.
+                // No reference was found. We fill this in by false so
+                //  the function will not have to continue to do this
+                //  test every time the function calls upon itself.
                 $sReference = false;
             }
         }
