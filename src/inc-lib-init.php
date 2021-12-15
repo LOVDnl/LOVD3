@@ -1118,11 +1118,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     if (preg_match('/^[A-Z-_.t0-9()]+:[gcmn]/', $sVariant)) {
         // The user seems to have written down a reference sequence.
         // Let's see if it matches the expected format.
+        list($sReferenceSequence, $sVariant) = explode(':', $sVariant);
+
         if (preg_match('/^(' .
             '(\(?[NX][CGMRTW]_[0-9]{6,9}.[0-9]+\)?){1,2}|' .
             'ENS[TG][0-9]{11}.[0-9]+|' .
             'LRG_[0-9]{3}(t[0-9]+)?' .
-            ')/', $sVariant)) {
+            ')$/', $sReferenceSequence)) {
+            // Check if the reference sequence matches one of
+            //  the possible formats.
             if ($sTranscriptID !== false) {
                 if (is_numeric($sTranscriptID)) {
                     $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
@@ -1131,7 +1135,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $sNCBIID = $sTranscriptID;
                 }
 
-                if ($sNCBIID == strstr($sVariant, ':', true)) {
+                if ($sNCBIID == $sReferenceSequence) {
                     // The transcript given in the DNA description is also
                     //  the transcript that we're using in LOVD for this variant.
                     $aResponse['warnings']['WTRANSCRIPTFOUND'] = 'Transcript ID found in the DNA description.';
@@ -1143,14 +1147,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
 
-            list($sReferenceSequence, $sVariant) = explode(':', $sVariant);
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
 
             if (($sVariant[0] == 'n' && !preg_match('/(NR|N[GC]\(NR\)|ENST|LRGt?)/', $sReferenceType))
                 || ($sVariant[0] == 'c' && !preg_match('/^([NX]M|N[GC]\(NM\)|ENST|LRGt?)$/', $sReferenceType))
                 || (preg_match('/[gm]/', $sVariant[0]) && !preg_match('/^(N[CTW]|ENSG|LRG)$/', $sReferenceType))) {
-                // NM (transcript ref) mag niet zonder NC of NG om de intronische posities te refereren
-                // definieer genomische ref seq; transcript ref seq; en transcript ref seq met genomische achtergrond
+                // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
                 }
@@ -1165,8 +1167,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['EREFERENCEFORMAT'] = 'The reference sequence could not be recognised.';
-            $sVariant = substr($sVariant, strpos($sVariant, ':') + 1);
+            $aResponse['errors']['EREFERENCEFORMAT'] = 'The reference sequence ' . (
+                !preg_match('/^(\(?[NX][CGMRTW]_[0-9]{6,9}\)?){1,2}$/', $sReferenceSequence)?
+                    'could not be recognised.' :
+                    'is missing the version number. Please add this information to your variant description.');
         }
     }
 
@@ -1632,9 +1636,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($aVariant['earliest_start'] != $aVariant['earliest_end']) {
                 // If the two positions are not the same, the variant is not fixable.
                 $aResponse['errors']['ETOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
+            } else {
+                // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
+                $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
             }
-            // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
-            $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
         }
 
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
