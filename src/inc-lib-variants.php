@@ -174,18 +174,19 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         // The wrong prefix was given. In other words: intronic positions or UTR
         //  notations were found for genomic DNA.
         if ($sVariant[0] == $sType) {
-            if (isset($aVariant['errors']['EFALSEUTR'])
-                || ($aVariant['position_start'] < 250000 && $aVariant['position_start_intronic'] < 250000)) {
-                // If the prefix equals the expected type, there is nothing
-                //  much that we can do about receiving a false UTR.
+            if (isset($aVariant['errors']['EFALSEINTRONIC'])
+                && ($aVariant['position_start'] >= 250000 || $aVariant['position_start_intronic'] >= 250000)) {
                 // If variants hold false intronic positions, it might be that
                 //  the user accidentally wrote down '-' while meaning '_'.
                 // We will fix this only if we can be really sure this is the case,
                 //  which is if the variant contains a position too big to
                 //  be of a transcript.
-                return $sReference . $sVariant; // Not HGVS.
-            } else {
                 return lovd_fixHGVS($sReference . str_replace('-', '_', $sVariant), $sType, $sReference);
+
+            } else {
+                // The user likely put the input in the wrong field.
+                // We cannot fix this variant with certainty.
+                return $sReference . $sVariant; // Not HGVS.
             }
 
         } else {
