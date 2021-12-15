@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-12-08
+ * Modified    : 2021-12-15
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -40,19 +40,13 @@ if (!defined('ROOT_PATH')) {
 
 
 
-function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
+function lovd_fixHGVS ($sVariant, $sType = 'g')
 {
     // This function tries to recognize common errors in the HGVS nomenclature,
     //  and fix the variants in such a way, that they will be recognizable and
     //  usable.
-    // Variable $sType will store the DNA type to allow for this function to
-    //  see when the wrong or right prefixes were given.
-    // Variable $sReference holds the reference sequence which comes before
-    //  the variant (the NC part of NC_...:g.1del as seperated by the ':').
-    // $sReference should always be an empty string on the first run of this
-    //  function. It will be filled by either false (in case no reference
-    //  sequence was found) or by the sequence ID itself when the function
-    //  runs recursively.
+    // $sType stores the DNA type (c, g, m, or n) to allow for this function to
+    //  fully validate the variant and, optionally, its reference sequence.
 
     if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
         $sType = 'g';
@@ -67,19 +61,17 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         return $sVariant;
     }
 
-    // Check for a reference sequence.
-    if ($sReference !== false) {
-        if ($sReference == '') {
-            if (preg_match('/^(\(?(LRG|ENS[GT]|[NX][CGMRTW])_?[0-9]+([.t][0-9]+)?\)?){1,2}:/', $sVariant)) {
-                list($sReference, $sVariant) = explode(':', $sVariant);
-                $sReference .= ':'; // We add the ':' to ease the concatenation later on.
-            } else {
-                // No reference was found. We fill this in by false so
-                //  the function will not have to continue to do this
-                //  test every time the function calls upon itself.
-                $sReference = false;
-            }
-        }
+    // Check for a reference sequence. We won't check it here, so we won't be
+    //  very strict.
+    if (preg_match('/^(ENS[GT]|LRG|[NX][CGMRTW]_)[0-9]+/', $sVariant)) {
+        // Something that looks like a reference sequence is prefixing the
+        //  variant. Cut it off and store it separately. We'll return it, but
+        //  this way we can actually check the variant itself.
+        list($sReference, $sVariant) = explode(':', $sVariant, 2);
+        $sReference .= ':'; // To simplify the concatenation later on.
+    } else {
+        // No reference was found.
+        $sReference = '';
     }
 
     // Move or remove wrongly placed parentheses.
@@ -92,11 +84,11 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         //  at the simplest and most common mistakes.
         if (strpos($sVariant, '((') !== false && ($nOpening - $nClosing) == 1) {
             // e.g., g.((123_234)_(345_456)del.
-            return lovd_fixHGVS($sReference . str_replace('((', '(', $sVariant), $sType, $sReference);
+            return lovd_fixHGVS($sReference . str_replace('((', '(', $sVariant), $sType);
 
         } elseif (($nClosing - $nOpening) == 1 && strpos($sVariant, '))')) {
             // e.g. g.(123_234)_(345_456))del.
-            return lovd_fixHGVS($sReference . str_replace('))', ')', $sVariant), $sType, $sReference);
+            return lovd_fixHGVS($sReference . str_replace('))', ')', $sVariant), $sType);
 
         } else {
             // The parentheses are formatted in a more difficult way than
@@ -112,29 +104,29 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         if (!preg_match('/\b[cgmn]\./', $sVariant)) {
             // No prefix found. Add one.
             return lovd_fixHGVS(
-                $sType . '.(' . substr($sVariant, 1), $sType);
+                $sReference . $sType . '.(' . substr($sVariant, 1), $sType);
         } elseif (preg_match('/^\(([cgmn]\.)/', $sVariant, $aRegs)) {
             // The variant is written as (c.1_2insA). We will rewrite this as c.(1_2insA).
-            return lovd_fixHGVS($sReference .
-                $aRegs[1] . '(' . substr($sVariant, 3), $sType, $sReference);
+            return lovd_fixHGVS(
+                $sReference . $aRegs[1] . '(' . substr($sVariant, 3), $sType);
         }
     }
 
     // Add prefix in case it is missing.
     if (!in_array($sVariant[0], array('c', 'g', 'm', 'n'))) {
-        return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType, $sReference);
+        return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
     }
 
     // Replace the outdated "con" type with "delins".
     // This used to check also if the delins needed square brackets around the
     //  insertion, but we moved that code to generalize it.
     if (strpos($sVariant, 'con') !== false) {
-        return lovd_fixHGVS($sReference . str_replace('con', 'delins', $sVariant), $sType, $sReference);
+        return lovd_fixHGVS($sReference . str_replace('con', 'delins', $sVariant), $sType);
     }
 
     // Remove redundant prefixes due to copy/paste errors (g.12_g.23del to g.12_23del).
     if (substr_count($sVariant, $sType . '.') > 1) {
-        return lovd_fixHGVS($sReference . $sType . '.' . str_replace($sType . '.', '', $sVariant), $sType, $sReference);
+        return lovd_fixHGVS($sReference . $sType . '.' . str_replace($sType . '.', '', $sVariant), $sType);
     }
 
     // Rewrite lowercase bases as uppercase bases.
@@ -148,17 +140,17 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
                 array('A', 'C', 'G', 'T', 'U'),
                 $sVariant
             )
-        ), $sType, $sReference);
+        ), $sType);
     }
 
     // Replace uracil with thymine (RNA -> DNA description).
     if (strpos($sVariant, 'U') !== false) {
-        return lovd_fixHGVS($sReference . str_replace('dTp', 'dup', str_replace('U', 'T', $sVariant)), $sType, $sReference);
+        return lovd_fixHGVS($sReference . str_replace('dTp', 'dup', str_replace('U', 'T', $sVariant)), $sType);
     }
 
     // Make sure no unnecessary bases are given for wild types (c.123A= -> c.123=).
     if (strpos($sVariant, '=') !== false && similar_text($sVariant, 'ACTG')) {
-        return lovd_fixHGVS($sReference . str_replace(array('=', 'A', 'C', 'T', 'G'), '', $sVariant) . '=', $sType, $sReference);
+        return lovd_fixHGVS($sReference . str_replace(array('=', 'A', 'C', 'T', 'G'), '', $sVariant) . '=', $sType);
     }
 
 
@@ -181,7 +173,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
                 // We will fix this only if we can be really sure this is the case,
                 //  which is if the variant contains a position too big to
                 //  be of a transcript.
-                return lovd_fixHGVS($sReference . str_replace('-', '_', $sVariant), $sType, $sReference);
+                return lovd_fixHGVS($sReference . str_replace('-', '_', $sVariant), $sType);
 
             } else {
                 // The user likely put the input in the wrong field.
@@ -193,7 +185,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
             // If the prefix does not equal the expected type, we can be sure
             //  to try and add in the type instead. Perhaps the user accidentally
             //  wrote down a 'g.' in the transcript field.
-            return lovd_fixHGVS($sReference . $sType . substr($sVariant, 1), $sType, $sReference);
+            return lovd_fixHGVS($sReference . $sType . substr($sVariant, 1), $sType);
         }
 
     } elseif (!empty($aVariant['errors']
@@ -205,7 +197,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
     // Change the variant type (if possible) if the wrong type was chosen.
     if (isset($aVariant['warnings']['WWRONGTYPE'])) {
         if ($aVariant['type'] == 'subst') {
-            return lovd_fixHGVS($sReference . preg_replace('/[ACTG]+>/', 'delins', $sVariant), $sType, $sReference);
+            return lovd_fixHGVS($sReference . preg_replace('/[ACTG]+>/', 'delins', $sVariant), $sType);
         }
         if ($aVariant['type'] == 'delins') {
             return $sReference . $sVariant; // Not HGVS. Fixme; take another look.
@@ -218,7 +210,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         // We take this string by isolating the part between the double quotes.
         // Fixme; send variant including suffix to VariantValidator as an additional check.
         list(,$sVariantType) = explode('"', $aVariant['warnings']['WSUFFIXGIVEN']);
-        return lovd_fixHGVS($sReference . strstr($sVariant, $sVariantType, true) . $sVariantType, $sType, $sReference);
+        return lovd_fixHGVS($sReference . strstr($sVariant, $sVariantType, true) . $sVariantType, $sType);
     }
 
 
@@ -230,7 +222,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         if (ctype_digit($sSuffix)) {
             // Add parentheses in case they were forgotten.
             return lovd_fixHGVS($sReference .
-                $sBeforeSuffix . $aVariant['type'] . '(' . $sSuffix . ')', $sType, $sReference);
+                $sBeforeSuffix . $aVariant['type'] . '(' . $sSuffix . ')', $sType);
         }
 
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
@@ -239,18 +231,18 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
             if (preg_match('/^\([0-9]+_[0-9]+\)$/', $sSuffix) || preg_match('/^\([ACTG]+\)$/', $sSuffix)) {
                 // Remove redundant parentheses.
                 return lovd_fixHGVS($sReference .
-                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType, $sReference);
+                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
             } elseif (preg_match('/^\[[^NX][^;\]]*]$/', $sSuffix)) {
                 // Remove redundant square brackets,
                 //  these are only needed when RefSeqs are given.
                 return lovd_fixHGVS($sReference .
-                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType, $sReference);
+                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
 
             } elseif (preg_match('/^[NX][CGMR]_[0-9]+/', $sSuffix) || strpos($sSuffix, ';')) {
                 // Square brackets were forgotten, RefSeqs are given.
                 return lovd_fixHGVS($sReference .
-                    $sBeforeSuffix . $aVariant['type'] . '[' . $sSuffix . ']', $sType, $sReference);
+                    $sBeforeSuffix . $aVariant['type'] . '[' . $sSuffix . ']', $sType);
             }
         }
     }
@@ -264,7 +256,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         //  sure we are doing the right thing as we are removing the
         //  second positions.
         $sVariant = preg_replace('/_[0-9]+([-+][0-9]+)?/', '', $sVariant);
-        return lovd_fixHGVS($sReference . $sVariant , $sType, $sReference);
+        return lovd_fixHGVS($sReference . $sVariant , $sType);
     }
 
 
@@ -387,7 +379,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
             $sAfter;
 
         if ($sNewVariant != $sVariant) {
-            return lovd_fixHGVS($sReference . $sNewVariant, $sType, $sReference);
+            return lovd_fixHGVS($sReference . $sNewVariant, $sType);
 
         } else {
             return $sReference . $sVariant;
