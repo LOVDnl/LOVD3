@@ -181,7 +181,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
                 // If variants hold false intronic positions, it might be that
                 //  the user accidentally wrote down '-' while meaning '_'.
                 // We will fix this only if we can be really sure this is the case,
-                //  which is if the position indicates a length too big to
+                //  which is if the variant contains a position too big to
                 //  be of a transcript.
                 return $sReference . $sVariant; // Not HGVS.
             } else {
