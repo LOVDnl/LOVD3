@@ -40,7 +40,7 @@ if (!defined('ROOT_PATH')) {
 
 
 
-function lovd_fixHGVS ($sVariant, $sType = 'g')
+function lovd_fixHGVS ($sVariant, $sType = '')
 {
     // This function tries to recognize common errors in the HGVS nomenclature,
     //  and fix the variants in such a way, that they will be recognizable and
@@ -49,7 +49,21 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     //  fully validate the variant and, optionally, its reference sequence.
 
     if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
-        $sType = 'g';
+        // If type is not given, default to something.
+        // We usually just default to 'g'. But when it's obviously something
+        //  else, pick that other thing.
+        if (in_array($sVariant[0], array('c', 'g', 'm', 'n'))) {
+            $sType = $sVariant[0];
+        } else {
+            if (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
+                // Variant doesn't have a prefix either, *and* there seems to be an
+                //  intronic position mentioned.
+                $sType = 'c';
+            } else {
+                // Fine, we default to 'g'.
+                $sType = 'g';
+            }
+        }
     }
 
     // Trim the variant and remove whitespace.
