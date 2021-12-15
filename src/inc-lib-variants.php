@@ -45,6 +45,14 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
     // This function tries to recognize common errors in the HGVS nomenclature,
     //  and fix the variants in such a way, that they will be recognizable and
     //  usable.
+    // Variable $sType will store the DNA type to allow for this function to
+    //  see when the wrong or right prefixes were given.
+    // Variable $sReference holds the reference sequence which comes before
+    //  the variant (the NC part of NC_...:g.1del as seperated by the ':').
+    // $sReference should always be an empty string on the first run of this
+    //  function. It will be filled by either false (in case no reference
+    //  sequence was found) or by the sequence ID itself when the function
+    //  runs recursively.
 
     if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
         $sType = 'g';
@@ -62,11 +70,13 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
     // Check for a reference sequence.
     if ($sReference !== false) {
         if ($sReference == '') {
-            if (preg_match('/^[NX][CGMR]_[0-9]{6,9}\.[0-9]+:/', $sVariant)) {
+            if (preg_match('/^(\(?(LRG|ENS[GT]|[NX][CGMRTW])_?[0-9]+([.t][0-9]+)?\)?){1,2}:/', $sVariant)) {
                 list($sReference, $sVariant) = explode(':', $sVariant);
-                $sReference .= ':'; // To easy the concatenation.
+                $sReference .= ':'; // We add the ':' to ease the concatenation later on.
             } else {
-                // No reference was found.
+                // No reference was found. We fill this in by false so
+                //  the function will not have to continue to do this
+                //  test every time the function calls upon itself.
                 $sReference = false;
             }
         }
@@ -164,18 +174,19 @@ function lovd_fixHGVS ($sVariant, $sType = 'g', $sReference = '')
         // The wrong prefix was given. In other words: intronic positions or UTR
         //  notations were found for genomic DNA.
         if ($sVariant[0] == $sType) {
-            if (isset($aVariant['errors']['EFALSEUTR'])
-                || ($aVariant['position_start'] < 250000 && $aVariant['position_start_intronic'] < 250000)) {
-                // If the prefix equals the expected type, there is nothing
-                //  much that we can do about receiving a false UTR.
+            if (isset($aVariant['errors']['EFALSEINTRONIC'])
+                && ($aVariant['position_start'] >= 250000 || $aVariant['position_start_intronic'] >= 250000)) {
                 // If variants hold false intronic positions, it might be that
                 //  the user accidentally wrote down '-' while meaning '_'.
                 // We will fix this only if we can be really sure this is the case,
-                //  which is if the position indicates a length too big to
+                //  which is if the variant contains a position too big to
                 //  be of a transcript.
-                return $sReference . $sVariant; // Not HGVS.
-            } else {
                 return lovd_fixHGVS($sReference . str_replace('-', '_', $sVariant), $sType, $sReference);
+
+            } else {
+                // The user likely put the input in the wrong field.
+                // We cannot fix this variant with certainty.
+                return $sReference . $sVariant; // Not HGVS.
             }
 
         } else {

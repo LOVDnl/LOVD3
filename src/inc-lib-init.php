@@ -1115,47 +1115,58 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Match the reference sequence if one was given.
-    if (preg_match('/^(' .
-        '(\(?[NX][CGMRTW]_[0-9]{6,9}.[0-9]+\)?){1,2}|' .
-        'ENS[TG][0-9]{11}.[0-9]+|' .
-        'LRG_[0-9]{3}(t[0-9]+)?' .
-        ')/', $sVariant)) {
-        // We are checking to see whether the variant sstarts with
-        //  a reference sequence such as NC_123456.1:...
-        //  or ENST12345678911.1:...
-        if ($sTranscriptID !== false) {
-            if (is_numeric($sTranscriptID)) {
-                $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
-                    array($sTranscriptID))->fetchColumn();
-            } else {
-                $sNCBIID = $sTranscriptID;
+    if (preg_match('/^[A-Z-_.t0-9()]+:[gcmn]/', $sVariant)) {
+        // The user seems to have written down a reference sequence.
+        // Let's see if it matches the expected format.
+        if (preg_match('/^(' .
+            '(\(?[NX][CGMRTW]_[0-9]{6,9}.[0-9]+\)?){1,2}|' .
+            'ENS[TG][0-9]{11}.[0-9]+|' .
+            'LRG_[0-9]{3}(t[0-9]+)?' .
+            ')/', $sVariant)) {
+            if ($sTranscriptID !== false) {
+                if (is_numeric($sTranscriptID)) {
+                    $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
+                        array($sTranscriptID))->fetchColumn();
+                } else {
+                    $sNCBIID = $sTranscriptID;
+                }
+
+                if ($sNCBIID == strstr($sVariant, ':', true)) {
+                    // The transcript given in the DNA description is also
+                    //  the transcript that we're using in LOVD for this variant.
+                    $aResponse['warnings']['WTRANSCRIPTFOUND'] = 'Transcript ID found in the DNA description.';
+                } else {
+                    // This is an actual problem; the submitter used a
+                    //  different transcript than configured in LOVD.
+                    $aResponse['warnings']['WDIFFERENTTRANSCRIPT'] =
+                        'The transcript found in the DNA description does not match the configured transcript.';
+                }
             }
 
-            if ($sNCBIID == strstr($sVariant, ':', true)) {
-                // The transcript given in the DNA description is also
-                //  the transcript that we're using in LOVD for this variant.
-                $aResponse['warnings']['WTRANSCRIPTFOUND'] = 'Transcript ID found in the DNA description.';
-            } else {
-                // This is an actual problem; the submitter used a
-                //  different transcript than configured in LOVD.
-                $aResponse['warnings']['WDIFFERENTTRANSCRIPT'] =
-                    'The transcript found in the DNA description does not match the configured transcript.';
+            list($sReferenceSequence, $sVariant) = explode(':', $sVariant);
+            $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
+
+            if (($sVariant[0] == 'n' && !preg_match('/(NR|N[GC]\(NR\)|ENST|LRGt?)/', $sReferenceType))
+                || ($sVariant[0] == 'c' && !preg_match('/^([NX]M|N[GC]\(NM\)|ENST|LRGt?)$/', $sReferenceType))
+                || (preg_match('/[gm]/', $sVariant[0]) && !preg_match('/^(N[CTW]|ENSG|LRG)$/', $sReferenceType))) {
+                // NM (transcript ref) mag niet zonder NC of NG om de intronische posities te refereren
+                // definieer genomische ref seq; transcript ref seq; en transcript ref seq met genomische achtergrond
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                $aResponse['errors']['EWRONGREFERENCE'] =
+                    'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').';
             }
-        }
 
-        list($sReferenceSequence, $sVariant) = explode(':', $sVariant);
-        $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
-
-        if (($sVariant[0] == 'n' && !preg_match('/(NR|N[GC]\(NR\)|ENST|LRGt?)/', $sReferenceType))
-            || ($sVariant[0] == 'c' && !preg_match('/^([NX]M|N[GC]\(NM\)|ENST|LRGt?)$/', $sReferenceType))
-            || (preg_match('/[gm]/', $sVariant[0]) && !preg_match('/^(N[CTW]|ENSG|LRG)$/', $sReferenceType))) {
-            // NM (transcript ref) mag niet zonder NC of NG om de intronische posities te refereren
-            // definieer genomische ref seq; transcript ref seq; en transcript ref seq met genomische achtergrond
+        } else {
+            // The user seems to have tried to write down a reference
+            //  sequence, but it was not formatted correctly. We will
+            //  return an error.
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['EWRONGREFERENCE'] =
-                'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').';
+            $aResponse['errors']['EREFERENCEFORMAT'] = 'The reference sequence could not be recognised.';
+            $sVariant = substr($sVariant, strpos($sVariant, ':') + 1);
         }
     }
 
@@ -1557,6 +1568,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif ($aVariant['type'] == 'ins') {
         if (!($aVariant['earliest_start'] == '?' || $aVariant['latest_start'] || $aVariant['earliest_end'])) {
+            // An insertion must always hold two positions: so it must have an earliest end
+            // (c.1_2insA) or a latest start (c.(1_5)insA). That is: except if the variant
+            // was given as c.?insA.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1564,6 +1578,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'An insertion must be provided with the two positions between which the insertion has taken place.';
 
         } elseif ($aVariant['latest_end'] || ($aVariant['latest_start'] && $aVariant['earliest_end'])) {
+            // An insertion should not get more than two positions: so it should not
+            //  have a latest end (c.1_(2_5)insA) or a latest start and earliest end
+            //  (c.(1_5)_6insA.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1572,6 +1589,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         } elseif ($aVariant['earliest_start'] != '?' && $aVariant['earliest_end'] != '?' &&
                     ($aVariant['earliest_end'] - $aVariant['earliest_start'] > 1 &&
                         !($aVariant['earliest_start'] == -1 && $aVariant['earliest_end'] == 1))) {
+            // An insertion must always get two positions which are next to each other,
+            //  since the inserted nucleotides will be placed in the middle of those.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1581,6 +1600,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         } elseif (isset($aResponse['messages']['IPOSITIONRANGE']) &&
                     $aVariant['latest_start'] - $aVariant['earliest_start'] == 1) {
+            // If the exact location of an insertion is unknown, this can be indicated
+            //  by placing the positions in the range-format (e.g. c.(1_10)insA). In this
+            //  case, the two positions should not be neighbours, since that would imply that
+            //  the position is certain.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1591,6 +1614,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif ($aResponse['type'] == 'subst') {
         $aSubstitution = explode('>', $aVariant['type']);
         if (strlen($aSubstitution[0]) > 1 || strlen($aSubstitution[1]) > 1) {
+            // A substitution should be a change of one base to one base. If this
+            //  is not the case, we will let the user know that it should have been
+            //  a delins.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1598,14 +1624,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?';
         }
         if ($aVariant['earliest_end']) {
-            // Making sure that substitutions do not hold end positions.
+            // As substitutions are always a one-base change, they should
+            //  only receive one positions (so the end position should be empty).
             if ($bCheckHGVS) {
                 return false;
             }
             if ($aVariant['earliest_start'] != $aVariant['earliest_end']) {
                 // If the two positions are not the same, the variant is not fixable.
                 $aResponse['errors']['ETOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
-                return $aResponse;
             }
             // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
             $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
@@ -1614,6 +1640,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
         foreach(explode('[', $aVariant['type']) as $sRepeat) {
             if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
+                // Repeat variants on coding DNA should always have
+                //  a length of a multiple of three bases.
                 $aResponse['warnings']['WINVALIDREPEATLENGTH'] =
                     'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
                 if ($bCheckHGVS) {
