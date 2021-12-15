@@ -1568,6 +1568,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif ($aVariant['type'] == 'ins') {
         if (!($aVariant['earliest_start'] == '?' || $aVariant['latest_start'] || $aVariant['earliest_end'])) {
+            // An insertion must always hold two positions: so it must have an earliest end
+            // (c.1_2insA) or a latest start (c.(1_5)insA). That is: except if the variant
+            // was given as c.?insA.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1575,6 +1578,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'An insertion must be provided with the two positions between which the insertion has taken place.';
 
         } elseif ($aVariant['latest_end'] || ($aVariant['latest_start'] && $aVariant['earliest_end'])) {
+            // An insertion should not get more than two positions: so it should not
+            //  have a latest end (c.1_(2_5)insA) or a latest start and earliest end
+            //  (c.(1_5)_6insA.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1583,6 +1589,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         } elseif ($aVariant['earliest_start'] != '?' && $aVariant['earliest_end'] != '?' &&
                     ($aVariant['earliest_end'] - $aVariant['earliest_start'] > 1 &&
                         !($aVariant['earliest_start'] == -1 && $aVariant['earliest_end'] == 1))) {
+            // An insertion must always get two positions which are next to each other,
+            //  since the inserted nucleotides will be placed in the middle of those.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1592,6 +1600,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         } elseif (isset($aResponse['messages']['IPOSITIONRANGE']) &&
                     $aVariant['latest_start'] - $aVariant['earliest_start'] == 1) {
+            // If the exact location of an insertion is unknown, this can be indicated
+            //  by placing the positions in the range-format (e.g. c.(1_10)insA). In this
+            //  case, the two positions should not be neighbours, since that would imply that
+            //  the position is certain.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1602,6 +1614,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif ($aResponse['type'] == 'subst') {
         $aSubstitution = explode('>', $aVariant['type']);
         if (strlen($aSubstitution[0]) > 1 || strlen($aSubstitution[1]) > 1) {
+            // A substitution should be a change of one base to one base. If this
+            //  is not the case, we will let the user know that it should have been
+            //  a delins.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1609,14 +1624,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?';
         }
         if ($aVariant['earliest_end']) {
-            // Making sure that substitutions do not hold end positions.
+            // As substitutions are always a one-base change, they should
+            //  only receive one positions (so the end position should be empty).
             if ($bCheckHGVS) {
                 return false;
             }
             if ($aVariant['earliest_start'] != $aVariant['earliest_end']) {
                 // If the two positions are not the same, the variant is not fixable.
                 $aResponse['errors']['ETOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
-                return $aResponse;
             }
             // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
             $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
@@ -1625,6 +1640,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
         foreach(explode('[', $aVariant['type']) as $sRepeat) {
             if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
+                // Repeat variants on coding DNA should always have
+                //  a length of a multiple of three bases.
                 $aResponse['warnings']['WINVALIDREPEATLENGTH'] =
                     'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.';
                 if ($bCheckHGVS) {
