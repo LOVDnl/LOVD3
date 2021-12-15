@@ -220,11 +220,28 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
-            array('g.1_2ins(50)', array(
+            array('g.1_2insN', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2ins(50)', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' =>
+                        'The inserted/affected sequence does not follow HGVS guidelines.',
+                ),
                 'errors' => array(),
             )),
             array('g.1_2ins5_10', array(
@@ -411,14 +428,14 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Unsure variants.
-            array('g.(1_2ins(50))', array(
+            array('g.(1_2insN[(50_60)])', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(),
                 'errors' => array(),
             )),
-            array('g.((1_5)ins(50))', array(
+            array('g.((1_5)insN[(50_60)])', array(
                 'position_start' => 1,
                 'position_end' => 5,
                 'type' => 'ins',
@@ -746,6 +763,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'inv',
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "inv".',
+                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),

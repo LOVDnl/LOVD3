@@ -1710,16 +1710,20 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         if ($aResponse['type'] != 'repeat') {
             // We know that repeat variants should never get a suffix. Therefore, it is
             //  no use to check the format of the suffix for a repeat variant.
-            if (isset($aResponse['messages']['IPOSITIONRANGE']) && !in_array($aVariant['type'], array('ins', 'delins')) &&
-                !preg_match('/^\([0-9]+\)$/', $aVariant['suffix'])) {
-                // If the position is uncertain, then the suffix must show the
-                //  length of the variant within parentheses.
-                if ($bCheckHGVS) {
-                    return false;
+            if (isset($aResponse['messages']['IPOSITIONRANGE']) && !in_array($aVariant['type'], array('ins', 'delins'))) {
+                if (!preg_match('/^\([0-9]+(_[0-9]+)?\)$/', $aVariant['suffix'])) {
+                    // If the position is uncertain, then the suffix must show the
+                    //  length of the variant within parentheses.
+                    if ($bCheckHGVS) {
+                        return false;
+                    }
+                    $aResponse['warnings']['WSUFFIXFORMAT'] = 'The length of the variant is not formatted conform the HGVS guidelines.';
                 }
-                $aResponse['warnings']['WSUFFIXFORMAT'] = 'The length of the variant is not formatted conform the HGVS guidelines.';
 
             } else {
+                // If the variant is not given within a range, it does
+                //  not need to get the length of the variant as a suffix.
+                // Now there are more possibilities, which we check below.
                 if (substr_count($aVariant['suffix'], '[') != substr_count($aVariant['suffix'], ']')) {
                     if ($bCheckHGVS) {
                         return false;
@@ -1728,18 +1732,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         'The inserted/affected sequence contains unbalanced square brackets.';
 
                 } else {
-
                     $bSuffixIsSurroundedByBrackets = $aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']';
                     $bMultipleInsertionsInSuffix = strpos($aVariant['suffix'], ';');
 
-                    foreach (explode(';', rtrim(ltrim($aVariant['suffix'], '['), ']')) as $sInsertion) {
+                    foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
+                            rtrim(ltrim($aVariant['suffix'], '['), ']'))) as $sInsertion) {
                         // Looping through all possible variants.
                         if (!(
-                            (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets) &&                     // so no c.1_2ins[A]
-                                (preg_match('/^[ACGT]+$/', $sInsertion) ||                                      // c.1_2insATG
-                                    preg_match('/^\([0-9]+\)$/', $sInsertion) ||                                // c.1_2ins(40)
-                                    preg_match('/^[-*]?[0-9]+([-+][0-9]+)?_[-*]?[0-9]+([-+]([0-9]+))?(inv)?$/', // c.1_2ins15+1_16-1
-                                        $sInsertion)))
+                            (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)               // so no c.1_2ins[A]
+                                && (preg_match('/^[ACGTN]+$/', $sInsertion)                            // c.1_2insATG
+                                    || preg_match('/^N\[([0-9]+|\([0-9]+_[0-9]+\))\]$/', $sInsertion)  // c.1_2insN[40] or ..N[(1_2)]
+                                    || preg_match(                                                            // c.1_2ins15+1_16-1
+                                        '/^[-*]?[0-9]+([-+][0-9]+)?_[-*]?[0-9]+([-+]([0-9]+))?(inv)?$/', $sInsertion)))
                             ||
                             (isset($bSuffixIsSurroundedByBrackets) && preg_match(
                                     '/^[NX][CMR]_[0-9]{6,9}\.[0-9]+:[cgmn]\.' .                           // c.1_2ins->[NC_123456.1:c.-
