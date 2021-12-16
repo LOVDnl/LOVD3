@@ -164,8 +164,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // Make sure no unnecessary bases are given for wild types (c.123A= -> c.123=).
-    if (strpos($sVariant, '=') !== false && similar_text($sVariant, 'ACTG')) {
-        return lovd_fixHGVS($sReference . str_replace(array('=', 'A', 'C', 'T', 'G'), '', $sVariant) . '=', $sType);
+    if (preg_match('/[0-9]([ACGTN]+=)/', $sVariant, $aRegs)) {
+        var_dump($aRegs[1], $sVariant);
+        return lovd_fixHGVS($sReference . str_replace($aRegs[1], '=', $sVariant), $sType);
     }
 
 
