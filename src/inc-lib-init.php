@@ -1218,7 +1218,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         '([ACGT]+>[ACGTRYSWKMBDHVN]+|' .         //  | (substitution)
         '([ACTG]+\[[0-9]+])+' .                  //  | (repeat sequence)
         '|ins|dup|delins|del|inv|sup|[=?]' .     //  V
-        '|\|(gom|lom|met=|.{3}))' .              // 20. Type of variant
+        '|\|(gom|lom|met=|.+))' .                // 20. Type of variant
 
         '(.*)))/',                               // 23. Suffix
 
@@ -1309,6 +1309,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
 
     } elseif ($aVariant['type'][0] == '|') {
+        // There might be variant types which some users would like to see
+        //  being added to HGVS, but are not yet, e.g. the "bsr" and "per" types.
+        // We want lovd_getVariantInfo() to still make an effort to read these
+        //  variants, so we can extract as much information from them as
+        //  possible (such as the positions and other warnings that might
+        //  have occurred). This is an error, not a warning, since it means
+        //  that the variant is theoretically incorrect and not fixable.
+        if ($aVariant['type'][0] == '|' && !in_array($aVariant['type'], array('|gom', '|lom', '|met='))) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['ENOTSUPPORTED'] = 'This not a valid HGVS description, please verify your input after "|".';
+        }
         $aResponse['type'] = 'met';
 
     } elseif ($aVariant['type'] == '?') {
@@ -1319,20 +1332,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } else {
         $aResponse['type'] = $aVariant['type'];
-
-        // There might be variant types which some users would like to see
-        //  being added to HGVS, but are not yet, e.g. the "bsr" and "per" types.
-        // We want lovd_getVariantInfo() to still make an effort to read these
-        //  variants, so we can extract as much information from them as
-        //  possible (such as the positions and other warnings that might
-        //  have occurred). This is an error, not a warning, since it means
-        //  that the variant is theoretically incorrect and not fixable.
-        if ($aResponse['type'][0] == '|' && !in_array($aResponse['type'], array('|gom', '|lom', '|met='))) {
-            if ($bCheckHGVS) {
-                return false;
-            }
-            $aResponse['errors']['ENOTSUPPORTED'] = 'This not a valid HGVS description, please verify your input after "|".';
-        }
     }
 
 
