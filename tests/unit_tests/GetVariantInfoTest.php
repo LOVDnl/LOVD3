@@ -281,7 +281,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'warnings' => array(),
                 'errors' => array(
-                    'EPOSITIONFORMAT' => 'No two positions should be the same.',
+                    'EPOSITIONFORMAT' => 'This variant description contains two positions that are the same. Please verify your description and try again.',
                 ),
             )),
             array('g.1_2ins', array(
@@ -303,7 +303,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.(1_10)insA', array(
@@ -313,7 +313,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.1_10insA', array(
@@ -442,7 +442,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.((1_2insA)', array(
@@ -463,7 +463,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.1_?del', array(
@@ -473,7 +473,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.?_100del', array(
@@ -483,7 +483,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.?_?del', array(
@@ -495,7 +495,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.',
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.(?_?)del', array(
@@ -509,8 +509,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'ESUFFIXMISSING' => 'The length must be provided for variants which took place within a range.',
                 ),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.',
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.(?_5)_10del', array(
@@ -520,7 +520,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.(5_?)_10del', array(
@@ -530,7 +530,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.(?_?)_10del', array(
@@ -542,7 +542,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.',
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.5_(10_?)del', array(
@@ -552,7 +552,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.5_(?_10)del', array(
@@ -562,7 +562,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.5_(?_?)del', array(
@@ -574,7 +574,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.',
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.(?_5)_(10_?)del', array(
@@ -584,7 +584,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.(5_?)_(?_10)del', array(
@@ -596,7 +596,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
             array('g.(?_?)_(?_?)del', array(
@@ -608,7 +608,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IUNKNOWNPOSITIONS' => 'This variant contains unknown positions.'
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
 
@@ -639,7 +639,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONFORMAT' => 'No two positions should be the same.'
+                    'WPOSITIONFORMAT' => 'This variant description contains two positions that are the same. Please verify your description and try again.'
                 ),
                 'errors' => array(),
             )),
@@ -648,7 +648,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONFORMAT' => 'The positions are not given in the correct order.'
+                    'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
                 ),
                 'errors' => array(),
             )),
@@ -751,7 +751,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.(1_100)del(30)', array(
@@ -761,7 +761,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.1inv(30)', array(
@@ -781,7 +781,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.1ACT[20]A', array(
@@ -804,7 +804,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
                 'messages' => array(
-                    'IPOSITIONRANGE' => 'The exact position of this variant is uncertain.',
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
 

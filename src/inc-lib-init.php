@@ -1378,7 +1378,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aVariant[$sPosition] = substr($aVariant[$sPosition], 1) + $aTranscriptOffsets[$sTranscriptID];
 
         } elseif ($aVariant[$sPosition] == '?') {
-            $aResponse['messages']['IUNKNOWNPOSITIONS'] = 'This variant contains unknown positions.';
+            $aResponse['messages']['IUNCERTAINPOSITIONS'] = 'This variant description contains uncertain positions.';
 
         } else {
             // When no '*' is found, we can safely cast the position to integer.
@@ -1428,9 +1428,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     if ($bCheckHGVS) {
                         return false;
                     }
-                    $sPositionWarning = 'No two positions should be the same.';
+                    $sPositionWarning = 'This variant description contains two positions that are the same.';
                     if ($aVariant['type'] == 'ins') {
-                        $aResponse['errors']['EPOSITIONFORMAT'] = $sPositionWarning;
+                        $aResponse['errors']['EPOSITIONFORMAT'] = $sPositionWarning .
+                            ' Please verify your description and try again.';
                         break;
                     }
 
@@ -1442,13 +1443,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     if ($bCheckHGVS) {
                         return false;
                     }
-                    $sPositionWarning = 'No two positions should be the same.';
+                    $sPositionWarning = 'This variant description contains two positions that are the same.';
                     if ($aVariant['type'] == 'ins') {
                         // Insertions must receive the two neighboring positions
                         //  between which they have taken place.
                         // If both positions are the same, this makes the variant
                         //  unclear to the extent that it cannot be interpreted.
-                        $aResponse['errors']['EPOSITIONFORMAT'] = $sPositionWarning;
+                        $aResponse['errors']['EPOSITIONFORMAT'] = $sPositionWarning .
+                            ' Please verify your description and try again.';
                         break;
                     }
                 }
@@ -1458,7 +1460,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if ($bCheckHGVS) {
                     return false;
                 }
-                $aResponse['warnings']['WPOSITIONFORMAT'] = $sPositionWarning;
+                $aResponse['warnings']['WPOSITIONFORMAT'] = $sPositionWarning .
+                    ' Please verify your description and try again.';
             }
         }
     }
@@ -1494,7 +1497,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // We now know we are dealing with a case such as g.(1_5)ins. This means that the positions
         //  are uncertain, but somewhere within the range as given within the parentheses. We add a
         //  message to make sure users know our interpretation and can make sure they meant it as such.
-        $aResponse['messages']['IPOSITIONRANGE'] = 'The exact position of this variant is uncertain.';
+        $aResponse['messages']['IPOSITIONRANGE'] = 'This variant description contains uncertain positions.';
         $aResponse['position_start'] = $aVariant['earliest_start'];
         $aResponse['position_end'] = $aVariant['latest_start'];
 
