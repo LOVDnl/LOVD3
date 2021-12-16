@@ -1118,7 +1118,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     if (preg_match('/^[A-Z-_.t0-9()]+:[gcmn]/', $sVariant)) {
         // The user seems to have written down a reference sequence.
         // Let's see if it matches the expected format.
-        list($sReferenceSequence, $sVariant) = explode(':', $sVariant);
+        list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
         if (preg_match('/^(' .
             '(\(?[NX][CGMRTW]_[0-9]{6,9}.[0-9]+\)?){1,2}|' .
@@ -1151,9 +1151,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
 
-            if (($sVariant[0] == 'n' && !preg_match('/(NR|N[GC]\(NR\)|ENST|LRGt?)/', $sReferenceType))
-                || ($sVariant[0] == 'c' && !preg_match('/^([NX]M|N[GC]\(NM\)|ENST|LRGt?)$/', $sReferenceType))
-                || (preg_match('/[gm]/', $sVariant[0]) && !preg_match('/^(N[CTW]|ENSG|LRG)$/', $sReferenceType))) {
+            if (($sVariant[0] == 'n' && !preg_match('/(NR|N[CGTW]\(NR\)|ENST|LRGt?)/', $sReferenceType))
+                || ($sVariant[0] == 'c' && !preg_match('/^([NX]M|N[CGTW]\(NM\)|ENST|LRGt?)$/', $sReferenceType))
+                || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
@@ -1321,8 +1321,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         $aResponse['type'] = $aVariant['type'];
 
         // There might be variant types which some users would like to see
-        //  being added to HGVS, but are not yet, e.g. the bsr and per types.
-        // We want getVariantInfo to still make an effort to read these
+        //  being added to HGVS, but are not yet, e.g. the "bsr" and "per" types.
+        // We want lovd_getVariantInfo() to still make an effort to read these
         //  variants, so we can extract as much information from them as
         //  possible (such as the positions and other warnings that might
         //  have occurred). This is an error, not a warning, since it means
@@ -1355,7 +1355,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Converting 3' UTR notations ('*' in the position fields) to normal notations,
-    //  and also checking for '?'.
+    //  checking for '?', and disallowing negative positions for prefixes other than c.
     foreach (array('earliest_start', 'latest_start', 'earliest_end', 'latest_end') as $sPosition) {
         if (substr($aVariant[$sPosition], 0, 1) == '*') {
             if ($aVariant['prefix'] != 'c') {
@@ -1370,7 +1370,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             if ($sTranscriptID === '') {
                 // If the '*' symbol is given, we must also have a transcript.
-                // This mistake does not lie with the user, but with LOVD as the function would not have
+                // This mistake does not lie with the user, but with LOVD as the function should not have
                 //  been called with a transcriptID or transcriptID=false.
                 return false;
             }
@@ -1398,24 +1398,27 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
 
-    // Making sure that all early positions are bigger than the later positions and that all start positions are bigger
-    //  than the end positions.
-    foreach (array(
-                 array('earliest_start',   'latest_start'),
-                 array('earliest_end',     'latest_end'),
-                 array('earliest_start',   'earliest_end'),
-                 array('latest_start',     'earliest_end'),
-                 array('latest_start',     'latest_end')
-             ) as $aFirstAndLast) {
+    // Making sure that all early positions are bigger than the later positions
+    //  and that all start positions are bigger than the end positions.
+    foreach (
+        array(
+             array('earliest_start',   'latest_start'),
+             array('earliest_end',     'latest_end'),
+             array('earliest_start',   'earliest_end'),
+             array('latest_start',     'earliest_end'),
+             array('latest_start',     'latest_end')
+        ) as $aFirstAndLast) {
 
-        if ($aVariant[$aFirstAndLast[0]] && $aVariant[$aFirstAndLast[1]] &&
-            $aVariant[$aFirstAndLast[0]] != '?' && $aVariant[$aFirstAndLast[1]] != '?') {
-            // We only check the positions if the first and last value are not 0.
+        if ($aVariant[$aFirstAndLast[0]] && $aVariant[$aFirstAndLast[1]]
+            && $aVariant[$aFirstAndLast[0]] != '?'
+            && $aVariant[$aFirstAndLast[1]] != '?') {
+            // We only check the positions if neither are unknown.
             list($sFirst, $sLast) = $aFirstAndLast;
             $sIntronicFirst = str_replace('_', '_intronic_', $sFirst);
             $sIntronicLast  = str_replace('_', '_intronic_', $sLast);
 
             if ($aVariant[$sFirst] > $aVariant[$sLast]) {
+                // Switch positions.
                 list($aVariant[$sFirst], $aVariant[$sIntronicFirst], $aVariant[$sLast], $aVariant[$sIntronicLast]) =
                     array($aVariant[$sLast], $aVariant[$sIntronicLast], $aVariant[$sFirst], $aVariant[$sIntronicFirst]);
                 $sPositionWarning = 'The positions are not given in the correct order.';
@@ -1471,7 +1474,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  information later on.
     $aResponse['position_start'] =
         (!$aVariant['latest_start'] || $aVariant['latest_start'] == '?'? $aVariant['earliest_start'] : $aVariant['latest_start']);
-    $aResponse['position_start'] = ($aResponse['position_start'] == '?'? '?' : (int)$aResponse['position_start']);
+    $aResponse['position_start'] = ($aResponse['position_start'] == '?'? '?' : (int) $aResponse['position_start']);
 
     if (!$aVariant['earliest_end']) {
         $aResponse['position_end'] = $aResponse['position_start'];
@@ -1480,7 +1483,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } else {
         $aResponse['position_end'] = $aVariant['latest_end'];
     }
-    $aResponse['position_end'] = ($aResponse['position_end'] == '?'? '?' : (int)$aResponse['position_end']);
+    $aResponse['position_end'] = ($aResponse['position_end'] == '?'? '?' : (int) $aResponse['position_end']);
 
     if (in_array($aVariant['prefix'], array('n', 'c'))) {
         $aResponse['position_start_intron'] = (int) ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
@@ -1504,8 +1507,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Now check the syntax of the variant in detail.
 
     // Making sure intronic positions are only given for variants which can hold them.
-    if (($aVariant['earliest_intronic_start'] || $aVariant['latest_intronic_start'] ||
-            $aVariant['earliest_intronic_end']   || $aVariant['latest_intronic_end'])) {
+    if (($aVariant['earliest_intronic_start'] || $aVariant['latest_intronic_start']
+        || $aVariant['earliest_intronic_end'] || $aVariant['latest_intronic_end'])) {
         if (!in_array($aVariant['prefix'], array('c', 'n'))) {
             if ($bCheckHGVS) {
                 return false;
@@ -1527,7 +1530,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             return $aResponse;
 
         } else {
-            if (isset($sReferenceType) && !preg_match('/^N[GC]/', $sReferenceType)) {
+            if (isset($sReferenceType) && !preg_match('/^N[CGTW]/', $sReferenceType)) {
                 // If a variant holds intronic positions, it must have a reference
                 //  which verifies these positions. We only want to look into this
                 //  if we actually found a reference sequence (hence the isset), and
@@ -1550,7 +1553,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // e.g. c.(?_?)_(?_?)del -> c.?del
         $sQuestionMarkWarning = 'Please rewrite the positions (?_?)_(?_?) to ?.';
 
-    } elseif (($aVariant['latest_start'] . $aVariant['earliest_end'] == '??')) {
+    } elseif ($aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
         // e.g. c.(2_?)_(?_10)del -> c.(2_10)del
         $sQuestionMarkWarning =
             'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_(?_' . $aVariant['latest_end'] .
@@ -1566,24 +1569,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         $sQuestionMarkWarning = 'Please rewrite the positions ' . $aVariant['earliest_start'] . '_(?_?) to '
             . $aVariant['earliest_start'] . '_?.';
 
-    } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??' &&
-                !$aVariant['latest_start'] && !$aVariant['latest_end']) {
+    } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??'
+        && !$aVariant['latest_start'] && !$aVariant['latest_end']) {
         // e.g. c.?_?del -> c.?del
         $sQuestionMarkWarning = 'Please rewrite the positions ?_? to ?.';
 
-    } elseif ($aVariant['earliest_start'] . $aVariant['latest_start'] == '??' &&
-                isset($aResponse['messages']['IPOSITIONRANGE'])) {
+    } elseif ($aVariant['earliest_start'] . $aVariant['latest_start'] == '??'
+        && isset($aResponse['messages']['IPOSITIONRANGE'])) {
         // e.g. c.(?_?)del -> c.?del
         $sQuestionMarkWarning = 'Please rewrite the positions (?_?) to ?.';
 
-    } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??' &&
-                !$aVariant['latest_start'] && $aVariant['latest_end']) {
+    } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??'
+        && !$aVariant['latest_start'] && $aVariant['latest_end']) {
         // e.g. c.?_(?_10)del -> c.(?_10)del
         $sQuestionMarkWarning =
             'Please rewrite the positions ?_(?_' . $aVariant['latest_end'] . ') to ?_' . $aVariant['latest_end'] . '.';
 
-    } elseif ($aVariant['earliest_start'] && !$aVariant['latest_end'] &&
-                $aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
+    } elseif ($aVariant['earliest_start'] && !$aVariant['latest_end']
+        && $aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
         // e.g. c.(2_?)_?del -> c.(2_?)del
         $sQuestionMarkWarning =
             'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_? to (' . $aVariant['earliest_start'] . '_?).';
