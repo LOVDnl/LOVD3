@@ -214,9 +214,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     if (isset($aVariant['warnings']['WWRONGTYPE'])) {
         if ($aVariant['type'] == 'subst') {
             return lovd_fixHGVS($sReference . preg_replace('/[ACTG]+>/', 'delins', $sVariant), $sType);
-        }
-        if ($aVariant['type'] == 'delins') {
-            return $sReference . $sVariant; // Not HGVS. Fixme; take another look.
+        } elseif ($aVariant['type'] == 'delins') {
+            return $sReference . $sVariant; // Not HGVS, and not fixable by us (unless we use VV).
         }
     }
 
@@ -224,7 +223,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     if (isset($aVariant['warnings']['WSUFFIXGIVEN']) && !isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
         // The warning message indicates where the unwanted suffix starts.
         // We take this string by isolating the part between the double quotes.
-        // Fixme; send variant including suffix to VariantValidator as an additional check.
         list(,$sVariantType) = explode('"', $aVariant['warnings']['WSUFFIXGIVEN']);
         if (!preg_match('/[0-9]+_[0-9]+' . $sVariantType . '\([0-9]+(_[0-9]+)?\)/', $sVariant)) {
             // If the suffix is formatted such as '([0-9]+)', it indicated the
@@ -232,11 +230,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             //  positions are '[0-9]+_[0-9]+', it might be that the user forgot
             //  to use brackets around the positions (indicating an uncertain
             //  location, which would mean the suffix IS necessary). We cannot
-            //  be sure we may remove it, so we have to let this mistake rest.
-            $sSuffix = preg_replace('/.*' . $sVariantType . '/', '', $sVariant);
+            //  be sure we may remove it, so we have to let this be.
+            list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
             return lovd_fixHGVS(
-                $sReference . strstr($sVariant, $sVariantType, true) . $sVariantType .
-                (substr_count($sSuffix, '(') >= substr_count($sSuffix, ')')? '' : ')'), $sType);
+                $sReference . $sBeforeType . $sVariantType .
+                str_repeat(')', (substr_count($sSuffix, ')') - substr_count($sSuffix, '('))), $sType);
         }
     }
 
@@ -262,13 +260,13 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
             } elseif (preg_match('/^\[[^NX][^;\]]*]$/', $sSuffix)) {
                 // Remove redundant square brackets,
-                //  these are only needed when RefSeqs are given.
+                //  these are only needed when RefSeqs or combined variants are given.
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
 
             } elseif (preg_match('/^[NX][CGMR]_[0-9]+/', $sSuffix)
                 || (strpos($sSuffix, ';') && strpos($sSuffix, '[') === false)) {
-                // Square brackets were forgotten, RefSeqs are given.
+                // Square brackets were forgotten, RefSeqs or combined variants are given.
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . '[' . $sSuffix . ']', $sType);
 
@@ -277,7 +275,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 //  instead of 'insN[length]' or 'ins(length_length)' instead
                 //  of 'insN[(length_length)]'.
                 return lovd_fixHGVS($sReference . $sBeforeSuffix . $aVariant['type'] . preg_replace(
-                        array('/\(([0-9]+)\)/', '/\(([0-9]+(_[0-9]+)?)\)/'),
+                        array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
                         array('N[${1}]', 'N[(${1})]'), $sSuffix), $sType);
             }
         }
@@ -291,10 +289,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         //  if the positions are the same. Since we know this, we can be
         //  sure we are doing the right thing as we are removing the
         //  second positions.
-        $sVariant = preg_replace('/_[0-9]+([-+][0-9]+)?/', '', $sVariant);
-        return lovd_fixHGVS($sReference . $sVariant , $sType);
+        return lovd_fixHGVS($sReference . preg_replace('/_[0-9]+([-+][0-9]+)?/', '', $sVariant), $sType);
     }
-
 
     // Swap positions if necessary.
     if (isset($aVariant['warnings']['WPOSITIONFORMAT']) || isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
@@ -325,7 +321,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             if ($aPositions['C']
                 && max($aPositions['A'], $aPositions['B']) > max($aPositions['C'], $aPositions['D'])) {
                 // If this is the case, the positions are swapped in groups,
-                //  i.e., c.(6_10)_(1_5)del. We will fix this as follows:
+                //  i.e., c.(6_10)_(1_5)del.
                 list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron'],
                     $aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron']) =
                     array($aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron'],
@@ -423,6 +419,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
 
+
+    // We're out of things that we can do.
     return $sReference . $sVariant; // Not HGVS.
 }
 
