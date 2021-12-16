@@ -255,8 +255,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
-            if (preg_match('/^\([0-9]+_[0-9]+\)$/', $sSuffix) || preg_match('/^\([ACTG]+\)$/', $sSuffix)) {
-                // Remove redundant parentheses.
+            if (preg_match('/^\([ACTG]+\)$/', $sSuffix) || preg_match('/^N\[\([0-9]+\)\]/', $sSuffix)) {
+                // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
@@ -266,10 +266,19 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
 
-            } elseif (preg_match('/^[NX][CGMR]_[0-9]+/', $sSuffix) || strpos($sSuffix, ';')) {
+            } elseif (preg_match('/^[NX][CGMR]_[0-9]+/', $sSuffix)
+                || (strpos($sSuffix, ';') && strpos($sSuffix, '[') === false)) {
                 // Square brackets were forgotten, RefSeqs are given.
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . '[' . $sSuffix . ']', $sType);
+
+            } elseif (preg_match('/\([0-9]+(_[0-9]+)?\)/', $sSuffix)) {
+                // The length of a variant was formatted as 'ins(length)'
+                //  instead of 'insN[length]' or 'ins(length_length)' instead
+                //  of 'insN[(length_length)]'.
+                return lovd_fixHGVS($sReference . $sBeforeSuffix . $aVariant['type'] . preg_replace(
+                        array('/\(([0-9]+)\)/', '/\(([0-9]+(_[0-9]+)?)\)/'),
+                        array('N[${1}]', 'N[(${1})]'), $sSuffix), $sType);
             }
         }
     }
