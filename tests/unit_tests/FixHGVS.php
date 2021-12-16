@@ -154,8 +154,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.5+1_5-1dup', 'c.5-1_5+1dup'),
 
             // Variants with reference sequences, testing various fixes.
-            array('NC_123456.10:(123delA)', 'NC_123456.10:g.123del'),
-            array('NC_123456.10:g.123_234conaaa)', 'NC_123456.10:g.123_234delinsAAA'),
+            array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
+            array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
 
 
 

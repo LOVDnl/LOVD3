@@ -1248,8 +1248,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if (strpos($sVariant, $sNeedsAPipe) && !strpos($sVariant, '|' . $sNeedsAPipe)) {
                 $aResponse['warnings']['WPIPEMISSING'] =
                     'Please place a "|" between the positions and the variant type (' . $sNeedsAPipe . ').';
+                return $aResponse;
             }
         }
+        return false;
     }
 
     // Storing the variant type.
@@ -1637,9 +1639,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($aVariant['earliest_start'] != $aVariant['earliest_end']) {
                 // If the two positions are not the same, the variant is not fixable.
                 $aResponse['errors']['ETOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
+            } else {
+                // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
+                $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
             }
-            // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
-            $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
         }
 
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {

@@ -122,6 +122,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             array('m.123+4_124-20dup', array(
                 'position_start' => 123,
                 'position_end' => 124,
+                'position_start_intron' => 4,
+                'position_end_intron' => -20,
                 'type' => 'dup',
                 'warnings' => array(),
                 'errors' => array(

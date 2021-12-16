@@ -77,7 +77,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Check for a reference sequence. We won't check it here, so we won't be
     //  very strict.
-    if (preg_match('/^(ENS[GT]|LRG|[NX][CGMRTW]_)[0-9]+/', $sVariant)) {
+    if (preg_match('/^(ENS[GT]|LRG_|[NX][CGMRTW]_)[0-9]+/', $sVariant)) {
         // Something that looks like a reference sequence is prefixing the
         //  variant. Cut it off and store it separately. We'll return it, but
         //  this way we can actually check the variant itself.
@@ -123,6 +123,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             // The variant is written as (c.1_2insA). We will rewrite this as c.(1_2insA).
             return lovd_fixHGVS(
                 $sReference . $aRegs[1] . '(' . substr($sVariant, 3), $sType);
+        }
+
+    } elseif (strpos($sVariant, '((') !== false || strpos($sVariant, '))') !== false) {
+        if (preg_match('/\(\([0-9_]+\)\)/', $sVariant)) {
+            // c.((1_5))insA or c.100_500del((10))
+            return lovd_fixHGVS($sReference . str_replace(array('((', '))'), array('(', ')'), $sVariant), $sType);
         }
     }
 
@@ -224,7 +230,18 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         // We take this string by isolating the part between the double quotes.
         // Fixme; send variant including suffix to VariantValidator as an additional check.
         list(,$sVariantType) = explode('"', $aVariant['warnings']['WSUFFIXGIVEN']);
-        return lovd_fixHGVS($sReference . strstr($sVariant, $sVariantType, true) . $sVariantType, $sType);
+        if (!preg_match('/[0-9]+_[0-9]+' . $sVariantType . '\([0-9]+(_[0-9]+)?\)/', $sVariant)) {
+            // If the suffix is formatted such as '([0-9]+)', it indicated the
+            //  length of the variant. If we find this in variants of which the
+            //  positions are '[0-9]+_[0-9]+', it might be that the user forgot
+            //  to use brackets around the positions (indicating an uncertain
+            //  location, which would mean the suffix IS necessary). We cannot
+            //  be sure we may remove it, so we have to let this mistake rest.
+            $sSuffix = preg_replace('/.*' . $sVariantType . '/', '', $sVariant);
+            return lovd_fixHGVS(
+                $sReference . strstr($sVariant, $sVariantType, true) . $sVariantType .
+                (substr_count($sSuffix, '(') >= substr_count($sSuffix, ')')? '' : ')'), $sType);
+        }
     }
 
 
