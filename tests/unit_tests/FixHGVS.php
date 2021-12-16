@@ -59,7 +59,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123del', 'g.123del'),
             array('g.1_300del', 'g.1_300del'),
             array('g.1_2insA', 'g.1_2insA'),
-            array('g.1_2ins(50)', 'g.1_2ins(50)'),
             array('g.1_2ins5_10', 'g.1_2ins5_10'),
             array('g.1_2ins[NC_123456.1:g.1_10]', 'g.1_2ins[NC_123456.1:g.1_10]'),
             array('g.1_5delinsACT', 'g.1_5delinsACT'),
@@ -67,7 +66,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123=', 'g.123='),
             array('c.?', 'c.?'),
             array('c.123?', 'c.123?'),
-            array('g.((1_5)ins(50))', 'g.((1_5)ins(50))'),
             array('c.(1_100)del(20)', 'c.(1_100)del(20)'),
 
 
@@ -120,6 +118,12 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
+            array('c.1_2ins(A)', 'c.1_2insA'),
+            array('c.1_2ins(20)', 'c.1_2insN[20]'),
+            array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
+            array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
+            array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
+
 
             // Question marks.
             // Note, that some of these variants do *not* need fixing and
