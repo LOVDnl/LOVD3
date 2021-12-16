@@ -724,6 +724,13 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_2ins[A[20];TGAAG[35];N[10]]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
 
             // Other affected sequences as suffixes.
             array('g.1delA', array(
@@ -857,7 +864,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(
-                    'EMISSINGREFERENCE' =>
+                    'EWRONGREFERENCE' =>
                         'The variant is missing a required genomic reference sequence to verify the intronic positions.',
                 ),
             )),

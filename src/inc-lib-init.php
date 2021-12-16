@@ -1158,6 +1158,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
                 $aResponse['errors']['EWRONGREFERENCE'] =
                     'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').';
+
             }
 
         } else {
@@ -1740,13 +1741,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $bMultipleInsertionsInSuffix = strpos($aVariant['suffix'], ';');
 
                     foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
-                            rtrim(ltrim($aVariant['suffix'], '['), ']'))) as $sInsertion) {
+                            substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
                         // Looping through all possible variants.
                         if (!(
-                            (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)               // so no c.1_2ins[A]
-                                && (preg_match('/^[ACGTN]+$/', $sInsertion)                            // c.1_2insATG
-                                    || preg_match('/^N\[([0-9]+|\([0-9]+_[0-9]+\))\]$/', $sInsertion)  // c.1_2insN[40] or ..N[(1_2)]
-                                    || preg_match(                                                            // c.1_2ins15+1_16-1
+                            (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                          // so no c.1_2ins[A]
+                                && (preg_match('/^[ACGTN]+$/', $sInsertion)                                      // c.1_2insATG
+                                    || preg_match(
+                                        '/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion) // c.1_2insN[40] or ..N[(1_2)]
+                                    || preg_match(                                                                       // c.1_2ins15+1_16-1
                                         '/^[-*]?[0-9]+([-+][0-9]+)?_[-*]?[0-9]+([-+]([0-9]+))?(inv)?$/', $sInsertion)))
                             ||
                             (isset($bSuffixIsSurroundedByBrackets) && preg_match(
