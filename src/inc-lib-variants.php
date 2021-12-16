@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-12-15
+ * Modified    : 2021-12-16
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -149,23 +149,18 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return lovd_fixHGVS($sReference . $sType . '.' . str_replace($sType . '.', '', $sVariant), $sType);
     }
 
-    // Rewrite lowercase bases as uppercase bases.
-    if (similar_text(substr($sVariant, 1), 'actg')) {
-        return lovd_fixHGVS($sReference . str_replace(
-            // This extra str_replace makes sure that prefixes do remain lowercase.
-            array('G.', 'C.'),
-            array('g.', 'c.'),
-            str_replace(
-                array('a', 'c', 'g', 't', 'u'),
-                array('A', 'C', 'G', 'T', 'U'),
-                $sVariant
-            )
-        ), $sType);
+    // We also don't like bases in lowercase.
+    if (preg_match('/^(.+)([a-z]>[a-z])$/', $sVariant, $aRegs)
+        || preg_match('/^(.+ins)([a-z]+)$/', $sVariant, $aRegs)) {
+        return lovd_fixHGVS($sReference . $aRegs[1] . strtoupper($aRegs[2]));
     }
 
     // Replace uracil with thymine (RNA -> DNA description).
-    if (strpos($sVariant, 'U') !== false) {
-        return lovd_fixHGVS($sReference . str_replace('dTp', 'dup', str_replace('U', 'T', $sVariant)), $sType);
+    if ((preg_match('/^(.+)([A-Z]>[A-Z])$/', $sVariant, $aRegs)
+            || preg_match('/^(.+ins)([A-Z]+)$/', $sVariant, $aRegs))
+        && strpos($aRegs[2], 'U') !== false) {
+        // Also convert U to T, since lowercase bases may mean an RNA-based description.
+        return lovd_fixHGVS($sReference . $aRegs[1] . str_replace('U', 'T', $aRegs[2]));
     }
 
     // Make sure no unnecessary bases are given for wild types (c.123A= -> c.123=).
