@@ -1506,7 +1506,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if ($bCheckHGVS) {
                     return false;
                 }
-                $aResponse['errors']['EMISSINGREFERENCE'] =
+                $aResponse['errors']['EWRONGREFERENCE'] =
                     'The variant is missing a required genomic reference sequence to verify the intronic positions.';
             }
         }
