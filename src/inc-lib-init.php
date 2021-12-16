@@ -1138,12 +1138,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if ($sNCBIID == $sReferenceSequence) {
                     // The transcript given in the DNA description is also
                     //  the transcript that we're using in LOVD for this variant.
-                    $aResponse['warnings']['WTRANSCRIPTFOUND'] = 'Transcript ID found in the DNA description.';
+                    $aResponse['warnings']['WTRANSCRIPTFOUND'] =
+                        'A transcript reference sequence has been found in the DNA description. Please remove it.';
                 } else {
                     // This is an actual problem; the submitter used a
                     //  different transcript than configured in LOVD.
                     $aResponse['warnings']['WDIFFERENTTRANSCRIPT'] =
-                        'The transcript found in the DNA description does not match the configured transcript.';
+                        'The transcript reference sequence found in the DNA description does not match the configured transcript.' .
+                        ' Please adapt the DNA description to the configured transcript.';
                 }
             }
 
@@ -1158,7 +1160,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
                 $aResponse['errors']['EWRONGREFERENCE'] =
                     'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').';
-
+                switch ($sVariant[0]) {
+                    case 'c':
+                        $aResponse['errors']['EWRONGREFERENCE'] .=
+                            ' For ' . $sVariant[0] . '. variants, please use a coding transcript reference sequence.';
+                        break;
+                    case 'n':
+                        $aResponse['errors']['EWRONGREFERENCE'] .=
+                            ' For ' . $sVariant[0] . '. variants, please use a non-coding transcript reference sequence.';
+                        break;
+                    case 'g':
+                    case 'm':
+                        $aResponse['errors']['EWRONGREFERENCE'] .=
+                            ' For ' . $sVariant[0] . '. variants, please use a genomic reference sequence.';
+                        break;
+                }
             }
 
         } else {
@@ -1240,7 +1256,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         foreach (array('qter', 'pter', 'cen', '::') as $sUnsupported) {
             if (strpos($sVariant, $sUnsupported)) {
                 $aResponse['errors']['ENOTSUPPORTED'] =
-                    'Currently, variants using "' . $sUnsupported . '" are not yet supported.';
+                    'Currently, variant descriptions using "' . $sUnsupported . '" are not yet supported.' .
+                    ' This does not necessarily mean the description is not valid HGVS.';
                 return $aResponse;
             }
         }
@@ -1278,7 +1295,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         if ($aResponse['type'] == '=') {
             // HGVS requires unchanged sequence ("=") to always give positions.
             $aResponse['errors']['EMISSINGPOSITIONS'] =
-                'When using "=", always provide the position(s) that are unchanged.';
+                'When using "=", please provide the position(s) that are unchanged.';
             return ($bCheckHGVS? false : $aResponse);
         }
         return ($bCheckHGVS? true : $aResponse);
@@ -1289,7 +1306,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif (substr($aVariant['type'], -1) == ']') {
         $aResponse['type'] = 'repeat';
         $aResponse['warnings']['WNOTSUPPORTED'] =
-            'Repeat variants are currently not supported for mapping and validation.';
+            'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
 
     } elseif ($aVariant['type'][0] == '|') {
         $aResponse['type'] = 'met';
@@ -1314,7 +1331,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['ENOTSUPPORTED'] = 'This variant type is not known by HGVS.';
+            $aResponse['errors']['ENOTSUPPORTED'] = 'This not a valid HGVS description, please verify your input after "|".';
         }
     }
 
@@ -1347,8 +1364,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     return false;
                 }
                 $aResponse['errors']['EFALSEUTR'] =
-                    'Only coding variants can describe positions in the UTR. ' .
-                    'Position "' . $aVariant[$sPosition] . '" is therefore invalid when using the "' . $aVariant['prefix'] . '" prefix.';
+                    'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "' . $aVariant[$sPosition] .
+                    '" which describes a position in the 3\' UTR, is invalid when using the "' . $aVariant['prefix'] . '" prefix.';
                 return $aResponse;
             }
             if ($sTranscriptID === '') {
@@ -1366,6 +1383,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         } else {
             // When no '*' is found, we can safely cast the position to integer.
             $aVariant[$sPosition] = (int)$aVariant[$sPosition];
+
+            if ($aVariant[$sPosition] < 0 && $aVariant['prefix'] != 'c') {
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                $aResponse['errors']['EFALSEUTR'] =
+                    'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "' . $aVariant[$sPosition] .
+                    '" which describes a position in the 5\' UTR, is invalid when using the "' . $aVariant['prefix'] . '" prefix.';
+                return $aResponse;
+            }
         }
     }
 
@@ -1484,10 +1511,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             }
             $aResponse['errors']['EFALSEINTRONIC'] =
-                'Only transcript-based variants (c. or n. prefixes) can describe intronic positions.';
+                'Only transcripts (c. or n. prefixes) have introns.' .
+                ' Therefore, this variant description with a position in an intron' .
+                ' is invalid when using the "' . $aVariant['prefix'] . '" prefix.';
             if (strpos($sVariant, '-') && !strpos($sVariant, '_')) {
                 $aResponse['errors']['EFALSEINTRONIC'] .=
-                    ' Did you perhaps try to indicate a range?';
+                    ' Did you perhaps try to indicate a range?' .
+                    ' If so, please use an underscore (_) to indicate a range.';
             }
             // Before we return this, also add the intronic positions. This'll
             //  allow us to make some guesstimate on whether or not this may
@@ -1563,7 +1593,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         if ($bCheckHGVS) {
             return false;
         }
-        $aResponse['warnings']['WTOOMUCHUNKNOWN'] = 'Redundant question marks were found. ' . $sQuestionMarkWarning;
+        $aResponse['warnings']['WTOOMUCHUNKNOWN'] =
+            'This variant description contains redundant question marks. ' .
+            $sQuestionMarkWarning;
     }
 
 

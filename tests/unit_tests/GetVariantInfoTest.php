@@ -116,7 +116,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'warnings' => array(),
                 'errors' => array(
-                    'EFALSEUTR' => 'Only coding variants can describe positions in the UTR. Position "*123" is therefore invalid when using the "g" prefix.',
+                    'EFALSEUTR' => 'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "*123" which describes a position in the 3\' UTR, is invalid when using the "g" prefix.',
                 ),
             )),
             array('m.123+4_124-20dup', array(
@@ -127,7 +127,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'warnings' => array(),
                 'errors' => array(
-                    'EFALSEINTRONIC' => 'Only transcript-based variants (c. or n. prefixes) can describe intronic positions.',
+                    'EFALSEINTRONIC' => 'Only transcripts (c. or n. prefixes) have introns. Therefore, this variant description with a position in an intron is invalid when using the "m" prefix.',
                 ),
             )),
 
@@ -352,7 +352,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -363,7 +363,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -374,7 +374,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                     'WINVALIDREPEATLENGTH' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
                 ),
                 'errors' => array(),
@@ -384,7 +384,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
@@ -396,7 +396,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '=',
                 'warnings' => array(),
                 'errors' => array(
-                    'EMISSINGPOSITIONS' => 'When using "=", always provide the position(s) that are unchanged.',
+                    'EMISSINGPOSITIONS' => 'When using "=", please provide the position(s) that are unchanged.',
                 ),
             )),
             array('g.123=', array(
@@ -491,7 +491,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 4294967295,
                 'type' => 'del',
                 'warnings' => array(
-                    'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions ?_? to ?.',
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions ?_? to ?.',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -503,7 +503,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 4294967295,
                 'type' => 'del',
                 'warnings' => array(
-                    'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions (?_?) to ?.',
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?) to ?.',
                 ),
                 'errors' => array(
                     'ESUFFIXMISSING' => 'The length must be provided for variants which took place within a range.',
@@ -538,7 +538,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 10,
                 'type' => 'del',
                 'warnings' => array(
-                    'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions (?_?)_10 to ?_10.',
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_10 to ?_10.',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -570,7 +570,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 4294967295,
                 'type' => 'del',
                 'warnings' => array(
-                    'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions 5_(?_?) to 5_?.',
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions 5_(?_?) to 5_?.',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -592,7 +592,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 10,
                 'type' => 'del',
                 'warnings' => array(
-                    'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions (5_?)_(?_10) to (5_10).',
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (5_?)_(?_10) to (5_10).',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -604,7 +604,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 4294967295,
                 'type' => 'del',
                 'warnings' => array(
-                    'WTOOMUCHUNKNOWN' => 'Redundant question marks were found. Please rewrite the positions (?_?)_(?_?) to ?.',
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_(?_?) to ?.',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -789,7 +789,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
                 ),
                 'errors' => array(),
@@ -799,7 +799,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'repeat',
                 'warnings' => array(
-                    'WNOTSUPPORTED' => 'Repeat variants are currently not supported for mapping and validation.',
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
                 ),
                 'errors' => array(),
@@ -815,7 +815,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, variants using "qter" are not yet supported.',
+                    'ENOTSUPPORTED' => 'Currently, variant descriptions using "qter" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
                 ),
             )),
             array('[g.1_cen]del', array(
@@ -824,7 +824,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, variants using "cen" are not yet supported.',
+                    'ENOTSUPPORTED' => 'Currently, variant descriptions using "cen" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
                 ),
             )),
             array('[g.1_pter]del', array(
@@ -833,7 +833,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, variants using "pter" are not yet supported.',
+                    'ENOTSUPPORTED' => 'Currently, variant descriptions using "pter" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
                 ),
             )),
             array('n.5-2::10-3', array(
@@ -842,7 +842,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '',
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'Currently, variants using "::" are not yet supported.',
+                    'ENOTSUPPORTED' => 'Currently, variant descriptions using "::" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
                 ),
             )),
 
@@ -931,7 +931,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n).',
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n). For n. variants, please use a non-coding transcript reference sequence.',
                 ),
             )),
 
@@ -941,7 +941,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (g).',
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
                 ),
             )),
             array('NC_123456.1:g.1del', array(
