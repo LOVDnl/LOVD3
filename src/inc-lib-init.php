@@ -1121,7 +1121,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
         if (preg_match('/^(' .
-            '(\(?[NX][CGMRTW]_[0-9]{6,9}.[0-9]+\)?){1,2}|' .
+            '[NX][CGMRTW]_[0-9]{6,9}.[0-9]+(\([NX][MR]_[0-9]{6,9}.[0-9]+\))?|' .
             'ENS[TG][0-9]{11}.[0-9]+|' .
             'LRG_[0-9]{3}(t[0-9]+)?' .
             ')$/', $sReferenceSequence)) {
@@ -1135,9 +1135,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $sNCBIID = $sTranscriptID;
                 }
 
-                if ($sNCBIID == $sReferenceSequence) {
+                if ($sNCBIID == preg_replace('/.+\((.+)\)/', '${1}', $sReferenceSequence)) {
                     // The transcript given in the DNA description is also
                     //  the transcript that we're using in LOVD for this variant.
+                    // Note: our preg_replace makes sure that, if there are two
+                    //  reference sequences, of which on is placed within
+                    //  parentheses, only this last sequence will be checked
+                    //  against the NCBIID (so the NM in NC_..(NM_..).
                     $aResponse['warnings']['WTRANSCRIPTFOUND'] =
                         'A transcript reference sequence has been found in the DNA description. Please remove it.';
                 } else {
@@ -1151,8 +1155,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
 
-            if (($sVariant[0] == 'n' && !preg_match('/(NR|ENST|LRGt?)/', $sReferenceType))
-                || ($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt?)/', $sReferenceType))
+            if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRG)/', $sReferenceType))
                 || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
@@ -1176,7 +1179,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         break;
                 }
 
-            } elseif (!preg_match('/^(N[CGT]|LRG|ENSG)/', $sReferenceType)
+            } elseif (!preg_match('/^(N[CGTW]|LRG|ENSG)/', $sReferenceType)
                 && (preg_match('/([0-9]+|\?)[-+]([0-9]+|\?)/', $sVariant))) {
                 // If a variant holds intronic positions, it must have a reference
                 //  which verifies these positions.
