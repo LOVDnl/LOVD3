@@ -939,9 +939,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n). For n. variants, please use a non-coding transcript reference sequence.',
-                ),
+                'errors' => array(),
             )),
 
             array('NM_123456.1:g.1del', array(
