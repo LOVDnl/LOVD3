@@ -1151,8 +1151,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
 
-            if (($sVariant[0] == 'n' && !preg_match('/(NR|N[CGTW]\(NR\)|ENST|LRGt?)/', $sReferenceType))
-                || ($sVariant[0] == 'c' && !preg_match('/^([NX]M|N[CGTW]\(NM\)|ENST|LRGt?)$/', $sReferenceType))
+            if (($sVariant[0] == 'n' && !preg_match('/(NR|ENST|LRGt?)/', $sReferenceType))
+                || ($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt?)/', $sReferenceType))
                 || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
@@ -1175,6 +1175,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             ' For ' . $sVariant[0] . '. variants, please use a genomic reference sequence.';
                         break;
                 }
+
+            } elseif (!preg_match('/^(N[CGT]|LRG|ENSG)/', $sReferenceType)
+                && (preg_match('/([0-9]+|\?)[-+]([0-9]+|\?)/', $sVariant))) {
+                // If a variant holds intronic positions, it must have a reference
+                //  which verifies these positions.
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                $aResponse['errors']['EWRONGREFERENCE'] =
+                    'The variant is missing a required genomic reference sequence to verify the intronic positions.';
             }
 
         } else {
@@ -1510,41 +1520,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // Making sure intronic positions are only given for variants which can hold them.
     if (($aVariant['earliest_intronic_start'] || $aVariant['latest_intronic_start']
-        || $aVariant['earliest_intronic_end'] || $aVariant['latest_intronic_end'])) {
-        if (!in_array($aVariant['prefix'], array('c', 'n'))) {
-            if ($bCheckHGVS) {
-                return false;
-            }
-            $aResponse['errors']['EFALSEINTRONIC'] =
-                'Only transcripts (c. or n. prefixes) have introns.' .
-                ' Therefore, this variant description with a position in an intron' .
-                ' is invalid when using the "' . $aVariant['prefix'] . '" prefix.';
-            if (strpos($sVariant, '-') && !strpos($sVariant, '_')) {
-                $aResponse['errors']['EFALSEINTRONIC'] .=
-                    ' Did you perhaps try to indicate a range?' .
-                    ' If so, please use an underscore (_) to indicate a range.';
-            }
-            // Before we return this, also add the intronic positions. This'll
-            //  allow us to make some guesstimate on whether or not this may
-            //  have been a typo.
-            $aResponse['position_start_intron'] = (int) ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
-            $aResponse['position_end_intron']   = (int) ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
-            return $aResponse;
-
-        } else {
-            if (isset($sReferenceType) && !preg_match('/^N[CGTW]/', $sReferenceType)) {
-                // If a variant holds intronic positions, it must have a reference
-                //  which verifies these positions. We only want to look into this
-                //  if we actually found a reference sequence (hence the isset), and
-                //  we can check if we found it by looking for an NG or NC in the
-                //  reference type.
-                if ($bCheckHGVS) {
-                    return false;
-                }
-                $aResponse['errors']['EWRONGREFERENCE'] =
-                    'The variant is missing a required genomic reference sequence to verify the intronic positions.';
-            }
+        || $aVariant['earliest_intronic_end']   || $aVariant['latest_intronic_end'])
+        && !in_array($aVariant['prefix'], array('c', 'n'))) {
+        if ($bCheckHGVS) {
+            return false;
         }
+        $aResponse['errors']['EFALSEINTRONIC'] =
+            'Only transcripts (c. or n. prefixes) have introns.' .
+            ' Therefore, this variant description with a position in an intron' .
+            ' is invalid when using the "' . $aVariant['prefix'] . '" prefix.';
+        if (strpos($sVariant, '-') && !strpos($sVariant, '_')) {
+            $aResponse['errors']['EFALSEINTRONIC'] .=
+                ' Did you perhaps try to indicate a range?' .
+                ' If so, please use an underscore (_) to indicate a range.';
+        }
+        // Before we return this, also add the intronic positions. This'll
+        //  allow us to make some guesstimate on whether or not this may
+        //  have been a typo.
+        $aResponse['position_start_intron'] = (int) ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
+        $aResponse['position_end_intron']   = (int) ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
+        return $aResponse;
     }
 
 
