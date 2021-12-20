@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-12-15
+ * Modified    : 2021-12-20
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1115,19 +1115,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Match the reference sequence if one was given.
-    if (preg_match('/^[A-Z-_.t0-9()]+:[gcmn]/', $sVariant)) {
+    if (preg_match('/^[A-Z_.t0-9()]+:[gcmn]/', $sVariant)) {
         // The user seems to have written down a reference sequence.
         // Let's see if it matches the expected format.
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
         if (preg_match('/^(' .
-            '[NX][CGMRTW]_[0-9]{6,9}.[0-9]+(\([NX][MR]_[0-9]{6,9}.[0-9]+\))?|' .
-            'ENS[TG][0-9]{11}.[0-9]+|' .
+            '[NX][CGMRTW]_[0-9]{6,9}\.[0-9]+|' .
+            'N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)|' .
+            'ENS[TG][0-9]{11}\.[0-9]+|' .
             'LRG_[0-9]{3}(t[0-9]+)?' .
             ')$/', $sReferenceSequence)) {
             // Check if the reference sequence matches one of
             //  the possible formats.
             if ($sTranscriptID !== false) {
+                // A transcript ID has been passed to this function.
+                // We should check if it matches the transcript in the DNA field.
                 if (is_numeric($sTranscriptID)) {
                     $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
                         array($sTranscriptID))->fetchColumn();
@@ -1135,13 +1138,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $sNCBIID = $sTranscriptID;
                 }
 
-                if ($sNCBIID == preg_replace('/.+\((.+)\)/', '${1}', $sReferenceSequence)) {
-                    // The transcript given in the DNA description is also
-                    //  the transcript that we're using in LOVD for this variant.
-                    // Note: our preg_replace makes sure that, if there are two
-                    //  reference sequences, of which on is placed within
-                    //  parentheses, only this last sequence will be checked
-                    //  against the NCBIID (so the NM in NC_..(NM_..).
+                if (preg_match('/\b' . preg_quote($sNCBIID) . '\b/', $sReferenceSequence)) {
+                    // The transcript given in the DNA description is also the
+                    //  transcript that we're using in LOVD for this variant.
                     $aResponse['warnings']['WTRANSCRIPTFOUND'] =
                         'A transcript reference sequence has been found in the DNA description. Please remove it.';
                 } else {
@@ -1149,13 +1148,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     //  different transcript than configured in LOVD.
                     $aResponse['warnings']['WDIFFERENTTRANSCRIPT'] =
                         'The transcript reference sequence found in the DNA description does not match the configured transcript.' .
-                        ' Please adapt the DNA description to the configured transcript.';
+                        ' Please adapt the DNA description to the configured transcript and then remove the reference sequence from the DNA field.';
                 }
             }
 
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
-
-            if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRG)/', $sReferenceType))
+            if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt)/', $sReferenceType))
                 || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
@@ -1168,10 +1166,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $aResponse['errors']['EWRONGREFERENCE'] .=
                             ' For ' . $sVariant[0] . '. variants, please use a coding transcript reference sequence.';
                         break;
-                    case 'n':
-                        $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a non-coding transcript reference sequence.';
-                        break;
                     case 'g':
                     case 'm':
                         $aResponse['errors']['EWRONGREFERENCE'] .=
@@ -1180,27 +1174,35 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
 
             } elseif (!preg_match('/^(N[CGTW]|LRG|ENSG)/', $sReferenceType)
-                && (preg_match('/([0-9]+|\?)[-+]([0-9]+|\?)/', $sVariant))) {
-                // If a variant holds intronic positions, it must have a reference
-                //  which verifies these positions.
+                && (preg_match('/[0-9]+[-+]([0-9]+|\?)/', $sVariant))) {
+                // If a variant has intronic positions, it must have a
+                //  reference that contains those positions.
                 if ($bCheckHGVS) {
                     return false;
                 }
                 $aResponse['errors']['EWRONGREFERENCE'] =
-                    'The variant is missing a required genomic reference sequence to verify the intronic positions.';
+                    'The variant is missing a genomic reference sequence required to verify the intronic positions.';
             }
 
         } else {
-            // The user seems to have tried to write down a reference
-            //  sequence, but it was not formatted correctly. We will
-            //  return an error.
+            // The user seems to have tried to add a reference sequence, but it
+            //  was not formatted correctly. We will return an error.
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['EREFERENCEFORMAT'] = 'The reference sequence ' . (
-                !preg_match('/^(\(?[NX][CGMRTW]_[0-9]{6,9}\)?){1,2}$/', $sReferenceSequence)?
-                    'could not be recognised.' :
-                    'is missing the version number. Please add this information to your variant description.');
+            if (preg_match('/^(' .
+                '[NX][CGMRTW]_[0-9]{6,9}|' .
+                'N[CGTW]_[0-9]{6}(\.[0-9]+)?\([NX][MR]_[0-9]{6,9}(\.[0-9]+)?\)|' .
+                'ENS[TG][0-9]{11}' .
+                ')$/', $sReferenceSequence)) {
+                $aResponse['errors']['EREFERENCEFORMAT'] =
+                    'The reference sequence used is missing the required version number.' .
+                    ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+            } else {
+                $aResponse['errors']['EREFERENCEFORMAT'] =
+                    'The reference sequence could not be recognised.' .
+                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
+            }
         }
     }
 
@@ -1523,7 +1525,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // Making sure intronic positions are only given for variants which can hold them.
     if (($aVariant['earliest_intronic_start'] || $aVariant['latest_intronic_start']
-        || $aVariant['earliest_intronic_end']   || $aVariant['latest_intronic_end'])
+        || $aVariant['earliest_intronic_end'] || $aVariant['latest_intronic_end'])
         && !in_array($aVariant['prefix'], array('c', 'n'))) {
         if ($bCheckHGVS) {
             return false;

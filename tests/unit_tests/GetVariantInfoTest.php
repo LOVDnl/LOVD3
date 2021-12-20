@@ -874,7 +874,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGREFERENCE' =>
-                        'The variant is missing a required genomic reference sequence to verify the intronic positions.',
+                        'The variant is missing a genomic reference sequence required to verify the intronic positions.',
                 ),
             )),
             array('NC_123456.1(NM_123456.1):c.1-1del', array(
@@ -972,7 +972,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised.',
+                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
                 ),
             )),
             array('LRG:g.1del', array(
@@ -981,7 +981,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised.',
+                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
                 ),
             )),
         );
