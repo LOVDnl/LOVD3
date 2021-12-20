@@ -1516,9 +1516,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     }
 
     if (!$aVariant['earliest_end'] && $aVariant['latest_start']) {
-        // We now know we are dealing with a case such as g.(1_5)ins. This means that the positions
-        //  are uncertain, but somewhere within the range as given within the parentheses. We add a
-        //  message to make sure users know our interpretation and can make sure they meant it as such.
+        // We now know we are dealing with a case such as g.(1_5)ins. This means
+        //  that the positions are uncertain, but somewhere within the range as
+        //  given within the parentheses. We add a message to make sure users
+        //  know our interpretation and can make sure they meant it as such.
+        // Note that IPOSITIONRANGE and IUNCERTAINPOSITIONS both send the same
+        //  message to the user about uncertain positions. However, internally,
+        //  this notice is used to determine whether the variant needs a suffix
+        //  because the variant's position is a single, uncertain range.
         $aResponse['messages']['IPOSITIONRANGE'] = 'This variant description contains uncertain positions.';
         $aResponse['position_start'] = $aVariant['earliest_start'];
         $aResponse['position_end'] = $aVariant['latest_start'];
@@ -1655,8 +1660,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'An insertion must have taken place between two neighboring positions. ' .
                 'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
 
-        } elseif (isset($aResponse['messages']['IPOSITIONRANGE']) &&
-                    $aVariant['latest_start'] - $aVariant['earliest_start'] == 1) {
+        } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])
+            && ($aVariant['latest_start'] - $aVariant['earliest_start']) == 1) {
             // If the exact location of an insertion is unknown, this can be indicated
             //  by placing the positions in the range-format (e.g. c.(1_10)insA). In this
             //  case, the two positions should not be neighbours, since that would imply that
@@ -1731,8 +1736,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Finding out if the suffix is appropriately placed and is formatted as it should.
-    if (!$aVariant['suffix'] &&
-        (in_array($aVariant['type'], array('ins', 'delins')) || isset($aResponse['messages']['IPOSITIONRANGE']))) {
+    if (!$aVariant['suffix']
+        && (in_array($aVariant['type'], array('ins', 'delins'))
+            || isset($aResponse['messages']['IPOSITIONRANGE']))) {
         // Variants of type ins and delins need a suffix showing what has been inserted,
         //  and variants which took place within a range need a suffix showing the length of the variant.
         if ($bCheckHGVS) {
@@ -1744,12 +1750,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                         'insertions or deletion-insertions' :
                                         'variants which took place within a range') . '.';
 
-
     } elseif ($aVariant['suffix']) {
-        if (!in_array($aVariant['type'], array('ins', 'delins')) &&
-            (!isset($aResponse['messages']['IPOSITIONRANGE'])) || $aResponse['type'] == 'repeat') {
-            // If the variants are of a type that is not ins or delins, they should not have a suffix,
-            //  except if they were given a position range. Repeats should never be given a suffix.
+        if ($aResponse['type'] == 'repeat'
+            || (!in_array($aVariant['type'], array('ins', 'delins'))
+                && !isset($aResponse['messages']['IPOSITIONRANGE']))) {
+            // Repeats should never be given a suffix. If the variants are of a
+            //  type that is not ins or delins, they should only have a suffix
+            //  if they were given a position range.
             if ($bCheckHGVS) {
                 return false;
             }
@@ -1758,7 +1765,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         } elseif ($aResponse['type'] != 'repeat') {
             // We know that repeat variants should never get a suffix. Therefore, it is
             //  no use to check the format of the suffix for a repeat variant.
-            if (isset($aResponse['messages']['IPOSITIONRANGE']) && !in_array($aVariant['type'], array('ins', 'delins'))) {
+            if (isset($aResponse['messages']['IPOSITIONRANGE'])
+                && !in_array($aVariant['type'], array('ins', 'delins'))) {
                 if (!preg_match('/^\([0-9]+(_[0-9]+)?\)$/', $aVariant['suffix'])) {
                     // If the position is uncertain, then the suffix must show the
                     //  length of the variant within parentheses.
@@ -1809,7 +1817,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
         }
     }
-
 
     // At this point, we can be certain that our variant fully matched the HGVS nomenclature.
     if ($bCheckHGVS) {
