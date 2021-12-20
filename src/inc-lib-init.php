@@ -1131,18 +1131,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($sTranscriptID !== false) {
                 // A transcript ID has been passed to this function.
                 // We should check if it matches the transcript in the DNA field.
+                $sField = (substr($sReferenceSequence, 0, 3) == 'ENS'? 'id_ensembl' : 'id_ncbi');
                 if (is_numeric($sTranscriptID)) {
-                    $sNCBIID = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
+                    $sRefSeqID = $_DB->query('SELECT `' . $sField . '` FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
                         array($sTranscriptID))->fetchColumn();
                 } else {
-                    $sNCBIID = $sTranscriptID;
+                    $sRefSeqID = $sTranscriptID;
                 }
 
-                if (preg_match('/\b' . preg_quote($sNCBIID) . '\b/', $sReferenceSequence)) {
+                if (preg_match('/\b' . preg_quote($sRefSeqID) . '\b/', $sReferenceSequence)) {
                     // The transcript given in the DNA description is also the
                     //  transcript that we're using in LOVD for this variant.
                     $aResponse['warnings']['WTRANSCRIPTFOUND'] =
                         'A transcript reference sequence has been found in the DNA description. Please remove it.';
+                } elseif (strpos($sRefSeqID, '.') && preg_match('/\b' . preg_quote(strstr($sRefSeqID, '.', true)) . '\.[0-9]+\b/', $sReferenceSequence)) {
+                    // The transcript given in the DNA description is also the
+                    //  transcript that we're using in LOVD for this variant,
+                    //  but the version number is different.
+                    $aResponse['warnings']['WTRANSCRIPTVERSION'] =
+                        'The transcript reference sequence found in the DNA description is a different version from the configured transcript.' .
+                        ' Please adapt the DNA description to the configured transcript and then remove the reference sequence from the DNA field.';
                 } else {
                     // This is an actual problem; the submitter used a
                     //  different transcript than configured in LOVD.
