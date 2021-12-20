@@ -164,7 +164,6 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "A>C".',
-                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -239,8 +238,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' =>
-                        'The inserted/affected sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -670,7 +668,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -679,7 +677,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -702,7 +700,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -711,7 +709,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
@@ -720,7 +718,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The inserted/affected sequence contains unbalanced square brackets.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" contains unbalanced square brackets.',
                 ),
                 'errors' => array(),
             )),
@@ -747,7 +745,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted conform the HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines.',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -770,7 +768,6 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'inv',
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "inv".',
-                    'WSUFFIXFORMAT' => 'The inserted/affected sequence does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),

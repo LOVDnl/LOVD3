@@ -1755,9 +1755,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
 
-        }
-
-        if ($aResponse['type'] != 'repeat') {
+        } elseif ($aResponse['type'] != 'repeat') {
             // We know that repeat variants should never get a suffix. Therefore, it is
             //  no use to check the format of the suffix for a repeat variant.
             if (isset($aResponse['messages']['IPOSITIONRANGE']) && !in_array($aVariant['type'], array('ins', 'delins'))) {
@@ -1767,7 +1765,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     if ($bCheckHGVS) {
                         return false;
                     }
-                    $aResponse['warnings']['WSUFFIXFORMAT'] = 'The length of the variant is not formatted conform the HGVS guidelines.';
+                    $aResponse['warnings']['WSUFFIXFORMAT'] = 'The length of the variant is not formatted following the HGVS guidelines.';
                 }
 
             } else {
@@ -1779,7 +1777,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         return false;
                     }
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
-                        'The inserted/affected sequence contains unbalanced square brackets.';
+                        'The part after "' . $aResponse['type'] . '" contains unbalanced square brackets.';
 
                 } else {
                     $bSuffixIsSurroundedByBrackets = $aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']';
@@ -1803,7 +1801,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             if ($bCheckHGVS) {
                                 return false;
                             }
-                            $aResponse['warnings']['WSUFFIXFORMAT'] = 'The inserted/affected sequence does not follow HGVS guidelines.';
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.';
                         }
                     }
                 }
