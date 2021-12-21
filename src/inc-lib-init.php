@@ -1240,7 +1240,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         '([ACGT]+>[ACGTRYSWKMBDHVN]+' .                   //  | (substitution)
         '|([ACTG]+\[[0-9]+])+' .                          //  | (repeat sequence)
-        '|[ACTG]*=(\/{1,2}[ACGT]*>[ACGTRYSWKMBDHVN]+)?' . //  | (wildtypes, mosaics, or chimerics)
+        '|[ACTG]*=(\/{1,2}[ACGT]*>[ACGTRYSWKMBDHVN]+)?' . //  | (wild types, mosaics, or chimerics)
         '|ins|dup|delins|del|inv|sup|\?' .                //  V
         '|\|(gom|lom|met=|.+))' .                         // 20. Type of variant
 
@@ -1303,7 +1303,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Storing the variant type.
     if (!$aVariant['type']) {
         // If no type was matched, we can be sure that the variant is either
-        //  a full wildtype or a full unknown variant; so either g.= or g.? .
+        //  a full wild type or a full unknown variant; so either g.= or g.? .
         // In this case, we do not need to go over all tests, since there is
         //  simply a lot less information to test. We will do a few tests
         //  and add all necessary information, and then return our response
@@ -1567,13 +1567,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         return $aResponse;
     }
 
-    // Making sure wild types are not provided with nucleotides
+    // Making sure wild type descriptions don't provide nucleotides
     // (e.g. c.123A=, which should be c.123=).
-    if ($aResponse['type'] == '=' && similar_text($sVariant, 'ACTG')) {
+    if ($aResponse['type'] == '=' && preg_match('/[ACGT]/', $sVariant)) {
         if ($bCheckHGVS) {
             return false;
         }
-        $aResponse['warnings']['WBASESONWILDTYPE'] = 'Unnecessary nucleotides provided for variant type "=".';
+        $aResponse['warnings']['WBASESGIVEN'] = 'When using "=", please remove the original sequence before the "=".';
     }
 
     // Making sure no redundant '?'s are given as positions.

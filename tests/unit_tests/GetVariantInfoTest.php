@@ -420,6 +420,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.123A=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '=',
+                'warnings' => array(
+                    'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
+                ),
+                'errors' => array(),
+            )),
 
             // Unknown variants.
             array('c.?', array(
