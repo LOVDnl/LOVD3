@@ -387,7 +387,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Mosaicism and chimerism
+            // Mosaicism and chimerism.
             array('g.123=/A>G', array(
                 'position_start' => 123,
                 'position_end' => 123,

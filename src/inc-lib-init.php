@@ -1110,8 +1110,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'errors'         => array(),
     );
 
-    $sVariant = trim($sVariant);
-
     // Trim the variant and remove whitespaces.
     $sVariant = preg_replace('/\s+/', '', $sVariant);
 
