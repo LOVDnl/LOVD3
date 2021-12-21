@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2020-11-17
- * For LOVD    : 3.0-26
+ * Modified    : 2020-12-21
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               Loes Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -41,7 +42,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_fixHGVS() with data from
         // dataProviderFixHGVS().
-        $this->assertEquals(lovd_fixHGVS($sInput), $sOutput);
+        $this->assertEquals($sOutput, lovd_fixHGVS($sInput));
     }
 
 
@@ -49,22 +50,140 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
     {
         // Data provider for testFixHGVS().
         return array(
-            // HGVS OK, returns input.
+            // VARIANTS THAT DON'T NEED FIXING.
+            // Note, some variants that don't need fixing are actually listed
+            //  below in the section "Fixable variants", near descriptions they
+            //  are related to.
+            array('g.123dup','g.123dup'),
             array('g.123A>C', 'g.123A>C'),
             array('g.123del', 'g.123del'),
-            array('g.123dup', 'g.123dup'),
-            // Add prefix when missing.
-            array('123del', 'g.123del'),
-            // Conversions that should be delins variants.
+            array('g.1_300del', 'g.1_300del'),
+            array('g.1_2insA', 'g.1_2insA'),
+            array('g.1_2ins5_10', 'g.1_2ins5_10'),
+            array('g.1_2ins[NC_123456.1:g.1_10]', 'g.1_2ins[NC_123456.1:g.1_10]'),
+            array('g.1_5delinsACT', 'g.1_5delinsACT'),
+            array('g.1_2ACT[20]', 'g.1_2ACT[20]'),
+            array('g.123=', 'g.123='),
+            array('c.?', 'c.?'),
+            array('c.123?', 'c.123?'),
+            array('c.(1_100)del(20)', 'c.(1_100)del(20)'),
+
+
+
+            // FIXABLE VARIANTS.
+            // Missing prefixes that will be added.
+            array('123dup', 'g.123dup'),
+            array('(123dup)', 'g.(123dup)'),
+            array('.123dup', 'g.123dup'),
+            array('123-5dup', 'c.123-5dup'),
+
+            // Wrong prefix, the size of the positions indicates it's a range,
+            //  and the range is fixed to a single position.
+            array('g.140712592-140712592C>T', 'g.140712592C>T'),
+
+            // Whitespace and other copy/paste errors.
+            array('g. 123_124insA', 'g.123_124insA'),
+            array(' g.123del', 'g.123del'),
+            array('c.–123del', 'c.-123del'),
+            array('c.–123del', 'c.-123del'),
+            array('c.123—5del', 'c.123-5del'),
+
+            // Lowercase nucleotides.
+            array('g.123insactg', 'g.123insACTG'),
+            array('g.123a>g', 'g.123A>G'),
+
+            // U given instead of T.
+            array('g.123insAUG', 'g.123insATG'),
+
+            // Conversions and substitutions that should be delins variants.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
-            // Unneeded parentheses.
-            array('g.(100_200)del', 'g.100_200del'),
+            array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:100_200]'),
+            array('g.123A>GC', 'g.123delinsGC'),
+            array('g.123_124AT>GC', 'g.123_124delinsGC'),
+
+            // Wild type requires no bases.
+            array('c.123T=', 'c.123='),
+            array('c.123_124TG=', 'c.123_124='),
+            array('c.(123_124TG=)', 'c.(123_124=)'),
+
+            // Double parentheses.
+            array('g.((123_234))del(50)', 'g.(123_234)del(50)'),
+            array('g.((123_234)_(345_456)del', 'g.(123_234)_(345_456)del'),
+            array('g.(123_234)_(345_456))del', 'g.(123_234)_(345_456)del'),
+
+            // Misplaced parentheses.
+            array('(c.(123_125)insA)', 'c.((123_125)insA)'),
+
+            // Redundant parentheses.
+            array('c.1_2ins(A)', 'c.1_2insA'),
+
+            // Superfluous suffixes.
+            array('c.123delA', 'c.123del'),
+
+            // Wrongly formatted suffixes.
+            array('c.1_2ins[A]', 'c.1_2insA'),
+            array('c.1_2ins[N]', 'c.1_2insN'),
+            array('c.1_2ins(A)', 'c.1_2insA'),
+            array('c.1_2ins(20)', 'c.1_2insN[20]'),
+            array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
+            array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
+            array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
+
+
+            // Question marks.
+            // Note, that some of these variants do *not* need fixing and
+            //  have *no* redundant question marks.
+            array('g.?del', 'g.?del'),
+            array('g.1_?del', 'g.1_?del'),
+            array('g.?_100del', 'g.?_100del'),
+            array('g.?_?del', 'g.?del'),
+            array('g.(?_?)del', 'g.?del'),
+
+            array('g.(?_5)_10del', 'g.(?_5)_10del'),
+            array('g.(5_?)_10del', 'g.(5_?)_10del'),
+            array('g.(5_?)_?del', 'g.(5_?)del'),
+            array('g.(?_?)_10del', 'g.?_10del'),
+
+            array('g.5_(10_?)del', 'g.5_(10_?)del'),
+            array('g.5_(?_10)del', 'g.5_(?_10)del'),
+            array('g.?_(?_10)del', 'g.(?_10)del'),
+            array('g.5_(?_?)del', 'g.5_?del'),
+
+            array('g.(?_5)_(10_?)del', 'g.(?_5)_(10_?)del'),
+            array('g.(5_?)_(?_10)del', 'g.(5_10)del'),
+            array('g.(5_?)_(?_10)del(3)', 'g.(5_10)del(3)'),
+
+            array('g.(?_?)_(?_?)del', 'g.?del'),
+
             // Swaps positions when needed.
-            array('g.200_100dup', 'g.100_200dup'),
-            array('g.500_(100_200)del', 'g.(100_200)_500del'),
-            array('g.(400_500)_100del', 'g.100_(400_500)del'),
-            // Correct RNA-like descriptions.
-            array('c.4780delinsgagagauu', 'c.4780delinsGAGAGATT'),
+            array('g.2_1dup', 'g.1_2dup'),
+            array('g.(5_1)_10dup', 'g.(1_5)_10dup'),
+            array('g.1_(7_5)dup', 'g.1_(5_7)dup'),
+            array('g.(7_5)_1dup', 'g.1_(5_7)dup'),
+            array('c.5+1_5-1dup', 'c.5-1_5+1dup'),
+
+            // Variants with reference sequences, testing various fixes.
+            array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
+            array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
+
+
+
+            // UNFIXABLE VARIANTS.
+            array('g.1delinsA', 'g.1delinsA'),
+            array('c.1_2AC[20]', 'c.1_2AC[20]'),
+            array('c.1_2A>G', 'c.1_2A>G'),
+            array('g.=', 'g.='),
+            array('c.1insA', 'c.1insA'),
+            array('c.1_2ins', 'c.1_2ins'),
+            array('c.1_10insA', 'c.1_10insA'),
+            array('c.(1_2)insA', 'c.(1_2)insA'),
+            array('c.1_20insBLA', 'c.1_20insBLA'),
+            array('c.1_100insA', 'c.1_100insA'),
+            array('c.1_100del(10)', 'c.1_100del(10)'),
+            array('g.123-5dup', 'g.123-5dup'),
+            array('m.123-5dup', 'm.123-5dup'),
+            array('g.*1_*2del', 'g.*1_*2del'),
         );
     }
 }
+?>
