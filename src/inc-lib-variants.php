@@ -69,6 +69,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // Trim the variant and remove whitespace.
     $sVariant = preg_replace('/\s+/', '', $sVariant);
 
+    // Replace special – (hyphen, minus, en dash, em dash) with a simple - (hyphen-minus).
+    $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
+
     // Do a quick HGVS check.
     if (lovd_getVariantInfo($sVariant, false, true)) {
         // All good!
