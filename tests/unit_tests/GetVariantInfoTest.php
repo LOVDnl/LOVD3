@@ -444,7 +444,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
 
-            // Wildtypes.
+            // Wild type sequence (no changes).
             array('g.=', array(
                 'position_start' => 0,
                 'position_end' => 0,
@@ -892,6 +892,29 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
+            )),
+
+            // Methylation-related changes.
+            array('g.123|met=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'met',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.123|gom', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'met',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.123|lom', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'met',
+                'warnings' => array(),
+                'errors' => array(),
             )),
 
             // Descriptions that are currently unsupported.
