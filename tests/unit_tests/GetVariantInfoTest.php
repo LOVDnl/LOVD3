@@ -736,14 +736,14 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
-            array('c.10000000_10000001del', array(
+            array('c.10000000+10000000000_10000001-10000000000del', array(
                 'position_start' => 8388607,
                 'position_end' => 8388607,
-                'position_start_intron' => 0,
-                'position_end_intron' => 0,
+                'position_start_intron' => 2147483647,
+                'position_end_intron' => -2147483648,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: position_start, position_end.',
+                    'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: start, start in intron, end, end in intron.',
                 ),
                 'errors' => array(),
             )),

@@ -1886,12 +1886,17 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse[$sField] = min($aResponse[$sField], $aMinMaxValue[1]);
 
                 if ($nOriValue != $aResponse[$sField]) {
+                    $sFieldName = str_replace('position_', '', $sField);
+                    if (strpos($sField, 'intron')) {
+                        $sFieldName = str_replace('_intron', ' in intron', $sFieldName);
+                    }
+
                     if (!isset($aResponse['warnings']['WPOSITIONSLIMIT'])) {
-                        $aResponse['warnings']['WPOSITIONSLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sField . '.';
+                        $aResponse['warnings']['WPOSITIONSLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sFieldName . '.';
                     } else {
                         // Append.
                         $aResponse['warnings']['WPOSITIONSLIMIT'] =
-                            str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONSLIMIT'], '.')) . ', ' . $sField . '.';
+                            str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONSLIMIT'], '.')) . ', ' . $sFieldName . '.';
                     }
                 }
             }
