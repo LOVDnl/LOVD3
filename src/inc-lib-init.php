@@ -1652,7 +1652,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONMISSING'] =
+            $aResponse['errors']['EPOSITIONMISSING'] =
                 'An insertion must be provided with the two positions between which the insertion has taken place.';
 
         } elseif ($aVariant['latest_end'] || ($aVariant['latest_start'] && $aVariant['earliest_end'])) {
@@ -1662,7 +1662,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONFORMAT'] = 'Insertions should not be given more than two positions.';
+            $aResponse['errors']['EPOSITIONFORMAT'] = 'Insertions should not be given more than two positions.';
 
         } elseif ($aVariant['earliest_start'] != '?' && $aVariant['earliest_end'] != '?' &&
                     ($aVariant['earliest_end'] - $aVariant['earliest_start'] > 1 &&
@@ -1672,7 +1672,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONFORMAT'] =
+            $aResponse['errors']['EPOSITIONFORMAT'] =
                 'An insertion must have taken place between two neighboring positions. ' .
                 'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
 
@@ -1685,8 +1685,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONFORMAT'] =
-                'The two positions do not indicate a range. Please remove the parentheses if the positions are certain.';
+            $aResponse['errors']['EPOSITIONFORMAT'] =
+                'The two positions do not indicate a range longer than two bases.' .
+                ' Please remove the parentheses if the positions are certain.';
         }
 
     } elseif ($aResponse['type'] == 'subst') {

@@ -308,11 +308,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'ins',
-                'warnings' => array(
+                'warnings' => array(),
+                'errors' => array(
                     'EPOSITIONMISSING' =>
                         'An insertion must be provided with the two positions between which the insertion has taken place.',
                 ),
-                'errors' => array(),
             )),
             array('g.1_1insA', array(
                 'position_start' => 1,
@@ -336,11 +336,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
-                'warnings' => array(
+                'warnings' => array(),
+                'errors' => array(
                     'EPOSITIONFORMAT' =>
-                        'The two positions do not indicate a range. Please remove the parentheses if the positions are certain.',
+                        'The two positions do not indicate a range longer than two bases. Please remove the parentheses if the positions are certain.',
                 ),
-                'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
@@ -355,16 +355,25 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_10)_20insA', array(
+                'position_start' => 10,
+                'position_end' => 20,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(
+                    'EPOSITIONFORMAT' => 'Insertions should not be given more than two positions.',
+                ),
+            )),
             array('g.1_10insA', array(
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'ins',
-                'warnings' => array(
+                'warnings' => array(),
+                'errors' => array(
                     'EPOSITIONFORMAT' =>
                         'An insertion must have taken place between two neighboring positions. If the exact ' .
                         'location is unknown, please indicate this by placing parentheses around the positions.',
                 ),
-                'errors' => array(),
             )),
 
             // Deletion-insertions.
