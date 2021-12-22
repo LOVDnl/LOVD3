@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-12-21
+ * Modified    : 2021-12-22
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -281,17 +281,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                         array('N[${1}]', 'N[(${1})]'), $sSuffix), $sType);
             }
         }
-    }
-
-    // Fix variants which hold two of the same positions.
-    if ($aVariant['type'] == 'subst' && isset($aVariant['warnings']['WTOOMANYPOSITIONS'])) {
-        // In this case, a variant of type substitution has been given
-        //  two positions. In getVariantInfo, these cases are passed
-        //  as errors if the positions are not the same, and as warnings
-        //  if the positions are the same. Since we know this, we can be
-        //  sure we are doing the right thing as we are removing the
-        //  second positions.
-        return lovd_fixHGVS($sReference . preg_replace('/_[0-9]+([-+][0-9]+)?/', '', $sVariant), $sType);
     }
 
     // Swap positions if necessary.

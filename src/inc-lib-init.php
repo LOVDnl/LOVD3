@@ -1709,9 +1709,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 // If the two positions are not the same, the variant is not fixable.
                 $aResponse['errors']['ETOOMANYPOSITIONS'] =
                     'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
-            } else {
-                // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
-                $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
             }
         }
 
