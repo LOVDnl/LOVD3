@@ -76,6 +76,25 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
 
 
 
+    public function testGetVariantInfoWithTranscript ()
+    {
+        // Test lovd_getVariantInfo() with given transcripts. We won't test the
+        //  whole list, since that is not necessary.
+
+        // This uses array dereferencing that is only compatible with PHP 5.4.0.
+        // It's just so much easier and the tests aren't run on PHP 5.3.0.
+        $this->assertArrayHasKey('WTRANSCRIPTFOUND', lovd_getVariantInfo(
+            'NM_123456.1:c.100del', 'NM_123456.1')['warnings']);
+        $this->assertArrayHasKey('WTRANSCRIPTVERSION', lovd_getVariantInfo(
+            'NM_123456.2:c.100del', 'NM_123456.1')['warnings']);
+        $this->assertArrayHasKey('WDIFFERENTTRANSCRIPT', lovd_getVariantInfo(
+            'NM_123457.2:c.100del', 'NM_123456.1')['warnings']);
+    }
+
+
+
+
+
     public static function dataProviderGetVariantInfo ()
     {
         // Data provider for testGetVariantInfo().
