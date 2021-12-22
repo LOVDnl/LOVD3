@@ -831,7 +831,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. When indicating an uncertain position like this, the length of the variant must be provided between parentheses.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)del50', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. When indicating an uncertain position like this, the length of the variant must be provided between parentheses.',
                 ),
                 'errors' => array(),
                 'messages' => array(

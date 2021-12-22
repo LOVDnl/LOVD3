@@ -1789,7 +1789,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     if ($bCheckHGVS) {
                         return false;
                     }
-                    $aResponse['warnings']['WSUFFIXFORMAT'] = 'The length of the variant is not formatted following the HGVS guidelines.';
+                    $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        'The length of the variant is not formatted following the HGVS guidelines.' .
+                        ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
                 }
 
             } else {
