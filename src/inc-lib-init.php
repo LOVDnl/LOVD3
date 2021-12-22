@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-12-20
+ * Modified    : 2021-12-22
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1707,7 +1707,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             if ($aVariant['earliest_start'] != $aVariant['earliest_end']) {
                 // If the two positions are not the same, the variant is not fixable.
-                $aResponse['errors']['ETOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
+                $aResponse['errors']['ETOOMANYPOSITIONS'] =
+                    'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
             } else {
                 // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
                 $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
@@ -1760,9 +1761,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
         $aResponse['errors']['ESUFFIXMISSING'] =
             'The ' . (in_array($aVariant['type'], array('ins', 'delins'))? 'inserted sequence' : 'length') .
-            ' must be provided for ' . (in_array($aVariant['type'], array('ins', 'delins'))?
-                                        'insertions or deletion-insertions' :
-                                        'variants which took place within a range') . '.';
+            ' must be provided for ' .
+            (in_array($aVariant['type'], array('ins', 'delins'))?
+                'insertions or deletion-insertions' :
+                'variants which took place within an uncertain range') . '.';
 
     } elseif ($aVariant['suffix']) {
         if ($aResponse['type'] == 'repeat'

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2021-12-20
+ * Modified    : 2021-12-22
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -44,7 +44,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
      */
     public function testGetVariantInfo ($sInput, $aOutput)
     {
-        // Test lovd_getVariantInfo with data from
+        // Test lovd_getVariantInfo() with data from
         // dataProviderGetVariantInfo().
         $this->assertEquals($aOutput, lovd_getVariantInfo($sInput, false));
     }
@@ -58,9 +58,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
      */
     public function testGetVariantInfoHGVS ($sInput, $aOutput)
     {
-        // Test lovd_getVariantInfo with data from
+        // Test lovd_getVariantInfo() with data from
         // dataProviderGetVariantInfo(), but only as an HGVS check.
-        if (empty($aOutput['errors']) && (empty($aOutput['warnings']) || empty(array_diff(array_keys($aOutput['warnings']),
+        if (empty($aOutput['errors']) && (empty($aOutput['warnings'])
+                || empty(array_diff(
+                        array_keys($aOutput['warnings']),
                         array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTTRANSCRIPT')))
             )) {
             $bHGVS = true;
@@ -110,6 +112,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.-123dup', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => 'dup',
+                'warnings' => array(),
+                'errors' => array(
+                    'EFALSEUTR' => 'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "-123" which describes a position in the 5\' UTR, is invalid when using the "g" prefix.',
+                ),
+            )),
             array('g.*123dup', array(
                 'position_start' => 0,
                 'position_end' => 0,
@@ -130,6 +141,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'EFALSEINTRONIC' => 'Only transcripts (c. or n. prefixes) have introns. Therefore, this variant description with a position in an intron is invalid when using the "m" prefix.',
                 ),
             )),
+            array('g.123000-125000dup', array(
+                'position_start' => 123000,
+                'position_end' => 123000,
+                'position_start_intron' => -125000,
+                'position_end_intron' => -125000,
+                'type' => 'dup',
+                'warnings' => array(),
+                'errors' => array(
+                    'EFALSEINTRONIC' => 'Only transcripts (c. or n. prefixes) have introns. Therefore, this variant description with a position in an intron is invalid when using the "g" prefix. Did you perhaps try to indicate a range? If so, please use an underscore (_) to indicate a range.',
+                ),
+            )),
 
             // Substitutions.
             array('g.123A>C', array(
@@ -145,7 +167,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(),
                 'errors' => array(
-                    'ETOOMANYPOSITIONS' => 'Too many positions are given for variant type substitution.'
+                    'ETOOMANYPOSITIONS' => 'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.'
                 ),
             )),
             array('g.123A>GC', array(
@@ -529,7 +551,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?) to ?.',
                 ),
                 'errors' => array(
-                    'ESUFFIXMISSING' => 'The length must be provided for variants which took place within a range.',
+                    'ESUFFIXMISSING' => 'The length must be provided for variants which took place within an uncertain range.',
                 ),
                 'messages' => array(
                     'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
@@ -675,6 +697,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('c.123-5_123-10del', array (
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => -10,
+                'position_end_intron' => -5,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' => 'The intronic positions are not given in the correct order. Please verify your description and try again.'
+                ),
+                'errors' => array(),
+            )),
             array('c.10000000_10000001del', array(
                 'position_start' => 8388607,
                 'position_end' => 8388607,
@@ -783,7 +816,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(
-                    'ESUFFIXMISSING' => 'The length must be provided for variants which took place within a range.',
+                    'ESUFFIXMISSING' => 'The length must be provided for variants which took place within an uncertain range.',
                 ),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
@@ -1007,6 +1040,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(
                     'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
+                ),
+            )),
+            array('NC_123456:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'EREFERENCEFORMAT' => 'The reference sequence used is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
                 ),
             )),
             array('LRG:g.1del', array(
