@@ -180,6 +180,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     if ($aVariant === false) {
         return $sReference . $sVariant; // Not HGVS.
 
+    } elseif (isset($aVariant['errors']['EPIPEMISSING'])) {
+        // This looked like a methylation-related variant that was missing a
+        //  pipe, failing lovd_getVariantInfo()'s entire regexp.
+        return lovd_fixHGVS($sReference . preg_replace('/(gom|lom|met=|bsrC?)$/', '|$1', $sVariant), $sType);
+
     } elseif (isset($aVariant['errors']['EFALSEUTR']) || isset($aVariant['errors']['EFALSEINTRONIC'])) {
         // The wrong prefix was given. In other words: intronic positions or UTR
         //  notations were found for genomic DNA.

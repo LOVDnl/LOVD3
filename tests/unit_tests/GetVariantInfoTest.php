@@ -916,6 +916,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.123lom', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'warnings' => array(),
+                'errors' => array(
+                    'EPIPEMISSING' => 'Please place a "|" between the positions and the variant type (lom).',
+                ),
+            )),
 
             // Descriptions that are currently unsupported.
             array('[g.1_qter]del', array(

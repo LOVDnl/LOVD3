@@ -1285,17 +1285,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return $aResponse;
             }
         }
-        foreach (array('gom', 'lom', 'met=', 'bsr', 'per') as $sNeedsAPipe) {
-            // These are all variants which we want to put behind a pipe for
-            //  Various reasons. The pipe is often forgotten by users, and
-            //  since we know this is a recurring mistake, we will try to send
-            //  a clear warning in case we find it. We add this to a warning,
-            //  not an error, since these issues can be fixed by fixHGVS.
-            if (strpos($sVariant, $sNeedsAPipe) && !strpos($sVariant, '|' . $sNeedsAPipe)) {
-                $aResponse['warnings']['WPIPEMISSING'] =
-                    'Please place a "|" between the positions and the variant type (' . $sNeedsAPipe . ').';
-                return $aResponse;
-            }
+        // We'll check for methylation-related variants here, that sometimes
+        //  lack a pipe character. Since we currently can't parse positions
+        //  anymore, we'll have to throw an error. If we can identify the user's
+        //  mistake, we can ask the user or lovd_fixHGVS() to correct it.
+        if (preg_match('/[0-9](gom|lom|met=|bsrC?)$/', $sVariant, $aRegs)) {
+            // Variant ends in a methylation-related suffix, but without a pipe.
+            // We can guess here that this can be fixed.
+            $aResponse['errors']['EPIPEMISSING'] =
+                'Please place a "|" between the positions and the variant type (' . $aRegs[1] . ').';
+            return $aResponse;
         }
         return false;
     }
