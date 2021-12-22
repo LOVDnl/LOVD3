@@ -1367,18 +1367,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // If given, check if we already know this transcript.
-    if ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
+    if ($sTranscriptID === false || !$_DB) {
+        // If the transcript ID is passed as false, we are asked to ignore not
+        //  having the transcript. Pick some random number, high enough to not
+        //  be smaller than position_start if that's not in the UTR.
+        // Also, we take this default when we're unit testing and thus don't
+        //  have a database connection.
+        $aTranscriptOffsets[$sTranscriptID] = 1000000;
+
+    } elseif ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
         $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
             array($sTranscriptID, $sTranscriptID))->fetchColumn();
         if (!$aTranscriptOffsets[$sTranscriptID]) {
             // The transcript is not configured correctly. We will treat this transcript as unknown.
             $sTranscriptID = '';
         }
-
-    } elseif ($sTranscriptID === false) {
-        // If the transcript ID is passed as false, we are asked to ignore not having the transcript.
-        // Some random number, high enough to not be smaller than position_start if that's not in the UTR.
-        $aTranscriptOffsets[$sTranscriptID] = 1000000;
     }
 
 
