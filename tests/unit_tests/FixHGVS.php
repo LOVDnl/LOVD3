@@ -109,6 +109,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Methylation-related changes.
             array('g.123|met=', 'g.123|met='),
             array('g.123lom', 'g.123|lom'),
+            array('g.123||bsrC', 'g.123|bsrC'),
 
             // Double parentheses.
             array('g.((123_234))del(50)', 'g.(123_234)del(50)'),

@@ -185,6 +185,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         //  pipe, failing lovd_getVariantInfo()'s entire regexp.
         return lovd_fixHGVS($sReference . preg_replace('/(gom|lom|met=|bsrC?)$/', '|$1', $sVariant), $sType);
 
+    } elseif (isset($aVariant['errors']['ENOTSUPPORTED'])
+        && $aVariant['type'] == 'met' && strpos($sVariant, '||')) {
+        // Whatever is after the pipe wasn't recognized, but we also found more
+        //  pipes. Try removing them.
+        return lovd_fixHGVS($sReference . preg_replace('/\|{2,}/', '|', $sVariant), $sType);
+
     } elseif (isset($aVariant['errors']['EFALSEUTR']) || isset($aVariant['errors']['EFALSEINTRONIC'])) {
         // The wrong prefix was given. In other words: intronic positions or UTR
         //  notations were found for genomic DNA.

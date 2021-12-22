@@ -925,6 +925,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'EPIPEMISSING' => 'Please place a "|" between the positions and the variant type (lom).',
                 ),
             )),
+            array('g.123||bsrC', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'met',
+                'warnings' => array(),
+                'errors' => array(
+                    'ENOTSUPPORTED' => 'This not a valid HGVS description, please verify your input after "|".',
+                ),
+            )),
 
             // Descriptions that are currently unsupported.
             array('[g.1_qter]del', array(
