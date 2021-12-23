@@ -1063,14 +1063,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
-            array('LRG_123:n.1del', array(
+            array('LRG_123:c.1del', array(
                 'position_start' => 1,
                 'position_end' => 1,
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (LRG_123) does not match the DNA type (c). For c. variants, please use a coding transcript reference sequence.',
+                ),
             )),
             array('NR_123456.1:n.1del', array(
                 'position_start' => 1,
