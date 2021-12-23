@@ -396,18 +396,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Repeat sequences.
-            array('g.1_2ACT[20]', array(
+            array('g.1ACT[20]', array(
                 'position_start' => 1,
-                'position_end' => 2,
+                'position_end' => 1,
                 'type' => 'repeat',
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
             )),
-            array('c.1_2ACT[20]', array(
+            array('c.1ACT[20]', array(
                 'position_start' => 1,
-                'position_end' => 2,
+                'position_end' => 1,
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'repeat',
@@ -416,9 +416,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
-            array('c.1_2AC[20]', array(
+            array('c.1AC[20]', array(
                 'position_start' => 1,
-                'position_end' => 2,
+                'position_end' => 1,
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'repeat',
@@ -428,9 +428,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
-            array('g.1_2AC[20]', array(
+            array('g.1AC[20]', array(
                 'position_start' => 1,
-                'position_end' => 2,
+                'position_end' => 1,
                 'type' => 'repeat',
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
@@ -958,7 +958,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Descriptions that are currently unsupported.
-            array('[g.1_qter]del', array(
+            array('g.1_qterdel', array(
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
@@ -967,7 +967,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'ENOTSUPPORTED' => 'Currently, variant descriptions using "qter" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
                 ),
             )),
-            array('[g.1_cen]del', array(
+            array('g.1_cendel', array(
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
@@ -976,7 +976,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'ENOTSUPPORTED' => 'Currently, variant descriptions using "cen" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
                 ),
             )),
-            array('[g.1_pter]del', array(
+            array('g.pter_1000000del', array(
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
@@ -1053,7 +1053,6 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
-
             array('LRG_123t1:n.1del', array(
                 'position_start' => 1,
                 'position_end' => 1,
