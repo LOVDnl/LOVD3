@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-12-20
+ * Modified    : 2021-12-23
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1162,7 +1162,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
             if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt)/', $sReferenceType))
-                || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
+                || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)/', $sReferenceType))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
@@ -1238,12 +1238,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position
         '\)))?' .
 
-        '([ACGT]+>[ACGTRYSWKMBDHVN]+|' .         //  | (substitution)
-        '([ACTG]+\[[0-9]+])+' .                  //  | (repeat sequence)
-        '|ins|dup|delins|del|inv|sup|[=?]' .     //  V
-        '|\|(gom|lom|met=|.+))' .                // 20. Type of variant
+        '([ACGT]+>[ACGTRYSWKMBDHVN]+' .                   //  | (substitution)
+        '|([ACTG]+\[[0-9]+])+' .                          //  | (repeat sequence)
+        '|[ACTG]*=(\/{1,2}[ACGT]*>[ACGTRYSWKMBDHVN]+)?' . //  | (wild types, mosaics, or chimerics)
+        '|ins|dup|delins|del|inv|sup|\?' .                //  V
+        '|\|(gom|lom|met=|.+))' .                         // 20. Type of variant
 
-        '(.*)))/',                               // 23. Suffix
+        '(.*)))/',                                       // 24. Suffix
 
         $sVariant, $aMatches);
 
@@ -1256,6 +1257,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //         is cast to 1 in case of +? and -1 for -?. (e.g. c.10-?del)
         'complete'                => $aMatches[0],
         'prefix'                  => (!isset($aMatches[1])?  '' : $aMatches[1]),
+        'positions'               => (!isset($aMatches[3])?  '' : $aMatches[3]),
         'starting_parentheses'    => (!isset($aMatches[4])?  '' : $aMatches[4]), // The parentheses are given to make additional checks later on in the function easier.
         'earliest_start'          => (!isset($aMatches[5])?   0 : $aMatches[5]), // These are not cast to integers, since they can still hold an informative '*'.
         'earliest_intronic_start' => (!isset($aMatches[6])?   0 : (int)str_replace('?', '1', $aMatches[6])),
@@ -1266,7 +1268,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'latest_end'              => (!isset($aMatches[17])?  0 : $aMatches[17]),
         'latest_intronic_end'     => (!isset($aMatches[18])?  0 : (int)str_replace('?', '1', $aMatches[18])),
         'type'                    => (!isset($aMatches[20])? '' : $aMatches[20]),
-        'suffix'                  => (!isset($aMatches[23])? '' : $aMatches[23]),
+        'suffix'                  => (!isset($aMatches[24])? '' : $aMatches[24]),
     ));
 
     if (!isset($aVariant['complete']) || $aVariant['complete'] != $sVariant) {
@@ -1284,25 +1286,29 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return $aResponse;
             }
         }
-        foreach (array('gom', 'lom', 'met=', 'bsr', 'per') as $sNeedsAPipe) {
-            // These are all variants which we want to put behind a pipe for
-            //  Various reasons. The pipe is often forgotten by users, and
-            //  since we know this is a recurring mistake, we will try to send
-            //  a clear warning in case we find it. We add this to a warning,
-            //  not an error, since these issues can be fixed by fixHGVS.
-            if (strpos($sVariant, $sNeedsAPipe) && !strpos($sVariant, '|' . $sNeedsAPipe)) {
-                $aResponse['warnings']['WPIPEMISSING'] =
-                    'Please place a "|" between the positions and the variant type (' . $sNeedsAPipe . ').';
-                return $aResponse;
-            }
+        // We'll check for methylation-related variants here, that sometimes
+        //  lack a pipe character. Since we currently can't parse positions
+        //  anymore, we'll have to throw an error. If we can identify the user's
+        //  mistake, we can ask the user or lovd_fixHGVS() to correct it.
+        if (preg_match('/[0-9](gom|lom|met=|bsrC?)$/', $sVariant, $aRegs)) {
+            // Variant ends in a methylation-related suffix, but without a pipe.
+            // We can guess here that this can be fixed.
+            $aResponse['errors']['EPIPEMISSING'] =
+                'Please place a "|" between the positions and the variant type (' . $aRegs[1] . ').';
+            return $aResponse;
         }
         return false;
+    }
+
+    // Clean position string. We'll use it for reporting later on.
+    if ($aVariant['positions']) {
+        $aVariant['positions'] = strstr($aVariant['positions'], $aVariant['type'], true);
     }
 
     // Storing the variant type.
     if (!$aVariant['type']) {
         // If no type was matched, we can be sure that the variant is either
-        //  a full wildtype or a full unknown variant; so either g.= or g.? .
+        //  a full wild type or a full unknown variant; so either g.= or g.? .
         // In this case, we do not need to go over all tests, since there is
         //  simply a lot less information to test. We will do a few tests
         //  and add all necessary information, and then return our response
@@ -1323,14 +1329,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
         return ($bCheckHGVS? true : $aResponse);
 
-    } elseif (strpos($aVariant['type'], '>')) {
-        $aResponse['type'] = 'subst';
-
-    } elseif (substr($aVariant['type'], -1) == ']') {
-        $aResponse['type'] = 'repeat';
-        $aResponse['warnings']['WNOTSUPPORTED'] =
-            'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
-
     } elseif ($aVariant['type'][0] == '|') {
         // There might be variant types which some users would like to see
         //  being added to HGVS, but are not yet, e.g. the "bsr" and "per" types.
@@ -1347,11 +1345,25 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
         $aResponse['type'] = 'met';
 
+    } elseif (strpos($aVariant['type'], '=') !== false) {
+        if (substr_count($sVariant, '/') == 1) {
+            $aResponse['type'] = 'mosaic';
+        } elseif (substr_count($sVariant, '/') == 2) {
+            $aResponse['type'] = 'chimeric';
+        } else {
+            $aResponse['type'] = '=';
+        }
+
+    } elseif (strpos($aVariant['type'], '>')) {
+        $aResponse['type'] = 'subst';
+
+    } elseif (substr($aVariant['type'], -1) == ']') {
+        $aResponse['type'] = 'repeat';
+        $aResponse['warnings']['WNOTSUPPORTED'] =
+            'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+
     } elseif ($aVariant['type'] == '?') {
         $aResponse['type'] = NULL;
-
-    } elseif ($aVariant['type'] == '=') {
-        $aResponse['type'] = '=';
 
     } else {
         $aResponse['type'] = $aVariant['type'];
@@ -1360,18 +1372,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // If given, check if we already know this transcript.
-    if ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
+    if ($sTranscriptID === false || !$_DB) {
+        // If the transcript ID is passed as false, we are asked to ignore not
+        //  having the transcript. Pick some random number, high enough to not
+        //  be smaller than position_start if that's not in the UTR.
+        // Also, we take this default when we're unit testing and thus don't
+        //  have a database connection.
+        $aTranscriptOffsets[$sTranscriptID] = 1000000;
+
+    } elseif ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
         $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
             array($sTranscriptID, $sTranscriptID))->fetchColumn();
         if (!$aTranscriptOffsets[$sTranscriptID]) {
             // The transcript is not configured correctly. We will treat this transcript as unknown.
             $sTranscriptID = '';
         }
-
-    } elseif ($sTranscriptID === false) {
-        // If the transcript ID is passed as false, we are asked to ignore not having the transcript.
-        // Some random number, high enough to not be smaller than position_start if that's not in the UTR.
-        $aTranscriptOffsets[$sTranscriptID] = 1000000;
     }
 
 
@@ -1560,60 +1575,48 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         return $aResponse;
     }
 
-
-
-    // Making sure no redundant '?'s are given as positions.
-    if ($aVariant['latest_start'] . $aVariant['latest_start'] .
-         $aVariant['earliest_end'] . $aVariant['latest_end'] == '????') {
-        // e.g. c.(?_?)_(?_?)del -> c.?del
-        $sQuestionMarkWarning = 'Please rewrite the positions (?_?)_(?_?) to ?.';
-
-    } elseif ($aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
-        // e.g. c.(2_?)_(?_10)del -> c.(2_10)del
-        $sQuestionMarkWarning =
-            'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_(?_' . $aVariant['latest_end'] .
-            ') to (' . $aVariant['earliest_start'] . '_' . $aVariant['latest_end'] . ').';
-
-    } elseif ($aVariant['earliest_start'] . $aVariant['latest_start'] == '??' && $aVariant['earliest_end']) {
-        // e.g. c.(?_?)_10del -> c.?_10del
-        $sQuestionMarkWarning = 'Please rewrite the positions (?_?)_' . $aVariant['earliest_end'] .
-            ' to ?_' . $aVariant['earliest_end'] . '.';
-
-    } elseif ($aVariant['earliest_end'] . $aVariant['latest_end'] == '??') {
-        // e.g. c.2_(?_?)del -> c.2_?del
-        $sQuestionMarkWarning = 'Please rewrite the positions ' . $aVariant['earliest_start'] . '_(?_?) to '
-            . $aVariant['earliest_start'] . '_?.';
-
-    } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??'
-        && !$aVariant['latest_start'] && !$aVariant['latest_end']) {
-        // e.g. c.?_?del -> c.?del
-        $sQuestionMarkWarning = 'Please rewrite the positions ?_? to ?.';
-
-    } elseif ($aVariant['earliest_start'] . $aVariant['latest_start'] == '??'
-        && isset($aResponse['messages']['IPOSITIONRANGE'])) {
-        // e.g. c.(?_?)del -> c.?del
-        $sQuestionMarkWarning = 'Please rewrite the positions (?_?) to ?.';
-
-    } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??'
-        && !$aVariant['latest_start'] && $aVariant['latest_end']) {
-        // e.g. c.?_(?_10)del -> c.(?_10)del
-        $sQuestionMarkWarning =
-            'Please rewrite the positions ?_(?_' . $aVariant['latest_end'] . ') to ?_' . $aVariant['latest_end'] . '.';
-
-    } elseif ($aVariant['earliest_start'] && !$aVariant['latest_end']
-        && $aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
-        // e.g. c.(2_?)_?del -> c.(2_?)del
-        $sQuestionMarkWarning =
-            'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_? to (' . $aVariant['earliest_start'] . '_?).';
-    }
-
-    if (isset($sQuestionMarkWarning)) {
+    // Making sure wild type descriptions don't provide nucleotides
+    // (e.g. c.123A=, which should be c.123=).
+    if ($aResponse['type'] == '=' && preg_match('/[ACGT]/', $sVariant)) {
         if ($bCheckHGVS) {
             return false;
         }
-        $aResponse['warnings']['WTOOMUCHUNKNOWN'] =
-            'This variant description contains redundant question marks. ' .
-            $sQuestionMarkWarning;
+        $aResponse['warnings']['WBASESGIVEN'] = 'When using "=", please remove the original sequence before the "=".';
+    }
+
+    // Making sure no redundant '?'s are given as positions.
+    if (strpos($aVariant['positions'], '?') !== false) {
+        // Let's try to keep this simple. There's so many combinations,
+        //  why not just work on strings?
+        $sFixedPosition = str_replace(
+            array(
+                '(?_?)',
+                '_?)_(?_',
+                '?_?',
+                '?)_?',
+                '?_(?',
+            ),
+            array(
+                '?',
+                '_',
+                '?',
+                '?)',
+                '(?',
+            ),
+            $aVariant['positions']
+        );
+        if ($aVariant['positions'] != $sFixedPosition) {
+            $sQuestionMarkWarning =
+                'Please rewrite the positions ' . $aVariant['positions'] .
+                ' to ' . $sFixedPosition . '.';
+
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['warnings']['WTOOMUCHUNKNOWN'] =
+                'This variant description contains redundant question marks. ' .
+                $sQuestionMarkWarning;
+        }
     }
 
 
@@ -1636,7 +1639,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONMISSING'] =
+            $aResponse['errors']['EPOSITIONMISSING'] =
                 'An insertion must be provided with the two positions between which the insertion has taken place.';
 
         } elseif ($aVariant['latest_end'] || ($aVariant['latest_start'] && $aVariant['earliest_end'])) {
@@ -1646,7 +1649,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONFORMAT'] = 'Insertions should not be given more than two positions.';
+            $aResponse['errors']['EPOSITIONFORMAT'] = 'Insertions should not be given more than two positions.';
 
         } elseif ($aVariant['earliest_start'] != '?' && $aVariant['earliest_end'] != '?' &&
                     ($aVariant['earliest_end'] - $aVariant['earliest_start'] > 1 &&
@@ -1656,7 +1659,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONFORMAT'] =
+            $aResponse['errors']['EPOSITIONFORMAT'] =
                 'An insertion must have taken place between two neighboring positions. ' .
                 'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
 
@@ -1669,8 +1672,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['warnings']['EPOSITIONFORMAT'] =
-                'The two positions do not indicate a range. Please remove the parentheses if the positions are certain.';
+            $aResponse['errors']['EPOSITIONFORMAT'] =
+                'The two positions do not indicate a range longer than two bases.' .
+                ' Please remove the parentheses if the positions are certain.';
         }
 
     } elseif ($aResponse['type'] == 'subst') {
@@ -1693,10 +1697,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             if ($aVariant['earliest_start'] != $aVariant['earliest_end']) {
                 // If the two positions are not the same, the variant is not fixable.
-                $aResponse['errors']['ETOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
-            } else {
-                // If the positions are the same, the variant can safely be interpreted and fixed accordingly.
-                $aResponse['warnings']['WTOOMANYPOSITIONS'] = 'Too many positions are given for variant type substitution.';
+                $aResponse['errors']['ETOOMANYPOSITIONS'] =
+                    'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
             }
         }
 
@@ -1724,7 +1726,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         if ($bCheckHGVS) {
             return false;
         }
-        $aResponse['warnings']['WPARENTHESES'] = 'The variant description contains unbalanced parentheses.';
+        $aResponse['warnings']['WUNBALANCEDPARENTHESES'] = 'The variant description contains unbalanced parentheses.';
     }
 
     if (substr_count($aVariant['suffix'], '(') < substr_count($aVariant['suffix'], ')')) {
@@ -1746,9 +1748,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
         $aResponse['errors']['ESUFFIXMISSING'] =
             'The ' . (in_array($aVariant['type'], array('ins', 'delins'))? 'inserted sequence' : 'length') .
-            ' must be provided for ' . (in_array($aVariant['type'], array('ins', 'delins'))?
-                                        'insertions or deletion-insertions' :
-                                        'variants which took place within a range') . '.';
+            ' must be provided for ' .
+            (in_array($aVariant['type'], array('ins', 'delins'))?
+                'insertions or deletion-insertions' :
+                'variants which took place within an uncertain range') . '.';
 
     } elseif ($aVariant['suffix']) {
         if ($aResponse['type'] == 'repeat'
@@ -1773,7 +1776,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     if ($bCheckHGVS) {
                         return false;
                     }
-                    $aResponse['warnings']['WSUFFIXFORMAT'] = 'The length of the variant is not formatted following the HGVS guidelines.';
+                    $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        'The length of the variant is not formatted following the HGVS guidelines.' .
+                        ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
                 }
 
             } else {
@@ -1870,12 +1875,17 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse[$sField] = min($aResponse[$sField], $aMinMaxValue[1]);
 
                 if ($nOriValue != $aResponse[$sField]) {
+                    $sFieldName = str_replace('position_', '', $sField);
+                    if (strpos($sField, 'intron')) {
+                        $sFieldName = str_replace('_intron', ' in intron', $sFieldName);
+                    }
+
                     if (!isset($aResponse['warnings']['WPOSITIONSLIMIT'])) {
-                        $aResponse['warnings']['WPOSITIONSLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sField . '.';
+                        $aResponse['warnings']['WPOSITIONSLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sFieldName . '.';
                     } else {
                         // Append.
                         $aResponse['warnings']['WPOSITIONSLIMIT'] =
-                            str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONSLIMIT'], '.')) . ', ' . $sField . '.';
+                            str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONSLIMIT'], '.')) . ', ' . $sFieldName . '.';
                     }
                 }
             }

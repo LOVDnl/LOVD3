@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-12-16
+ * Modified    : 2021-12-23
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -68,6 +68,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Trim the variant and remove whitespace.
     $sVariant = preg_replace('/\s+/', '', $sVariant);
+
+    // Replace special – (hyphen, minus, en dash, em dash) with a simple - (hyphen-minus).
+    $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
 
     // Do a quick HGVS check.
     if (lovd_getVariantInfo($sVariant, false, true)) {
@@ -177,6 +180,17 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     if ($aVariant === false) {
         return $sReference . $sVariant; // Not HGVS.
 
+    } elseif (isset($aVariant['errors']['EPIPEMISSING'])) {
+        // This looked like a methylation-related variant that was missing a
+        //  pipe, failing lovd_getVariantInfo()'s entire regexp.
+        return lovd_fixHGVS($sReference . preg_replace('/(gom|lom|met=|bsrC?)$/', '|$1', $sVariant), $sType);
+
+    } elseif (isset($aVariant['errors']['ENOTSUPPORTED'])
+        && $aVariant['type'] == 'met' && strpos($sVariant, '||')) {
+        // Whatever is after the pipe wasn't recognized, but we also found more
+        //  pipes. Try removing them.
+        return lovd_fixHGVS($sReference . preg_replace('/\|{2,}/', '|', $sVariant), $sType);
+
     } elseif (isset($aVariant['errors']['EFALSEUTR']) || isset($aVariant['errors']['EFALSEINTRONIC'])) {
         // The wrong prefix was given. In other words: intronic positions or UTR
         //  notations were found for genomic DNA.
@@ -257,13 +271,13 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
-            } elseif (preg_match('/^\[[^NX][^;\]]*]$/', $sSuffix)) {
-                // Remove redundant square brackets,
+            } elseif (preg_match('/^\[.*\]$/', $sSuffix) && !preg_match('/[:;]/', $sSuffix)) {
+                // Remove redundant square brackets surrounding the suffix,
                 //  these are only needed when RefSeqs or combined variants are given.
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
 
-            } elseif (preg_match('/^[NX][CGMR]_[0-9]+/', $sSuffix)
+            } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/', $sSuffix)
                 || (strpos($sSuffix, ';') && strpos($sSuffix, '[') === false)) {
                 // Square brackets were forgotten, RefSeqs or combined variants are given.
                 return lovd_fixHGVS($sReference .
@@ -280,19 +294,20 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         }
     }
 
-    // Fix variants which hold two of the same positions.
-    if ($aVariant['type'] == 'subst' && isset($aVariant['warnings']['WTOOMANYPOSITIONS'])) {
-        // In this case, a variant of type substitution has been given
-        //  two positions. In getVariantInfo, these cases are passed
-        //  as errors if the positions are not the same, and as warnings
-        //  if the positions are the same. Since we know this, we can be
-        //  sure we are doing the right thing as we are removing the
-        //  second positions.
-        return lovd_fixHGVS($sReference . preg_replace('/_[0-9]+([-+][0-9]+)?/', '', $sVariant), $sType);
+    // Fix problems with too many questionmarks.
+    if (isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
+        // This means that question marks where given to the variant in
+        //  places where they do not bring any additional value. We'll let
+        //  lovd_getVariantInfo() do all the work!
+        if (preg_match('/Please rewrite the positions ([()0-9_?+-]+) to ([()0-9_?+-]+)\.$/',
+            $aVariant['warnings']['WTOOMUCHUNKNOWN'], $aRegs)) {
+            list(, $sOldPosition, $sNewPosition) = $aRegs;
+            return lovd_fixHGVS($sReference . str_replace($sOldPosition, $sNewPosition, $sVariant), $sType);
+        }
     }
 
     // Swap positions if necessary.
-    if (isset($aVariant['warnings']['WPOSITIONFORMAT']) || isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
+    if (isset($aVariant['warnings']['WPOSITIONFORMAT'])) {
         $aPositions = array();
 
         preg_match('/([cgmn]\.)(\()?' .
@@ -316,89 +331,47 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         $aPositions['D']       = $aMatches[18];
         $aPositions['DIntron'] = $aMatches[20];
 
-        if (isset($aVariant['warnings']['WPOSITIONFORMAT'])) {
-            if ($aPositions['C']
-                && max($aPositions['A'], $aPositions['B']) > max($aPositions['C'], $aPositions['D'])) {
-                // If this is the case, the positions are swapped in groups,
-                //  i.e., c.(6_10)_(1_5)del.
-                list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron'],
-                    $aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron']) =
-                    array($aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron'],
-                        $aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron']);
+        if ($aPositions['C']
+            && max($aPositions['A'], $aPositions['B']) > max($aPositions['C'], $aPositions['D'])) {
+            // If this is the case, the positions are swapped in groups,
+            //  i.e., c.(6_10)_(1_5)del.
+            list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron'],
+                $aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron']) =
+                array($aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron'],
+                    $aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron']);
 
-            } else {
-                // If the above is not the case, the positions are swapped more
-                //  intricately. This will be checked and fixed one by one.
-                foreach (array(array('A', 'B'), array('C', 'D'), array('A', 'C'), array('B', 'D')) as $aFirstAndLast) {
-                    list($sFirst, $sLast) = $aFirstAndLast;
+        } else {
+            // If the above is not the case, the positions are swapped more
+            //  intricately. This will be checked and fixed one by one.
+            foreach (array(array('A', 'B'), array('C', 'D'), array('A', 'C'), array('B', 'D')) as $aFirstAndLast) {
+                list($sFirst, $sLast) = $aFirstAndLast;
 
-                    if ($aPositions[$sFirst] && $aPositions[$sLast]
-                        && $aPositions[$sFirst] != '?' && $aPositions[$sLast] != '?') {
-                        // We only check the positions if the first and last value are
-                        //  not empty strings or question marks.
-                        $sIntronicFirst = $sFirst . 'Intron';
-                        $sIntronicLast = $sLast . 'Intron';
+                if ($aPositions[$sFirst] && $aPositions[$sLast]
+                    && $aPositions[$sFirst] != '?' && $aPositions[$sLast] != '?') {
+                    // We only check the positions if the first and last value are
+                    //  not empty strings or question marks.
+                    $sIntronicFirst = $sFirst . 'Intron';
+                    $sIntronicLast = $sLast . 'Intron';
 
-                        if ($aPositions[$sFirst] > $aPositions[$sLast]) {
-                            list($aPositions[$sFirst], $aPositions[$sIntronicFirst], $aPositions[$sLast], $aPositions[$sIntronicLast]) =
-                                array($aPositions[$sLast], $aPositions[$sIntronicLast], $aPositions[$sFirst], $aPositions[$sIntronicFirst]);
+                    if ($aPositions[$sFirst] > $aPositions[$sLast]) {
+                        list($aPositions[$sFirst], $aPositions[$sIntronicFirst], $aPositions[$sLast], $aPositions[$sIntronicLast]) =
+                            array($aPositions[$sLast], $aPositions[$sIntronicLast], $aPositions[$sFirst], $aPositions[$sIntronicFirst]);
 
-                        } elseif ($aPositions[$sFirst] == $aPositions[$sLast]) {
-                            if ($aPositions[$sIntronicFirst] > $aPositions[$sIntronicLast]) {
-                                list($aPositions[$sIntronicFirst], $aPositions[$sIntronicLast]) =
-                                    array($aPositions[$sIntronicLast], $aPositions[$sIntronicFirst]);
+                    } elseif ($aPositions[$sFirst] == $aPositions[$sLast]) {
+                        if ($aPositions[$sIntronicFirst] > $aPositions[$sIntronicLast]) {
+                            list($aPositions[$sIntronicFirst], $aPositions[$sIntronicLast]) =
+                                array($aPositions[$sIntronicLast], $aPositions[$sIntronicFirst]);
 
-                            } elseif ($sFirst . $sLast == 'AB' || $sFirst . $sLast == 'CD'
-                                || ($sFirst . $sLast == 'AC' && !$aPositions['B'] && !$aPositions['D'])) {
-                                // If the first and last positions are the same, we can
-                                //  only remove the last one if the positions are
-                                //  grouped together (e.g. c.1_1del, or c.(1_1)_10del).
-                                $aPositions[$sLast] = '';
-                                $aPositions[$sIntronicLast] = '';
-                            }
+                        } elseif ($sFirst . $sLast == 'AB' || $sFirst . $sLast == 'CD'
+                            || ($sFirst . $sLast == 'AC' && !$aPositions['B'] && !$aPositions['D'])) {
+                            // If the first and last positions are the same, we can
+                            //  only remove the last one if the positions are
+                            //  grouped together (e.g. c.1_1del, or c.(1_1)_10del).
+                            $aPositions[$sLast] = '';
+                            $aPositions[$sIntronicLast] = '';
                         }
                     }
                 }
-            }
-
-        } else {
-            // In this case, a WTOOMUCHUNKNOWN warning was thrown.
-            // This means that question marks where given to the variant in
-            //  places where they do not bring any additional value. We
-            //  shall remove this redundancy by replacing the question marks
-            //  by empty strings, thus removing them from the variant.
-
-            if ($aPositions['C'] . $aPositions['D'] == '??') {
-                // e.g. c.1_(?_?)del -> c.1_?del
-                $aPositions['D'] = '';
-
-            } elseif ($aPositions['A'] . $aPositions['C'] == '??' && !$aPositions['B'] && $aPositions['D']) {
-                // e.g. c.?_(?_10)del -> c.(?_10)del
-                $aPositions['B'] = $aPositions['D'];
-                $aPositions['C'] = '';
-                $aPositions['D'] = '';
-
-            } elseif ($aPositions['B'] . $aPositions['C'] == '??' && !$aPositions['D']) {
-                // e.g. c.(1_?)_?del -> c.(1_?)del
-                $aPositions['C'] = '';
-
-            } elseif ($aPositions['B'] . $aPositions['C'] == '??' && $aPositions['A'] != '?'
-                && !in_array($aPositions['D'], array('', '?'))) {
-                // e.g. c.(2_?)_(?_10)del -> c.(2_10)del
-                // In this case, a type of variant has been found which should
-                //  be placed in a range from the first to the last position.
-                // Only, variants placed in ranges need to be given the length
-                //  of the variant. If a suffix is given: good, we can send the
-                //  variant in. If no suffix has been given, there is nothing
-                //  we can do to turn this into a clean variant.
-                $aPositions['B'] = $aPositions['D'];
-                $aPositions['C'] = '';
-                $aPositions['D'] = '';
-
-            } else {
-                // e.g. c.?_?del -> c.?del
-                $aPositions['B'] = ($aPositions['B'] == '?'? '' : $aPositions['B']);
-                $aPositions['C'] = ($aPositions['C'] == '?'? '' : $aPositions['C']);
             }
         }
 
@@ -411,9 +384,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
         if ($sNewVariant != $sVariant) {
             return lovd_fixHGVS($sReference . $sNewVariant, $sType);
-
-        } else {
-            return $sReference . $sVariant;
         }
     }
 

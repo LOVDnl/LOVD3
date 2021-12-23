@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2020-12-16
+ * Modified    : 2020-12-23
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -62,7 +62,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.1_2ins5_10', 'g.1_2ins5_10'),
             array('g.1_2ins[NC_123456.1:g.1_10]', 'g.1_2ins[NC_123456.1:g.1_10]'),
             array('g.1_5delinsACT', 'g.1_5delinsACT'),
-            array('g.1_2ACT[20]', 'g.1_2ACT[20]'),
+            array('g.1ACT[20]', 'g.1ACT[20]'),
             array('g.123=', 'g.123='),
             array('c.?', 'c.?'),
             array('c.123?', 'c.123?'),
@@ -81,9 +81,12 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             //  and the range is fixed to a single position.
             array('g.140712592-140712592C>T', 'g.140712592C>T'),
 
-            // Whitespace.
+            // Whitespace and other copy/paste errors.
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
+            array('c.–123del', 'c.-123del'),
+            array('c.–123del', 'c.-123del'),
+            array('c.123—5del', 'c.123-5del'),
 
             // Lowercase nucleotides.
             array('g.123insactg', 'g.123insACTG'),
@@ -103,6 +106,11 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.123_124TG=', 'c.123_124='),
             array('c.(123_124TG=)', 'c.(123_124=)'),
 
+            // Methylation-related changes.
+            array('g.123|met=', 'g.123|met='),
+            array('g.123lom', 'g.123|lom'),
+            array('g.123||bsrC', 'g.123|bsrC'),
+
             // Double parentheses.
             array('g.((123_234))del(50)', 'g.(123_234)del(50)'),
             array('g.((123_234)_(345_456)del', 'g.(123_234)_(345_456)del'),
@@ -119,11 +127,13 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
+            array('c.1_2ins[N]', 'c.1_2insN'),
             array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
+            array('g.(100_200)del50', 'g.(100_200)del(50)'),
 
 
             // Question marks.
@@ -137,19 +147,31 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             array('g.(?_5)_10del', 'g.(?_5)_10del'),
             array('g.(5_?)_10del', 'g.(5_?)_10del'),
+            array('g.(?_5)_?del', 'g.(?_5)_?del'),
             array('g.(5_?)_?del', 'g.(5_?)del'),
+
             array('g.(?_?)_10del', 'g.?_10del'),
+            array('g.(?_?)_(10_?)del', 'g.?_(10_?)del'),
+            array('g.(?_?)_(?_10)del', 'g.(?_10)del'),
 
             array('g.5_(10_?)del', 'g.5_(10_?)del'),
             array('g.5_(?_10)del', 'g.5_(?_10)del'),
+            array('g.?_(10_?)del', 'g.?_(10_?)del'),
             array('g.?_(?_10)del', 'g.(?_10)del'),
+
             array('g.5_(?_?)del', 'g.5_?del'),
+            array('g.(5_?)_(?_?)del', 'g.(5_?)del'),
+            array('g.(?_5)_(?_?)del', 'g.(?_5)_?del'),
 
             array('g.(?_5)_(10_?)del', 'g.(?_5)_(10_?)del'),
             array('g.(5_?)_(?_10)del', 'g.(5_10)del'),
             array('g.(5_?)_(?_10)del(3)', 'g.(5_10)del(3)'),
 
             array('g.(?_?)_(?_?)del', 'g.?del'),
+
+            // Combining sorting and solving redundant question marks.
+            array('g.(10_?)_(?_5)del', 'g.(5_10)del'),
+            array('c.(10+1_?)_(?_5-1)del', 'c.(5-1_10+1)del'),
 
             // Swaps positions when needed.
             array('g.2_1dup', 'g.1_2dup'),
@@ -166,7 +188,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // UNFIXABLE VARIANTS.
             array('g.1delinsA', 'g.1delinsA'),
-            array('c.1_2AC[20]', 'c.1_2AC[20]'),
+            array('c.1AC[20]', 'c.1AC[20]'),
             array('c.1_2A>G', 'c.1_2A>G'),
             array('g.=', 'g.='),
             array('c.1insA', 'c.1insA'),
