@@ -1257,6 +1257,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //         is cast to 1 in case of +? and -1 for -?. (e.g. c.10-?del)
         'complete'                => $aMatches[0],
         'prefix'                  => (!isset($aMatches[1])?  '' : $aMatches[1]),
+        'positions'               => (!isset($aMatches[3])?  '' : $aMatches[3]),
         'starting_parentheses'    => (!isset($aMatches[4])?  '' : $aMatches[4]), // The parentheses are given to make additional checks later on in the function easier.
         'earliest_start'          => (!isset($aMatches[5])?   0 : $aMatches[5]), // These are not cast to integers, since they can still hold an informative '*'.
         'earliest_intronic_start' => (!isset($aMatches[6])?   0 : (int)str_replace('?', '1', $aMatches[6])),
@@ -1297,6 +1298,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             return $aResponse;
         }
         return false;
+    }
+
+    // Clean position string. We'll use it for reporting later on.
+    if ($aVariant['positions']) {
+        $aVariant['positions'] = strstr($aVariant['positions'], $aVariant['type'], true);
     }
 
     // Storing the variant type.
@@ -1587,18 +1593,20 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } elseif ($aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
         // e.g. c.(2_?)_(?_10)del -> c.(2_10)del
         $sQuestionMarkWarning =
-            'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_(?_' . $aVariant['latest_end'] .
-            ') to (' . $aVariant['earliest_start'] . '_' . $aVariant['latest_end'] . ').';
+            'Please rewrite the positions ' . $aVariant['positions'] .
+            ' to (' . $aVariant['earliest_start'] . '_' . $aVariant['latest_end'] . ').';
 
     } elseif ($aVariant['earliest_start'] . $aVariant['latest_start'] == '??' && $aVariant['earliest_end']) {
         // e.g. c.(?_?)_10del -> c.?_10del
-        $sQuestionMarkWarning = 'Please rewrite the positions (?_?)_' . $aVariant['earliest_end'] .
+        $sQuestionMarkWarning =
+            'Please rewrite the positions ' . $aVariant['positions'] .
             ' to ?_' . $aVariant['earliest_end'] . '.';
 
     } elseif ($aVariant['earliest_end'] . $aVariant['latest_end'] == '??') {
         // e.g. c.2_(?_?)del -> c.2_?del
-        $sQuestionMarkWarning = 'Please rewrite the positions ' . $aVariant['earliest_start'] . '_(?_?) to '
-            . $aVariant['earliest_start'] . '_?.';
+        $sQuestionMarkWarning =
+            'Please rewrite the positions ' . $aVariant['positions'] .
+            ' to ' . $aVariant['earliest_start'] . '_?.';
 
     } elseif ($aVariant['earliest_start'] . $aVariant['earliest_end'] == '??'
         && !$aVariant['latest_start'] && !$aVariant['latest_end']) {
@@ -1614,13 +1622,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         && !$aVariant['latest_start'] && $aVariant['latest_end']) {
         // e.g. c.?_(?_10)del -> c.(?_10)del
         $sQuestionMarkWarning =
-            'Please rewrite the positions ?_(?_' . $aVariant['latest_end'] . ') to ?_' . $aVariant['latest_end'] . '.';
+            'Please rewrite the positions ' . $aVariant['positions'] .
+            ' to (?_' . $aVariant['latest_end'] . ').';
 
     } elseif ($aVariant['earliest_start'] && !$aVariant['latest_end']
         && $aVariant['latest_start'] . $aVariant['earliest_end'] == '??') {
         // e.g. c.(2_?)_?del -> c.(2_?)del
         $sQuestionMarkWarning =
-            'Please rewrite the positions (' . $aVariant['earliest_start'] . '_?)_? to (' . $aVariant['earliest_start'] . '_?).';
+            'Please rewrite the positions ' . $aVariant['positions'] .
+            ' to (' . $aVariant['earliest_start'] . '_?).';
     }
 
     if (isset($sQuestionMarkWarning)) {
