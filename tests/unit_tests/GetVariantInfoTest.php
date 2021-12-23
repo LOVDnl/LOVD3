@@ -532,7 +532,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             // Positions with question marks.
             array('g.?del', array(
                 'position_start' => 1,
-                'position_end' => 4294967295,  // Fixme; Are we sure about this?
+                'position_end' => 4294967295,
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(),
@@ -607,12 +607,58 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
+            array('g.(?_5)_?del', array(
+                'position_start' => 5,
+                'position_end' => 4294967295,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
+                ),
+            )),
+            array('g.(5_?)_?del', array(
+                'position_start' => 5,
+                'position_end' => 4294967295,
+                'type' => 'del',
+                'warnings' => array(
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (5_?)_? to (5_?).',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
+                ),
+            )),
             array('g.(?_?)_10del', array(
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_10 to ?_10.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(?_?)_(10_?)del', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_(10_?) to ?_(10_?).',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(?_?)_(?_10)del', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_(?_10) to (?_10).',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -639,12 +685,58 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
                 ),
             )),
+            array('g.?_(10_?)del', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
+                ),
+            )),
+            array('g.?_(?_10)del', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions ?_(?_10) to (?_10).',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.'
+                ),
+            )),
             array('g.5_(?_?)del', array(
                 'position_start' => 5,
                 'position_end' => 4294967295,
                 'type' => 'del',
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions 5_(?_?) to 5_?.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(5_?)_(?_?)del', array(
+                'position_start' => 5,
+                'position_end' => 4294967295,
+                'type' => 'del',
+                'warnings' => array(
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (5_?)_(?_?) to (5_?).',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINPOSITIONS' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(?_5)_(?_?)del', array(
+                'position_start' => 5,
+                'position_end' => 4294967295,
+                'type' => 'del',
+                'warnings' => array(
+                    'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_5)_(?_?) to (?_5)_?.',
                 ),
                 'errors' => array(),
                 'messages' => array(

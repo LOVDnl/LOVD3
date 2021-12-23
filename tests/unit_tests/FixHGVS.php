@@ -147,13 +147,21 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             array('g.(?_5)_10del', 'g.(?_5)_10del'),
             array('g.(5_?)_10del', 'g.(5_?)_10del'),
+            array('g.(?_5)_?del', 'g.(?_5)_?del'),
             array('g.(5_?)_?del', 'g.(5_?)del'),
+
             array('g.(?_?)_10del', 'g.?_10del'),
+            array('g.(?_?)_(10_?)del', 'g.?_(10_?)del'),
+            array('g.(?_?)_(?_10)del', 'g.(?_10)del'),
 
             array('g.5_(10_?)del', 'g.5_(10_?)del'),
             array('g.5_(?_10)del', 'g.5_(?_10)del'),
+            array('g.?_(10_?)del', 'g.?_(10_?)del'),
             array('g.?_(?_10)del', 'g.(?_10)del'),
+
             array('g.5_(?_?)del', 'g.5_?del'),
+            array('g.(5_?)_(?_?)del', 'g.(5_?)del'),
+            array('g.(?_5)_(?_?)del', 'g.(?_5)_?del'),
 
             array('g.(?_5)_(10_?)del', 'g.(?_5)_(10_?)del'),
             array('g.(5_?)_(?_10)del', 'g.(5_10)del'),
