@@ -169,6 +169,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             array('g.(?_?)_(?_?)del', 'g.?del'),
 
+            // Combining sorting and solving redundant question marks.
+            array('g.(10_?)_(?_5)del', 'g.(5_10)del'),
+            array('c.(10+1_?)_(?_5-1)del', 'c.(5-1_10+1)del'),
+
             // Swaps positions when needed.
             array('g.2_1dup', 'g.1_2dup'),
             array('g.(5_1)_10dup', 'g.(1_5)_10dup'),
