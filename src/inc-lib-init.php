@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-12-22
+ * Modified    : 2021-12-23
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1739,7 +1739,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         if ($bCheckHGVS) {
             return false;
         }
-        $aResponse['warnings']['WPARENTHESES'] = 'The variant description contains unbalanced parentheses.';
+        $aResponse['warnings']['WUNBALANCEDPARENTHESES'] = 'The variant description contains unbalanced parentheses.';
     }
 
     if (substr_count($aVariant['suffix'], '(') < substr_count($aVariant['suffix'], ')')) {
