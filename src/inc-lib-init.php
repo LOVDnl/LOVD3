@@ -407,6 +407,144 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
 
 
 
+function lovd_findReferenceSequence ($s, $sQuestion='holdsReference', $sDNAType='')
+{
+    // This function allows for an easy recognition of reference
+    //  sequences within variant descriptions. The function can be used
+    //  to answer a multitude of questions.
+    // The question of interest should be given through the variable
+    //  $sQuestion, following the options as given below.
+    //
+    // >'holdsReference':   The function will return true or false
+    //                       depending on whether a general reference
+    //                       sequence pattern was found.
+    // >'getMatchingTypes': The function will return an array holding
+    //                       all the prefixes of DNA types which work
+    //                       with the reference sequence in the string.
+    // >'matchDNAType':     The function will check whether the given
+    //                       reference sequence matches the DNA type.
+    // >'getIssues':        The function will look for problems within
+    //                       the given reference sequences, and returns
+    //                       all the problems that were found using an
+    //                       array containing the warning messages.
+    //
+    // $sDNAType can be used to provide a DNA type when $s does not
+    //  hold any.
+    // If $sQuestion is invalid, the function will throw an exception.
+
+    if (!preg_match('/^[A-Z_.t0-9()]+:[gcmn]/', $s)) {
+        // Whatever the question may have been, if the general
+        //  reference sequence pattern was not found within the
+        // given input string, we return false.
+        return false;
+    }
+
+
+    if ($sQuestion == 'holdsReference') {
+        // Find out whether the given variant description holds a
+        //  reference sequence. Return the answer through either
+        //  true or false.
+        // If the programme made it this far, we already know that
+        //  a reference sequence pattern has been found.
+        return true;
+    }
+
+
+    // $aPatterns will store all patterns which can match the
+    //  right reference sequences to each DNA type.
+    $aPatterns = array(
+        'c' => '/^([NX]M|ENST|LRG.*t)/',
+        'g' => '/^(N[CGTW]|ENSG|LRG)/',
+        'm' => '/^(N[CGTW]|ENSG|LRG)/',
+        'n' => '/.*/', // Fixme; Add specific requirements for the reference sequence of non-coding DNA.
+    );
+
+
+    if ($sQuestion == 'getMatchingTypes') {
+        // If the user wants to get all matching types,
+        //  we will do so by matching the pattern of each
+        //  DNA type to the given reference sequence.
+        return array_keys(array_filter($aPatterns, static function ($sPattern) use ($s) {
+            return preg_match($sPattern, $s);
+        }));
+//        $aMatchingDNATypes = array();
+//
+//        foreach ($aPatterns as $sDNAType => $sPattern) {
+//            if (preg_match($sPattern, $s)) {
+//                $aMatchingDNATypes[] = $sDNAType;
+//            }
+//        }
+//        return $aMatchingDNATypes;
+    }
+
+
+    // If $sDNAType was not given by the user, we must find it
+    //  in the given variant description. It will be placed right
+    //  after the ':' (e.g. NC_123456.1:g.1_2insA).
+    $sDNAType = ($sDNAType? : $s[strpos($s, ':') + 1]);
+
+
+    if ($sQuestion == 'matchType') {
+        // If the user asked to match a certain type, we will
+        //  find out whether the reference sequence matches the
+        //  patterns which are expected for the given type.
+        return preg_match($aPatterns[$sDNAType], $s);
+    }
+
+
+    if ($sQuestion == 'getIssues') {
+        // The user wants to find out what is wrong with a
+        //  certain reference genome. We will look find out
+        //  by going through the most common issues.
+        $aIssues = array();
+
+        // 1. Unknown reference sequence.
+        if (!preg_match('/^(' .
+            '[NX][CGMRTW]_[0-9]{6,9}(\.[0-9]+)?|' .
+            'N[CGTW]_[0-9]{6}(\.[0-9]+)?\([NX][MR]_[0-9]{6,9}(\.[0-9]+)?\)|' .
+            'ENS[TG][0-9]{11}\.[0-9]+|' .
+            'LRG_[0-9]{3}(t[0-9]+)?' .
+            '):/', $s)) {
+            // If this issue has been found, it might be a flaw
+            //  within our regular expression rather than a
+            //  problem with the user. However, it could also
+            //  be a problem on their end. We don't know.
+            return array('unknownReference');
+        }
+
+        // 2. Missing version number.
+        if (preg_match('/[NX][CGMRTW]_[0-9]{6,9}[:)]/', $s)) {
+            // A common mistake from users is that they
+            //  forget to add the version of a RefSeq.
+            $aIssues[] = 'missingVersion';
+        }
+
+        // 3. Reference sequence does not match DNA type.
+        if (!preg_match($aPatterns[$sDNAType], $s)) {
+            $aIssues[] = 'doesNotMatchDNAType';
+        }
+
+        // 4. Intronic positions are not referenced for
+        //  coding DNA.
+        if (!preg_match('/^(N[CGTW]|LRG|ENSG)/', $s)
+            && (preg_match('/[0-9]+[-+]([0-9]+|\?)/', $s))) {
+            $aIssues[] = 'missingIntronicReference';
+        }
+
+        return $aIssues;
+    }
+
+
+    // If the function was run with an unidentifiable $sQuestion,
+    //  we throw an exception to inform the user that something
+    //  was off with the input.
+    throw new RuntimeException('Illegal value found for $sQuestion.');
+}
+
+
+
+
+
 function lovd_generateRandomID ($l = 10)
 {
     // Generates random ID with $l length.
