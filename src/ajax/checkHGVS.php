@@ -134,11 +134,13 @@ if ($_REQUEST['method'] == 'single') {
                 if (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']) {
                     $sResponse .= 'The variant passed the name check.';
 
+                } elseif (in_array('WCORRECTED', array_keys($aValidatedVariant['warnings']))) {
+                    $sResponse .= 'Your variant was corrected to: ' . $aValidatedVariant['data']['DNA'] . '.';
+
                 } else {
                     $sResponse .=
-                        // Fixme; where is the fixed variant?
                         (!$aValidatedVariant['warnings'] ? '' :
-                            '<b>Warnings:<br> - ' . implode('<br> - ', $aValidatedVariant['warnings'])) . '<br>' .
+                            '<b>Warnings:</b><br> - ' . implode('<br> - ', $aValidatedVariant['warnings'])) . '<br>' .
                         (!$aValidatedVariant['errors'] ? '' :
                             '<b>Errors:</b><br> - ' . implode('<br> - ', $aValidatedVariant['errors']));
                 }
@@ -199,11 +201,14 @@ if ($_REQUEST['method'] == 'list') {
                         if ($aValidatedVariant === false) {
                             $sTable .= '<TD>error performing name check.</TD>';
 
+                        } elseif (in_array('WCORRECTED', array_keys($aValidatedVariant['warnings']))) {
+                                $sTable .= '<TD>variant was corrected to: ' . $aValidatedVariant['data']['DNA'] . '.</TD>';
+
                         } else {
-                        $sTable .= '<TD>' . (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']?
-                                'passed name check' :
-                                'failed name check: - ' . implode('. - ',
-                                array_merge($aValidatedVariant['errors'], $aValidatedVariant['warnings']))) . '.</TD>';
+                            $sTable .= '<TD>' . (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']?
+                            'passed name check' :
+                            'failed name check: - ' . implode('. - ',
+                            array_merge($aValidatedVariant['errors'], $aValidatedVariant['warnings']))) . '.</TD>';
                         }
                     }
                 }
