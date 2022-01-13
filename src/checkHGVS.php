@@ -62,11 +62,11 @@ if (PATH_COUNT == 5 && !ACTION) {
 
 
 
-if (PATH_COUNT == 1 && ACTION == 'checkOne') {
-    // URL: /checkHGVS?checkOne
-    // Simple HGVS check of one variant.
+if (PATH_COUNT == 1 && substr(ACTION, 0, 5) ==  'check') {
+    // URL: /checkHGVS?checkOne or /checkHGVS?checkList
 
-    define('PAGE_TITLE', 'Single variant HGVS Check');
+    define('METHOD', (substr(ACTION, -3) == 'One'? 'single' : 'list'));
+    define('PAGE_TITLE', (METHOD == 'single'? 'Single variant' : 'Batch') . ' HGVS Check');
     define('LOG_EVENT', 'CheckHGVS');
 
     require ROOT_PATH . 'inc-lib-form.php';
@@ -79,63 +79,28 @@ if (PATH_COUNT == 1 && ACTION == 'checkOne') {
 
     // Show form.
     print(
-        '<FORM onsubmit="showResponse(); return false;" action="">
-            <INPUT onchange="showResponse();" id="variant"/>
-            <INPUT type="submit" id="checkButton" value="Check"/>
-            <IMG src="gfx/trans.png" id="checkResult">
-            <DIV><BR></DIV>
-            <DIV id="response"></DIV>
-        </FORM>'
-    );
-
-    // Call AJAX.
-    print(
-        '<SCRIPT>
-        function showResponse() {
-            $.get("ajax/checkHGVS.php?var=" + $("#variant").val() + "&method=single").fail(function(){alert("Error checking variant, please try again later.");});
-        }
-        </SCRIPT>'
-    );
-
-    exit;
-}
-
-
-
-
-
-if (PATH_COUNT == 1 && ACTION == 'checkList') {
-    // URL: /checkHGVS?checkList
-    // HGVS check of a list of variants as given through an input box.
-
-    define('PAGE_TITLE', 'HGVS Check of a list of variants');
-    define('LOG_EVENT', 'CheckHGVS');
-
-    require ROOT_PATH . 'inc-lib-form.php';
-    require ROOT_PATH . 'inc-lib-variants.php';
-
-
-    $_T->printHeader(false);
-    $_T->printTitle();
-
-    print('      To check your variants, please write them down in the input bar below, each on one line.<BR><BR>');
-
-    // Show form.
-    print(
     '<FORM onsubmit="showResponse(); return false;" action="">
-            <TEXTAREA onchange="showResponse();" cols="30" rows="10" id="variant"></TEXTAREA>
-            <INPUT type="submit" id="checkButton" value="Check"/>
-            <IMG src="gfx/trans.png" id="checkResult">
-            <DIV><BR></DIV>
-            <DIV id="response"></DIV>
-        </FORM>'
+        <INPUT type="checkbox" id="nameCheck"/>
+        <LABEL for="syntax">Besides checking the syntax, please also check the contents of my variant' . (METHOD == 'single'? '' : 's') . '.</LABEL>
+        <DIV><BR></DIV>' .
+        (METHOD == 'single'?
+        '<INPUT onchange="showResponse();" id="variant"/>' :
+        '<TEXTAREA onchange="showResponse();" cols="30" rows="10" id="variant"></TEXTAREA>'
+        ) . '
+        <INPUT type="submit" id="checkButton" value="Check"/>
+        <IMG src="gfx/trans.png" id="checkResult">
+        <DIV><BR></DIV>
+        <DIV id="response"></DIV>
+    </FORM>'
     );
 
     // Call AJAX.
     print(
     '<SCRIPT>
         function showResponse() {
-            $.get("ajax/checkHGVS.php?var=" + encodeURIComponent($("#variant").val()) + "&method=list").fail(function(){alert("Error checking variant, please try again later.");});
+            $.get("ajax/checkHGVS.php?var=" + encodeURIComponent($("#variant").val()) + "&method=' . METHOD . '&nameCheck=" + $("#nameCheck").is(":checked"))
+            .fail(function(){alert("Error checking variant, please try again later.");})
+            ;
         }
         </SCRIPT>'
     );
