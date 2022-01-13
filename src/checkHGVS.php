@@ -80,8 +80,8 @@ if (PATH_COUNT == 1 && substr(ACTION, 0, 5) ==  'check') {
     // Show form.
     print(
     '<FORM onsubmit="showResponse(); return false;" action="">
-        <INPUT type="checkbox" id="nameCheck"/>
-        <LABEL for="syntax">Besides checking the syntax, please also check the contents of my variant' . (METHOD == 'single'? '' : 's') . '.</LABEL>
+        <INPUT type="checkbox" id="callVV"/>
+        <LABEL for="syntax">Besides checking the syntax of my variant' . (METHOD == 'single'? '' : 's') . ', please also run VariantValidator.</LABEL>
         <DIV><BR></DIV>' .
         (METHOD == 'single'?
         '<INPUT onchange="showResponse();" id="variant"/>' :
@@ -98,7 +98,7 @@ if (PATH_COUNT == 1 && substr(ACTION, 0, 5) ==  'check') {
     print(
     '<SCRIPT>
         function showResponse() {
-            $.get("ajax/checkHGVS.php?var=" + encodeURIComponent($("#variant").val()) + "&method=' . METHOD . '&nameCheck=" + $("#nameCheck").is(":checked"))
+            $.get("ajax/checkHGVS.php?var=" + encodeURIComponent($("#variant").val()) + "&method=' . METHOD . '&callVV=" + $("#callVV").is(":checked"))
             .fail(function(){alert("Error checking variant, please try again later.");})
             ;
         }
@@ -118,7 +118,7 @@ if (PATH_COUNT == 1 && substr(ACTION, 0, 5) ==  'check') {
                              + encodeURI(row.children().eq(1).text()) + "\t" // isHGVS
                              + encodeURI(row.children().eq(2).text()) + "\t" // fixedVariant
                              + encodeURI(row.children().eq(3).text())        // warnings and errors
-                             + (!$("#nameCheck").is(":checked")? "" :        // nameCheck
+                             + (!$("#callVV").is(":checked")? "" :           // result of VariantValidator
                                  "\t" + encodeURI(row.children().eq(4).text()))
                              + "\r\n";                
             }

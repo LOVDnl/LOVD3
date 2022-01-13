@@ -37,7 +37,7 @@ define('ROOT_PATH', './../');
 require ROOT_PATH . 'inc-lib-variants.php';
 require ROOT_PATH . 'inc-init.php';
 
-if ($_REQUEST['nameCheck'] == 'true') {
+if ($_REQUEST['callVV'] == 'true') {
     require ROOT_PATH . 'class/variant_validator.php';
 }
 
@@ -65,7 +65,7 @@ if ($_REQUEST['method'] == 'single') {
     $sResponse .= 'The given variant is ' . ($bIsHGVS ? '' : 'not ') . 'HGVS.<br><br>';
 
     // Warn the user if a reference sequence is missing.
-    if (!lovd_findReferenceSequence($sVariant) && $_REQUEST['nameCheck'] == 'false') {
+    if (!lovd_findReferenceSequence($sVariant) && $_REQUEST['callVV'] == 'false') {
         $sResponse .= '<i>' .
         'Please note that your variant is missing a reference sequence.<br>' .
         'Although this is not necessary for our syntax check, a variant description does ' .
@@ -111,21 +111,21 @@ if ($_REQUEST['method'] == 'single') {
     }
 
 
-    // Performing the nameCheck using VariantValidator.
-    if ($_REQUEST['nameCheck'] == 'true') {
-        $sResponse .= '<br><b>Result of the name check (calling VariantValidator):</b><br>';
+    // Running VariantValidator.
+    if ($_REQUEST['callVV'] == 'true') {
+        $sResponse .= '<br><b>Running VariantValidator:</b><br>';
 
-        // We only want to run a name check on HGVS variants.
+        // We only want to run VariantValidator on HGVS variants.
         if (!$bIsHGVS) {
             $sResponse .=
-                'A name check can only be run using HGVS descriptions. Please take another look at your variant' .
+                'VariantValidator can only be run using HGVS descriptions. Please take another look at your variant' .
                 (isset($sFixedVariant)? '' : ' and our recommended fixes') . ', and try again.';
 
         } else {
-            // We also only want to run a name check if a
+            // We cannot run VariantValidator if no
             //  reference sequence was provided.
             if (!lovd_findReferenceSequence($sVariant)) {
-                $sResponse .= 'Please provide a reference sequence to check the contents of your variant.';
+                $sResponse .= 'Please provide a reference sequence to run VariantValidator.';
 
             } else {
                 $sVariant = (!isset($sFixedVariant) || !lovd_getVariantInfo($sFixedVariant, false, true) ?
@@ -139,8 +139,11 @@ if ($_REQUEST['method'] == 'single') {
 
 
                 // Returning the results.
-                if (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']) {
-                    $sResponse .= 'The variant passed the name check.';
+                if ($aValidatedVariant === false) {
+                    $sResponse .= 'Internal error occurred';
+
+                } elseif (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']) {
+                    $sResponse .= 'The variant passed the validation.';
 
                 } elseif (in_array('WCORRECTED', array_keys($aValidatedVariant['warnings']))) {
                     $sResponse .= 'Your variant was corrected to: ' . $aValidatedVariant['data']['DNA'] . '.';
@@ -175,8 +178,8 @@ if ($_REQUEST['method'] == 'list') {
            '<TH style=\"background : #90E090;\">Is HGVS? (T/F)</TH>' .
            '<TH style=\"background : #90E090;\">Fixed variant</TH>' .
            '<TH style=\"background : #90E090;\">Warnings and errors</TH>' .
-           ($_REQUEST['nameCheck'] == 'false'? '' :
-          '<TH style=\"background : #90E090;\">Result of the name check</TH>') .
+           ($_REQUEST['callVV'] == 'false'? '' :
+          '<TH style=\"background : #90E090;\">Result of VariantValidator</TH>') .
         '</TR>';
 
     foreach (explode("\n", $sVariants) as $sVariant) {
@@ -202,11 +205,11 @@ if ($_REQUEST['method'] == 'list') {
             if ($bIsHGVS) {
                 $sTable .= '<TD></TD><TD></TD>';
 
-                if ($_REQUEST['nameCheck'] == 'true') {
+                if ($_REQUEST['callVV'] == 'true') {
                     if (!lovd_findReferenceSequence($sVariant)) {
                         // We can only call VariantValidator if the variant
                         //  is HGVS and holds a reference sequence.
-                        $sTable .= '<TD>could not perform name check: missing required reference sequence.</TD>';
+                        $sTable .= '<TD>could not run VariantValidator: missing required reference sequence.</TD>';
 
                     } else {
                         $_VV = new LOVD_VV();
@@ -215,15 +218,15 @@ if ($_REQUEST['method'] == 'list') {
                             $_VV->verifyVariant($sVariant, array()));
 
                         if ($aValidatedVariant === false) {
-                            $sTable .= '<TD>error performing name check.</TD>';
+                            $sTable .= '<TD>internal error occurred.</TD>';
 
                         } elseif (in_array('WCORRECTED', array_keys($aValidatedVariant['warnings']))) {
                                 $sTable .= '<TD>variant was corrected to: ' . $aValidatedVariant['data']['DNA'] . '.</TD>';
 
                         } else {
                             $sTable .= '<TD>' . (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']?
-                            'passed name check' :
-                            'failed name check: - ' . implode('. - ',
+                            'passed variant validation' :
+                            'failed validation: - ' . implode('. - ',
                             array_merge($aValidatedVariant['errors'], $aValidatedVariant['warnings']))) . '.</TD>';
                         }
                     }
@@ -259,9 +262,9 @@ if ($_REQUEST['method'] == 'list') {
                         '</TD>';
                 }
 
-                // Perform name check (call VariantValidator).
-                if ($_REQUEST['nameCheck'] == 'true') {
-                    $sTable .= '<TD>could not perform name check: variant is not HGVS.</TD>';
+                // Call VariantValidator.
+                if ($_REQUEST['callVV'] == 'true') {
+                    $sTable .= '<TD>could not run VariantValidator: description is not HGVS.</TD>';
                 }
             }
             $sTable .= '</TR>';
@@ -274,7 +277,7 @@ if ($_REQUEST['method'] == 'list') {
     // Create response.
     $sResponse .= 'The variants are ' . ($bAllIsHGVS ? '' : 'not ') . 'all clean HGVS description.' .
 
-                   ($bAllHoldRefSeqs || $_REQUEST['nameCheck'] == 'true'? '' : '<br><br><i>' .
+                   ($bAllHoldRefSeqs || $_REQUEST['callVV'] == 'true'? '' : '<br><br><i>' .
                         'Please note that at least one of your variants is missing a reference sequence.<br>' .
                         'Although this is not necessary for our syntax check, a variant description does ' .
                         'need a reference to be fully informative and HGVS compliant.</i><br>') .
