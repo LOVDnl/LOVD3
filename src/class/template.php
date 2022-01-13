@@ -770,7 +770,9 @@ foreach ($zAnnouncements as $zAnnouncement) {
                     }
                     list($sIMG, $sName, $nRequiredLevel) = $aItem;
                     $bDisabled = false;
-                    if ($nRequiredLevel && (($nRequiredLevel == LEVEL_CURATOR && !$bCurator) || ($nRequiredLevel != LEVEL_CURATOR && $nRequiredLevel > $_AUTH['level']))) {
+                    if ($nRequiredLevel && $_AUTH
+                        && (($nRequiredLevel == LEVEL_CURATOR && !$bCurator)
+                            || ($nRequiredLevel != LEVEL_CURATOR && $nRequiredLevel > $_AUTH['level']))) {
                         $bDisabled = true;
                     } else {
                         if (!$sURL) {
@@ -794,10 +796,6 @@ foreach ($zAnnouncements as $zAnnouncement) {
                                 '</A></LI>' . "\n";
                         $bHR = false;
                     }
-// class disabled, disabled. Nu gewoon maar even weggehaald.
-//                    $sUL .= '  <LI class="disabled">' .
-//                        (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . preg_replace('/(\.[a-z]+)$/', '_disabled' . "$1", $sIMG) . ');"></SPAN>') . $sName .
-//                        '</LI>' . "\n";
                 }
                 $sUL .= '</UL>' . "\n";
 
