@@ -64,6 +64,14 @@ if ($_REQUEST['method'] == 'single') {
 
     $sResponse .= 'The given variant is ' . ($bIsHGVS ? '' : 'not ') . 'HGVS.<br><br>';
 
+    // Warn the user if a reference sequence is missing.
+    if (!lovd_findReferenceSequence($sVariant) && $_REQUEST['nameCheck'] == 'false') {
+        $sResponse .= '<i>' .
+        'Please note that your variant is missing a reference sequence.<br>' .
+        'Although this is not necessary for our syntax check, a variant description does ' .
+        'need a reference to be fully informative and HGVS compliant.</i><br>';
+    }
+
     // Show whether the variant was correct through a check or a cross.
     print('$("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png"); ');
 
@@ -159,6 +167,7 @@ if ($_REQUEST['method'] == 'list') {
 
 
     $bAllIsHGVS = true;
+    $bAllHoldRefSeqs = true;
 
     $sTable = '<HTML><TABLE id=\"responseTable\" border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\">' .
         '<TR>' .
@@ -176,6 +185,13 @@ if ($_REQUEST['method'] == 'list') {
 
         } else {
             $sVariant = rtrim($sVariant); // Removing floating whitespaces.
+
+            // Storing info on whether we find any variants which are missing
+            //  reference sequences.
+            if (!lovd_findReferenceSequence($sVariant)) {
+                $bAllHoldRefSeqs = false;
+            }
+
             $bIsHGVS = lovd_getVariantInfo($sVariant, false, true);
             $sColour = 'green';
 
@@ -257,6 +273,12 @@ if ($_REQUEST['method'] == 'list') {
 
     // Create response.
     $sResponse .= 'The variants are ' . ($bAllIsHGVS ? '' : 'not ') . 'all clean HGVS description.' .
+
+                   ($bAllHoldRefSeqs || $_REQUEST['nameCheck'] == 'true'? '' : '<br><br><i>' .
+                        'Please note that at least one of your variants is missing a reference sequence.<br>' .
+                        'Although this is not necessary for our syntax check, a variant description does ' .
+                        'need a reference to be fully informative and HGVS compliant.</i><br>') .
+
                   '<br><br>' .
                    $sTable .
                   '<br>' .
