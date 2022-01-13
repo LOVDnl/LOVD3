@@ -158,7 +158,7 @@ if ($_REQUEST['method'] == 'list') {
 
     $bAllIsHGVS = true;
 
-    $sTable = '<HTML><TABLE border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\">' .
+    $sTable = '<HTML><TABLE id=\"responseTable\" border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\">' .
         '<TR>' .
            '<TH style=\"background : #90E090;\">Variant</TH>' .
            '<TH style=\"background : #90E090;\">Is HGVS? (T/F)</TH>' .
@@ -227,7 +227,7 @@ if ($_REQUEST['method'] == 'list') {
                 $sTable .='<TD>' .
                     (empty($aVariantInfo['errors']) ? '' :
                         '<B>Errors: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['errors'])))) .
-                    (!$aVariantInfo['warnings'] || !$aVariantInfo['errors'] ? '' : '<BR>') .
+                    (!$aVariantInfo['warnings'] || !$aVariantInfo['errors'] ? '' : ' <BR>') .
                     (empty($aVariantInfo['warnings']) ? '' :
                         '<B>Warnings: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['warnings'])))) .
                 '</TD>';
@@ -243,11 +243,13 @@ if ($_REQUEST['method'] == 'list') {
 
     $sTable .= '</TABLE></HTML>';
 
-    $sResponse .= 'The variants are ' . ($bAllIsHGVS ? '' : 'not ') . 'all clean HGVS description.<br><br>';
 
-    if (!$bAllIsHGVS) {
-        $sResponse .= $sTable;
-    }
+    // Create response.
+    $sResponse .= 'The variants are ' . ($bAllIsHGVS ? '' : 'not ') . 'all clean HGVS description.' .
+                  '<br><br>' .
+                   $sTable .
+                  '<br>' .
+                  '<BUTTON onclick=\"downloadResponse()\">Download result</BUTTON>';
 }
 
 

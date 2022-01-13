@@ -105,6 +105,34 @@ if (PATH_COUNT == 1 && substr(ACTION, 0, 5) ==  'check') {
         </SCRIPT>'
     );
 
+
+    // Allow download.
+    print(
+    '<SCRIPT>
+        function downloadResponse(){
+            var fileContent = "data:text/tab-seperated-values;charset=utf-8,";
+
+            for(var i=0; i<$("#responseTable tr").length; i++){
+                row = $("#responseTable tr").eq(i);
+                fileContent += encodeURI(row.children().eq(0).text()) + "\t" // variant
+                             + encodeURI(row.children().eq(1).text()) + "\t" // isHGVS
+                             + encodeURI(row.children().eq(2).text()) + "\t" // fixedVariant
+                             + encodeURI(row.children().eq(3).text())        // warnings and errors
+                             + (!$("#nameCheck").is(":checked")? "" :        // nameCheck
+                                 "\t" + encodeURI(row.children().eq(4).text()))
+                             + "\r\n";                
+            }
+
+            var link = document.createElement("a");
+            link.setAttribute("href", fileContent);
+            link.setAttribute("download", "LOVD_HGVSCheck ' . date("Y-m-d H.i.s") . '.txt");
+            document.body.appendChild(link);
+
+            link.click();
+        }
+        </SCRIPT>'
+    );
+
     exit;
 }
 
