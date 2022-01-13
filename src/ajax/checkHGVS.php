@@ -229,13 +229,19 @@ if ($_REQUEST['method'] == 'list') {
                 // if it was HGVS and orange if it was fixed.
                 $sColour = ($sVariant == $sFixedVariant || !$bFixedIsHGVS? 'red' : 'orange');
 
-                $sTable .='<TD>' .
-                    (empty($aVariantInfo['errors']) ? '' :
-                        '<B>Errors: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['errors'])))) .
-                    (!$aVariantInfo['warnings'] || !$aVariantInfo['errors'] ? '' : ' <BR>') .
-                    (empty($aVariantInfo['warnings']) ? '' :
-                        '<B>Warnings: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['warnings'])))) .
-                '</TD>';
+                if (empty($aVariantInfo['warnings']) && empty($aVariantInfo['errors'])
+                    && $sFixedVariant != $sVariant && $bFixedIsHGVS) {
+                    $sTable .= '<TD>The variant description has been corrected.</TD>';
+
+                } else {
+                    $sTable .= '<TD>' .
+                        (empty($aVariantInfo['errors']) ? '' :
+                            '<B>Errors: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['errors'])))) .
+                        (!$aVariantInfo['warnings'] || !$aVariantInfo['errors'] ? '' : ' <BR>') .
+                        (empty($aVariantInfo['warnings']) ? '' :
+                            '<B>Warnings: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['warnings'])))) .
+                        '</TD>';
+                }
 
                 // Perform name check (call VariantValidator).
                 if ($_REQUEST['nameCheck'] == 'true') {
