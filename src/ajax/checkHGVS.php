@@ -62,14 +62,14 @@ if ($_REQUEST['method'] == 'single') {
     // First check to see if the variant is HGVS.
     $bIsHGVS = lovd_getVariantInfo($sVariant, false, true);
 
-    $sResponse .= 'The given variant is ' . ($bIsHGVS ? '' : 'not ') . 'HGVS.<br><br>';
+    $sResponse .= 'The given variant ' . ($bIsHGVS ? 'passed' : 'did not pass') . ' our syntax check.<br><br>';
 
     // Warn the user if a reference sequence is missing.
     if (!lovd_findReferenceSequence($sVariant) && $_REQUEST['callVV'] == 'false') {
         $sResponse .= '<i>' .
         'Please note that your variant is missing a reference sequence.<br>' .
         'Although this is not necessary for our syntax check, a variant description does ' .
-        'need a reference to be fully informative and HGVS compliant.</i><br>';
+        'need a reference to be fully informative and HGVS compliant.</i><br><br>';
     }
 
     // Show whether the variant was correct through a check or a cross.
@@ -105,7 +105,7 @@ if ($_REQUEST['method'] == 'single') {
             if (lovd_getVariantInfo($sFixedVariant, false, true)) {
                 $sResponse .= 'Did you mean ' . $sFixedVariantPlusLink . ' ?<br>';
             } else {
-                $sResponse .= 'We could not (safely) turn your variant into an HGVS description, but this suggestion might be an improvement: ' . $sFixedVariantPlusLink . '.<br>';
+                $sResponse .= 'We could not (safely) turn your variant into a syntax that passes our tests, but this suggestion might be an improvement: ' . $sFixedVariantPlusLink . '.<br>';
             }
         }
     }
@@ -275,7 +275,8 @@ if ($_REQUEST['method'] == 'list') {
 
 
     // Create response.
-    $sResponse .= 'The variants are ' . ($bAllIsHGVS ? '' : 'not ') . 'all clean HGVS description.' .
+    $sResponse .= ($bAllIsHGVS ? 'All of the variants passed our syntax check!' :
+                                 'Some of the variants did not pass our syntax check...') .
 
                    ($bAllHoldRefSeqs || $_REQUEST['callVV'] == 'true'? '' : '<br><br><i>' .
                         'Please note that at least one of your variants is missing a reference sequence.<br>' .
