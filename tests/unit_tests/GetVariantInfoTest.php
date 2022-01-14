@@ -46,6 +46,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_getVariantInfo() with data from
         // dataProviderGetVariantInfo().
+        echo $sInput;
         $this->assertEquals($aOutput, lovd_getVariantInfo($sInput, false));
     }
 
@@ -1123,7 +1124,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1(NM_123456.1)) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
+                ),
             )),
             array('NC_123456.1(NM_123456.1):c.1-1del', array(
                 'position_start' => 1,
@@ -1155,7 +1158,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (LRG_123t1) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
+                ),
             )),
             array('LRG_123t1:c.1del', array(
                 'position_start' => 1,
@@ -1202,7 +1207,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n). For n. variants, please use a non-coding transcript reference sequence.',
+                ),
             )),
 
             array('NM_123456.1:g.1del', array(
@@ -1244,7 +1251,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(),
                 'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence used is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
+                    'EREFERENCEFORMAT' => 'The reference sequence is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
                 ),
             )),
             array('LRG:g.1del', array(

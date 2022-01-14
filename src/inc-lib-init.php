@@ -1115,13 +1115,13 @@ function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
     //  a complete reference sequence. The ending pattern will accept
     //  both possibilities if this is set to unknown (null), but should
     //  be set to either true or false when it IS known.
-    $sEnd = ($bFullVariantDescription === null? '(:.|$)' : ($bFullVariantDescription? ':.*' : '$'));
+    $sEnd = ($bFullVariantDescription === null? '(:.*|$)' : ($bFullVariantDescription? ':.*' : '$'));
 
     return array(
         'general' => array(
-            'lenient' => '/^[A-Z_.t0-9()]+/' . $sEnd,
-            'strict'  => '/^([NX][CGMRTW]_[0-9]{6,9}(\.[0-9]+)?' .
-                '|N[CGTW]_[0-9]{6}(\.[0-9]+)?\([NX][MR]_[0-9]{6,9}(\.[0-9]+)?\)' .
+            'lenient' => '/^[A-Z_.t0-9()]+' . $sEnd . '/',
+            'strict'  => '/^([NX][CGMRTW]_[0-9]{6,9}\.[0-9]+' .
+                '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX]M_[0-9]{6,9}\.[0-9]+\)' .
                 '|ENS[TG][0-9]{11}\.[0-9]+' .
                 '|LRG_[0-9]{3}(t[0-9]+)?' .
                 ')' . $sEnd . '/',
@@ -1133,14 +1133,14 @@ function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
             'n' => '/^[NX]R/',
         ),
         'refSeqPatternToDNAType' => array(
-            '/(ENST|LRG.*t)' . $sEnd . '/'           => array('c'),
-            '/[NX]M/'                                => array('c', 'n'),
-            '/[NX]R/'                                => array('n'),
-            '/(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/' => array('g', 'm'),
+            '/[NX]M/'                                 => array('c'),
+            '/(ENST|LRG_[0-9]+t[0-9]+' . $sEnd . ')/' => array('n', 'c'),
+            '/[NX]R/'                                 => array('n'),
+            '/(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/'  => array('g', 'm'),
         ),
-        'notes' => array(
-            'missingVersion'          => '/[NX][CGMRTW]_[0-9]{6,9}/(\)|' . $sEnd . ')/',
-            'cannotReferenceIntronic' => '/^(?!((N[CGTW]|LRG|ENSG)))/',
+        'checks' => array(
+            'missingVersion'           => '/[NX][CGMRTW]_[0-9]{6,9}(\)|' . $sEnd . ')/',
+            'cannotReferenceIntronic'  => '/^(?!((N[CGTW]|LRG|ENSG)))/',
         ),
     );
 }
@@ -1182,17 +1182,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Match the reference sequence if one was given.
-    if (preg_match('/^[A-Z_.t0-9()]+:[gcmn]/', $sVariant)) {
+    if (lovd_holdsRefSeq($sVariant)) {
         // The user seems to have written down a reference sequence.
         // Let's see if it matches the expected format.
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
-        if (preg_match('/^(' .
-            '[NX][CGMRTW]_[0-9]{6,9}\.[0-9]+|' .
-            'N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)|' .
-            'ENS[TG][0-9]{11}\.[0-9]+|' .
-            'LRG_[0-9]{3}(t[0-9]+)?' .
-            ')$/', $sReferenceSequence)) {
+        $aRefSeqPatterns = lovd_getRefSeqPatterns(false);
+        if (preg_match($aRefSeqPatterns['general']['strict'], $sReferenceSequence)) {
             // Check if the reference sequence matches one of
             //  the possible formats.
             if ($sTranscriptID !== false) {
@@ -1227,9 +1223,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
 
-            $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
-            if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt)/', $sReferenceType))
-                || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)/', $sReferenceType))) {
+            if (!in_array($sVariant[0], lovd_getMatchingDNATypesOfRefSeq($sReferenceSequence))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
@@ -1246,9 +1240,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $aResponse['errors']['EWRONGREFERENCE'] .=
                             ' For ' . $sVariant[0] . '. variants, please use a genomic reference sequence.';
                         break;
+                    case 'n':
+                        $aResponse['errors']['EWRONGREFERENCE'] .=
+                            ' For ' . $sVariant[0] . '. variants, please use a non-coding transcript reference sequence.';
                 }
 
-            } elseif (!preg_match('/^(N[CGTW]|LRG|ENSG)/', $sReferenceType)
+            } elseif (preg_match($aRefSeqPatterns['checks']['cannotReferenceIntronic'], $sReferenceSequence)
                 && (preg_match('/[0-9]+[-+]([0-9]+|\?)/', $sVariant))) {
                 // If a variant has intronic positions, it must have a
                 //  reference that contains those positions.
@@ -1261,22 +1258,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         } else {
             // The user seems to have tried to add a reference sequence, but it
-            //  was not formatted correctly. We will return an error.
+            //  was not formatted correctly. We will return errors or warnings accordingly.
             if ($bCheckHGVS) {
                 return false;
             }
-            if (preg_match('/^(' .
-                '[NX][CGMRTW]_[0-9]{6,9}|' .
-                'N[CGTW]_[0-9]{6}(\.[0-9]+)?\([NX][MR]_[0-9]{6,9}(\.[0-9]+)?\)|' .
-                'ENS[TG][0-9]{11}' .
-                ')$/', $sReferenceSequence)) {
+            if (preg_match($aRefSeqPatterns['checks']['missingVersion'], $sReferenceSequence)) {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
-                    'The reference sequence used is missing the required version number.' .
+                    'The reference sequence is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
-                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
+                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'; // Fixme; should we store this information in getRefSeqPatterns maybe?
             }
         }
     }
