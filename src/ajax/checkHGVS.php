@@ -65,7 +65,7 @@ if ($_REQUEST['method'] == 'single') {
     $sResponse .= 'The given variant ' . ($bIsHGVS ? 'passed' : 'did not pass') . ' our syntax check.<br><br>';
 
     // Warn the user if a reference sequence is missing.
-    if (!lovd_findReferenceSequence($sVariant) && $_REQUEST['callVV'] == 'false') {
+    if (!lovd_holdsRefSeq($sVariant) && $_REQUEST['callVV'] == 'false') {
         $sResponse .= '<i>' .
         'Please note that your variant is missing a reference sequence.<br>' .
         'Although this is not necessary for our syntax check, a variant description does ' .
@@ -124,7 +124,7 @@ if ($_REQUEST['method'] == 'single') {
         } else {
             // We cannot run VariantValidator if no
             //  reference sequence was provided.
-            if (!lovd_findReferenceSequence($sVariant)) {
+            if (!lovd_holdsRefSeq($sVariant)) {
                 $sResponse .= 'Please provide a reference sequence to run VariantValidator.';
 
             } else {
@@ -191,7 +191,7 @@ if ($_REQUEST['method'] == 'list') {
 
             // Storing info on whether we find any variants which are missing
             //  reference sequences.
-            if (!lovd_findReferenceSequence($sVariant)) {
+            if ($bAllHoldRefSeqs && !lovd_holdsRefSeq($sVariant)) {
                 $bAllHoldRefSeqs = false;
             }
 
@@ -206,7 +206,7 @@ if ($_REQUEST['method'] == 'list') {
                 $sTable .= '<TD></TD><TD></TD>';
 
                 if ($_REQUEST['callVV'] == 'true') {
-                    if (!lovd_findReferenceSequence($sVariant)) {
+                    if (!lovd_holdsRefSeq($sVariant)) {
                         // We can only call VariantValidator if the variant
                         //  is HGVS and holds a reference sequence.
                         $sTable .= '<TD>could not run VariantValidator: missing required reference sequence.</TD>';
