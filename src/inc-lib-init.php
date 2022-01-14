@@ -407,87 +407,6 @@ function lovd_displayError ($sError, $sMessage, $sLogFile = 'Error')
 
 
 
-function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
-{
-    // This function stores and returns all the patterns necessary to
-    //  match reference sequences.
-    // The patterns will be ended with a certain 'ending pattern' based
-    //  on whether they will be run on a full variant description or on
-    //  a complete reference sequence. The ending pattern will accept
-    //  both possibilities if this is set to unknown (null), but should
-    //  be set to either true or false when it IS known.
-    $sEnd = ($bFullVariantDescription === null? '(:.|$)' : ($bFullVariantDescription? ':.*' : '$'));
-
-    return array(
-        'general' => array(
-            'lenient' => '/^[A-Z_.t0-9()]+/' . $sEnd,
-            'strict'  => '/^([NX][CGMRTW]_[0-9]{6,9}(\.[0-9]+)?' .
-                             '|N[CGTW]_[0-9]{6}(\.[0-9]+)?\([NX][MR]_[0-9]{6,9}(\.[0-9]+)?\)' .
-                             '|ENS[TG][0-9]{11}\.[0-9]+' .
-                             '|LRG_[0-9]{3}(t[0-9]+)?' .
-                         ')' . $sEnd . '/',
-        ),
-        'DNATypeToRefSeqPattern' => array(
-            'c' => '/([NX]M|ENST|LRG_[0-9]+t[0-9]+'    . $sEnd . ')/',
-            'g' => '/^(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/',
-            'm' => '/^(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/',
-            'n' => '/^[NX]R/',
-        ),
-        'refSeqPatternToDNAType' => array(
-            '/(ENST|LRG.*t)' . $sEnd . '/'           => array('c'),
-            '/[NX]M/'                                => array('c', 'n'),
-            '/[NX]R/'                                => array('n'),
-            '/(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/' => array('g', 'm'),
-        ),
-        'notes' => array(
-            'missingVersion'          => '/[NX][CGMRTW]_[0-9]{6,9}/(\)|' . $sEnd . ')/',
-            'cannotReferenceIntronic' => '/^(?!((N[CGTW]|LRG|ENSG)))/',
-        ),
-    );
-}
-
-
-
-
-
-function lovd_getMatchingDNATypesOfRefSeq ($s, $bFullVariantDescription=null)
-{
-    // Depends on lovd_getRefSeqInfo().
-    // Returns all the DNA types which fit a given reference sequence.
-    // The variable $s could be a full variant description, or it might
-    //  just be a reference sequence. A user could let us know by
-    //  filling in $bFullVariantDescription.
-    $aPatterns = lovd_getRefSeqPatterns($bFullVariantDescription);
-
-    // Get matching DNA types.
-    foreach($aPatterns['refSeqPatternToDNAType'] as $sPattern => $aDNATypes) {
-        if (preg_match($sPattern, $s)) {
-            return $aDNATypes;
-        }
-    }
-
-    // No matches found.
-    return array();
-}
-
-
-
-
-
-function lovd_holdsRefSeq ($sVariantDescription) : bool
-{
-    // Depends on lovd_getRefSeqInfo().
-    // Finds out whether the general pattern of a reference
-    //  sequence was found in a variant description.
-    $aPatterns = lovd_getRefSeqPatterns(true);
-
-    return preg_match($aPatterns['general']['lenient'], $sVariantDescription);
-}
-
-
-
-
-
 function lovd_generateRandomID ($l = 10)
 {
     // Generates random ID with $l length.
@@ -1157,6 +1076,73 @@ function lovd_getInstallURL ($bFull = true)
     // ROOT_PATH can be relative or absolute.
     return (!$bFull? '' : PROTOCOL . $_SERVER['HTTP_HOST']) .
         lovd_cleanDirName(substr(ROOT_PATH, 0, 1) == '/'? ROOT_PATH : dirname($_SERVER['SCRIPT_NAME']) . '/' . ROOT_PATH);
+}
+
+
+
+
+
+function lovd_getMatchingDNATypesOfRefSeq ($s, $bFullVariantDescription=null)
+{
+    // Depends on lovd_getRefSeqPatterns().
+    // Returns all the DNA types which fit a given reference sequence.
+    // The variable $s could be a full variant description, or it might
+    //  just be a reference sequence. A user could let us know by
+    //  filling in $bFullVariantDescription.
+    $aPatterns = lovd_getRefSeqPatterns($bFullVariantDescription);
+
+    // Get matching DNA types.
+    foreach($aPatterns['refSeqPatternToDNAType'] as $sPattern => $aDNATypes) {
+        if (preg_match($sPattern, $s)) {
+            return $aDNATypes;
+        }
+    }
+
+    // No matches found.
+    return array();
+}
+
+
+
+
+
+function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
+{
+    // This function stores and returns all the patterns necessary to
+    //  match reference sequences.
+    // The patterns will be ended with a certain 'ending pattern' based
+    //  on whether they will be run on a full variant description or on
+    //  a complete reference sequence. The ending pattern will accept
+    //  both possibilities if this is set to unknown (null), but should
+    //  be set to either true or false when it IS known.
+    $sEnd = ($bFullVariantDescription === null? '(:.|$)' : ($bFullVariantDescription? ':.*' : '$'));
+
+    return array(
+        'general' => array(
+            'lenient' => '/^[A-Z_.t0-9()]+/' . $sEnd,
+            'strict'  => '/^([NX][CGMRTW]_[0-9]{6,9}(\.[0-9]+)?' .
+                '|N[CGTW]_[0-9]{6}(\.[0-9]+)?\([NX][MR]_[0-9]{6,9}(\.[0-9]+)?\)' .
+                '|ENS[TG][0-9]{11}\.[0-9]+' .
+                '|LRG_[0-9]{3}(t[0-9]+)?' .
+                ')' . $sEnd . '/',
+        ),
+        'DNATypeToRefSeqPattern' => array(
+            'c' => '/([NX]M|ENST|LRG_[0-9]+t[0-9]+'    . $sEnd . ')/',
+            'g' => '/^(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/',
+            'm' => '/^(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/',
+            'n' => '/^[NX]R/',
+        ),
+        'refSeqPatternToDNAType' => array(
+            '/(ENST|LRG.*t)' . $sEnd . '/'           => array('c'),
+            '/[NX]M/'                                => array('c', 'n'),
+            '/[NX]R/'                                => array('n'),
+            '/(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/' => array('g', 'm'),
+        ),
+        'notes' => array(
+            'missingVersion'          => '/[NX][CGMRTW]_[0-9]{6,9}/(\)|' . $sEnd . ')/',
+            'cannotReferenceIntronic' => '/^(?!((N[CGTW]|LRG|ENSG)))/',
+        ),
+    );
 }
 
 
@@ -2082,6 +2068,20 @@ function lovd_hideEmail ($s)
     }
 
     return $s_return;
+}
+
+
+
+
+
+function lovd_holdsRefSeq ($sVariantDescription) : bool
+{
+    // Depends on lovd_getRefSeqPatterns().
+    // Finds out whether the general pattern of a reference
+    //  sequence was found in a variant description.
+    $aPatterns = lovd_getRefSeqPatterns(true);
+
+    return preg_match($aPatterns['general']['lenient'], $sVariantDescription);
 }
 
 
