@@ -184,6 +184,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
             array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
 
+            // Swapping reference sequences.
+            array('NM_123456.1(NC_123456.1):c.100del', 'NC_123456.1(NM_123456.1):c.100del'),
 
 
             // UNFIXABLE VARIANTS.

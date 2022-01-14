@@ -1263,6 +1263,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
                 ),
             )),
+
+            array('NM_123456.1(NC_123456.1):c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequences are switched around.' .
+                        ' Expected: genomic(transcript); found: transcript(genomic).',
+                ),
+                'errors' => array(),
+            ))
         );
     }
 }

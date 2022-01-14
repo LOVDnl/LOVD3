@@ -176,7 +176,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // The basic steps have all been taken. From this point forward, we
     //  can use the warning and error messages of lovd_getVariantInfo() to check
     //  and fix the variant.
-    $aVariant = lovd_getVariantInfo($sVariant, false);
+    $aVariant = lovd_getVariantInfo($sReference . $sVariant, false);
     if ($aVariant === false) {
         return $sReference . $sVariant; // Not HGVS.
 
@@ -221,6 +221,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         && !isset($aVariant['errors']['ESUFFIXMISSING'])
         && isset($aVariant['warnings']['WTOOMUCHUNKNOWN']))) {
         return $sReference . $sVariant; // Not HGVS.
+    }
+
+    // Swap the reference sequences if they were wrongly sorted.
+    if (isset($aVariant['warnings']['WREFERENCEFORMAT'])) {
+        return lovd_fixHGVS(preg_replace('/(.*)\((.*)\)/', '$2($1)', $sReference) . $sVariant, $sType);
     }
 
     // Change the variant type (if possible) if the wrong type was chosen.

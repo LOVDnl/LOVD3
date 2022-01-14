@@ -1141,6 +1141,7 @@ function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
         'checks' => array(
             'missingVersion'           => '/[NX][CGMRTW]_[0-9]{6,9}(\)|' . $sEnd . ')/',
             'cannotReferenceIntronic'  => '/^(?!((N[CGTW]|LRG|ENSG)))/',
+            'swappedCodingAndGenomic' => '/^[NX]M_[0-9]{6}\.[0-9]+?\(N[CGTW]_[0-9]{6,9}\.[0-9]+?\)' . $sEnd . '/',
         ),
     );
 }
@@ -1266,6 +1267,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+
+            } elseif (preg_match($aRefSeqPatterns['checks']['swappedCodingAndGenomic'], $sReferenceSequence)) {
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'The genomic and transcript reference sequences are switched around.' .
+                    ' Expected: genomic(transcript); found: transcript(genomic).';
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
