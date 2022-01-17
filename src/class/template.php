@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2021-11-10
+ * Modified    : 2022-01-12
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -363,7 +363,7 @@ class LOVD_Template
 
         }
         print('  Powered by <A href="' . $_SETT['upstream_URL'] . $_STAT['tree'] . '/" target="_blank">LOVD v.' . $_STAT['tree'] . '</A> Build ' . $_STAT['build'] . '<BR>' . "\n" .
-              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2021 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
+              '  LOVD' . (LOVD_plus? '+' : '') . ' software &copy;2004-2022 <A href="http://www.lumc.nl/" target="_blank">Leiden University Medical Center</A>' . "\n");
 ?>
     </TD>
     <TD width="42" align="right">
@@ -770,7 +770,9 @@ foreach ($zAnnouncements as $zAnnouncement) {
                     }
                     list($sIMG, $sName, $nRequiredLevel) = $aItem;
                     $bDisabled = false;
-                    if ($nRequiredLevel && (($nRequiredLevel == LEVEL_CURATOR && !$bCurator) || ($nRequiredLevel != LEVEL_CURATOR && $nRequiredLevel > $_AUTH['level']))) {
+                    if ($nRequiredLevel && $_AUTH
+                        && (($nRequiredLevel == LEVEL_CURATOR && !$bCurator)
+                            || ($nRequiredLevel != LEVEL_CURATOR && $nRequiredLevel > $_AUTH['level']))) {
                         $bDisabled = true;
                     } else {
                         if (!$sURL) {
@@ -794,10 +796,6 @@ foreach ($zAnnouncements as $zAnnouncement) {
                                 '</A></LI>' . "\n";
                         $bHR = false;
                     }
-// class disabled, disabled. Nu gewoon maar even weggehaald.
-//                    $sUL .= '  <LI class="disabled">' .
-//                        (!$sIMG? '' : '<SPAN class="icon" style="background-image: url(gfx/' . preg_replace('/(\.[a-z]+)$/', '_disabled' . "$1", $sIMG) . ');"></SPAN>') . $sName .
-//                        '</LI>' . "\n";
                 }
                 $sUL .= '</UL>' . "\n";
 

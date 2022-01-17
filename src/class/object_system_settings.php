@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2021-09-27
+ * Modified    : 2022-01-14
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -54,7 +54,7 @@ class LOVD_SystemSetting extends LOVD_Object
     function checkFields ($aData, $zData = false, $aOptions = array())
     {
         // Checks fields before submission of data.
-        global $_SETT;
+        global $_SETT, $_STAT;
 
         $this->aCheckMandatory =
                  array(
@@ -65,13 +65,31 @@ class LOVD_SystemSetting extends LOVD_Object
         parent::checkFields($aData, $zData, $aOptions);
 
         // Database URL is mandatory, if the option "Include in the global LOVD listing" is selected.
-        if (!empty($aData['include_in_listing']) && empty($aData['location_url'])) {
-            lovd_errorAdd('location_url', 'Please fill in an URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing; otherwise disable the \'Include in the global LOVD listing\' setting below.');
-        }
-
-        // Database URL should be an URL.
-        if (!empty($aData['location_url']) && !lovd_matchURL($aData['location_url'])) {
-            lovd_errorAdd('location_url', 'Please fill in a correct URL in the \'Database URL\' field.');
+        // If mandatory or given, we'll check the URL (if not given, we'll auto-generate it).
+        if (!empty($aData['include_in_listing']) || !empty($aData['location_url'])) {
+            // Database URL should be an URL.
+            if (!empty($aData['location_url']) && !lovd_matchURL($aData['location_url'])) {
+                lovd_errorAdd('location_url', 'Please fill in a correct URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing; otherwise empty the field and disable the \'Include in the global LOVD listing\' setting below.');
+            } else {
+                // Validate the URL. Failures are fatal since 3.0-28; before, this was an ajax script.
+                $sResponse = implode('',
+                    lovd_php_file(
+                        $_SETT['check_location_URL'] . '?url=' . rawurlencode(rtrim(
+                                (empty($aData['location_url'])? lovd_getInstallURL() : $aData['location_url']), '/') . '/') .
+                        '&signature=' . rawurlencode($_STAT['signature'])));
+                if (strpos($sResponse, 'http') === 0) {
+                    // I don't have a nice feedback system, $aData is not passed as reference.
+                    // So we'll just overwrite $_POST in this case.
+                    // It's OK, the value will be escaped before being fed back to the form.
+                    $aData['location_url'] = $_POST['location_url'] = $sResponse;
+                } elseif (empty($aData['location_url'])) {
+                    // Couldn't automatically determine the URL, so we'll have to ask.
+                    lovd_errorAdd('location_url', 'Please fill in an URL in the \'Database URL\' field, if you want this LOVD installation to be included in the global LOVD listing; otherwise disable the \'Include in the global LOVD listing\' setting below.');
+                } else {
+                    // Some other error occurred.
+                    lovd_errorAdd('location_url', 'Error while trying to validate your database URL: ' . htmlspecialchars($sResponse));
+                }
+            }
         }
 
         // Email address.
@@ -225,7 +243,7 @@ class LOVD_SystemSetting extends LOVD_Object
                         'hr',
                         array('Title of this LOVD installation', 'This will be shown on the top of every page.', 'text', 'system_title', 45),
                         array('Institute (optional)', 'The institute which runs this database is displayed in the public area and in emails sent by LOVD. It\'s commonly set to a laboratory name or a website name.', 'text', 'institute', 45),
-                        array('Database URL (optional)', 'This is the URL with which the database can be accessed by the outside world, including "http://" or "https://". It will also be used in emails sent by LOVD. This field is mandatory if you select the "Include in the global LOVD listing" option.<BR>If you click the "check" link, LOVD will verify or try to predict the value.', 'print', '<INPUT type="text" name="location_url" size="40" id="location_url" value="' . (empty($_POST['location_url'])? '' : htmlspecialchars($_POST['location_url'])) . '"' . (!lovd_errorFindField('location_url')? '' : ' class="err"') . '>&nbsp;<SPAN id="location_url_check">(<A href="#" onclick="javascript:lovd_checkURL(); return false;">check</A>)</SPAN>'),
+                        array('Database URL (optional)', 'This is the URL with which the database can be accessed by the outside world, including "http://" or "https://". It will also be used in emails sent by LOVD. This field is mandatory if you select the "Include in the global LOVD listing" option.<BR>If you click the "check" link, LOVD will verify or try to predict the value.', 'text', 'location_url', 40),
                         array('LOVD email address', 'This email address will be used to send emails from LOVD to users. We need this address to make sure that emails from LOVD arrive. Please note that although strictly speaking this email address does not need to exist, we recommend that you use a valid address.', 'text', 'email_address', 40),
                         array('Forward messages to database admin?', 'This will forward messages to the database administrator about submitter registrations and submissions.', 'checkbox', 'send_admin_submissions'),
       'refseq_build' => array('Human Build to map to (UCSC/NCBI)', 'We need to know which version of the Human Build we need to map the variants in this LOVD to.', 'select', 'refseq_build', 1, $aHumanBuilds, false, false, false),
