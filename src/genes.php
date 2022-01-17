@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2021-09-22
+ * Modified    : 2022-01-17
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -337,7 +337,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 require ROOT_PATH . 'class/progress_bar.php';
 
                 $sFormNextPage = '<FORM action="' . $sPath . '" id="createGene" method="post">' . "\n" .
-                                 '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
+                                 '          <INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n" .
                                  '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
                                  '        </FORM>';
 
@@ -516,7 +516,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                             array('', '', 'submit', 'Continue &raquo;'),
                           );
         lovd_viewForm($aFormData);
-        print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+        print('<INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n");
         print('</TABLE></FORM>' . "\n\n");
         print('<SCRIPT type="text/javascript">' . "\n" .
               '  <!--' . "\n" .
@@ -715,7 +715,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                           ));
         lovd_viewForm($aForm);
 
-        print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+        print('<INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n");
         print('</FORM>' . "\n\n");
 
         $_T->printFooter();
@@ -916,7 +916,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                       ));
     lovd_viewForm($aForm);
 
-    print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+    print('<INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n");
     print('</FORM>' . "\n\n");
 
     $_T->printFooter();
