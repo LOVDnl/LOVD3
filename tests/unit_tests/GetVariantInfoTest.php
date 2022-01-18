@@ -812,6 +812,13 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.(100_200)_(200_500)del', array(
+                'position_start' => 200,
+                'position_end' => 200,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('g.100_(400_500)del', array(
                 'position_start' => 100,
                 'position_end' => 400,
