@@ -232,7 +232,30 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // Change the variant type (if possible) if the wrong type was chosen.
     if (isset($aVariant['warnings']['WWRONGTYPE'])) {
         if ($aVariant['type'] == 'subst') {
-            return lovd_fixHGVS($sReference . preg_replace('/[ACTG]+>/', 'delins', $sVariant), $sType);
+            // Change positions based on length REF part of the substitution;
+            //  e.g. N>N or NN>N.
+            preg_match('/([A-Z]+)>([A-Z]+)$/', $sVariant, $aRegs);
+            $nLength = strlen($aRegs[1]) - 1;
+            if ($nLength && !isset($aVariant['errors']['ETOOMANYPOSITIONS'])) {
+                // Only when we have more than one base before the > and there
+                //  is currently just one position, do we calculate an end
+                //  position.
+                if (isset($aVariant['position_start_intron'])) {
+                    $aVariant['position_end_intron'] += $nLength;
+                    // Compensate for the possibility where we just left the intron.
+                    if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
+                        $aVariant['position_end'] += $aVariant['position_end_intron'];
+                        $aVariant['position_end_intron'] = 0;
+                    }
+                } else {
+                    $aVariant['position_end'] += $nLength;
+                }
+                $sEndPosition = $aVariant['position_end'] .
+                    (empty($aVariant['position_end_intron'])? '' :
+                        ($aVariant['position_end_intron'] < 1? $aVariant['position_end_intron'] : '+' . $aVariant['position_end_intron']));
+                return lovd_fixHGVS($sReference . str_replace($aRegs[0], '_' . $sEndPosition . 'delins' . $aRegs[2], $sVariant), $sType);
+            }
+            return lovd_fixHGVS($sReference . str_replace($aRegs[0], 'delins' . $aRegs[2], $sVariant), $sType);
         } elseif ($aVariant['type'] == 'delins') {
             return $sReference . $sVariant; // Not HGVS, and not fixable by us (unless we use VV).
         }
