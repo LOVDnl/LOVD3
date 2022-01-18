@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-12-23
+ * Modified    : 2022-01-18
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -1162,7 +1162,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
             if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt)/', $sReferenceType))
-                || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)/', $sReferenceType))) {
+                || ($sVariant[0] == 'n' && !preg_match('/^([NX]R|ENST|LRGt)/', $sReferenceType))
+                || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
@@ -1171,8 +1172,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').';
                 switch ($sVariant[0]) {
                     case 'c':
+                    case 'n':
                         $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a coding transcript reference sequence.';
+                            ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'c'? '' : 'non-') . 'coding transcript reference sequence.';
                         break;
                     case 'g':
                     case 'm':

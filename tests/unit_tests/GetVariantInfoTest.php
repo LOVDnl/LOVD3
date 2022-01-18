@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2021-12-23
+ * Modified    : 2022-01-18
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Loes Werkman <L.Werkman@LUMC.nl>
@@ -1123,7 +1123,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1(NM_123456.1)) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
+                ),
             )),
             array('NC_123456.1(NM_123456.1):c.1-1del', array(
                 'position_start' => 1,
@@ -1155,7 +1157,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (LRG_123t1) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
+                ),
             )),
             array('LRG_123t1:c.1del', array(
                 'position_start' => 1,
@@ -1202,7 +1206,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'del',
                 'warnings' => array(),
-                'errors' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n). For n. variants, please use a non-coding transcript reference sequence.',
+                ),
             )),
 
             array('NM_123456.1:g.1del', array(
