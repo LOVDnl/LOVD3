@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-12-23
+ * Modified    : 2022-01-18
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -75,6 +75,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // Do a quick HGVS check.
     if (lovd_getVariantInfo($sVariant, false, true)) {
         // All good!
+        return $sVariant;
+    }
+
+    // We currently don't support OR variants (^). In fact, if we don't return
+    //  it here, we'll mutilate it.
+    if (strpos($sVariant, '^') !== false) {
         return $sVariant;
     }
 
