@@ -1463,22 +1463,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $sPositionWarning = 'The positions are not given in the correct order.';
 
             } elseif ($aVariant[$sFirst] == $aVariant[$sLast]) {
-                if (!isset($aVariant[$sIntronicFirst])) {
-                    if ($bCheckHGVS) {
-                        return false;
-                    }
-                    $sPositionWarning = 'This variant description contains two positions that are the same.';
-                    if ($aVariant['type'] == 'ins') {
-                        $aResponse['errors']['EPOSITIONFORMAT'] = $sPositionWarning .
-                            ' Please verify your description and try again.';
-                        break;
-                    }
-
-                } elseif ($aVariant[$sIntronicFirst] > $aVariant[$sIntronicLast]) {
+                // Positions are the same. Now compare intronic positions.
+                // Intronic position fields are always defined, so we can safely
+                //  compare them.
+                if ($aVariant[$sIntronicFirst] > $aVariant[$sIntronicLast]) {
                     list($aVariant[$sIntronicFirst], $aVariant[$sIntronicLast]) = array($aVariant[$sIntronicLast], $aVariant[$sIntronicFirst]);
                     $sPositionWarning = 'The intronic positions are not given in the correct order.';
 
                 } elseif ($aVariant[$sIntronicFirst] == $aVariant[$sIntronicLast]) {
+                    // The intronic offset is also the same (or both 0).
                     if ($bCheckHGVS) {
                         return false;
                     }
