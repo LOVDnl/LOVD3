@@ -60,7 +60,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_getVariantInfo() with data from
         // dataProviderGetVariantInfo(), but only as an HGVS check.
-        if (empty($aOutput['errors']) && (empty($aOutput['warnings'])
+        if (empty($aOutput['errors'])
+            && (empty($aOutput['warnings'])
                 || empty(array_diff(
                         array_keys($aOutput['warnings']),
                         array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTTRANSCRIPT')))
@@ -392,6 +393,31 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(
                     'WWRONGTYPE' => 'A deletion-insertion of one base to one base should be described as a substitution.',
                 ),
+                'errors' => array(),
+            )),
+            array('g.100_200delins[NC_000001.10:g.100_200]', array(
+                'position_start' => 100,
+                'position_end' => 200,
+                'type' => 'delins',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('c.100_200delins[NG_000123.1:g.100_200]', array(
+                'position_start' => 100,
+                'position_end' => 200,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'delins',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('c.100_200delins[LRG_123:g.100_200inv]', array(
+                'position_start' => 100,
+                'position_end' => 200,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'delins',
+                'warnings' => array(),
                 'errors' => array(),
             )),
 

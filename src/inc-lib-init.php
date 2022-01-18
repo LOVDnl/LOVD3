@@ -1795,7 +1795,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         'The part after "' . $aResponse['type'] . '" contains unbalanced square brackets.';
 
                 } else {
-                    $bSuffixIsSurroundedByBrackets = $aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']';
+                    $bSuffixIsSurroundedByBrackets = ($aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']');
                     $bMultipleInsertionsInSuffix = strpos($aVariant['suffix'], ';');
 
                     foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
@@ -1809,10 +1809,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                     || preg_match(                                                                       // c.1_2ins15+1_16-1
                                         '/^[-*]?[0-9]+([-+][0-9]+)?_[-*]?[0-9]+([-+]([0-9]+))?(inv)?$/', $sInsertion)))
                             ||
-                            (isset($bSuffixIsSurroundedByBrackets) && preg_match(
-                                    '/^[NX][CMR]_[0-9]{6,9}\.[0-9]+:[cgmn]\.' .                           // c.1_2ins->[NC_123456.1:c.-
-                                    '[-*]?[0-9]+([-+][0-9]+)?_[-*]?[0-9]+([-+]([0-9]+))?(inv)?$/', $sInsertion)) //   -15+1_16-1]
-                        )) {
+                            ($bSuffixIsSurroundedByBrackets && strpos($sInsertion, ':')
+                                && ( // If we have brackets and we find a colon, we expect a full position or inversion.
+                                    (substr($sInsertion, -3) == 'inv' && lovd_getVariantInfo($sInsertion, false, true))
+                                    || lovd_getVariantInfo($sInsertion . 'del', false, true)
+                                )
+                            ))) {
                             if ($bCheckHGVS) {
                                 return false;
                             }
