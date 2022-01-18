@@ -1470,8 +1470,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     list($aVariant[$sIntronicFirst], $aVariant[$sIntronicLast]) = array($aVariant[$sIntronicLast], $aVariant[$sIntronicFirst]);
                     $sPositionWarning = 'The intronic positions are not given in the correct order.';
 
-                } elseif ($aVariant[$sIntronicFirst] == $aVariant[$sIntronicLast]) {
+                } elseif ($aVariant[$sIntronicFirst] == $aVariant[$sIntronicLast]
+                    && !(
+                        $aVariant['earliest_start'] && $aVariant['earliest_start']
+                        && $aVariant['earliest_start'] && $aVariant['earliest_start']
+                        && $sFirst == 'latest_start' && $sLast == 'earliest_end'
+                    )) {
                     // The intronic offset is also the same (or both 0).
+                    // There is an exception; variants with four positions can
+                    //  have the same middle position. This should be allowed.
                     if ($bCheckHGVS) {
                         return false;
                     }
