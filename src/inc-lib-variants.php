@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2020-11-19
- * For LOVD    : 3.0-26
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -59,10 +59,10 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     $sVariant = (string) $sVariant;
 
     // Forgot a prefix?
-    if (ctype_digit($sVariant{0})) {
+    if (ctype_digit($sVariant[0])) {
         // Variant starts with a number. Try including a prefix.
         return lovd_fixHGVS($sType . '.' . $sVariant, $sType);
-    } elseif ($sVariant{0} == '.') {
+    } elseif ($sVariant[0] == '.') {
         // Variant starts with a period. Try including a prefix.
         return lovd_fixHGVS($sType . $sVariant, $sType);
     }
@@ -77,7 +77,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
         // Return as a delins.
         // The annoying thing is that 'con' never needed a square bracket,
         //  but a delins does, when other reference sequences are involved.
-        if (in_array($aRegs[2]{0}, array('N', 'X'))) {
+        if (in_array($aRegs[2][0], array('N', 'X'))) {
             $aRegs[2] = '[' . $aRegs[2] . ']';
         }
         return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'delins' . $aRegs[2]);

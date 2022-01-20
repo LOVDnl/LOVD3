@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-08-11
- * For LOVD    : 3.0-27
+ * Modified    : 2022-01-17
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -244,20 +244,20 @@ class LOVD_Object
     function autoExplode ($zData)
     {
         // Automatically explode GROUP_CONCAT values based on their name.
-        foreach ($zData as $key => $val) {
-            if ($key{0} == '_') {
-                unset($zData[$key]);
-                if (!empty($val)) {
-                    if ($key{1} == '_') {
+        foreach ($zData as $sKey => $sVal) {
+            if ($sKey[0] == '_') {
+                unset($zData[$sKey]);
+                if (!empty($sVal)) {
+                    if ($sKey[1] == '_') {
                         // Explode GROUP_CONCAT nested array
-                        $aValues = explode(';;', $val);
-                        $zData[ltrim($key, '_')] = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
+                        $aValues = explode(';;', $sVal);
+                        $zData[ltrim($sKey, '_')] = array_map('explode', array_fill(0, count($aValues), ';'), $aValues);
                     } else {
                         // Explode GROUP_CONCAT array
-                        $zData[ltrim($key, '_')] = explode(';', $val);
+                        $zData[ltrim($sKey, '_')] = explode(';', $sVal);
                     }
                 } else {
-                    $zData[ltrim($key, '_')] = array();
+                    $zData[ltrim($sKey, '_')] = array();
                 }
             }
         }
@@ -1593,6 +1593,9 @@ class LOVD_Object
         if ($sView == 'list') {
             // By default, we put anchors in the id_ and DNA fields, if present.
             if ($zData['row_link']) {
+                if (substr($zData['row_link'], 0, 11) == 'javascript:') {
+                    $zData['row_link'] = htmlspecialchars(rawurldecode($zData['row_link']));
+                }
                 if (isset($this->aColumnsViewList['id_']) && $zData['id']) {
                     $zData['id_'] = '<A href="' . $zData['row_link'] . '" class="hide">' . $zData['id'] . '</A>';
                 }
@@ -1630,7 +1633,7 @@ class LOVD_Object
 
             // Handle JSON data (well, in a VL, we hide it).
             foreach ($zData as $sKey => $Value) {
-                if (is_string($Value) && $Value && $Value{0} == '{'
+                if (is_string($Value) && $Value && $Value[0] == '{'
                     && is_array(json_decode(htmlspecialchars_decode($Value), true))) {
                     // We don't show JSON data in the VLs.
                     $zData[$sKey] = '<I>(data)</I>';
@@ -1650,7 +1653,7 @@ class LOVD_Object
 
             // Handle JSON well.
             foreach ($zData as $sKey => $Value) {
-                if (is_string($Value) && $Value && $Value{0} == '{'
+                if (is_string($Value) && $Value && $Value[0] == '{'
                     && is_array(json_decode(htmlspecialchars_decode($Value), true))) {
                     // Restructure the JSON.
                     $zData[$sKey] = $this->formatArrayToTable(json_decode(htmlspecialchars_decode($Value), true));
@@ -1676,7 +1679,14 @@ class LOVD_Object
                     //  and we don't want it to run off the page. I have found no way of moving the tooltip left whenever it's enlarging the document size.
                     $sOwnedBy .= (!$sOwnedBy? '' : ', ') .
                         '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
-                        addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') .
+                        addslashes(
+                            '<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' .
+                            ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') .
+                            '</TD></TR><TR><TH valign=top>Name</TH><TD>' . htmlspecialchars($sName) .
+                            '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) .
+                            '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . htmlspecialchars($sInstitute) .
+                            '</TD></TR><TR><TH valign=top>Department</TH><TD>' . htmlspecialchars($sDepartment) .
+                            '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') .
                         '\', this, [' . ($sView == 'list'? '-200' : '0') . ', 0]);">' . $sName . '</SPAN>';
                 }
             }
@@ -3183,8 +3193,10 @@ FROptions
                     foreach ($zData as $key => $val) {
                         // Also allow data from $zData to be put into the row link & row id.
                         // FIXME; This is a temporary ugly solution, so we need to fix this later!!!!
-                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
-                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
+                        // But don't break C>G notation, variants can't be searched using row links otherwise.
+                        $zData['row_link'] = str_replace('%26gt%3B', '%3E', $zData['row_link']);
                     }
                 } else {
                     $zData['row_link'] = '';
@@ -3265,8 +3277,8 @@ FROptions
             print('</TABLE>' . "\n");
             if ($aOptions['show_navigation']) {
                 print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
-                      '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
+                      '        <INPUT type="hidden" name="page_size" value="' . htmlspecialchars($_GET['page_size']) . '">' . "\n" .
+                      '        <INPUT type="hidden" name="page" value="' . htmlspecialchars($_GET['page']) . '">' . "\n\n");
 
                 lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
             }

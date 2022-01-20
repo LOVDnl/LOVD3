@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-09
- * Modified    : 2012-11-09
- * For LOVD    : 3.0-beta-10
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -47,11 +47,12 @@ function lovd_convertDNAPositionToDB ($nPositionMRNAStart, $nPositionMRNAEnd, $n
         if (empty($aRegs[3])) {
             $aRegs[3] = 0;
         } else {
-            $aRegs[3] = intval($aRegs[2]{0} . $aRegs[3]);
+            // Prefix with + or - to create the integer.
+            $aRegs[3] = intval($aRegs[2][0] . $aRegs[3]);
         }
 
         // Change c.*50 notation to c.500.
-        if ($aRegs[1]{0} == '*') {
+        if ($aRegs[1][0] == '*') {
             $aRegs[1] = substr($aRegs[1], 1) + $nPositionCDSEnd;
         }
 

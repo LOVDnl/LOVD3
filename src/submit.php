@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2020-09-17
- * For LOVD    : 3.0-25
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -54,12 +54,12 @@ function lovd_prepareSubmitData ($sDataType, $aData) {
         case 'variant':
             if (!empty($aData['aTranscripts'])) {
                 foreach ($aData['aTranscripts'] as $nTranscriptID) {
-                    $aData[$nTranscriptID . '_effect_reported'] = $_SETT['var_effect'][$aData[$nTranscriptID . '_effectid']{0}];
-                    $aData[$nTranscriptID . '_effect_concluded'] = $_SETT['var_effect'][$aData[$nTranscriptID . '_effectid']{1}];
+                    $aData[$nTranscriptID . '_effect_reported'] = $_SETT['var_effect'][$aData[$nTranscriptID . '_effectid'][0]];
+                    $aData[$nTranscriptID . '_effect_concluded'] = $_SETT['var_effect'][$aData[$nTranscriptID . '_effectid'][1]];
                 }
             }
-            $aData['effect_reported'] = $_SETT['var_effect'][$aData['effectid']{0}];
-            $aData['effect_concluded'] = $_SETT['var_effect'][$aData['effectid']{1}];
+            $aData['effect_reported'] = $_SETT['var_effect'][$aData['effectid'][0]];
+            $aData['effect_concluded'] = $_SETT['var_effect'][$aData['effectid'][1]];
             break;
     }
 

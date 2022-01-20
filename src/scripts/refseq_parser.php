@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2020-03-31
- * For LOVD    : 3.0-22
+ * Modified    : 2022-01-17
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Gerard C.P. Schaafsma <G.C.P.Schaafsma@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -377,15 +377,15 @@ if ($_GET['step'] == 1) {
 
             // To continue to step 2, we need to create a form and send all data.
             print('<FORM action="' . $_SERVER['SCRIPT_NAME'] . '?step=2" method="post">' . "\n" .
-                '  <INPUT type="hidden" name="symbol" value="' . $_POST['symbol'] . '">' . "\n" .
-                '  <INPUT type="hidden" name="sequence" value="' . $_POST['sequence'] . '">' . "\n" .
-                '  <INPUT type="hidden" name="exists" value="' . $_POST['exists'] . '">' . "\n" .
-                '  <INPUT type="hidden" name="version_id" value="' . $_POST['version_id'] . '">' . "\n" . // 2009-12-03; 2.0-23; Add GenBank ID.
-                '  <INPUT type="hidden" name="transcript_id" value="' . $_POST['transcript_id'] . '">' . "\n" . // 2009-03-09; 2.0-17 by Gerard: to fill in the textboxes if you come from step 1
-                '  <INPUT type="hidden" name="protein_id" value="' . $_POST['protein_id'] . '">' . "\n" . // 2009-03-09; 2.0-17 by Gerard: to fill in the textboxes if you come from step 1
-                '  <INPUT type="hidden" name="step1" value="true">' . "\n" . // 2009-06-22; 2.0-19; by Gerard: need to know if you came from step 1
-                '  <INPUT type="submit" value="Continue to next step &raquo;">' . "\n" .
-                '</FORM><BR>' . "\n\n");
+                  '  <INPUT type="hidden" name="symbol" value="' . htmlspecialchars($_POST['symbol']) . '">' . "\n" .
+                  '  <INPUT type="hidden" name="sequence" value="' . htmlspecialchars($_POST['sequence']) . '">' . "\n" .
+                  '  <INPUT type="hidden" name="exists" value="' . htmlspecialchars($_POST['exists']) . '">' . "\n" .
+                  '  <INPUT type="hidden" name="version_id" value="' . htmlspecialchars($_POST['version_id']) . '">' . "\n" . // 2009-12-03; 2.0-23; Add GenBank ID.
+                  '  <INPUT type="hidden" name="transcript_id" value="' . htmlspecialchars($_POST['transcript_id']) . '">' . "\n" . // 2009-03-09; 2.0-17 by Gerard: to fill in the textboxes if you come from step 1
+                  '  <INPUT type="hidden" name="protein_id" value="' . htmlspecialchars($_POST['protein_id']) . '">' . "\n" . // 2009-03-09; 2.0-17 by Gerard: to fill in the textboxes if you come from step 1
+                  '  <INPUT type="hidden" name="step1" value="true">' . "\n" . // 2009-06-22; 2.0-19; by Gerard: need to know if you came from step 1
+                  '  <INPUT type="submit" value="Continue to next step &raquo;">' . "\n" .
+                  '</FORM><BR>' . "\n\n");
 
             $_T->printFooter();
             exit;
@@ -510,7 +510,7 @@ if ($_GET['step'] == 2) {
             $_POST['gene'] = $_DB->query('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
 
             for ($i = 0; $i < strlen($sSeq); $i ++) {
-                $s = $sSeq{$i};
+                $s = $sSeq[$i];
                 // We will need to loop through the sequence to provided detailed error messages.
                 // up and downstream are first considered introns (first and last elements of the
                 // intron array $aIntron)
@@ -1118,12 +1118,12 @@ if ($_GET['step'] == 2) {
 
                 // To continue to step 3, we need to create a form and send all data.
                 print('<FORM action="' . $_SERVER['SCRIPT_NAME'] . '?step=3" method="post">' . "\n" .
-                    '  <INPUT type="hidden" name="symbol" value="' . $_POST['symbol'] . '">' . "\n" .
-                    '  <INPUT type="hidden" name="sequence" value="' . $_POST['sequence'] . '">' . "\n" .
-                    '  <INPUT type="hidden" name="version_id" value="' . $_POST['version_id'] . '">' . "\n" . // 2009-12-03; 2.0-23; accession number with version added
-                    '  <INPUT type="hidden" name="transcript_id" value="' . $_POST['transcript_id'] . '">' . "\n" .
-                    '  <INPUT type="hidden" name="exists" value="' . $_POST['exists'] . '">' . "\n" .
-                    '  <INPUT type="hidden" name="step2" value="true">' . "\n"); // 2009-03-09; 2.0-17; by Gerard: need to know if you created the up- and downstream sequences in step 2
+                      '  <INPUT type="hidden" name="symbol" value="' . htmlspecialchars($_POST['symbol']) . '">' . "\n" .
+                      '  <INPUT type="hidden" name="sequence" value="' . htmlspecialchars($_POST['sequence']) . '">' . "\n" .
+                      '  <INPUT type="hidden" name="version_id" value="' . htmlspecialchars($_POST['version_id']) . '">' . "\n" . // 2009-12-03; 2.0-23; accession number with version added
+                      '  <INPUT type="hidden" name="transcript_id" value="' . htmlspecialchars($_POST['transcript_id']) . '">' . "\n" .
+                      '  <INPUT type="hidden" name="exists" value="' . htmlspecialchars($_POST['exists']) . '">' . "\n" .
+                      '  <INPUT type="hidden" name="step2" value="true">' . "\n"); // 2009-03-09; 2.0-17; by Gerard: need to know if you created the up- and downstream sequences in step 2
 
                 // 2009-02-27; 2.0-16; you need these lengths for the g. numbering
                 if (!empty($aLengthsSequenceParts)) {
@@ -1155,9 +1155,9 @@ if ($_GET['step'] == 2) {
 
     // Need to pass symbol.
     if ($bStep1) {
-        print('        <INPUT type="hidden" name="symbol" value="' . $_POST['symbol'] . '">'. "\n" .
-              '        <INPUT type="hidden" name="transcript_id" value="' . $_POST['transcript_id'] . '">' . "\n" .
-              '        <INPUT type="hidden" name="version_id" value="' . $_POST['version_id'] . '">'. "\n");
+        print('        <INPUT type="hidden" name="symbol" value="' . htmlspecialchars($_POST['symbol']) . '">'. "\n" .
+              '        <INPUT type="hidden" name="transcript_id" value="' . htmlspecialchars($_POST['transcript_id']) . '">' . "\n" .
+              '        <INPUT type="hidden" name="version_id" value="' . htmlspecialchars($_POST['version_id']) . '">'. "\n");
     }
 
 
@@ -1265,7 +1265,7 @@ if ($_GET['step'] == 3) {
             $_POST['gene'] = $_DB->query('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
 
             for ($i = 0; $i < strlen($sSeq); $i ++) {
-                $s = $sSeq{$i};
+                $s = $sSeq[$i];
                 // We will need to loop through the sequence to provided detailed error messages
                 if (!$started) {
                     // We are still before the translation
@@ -1762,7 +1762,7 @@ if ($_GET['step'] == 3) {
                         $sPrntFinl .= $c_prnt;
 
                         // Create number at the right of the sequence.
-                        if ($l_prnt{0} != '*') {
+                        if ($l_prnt[0] != '*') {
                             // Maybe this is a weird check. Will there ever be no $c_prnt?
                             $l_prnt = ($c_prnt? $l_prnt+1 : $l_prnt);
                         } elseif ($c_prnt) {
@@ -1890,7 +1890,7 @@ if ($_GET['step'] == 3) {
                     if (isset($n_break)) {
                         $n_break = LENGTH_LINE - $n_break;
                         $i -= $n_break;
-                        if ($l_prnt{1} == '*') {
+                        if ($l_prnt[1] == '*') {
                             $l_prnt = (substr($l_prnt, 1) - $n_break);
                         } else {
                             $l_prnt = '*0';
@@ -2059,10 +2059,10 @@ if ($_GET['step'] == 3) {
     // 2009-06-22; 2.0-19; added symbol which you need if you come from step 2
     // 2009-12-03; 2.0-23; added the accession number, including version
     if ($bStep2) {
-        print('  <INPUT type="hidden" name="step2" value="' . $_POST['step2'] . '">' . "\n" .
-            '  <INPUT type="hidden" name="symbol" value="' . $_POST['symbol'] . '">' . "\n" .
-            '  <INPUT type="hidden" name="version_id" value="' . $_POST['version_id'] . '">' . "\n" .
-            '  <INPUT type="hidden" name="transcript_id" value="' . $_POST['transcript_id']. '">' . "\n");
+        print('  <INPUT type="hidden" name="step2" value="' . htmlspecialchars($_POST['step2']) . '">' . "\n" .
+              '  <INPUT type="hidden" name="symbol" value="' . htmlspecialchars($_POST['symbol']) . '">' . "\n" .
+              '  <INPUT type="hidden" name="version_id" value="' . htmlspecialchars($_POST['version_id']) . '">' . "\n" .
+              '  <INPUT type="hidden" name="transcript_id" value="' . htmlspecialchars($_POST['transcript_id']) . '">' . "\n");
     }
 
 

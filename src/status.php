@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2019-10-01
- * For LOVD    : 3.0-22
+ * Modified    : 2021-10-13
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -42,6 +42,12 @@ $_T->printHeader();
 $_T->printTitle();
 
 print('      <I>Current time: ' . date('r') . '</I><BR><BR>' . "\n\n");
+
+if (!$_SETT['customization_settings']['graphs_enable']) {
+      lovd_showInfoTable('Graphs are currently disabled.');
+      $_T->printFooter();
+      exit;
+}
 
 
 

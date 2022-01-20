@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2021-10-05
+ * Modified    : 2021-11-10
  * For LOVD    : 3.5-pre-03
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1694,7 +1694,14 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                     } elseif (preg_match('/^I(\d+)$/', $aVariant['sampleGenotype'], $aMatches)) {
                         // Insertions, from BED.
                         $aFieldsVariantOnGenome[0]['allele'] = 0;
-                        if (!empty($aVariant['sampleAlleles']) && $aMatches[1] == 1 && ($nPos = array_search($aVariant['sampleAlleles']{1}, array($aVariant['referenceBase']{0}, $aVariant['referenceBase']{2}))) !== false) {
+                        if (!empty($aVariant['sampleAlleles']) && $aMatches[1] == 1
+                            && ($nPos = array_search(
+                                substr($aVariant['sampleAlleles'], 1, 1),
+                                array(
+                                    substr($aVariant['referenceBase'], 0, 1),
+                                    substr($aVariant['referenceBase'], 2, 0)
+                                )
+                            )) !== false) {
                             // It's a duplication.
                             $aFieldsVariantOnGenome[0]['type'] = 'dup';
                             $aFieldsVariantOnGenome[0]['position_g_start'] = $aFieldsVariantOnGenome[0]['position_g_end'] = $aVariant['position'] + $nPos;
@@ -2523,10 +2530,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         // 2013-09-10; 3.0-08; Don't just throw away $_POST, because it contains info we need (such as for DB-ID prediction).
         $_POST = array_replace($_POST, $zData);
         // Now loop through $_POST to find the effectid fields, that need to be split.
-        foreach ($_POST as $key => $val) {
-            if (preg_match('/^(\d+_)?effect(id)$/', $key, $aRegs)) { // (id) instead of id to make sure we have a $aRegs (so to prevent notices).
-                $_POST[$aRegs[1] . 'effect_reported'] = $val{0};
-                $_POST[$aRegs[1] . 'effect_concluded'] = $val{1};
+        foreach ($_POST as $sKey => $sVal) {
+            if (preg_match('/^(\d+_)?effect(id)$/', $sKey, $aRegs)) { // (id) instead of id to make sure we have a $aRegs (so to prevent notices).
+                $_POST[$aRegs[1] . 'effect_reported'] = $sVal[0];
+                $_POST[$aRegs[1] . 'effect_concluded'] = $sVal[1];
             }
         }
         $_POST['statusid'] = STATUS_OK;
@@ -2561,7 +2568,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                                 $_DATA['Genome']->buildFields());
 
             // Prepare values.
-            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : $zData['effectid']{1});
+            $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : $zData['effectid'][1]);
             if ($_AUTH['level'] >= LEVEL_CURATOR) {
                 $aFieldsGenome[] = 'owned_by';
                 $aFieldsGenome[] = 'statusid';
@@ -2681,16 +2688,16 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         foreach ($zData as $key => $val) {
             $_POST[$key] = $val;
         }
-        $_POST['effect_reported'] = $zData['effectid']{0};
-        $_POST['effect_concluded'] = $zData['effectid']{1};
+        $_POST['effect_reported'] = $zData['effectid'][0];
+        $_POST['effect_concluded'] = $zData['effectid'][1];
         if ($zData['statusid'] < STATUS_HIDDEN) {
             $_POST['statusid'] = STATUS_OK;
         }
         if ($bGene) {
             foreach ($aGenes as $sGene) {
                 foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
-                    $_POST[$nTranscriptID . '_effect_reported'] = $zData[$nTranscriptID . '_effectid']{0};
-                    $_POST[$nTranscriptID . '_effect_concluded'] = $zData[$nTranscriptID . '_effectid']{1};
+                    $_POST[$nTranscriptID . '_effect_reported'] = $zData[$nTranscriptID . '_effectid'][0];
+                    $_POST[$nTranscriptID . '_effect_concluded'] = $zData[$nTranscriptID . '_effectid'][1];
                 }
             }
         }
@@ -2704,7 +2711,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     $_T->printTitle();
 
     // If we're not the creator nor the owner, warn.
-    if ($_POST['created_by'] != $_AUTH['id'] && $_POST['owned_by'] != $_AUTH['id']) {
+    if ($zData['created_by'] != $_AUTH['id'] && $zData['owned_by'] != $_AUTH['id']) {
         lovd_showInfoTable('Warning: You are editing data not created or owned by you. You are free to correct errors such as data inserted into the wrong field or typographical errors, but make sure that all other edits are made in consultation with the submitter. If you disagree with the submitter\'s findings, add a remark rather than removing or overwriting data. In particular, do not overwrite the submitter\'s reported variant effect if you disagree, rather add your own variant effect.', 'warning', 760);
     }
 
@@ -2833,7 +2840,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             }
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted variant entry #' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . $_PE[0]);
@@ -2864,7 +2871,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '50%', '14', '50%'),
-                        array('Deleting variant entry', '', 'print', $nID . ' (Owner: ' . $zData['owned_by_'] . ')'),
+                        array('Deleting variant entry', '', 'print', $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')'),
                         'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete variant entry'),
