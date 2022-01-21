@@ -1189,7 +1189,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
         // Convert 3' UTR notations into normal notations.
-        if ($sStartPosition{0} == '*' || ($sEndPosition && $sEndPosition{0} == '*')) {
+        if ($sStartPosition[0] == '*' || ($sEndPosition && $sEndPosition[0] == '*')) {
             // Check if a transcript ID has been provided.
             if ($sTranscriptID === '') {
                 // No, but we'll need it.
@@ -1197,10 +1197,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
 
             // Translate positions.
-            if ($sStartPosition{0} == '*') {
+            if ($sStartPosition[0] == '*') {
                 $sStartPosition = substr($sStartPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
             }
-            if ($sEndPosition && $sEndPosition{0} == '*') {
+            if ($sEndPosition && $sEndPosition[0] == '*') {
                 $sEndPosition = substr($sEndPosition, 1) + $aTranscriptOffsets[$sTranscriptID];
             }
         }
@@ -1293,8 +1293,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
         // Convert 3' UTR notations into normal notations.
-        if ($sStartPositionEarly{0} == '*' || ($sStartPositionLate && $sStartPositionLate{0} == '*')
-            || $sEndPositionEarly{0} == '*' || ($sEndPositionLate && $sEndPositionLate{0} == '*')) {
+        if ($sStartPositionEarly[0] == '*' || ($sStartPositionLate && $sStartPositionLate[0] == '*')
+            || $sEndPositionEarly[0] == '*' || ($sEndPositionLate && $sEndPositionLate[0] == '*')) {
             // Check if a transcript ID has been provided.
             if ($sTranscriptID === '') {
                 // No, but we'll need it.

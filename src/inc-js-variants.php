@@ -33,7 +33,7 @@
  *************/
 
 header('Content-type: text/javascript; charset=UTF-8');
-header('Expires: ' . date('r', time()+(180*60)));
+header('Expires: ' . date('r', time()));
 
 define('AJAX_FALSE', '0');
 define('AJAX_TRUE', '1');
@@ -45,117 +45,129 @@ define('AJAX_DATA_ERROR', '9');
 $_SETT = array('objectid_length' => array('transcripts' => 8));
 ?>
 
-function lovd_checkHGVS (e)
-{
-    // Function that is being called everytime a change has been made to a DNA field,
-    // either from an onKeyUp or onChange, although the onKeyUp only uses this function partially.
-    // This will run the Mutalyzer checkHGVS module (if needed) and will return the response to the user.
+// function lovd_checkHGVS (e)
+// {
+//    // Function that is being called everytime a change has been made to a DNA field,
+//    // either from an onKeyUp or onChange, although the onKeyUp only uses this function partially.
+//    // This will run the Mutalyzer checkHGVS module (if needed) and will return the response to the user.
+//
+//    var oVariantDNA = $(this);
+//    oVariantDNA.removeClass();
+//
+//    // If we're a "preliminary" trigger, actually run when a key has been pressed, we just want a quick check
+//    // if the DNA field seems correct. If so, we show the mark and the buttons, just like a "real" onChange().
+//    // However, when it doesn't look good, we don't request Mutalyzer (to confirm, they should know best)
+//    // unless we're a "real" onChange() request.
+//
+//    var bHGVS; // True -> correct syntax; False -> We don't recognize it, but Mutalyzer might.
+//    // First check: genomic field should start with g. or m., cDNA field should start with c. or n..
+//    if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA' && !/^(g|m)\./.test(oVariantDNA.val().substring(0, 2))) {
+//        bHGVS = false;
+//    } else if (oVariantDNA.attr('name') != 'VariantOnGenome/DNA' && !/^(c|n)\./.test(oVariantDNA.val().substring(0, 2))) {
+//        bHGVS = false;
+//    } else {
+//        // Try to match simple stuff: deletions, duplications, insertions, inversions and substitutions.
+//        var oRegExp = /^[cgmn]\.\-?\d+([-+]\d+)?([ACGT]>[ACGT]|(_\-?\d+([-+]\d+)?)?d(el|up)([ACGT])*|_\-?\d+([-+]\d+)?(inv|ins([ACGT])+))$/;
+//        // "false" doesn't necessarily mean false here! Just means this check doesn't recognize it. Mutalyzer may still.
+//        bHGVS = (oRegExp.test(oVariantDNA.val()));
+//    }
+//
+//    // Grab the corresponding protein description field if it exists.
+//    var oProtein = $(oVariantDNA).parent().parent().siblings().find('input[name="' + $(oVariantDNA).attr('name').substring(0, <?php //echo $_SETT['objectid_length']['transcripts']; ?>//) + '_VariantOnTranscript/Protein"]');
+//
+//    // Add a transparent placeholder for the indicator at the protein field, so that the form will not shift when it is added.
+//    oProtein.siblings('img:first').removeClass().attr('src', 'gfx/trans.png');
+//
+//    if (e.type == 'change' && !bHGVS && oVariantDNA.val()) {
+//        // This is a "real" onChange call(), we couldn't match the variant, but we do have something filled in. Check with Mutalyzer!
+//        if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA') {
+//            var sVariantNotation = 'g:' + oVariantDNA.val(); // The actual chromosome is not important, it's just the variant syntax that matters here.
+//        } else {
+//            var sVariantNotation = 'c:' + oVariantDNA.val(); // The actual transcript is not important, it's just the variant syntax that matters here.
+//        }
+//
+//        // Now we have to check with Mutalyzer...
+//        $(oVariantDNA).siblings('img:first').attr({
+//            src: 'gfx/lovd_loading.gif',
+//            alt: 'Loading...',
+//            title: 'Loading...',
+//            className: '',
+//            onmouseover: '',
+//            onmouseout: ''
+//        }).show();
+//
+//        // Make the call to Mutalyzer to see if the variant is correct HGVS.
+//        $.get('ajax/check_hgvs.php', { variant: sVariantNotation },
+//            function(sData) {
+//                if (sData != '<?php //echo AJAX_TRUE; ?>//') {
+//                    // Either Mutalyzer says No, our regexp didn't find a c. or g. at the beginning or user lost $_AUTH.
+//                    oVariantDNA.siblings('img:first').attr({
+//                        src: 'gfx/cross.png',
+//                        alt: (sData == <?php //echo AJAX_UNKNOWN_RESPONSE; ?>//? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
+//                        title: (sData == <?php //echo AJAX_UNKNOWN_RESPONSE; ?>//? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
+//                    }).show();
+//                    // Now hide the "Map variant" and "Predict" buttons.
+//                    if (!$.isEmptyObject(aTranscripts)) {
+//                        oVariantDNA.siblings('button:eq(0)').hide();
+//                        oProtein.siblings('button:eq(0)').hide();
+//                    }
+//
+//                } else {
+//                    oVariantDNA.siblings('img:first').attr({
+//                        src: 'gfx/check.png',
+//                        alt: 'Valid HGVS syntax!',
+//                        title: 'Valid HGVS syntax!'
+//                    }).show();
+//                    // Check if the variant description is a c.? or a g.?. If it is, then do not let the user map the variant.
+//                    if (oVariantDNA.val().substring(1,3) == '.?') {
+//                        oVariantDNA.siblings('button:eq(0)').hide();
+//                        oProtein.siblings('button:eq(0)').hide();
+//                    } else if (!$.isEmptyObject(aTranscripts)) {
+//                        // Only enable the mapping buttons when there are transcripts added to this variant.
+//                        oVariantDNA.siblings('button:eq(0)').show();
+//                        oProtein.siblings('button:eq(0)').show();
+//                        // Hide possible 'view prediction button'
+//                        $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
+//                    }
+//                }
+//            });
+//
+//    } else if (bHGVS) {
+//        // We didn't need Mutalyzer, and we know we've got a good-looking variant here.
+//        oVariantDNA.siblings('img:first').attr({
+//            src: 'gfx/check.png',
+//            alt: 'Valid HGVS syntax!',
+//            title: 'Valid HGVS syntax!'
+//        }).show();
+//        if (!$.isEmptyObject(aTranscripts)) {
+//            // Only enable the mapping buttons when there are transcripts added to this variant.
+//            oVariantDNA.siblings('button:eq(0)').show();
+//            oProtein.siblings('button:eq(0)').show();
+//            // Hide possible 'view prediction button'
+//            $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
+//        }
+//
+//    } else {
+//        // No HGVS syntax, but no "real" onChange trigger yet, either.
+//        oVariantDNA.siblings('img:first').hide();
+//        if (!$.isEmptyObject(aTranscripts)) {
+//            oVariantDNA.siblings('button:eq(0)').hide();
+//            oProtein.siblings('button:eq(0)').hide();
+//        }
+//    }
+//    return false;
+// }
 
-    var oVariantDNA = $(this);
-    oVariantDNA.removeClass();
 
-    // If we're a "preliminary" trigger, actually run when a key has been pressed, we just want a quick check
-    // if the DNA field seems correct. If so, we show the mark and the buttons, just like a "real" onChange().
-    // However, when it doesn't look good, we don't request Mutalyzer (to confirm, they should know best)
-    // unless we're a "real" onChange() request.
 
-    var bHGVS; // True -> correct syntax; False -> We don't recognize it, but Mutalyzer might.
-    // First check: genomic field should start with g. or m., cDNA field should start with c. or n..
-    if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA' && !/^(g|m)\./.test(oVariantDNA.val().substring(0, 2))) {
-        bHGVS = false;
-    } else if (oVariantDNA.attr('name') != 'VariantOnGenome/DNA' && !/^(c|n)\./.test(oVariantDNA.val().substring(0, 2))) {
-        bHGVS = false;
-    } else {
-        // Try to match simple stuff: deletions, duplications, insertions, inversions and substitutions.
-        var oRegExp = /^[cgmn]\.\-?\d+([-+]\d+)?([ACGT]>[ACGT]|(_\-?\d+([-+]\d+)?)?d(el|up)([ACGT])*|_\-?\d+([-+]\d+)?(inv|ins([ACGT])+))$/;
-        // "false" doesn't necessarily mean false here! Just means this check doesn't recognize it. Mutalyzer may still.
-        bHGVS = (oRegExp.test(oVariantDNA.val()));
-    }
 
-    // Grab the corresponding protein description field if it exists.
-    var oProtein = $(oVariantDNA).parent().parent().siblings().find('input[name="' + $(oVariantDNA).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>) + '_VariantOnTranscript/Protein"]');
 
-    // Add a transparent placeholder for the indicator at the protein field, so that the form will not shift when it is added.
-    oProtein.siblings('img:first').removeClass().attr('src', 'gfx/trans.png');
-
-    if (e.type == 'change' && !bHGVS && oVariantDNA.val()) {
-        // This is a "real" onChange call(), we couldn't match the variant, but we do have something filled in. Check with Mutalyzer!
-        if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA') {
-            var sVariantNotation = 'g:' + oVariantDNA.val(); // The actual chromosome is not important, it's just the variant syntax that matters here.
-        } else {
-            var sVariantNotation = 'c:' + oVariantDNA.val(); // The actual transcript is not important, it's just the variant syntax that matters here.
-        }
-
-        // Now we have to check with Mutalyzer...
-        $(oVariantDNA).siblings('img:first').attr({
-            src: 'gfx/lovd_loading.gif',
-            alt: 'Loading...',
-            title: 'Loading...',
-            className: '',
-            onmouseover: '',
-            onmouseout: ''
-        }).show();
-
-        // Make the call to Mutalyzer to see if the variant is correct HGVS.
-        $.get('ajax/check_hgvs.php', { variant: sVariantNotation },
-            function(sData) {
-                if (sData != '<?php echo AJAX_TRUE; ?>') {
-                    // Either Mutalyzer says No, our regexp didn't find a c. or g. at the beginning or user lost $_AUTH.
-                    oVariantDNA.siblings('img:first').attr({
-                        src: 'gfx/cross.png',
-                        alt: (sData == <?php echo AJAX_UNKNOWN_RESPONSE; ?>? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
-                        title: (sData == <?php echo AJAX_UNKNOWN_RESPONSE; ?>? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
-                    }).show();
-                    // Now hide the "Map variant" and "Predict" buttons.
-                    if (!$.isEmptyObject(aTranscripts)) {
-                        oVariantDNA.siblings('button:eq(0)').hide();
-                        oProtein.siblings('button:eq(0)').hide();
-                    }
-
-                } else {
-                    oVariantDNA.siblings('img:first').attr({
-                        src: 'gfx/check.png',
-                        alt: 'Valid HGVS syntax!',
-                        title: 'Valid HGVS syntax!'
-                    }).show();
-                    // Check if the variant description is a c.? or a g.?. If it is, then do not let the user map the variant.
-                    if (oVariantDNA.val().substring(1,3) == '.?') {
-                        oVariantDNA.siblings('button:eq(0)').hide();
-                        oProtein.siblings('button:eq(0)').hide();
-                    } else if (!$.isEmptyObject(aTranscripts)) {
-                        // Only enable the mapping buttons when there are transcripts added to this variant.
-                        oVariantDNA.siblings('button:eq(0)').show();
-                        oProtein.siblings('button:eq(0)').show();
-                        // Hide possible 'view prediction button'
-                        $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
-                    }
-                }
-            });
-
-    } else if (bHGVS) {
-        // We didn't need Mutalyzer, and we know we've got a good-looking variant here.
-        oVariantDNA.siblings('img:first').attr({
-            src: 'gfx/check.png',
-            alt: 'Valid HGVS syntax!',
-            title: 'Valid HGVS syntax!'
-        }).show();
-        if (!$.isEmptyObject(aTranscripts)) {
-            // Only enable the mapping buttons when there are transcripts added to this variant.
-            oVariantDNA.siblings('button:eq(0)').show();
-            oProtein.siblings('button:eq(0)').show();
-            // Hide possible 'view prediction button'
-            $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
-        }
-
-    } else {
-        // No HGVS syntax, but no "real" onChange trigger yet, either.
-        oVariantDNA.siblings('img:first').hide();
-        if (!$.isEmptyObject(aTranscripts)) {
-            oVariantDNA.siblings('button:eq(0)').hide();
-            oProtein.siblings('button:eq(0)').hide();
-        }
-    }
-    return false;
+// Checking the input variant.
+function lovd_checkHGVS(e) {
+    var sVariant = $(this).val();
+    var sName = $(this).attr("name");
+    $.get("ajax/check_hgvs_dialogue.php?var=" + encodeURIComponent(sVariant) + "&name=" + encodeURIComponent(sName))
+        .fail(function(){alert("Error checking your variant, please try again later.");});
 }
 
 
@@ -521,14 +533,6 @@ $(function ()
     oGenomicVariant.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to transcript' + (oTranscriptVariants.length == 1? '' : 's') + '</BUTTON>');
     // Add an onChange event that runs lovd_checkHGVS.
     oGenomicVariant.change(lovd_checkHGVS);
-    // Add same function to the onKeyUp event, but then it will check itself if the variant is likely to be complete.
-    oGenomicVariant.keyup(lovd_checkHGVS);
-
-    if (oGenomicVariant.val() !== '') {
-        // Variant field already has content, check HGVS now because if we're on an edit form we
-        // want the buttons to be ready.
-        oGenomicVariant.change();
-    }
 
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.
@@ -540,19 +544,11 @@ $(function ()
         }
         // Add an onChange event that runs lovd_checkHGVS.
         oTranscriptVariants.change(lovd_checkHGVS);
-        // Add same function to the onKeyUp event, but then it will check itself if the variant is likely to be complete.
-        oTranscriptVariants.keyup(lovd_checkHGVS);
 
         var oProteinVariants = $('#variantForm input[name$="_VariantOnTranscript/Protein"]');
         if (oProteinVariants[0] != undefined) {
             // Add the buttons and images at the end of the protein description fields.
             oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" style="display:inline;" align="top" width="16" height="16">&nbsp;<BUTTON class="proteinChange" type="button" onclick="lovd_getProteinChange(this); return false;" style="display:none;">Predict</BUTTON>');
-        }
-
-        if (oTranscriptVariants.val() !== '') {
-            // Variant field already has content, check HGVS now because if we're on an edit form we
-            // want the buttons to be ready.
-            oTranscriptVariants.change();
         }
     }
 });
