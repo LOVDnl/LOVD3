@@ -412,6 +412,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.1_5delins20_10', array(
+                'position_start' => 1,
+                'position_end' => 5,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "delins" does not follow HGVS guidelines.',
+                ),
+                'errors' => array(),
+            )),
             array('g.100_200delins[NC_000001.10:g.100_200]', array(
                 'position_start' => 100,
                 'position_end' => 200,
