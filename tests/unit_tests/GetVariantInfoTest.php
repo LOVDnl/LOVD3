@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-01-18
+ * Modified    : 2022-01-21
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -192,6 +192,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
             )),
             array('g.123A>GC', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'warnings' => array(
+                    'WWRONGTYPE' =>
+                        'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123AA>G', array(
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
@@ -395,6 +405,13 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_5delins10_20', array(
+                'position_start' => 1,
+                'position_end' => 5,
+                'type' => 'delins',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('g.100_200delins[NC_000001.10:g.100_200]', array(
                 'position_start' => 100,
                 'position_end' => 200,
@@ -528,6 +545,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Unsure variants.
+            array('c.(123A>T)', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('g.(1_2insN[(50_60)])', array(
                 'position_start' => 1,
                 'position_end' => 2,
