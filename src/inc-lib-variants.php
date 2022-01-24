@@ -235,25 +235,35 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             // Change positions based on length REF part of the substitution;
             //  e.g. N>N or NN>N.
             preg_match('/([A-Z]+)>([A-Z]+)$/', $sVariant, $aRegs);
-            $nLength = strlen($aRegs[1]) - 1;
-            if ($nLength && !isset($aVariant['errors']['ETOOMANYPOSITIONS'])) {
+            $nLength = strlen($aRegs[1]);
+            if ($nLength > 1 && !isset($aVariant['errors']['ETOOMANYPOSITIONS'])) {
                 // Only when we have more than one base before the > and there
                 //  is currently just one position, do we calculate an end
                 //  position.
                 if (isset($aVariant['position_start_intron'])) {
-                    $aVariant['position_end_intron'] += $nLength;
+                    $aVariant['position_end_intron'] += $nLength - 1;
                     // Compensate for the possibility where we just left the intron.
                     if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
                         $aVariant['position_end'] += $aVariant['position_end_intron'];
                         $aVariant['position_end_intron'] = 0;
                     }
                 } else {
-                    $aVariant['position_end'] += $nLength;
+                    $aVariant['position_end'] += $nLength - 1;
                 }
                 $sEndPosition = $aVariant['position_end'] .
                     (empty($aVariant['position_end_intron'])? '' :
                         ($aVariant['position_end_intron'] < 1? $aVariant['position_end_intron'] : '+' . $aVariant['position_end_intron']));
                 return lovd_fixHGVS($sReference . str_replace($aRegs[0], '_' . $sEndPosition . 'delins' . $aRegs[2], $sVariant), $sType);
+
+            } elseif ($nLength > 1) {
+                // Variant already has a range as position, check the length.
+                $nPositionLength = lovd_getVariantLength($aVariant);
+                if ($nPositionLength != $nLength) {
+                    // e.g., c.100_102AA>C
+                    // This is an error we cannot fix. We don't know if the
+                    //  error is in the positions or the given sequence.
+                    return $sReference . $sVariant;
+                }
             }
             return lovd_fixHGVS($sReference . str_replace($aRegs[0], 'delins' . $aRegs[2], $sVariant), $sType);
         } elseif ($aVariant['type'] == 'delins') {
