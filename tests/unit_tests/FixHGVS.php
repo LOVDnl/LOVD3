@@ -128,6 +128,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Superfluous suffixes.
             array('c.123delA', 'c.123del'),
+            array('c.123delAA', 'c.123delAA'),
 
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),

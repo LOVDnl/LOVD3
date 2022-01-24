@@ -284,6 +284,13 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             //  location, which would mean the suffix IS necessary). We cannot
             //  be sure we may remove it, so we have to let this be.
             list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
+            // For normal dels and dups, don't remove the suffix if it doesn't
+            //  match the length.
+            if (in_array($aVariant['type'], array('del', 'dup'))
+                && strlen(trim($sSuffix, '()')) != lovd_getVariantLength($aVariant)) {
+                // Don't mess with it.
+                return $sReference . $sVariant;
+            }
             return lovd_fixHGVS(
                 $sReference . $sBeforeType . $sVariantType .
                 str_repeat(')', (substr_count($sSuffix, ')') - substr_count($sSuffix, '('))), $sType);
