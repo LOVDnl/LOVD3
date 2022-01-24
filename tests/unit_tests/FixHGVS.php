@@ -206,6 +206,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123-5dup', 'g.123-5dup'),
             array('m.123-5dup', 'm.123-5dup'),
             array('g.*1_*2del', 'g.*1_*2del'),
+            array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)insN[(69_111)]'), // Used to cause an infinite recursion.
         );
     }
 }
