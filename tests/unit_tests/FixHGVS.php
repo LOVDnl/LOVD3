@@ -136,6 +136,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
+            array('c.1_2ins[NC_000001.10:100_(200_300);400_500]',
+                  'c.1_2ins[NC_000001.10:100_(200_300);400_500]'), // Neg control.
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
             array('g.(100_200)del50', 'g.(100_200)del(50)'),

@@ -333,13 +333,16 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
             } elseif (preg_match('/(^|.)\([0-9]+(?:_[0-9]+)?\)(.|$)/', $sSuffix, $aRegs)) {
                 // The length of a variant was formatted as 'ins(length)'
-                //  instead of 'insN[length]' or 'ins(length_length)' instead
-                //  of 'insN[(length_length)]'.
-                // HOWEVER; Since we're not matching the whole suffix on
-                //  purpose, we might also be dealing with a simply miss-
-                //  formatted suffix where we *did* already place insN[]
-                //  around the length. So, check!
-                if (!($aRegs[1] == '[' && $aRegs[2] == ']')) {
+                //  instead of 'insN[length]' or 'ins(min_max)' instead
+                //  of 'insN[(min_max)]'.
+                // HOWEVER; Since we're not matching the whole suffix on purpose
+                //  to support combined variants like g.1_2ins[ACT;(20)], we
+                //  might also be dealing with a simply miss-formatted suffix
+                //  where we *did* already place insN[] around the length.
+                // Also, we might be dealing with a reference-sequence based
+                //  suffix with unsure positions. So, check!
+                if (!($aRegs[1] == '[' && $aRegs[2] == ']')
+                    && !preg_match('/^\[[NX][CGMRTW]_[0-9]+/', $sSuffix)) {
                     return lovd_fixHGVS($sReference . $sBeforeSuffix . $aVariant['type'] . preg_replace(
                             array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
                             array('N[${1}]', 'N[(${1})]'), $sSuffix), $sType);
