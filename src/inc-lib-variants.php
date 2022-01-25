@@ -154,8 +154,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // Remove redundant prefixes due to copy/paste errors (g.12_g.23del to g.12_23del).
-    if (substr_count($sVariant, $sType . '.') > 1) {
-        return lovd_fixHGVS($sReference . $sType . '.' . str_replace($sType . '.', '', $sVariant), $sType);
+    // But only remove them if there isn't another refseq in front of it
+    //  (like for complex insertions).
+    if (preg_match_all('/(?<!:)' . preg_quote($sType, '/') . '\./', $sVariant) > 1) {
+        return lovd_fixHGVS($sReference . $sType . '.' .
+            preg_replace('/(?<!:)' . preg_quote($sType, '/') . '\./', '', $sVariant), $sType);
     }
 
     // We also don't like bases in lowercase.
