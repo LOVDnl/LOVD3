@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-01-24
+ * Modified    : 2022-01-25
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -317,11 +317,13 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 return lovd_fixHGVS($sReference .
                     $sBeforeSuffix . $aVariant['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
 
-            } elseif (preg_match('/^\[.*\]$/', $sSuffix) && !preg_match('/[:;]/', $sSuffix)) {
+            } elseif (preg_match('/^\[.*\]$/', $sSuffix)
+                && !preg_match('/[:;]/', $sSuffix)
+                && !preg_match('/^\[[NX][CGMRTW]_[0-9]+/', $sSuffix)) {
                 // Remove redundant square brackets surrounding the suffix,
                 //  these are only needed when RefSeqs or combined variants are given.
                 return lovd_fixHGVS($sReference .
-                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('[', ']'), '', $sSuffix), $sType);
+                    $sBeforeSuffix . $aVariant['type'] . trim($sSuffix, '[]'), $sType);
 
             } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/', $sSuffix)
                 || (strpos($sSuffix, ';') && strpos($sSuffix, '[') === false)) {
