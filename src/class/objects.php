@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-11-10
+ * Modified    : 2022-01-17
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -3277,8 +3277,8 @@ FROptions
             print('</TABLE>' . "\n");
             if ($aOptions['show_navigation']) {
                 print('        <INPUT type="hidden" name="total" value="' . $nTotal . '" disabled>' . "\n" .
-                      '        <INPUT type="hidden" name="page_size" value="' . $_GET['page_size'] . '">' . "\n" .
-                      '        <INPUT type="hidden" name="page" value="' . $_GET['page'] . '">' . "\n\n");
+                      '        <INPUT type="hidden" name="page_size" value="' . htmlspecialchars($_GET['page_size']) . '">' . "\n" .
+                      '        <INPUT type="hidden" name="page" value="' . htmlspecialchars($_GET['page']) . '">' . "\n\n");
 
                 lovd_pagesplitShowNav($sViewListID, $nTotal, $bTrueCount, $bSortableVL, $bLegend);
             }
