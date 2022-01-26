@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-01-21
+ * Modified    : 2022-01-26
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1339,7 +1339,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //  possible (such as the positions and other warnings that might
         //  have occurred). This is an error, not a warning, since it means
         //  that the variant is theoretically incorrect and not fixable.
-        if ($aVariant['type'][0] == '|' && !in_array($aVariant['type'], array('|gom', '|lom', '|met='))) {
+        if (in_array($aVariant['type'], array('|gom', '|lom', '|met='))) {
+            $aResponse['warnings']['WNOTSUPPORTED'] =
+                'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+        } else {
             if ($bCheckHGVS) {
                 return false;
             }
