@@ -1099,6 +1099,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  function to just check if the variant is HGVS or not. It will in this
     //  case be more stringent than the function normally is, checking the
     //  variant further in details, but it will only return a boolean value.
+    // When using this function to do a HGVS check ($bCheckHGVS=true), please
+    //  use the wrapper lovd_isHGVS to increase readability.
     global $_DB;
 
     static $aTranscriptOffsets = array();
@@ -1830,6 +1832,18 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
     $q = $_DB->query($sQ, array_merge($Data, $aOwnerIDs));
 
     return ($q !== false && intval($q->fetchColumn()) == count($Data));
+}
+
+
+
+
+
+function lovd_isHGVS($sVariant)
+{
+    // This wrapper calls the HGVS check functionality of lovd_getVariantInfo.
+    // To increase readability, please use this function rather than a direct
+    //  call to getVariantInfo when checking the HGVS of a variant.
+    return lovd_getVariantInfo($sVariant, false, true);
 }
 
 

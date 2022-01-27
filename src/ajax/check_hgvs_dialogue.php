@@ -53,7 +53,7 @@ if (!$_REQUEST['var']) {
 
 
 // If the variant is HGVS, we set the HGVS check to a 'check'.
-if (lovd_getVariantInfo($sVariant, false, true)) {
+if (lovd_isHGVS($sVariant)) {
     exit('
     var oInput = $(\'input[name$="' . $sName . '"]\');
     oInput.siblings("img:first").attr({src: "gfx/check.png"}).show();
@@ -103,7 +103,7 @@ if (!empty($aVariantIssues)) {
 }
 
 if ($sFixedVariant !== $sVariant
-    && lovd_getVariantInfo($sFixedVariant, false, true)) {
+    && lovd_isHGVS($sFixedVariant)) {
     $sResponse .= 'Did you mean \"' . $sFixedVariant . '\"?<br>';
     $sButtons = 'oButtonYes, oButtonNo';
 

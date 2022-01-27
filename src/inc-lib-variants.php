@@ -50,7 +50,7 @@ function lovd_fixHGVS ($sVariant, $sType = 'g')
     }
 
     // Do a quick HGVS check.
-    if (lovd_getVariantInfo($sVariant, '', true)) {
+    if (lovd_isHGVS($sVariant)) {
         // All good!
         return $sVariant;
     }
