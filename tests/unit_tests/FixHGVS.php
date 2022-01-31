@@ -101,7 +101,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Conversions and substitutions that should be delins variants.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
-            array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:100_200]'),
+            array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:g.100_200]'),
             array('g.123A>GC', 'g.123delinsGC'),
             array('g.123AA>GC', 'g.123_124delinsGC'),
             array('c.123+1AA>GC', 'c.123+1_123+2delinsGC'),
@@ -140,8 +140,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
-            array('c.1_2ins[NC_000001.10:100_(200_300);400_500]',
-                  'c.1_2ins[NC_000001.10:100_(200_300);400_500]'), // Neg control.
+            array('c.1_2ins[NC_000001.10:100_(300_200);400_500]',
+                  'c.1_2ins[NC_000001.10:g.100_(200_300);400_500]'),
+            array('c.1_2ins[NC_000001.10:100_(300_200);(400_500)]',
+                  'c.1_2ins[NC_000001.10:g.100_(200_300);N[(400_500)]]'),
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
             array('g.(100_200)del50', 'g.(100_200)del(50)'),
@@ -217,7 +219,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123-5dup', 'g.123-5dup'),
             array('m.123-5dup', 'm.123-5dup'),
             array('g.*1_*2del', 'g.*1_*2del'),
-            array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)insN[(69_111)]'), // Used to cause an infinite recursion.
+            array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)ins(69_111)'), // Used to cause an infinite recursion.
             array('g.(200_100)?', 'g.(100_200)?'),
         );
     }

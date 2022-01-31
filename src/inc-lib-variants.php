@@ -348,6 +348,19 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                     $aParts[$i] = preg_replace(
                         array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
                         array('N[${1}]', 'N[(${1})]'), $sPart);
+
+                } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/', $sPart)) {
+                    // This is a full position with refseq. Often, mistakes are
+                    //  made in this suffix. So check it.
+                    // Append '=' to convert the position into something we can
+                    //  check.
+                    if (!lovd_getVariantInfo($sPart . '=', false, true)) {
+                        $sPart = lovd_fixHGVS($sPart . '=');
+                        if (lovd_getVariantInfo($sPart, false, true)) {
+                            // FixHGVS() has fixed this part.
+                            $aParts[$i] = rtrim($sPart, '=');
+                        }
+                    }
                 }
             }
 
