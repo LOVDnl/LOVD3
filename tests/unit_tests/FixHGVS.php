@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-01-25
+ * Modified    : 2022-01-31
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -28,6 +28,10 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+// This test refuses to execute unless configured in the phpunit.xml and by using --configuration.
+// Also renaming it to *Test.php doesn't help, and direct calls to this files return immediately without output.
+// Can not find a reason for this.
 
 require_once 'src/inc-lib-init.php'; // For the dependency on lovd_getVariantInfo().
 require_once 'src/inc-lib-variants.php'; // For lovd_fixHGVS().
@@ -214,6 +218,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('m.123-5dup', 'm.123-5dup'),
             array('g.*1_*2del', 'g.*1_*2del'),
             array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)insN[(69_111)]'), // Used to cause an infinite recursion.
+            array('g.(200_100)?', 'g.(100_200)?'),
         );
     }
 }

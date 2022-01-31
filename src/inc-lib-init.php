@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-01-26
+ * Modified    : 2022-01-31
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1220,33 +1220,33 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // All information of interest will be placed into an associative array.
     // Note: For now, the regular expression only works for c., g., n., and m. variants.
     preg_match(
-        '/^([cngm])\.' .                  // 1.  Prefix
+        '/^([cgmn])\.' .                         // 1.  Prefix.
 
-        '([?=]$|(' .                             // 2. '?' or '=' (e.g. c.=)
-        '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses
-        '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position
-        '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position
+        '([?=]$|(' .                             // 2. '?' or '=' (e.g. c.=).
+        '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses.
+        '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position.
+        '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position.
         '(?(4)(_' .
-            '([-*]?[0-9]+|\?)' .                 // 9. Latest start position
-            '([-+]([0-9]+|\?))?' .               // 10. Latest intronic start position
+            '([-*]?[0-9]+|\?)' .                 // 9. Latest start position.
+            '([-+]([0-9]+|\?))?' .               // 10. Latest intronic start position.
         '\))?)' .
 
         '(_' .
             '(\()?' .               // 13=(
-            '([-*]?[0-9]+|\?)' .                 // 14. (Earliest) end position
-            '([-+]([0-9]+|\?))?' .               // 15. (Earliest) intronic end position
+            '([-*]?[0-9]+|\?)' .                 // 14. (Earliest) end position.
+            '([-+]([0-9]+|\?))?' .               // 15. (Earliest) intronic end position.
             '(?(13)_' .
-                '([-*]?[0-9]+|\?)' .             // 17. Latest end position
-                '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position
+                '([-*]?[0-9]+|\?)' .             // 17. Latest end position.
+                '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
         '\)))?' .
 
         '([ACGT]+>[ACGTRYSWKMBDHVN]+' .                   //  | (substitution)
         '|([ACTG]+\[[0-9]+])+' .                          //  | (repeat sequence)
         '|[ACTG]*=(\/{1,2}[ACGT]*>[ACGTRYSWKMBDHVN]+)?' . //  | (wild types, mosaics, or chimerics)
         '|ins|dup|delins|del|inv|sup|\?' .                //  V
-        '|\|(gom|lom|met=|.+))' .                         // 20. Type of variant
+        '|\|(gom|lom|met=|.+))' .                         // 20. Type of variant.
 
-        '(.*)))/',                                       // 24. Suffix
+        '(.*)))/',                                        // 24. Suffix.
 
         $sVariant, $aMatches);
 

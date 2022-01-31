@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-01-25
+ * Modified    : 2022-01-31
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -370,26 +370,41 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     if (isset($aVariant['warnings']['WPOSITIONFORMAT'])) {
         $aPositions = array();
 
-        preg_match('/([cgmn]\.)(\()?' .
-            '(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)' .
-            '(?(2)_(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)\))(_' .
-            '(\()?(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)' .
-            '(?(12)_(([*-+]?([0-9]+|\?))([-+][?0-9]+)?)\)))?([A-Za-z|]+.*)/',
+        preg_match(
+            '/^([cgmn])\.' .                         // 1.  Prefix.
+            '((' .
+            '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses.
+            '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position.
+            '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position.
+            '(?(4)(_' .
+                '([-*]?[0-9]+|\?)' .                 // 9. Latest start position.
+                '([-+]([0-9]+|\?))?' .               // 10. Latest intronic start position.
+            '\))?)' .
+            '(_' .
+                '(\()?' .               // 13=(
+                '([-*]?[0-9]+|\?)' .                 // 14. (Earliest) end position.
+                '([-+]([0-9]+|\?))?' .               // 15. (Earliest) intronic end position.
+                '(?(13)_' .
+                    '([-*]?[0-9]+|\?)' .             // 17. Latest end position.
+                    '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
+            '\)))?' .
+            '(.*)' .                                 // 20. Type of variant and suffix.
+            '))/',
             $sVariant, $aMatches);
         // c.(1_2)_(3_4)del == c.(A_B)_(C_D)del
         // c.1_2del         == c.A_Cdel
         // c.(1_2)del       == c.(A_B)del
         $sBefore  = $aMatches[1];
-        $sAfter   = $aMatches[21];
+        $sAfter   = $aMatches[20];
 
-        $aPositions['A']       = $aMatches[4];
+        $aPositions['A']       = $aMatches[5];
         $aPositions['AIntron'] = $aMatches[6];
-        $aPositions['B']       = $aMatches[8];
+        $aPositions['B']       = $aMatches[9];
         $aPositions['BIntron'] = $aMatches[10];
         $aPositions['C']       = $aMatches[14];
-        $aPositions['CIntron'] = $aMatches[16];
-        $aPositions['D']       = $aMatches[18];
-        $aPositions['DIntron'] = $aMatches[20];
+        $aPositions['CIntron'] = $aMatches[15];
+        $aPositions['D']       = $aMatches[17];
+        $aPositions['DIntron'] = $aMatches[18];
 
         if ($aPositions['C']
             && max($aPositions['A'], $aPositions['B']) > max($aPositions['C'], $aPositions['D'])) {
@@ -435,7 +450,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             }
         }
 
-        $sNewVariant = $sBefore .
+        $sNewVariant = $sBefore . '.' .
             ($aPositions['A'] && $aPositions['B'] ? '(' : '') . $aPositions['A'] . $aPositions['AIntron'] .
             ($aPositions['B'] ? '_' . $aPositions['B'] . $aPositions['BIntron'] . ')' : '') .
             ($aPositions['C'] ? '_' . ($aPositions['D'] ? '(' : '') . $aPositions['C'] . $aPositions['CIntron'] : '') .
