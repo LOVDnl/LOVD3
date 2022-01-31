@@ -307,7 +307,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
 
         if (ctype_digit($sSuffix)) {
-            // Add parentheses in case they were forgotten.
+            // Add parentheses in case they were forgotten (del/ins lengths).
             return lovd_fixHGVS($sReference .
                 $sBeforeSuffix . $aVariant['type'] . '(' . $sSuffix . ')', $sType);
         }
@@ -315,41 +315,54 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
-            if (preg_match('/^\([ACTG]+\)$/', $sSuffix) || preg_match('/^N\[\([0-9]+\)\]/', $sSuffix)) {
-                // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
-                return lovd_fixHGVS($sReference .
-                    $sBeforeSuffix . $aVariant['type'] . str_replace(array('(', ')'), '', $sSuffix), $sType);
+            // Suffix could contain a closing parenthesis that opens in the beginning of the variant.
+            // Don't let it mess up our parsing. Parentheses must be balanced in the entire variant (we checked).
+            $bClosingParenthesis = false;
+            $sNewSuffix = $sSuffix;
+            if (substr_count($sNewSuffix, '(') < substr_count($sNewSuffix, ')') && substr($sNewSuffix, -1) == ')') {
+                // Unbalanced parentheses in the suffix, and the suffix
+                //  ends with an closing parenthesis.
+                $bClosingParenthesis = true;
+                $sNewSuffix = substr($sNewSuffix, 0, -1);
+            }
 
-            } elseif (preg_match('/^\[.*\]$/', $sSuffix)
-                && !preg_match('/[:;]/', $sSuffix)
-                && !preg_match('/^\[[NX][CGMRTW]_[0-9]+/', $sSuffix)) {
-                // Remove redundant square brackets surrounding the suffix,
-                //  these are only needed when RefSeqs or combined variants are given.
-                return lovd_fixHGVS($sReference .
-                    $sBeforeSuffix . $aVariant['type'] . trim($sSuffix, '[]'), $sType);
+            // Remove [ and ], when present.
+            if ($sSuffix[0] == '[' && substr($sSuffix, -1) == ']') {
+                $sNewSuffix = substr($sNewSuffix, 1, -1);
+            }
 
-            } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/', $sSuffix)
-                || (strpos($sSuffix, ';') && strpos($sSuffix, '[') === false)) {
-                // Square brackets were forgotten, RefSeqs or combined variants are given.
-                return lovd_fixHGVS($sReference .
-                    $sBeforeSuffix . $aVariant['type'] . '[' . $sSuffix . ']', $sType);
+            // It became too difficult to handle complex suffixes, so let's
+            //  split them up.
+            $aParts = explode(';', $sNewSuffix);
+            $nParts = count($aParts);
 
-            } elseif (preg_match('/(^|.)\([0-9]+(?:_[0-9]+)?\)(.|$)/', $sSuffix, $aRegs)) {
-                // The length of a variant was formatted as 'ins(length)'
-                //  instead of 'insN[length]' or 'ins(min_max)' instead
-                //  of 'insN[(min_max)]'.
-                // HOWEVER; Since we're not matching the whole suffix on purpose
-                //  to support combined variants like g.1_2ins[ACT;(20)], we
-                //  might also be dealing with a simply miss-formatted suffix
-                //  where we *did* already place insN[] around the length.
-                // Also, we might be dealing with a reference-sequence based
-                //  suffix with unsure positions. So, check!
-                if (!($aRegs[1] == '[' && $aRegs[2] == ']')
-                    && !preg_match('/^\[[NX][CGMRTW]_[0-9]+/', $sSuffix)) {
-                    return lovd_fixHGVS($sReference . $sBeforeSuffix . $aVariant['type'] . preg_replace(
-                            array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
-                            array('N[${1}]', 'N[(${1})]'), $sSuffix), $sType);
+            foreach ($aParts as $i => $sPart) {
+                if (preg_match('/^\([ACTG]+\)$/', $sPart) || preg_match('/^N\[\([0-9]+\)\]/', $sPart)) {
+                    // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
+                    $aParts[$i] = str_replace(array('(', ')'), '', $sPart);
+
+                } elseif (preg_match('/^\([0-9]+(?:_[0-9]+)?\)$/', $sPart, $aRegs)) {
+                    // The length of a variant was formatted as 'ins(length)'
+                    //  instead of 'insN[length]' or 'ins(min_max)' instead
+                    //  of 'insN[(min_max)]'.
+                    $aParts[$i] = preg_replace(
+                        array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
+                        array('N[${1}]', 'N[(${1})]'), $sPart);
                 }
+            }
+
+            $sNewSuffix = implode(';', $aParts);
+            // Add [ and ] again, when needed.
+            if ($nParts > 1 || preg_match('/^[NX][CGMRTW]_[0-9]+/', $sNewSuffix)) {
+                $sNewSuffix = '[' . $sNewSuffix . ']';
+            }
+            if ($bClosingParenthesis) {
+                $sNewSuffix .= ')';
+            }
+            if ($sSuffix != $sNewSuffix) {
+                // Something has changed.
+                return lovd_fixHGVS($sReference .
+                    $sBeforeSuffix . $aVariant['type'] . $sNewSuffix, $sType);
             }
         }
     }
