@@ -86,10 +86,15 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Check for a reference sequence. We won't check it here, so we won't be
     //  very strict.
-    if (preg_match('/^(ENS[GT]|LRG_|[NX][CGMRTW]_)[0-9]+/', $sVariant)) {
+    if (preg_match('/^(ENS[GT]|LRG_|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/', $sVariant, $aRegs)) {
         // Something that looks like a reference sequence is prefixing the
         //  variant. Cut it off and store it separately. We'll return it, but
         //  this way we can actually check the variant itself.
+        if (strpos($sVariant, ':') === false) {
+            // We don't always have a : in there, though.
+            // Try to insert one.
+            $sVariant = str_replace($aRegs[0], $aRegs[0] . ':', $sVariant);
+        }
         list($sReference, $sVariant) = explode(':', $sVariant, 2);
         $sReference .= ':'; // To simplify the concatenation later on.
     } else {
