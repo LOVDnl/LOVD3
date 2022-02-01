@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-01-31
+ * Modified    : 2022-02-01
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1246,7 +1246,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         '|ins|dup|delins|del|inv|sup|\?' .                //  V
         '|\|(gom|lom|met=|.+))' .                         // 20. Type of variant.
 
-        '(.*)))/',                                        // 24. Suffix.
+        '(.*)))/i',                                       // 24. Suffix.
 
         $sVariant, $aMatches);
 
@@ -1258,7 +1258,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //        -If an intronic position is given a question mark, its position
         //         is cast to 1 in case of +? and -1 for -?. (e.g. c.10-?del)
         'complete'                => $aMatches[0],
-        'prefix'                  => (!isset($aMatches[1])?  '' : $aMatches[1]),
+        'prefix'                  => (!isset($aMatches[1])?  '' : strtolower($aMatches[1])),
         'positions'               => (!isset($aMatches[3])?  '' : $aMatches[3]),
         'starting_parentheses'    => (!isset($aMatches[4])?  '' : $aMatches[4]), // The parentheses are given to make additional checks later on in the function easier.
         'earliest_start'          => (!isset($aMatches[5])?   0 : $aMatches[5]), // These are not cast to integers, since they can still hold an informative '*'.
@@ -1269,7 +1269,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'earliest_intronic_end'   => (!isset($aMatches[15])?  0 : (int)str_replace('?', '1', $aMatches[15])),
         'latest_end'              => (!isset($aMatches[17])?  0 : $aMatches[17]),
         'latest_intronic_end'     => (!isset($aMatches[18])?  0 : (int)str_replace('?', '1', $aMatches[18])),
-        'type'                    => (!isset($aMatches[20])? '' : $aMatches[20]),
+        'type'                    => (!isset($aMatches[20])? '' :
+            (preg_match('/(^[ACTG]*=|[>\[])/', $aMatches[20])? strtoupper($aMatches[20]) : strtolower($aMatches[20]))),
         'suffix'                  => (!isset($aMatches[24])? '' : $aMatches[24]),
     ));
 
@@ -1305,6 +1306,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Clean position string. We'll use it for reporting later on.
     if ($aVariant['positions']) {
         $aVariant['positions'] = strstr($aVariant['positions'], $aVariant['type'], true);
+    }
+
+    // Check the variant's case.
+    // First, handle an annoying exception.
+    if (substr($aVariant['type'], -4) == 'bsrc') {
+        $aVariant['type'] = str_replace('bsrc', 'bsrC', $aVariant['type']);
+    }
+    // Now check.
+    if ((isset($aMatches[1]) && $aVariant['prefix'] != $aMatches[1])
+        || (isset($aMatches[20]) && $aVariant['type'] != $aMatches[20])) {
+        // There's a case problem.
+        if ($bCheckHGVS) {
+            return false;
+        }
+        $aResponse['warnings']['WWRONGCASE'] =
+            'This not a valid HGVS description, due to characters being in the wrong case.' .
+            ' Please check the use of upper- and lowercase characters.';
     }
 
     // Storing the variant type.
