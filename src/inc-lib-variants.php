@@ -383,7 +383,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
             $sNewSuffix = implode(';', $aParts);
             // Add [ and ] again, when needed.
-            if ($nParts > 1 || preg_match('/^[NX][CGMRTW]_[0-9]+/', $sNewSuffix)) {
+            if ($nParts > 1 || preg_match('/^[NX][CGMRTW]_[0-9]+/', $sNewSuffix)
+                || strpos($sNewSuffix, ':') !== false) {
                 $sNewSuffix = '[' . $sNewSuffix . ']';
             }
             if ($bClosingParenthesis) {
