@@ -66,6 +66,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         $sReference = '';
     }
 
+    // In case users forgot to remove the starting ':'.
+    $sVariant = ltrim($sVariant, ':');
+
     if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
         // If type is not given, default to something.
         // We usually just default to 'g'. But when it's obviously something
