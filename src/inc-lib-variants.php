@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-01-31
+ * Modified    : 2022-02-01
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -48,42 +48,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // $sType stores the DNA type (c, g, m, or n) to allow for this function to
     //  fully validate the variant and, optionally, its reference sequence.
 
-    if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
-        // If type is not given, default to something.
-        // We usually just default to 'g'. But when it's obviously something
-        //  else, pick that other thing.
-        if (in_array($sVariant[0], array('c', 'g', 'm', 'n'))) {
-            $sType = $sVariant[0];
-        } else {
-            if (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
-                // Variant doesn't have a prefix either, *and* there seems to be an
-                //  intronic position mentioned.
-                $sType = 'c';
-            } else {
-                // Fine, we default to 'g'.
-                $sType = 'g';
-            }
-        }
-    }
-
-    // Trim the variant and remove whitespace.
-    $sVariant = preg_replace('/\s+/', '', $sVariant);
-
-    // Replace special – (hyphen, minus, en dash, em dash) with a simple - (hyphen-minus).
-    $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
-
-    // Do a quick HGVS check.
-    if (lovd_getVariantInfo($sVariant, false, true)) {
-        // All good!
-        return $sVariant;
-    }
-
-    // We currently don't support OR variants (^). In fact, if we don't return
-    //  it here, we'll mutilate it.
-    if (strpos($sVariant, '^') !== false) {
-        return $sVariant;
-    }
-
     // Check for a reference sequence. We won't check it here, so we won't be
     //  very strict.
     if (preg_match('/^(ENS[GT]|LRG_|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/', $sVariant, $aRegs)) {
@@ -100,6 +64,54 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     } else {
         // No reference was found.
         $sReference = '';
+    }
+
+    if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
+        // If type is not given, default to something.
+        // We usually just default to 'g'. But when it's obviously something
+        //  else, pick that other thing.
+        if (in_array($sVariant[0], array('c', 'g', 'm', 'n'))) {
+            $sType = $sVariant[0];
+        } else {
+            if (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
+                // Variant doesn't have a prefix either, *and* there seems to be an
+                //  intronic position mentioned.
+                $sType = 'c';
+            } elseif ($sReference) {
+                // If can't get it from the variant, but we do have a refseq,
+                //  let that one do the talking!
+                if (preg_match('/^[NX]R_[0-9]/', $sReference)) {
+                    $sType = 'n';
+                } elseif (preg_match('/^(ENST|LRG_[0-9]+t|[NX]M_)[0-9]/', $sReference)) {
+                    $sType = 'c';
+                } elseif (preg_match('/^NC_(001807|012920)/', $sReference)) {
+                    $sType = 'm';
+                } else {
+                        $sType = 'g';
+                }
+            } else {
+                // Fine, we default to 'g'.
+                $sType = 'g';
+            }
+        }
+    }
+
+    // Trim the variant and remove whitespace.
+    $sVariant = preg_replace('/\s+/', '', $sVariant);
+
+    // Replace special – (hyphen, minus, en dash, em dash) with a simple - (hyphen-minus).
+    $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
+
+    // Do a quick HGVS check.
+    if (lovd_getVariantInfo($sReference . $sVariant, false, true)) {
+        // All good!
+        return $sReference . $sVariant;
+    }
+
+    // We currently don't support OR variants (^). In fact, if we don't return
+    //  it here, we'll mutilate it.
+    if (strpos($sVariant, '^') !== false) {
+        return $sReference . $sVariant;
     }
 
     // Move or remove wrongly placed parentheses.
