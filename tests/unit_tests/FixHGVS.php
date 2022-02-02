@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-01-31
+ * Modified    : 2022-02-02
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -144,6 +144,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
                   'c.1_2ins[NC_000001.10:g.100_(200_300);400_500]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);(400_500)]',
                   'c.1_2ins[NC_000001.10:g.100_(200_300);N[(400_500)]]'),
+            array('c.1_2ins[NC_000001.10(100_200)_300]',
+                  'c.1_2ins[NC_000001.10:g.(100_200)_300]'),
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
             array('g.(100_200)del50', 'g.(100_200)del(50)'),
@@ -199,8 +201,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Where we can still improve
             //  (still results in an invalid description, more work needed).
-            array('c.(?_-21)_(343+1_344-1)conNM_030589.2(?_-542) _(340+1_341-1)',
-                'c.(?_-21)_(343+1_344-1)delins[NM_030589.2(?_-542)_(340+1_341-1)]'), // Used to cause an infinite recursion.
+            array('g.(100_200)[ins50]', 'g.(100_200)[ins50]'),
+            array('g.(?_100?_200_?)dup', 'g.(?)'),
 
 
 
@@ -221,6 +223,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.*1_*2del', 'g.*1_*2del'),
             array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)ins(69_111)'), // Used to cause an infinite recursion.
             array('g.(200_100)?', 'g.(100_200)?'),
+            array('c.361A>T^362C>G', 'c.361A>T^362C>G'), // FIXME; This needs to be handled in lovd_getVariantInfo() and lovd_fixHGVS().
         );
     }
 }
