@@ -197,7 +197,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // Make sure no unnecessary bases are given for wild types (c.123A= -> c.123=).
-    if (preg_match('/[0-9]([ACGTN]+=)/', $sVariant, $aRegs)) {
+    if (preg_match('/[0-9]([ACGTN]+=)/i', $sVariant, $aRegs)) {
         return lovd_fixHGVS($sReference . str_replace($aRegs[1], '=', $sVariant), $sType);
     }
 
