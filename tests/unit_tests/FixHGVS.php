@@ -111,6 +111,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.123-1AA>GC', 'c.123-1_123delinsGC'),
             array('g.123_124AA>GC', 'g.123_124delinsGC'),
             array('g.123_124AAA>GC', 'g.123_124AAA>GC'),
+            array('g.123C>.', 'g.123del'),
 
             // Wild type requires no bases.
             array('c.123T=', 'c.123='),

@@ -196,6 +196,15 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return lovd_fixHGVS($sReference . str_replace($aRegs[1], '=', $sVariant), $sType);
     }
 
+    // Fix VCF-style substitutions that are deletions.
+    if (preg_match('/(?<=[0-9])([ACGTN]+)>\.$/i', $sVariant, $aRegs)) {
+        return lovd_fixHGVS($sReference . str_replace($aRegs[0], 'del' . $aRegs[1], $sVariant), $sType);
+    }
+    // Note: We can't handle c.100.>A as we don't know whether this means c.99_100insA or c.100_101insA.
+    // This depends on the implementation of the program that created the VCF.
+    // (ANNOVAR does something else than most other VCF generators)
+    // Note that either way, nor the REF nor the ALT is actually ever allowed to be empty, so it's always a bug.
+
 
 
     // The basic steps have all been taken. From this point forward, we
