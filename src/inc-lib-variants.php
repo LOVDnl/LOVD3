@@ -184,8 +184,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // We also don't like bases in lowercase.
-    if (preg_match('/^(.+)([a-z]>[a-z])$/', $sVariant, $aRegs)
-        || preg_match('/^(.+ins)([a-z]+)$/', $sVariant, $aRegs)) {
+    if (preg_match('/^(.+ins)([a-z]+)$/', $sVariant, $aRegs)) {
         return lovd_fixHGVS($sReference . $aRegs[1] . strtoupper($aRegs[2]));
     }
 
@@ -259,6 +258,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         // Check prefix. I'd rather do it here.
         if (ctype_upper($sVariant[0])) {
             return lovd_fixHGVS($sReference . strtolower($sVariant[0]) . substr($sVariant, 1), $sType);
+
+        // If not the prefix, then it must be because of the variant type (we currently don't check the suffix).
+        } elseif ($aVariant['type'] == 'subst') {
+            return lovd_fixHGVS($sReference . $sVariant[0] . strtoupper(substr($sVariant, 1)), $sType);
         }
     }
 
