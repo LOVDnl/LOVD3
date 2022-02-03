@@ -1628,6 +1628,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             ),
             $aVariant['positions']
         );
+        // Exception; ?_? should be allowed for ins variants (g.?_?ins[...]).
+        if ($sFixedPosition == '?' && $aVariant['type'] == 'ins') {
+            $sFixedPosition = '?_?';
+        }
         if ($aVariant['positions'] != $sFixedPosition) {
             $sQuestionMarkWarning =
                 'Please rewrite the positions ' . $aVariant['positions'] .
