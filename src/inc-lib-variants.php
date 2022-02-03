@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-01
+ * Modified    : 2022-02-03
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,7 +50,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Check for a reference sequence. We won't check it here, so we won't be
     //  very strict.
-    if (preg_match('/^(ENS[GT]|LRG_|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/', $sVariant, $aRegs)) {
+    if (preg_match('/^(ENS[GT]|LRG_([0-9]+t)?|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/i', $sVariant, $aRegs)) {
         // Something that looks like a reference sequence is prefixing the
         //  variant. Cut it off and store it separately. We'll return it, but
         //  this way we can actually check the variant itself.
@@ -60,6 +60,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             $sVariant = str_replace($aRegs[0], $aRegs[0] . ':', $sVariant);
         }
         list($sReference, $sVariant) = explode(':', $sVariant, 2);
+        // Fix possible case issues. All uppercase except for the t in LRG_123t1.
+        $sReference = preg_replace('/(?<=[0-9])T(?=[0-9])/', 't', strtoupper($sReference));
         $sReference .= ':'; // To simplify the concatenation later on.
     } else {
         // No reference was found.
@@ -369,7 +371,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                         array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
                         array('N[${1}]', 'N[(${1})]'), $sPart);
 
-                } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/', $sPart)) {
+                } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/i', $sPart)) {
                     // This is a full position with refseq. Often, mistakes are
                     //  made in this suffix. So check it.
                     // Append '=' to convert the position into something we can
