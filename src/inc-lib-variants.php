@@ -75,8 +75,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         // If type is not given, default to something.
         // We usually just default to 'g'. But when it's obviously something
         //  else, pick that other thing.
-        if (in_array($sVariant[0], array('c', 'g', 'm', 'n'))) {
-            $sType = $sVariant[0];
+        if (in_array(strtolower($sVariant[0]), array('c', 'g', 'm', 'n'))) {
+            $sType = strtolower($sVariant[0]);
         } else {
             if (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
                 // Variant doesn't have a prefix either, *and* there seems to be an
@@ -164,7 +164,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     }
 
     // Add prefix in case it is missing.
-    if (!in_array($sVariant[0], array('c', 'g', 'm', 'n'))) {
+    if (!in_array(strtolower($sVariant[0]), array('c', 'g', 'm', 'n'))) {
         return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
     }
 
@@ -225,7 +225,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     } elseif (isset($aVariant['errors']['EFALSEUTR']) || isset($aVariant['errors']['EFALSEINTRONIC'])) {
         // The wrong prefix was given. In other words: intronic positions or UTR
         //  notations were found for genomic DNA.
-        if ($sVariant[0] == $sType) {
+        if (strtolower($sVariant[0]) == $sType) {
             if (isset($aVariant['errors']['EFALSEINTRONIC'])
                 && ($aVariant['position_start'] >= 250000 || $aVariant['position_start_intron'] >= 250000)) {
                 // If variants hold false intronic positions, it might be that
@@ -252,6 +252,14 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         && !isset($aVariant['errors']['ESUFFIXMISSING'])
         && isset($aVariant['warnings']['WTOOMUCHUNKNOWN']))) {
         return $sReference . $sVariant; // Not HGVS.
+    }
+
+    // Fix case problems.
+    if (isset($aVariant['warnings']['WWRONGCASE'])) {
+        // Check prefix. I'd rather do it here.
+        if (ctype_upper($sVariant[0])) {
+            return lovd_fixHGVS($sReference . strtolower($sVariant[0]) . substr($sVariant, 1), $sType);
+        }
     }
 
     // Change the variant type (if possible) if the wrong type was chosen.
