@@ -1823,11 +1823,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
                         // Looping through all possible variants.
                         if (!(
-                            (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                          // so no c.1_2ins[A]
-                                && (preg_match('/^[ACGTN]+$/', $sInsertion)                                      // c.1_2insATG
+                            (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                            // so no c.1_2ins[A]
+                                && (preg_match('/^[ACGTN]+$/', $sInsertion)                                                // c.1_2insATG
                                     || preg_match(
-                                        '/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion) // c.1_2insN[40] or ..N[(1_2)]
-                                    || (preg_match(                                                                       // c.1_2ins15+1_16-1
+                                        '/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion)          // c.1_2insN[40] or ..N[(1_2)]
+                                    || (preg_match(                                                                        // c.1_2ins15+1_16-1
                                         '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
                                         && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) // if positions are simple, is A < B?
                             ||

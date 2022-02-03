@@ -183,11 +183,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             preg_replace('/(?<!:)' . preg_quote($sType, '/') . '\./', '', $sVariant), $sType);
     }
 
-    // We also don't like bases in lowercase.
-    if (preg_match('/^(.+ins)([a-z]+)$/', $sVariant, $aRegs)) {
-        return lovd_fixHGVS($sReference . $aRegs[1] . strtoupper($aRegs[2]));
-    }
-
     // Replace uracil with thymine (RNA -> DNA description).
     if ((preg_match('/^(.+)([A-Z]>[A-Z])$/', $sVariant, $aRegs)
             || preg_match('/^(.+ins)([A-Z]+)$/', $sVariant, $aRegs))
@@ -370,6 +365,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             $nParts = count($aParts);
 
             foreach ($aParts as $i => $sPart) {
+                if (preg_match('/^[ACTG]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
+                    // Looks good, but make sure the case is good, too.
+                    $aParts[$i] = $sPart = strtoupper($sPart);
+                }
+
                 if (preg_match('/^\([ACTG]+\)$/', $sPart) || preg_match('/^N\[\([0-9]+\)\]/', $sPart)) {
                     // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
                     $aParts[$i] = str_replace(array('(', ')'), '', $sPart);

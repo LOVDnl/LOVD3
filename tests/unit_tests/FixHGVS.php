@@ -96,7 +96,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('C.123C>a', 'c.123C>A'),
             array('g.123insactg', 'g.123insACTG'),
             array('g.123a>g', 'g.123A>G'),
-            array('g.100_101ins[nc_000010.1:g.100_200]', 'g.100_101ins[NC_000010.1:g.100_200]'),
+            array('g.100_101ins[nc_000010.1:g.100_200;aaaa;n[10]]', 'g.100_101ins[NC_000010.1:g.100_200;AAAA;N[10]]'),
             array('lrg_123t1:c.100del', 'LRG_123t1:c.100del'),
 
             // U given instead of T.
