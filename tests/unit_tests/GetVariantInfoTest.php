@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-02-01
+ * Modified    : 2022-02-07
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -182,6 +182,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.123.>.', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGTYPE' => 'This substitution does not seem to contain any data. Please provide bases that were replaced.',
+                ),
+            )),
             array('g.123_124A>C', array(
                 'position_start' => 123,
                 'position_end' => 124,
@@ -197,9 +206,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(
                     'WWRONGTYPE' =>
-                        'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?',
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
                 ),
                 'errors' => array(),
+            )),
+            array('g.123.>C', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGTYPE' =>
+                        'A substitution should be a change of one base to one base. Did you mean to describe an insertion?',
+                ),
             )),
             array('g.123AA>G', array(
                 'position_start' => 123,
@@ -207,7 +226,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(
                     'WWRONGTYPE' =>
-                        'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?',
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123A>.', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'warnings' => array(
+                    'WWRONGTYPE' =>
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion?',
                 ),
                 'errors' => array(),
             )),
@@ -217,7 +246,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(
                     'WWRONGTYPE' =>
-                        'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?',
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
                 ),
                 'errors' => array(
                     'ETOOMANYPOSITIONS' => 'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.'
@@ -229,7 +258,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'subst',
                 'warnings' => array(
                     'WWRONGTYPE' =>
-                        'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?',
+                        'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
                 ),
                 'errors' => array(
                     'ETOOMANYPOSITIONS' => 'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.'

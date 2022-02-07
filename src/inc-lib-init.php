@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-03
+ * Modified    : 2022-02-07
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1240,7 +1240,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
         '\)))?' .
 
-        '([ACGT]+>[ACGTRYSWKMBDHVN]+' .                   //  | (substitution)
+        '((?:[ACGT]+|\.)>(?:[ACGTRYSWKMBDHVN]+|\.)' .     //  | (substitution)
         '|([ACTG]+\[[0-9]+])+' .                          //  | (repeat sequence)
         '|[ACTG]*=(\/{1,2}[ACGT]*>[ACGTRYSWKMBDHVN]+)?' . //  | (wild types, mosaics, or chimerics)
         '|ins|dup|delins|del|inv|sup|\?' .                //  V
@@ -1706,7 +1706,28 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif ($aResponse['type'] == 'subst') {
         $aSubstitution = explode('>', $aVariant['type']);
-        if (strlen($aSubstitution[0]) > 1 || strlen($aSubstitution[1]) > 1) {
+        if ($aSubstitution[0] == '.' && $aSubstitution[1] == '.') {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EWRONGTYPE'] =
+                'This substitution does not seem to contain any data. Please provide bases that were replaced.';
+
+        } elseif ($aSubstitution[0] == '.') {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EWRONGTYPE'] =
+                'A substitution should be a change of one base to one base. Did you mean to describe an insertion?';
+
+        } elseif ($aSubstitution[1] == '.') {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['warnings']['WWRONGTYPE'] =
+                'A substitution should be a change of one base to one base. Did you mean to describe a deletion?';
+
+        } elseif (strlen($aSubstitution[0]) > 1 || strlen($aSubstitution[1]) > 1) {
             // A substitution should be a change of one base to one base. If this
             //  is not the case, we will let the user know that it should have been
             //  a delins.
@@ -1714,7 +1735,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             }
             $aResponse['warnings']['WWRONGTYPE'] =
-                'A substitution should be a change of one base to one base. Did you mean a deletion-insertion?';
+                'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?';
         }
         if ($aVariant['earliest_end']) {
             // As substitutions are always a one-base change, they should
