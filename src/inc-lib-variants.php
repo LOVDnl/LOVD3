@@ -274,26 +274,16 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     if (isset($aVariant['warnings']['WWRONGTYPE'])) {
         if ($aVariant['type'] == 'subst') {
             // Change positions based on length REF part of the substitution;
-            //  e.g. N>N or NN>N.
+            //  e.g. N>N (OK) or NN>N (del).
             preg_match('/([A-Z]+)>([A-Z]+)$/', $sVariant, $aRegs);
             $nLength = strlen($aRegs[1]);
             if ($nLength > 1 && !isset($aVariant['errors']['ETOOMANYPOSITIONS'])) {
                 // Only when we have more than one base before the > and there
                 //  is currently just one position, do we calculate an end
                 //  position.
-                if (isset($aVariant['position_start_intron'])) {
-                    $aVariant['position_end_intron'] += $nLength - 1;
-                    // Compensate for the possibility where we just left the intron.
-                    if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
-                        $aVariant['position_end'] += $aVariant['position_end_intron'];
-                        $aVariant['position_end_intron'] = 0;
-                    }
-                } else {
-                    $aVariant['position_end'] += $nLength - 1;
-                }
-                $sEndPosition = $aVariant['position_end'] .
-                    (empty($aVariant['position_end_intron'])? '' :
-                        ($aVariant['position_end_intron'] < 1? $aVariant['position_end_intron'] : '+' . $aVariant['position_end_intron']));
+                list($nEndPosition, $nEndIntron) = lovd_getVariantEndPosition($aVariant, $nLength);
+                $sEndPosition = $nEndPosition .
+                    (!$nEndIntron? '' : ($nEndIntron < 1? $nEndIntron : '+' . $nEndIntron));
                 return lovd_fixHGVS($sReference . str_replace($aRegs[0], '_' . $sEndPosition . 'delins' . $aRegs[2], $sVariant), $sType);
 
             } elseif ($nLength > 1) {
@@ -735,6 +725,38 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
     }
 
     return $aMutalyzerData;
+}
+
+
+
+
+
+function lovd_getVariantEndPosition ($aVariant, $nLength)
+{
+    // Takes the start position from the $aVariant array (g. based or c. based), adds the given length,
+    //  and calculates the end position (overwriting it if needed).
+
+    if (!isset($aVariant['position_start'])
+        || (!is_int($nLength) && !ctype_digit($nLength))
+        || $nLength < 1) {
+        return false;
+    }
+
+    if (!empty($aVariant['position_start_intron'])) {
+        $aVariant['position_end_intron'] = $aVariant['position_start_intron'] + $nLength - 1;
+        // Compensate for the possibility that we just left the intron.
+        if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
+            $aVariant['position_end'] = $aVariant['position_start'] + $aVariant['position_end_intron'];
+            $aVariant['position_end_intron'] = 0;
+        }
+    } else {
+        if (isset($aVariant['position_end_intron'])) {
+            $aVariant['position_end_intron'] = 0;
+        }
+        $aVariant['position_end'] = $aVariant['position_start'] + $nLength - 1;
+    }
+    return array($aVariant['position_end'],
+        (isset($aVariant['position_end_intron'])? $aVariant['position_end_intron'] : NULL));
 }
 
 
