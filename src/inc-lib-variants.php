@@ -281,9 +281,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 // Only when we have more than one base before the > and there
                 //  is currently just one position, do we calculate an end
                 //  position.
-                list($nEndPosition, $nEndIntron) = lovd_getVariantEndPosition($aVariant, $nLength);
-                $sEndPosition = $nEndPosition .
-                    (!$nEndIntron? '' : ($nEndIntron < 1? $nEndIntron : '+' . $nEndIntron));
+                list(,, $sEndPosition) = lovd_getVariantEndPosition($aVariant, $nLength);
                 return lovd_fixHGVS($sReference . str_replace($aRegs[0], '_' . $sEndPosition . 'delins' . $aRegs[2], $sVariant), $sType);
 
             } elseif ($nLength > 1) {
@@ -748,15 +746,33 @@ function lovd_getVariantEndPosition ($aVariant, $nLength)
         if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
             $aVariant['position_end'] = $aVariant['position_start'] + $aVariant['position_end_intron'];
             $aVariant['position_end_intron'] = 0;
+        } else {
+            $aVariant['position_end'] = $aVariant['position_start'];
         }
+
     } else {
         if (isset($aVariant['position_end_intron'])) {
             $aVariant['position_end_intron'] = 0;
         }
         $aVariant['position_end'] = $aVariant['position_start'] + $nLength - 1;
     }
-    return array($aVariant['position_end'],
-        (isset($aVariant['position_end_intron'])? $aVariant['position_end_intron'] : NULL));
+
+    // Build return array.
+    $aReturn = array(
+        $aVariant['position_end'], // End position (genomic or exonic).
+        NULL, // (intronic, default value)
+        $aVariant['position_end'], // Formatted position string, to be extended.
+    );
+    if (isset($aVariant['position_end_intron'])) {
+        $aReturn[1] = $aVariant['position_end_intron'];
+        if ($aVariant['position_end_intron']) {
+            $aReturn[2] .= ($aVariant['position_end_intron'] < 1?
+                $aVariant['position_end_intron'] :
+                '+' . $aVariant['position_end_intron']);
+        }
+    }
+
+    return $aReturn;
 }
 
 
