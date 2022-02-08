@@ -102,16 +102,26 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // U given instead of T.
             array('g.123insAUG', 'g.123insATG'),
 
-            // Conversions and substitutions that should be delins variants.
+            // Variant types should be something else.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
             array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:g.100_200]'),
             array('g.123A>GC', 'g.123delinsGC'),
+            array('g.123A>AA', 'g.123dup'),
+            array('g.123AA>AC', 'g.124A>C'),
+            array('g.123AA>GA', 'g.123A>G'),
+            array('g.123AA>TT', 'g.123_124inv'),
             array('g.123AA>GC', 'g.123_124delinsGC'),
+            array('g.123AA>AAAA', 'g.123_124dup'),
+            array('g.123AA>AGCA', 'g.123_124insGC'),
             array('c.123+1AA>GC', 'c.123+1_123+2delinsGC'),
             array('c.123-1AA>GC', 'c.123-1_123delinsGC'),
+            array('g.123_124AA>AA', 'g.123_124='),
+            array('g.123_124AA>AC', 'g.124A>C'),
+            array('g.123_124AA>GA', 'g.123A>G'),
             array('g.123_124AA>GC', 'g.123_124delinsGC'),
-            array('g.123_124AAA>GC', 'g.123_124AAA>GC'),
-            array('g.123C>.', 'g.123del'),
+            array('g.123_124AAA>GC', 'g.123_124AAA>GC'), // Unfixable.
+            array('g.123A>.', 'g.123del'),
+            array('g.123AA>.', 'g.123_124del'),
 
             // Wild type requires no bases.
             array('c.123T=', 'c.123='),
@@ -228,6 +238,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123-5dup', 'g.123-5dup'),
             array('m.123-5dup', 'm.123-5dup'),
             array('g.*1_*2del', 'g.*1_*2del'),
+            array('g.123.>.', 'g.123.>.'),
+            array('g.123.>C', 'g.123.>C'),
             array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)ins(69_111)'), // Used to cause an infinite recursion.
             array('g.(200_100)?', 'g.(100_200)?'),
             array('c.361A>T^362C>G', 'c.361A>T^362C>G'), // FIXME; This needs to be handled in lovd_getVariantInfo() and lovd_fixHGVS().

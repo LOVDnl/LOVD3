@@ -196,15 +196,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return lovd_fixHGVS($sReference . str_replace($aRegs[1], '=', $sVariant), $sType);
     }
 
-    // Fix VCF-style substitutions that are deletions.
-    if (preg_match('/(?<=[0-9])([ACGTN]+)>\.$/i', $sVariant, $aRegs)) {
-        return lovd_fixHGVS($sReference . str_replace($aRegs[0], 'del' . $aRegs[1], $sVariant), $sType);
-    }
-    // Note: We can't handle c.100.>A as we don't know whether this means c.99_100insA or c.100_101insA.
-    // This depends on the implementation of the program that created the VCF.
-    // (ANNOVAR does something else than most other VCF generators)
-    // Note that either way, nor the REF nor the ALT is actually ever allowed to be empty, so it's always a bug.
-
 
 
     // The basic steps have all been taken. From this point forward, we
@@ -273,28 +264,105 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // Change the variant type (if possible) if the wrong type was chosen.
     if (isset($aVariant['warnings']['WWRONGTYPE'])) {
         if ($aVariant['type'] == 'subst') {
-            // Change positions based on length REF part of the substitution;
-            //  e.g. N>N (OK) or NN>N (del).
-            preg_match('/([A-Z]+)>([A-Z]+)$/', $sVariant, $aRegs);
-            $nLength = strlen($aRegs[1]);
-            if ($nLength > 1 && !isset($aVariant['errors']['ETOOMANYPOSITIONS'])) {
-                // Only when we have more than one base before the > and there
-                //  is currently just one position, do we calculate an end
-                //  position.
-                list(,, $sEndPosition) = lovd_getVariantEndPosition($aVariant, $nLength);
-                return lovd_fixHGVS($sReference . str_replace($aRegs[0], '_' . $sEndPosition . 'delins' . $aRegs[2], $sVariant), $sType);
+            // Handle all notations of substitutions regardless of the length of
+            //  the REF and ALT; recognize deletions, insertions, duplications,
+            //  and more.
+            // NOTE: We can't handle c.100.>A as we don't know whether this
+            //  means c.99_100insA or c.100_101insA. This depends on the
+            //  implementation of the program that created the VCF.
+            // (ANNOVAR does something else than most other VCF generators)
+            // Either way, VCF doesn't actually allow empty REFs or ALTs.
+            preg_match('/([0-9_+-]+)([A-Z]+)>([A-Z.]+)$/', $sVariant, $aRegs);
+            list(, $sPosition, $sRef, $sAlt) = $aRegs;
+            $sAlt = rtrim($sAlt, '.'); // Change . into an empty string.
+            $nPositionLength = lovd_getVariantLength($aVariant);
 
-            } elseif ($nLength > 1) {
-                // Variant already has a range as position, check the length.
-                $nPositionLength = lovd_getVariantLength($aVariant);
-                if ($nPositionLength != $nLength) {
-                    // e.g., c.100_102AA>C
-                    // This is an error we cannot fix. We don't know if the
-                    //  error is in the positions or the given sequence.
-                    return $sReference . $sVariant;
+            // We'll always accept having only one position (g.100AAA>.)
+            //  but we'll never accept having a range that doesn't agree with
+            //  the length of the REF.
+            if ($nPositionLength > 1 && $nPositionLength != strlen($sRef)) {
+                // e.g., c.100_102AAAA>A.
+                // This is an error we cannot fix. We don't know if the
+                //  error is in the positions or the given sequence.
+                return $sReference . $sVariant;
+            }
+
+            // The following code is similar to lovd_getVariantDescription(),
+            //  but it's not the same. It needs to handle complex (intronic)
+            //  positions. Not sure, but decided to duplicate and adapt.
+            // FIXME: Perhaps we can write a new function that's more generic?
+
+            // Shift variant if REF and ALT are similar.
+            // Save original value before we edit it.
+            $sAltOriginal = $sAlt;
+            $nOffset = 0;
+            // 'Eat' letters from either end - first left, then right - to isolate the difference.
+            while (strlen($sRef) > 0 && strlen($sAlt) > 0 && $sRef[0] == $sAlt[0]) {
+                $sRef = substr($sRef, 1);
+                $sAlt = substr($sAlt, 1);
+                $nOffset ++;
+            }
+            while (strlen($sRef) > 0 && strlen($sAlt) > 0 && $sRef[strlen($sRef) - 1] == $sAlt[strlen($sAlt) - 1]) {
+                $sRef = substr($sRef, 0, -1);
+                $sAlt = substr($sAlt, 0, -1);
+            }
+            $nREFLength = strlen($sRef); // We are sure this is not a period.
+            $nALTLength = strlen($sAlt);
+
+            // Now determine the actual variant type.
+            if ($nREFLength == 0 && $nALTLength == 0) {
+                // Nothing left. Take the original position and add '='.
+                return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . '=', $sVariant), $sType);
+
+            } elseif ($nREFLength == 1 && $nALTLength == 1) {
+                // Substitution.
+                // Recalculate the position always; we might have started with a
+                //  range, but ended with just a single position.
+                list(,,$sPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . $sRef . '>' . $sAlt, $sVariant), $sType);
+
+            } elseif ($nALTLength == 0) {
+                // Deletion.
+                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
+                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+                return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'del', $sVariant), $sType);
+
+            } elseif ($nREFLength == 0) {
+                // Something has been added... could be an insertion or a duplication.
+                if (substr($sAltOriginal, strrpos($sAltOriginal, $sAlt) - $nALTLength, $nALTLength) == $sAlt) {
+                    // Duplication. Note that the start position might be quite
+                    //  far from the actual insert.
+                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1 - $nALTLength);
+                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset);
+                    $sPosition = $sStartPosition . ($nALTLength == 1? '' : '_' . $sEndPosition);
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'dup', $sVariant), $sType);
+
+                } else {
+                    // Insertion. We don't need to worry about an offset of 0,
+                    //  as we don't accept empty REFs - they can only have been
+                    //  emptied by shifting.
+                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset);
+                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                    $sPosition = $sStartPosition . '_' . $sEndPosition;
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'ins' . $sAlt, $sVariant), $sType);
+                }
+
+            } else {
+                // Inversion or deletion-insertion. Both REF and ALT are >1.
+                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
+                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+
+                if ($sRef == strrev(str_replace(array('A', 'C', 'G', 'T'), array('T', 'G', 'C', 'A'), strtoupper($sAlt)))) {
+                    // Inversion.
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'inv', $sVariant), $sType);
+                } else {
+                    // Deletion-insertion. Both REF and ALT are >1.
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'delins' . $sAlt, $sVariant), $sType);
                 }
             }
-            return lovd_fixHGVS($sReference . str_replace($aRegs[0], 'delins' . $aRegs[2], $sVariant), $sType);
+
         } elseif ($aVariant['type'] == 'delins') {
             return $sReference . $sVariant; // Not HGVS, and not fixable by us (unless we use VV).
         }
