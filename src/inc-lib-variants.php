@@ -383,8 +383,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
             // For normal dels and dups, don't remove the suffix if it doesn't
             //  match the length.
+            $sSuffixClean = trim($sSuffix, '()');
+            $nLength = lovd_getVariantLength($aVariant);
             if (in_array($aVariant['type'], array('del', 'dup'))
-                && strlen(trim($sSuffix, '()')) != lovd_getVariantLength($aVariant)) {
+                && ((ctype_digit($sSuffixClean) && $sSuffixClean != $nLength)
+                    || (!ctype_digit($sSuffixClean) && strlen($sSuffixClean) != $nLength))) {
                 // Don't mess with it.
                 return $sReference . $sVariant;
             }
