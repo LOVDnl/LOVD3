@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-07
+ * Modified    : 2022-02-08
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -533,13 +533,29 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         $aPositions['DIntron'] = $aMatches[18];
 
         if ($aPositions['C']
-            && max($aPositions['A'], $aPositions['B']) > max($aPositions['C'], $aPositions['D'])) {
+            && max(
+                str_replace('?', '', $aPositions['A']),
+                str_replace('?', '', $aPositions['B'])
+            ) > max(
+                str_replace('?', '', $aPositions['C']),
+                str_replace('?', '', $aPositions['D']))) {
             // If this is the case, the positions are swapped in groups,
             //  i.e., c.(6_10)_(1_5)del.
             list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron'],
                 $aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron']) =
                 array($aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron'],
                     $aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron']);
+
+            // Now that we swapped the whole groups, swap the inner positions as
+            //  well, but only if they're both defined.
+            if ($aPositions['A'] && $aPositions['B']) {
+                list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron']) =
+                    array($aPositions['B'], $aPositions['BIntron'], $aPositions['A'], $aPositions['AIntron']);
+            }
+            if ($aPositions['C'] && $aPositions['D']) {
+                list($aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron']) =
+                    array($aPositions['D'], $aPositions['DIntron'], $aPositions['C'], $aPositions['CIntron']);
+            }
 
         } else {
             // If the above is not the case, the positions are swapped more
