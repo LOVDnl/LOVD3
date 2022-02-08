@@ -228,6 +228,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             //  (still results in an invalid description, more work needed).
             array('g.(100_200)[ins50]', 'g.(100_200)[ins50]'),
             array('g.(?_100?_200_?)dup', 'g.(?)'),
+            array('g.123delAinsG', 'g.123delAinsG'), // Should be g.123A>G.
+            // Real problem is a typo in the last position; could we recognize this?
+            array('g.(150138199_150142492)_(150145873_15147218)del',
+                'g.(15147218_150142492)_(150138199_150145873)del'),
 
 
 
