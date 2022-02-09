@@ -113,12 +113,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return $sReference . $sVariant;
     }
 
-    // We currently don't support OR variants (^). In fact, if we don't return
-    //  it here, we'll mutilate it.
-    if (strpos($sVariant, '^') !== false) {
-        return $sReference . $sVariant;
-    }
-
     // Move or remove wrongly placed parentheses.
     $nOpening = substr_count($sVariant, '(');
     $nClosing = substr_count($sVariant, ')');
@@ -381,6 +375,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             //  location, which would mean the suffix IS necessary). We cannot
             //  be sure we may remove it, so we have to let this be.
             list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
+            // We currently don't support OR variants (^). In fact, if we don't
+            //  return it here, we'll mutilate it.
+            if ($sSuffix[0] == '^') {
+                return $sReference . $sVariant;
+            }
             // For combined variants, return as-is.
             if (preg_match('/^[](]?;/', $sSuffix)) {
                 // Combined variant (allele notation), don't mess with it.
