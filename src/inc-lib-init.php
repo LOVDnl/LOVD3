@@ -1276,11 +1276,37 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     if (!isset($aVariant['complete']) || $aVariant['complete'] != $sVariant) {
         // If the complete match is not set or does not equal the given variant,
-        //  then the variant is not HGVS and we cannot extract any information
-        //  from it.
+        //  then the variant is not HGVS-compliant, and we cannot extract any
+        //  information.
         if ($bCheckHGVS) {
             return false;
         }
+
+        // Before we just return false when people request more information;
+        //  check for some currently unsupported syntax that we do recognize.
+
+        // 1) "Or" syntax using a ^.
+        if (strpos($sVariant, '^') !== false) {
+            // This is a stub, but it's better than nothing.
+            // We replace the ^ and everything that follows with a =, and
+            //  process the variant like this. Then we overwrite the type, and
+            //  we return what we have.
+            // Note that variants like g.123A>C^124G>C don't reach us; they are
+            //  matched and returned with a WSUFFIXGIVEN.
+            $aVariant = lovd_getVariantInfo(strstr($sVariant, '^', true) . '=');
+            if ($aVariant !== false) {
+                $aVariant['type'] = '^';
+                // We have to throw an ENOTSUPPORTED, although we're returning
+                //  positions. We currently cannot claim these are HGVS or not,
+                //  so an WNOTSUPPORTED isn't appropriate.
+                $aVariant['errors']['ENOTSUPPORTED'] =
+                    'Currently, variant descriptions using "^" are not yet supported.' .
+                    ' This does not necessarily mean the description is not valid HGVS.';
+                return $aVariant;
+            }
+        }
+
+        // 2) qter/pter/cen-based positions, translocations, fusions.
         foreach (array('qter', 'pter', 'cen', '::') as $sUnsupported) {
             if (strpos($sVariant, $sUnsupported)) {
                 $aResponse['errors']['ENOTSUPPORTED'] =
@@ -1289,6 +1315,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return $aResponse;
             }
         }
+
+        // 3) Methylation-related variants without a pipe.
         // We'll check for methylation-related variants here, that sometimes
         //  lack a pipe character. Since we currently can't parse positions
         //  anymore, we'll have to throw an error. If we can identify the user's
