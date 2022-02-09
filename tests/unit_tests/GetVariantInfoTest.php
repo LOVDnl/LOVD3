@@ -939,6 +939,39 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('c.*2_1del', array (
+                'position_start' => 1,
+                'position_end' => 1000002,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
+                ),
+                'errors' => array(),
+            )),
+            array('c.(*50_500)_(100_1)del', array (
+                'position_start' => 100,
+                'position_end' => 1000050,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
+                ),
+                'errors' => array(),
+            )),
+            array('c.(500_*50)_(1_100)del', array (
+                'position_start' => 100,
+                'position_end' => 1000050,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
+                ),
+                'errors' => array(),
+            )),
             array('c.123-5_123-10del', array (
                 'position_start' => 123,
                 'position_end' => 123,

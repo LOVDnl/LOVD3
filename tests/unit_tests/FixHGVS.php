@@ -219,6 +219,9 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.(200_100)_(50_?)del', 'g.(?_50)_(100_200)del'),
             array('g.(?_300)_(200_100)del', 'g.(100_200)_(300_?)del'),
             array('c.5+1_5-1dup', 'c.5-1_5+1dup'),
+            array('c.*2_1del', 'c.1_*2del'),
+            array('c.(*50_500)_(100_1)del', 'c.(1_100)_(500_*50)del'),
+            array('c.(500_*50)_(1_100)del', 'c.(1_100)_(500_*50)del'),
 
             // Variants with reference sequences, testing various fixes.
             array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
@@ -232,7 +235,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123delAinsG', 'g.123delAinsG'), // Should be g.123A>G.
             // Real problem is a typo in the last position; could we recognize this?
             array('g.(150138199_150142492)_(150145873_15147218)del',
-                'g.(15147218_150142492)_(150138199_150145873)del'),
+                  'g.(15147218_150142492)_(150138199_150145873)del'),
             array('g.123^124A>C', 'g.123^124A>C'),
             array('g.123A>C^124G>C', 'g.123A>C^124G>C'),
             array('g.123A>C;124A>C', 'g.123A>C;124A>C'),

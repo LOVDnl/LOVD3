@@ -540,12 +540,14 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         $aPositions['DIntron'] = $aMatches[18];
 
         if ($aPositions['C']
+            // Deliberately don't case these to int;
+            //  max(<number>, "") is always <number>.
             && max(
-                str_replace('?', '', $aPositions['A']),
-                str_replace('?', '', $aPositions['B'])
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['A']),
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['B'])
             ) > max(
-                str_replace('?', '', $aPositions['C']),
-                str_replace('?', '', $aPositions['D']))) {
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['C']),
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['D']))) {
             // If this is the case, the positions are swapped in groups,
             //  i.e., c.(6_10)_(1_5)del.
             list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron'],
@@ -577,12 +579,14 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                     $sIntronicFirst = $sFirst . 'Intron';
                     $sIntronicLast = $sLast . 'Intron';
 
-                    if ($aPositions[$sFirst] > $aPositions[$sLast]) {
+                    if (str_replace('*', '1000000', $aPositions[$sFirst])
+                        > str_replace('*', '1000000', $aPositions[$sLast])) {
                         list($aPositions[$sFirst], $aPositions[$sIntronicFirst], $aPositions[$sLast], $aPositions[$sIntronicLast]) =
                             array($aPositions[$sLast], $aPositions[$sIntronicLast], $aPositions[$sFirst], $aPositions[$sIntronicFirst]);
 
                     } elseif ($aPositions[$sFirst] == $aPositions[$sLast]) {
-                        if ($aPositions[$sIntronicFirst] > $aPositions[$sIntronicLast]) {
+                        if ((int) str_replace('?', '1', $aPositions[$sIntronicFirst])
+                            > (int) str_replace('?', '1', $aPositions[$sIntronicLast])) {
                             list($aPositions[$sIntronicFirst], $aPositions[$sIntronicLast]) =
                                 array($aPositions[$sIntronicLast], $aPositions[$sIntronicFirst]);
 
