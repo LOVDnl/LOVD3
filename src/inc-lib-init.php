@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-07
+ * Modified    : 2022-02-09
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1691,6 +1691,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
 
         } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])
+            && $aVariant['earliest_start'] != '?' && $aVariant['latest_start'] != '?'
             && ($aVariant['latest_start'] - $aVariant['earliest_start']) == 1) {
             // If the exact location of an insertion is unknown, this can be indicated
             //  by placing the positions in the range-format (e.g. c.(1_10)insA). In this
