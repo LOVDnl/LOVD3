@@ -1262,13 +1262,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'positions'               => (!isset($aMatches[3])?  '' : $aMatches[3]),
         'starting_parentheses'    => (!isset($aMatches[4])?  '' : $aMatches[4]), // The parentheses are given to make additional checks later on in the function easier.
         'earliest_start'          => (!isset($aMatches[5])?   0 : $aMatches[5]), // These are not cast to integers, since they can still hold an informative '*'.
-        'earliest_intronic_start' => (!isset($aMatches[6])?   0 : (int)str_replace('?', '1', $aMatches[6])),
+        'earliest_intronic_start' => (!isset($aMatches[6])?   0 : (int) str_replace('?', '1', $aMatches[6])),
         'latest_start'            => (!isset($aMatches[9])?   0 : $aMatches[9]),
-        'latest_intronic_start'   => (!isset($aMatches[10])?  0 : (int)str_replace('?', '1', $aMatches[10])),
+        'latest_intronic_start'   => (!isset($aMatches[10])?  0 : (int) str_replace('?', '1', $aMatches[10])),
         'earliest_end'            => (!isset($aMatches[14])?  0 : $aMatches[14]),
-        'earliest_intronic_end'   => (!isset($aMatches[15])?  0 : (int)str_replace('?', '1', $aMatches[15])),
+        'earliest_intronic_end'   => (!isset($aMatches[15])?  0 : (int) str_replace('?', '1', $aMatches[15])),
         'latest_end'              => (!isset($aMatches[17])?  0 : $aMatches[17]),
-        'latest_intronic_end'     => (!isset($aMatches[18])?  0 : (int)str_replace('?', '1', $aMatches[18])),
+        'latest_intronic_end'     => (!isset($aMatches[18])?  0 : (int) str_replace('?', '1', $aMatches[18])),
         'type'                    => (!isset($aMatches[20])? '' :
             (preg_match('/(^[ACTG]*=|[>\[])/i', $aMatches[20])? strtoupper($aMatches[20]) : strtolower($aMatches[20]))),
         'suffix'                  => (!isset($aMatches[24])? '' : $aMatches[24]),
@@ -1493,8 +1493,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['messages']['IUNCERTAINPOSITIONS'] = 'This variant description contains uncertain positions.';
 
         } else {
-            // When no '*' is found, we can safely cast the position to integer.
-            $aVariant[$sPosition] = (int)$aVariant[$sPosition];
+            // When no '*' or '?' is found, we can safely cast the position to integer.
+            $aVariant[$sPosition] = (int) $aVariant[$sPosition];
 
             if ($aVariant[$sPosition] < 0 && $aVariant['prefix'] != 'c') {
                 if ($bCheckHGVS) {
@@ -1585,11 +1585,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  unknown. This means that e.g. c.(1_2)_(5_6)del will be returned as having a position_start of 2, and
     //  a position_end of 5. However, if we find a variant such as c.(1_?)_(?_6)del, we will save the outer
     //  positions (so a position_start of 1 and a position_end of 6).
-    // We only cast the positions to integers if they are not question marks, since we will need this
-    //  information later on.
     $aResponse['position_start'] =
         (!$aVariant['latest_start'] || $aVariant['latest_start'] == '?'? $aVariant['earliest_start'] : $aVariant['latest_start']);
-    $aResponse['position_start'] = ($aResponse['position_start'] == '?'? '?' : (int) $aResponse['position_start']);
 
     if (!$aVariant['earliest_end']) {
         $aResponse['position_end'] = $aResponse['position_start'];
@@ -1598,11 +1595,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     } else {
         $aResponse['position_end'] = $aVariant['latest_end'];
     }
-    $aResponse['position_end'] = ($aResponse['position_end'] == '?'? '?' : (int) $aResponse['position_end']);
 
     if (in_array($aVariant['prefix'], array('n', 'c'))) {
-        $aResponse['position_start_intron'] = (int) ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
-        $aResponse['position_end_intron']   = (int) ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
+        $aResponse['position_start_intron'] = ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
+        $aResponse['position_end_intron']   = ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
     }
 
     if (!$aVariant['earliest_end'] && $aVariant['latest_start']) {
@@ -1645,8 +1641,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // Before we return this, also add the intronic positions. This'll
         //  allow us to make some guesstimate on whether or not this may
         //  have been a typo.
-        $aResponse['position_start_intron'] = (int) ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
-        $aResponse['position_end_intron']   = (int) ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
+        $aResponse['position_start_intron'] = ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
+        $aResponse['position_end_intron']   = ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
         return $aResponse;
     }
 
