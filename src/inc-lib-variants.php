@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-08
+ * Modified    : 2022-02-09
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -381,6 +381,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             //  location, which would mean the suffix IS necessary). We cannot
             //  be sure we may remove it, so we have to let this be.
             list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
+            // For combined variants, return as-is.
+            if (preg_match('/^[](]?;/', $sSuffix)) {
+                // Combined variant (allele notation), don't mess with it.
+                return $sReference . $sVariant;
+            }
             // For normal dels and dups, don't remove the suffix if it doesn't
             //  match the length.
             $sSuffixClean = trim($sSuffix, '()');

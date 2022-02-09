@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-02-08
+ * Modified    : 2022-02-09
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -225,13 +225,20 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
 
             // Where we can still improve
-            //  (still results in an invalid description, more work needed).
+            //  (still results in an invalid description - more work needed,
+            //   or variants currently not supported and returned as-is).
             array('g.(100_200)[ins50]', 'g.(100_200)[ins50]'),
             array('g.(?_100?_200_?)dup', 'g.(?)'),
             array('g.123delAinsG', 'g.123delAinsG'), // Should be g.123A>G.
             // Real problem is a typo in the last position; could we recognize this?
             array('g.(150138199_150142492)_(150145873_15147218)del',
                 'g.(15147218_150142492)_(150138199_150145873)del'),
+            array('g.123^124A>C', 'g.123^124A>C'),
+            array('g.123A>C^124G>C', 'g.123A>C^124G>C'),
+            array('g.123A>C;124A>C', 'g.123A>C;124A>C'),
+            array('g.[123A>C;124A>C]', 'g.[123A>C;124A>C]'),
+            array('g.[123A>C(;)124A>C]', 'g.[123A>C(;)124A>C]'),
+            array('g.[123A>C];[124A>C]', 'g.[123A>C];[124A>C]'),
 
 
 
@@ -254,7 +261,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123.>C', 'g.123.>C'),
             array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)ins(69_111)'), // Used to cause an infinite recursion.
             array('g.(200_100)?', 'g.(100_200)?'),
-            array('c.361A>T^362C>G', 'c.361A>T^362C>G'), // FIXME; This needs to be handled in lovd_getVariantInfo() and lovd_fixHGVS().
         );
     }
 }
