@@ -1306,7 +1306,31 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
         }
 
-        // 2) qter/pter/cen-based positions, translocations, fusions.
+        // 2) Combined variants that should be split.
+        if (preg_match('/\[.+;.+\]/', $sVariant)) {
+            // Although insertions can have this pattern as well, they don't end
+            //  up here; so we're left with combined variants.
+            // Try to send in the first one.
+            $aVariant = lovd_getVariantInfo(
+                str_replace(array('[', ']'), '', strstr($sVariant, ';', true)));
+            if ($aVariant !== false) {
+                $aVariant['type'] = ';';
+                // We have to throw an ENOTSUPPORTED, although we're returning
+                //  positions. We currently cannot claim these are HGVS or not,
+                //  so an WNOTSUPPORTED isn't appropriate.
+                $aVariant['errors']['ENOTSUPPORTED'] =
+                    'Currently, variant descriptions of combined variants are not yet supported.' .
+                    ' This does not necessarily mean the description is not valid HGVS.' .
+                    ' Please submit your variants separately.';
+                // Some valid descriptions throw a WUNBALANCEDPARENTHESES or a
+                //  WSUFFIXGIVEN. Remove these.
+                unset($aVariant['warnings']['WUNBALANCEDPARENTHESES']);
+                unset($aVariant['warnings']['WSUFFIXGIVEN']);
+                return $aVariant;
+            }
+        }
+
+        // 3) qter/pter/cen-based positions, translocations, fusions.
         foreach (array('qter', 'pter', 'cen', '::') as $sUnsupported) {
             if (strpos($sVariant, $sUnsupported)) {
                 $aResponse['errors']['ENOTSUPPORTED'] =
@@ -1316,7 +1340,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
         }
 
-        // 3) Methylation-related variants without a pipe.
+        // 4) Methylation-related variants without a pipe.
         // We'll check for methylation-related variants here, that sometimes
         //  lack a pipe character. Since we currently can't parse positions
         //  anymore, we'll have to throw an error. If we can identify the user's
