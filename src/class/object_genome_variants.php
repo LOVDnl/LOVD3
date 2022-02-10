@@ -413,7 +413,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectConcluded = false;
-            $nVOGEffectConcluded = intval($zData['effectid'][1]);
+            $nVOGEffectConcluded = (!isset($zData['effectid'])? 0 : intval($zData['effectid'][1]));
             if ($nVOGEffectConcluded === 0) {
                 // Set to "Not classified", we'll fill it in.
                 $bHideEffectConcluded = true;
@@ -442,7 +442,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectReported = false;
-            $nVOGEffectReported = intval($zData['effectid'][0]);
+            $nVOGEffectReported = (!isset($zData['effectid'])? 0 : intval($zData['effectid'][0]));
             if ($nVOGEffectReported === 0) {
                 // Set to "Not classified", we'll fill it in.
                 $bHideEffectReported = true;
