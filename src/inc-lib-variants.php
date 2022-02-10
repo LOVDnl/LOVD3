@@ -4,13 +4,14 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2021-11-10
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
+ *               Loes Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -39,106 +40,579 @@ if (!defined('ROOT_PATH')) {
 
 
 
-function lovd_fixHGVS ($sVariant, $sType = 'g')
+function lovd_fixHGVS ($sVariant, $sType = '')
 {
     // This function tries to recognize common errors in the HGVS nomenclature,
     //  and fix the variants in such a way, that they will be recognizable and
     //  usable.
+    // $sType stores the DNA type (c, g, m, or n) to allow for this function to
+    //  fully validate the variant and, optionally, its reference sequence.
 
-    if (!in_array($sType, array('g', 'c'))) {
-        $sType = 'g';
+    // Check for a reference sequence. We won't check it here, so we won't be
+    //  very strict.
+    if (preg_match('/^(ENS[GT]|LRG_([0-9]+t)?|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/i', $sVariant, $aRegs)) {
+        // Something that looks like a reference sequence is prefixing the
+        //  variant. Cut it off and store it separately. We'll return it, but
+        //  this way we can actually check the variant itself.
+        if (strpos($sVariant, ':') === false) {
+            // We don't always have a : in there, though.
+            // Try to insert one.
+            $sVariant = str_replace($aRegs[0], $aRegs[0] . ':', $sVariant);
+        }
+        list($sReference, $sVariant) = explode(':', $sVariant, 2);
+        // Fix possible case issues. All uppercase except for the t in LRG_123t1.
+        $sReference = preg_replace('/(?<=[0-9])T(?=[0-9])/', 't', strtoupper($sReference));
+        $sReference .= ':'; // To simplify the concatenation later on.
+    } else {
+        // No reference was found.
+        $sReference = '';
     }
+
+    // In case users forgot to remove the starting ':'.
+    $sVariant = ltrim($sVariant, ':');
+
+    if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
+        // If type is not given, default to something.
+        // We usually just default to 'g'. But when it's obviously something
+        //  else, pick that other thing.
+        if (in_array(strtolower($sVariant[0]), array('c', 'g', 'm', 'n'))) {
+            $sType = strtolower($sVariant[0]);
+        } else {
+            if (preg_match('/[0-9][+-][0-9]/', $sVariant)) {
+                // Variant doesn't have a prefix either, *and* there seems to be an
+                //  intronic position mentioned.
+                $sType = 'c';
+            } elseif ($sReference) {
+                // If can't get it from the variant, but we do have a refseq,
+                //  let that one do the talking!
+                if (preg_match('/^[NX]R_[0-9]/', $sReference)) {
+                    $sType = 'n';
+                } elseif (preg_match('/^(ENST|LRG_[0-9]+t|[NX]M_)[0-9]/', $sReference)) {
+                    $sType = 'c';
+                } elseif (preg_match('/^NC_(001807|012920)/', $sReference)) {
+                    $sType = 'm';
+                } else {
+                        $sType = 'g';
+                }
+            } else {
+                // Fine, we default to 'g'.
+                $sType = 'g';
+            }
+        }
+    }
+
+    // Trim the variant and remove whitespace.
+    $sVariant = preg_replace('/\s+/', '', $sVariant);
+
+    // Replace special – (hyphen, minus, en dash, em dash) with a simple - (hyphen-minus).
+    $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
 
     // Do a quick HGVS check.
-    if (lovd_isHGVS($sVariant)) {
+    if (lovd_isHGVS($sReference . $sVariant)) {
         // All good!
-        return $sVariant;
+        return $sReference . $sVariant;
     }
 
-    // Make sure we can use ctype_digit().
-    $sVariant = (string) $sVariant;
+    // Move or remove wrongly placed parentheses.
+    $nOpening = substr_count($sVariant, '(');
+    $nClosing = substr_count($sVariant, ')');
+    if ($nOpening != $nClosing) {
+        // There are more parentheses opening than closing.
+        // We won't be looking all the way into the variant, since that is
+        //  simply too much effort for the reward. However, we will take a look
+        //  at the simplest and most common mistakes.
+        if (strpos($sVariant, '((') !== false && ($nOpening - $nClosing) == 1) {
+            // e.g., g.((123_234)_(345_456)del.
+            return lovd_fixHGVS($sReference . str_replace('((', '(', $sVariant), $sType);
 
-    // Forgot a prefix?
-    if (ctype_digit($sVariant[0])) {
-        // Variant starts with a number. Try including a prefix.
-        return lovd_fixHGVS($sType . '.' . $sVariant, $sType);
-    } elseif ($sVariant[0] == '.') {
-        // Variant starts with a period. Try including a prefix.
-        return lovd_fixHGVS($sType . $sVariant, $sType);
-    }
-
-    // People sometimes leave spaces.
-    if (strpos($sVariant, ' ') !== false) {
-        return lovd_fixHGVS(preg_replace('/\s+/', '', $sVariant));
-    }
-
-    // Con variants that should be delins.
-    if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)con(.+)$/', $sVariant, $aRegs)) {
-        // Return as a delins.
-        // The annoying thing is that 'con' never needed a square bracket,
-        //  but a delins does, when other reference sequences are involved.
-        if (in_array($aRegs[2][0], array('N', 'X'))) {
-            $aRegs[2] = '[' . $aRegs[2] . ']';
-        }
-        return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'delins' . $aRegs[2]);
-    }
-
-    // Delins variants that require square brackets.
-    if (preg_match('/^' . $sType . '\.([0-9]+_[0-9]+)delins([NX].+)$/', $sVariant, $aRegs)) {
-        // Include the inserted sequence into square brackets.
-        return lovd_fixHGVS($sType . '.' . $aRegs[1] . 'delins' . '[' . $aRegs[2] . ']');
-    }
-
-    // Parentheses where they shouldn't belong?
-    // g.(1234_2345)del doesn't need those parentheses.
-    if (preg_match('/^([gm])\.\((\d+_\d+)\)(con|del(?:ins)?|dup|inv|ins)(.*)/', $sVariant, $aRegs)) {
-        return lovd_fixHGVS($aRegs[1] . '.' . $aRegs[2] . $aRegs[3] . $aRegs[4]);
-    }
-
-    // Too many prefixes due to copy/paste errors?
-    // g.12345_g.23456del to g.12345_23456del.
-    if (substr_count($sVariant, $sType . '.') > 1) {
-        return lovd_fixHGVS($sType . '.' . str_replace($sType . '.', '', $sVariant));
-    }
-
-    // Maybe positions are in wrong order?
-    $aVariantInfo = lovd_getVariantInfo($sVariant, '');
-    if (isset($aVariantInfo['warnings']['WPOSITIONSSWAPPED'])) {
-        // Swap positions in the description as well.
-        if (preg_match('/\.(\()?([0-9?_*+-]+)(?(1)\))_(\()?([0-9?_*+-]+)(?(3)\))[A-Za-z]/', $sVariant, $aRegs)) {
-            // Precise swapping, supporting uncertain positions.
-            list(, $bStartParentheses, $sPositionStart, $bEndParentheses, $sPositionEnd) = $aRegs;
-            return lovd_fixHGVS(str_replace(
-                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')') . '_' .
-                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')'),
-                (!$bEndParentheses? $sPositionEnd : '(' . $sPositionEnd . ')') . '_' .
-                (!$bStartParentheses? $sPositionStart : '(' . $sPositionStart . ')'), $sVariant));
+        } elseif (($nClosing - $nOpening) == 1 && strpos($sVariant, '))')) {
+            // e.g. g.(123_234)_(345_456))del.
+            return lovd_fixHGVS($sReference . str_replace('))', ')', $sVariant), $sType);
 
         } else {
-            // Fallback, in case the match above fails. (can it?)
-            $sPositionStart = $aVariantInfo['position_start'] .
-                (!isset($aVariantInfo['position_start_intron'])? '' :
-                    ($aVariantInfo['position_start_intron'] < 0? '' : '+') .
-                    $aVariantInfo['position_start_intron']);
-            $sPositionEnd = $aVariantInfo['position_end'] .
-                (!isset($aVariantInfo['position_end_intron'])? '' :
-                    ($aVariantInfo['position_end_intron'] < 0? '' : '+') .
-                    $aVariantInfo['position_end_intron']);
+            // The parentheses are formatted in a more difficult way than
+            //  is worth handling. We will return the variant, which is sadly
+            //  still not HGVS.
+            return $sReference . $sVariant; // Not HGVS.
+        }
 
-            return lovd_fixHGVS(str_replace(
-                $sPositionEnd . '_' . $sPositionStart,
-                $sPositionStart . '_' . $sPositionEnd, $sVariant));
+    } elseif ($sVariant[0] == '(') {
+        // All opening parentheses are closed, but the description starts with
+        //  one, which isn't an option. Don't just assume a prefix is there or
+        //  not, check.
+        if (!preg_match('/\b[cgmn]\./', $sVariant)) {
+            // No prefix found. Add one.
+            return lovd_fixHGVS(
+                $sReference . $sType . '.(' . substr($sVariant, 1), $sType);
+        } elseif (preg_match('/^\(([cgmn]\.)/', $sVariant, $aRegs)) {
+            // The variant is written as (c.1_2insA). We will rewrite this as c.(1_2insA).
+            return lovd_fixHGVS(
+                $sReference . $aRegs[1] . '(' . substr($sVariant, 3), $sType);
+        }
+
+    } elseif (strpos($sVariant, '((') !== false || strpos($sVariant, '))') !== false) {
+        if (preg_match('/\(\([0-9_]+\)\)/', $sVariant)) {
+            // c.((1_5))insA or c.100_500del((10))
+            return lovd_fixHGVS($sReference . str_replace(array('((', '))'), array('(', ')'), $sVariant), $sType);
         }
     }
 
-    // We also don't like bases in lowercase.
-    if (preg_match('/^(.+)([a-z]>[a-z])$/', $sVariant, $aRegs)
-        || preg_match('/^(.+ins)([a-z]+)$/', $sVariant, $aRegs)) {
-        // Also convert U to T, since lowercase bases may mean an RNA-based description.
-        return lovd_fixHGVS($aRegs[1] . strtoupper(str_replace('u', 't', $aRegs[2])));
+    // Add prefix in case it is missing.
+    if (!in_array(strtolower($sVariant[0]), array('c', 'g', 'm', 'n'))) {
+        return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
     }
 
-    return $sVariant;
+    // Replace the outdated "con" type with "delins".
+    // This used to check also if the delins needed square brackets around the
+    //  insertion, but we moved that code to generalize it.
+    if (strpos($sVariant, 'con') !== false) {
+        return lovd_fixHGVS($sReference . str_replace('con', 'delins', $sVariant), $sType);
+    }
+
+    // Remove redundant prefixes due to copy/paste errors (g.12_g.23del to g.12_23del).
+    // But only remove them if there isn't another refseq in front of it
+    //  (like for complex insertions).
+    if (preg_match_all('/(?<!:)' . preg_quote($sType, '/') . '\./', $sVariant) > 1) {
+        return lovd_fixHGVS($sReference . $sType . '.' .
+            preg_replace('/(?<!:)' . preg_quote($sType, '/') . '\./', '', $sVariant), $sType);
+    }
+
+    // Make sure no unnecessary bases are given for wild types (c.123A= -> c.123=).
+    if (preg_match('/[0-9]([ACGTN]+=)/i', $sVariant, $aRegs)) {
+        return lovd_fixHGVS($sReference . str_replace($aRegs[1], '=', $sVariant), $sType);
+    }
+
+
+
+    // The basic steps have all been taken. From this point forward, we
+    //  can use the warning and error messages of lovd_getVariantInfo() to check
+    //  and fix the variant.
+    $aVariant = lovd_getVariantInfo($sVariant, false);
+    if ($aVariant === false) {
+        return $sReference . $sVariant; // Not HGVS.
+
+    } elseif (isset($aVariant['errors']['EPIPEMISSING'])) {
+        // This looked like a methylation-related variant that was missing a
+        //  pipe, failing lovd_getVariantInfo()'s entire regexp.
+        return lovd_fixHGVS($sReference . preg_replace('/(gom|lom|met=|bsrC?)$/', '|$1', $sVariant), $sType);
+
+    } elseif (isset($aVariant['errors']['ENOTSUPPORTED'])
+        && $aVariant['type'] == 'met' && strpos($sVariant, '||')) {
+        // Whatever is after the pipe wasn't recognized, but we also found more
+        //  pipes. Try removing them.
+        return lovd_fixHGVS($sReference . preg_replace('/\|{2,}/', '|', $sVariant), $sType);
+
+    } elseif (isset($aVariant['errors']['EFALSEUTR']) || isset($aVariant['errors']['EFALSEINTRONIC'])) {
+        // The wrong prefix was given. In other words: intronic positions or UTR
+        //  notations were found for genomic DNA.
+        if (strtolower($sVariant[0]) == $sType) {
+            if (isset($aVariant['errors']['EFALSEINTRONIC'])
+                && ($aVariant['position_start'] >= 250000 || $aVariant['position_start_intron'] >= 250000)) {
+                // If variants hold false intronic positions, it might be that
+                //  the user accidentally wrote down '-' while meaning '_'.
+                // We will fix this only if we can be really sure this is the case,
+                //  which is if the variant contains a position too big to
+                //  be of a transcript.
+                return lovd_fixHGVS($sReference . str_replace('-', '_', $sVariant), $sType);
+
+            } else {
+                // The user likely put the input in the wrong field.
+                // We cannot fix this variant with certainty.
+                return $sReference . $sVariant; // Not HGVS.
+            }
+
+        } else {
+            // If the prefix does not equal the expected type, we can be sure
+            //  to try and add in the type instead. Perhaps the user accidentally
+            //  wrote down a 'g.' in the transcript field.
+            return lovd_fixHGVS($sReference . $sType . substr($sVariant, 1), $sType);
+        }
+
+    } elseif (!empty($aVariant['errors']
+        && !isset($aVariant['errors']['ESUFFIXMISSING'])
+        && !isset($aVariant['errors']['EPOSITIONFORMAT'])
+        && isset($aVariant['warnings']['WTOOMUCHUNKNOWN']))) {
+        return $sReference . $sVariant; // Not HGVS.
+    }
+
+    // Fix case problems.
+    if (isset($aVariant['warnings']['WWRONGCASE'])) {
+        // Check prefix. I'd rather do it here.
+        if (ctype_upper($sVariant[0])) {
+            return lovd_fixHGVS($sReference . strtolower($sVariant[0]) . substr($sVariant, 1), $sType);
+
+        // If not the prefix, then it must be because of the variant type
+        //  (lovd_getVariantInfo() currently doesn't check the suffix).
+        } elseif ($aVariant['type'] == 'subst') {
+            return lovd_fixHGVS($sReference . $sVariant[0] .
+                str_replace('U', 'T', strtoupper(substr($sVariant, 1))), $sType);
+        }
+    }
+
+    // Change the variant type (if possible) if the wrong type was chosen.
+    if (isset($aVariant['warnings']['WWRONGTYPE'])) {
+        if ($aVariant['type'] == 'subst') {
+            // Handle all notations of substitutions regardless of the length of
+            //  the REF and ALT; recognize deletions, insertions, duplications,
+            //  and more.
+            // NOTE: We can't handle c.100.>A as we don't know whether this
+            //  means c.99_100insA or c.100_101insA. This depends on the
+            //  implementation of the program that created the VCF.
+            // (ANNOVAR does something else than most other VCF generators)
+            // Either way, VCF doesn't actually allow empty REFs or ALTs.
+            preg_match('/([0-9_+-]+)([A-Z]+)>([A-Z.]+)$/', $sVariant, $aRegs);
+            list(, $sPosition, $sRef, $sAlt) = $aRegs;
+            $sAlt = rtrim($sAlt, '.'); // Change . into an empty string.
+            $nPositionLength = lovd_getVariantLength($aVariant);
+
+            // We'll always accept having only one position (g.100AAA>.)
+            //  but we'll never accept having a range that doesn't agree with
+            //  the length of the REF.
+            if ($nPositionLength > 1 && $nPositionLength != strlen($sRef)) {
+                // e.g., c.100_102AAAA>A.
+                // This is an error we cannot fix. We don't know if the
+                //  error is in the positions or the given sequence.
+                return $sReference . $sVariant;
+            }
+
+            // The following code is similar to lovd_getVariantDescription(),
+            //  but it's not the same. It needs to handle complex (intronic)
+            //  positions. Not sure, but decided to duplicate and adapt.
+            // FIXME: Perhaps we can write a new function that's more generic?
+
+            // Shift variant if REF and ALT are similar.
+            // Save original value before we edit it.
+            $sAltOriginal = $sAlt;
+            $nOffset = 0;
+            // 'Eat' letters from either end - first left, then right - to isolate the difference.
+            while (strlen($sRef) > 0 && strlen($sAlt) > 0 && $sRef[0] == $sAlt[0]) {
+                $sRef = substr($sRef, 1);
+                $sAlt = substr($sAlt, 1);
+                $nOffset ++;
+            }
+            while (strlen($sRef) > 0 && strlen($sAlt) > 0 && $sRef[strlen($sRef) - 1] == $sAlt[strlen($sAlt) - 1]) {
+                $sRef = substr($sRef, 0, -1);
+                $sAlt = substr($sAlt, 0, -1);
+            }
+            $nREFLength = strlen($sRef); // We are sure this is not a period.
+            $nALTLength = strlen($sAlt);
+
+            // Now determine the actual variant type.
+            if ($nREFLength == 0 && $nALTLength == 0) {
+                // Nothing left. Take the original position and add '='.
+                return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . '=', $sVariant), $sType);
+
+            } elseif ($nREFLength == 1 && $nALTLength == 1) {
+                // Substitution.
+                // Recalculate the position always; we might have started with a
+                //  range, but ended with just a single position.
+                list(,,$sPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . $sRef . '>' . $sAlt, $sVariant), $sType);
+
+            } elseif ($nALTLength == 0) {
+                // Deletion.
+                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
+                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+                return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'del', $sVariant), $sType);
+
+            } elseif ($nREFLength == 0) {
+                // Something has been added... could be an insertion or a duplication.
+                if (substr($sAltOriginal, strrpos($sAltOriginal, $sAlt) - $nALTLength, $nALTLength) == $sAlt) {
+                    // Duplication. Note that the start position might be quite
+                    //  far from the actual insert.
+                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1 - $nALTLength);
+                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset);
+                    $sPosition = $sStartPosition . ($nALTLength == 1? '' : '_' . $sEndPosition);
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'dup', $sVariant), $sType);
+
+                } else {
+                    // Insertion. We don't need to worry about an offset of 0,
+                    //  as we don't accept empty REFs - they can only have been
+                    //  emptied by shifting.
+                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset);
+                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                    $sPosition = $sStartPosition . '_' . $sEndPosition;
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'ins' . $sAlt, $sVariant), $sType);
+                }
+
+            } else {
+                // Inversion or deletion-insertion. Both REF and ALT are >1.
+                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
+                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+
+                if ($sRef == strrev(str_replace(array('A', 'C', 'G', 'T'), array('T', 'G', 'C', 'A'), strtoupper($sAlt)))) {
+                    // Inversion.
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'inv', $sVariant), $sType);
+                } else {
+                    // Deletion-insertion. Both REF and ALT are >1.
+                    return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'delins' . $sAlt, $sVariant), $sType);
+                }
+            }
+
+        } elseif ($aVariant['type'] == 'delins') {
+            return $sReference . $sVariant; // Not HGVS, and not fixable by us (unless we use VV).
+        }
+    }
+
+    // Remove the suffix if it is given to a variant type which should not hold one.
+    if (isset($aVariant['warnings']['WSUFFIXGIVEN']) && !isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
+        // The warning message indicates where the unwanted suffix starts.
+        // We take this string by isolating the part between the double quotes.
+        list(,$sVariantType) = explode('"', $aVariant['warnings']['WSUFFIXGIVEN']);
+        if (!preg_match('/[0-9]+_[0-9]+' . $sVariantType . '\([0-9]+(_[0-9]+)?\)/', $sVariant)) {
+            // If the suffix is formatted such as '([0-9]+)', it indicated the
+            //  length of the variant. If we find this in variants of which the
+            //  positions are '[0-9]+_[0-9]+', it might be that the user forgot
+            //  to use brackets around the positions (indicating an uncertain
+            //  location, which would mean the suffix IS necessary). We cannot
+            //  be sure we may remove it, so we have to let this be.
+            list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
+            // We currently don't support OR variants (^). In fact, if we don't
+            //  return it here, we'll mutilate it.
+            if ($sSuffix[0] == '^') {
+                return $sReference . $sVariant;
+            }
+            // For combined variants, return as-is.
+            if (preg_match('/^[](]?;/', $sSuffix)) {
+                // Combined variant (allele notation), don't mess with it.
+                return $sReference . $sVariant;
+            }
+            // For normal dels and dups, don't remove the suffix if it doesn't
+            //  match the length.
+            $sSuffixClean = trim($sSuffix, '()');
+            $nLength = lovd_getVariantLength($aVariant);
+            if (in_array($aVariant['type'], array('del', 'dup'))
+                && ((ctype_digit($sSuffixClean) && $sSuffixClean != $nLength)
+                    || (!ctype_digit($sSuffixClean) && strlen($sSuffixClean) != $nLength))) {
+                // Don't mess with it.
+                return $sReference . $sVariant;
+            }
+            return lovd_fixHGVS(
+                $sReference . $sBeforeType . $sVariantType .
+                str_repeat(')', (substr_count($sSuffix, ')') - substr_count($sSuffix, '('))), $sType);
+        }
+    }
+
+
+
+    // Reformat wrongly described suffixes.
+    if (isset($aVariant['warnings']['WSUFFIXFORMAT'])) {
+        list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
+
+        if (ctype_digit($sSuffix)) {
+            // Add parentheses in case they were forgotten (del/ins lengths).
+            return lovd_fixHGVS($sReference .
+                $sBeforeSuffix . $aVariant['type'] . '(' . $sSuffix . ')', $sType);
+        }
+
+        if (in_array($aVariant['type'], array('ins', 'delins'))) {
+            // Extra format checks which only apply to ins or delins types.
+
+            // Suffix could contain a closing parenthesis that opens in the beginning of the variant.
+            // Don't let it mess up our parsing. Parentheses must be balanced in the entire variant (we checked).
+            $bClosingParenthesis = false;
+            $sNewSuffix = $sSuffix;
+            if (substr_count($sNewSuffix, '(') < substr_count($sNewSuffix, ')') && substr($sNewSuffix, -1) == ')') {
+                // Unbalanced parentheses in the suffix, and the suffix
+                //  ends with an closing parenthesis.
+                $bClosingParenthesis = true;
+                $sNewSuffix = substr($sNewSuffix, 0, -1);
+            }
+
+            // Remove [ and ], when present.
+            if ($sSuffix[0] == '[' && substr($sSuffix, -1) == ']') {
+                $sNewSuffix = substr($sNewSuffix, 1, -1);
+            }
+
+            // It became too difficult to handle complex suffixes, so let's
+            //  split them up.
+            $aParts = explode(';', $sNewSuffix);
+            $nParts = count($aParts);
+
+            foreach ($aParts as $i => $sPart) {
+                if (preg_match('/^[ACGTU]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
+                    // Looks good, but make sure the case is good, too.
+                    $aParts[$i] = $sPart = str_replace('U', 'T', strtoupper($sPart));
+                }
+
+                if (preg_match('/^\([ACTG]+\)$/', $sPart) || preg_match('/^N\[\([0-9]+\)\]/', $sPart)) {
+                    // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
+                    $aParts[$i] = str_replace(array('(', ')'), '', $sPart);
+
+                } elseif (preg_match('/^\([0-9]+(?:_[0-9]+)?\)$/', $sPart, $aRegs)) {
+                    // The length of a variant was formatted as 'ins(length)'
+                    //  instead of 'insN[length]' or 'ins(min_max)' instead
+                    //  of 'insN[(min_max)]'.
+                    $aParts[$i] = preg_replace(
+                        array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
+                        array('N[${1}]', 'N[(${1})]'), $sPart);
+
+                } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/i', $sPart)) {
+                    // This is a full position with refseq. Often, mistakes are
+                    //  made in this suffix. So check it.
+                    // Append '=' to convert the position into something we can
+                    //  check.
+                    if (!lovd_getVariantInfo($sPart . '=', false, true)) {
+                        $sPart = lovd_fixHGVS($sPart . '=');
+                        if (lovd_getVariantInfo($sPart, false, true)) {
+                            // FixHGVS() has fixed this part.
+                            $aParts[$i] = rtrim($sPart, '=');
+                        }
+                    }
+                }
+            }
+
+            $sNewSuffix = implode(';', $aParts);
+            // Add [ and ] again, when needed.
+            if ($nParts > 1 || preg_match('/^[NX][CGMRTW]_[0-9]+/', $sNewSuffix)
+                || strpos($sNewSuffix, ':') !== false) {
+                $sNewSuffix = '[' . $sNewSuffix . ']';
+            }
+            if ($bClosingParenthesis) {
+                $sNewSuffix .= ')';
+            }
+            if ($sSuffix != $sNewSuffix) {
+                // Something has changed.
+                return lovd_fixHGVS($sReference .
+                    $sBeforeSuffix . $aVariant['type'] . $sNewSuffix, $sType);
+            }
+        }
+    }
+
+    // Fix problems with too many questionmarks.
+    if (isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
+        // This means that question marks where given to the variant in
+        //  places where they do not bring any additional value. We'll let
+        //  lovd_getVariantInfo() do all the work!
+        if (preg_match('/Please rewrite the positions ([()0-9_?+-]+) to ([()0-9_?+-]+)\.$/',
+            $aVariant['warnings']['WTOOMUCHUNKNOWN'], $aRegs)) {
+            list(, $sOldPosition, $sNewPosition) = $aRegs;
+            return lovd_fixHGVS($sReference . str_replace($sOldPosition, $sNewPosition, $sVariant), $sType);
+        }
+    }
+
+    // Swap positions if necessary.
+    if (isset($aVariant['warnings']['WPOSITIONFORMAT'])) {
+        $aPositions = array();
+
+        preg_match(
+            '/^([cgmn])\.' .                         // 1.  Prefix.
+            '((' .
+            '(\({1,2})?' .              // 4=(       // 4.  Opening parentheses.
+            '([-*]?[0-9]+|\?)' .                     // 5.  (Earliest) start position.
+            '([-+]([0-9]+|\?))?' .                   // 6.  (Earliest) intronic start position.
+            '(?(4)(_' .
+                '([-*]?[0-9]+|\?)' .                 // 9. Latest start position.
+                '([-+]([0-9]+|\?))?' .               // 10. Latest intronic start position.
+            '\))?)' .
+            '(_' .
+                '(\()?' .               // 13=(
+                '([-*]?[0-9]+|\?)' .                 // 14. (Earliest) end position.
+                '([-+]([0-9]+|\?))?' .               // 15. (Earliest) intronic end position.
+                '(?(13)_' .
+                    '([-*]?[0-9]+|\?)' .             // 17. Latest end position.
+                    '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
+            '\)))?' .
+            '(.*)' .                                 // 20. Type of variant and suffix.
+            '))/',
+            $sVariant, $aMatches);
+        // c.(1_2)_(3_4)del == c.(A_B)_(C_D)del
+        // c.1_2del         == c.A_Cdel
+        // c.(1_2)del       == c.(A_B)del
+        $sBefore  = $aMatches[1];
+        $sAfter   = $aMatches[20];
+
+        $aPositions['A']       = $aMatches[5];
+        $aPositions['AIntron'] = $aMatches[6];
+        $aPositions['B']       = $aMatches[9];
+        $aPositions['BIntron'] = $aMatches[10];
+        $aPositions['C']       = $aMatches[14];
+        $aPositions['CIntron'] = $aMatches[15];
+        $aPositions['D']       = $aMatches[17];
+        $aPositions['DIntron'] = $aMatches[18];
+
+        if ($aPositions['C']
+            // Deliberately don't case these to int;
+            //  max(<number>, "") is always <number>.
+            && max(
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['A']),
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['B'])
+            ) > max(
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['C']),
+                str_replace(array('?', '*'), array('', '1000000'), $aPositions['D']))) {
+            // If this is the case, the positions are swapped in groups,
+            //  i.e., c.(6_10)_(1_5)del.
+            list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron'],
+                $aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron']) =
+                array($aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron'],
+                    $aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron']);
+
+            // Now that we swapped the whole groups, swap the inner positions as
+            //  well, but only if they're both defined.
+            if ($aPositions['A'] && $aPositions['B']) {
+                list($aPositions['A'], $aPositions['AIntron'], $aPositions['B'], $aPositions['BIntron']) =
+                    array($aPositions['B'], $aPositions['BIntron'], $aPositions['A'], $aPositions['AIntron']);
+            }
+            if ($aPositions['C'] && $aPositions['D']) {
+                list($aPositions['C'], $aPositions['CIntron'], $aPositions['D'], $aPositions['DIntron']) =
+                    array($aPositions['D'], $aPositions['DIntron'], $aPositions['C'], $aPositions['CIntron']);
+            }
+
+        } else {
+            // If the above is not the case, the positions are swapped more
+            //  intricately. This will be checked and fixed one by one.
+            foreach (array(array('A', 'B'), array('C', 'D'), array('A', 'C'), array('B', 'D')) as $aFirstAndLast) {
+                list($sFirst, $sLast) = $aFirstAndLast;
+
+                if ($aPositions[$sFirst] && $aPositions[$sLast]
+                    && $aPositions[$sFirst] != '?' && $aPositions[$sLast] != '?') {
+                    // We only check the positions if the first and last value are
+                    //  not empty strings or question marks.
+                    $sIntronicFirst = $sFirst . 'Intron';
+                    $sIntronicLast = $sLast . 'Intron';
+
+                    if (str_replace('*', '1000000', $aPositions[$sFirst])
+                        > str_replace('*', '1000000', $aPositions[$sLast])) {
+                        list($aPositions[$sFirst], $aPositions[$sIntronicFirst], $aPositions[$sLast], $aPositions[$sIntronicLast]) =
+                            array($aPositions[$sLast], $aPositions[$sIntronicLast], $aPositions[$sFirst], $aPositions[$sIntronicFirst]);
+
+                    } elseif ($aPositions[$sFirst] == $aPositions[$sLast]) {
+                        if ((int) str_replace('?', '1', $aPositions[$sIntronicFirst])
+                            > (int) str_replace('?', '1', $aPositions[$sIntronicLast])) {
+                            list($aPositions[$sIntronicFirst], $aPositions[$sIntronicLast]) =
+                                array($aPositions[$sIntronicLast], $aPositions[$sIntronicFirst]);
+
+                        } elseif ($sFirst . $sLast == 'AB' || $sFirst . $sLast == 'CD'
+                            || ($sFirst . $sLast == 'AC' && !$aPositions['B'] && !$aPositions['D'])) {
+                            // If the first and last positions are the same, we can
+                            //  only remove the last one if the positions are
+                            //  grouped together (e.g. c.1_1del, or c.(1_1)_10del).
+                            $aPositions[$sLast] = '';
+                            $aPositions[$sIntronicLast] = '';
+                        }
+                    }
+                }
+            }
+        }
+
+        $sNewVariant = $sBefore . '.' .
+            ($aPositions['A'] && $aPositions['B'] ? '(' : '') . $aPositions['A'] . $aPositions['AIntron'] .
+            ($aPositions['B'] ? '_' . $aPositions['B'] . $aPositions['BIntron'] . ')' : '') .
+            ($aPositions['C'] ? '_' . ($aPositions['D'] ? '(' : '') . $aPositions['C'] . $aPositions['CIntron'] : '') .
+            ($aPositions['D'] ? '_' . $aPositions['D'] . $aPositions['DIntron'] . ')' : '') .
+            $sAfter;
+
+        if ($sNewVariant != $sVariant) {
+            return lovd_fixHGVS($sReference . $sNewVariant, $sType);
+        }
+    }
+
+
+
+    // We're out of things that we can do.
+    return $sReference . $sVariant; // Not HGVS.
 }
 
 
@@ -338,6 +812,123 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
     }
 
     return $aMutalyzerData;
+}
+
+
+
+
+
+function lovd_getVariantEndPosition ($aVariant, $nLength)
+{
+    // Takes the start position from the $aVariant array (g. based or c. based), adds the given length,
+    //  and calculates the end position (overwriting it if needed).
+
+    if (!isset($aVariant['position_start'])
+        || (!is_int($nLength) && !ctype_digit($nLength))
+        || $nLength < 1) {
+        return false;
+    }
+
+    if (!empty($aVariant['position_start_intron'])) {
+        $aVariant['position_end_intron'] = $aVariant['position_start_intron'] + $nLength - 1;
+        // Compensate for the possibility that we just left the intron.
+        if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
+            $aVariant['position_end'] = $aVariant['position_start'] + $aVariant['position_end_intron'];
+            $aVariant['position_end_intron'] = 0;
+        } else {
+            $aVariant['position_end'] = $aVariant['position_start'];
+        }
+
+    } else {
+        if (isset($aVariant['position_end_intron'])) {
+            $aVariant['position_end_intron'] = 0;
+        }
+        $aVariant['position_end'] = $aVariant['position_start'] + $nLength - 1;
+    }
+
+    // Build return array.
+    $aReturn = array(
+        $aVariant['position_end'], // End position (genomic or exonic).
+        NULL, // (intronic, default value)
+        $aVariant['position_end'], // Formatted position string, to be extended.
+    );
+    if (isset($aVariant['position_end_intron'])) {
+        $aReturn[1] = $aVariant['position_end_intron'];
+        if ($aVariant['position_end_intron']) {
+            $aReturn[2] .= ($aVariant['position_end_intron'] < 1?
+                $aVariant['position_end_intron'] :
+                '+' . $aVariant['position_end_intron']);
+        }
+    }
+
+    return $aReturn;
+}
+
+
+
+
+
+function lovd_getVariantLength ($aVariant)
+{
+    // This function receives an array in the format as given by
+    //  lovd_getVariantInfo() and calculates the length of the variant.
+    // This length will only include intronic positions if the input contains
+    //  these. When the length cannot be determined due to crossing the center
+    //  of an intron, this function will return false.
+
+    $nBasicLength = $aVariant['position_end'] - $aVariant['position_start'] + 1;
+    if (empty($aVariant['position_start_intron'])
+        && empty($aVariant['position_end_intron'])) {
+        // Simple case; genomic variant or simply no introns involved.
+        return ($nBasicLength);
+
+    } elseif (empty($aVariant['position_start_intron'])) {
+        // So we have an intronic end, but not an intronic start.
+        // If the intronic end is negative, this means we're crossing the
+        //  center of an intron, and the length cannot be determined.
+        if ($aVariant['position_end_intron'] < 0) {
+            return false;
+        }
+        return ($nBasicLength + $aVariant['position_end_intron']);
+
+    } elseif (empty($aVariant['position_end_intron'])) {
+        // So we have an intronic start, but not an intronic end.
+        // If the intronic start is positive, this means we're crossing the
+        //  center of an intron, and the length cannot be determined.
+        if ($aVariant['position_start_intron'] > 0) {
+            return false;
+        }
+        return ($nBasicLength + abs($aVariant['position_start_intron']));
+    }
+
+    // Else, we have intronic positions both for the start and the end.
+    if ($aVariant['position_start'] == $aVariant['position_end']) {
+        // Same side of the intron. Just take the max minus the min.
+        // NOTE: $nBasicLength is already 1 even though no length has been
+        //  calculated yet. So we don't have to add that 1 here.
+        return (
+            $nBasicLength +
+            max(
+                $aVariant['position_start_intron'],
+                $aVariant['position_end_intron']
+            ) -
+            min(
+                $aVariant['position_start_intron'],
+                $aVariant['position_end_intron']
+            )
+        );
+
+    } elseif ($aVariant['position_start_intron'] > 0
+        || $aVariant['position_end_intron'] < 0) {
+        // Still nope.
+        return false;
+    }
+
+    // OK, just add the lengths.
+    return (
+        $nBasicLength
+        + abs($aVariant['position_start_intron'])
+        + $aVariant['position_end_intron']);
 }
 
 

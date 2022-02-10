@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-01-17
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -139,7 +139,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     // View all entries.
 
     // Managers are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -150,7 +150,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $aVLOptions = array(
-        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER),
     );
     $_DATA->viewList('Genes', $aVLOptions);
 
@@ -1475,7 +1475,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     // Load authorization, collaborators and up see statistics about all variants, not just the public ones.
     lovd_isAuthorized('gene', $sID);
-    $bSeeNonPublicVariants = ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
+    $bSeeNonPublicVariants = ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
 
     // Check if there are variants at all.
     $nVariants = $_DB->query('
@@ -1607,7 +1607,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
     // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
 
-    if (ACTION == 'authorize' && $_AUTH['level'] < LEVEL_MANAGER) {
+    if (ACTION == 'authorize' && (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER)) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $sID . '?sortCurators');
         exit;
     }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2021-09-27
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -99,15 +99,19 @@ class LOVD_Individual extends LOVD_Custom
                                           (LOVD_plus? '' :
                                               'GROUP_CONCAT(DISTINCT s2g.geneid ORDER BY s2g.geneid SEPARATOR ", ") AS genes_screened_, ' .
                                               'GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ", ") AS variants_in_genes_, ' .
-                                              'COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ') AS variants_, ' // Counting s2v.variantid will not include the limit opposed to vog in the join's ON() clause.
+                                              'COUNT(DISTINCT ' . ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ') AS variants_, ' // Counting s2v.variantid will not include the limit opposed to vog in the join's ON() clause.
                                           ) .
                                           'uo.name AS owned_by_, ' .
                                           'CONCAT_WS(";", uo.id, uo.name, uo.email, uo.institute, uo.department, IFNULL(uo.countryid, "")) AS _owner, ' .
                                           'ds.name AS status';
 
-        // Construct list of user IDs for current user and users who share access with them.
-        $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-        $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+        if ($_AUTH) {
+            // Construct list of user IDs for current user and users who share access with them.
+            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
+            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+        } else {
+            $sOwnerIDsSQL = '';
+        }
 
         $this->aSQLViewList['FROM']     = TABLE_INDIVIDUALS . ' AS i ' .
                                           'LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) ' .
@@ -115,10 +119,10 @@ class LOVD_Individual extends LOVD_Custom
                                           'LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) ' .
                                           (LOVD_plus? '' :
                                               'LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.screeningid = s.id) ' .
-                                              ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                                              ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                                                   'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id AND (vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')) ') .
                                               'LEFT OUTER JOIN ' . TABLE_SCR2GENE . ' AS s2g ON (s.id = s2g.screeningid) ' .
-                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ' = vot.id) ' .
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (' . ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 's2v.variantid' : 'vog.id') . ' = vot.id) ' .
                                               'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (t.id = vot.transcriptid) '
                                           ) .
                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (i.owned_by = uo.id) ' .
@@ -229,7 +233,7 @@ class LOVD_Individual extends LOVD_Custom
             $this->aSQLViewList['SELECT'] .= ', GROUP_CONCAT(DISTINCT p.`Phenotype/Additional` ORDER BY p.`Phenotype/Additional` SEPARATOR ", ") AS phenotypes_';
 
             $this->aSQLViewList['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid';
-            if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+            if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
                 $this->aSQLViewList['FROM'] .= ' AND (p.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (p.created_by = "' . $_AUTH['id'] . '" OR p.owned_by IN (' . join(', ', array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL))) . '))') . ')';
             }
             $this->aSQLViewList['FROM'] .= ')';

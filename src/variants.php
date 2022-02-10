@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2021-11-10
+ * Modified    : 2022-02-10
  * For LOVD    : 3.5-pre-03
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -114,7 +114,7 @@ if (!ACTION && (empty($_PE[1])
     // View all variant entries on the genome level, optionally restricted by chromosome or genomic range.
 
     // Managers are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -153,7 +153,7 @@ if (!ACTION && (empty($_PE[1])
             SELECT c.name, COUNT(vog.id)
             FROM ' . TABLE_CHROMOSOMES . ' AS c
               LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (c.name = vog.chromosome)' .
-            ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+            ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                 ' WHERE vog.statusid >= ' . STATUS_MARKED) . '
             GROUP BY c.name
             ORDER BY c.sort_id')->fetchAllCombine();
@@ -175,7 +175,7 @@ if (!ACTION && (empty($_PE[1])
 
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
         'curate_set' => true,
     );
@@ -194,7 +194,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION
     // View all entries effecting a transcript.
 
     // Managers are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -206,7 +206,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION
     $_DATA = new LOVD_CustomViewList(array('Transcript', 'VariantOnTranscript', 'VariantOnGenome'));
     $aVLOptions = array(
         'cols_to_skip' => array('name', 'id_protein_ncbi'),
-        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER),
         'curate_set' => true,
     );
     $_DATA->viewList('CustomVL_IN_GENE', $aVLOptions);
@@ -273,7 +273,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         lovd_isAuthorized('gene', $sGene); // To show non public entries.
 
         // Curators are allowed to download this list...
-        if ($_AUTH['level'] >= LEVEL_CURATOR) {
+        if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
             define('FORMAT_ALLOW_TEXTPLAIN', true);
         }
 
@@ -360,7 +360,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
         $aVLOptions = array(
             'cols_to_skip' => array('chromosome', 'allele_'), // Enforced for unique view in the object.
-            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR),
             'find_and_replace' => !$bUnique,
             'multi_value_filter' => $bUnique,
             'curate_set' => !$bUnique,
