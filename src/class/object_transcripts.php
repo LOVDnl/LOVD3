@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2021-09-27
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -81,7 +81,7 @@ class LOVD_Transcript extends LOVD_Object
                                           'g.chromosome' .
                                           (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']? '' :
                                               // Speed optimization by skipping variant counts.
-                                              ', COUNT(DISTINCT ' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants');
+                                              ', COUNT(DISTINCT ' . ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? 'vot.id' : 'vog.id') . ') AS variants');
         $this->aSQLViewList['FROM']     = TABLE_TRANSCRIPTS . ' AS t ' .
                                           'LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) ' .
                                           (!$_SETT['customization_settings']['transcripts_VL_show_variant_counts']? '' :
@@ -89,7 +89,7 @@ class LOVD_Transcript extends LOVD_Object
                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)' .
                                               // If user is less than a collaborator, only show public variants and
                                               //  variants owned/created by them.
-                                              ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
+                                              ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' :
                                                   ' LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog' .
                                                   '   ON (vot.id = vog.id AND (vog.statusid >= ' . STATUS_MARKED .
                                                   (!$_AUTH? '' :

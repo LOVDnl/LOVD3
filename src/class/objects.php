@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-01-17
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -118,7 +118,7 @@ class LOVD_Object
         // FIXME: This check should be done earlier, not just when running it.
         // Check user authorization needed to perform find and replace action.
         // FIXME: check if authorization level is correctly set for viewlist data.
-        if ($_AUTH['level'] < LEVEL_CURATOR) {
+        if (!$_AUTH || $_AUTH['level'] < LEVEL_CURATOR) {
             $sErr = 'You do not have authorization to perform this action.';
             lovd_displayError('FindAndReplace', $sErr);
             return false;
@@ -1610,7 +1610,7 @@ class LOVD_Object
             // Status coloring will only be done, when we have authorization.
             // Instead of having the logic in separate objects and the custom VL object, put it together here.
             // In LOVD+, we disable the feature of coloring hidden and marked data, since all data is hidden.
-            if (!LOVD_plus && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
+            if (!LOVD_plus && $_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                 // Loop through possible status fields, always keep the minimum.
                 foreach (array('statusid', 'var_statusid', 'ind_statusid') as $sField) {
                     if (!empty($zData[$sField])) {
@@ -1681,7 +1681,7 @@ class LOVD_Object
                         '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
                         addslashes(
                             '<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' .
-                            ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') .
+                            (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') .
                             '</TD></TR><TR><TH valign=top>Name</TH><TD>' . htmlspecialchars($sName) .
                             '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) .
                             '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . htmlspecialchars($sInstitute) .
@@ -1700,7 +1700,14 @@ class LOVD_Object
             // Analyzer's details like the owner's details.
             if (isset($zData['analysis_by']) && (int) $zData['analysis_by'] && !empty($zData['analyzer'])) {
                 list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $zData['analyzer'];
-                $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' . addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' . ($_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR><TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR><TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR><TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR><TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR><TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
+                $zData['analysis_by_'] = '<SPAN class="custom_link" onmouseover="lovd_showToolTip(\'' .
+                    addslashes('<TABLE border=0 cellpadding=0 cellspacing=0 width=350 class=S11><TR><TH valign=top>User&nbsp;ID</TH><TD>' .
+                        (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER? $nID : '<A href=users/' . $nID . '>' . $nID . '</A>') . '</TD></TR>' .
+                        '<TR><TH valign=top>Name</TH><TD>' . $sName . '</TD></TR>' .
+                        '<TR><TH valign=top>Email&nbsp;address</TH><TD>' . str_replace("\r\n", '<BR>', lovd_hideEmail($sEmail)) . '</TD></TR>' .
+                        '<TR><TH valign=top>Institute</TH><TD>' . $sInstitute . '</TD></TR>' .
+                        '<TR><TH valign=top>Department</TH><TD>' . $sDepartment . '</TD></TR>' .
+                        '<TR><TH valign=top>Country</TH><TD>' . $sCountryID . '</TD></TR></TABLE>') . '\', this);">' . $sName . '</SPAN>';
             }
         }
 
