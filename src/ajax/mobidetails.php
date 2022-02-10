@@ -114,7 +114,7 @@ if (ACTION == 'check') {
     print('
     $("#mobidetails_dialog").html("<IMG src=\'gfx/ajax_loading.gif\' alt=\'Please wait...\' width=\'100\' height=\'100\'>");
     ');
-    ob_end_flush();
+    @ob_end_flush();
     flush();
 
     // Now check with MobiDetails.
