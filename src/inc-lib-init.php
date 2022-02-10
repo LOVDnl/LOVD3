@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-09
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1240,13 +1240,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
         '\)))?' .
 
-        '((?:[ACGT]+|\.)>(?:[ACGTRYSWKMBDHVN]+|\.)' .     //  | (substitution)
-        '|([ACTG]+\[[0-9]+])+' .                          //  | (repeat sequence)
-        '|[ACTG]*=(\/{1,2}[ACGT]*>[ACGTRYSWKMBDHVN]+)?' . //  | (wild types, mosaics, or chimerics)
-        '|ins|dup|delins|del|inv|sup|\?' .                //  V
-        '|\|(gom|lom|met=|.+))' .                         // 20. Type of variant.
+        '((?:[ACGTU]+|\.)>(?:[ACGTRYSWKMBDHUVN]+|\.)' .      //  | (substitution)
+        '|([ACGTU]+\[[0-9]+])+' .                            //  | (repeat sequence)
+        '|[ACGTU]*=(\/{1,2}[ACGTU]*>[ACGTRYSWKMBDHUVN]+)?' . //  | (wild types, mosaics, or chimerics)
+        '|ins|dup|delins|del|inv|sup|\?' .                   //  V
+        '|\|(gom|lom|met=|.+))' .                            // 20. Type of variant.
 
-        '(.*)))/i',                                       // 24. Suffix.
+        '(.*)))/i',                                          // 24. Suffix.
 
         $sVariant, $aMatches);
 
