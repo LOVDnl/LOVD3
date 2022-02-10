@@ -2335,9 +2335,9 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
     // Return: True if all of the objects of type $sType with an ID in $Data
     //         are owned or created by a colleague of the current user.
 
-    global $_DB;
+    global $_AUTH, $_DB;
 
-    if (!in_array($sType, array('individual', 'phenotype', 'screening', 'variant'))) {
+    if (!$_AUTH || !in_array($sType, array('individual', 'phenotype', 'screening', 'variant'))) {
         // Unknown data type, return false by default.
         return false;
     }
