@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-02-09
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,11 +29,6 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
-
-if (PHP_OS == 'WINNT') {
-    chdir('C:/Users/loesj/Documents/LUMC/git/LOVD3');
-}
-
 
 require_once 'src/inc-lib-init.php';
 
@@ -108,18 +103,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
-            array('m.123dup', array(
-                'position_start' => 123,
-                'position_end' => 123,
-                'type' => 'dup',
-                'warnings' => array(),
-                'errors' => array(),
-            )),
             array('c.123dup', array(
                 'position_start' => 123,
                 'position_end' => 123,
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
+                'type' => 'dup',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('m.123dup', array(
+                'position_start' => 123,
+                'position_end' => 123,
                 'type' => 'dup',
                 'warnings' => array(),
                 'errors' => array(),
@@ -980,6 +975,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'The intronic positions are not given in the correct order. Please verify your description and try again.'
+                ),
+                'errors' => array(),
+            )),
+            array('c.10000000_10000001del', array(
+                'position_start' => 8388607,
+                'position_end' => 8388607,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: start, end.',
                 ),
                 'errors' => array(),
             )),
