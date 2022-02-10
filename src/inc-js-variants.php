@@ -165,9 +165,31 @@ $_SETT = array('objectid_length' => array('transcripts' => 8));
 // Checking the input variant.
 function lovd_checkHGVS(e) {
     var sVariant = $(this).val();
-    var sName = $(this).attr("name");
-    $.get("ajax/check_hgvs_dialogue.php?var=" + encodeURIComponent(sVariant) + "&name=" + encodeURIComponent(sName))
-        .fail(function(){alert("Error checking your variant, please try again later.");});
+    var sFieldName = $(this).attr("name");
+    var oChromosome = $('select[name="chromosome"]');
+    var sChromosome = (
+        oChromosome.length ? // Yes=VOG form; No=VOT form.
+            oChromosome.val() :
+            $("td:contains('Chromosome')").last().filter(function () {
+                return $(this).html() === "Chromosome";
+            }).siblings().eq(1).html()
+    );
+    var sRefSeqInfo = (
+        sFieldName[0] !== 'V'? // Yes=RefSeq is a transcript; No=RefSeq is genomic.
+        $(this).data('id_ncbi') :
+        sFieldName.substring(sFieldName.indexOf('DNA') + 3).replace(/\//, '') + '-' + sChromosome
+    );
+    var sTranscripts = $($('#variantForm input[name$="_VariantOnTranscript/DNA"]')).map(function(){
+        return $(this).data('id_ncbi');
+    }).get().join('|');
+
+    $.get("ajax/check_hgvs_dialogue.php?"
+            + "var=" + encodeURIComponent(sVariant)
+            + "&fieldName=" + encodeURIComponent(sFieldName)
+            + "&refSeqInfo=" + encodeURIComponent(sRefSeqInfo)
+            + "&transcripts=" + encodeURIComponent(sTranscripts))
+        // .fail(function(){alert("Error checking your variant, please try again later.");})
+    ;
 }
 
 
@@ -258,7 +280,7 @@ function lovd_convertPosition (oElement)
                         for (i = 0; i < nVariants; i++) {
                             var aVariant = /^([A-Z]{2}_\d{6,9}\.\d{1,2}(?:\([A-Z0-9]+_v\d{3}\))?):([cn]\..+)$/.exec(aVariants[i]);
                             if (aVariant != null) {
-                                var oInput = $('#variantForm input[id_ncbi="' + aVariant[1] + '"]');
+                                var oInput = $('#variantForm input[data-id_ncbi="' + aVariant[1] + '"]');
                                 if (oInput[0] != undefined) {
                                     // If the transcript returned by mutalyzer is present in the form, fill in the respons from mutalyzer.
                                     oInput.val(aVariant[2]);
@@ -540,7 +562,7 @@ $(function ()
         var nTranscriptVariants = oTranscriptVariants.size();
         for (i=0; i < nTranscriptVariants; i++) {
             // Add an artificial attribute "id_ncbi" to the transcripts DNA input field. This is needed to link the response from Mutalyzer to this field, if needed.
-            $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>)][0]);
+            $(oTranscriptVariants[i]).data('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>)][0]);
         }
         // Add an onChange event that runs lovd_checkHGVS.
         oTranscriptVariants.change(lovd_checkHGVS);
