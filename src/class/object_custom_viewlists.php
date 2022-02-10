@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2021-01-18
- * For LOVD    : 3.0-26
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -82,19 +82,19 @@ class LOVD_CustomViewList extends LOVD_Object
             // Note: objects inheriting LOVD_custom implement selection of
             //  viewable columns in buildViewList().
             $sSQL = 'SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, GROUP_CONCAT(sc.geneid, ":", sc.public_view SEPARATOR ";") AS public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (sc.colid = ac.colid) ' .
-                    'WHERE ' . ($_AUTH['level'] >= ($sGene? $_SETT['user_level_settings']['see_nonpublic_data'] : LEVEL_MANAGER)? '' : '((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
+                    'WHERE ' . ($_AUTH && $_AUTH['level'] >= ($sGene? $_SETT['user_level_settings']['see_nonpublic_data'] : LEVEL_MANAGER)? '' : '((c.id NOT LIKE "VariantOnTranscript/%" AND c.public_view = 1) OR sc.public_view = 1) AND ') . '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     (!$sGene? 'GROUP BY c.id ' :
                       // If gene is given, only shown VOT columns active in the given gene! We'll use an UNION for that, so that we'll get the correct width and order also.
                       'AND c.id NOT LIKE "VariantOnTranscript/%" GROUP BY c.id ' . // Exclude the VOT columns from the normal set, we'll load them below.
                       'UNION ' .
                       'SELECT c.id, sc.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, sc.col_order, CONCAT(sc.geneid, ":", sc.public_view) AS public_view FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE sc.geneid = ? ' .
-                      ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : 'AND sc.public_view = 1 ')) .
+                      ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : 'AND sc.public_view = 1 ')) .
                     'ORDER BY col_order';
         } else {
             // In LOVD_plus, the shared cols table is empty and the public_view field is used to set if a custom column will be displayed in a VL or not.
             // So, in LOVD_plus we need to check for ALL USERS if a custom column has public_view flag turned on or not.
             $sSQL = 'SELECT c.id, c.width, c.head_column, c.description_legend_short, c.description_legend_full, c.mysql_type, c.form_type, c.select_options, c.col_order, c.public_view FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS . ' AS c ON (c.id = ac.colid) ' .
-                    'WHERE ' . (!LOVD_plus && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : 'c.public_view = 1 AND ') .
+                    'WHERE ' . (!LOVD_plus && $_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : 'c.public_view = 1 AND ') .
                     '(c.id LIKE ?' . str_repeat(' OR c.id LIKE ?', count($aObjects)-1) . ') ' .
                     'GROUP BY c.id ' .
                     'ORDER BY col_order';
@@ -270,10 +270,14 @@ class LOVD_CustomViewList extends LOVD_Object
                     $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_DATA_STATUS . ' AS dsg ON (vog.statusid = dsg.id)';
 
                     // If user level not high enough, hide lines with hidden variants!
-                    if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
-                        // Construct list of user IDs for current user and users who share access with them.
-                        $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-                        $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+                    if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
+                        if ($_AUTH) {
+                            // Construct list of user IDs for current user and users who share access with them.
+                            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
+                            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+                        } else {
+                            $sOwnerIDsSQL = '';
+                        }
 
                         $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . '(vog.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR vog.created_by = "' . $_AUTH['id'] . '" OR vog.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';
                     }
@@ -455,7 +459,7 @@ class LOVD_CustomViewList extends LOVD_Object
                             SELECT 1 FROM ' . TABLE_INDIVIDUALS . ' LIMIT 1')->fetchColumn();
                         $aSQL['ORDER_BY'] = 'i.id';
                         // If no manager, hide lines with hidden individuals (not specific to a gene)!
-                        if ($_AUTH['level'] < LEVEL_MANAGER) {
+                        if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
                             $aSQL['WHERE'] .= (!$aSQL['WHERE']? '' : ' AND ') . 'i.statusid >= ' . STATUS_MARKED;
                         }
                     } else {
@@ -475,10 +479,14 @@ class LOVD_CustomViewList extends LOVD_Object
                         }
                         $aSQL['FROM'] .= ' LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id';
                         // If user level not high enough, hide hidden individuals (from the join, don't hide the line)!
-                        if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
-                            // Construct list of user IDs for current user and users who share access with them.
-                            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-                            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+                        if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
+                            if ($_AUTH) {
+                                // Construct list of user IDs for current user and users who share access with them.
+                                $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
+                                $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+                            } else {
+                                $sOwnerIDsSQL = '';
+                            }
 
                             $aSQL['FROM'] .= ' AND (i.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR i.created_by = "' . $_AUTH['id'] . '" OR i.owned_by IN (' . $sOwnerIDsSQL . ')') . ')';
                         }
@@ -782,7 +790,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (in_array('Individual', $aObjects)) {
                         unset($this->aColumnsViewList['owned_by_']);
                     }
-                    if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
+                    if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                         // Unset status column for non-collaborators. We're assuming here, that lovd_isAuthorized() only gets called for gene-specific overviews.
                         unset($this->aColumnsViewList['var_status']);
                     }
@@ -805,7 +813,7 @@ class LOVD_CustomViewList extends LOVD_Object
                                 'view' => array('Ind. status', 70),
                                 'db'   => array('dsi.name', false, true)),
                         ));
-                    if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
+                    if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                         // Unset status column for non-collaborators. We're assuming here, that lovd_isAuthorized() only gets called for gene-specific overviews.
                         unset($this->aColumnsViewList['ind_status']);
                     }
@@ -899,7 +907,7 @@ class LOVD_CustomViewList extends LOVD_Object
         }
 
         foreach ($this->aColumns as $sCol => $aCol) {
-            if (!LOVD_plus && $_AUTH['level'] < LEVEL_MANAGER && !$this->nID && substr($sCol, 0, 19) == 'VariantOnTranscript') {
+            if (!LOVD_plus && (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) && !$this->nID && substr($sCol, 0, 19) == 'VariantOnTranscript') {
                 // Not a special authorized person, no gene selected, VOT column.
                 // Empty the field if the column is not actually active for the gene(s) of this entry.
                 // A column that has been disabled for this gene, may still show its value to collaborators and higher.

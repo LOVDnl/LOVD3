@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2021-07-07
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -86,7 +86,7 @@ class LOVD_Gene extends LOVD_Object
                                            'LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) ' .
                                            'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) ' .
-                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ua ON (u2g.userid = ua.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND u2g.show_order > 0') . ') ' .
+                                           'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ua ON (u2g.userid = ua.id' . ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND u2g.show_order > 0') . ') ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (g.created_by = uc.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS ue ON (g.edited_by = ue.id) ' .
                                            'LEFT OUTER JOIN ' . TABLE_USERS . ' AS uu ON (g.updated_by = uu.id) ' .
@@ -111,7 +111,7 @@ class LOVD_Gene extends LOVD_Object
                                           (!$_SETT['customization_settings']['genes_VL_show_variant_counts']? '' :
                                               // Speed optimization by skipping variant counts.
                                               'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) ' .
-                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
+                                              'LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id' . ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']? '' : ' AND vog.statusid >= ' . STATUS_MARKED) . ') ') .
                                           'LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id)';
         $this->aSQLViewList['GROUP_BY'] = 'g.id';
 
@@ -575,7 +575,7 @@ class LOVD_Gene extends LOVD_Object
                 }
             }
 
-            if ($_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
+            if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR || !empty($zData['allow_download'])) {
                 $zData['download_'] = '<A href="download/all/gene/' . $zData['id'] . '">' .
                     'Download all data</a>';
             } else {
@@ -623,7 +623,7 @@ class LOVD_Gene extends LOVD_Object
             }
             $this->aColumnsViewEntry['curators_'] .= ' (' . $nCurators . ')';
 
-            if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
+            if ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                 // Collaborator string.
                 $i = 0;
                 foreach ($aCollaborators as $nUserID => $sName) {
@@ -653,7 +653,7 @@ class LOVD_Gene extends LOVD_Object
             }
 
             $zData['hidden_variants_'] = $zData['hidden_variants'];
-            if ($zData['hidden_variants'] && $_AUTH['level'] >= LEVEL_CURATOR) {
+            if ($zData['hidden_variants'] && $_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
                 $zData['hidden_variants_'] = '<A href="variants/' . $zData['id'] . '?search_var_status=%3D%22Pending%22%7C%3D%22Non%20public%22">' . $zData['hidden_variants'] . '</A>';
             }
 
@@ -664,12 +664,12 @@ class LOVD_Gene extends LOVD_Object
                 $zData['version_'] = '<B>' . $zData['id'] . date(':ymd', strtotime($zData['updated_date_'])) . '</B>';
             } else {
                 unset($this->aColumnsViewEntry['version_']);
-                if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
+                if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                     // Also unset the empty updated_date field; users lower than collaborator don't see the updated_by field, either.
                     unset($this->aColumnsViewEntry['updated_date_']);
                 }
             }
-            if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
+            if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
                 // Public, change date timestamps to human readable format.
                 $zData['created_date_'] = date('F d, Y', strtotime($zData['created_date_']));
                 $zData['updated_date_'] = date('F d, Y', strtotime($zData['updated_date_']));
