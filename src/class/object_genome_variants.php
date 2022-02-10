@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2021-11-10
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -98,7 +98,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             // Added so that Curators and Collaborators can view the variants for which they have
             // viewing rights in the genomic variant VL.
             // The WHERE condition is set in object_custom.php.
-            ($_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
+            ($_AUTH && $_AUTH['level'] == LEVEL_SUBMITTER && (count($_AUTH['curates']) || count($_AUTH['collaborates']))?
                 'LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) ' .
                 'LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) '
             : '') .
@@ -413,7 +413,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectConcluded = false;
-            $nVOGEffectConcluded = intval($zData['effectid'][1]);
+            $nVOGEffectConcluded = (!isset($zData['effectid'])? 0 : intval($zData['effectid'][1]));
             if ($nVOGEffectConcluded === 0) {
                 // Set to "Not classified", we'll fill it in.
                 $bHideEffectConcluded = true;
@@ -442,7 +442,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             //  'not classified', will the form field be shown so that the user
             //  must manually correct the current value.
             $bHideEffectReported = false;
-            $nVOGEffectReported = intval($zData['effectid'][0]);
+            $nVOGEffectReported = (!isset($zData['effectid'])? 0 : intval($zData['effectid'][0]));
             if ($nVOGEffectReported === 0) {
                 // Set to "Not classified", we'll fill it in.
                 $bHideEffectReported = true;
@@ -486,7 +486,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             // While in principle a variant should only be connected to one patient, due to database model limitations, through several screenings, one could link a variant to more individuals.
             foreach ($zData['individuals'] as $aIndividual) {
                 list($nID, $nStatusID) = $aIndividual;
-                if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
+                if ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                     $zData['individualid_'] .= ($zData['individualid_']? ', ' : '') .
                         '<A href="individuals/' . $nID . '">' . $nID . '</A> ' .
                         '<SPAN style="color: #' . $this->getStatusColor($nStatusID) . '">(' . $_SETT['data_status'][$nStatusID] . ')</SPAN>';
@@ -504,7 +504,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 // Allow linking to view of all these variants.
                 $sQ = 'SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE chromosome = ? AND `VariantOnGenome/DBID` = ?';
                 $aArgs = array($zData['chromosome'], $zData['VariantOnGenome/DBID']);
-                if ($_AUTH['level'] < LEVEL_CURATOR) {
+                if (!$_AUTH || $_AUTH['level'] < LEVEL_CURATOR) {
                     $sQ .= ' AND statusid >= ?';
                     $aArgs[] = STATUS_MARKED;
                 }
@@ -547,7 +547,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                     }
                     $sMappingLinkText = 'Map now';
                 }
-                if ($_AUTH['level'] >= LEVEL_OWNER) {
+                if ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER) {
                     $zData['mapping_flags_'] .= ' <SPAN style="float: right" id="mapOnRequest"><A href="#" onclick="return lovd_mapOnRequest();"' . (!$sMappingLinkTitle? '' : ' title="' . $sMappingLinkTitle . '"') . '>' . $sMappingLinkText . '</A></SPAN>';
                 }
             } else {

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-09
- * Modified    : 2021-07-12
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -66,7 +66,7 @@ if ($sObject == 'Transcript_Variant') {
 } elseif ($sObject == 'User') {
     lovd_isAuthorized(strtolower($sObject), $nID);
     // Users viewing their own profile should see a lot more...
-    if ($_AUTH['id'] == $nID && $_AUTH['level'] < LEVEL_CURATOR) {
+    if ($_AUTH && $_AUTH['id'] == $nID && $_AUTH['level'] < LEVEL_CURATOR) {
         $_AUTH['level'] = LEVEL_CURATOR;
     }
 }

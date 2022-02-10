@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-09-27
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -195,8 +195,6 @@ class LOVD_User extends LOVD_Object
         $this->sSortDefault = 'level_';
 
         // Because the user information is publicly available, remove some columns for the public.
-        // FIXME; Dit moet eigenlijk per user anders; curatoren mogen deze info wel van submitters zien.
-        // Dus eigenlijk if ($_AUTH['level'] <= $zData['level']) maar we hebben hier geen $zData...
         $this->unsetColsByAuthLevel();
 
         parent::__construct();
@@ -515,7 +513,7 @@ class LOVD_User extends LOVD_Object
                 } else {
                     $zData['auth_token_expires_'] = (!$zData['auth_token']? '' : '- (Never)');
                 }
-                if ($_AUTH['level'] >= LEVEL_MANAGER && lovd_isAuthorized('user', $zData['id'])) {
+                if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER && lovd_isAuthorized('user', $zData['id'])) {
                     $zData['api_settings'] = '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/api_settings.php/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing settings, please try again later.\');}); return false;">Change</A>)</SPAN>' .
                         $zData['api_settings'];
                 }
