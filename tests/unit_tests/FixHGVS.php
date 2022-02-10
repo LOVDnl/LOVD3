@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-02-09
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -94,7 +94,9 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Lowercase nucleotides and other case issues.
             array('C.123C>a', 'c.123C>A'),
+            array('C.123a>u', 'c.123A>T'),
             array('g.123insactg', 'g.123insACTG'),
+            array('g.123delinsgagagauu', 'g.123delinsGAGAGATT'),
             array('g.123a>g', 'g.123A>G'),
             array('g.100_101ins[nc_000010.1:g.100_200;aaaa;n[10]]', 'g.100_101ins[NC_000010.1:g.100_200;AAAA;N[10]]'),
             array('lrg_123t1:c.100del', 'LRG_123t1:c.100del'),

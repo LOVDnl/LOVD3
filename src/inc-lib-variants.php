@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-09
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -177,14 +177,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             preg_replace('/(?<!:)' . preg_quote($sType, '/') . '\./', '', $sVariant), $sType);
     }
 
-    // Replace uracil with thymine (RNA -> DNA description).
-    if ((preg_match('/^(.+)([A-Z]>[A-Z])$/', $sVariant, $aRegs)
-            || preg_match('/^(.+ins)([A-Z]+)$/', $sVariant, $aRegs))
-        && strpos($aRegs[2], 'U') !== false) {
-        // Also convert U to T, since lowercase bases may mean an RNA-based description.
-        return lovd_fixHGVS($sReference . $aRegs[1] . str_replace('U', 'T', $aRegs[2]));
-    }
-
     // Make sure no unnecessary bases are given for wild types (c.123A= -> c.123=).
     if (preg_match('/[0-9]([ACGTN]+=)/i', $sVariant, $aRegs)) {
         return lovd_fixHGVS($sReference . str_replace($aRegs[1], '=', $sVariant), $sType);
@@ -249,9 +241,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (ctype_upper($sVariant[0])) {
             return lovd_fixHGVS($sReference . strtolower($sVariant[0]) . substr($sVariant, 1), $sType);
 
-        // If not the prefix, then it must be because of the variant type (we currently don't check the suffix).
+        // If not the prefix, then it must be because of the variant type
+        //  (lovd_getVariantInfo() currently doesn't check the suffix).
         } elseif ($aVariant['type'] == 'subst') {
-            return lovd_fixHGVS($sReference . $sVariant[0] . strtoupper(substr($sVariant, 1)), $sType);
+            return lovd_fixHGVS($sReference . $sVariant[0] .
+                str_replace('U', 'T', strtoupper(substr($sVariant, 1))), $sType);
         }
     }
 
@@ -438,9 +432,9 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             $nParts = count($aParts);
 
             foreach ($aParts as $i => $sPart) {
-                if (preg_match('/^[ACTG]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
+                if (preg_match('/^[ACGTU]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
                     // Looks good, but make sure the case is good, too.
-                    $aParts[$i] = $sPart = strtoupper($sPart);
+                    $aParts[$i] = $sPart = str_replace('U', 'T', strtoupper($sPart));
                 }
 
                 if (preg_match('/^\([ACTG]+\)$/', $sPart) || preg_match('/^N\[\([0-9]+\)\]/', $sPart)) {
