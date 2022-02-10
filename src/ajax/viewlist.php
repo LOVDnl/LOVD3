@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-18
- * Modified    : 2020-02-24
- * For LOVD    : 3.0-24
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -93,7 +93,7 @@ if ($sObject == 'Custom_ViewList' && (!isset($sObjectID) || !in_array($sObjectID
 
 // We can't authorize Curators and Collaborators without loading their level!
 // 2014-03-13; 3.0-10; Collaborators should of course also get their level loaded!
-if ($_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AUTH['collaborates']))) {
+if ($_AUTH && $_AUTH['level'] < LEVEL_MANAGER && (!empty($_AUTH['curates']) || !empty($_AUTH['collaborates']))) {
     if ($sObject == 'Column') {
         lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
     } elseif ($sObject == 'Individual' && isset($_REQUEST['search_genes_searched']) && preg_match('/^="([^"]+)"$/', $_REQUEST['search_genes_searched'], $aRegs)) {
@@ -165,7 +165,7 @@ $aColsToSkip = (!empty($_REQUEST['skip'])? $_REQUEST['skip'] : array());
 
 // Submitters should not be allowed to retrieve more information
 //  about users than the info the access sharing page gives them.
-if ($sObject == 'User' && $_AUTH['level'] < LEVEL_MANAGER) {
+if ($sObject == 'User' && (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER)) {
     // Force removal of certain columns, regardless of this has been requested or not.
     // We cannot trust this was set in $_SESSION already since the VL can be loaded independently.
     $aColsToSkip = array_unique(
@@ -183,7 +183,7 @@ if ($sObject == 'User' && $_AUTH['level'] < LEVEL_MANAGER) {
 
 // Managers, and sometimes curators, are allowed to download lists...
 if (in_array(ACTION, array('download', 'downloadSelected'))) {
-    if ($_AUTH['level'] >= LEVEL_CURATOR) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         // We need this define() because the Object::viewList() may still throw some error which calls
         // Template::printHeader(), which would then thow a "text/plain not allowed here" error.
         define('FORMAT_ALLOW_TEXTPLAIN', true);
@@ -216,8 +216,8 @@ $_DATA = new $sObjectClassname($sObjectID, $nID);
 if (POST && ACTION == 'applyFR') {
     // Apply find & replace.
 
-    if ($_AUTH['level'] < LEVEL_CURATOR || !isset($_POST['password']) ||
-        !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
+    if (!$_AUTH || $_AUTH['level'] < LEVEL_CURATOR || !isset($_POST['password'])
+        || !lovd_verifyPassword($_POST['password'], $_AUTH['password'])) {
         // Not authorized for find & replace.
         die(AJAX_NO_AUTH);
     }

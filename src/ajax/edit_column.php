@@ -4,11 +4,12 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-01
- * Modified    : 2012-04-02
- * For LOVD    : 3.0-beta-04
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
+ *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -31,7 +32,7 @@
 define('ROOT_PATH', '../');
 require_once ROOT_PATH . 'inc-init.php';
 
-if ($_AUTH['level'] < LEVEL_MANAGER) {
+if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
     exit(AJAX_NO_AUTH);
 } elseif (ACTION == 'set_standard' && !empty($_POST['colid']) && $_DB->query('UPDATE ' . TABLE_COLS . ' SET standard = 1, edited_by = ?, edited_date = NOW() WHERE id = ?', array($_AUTH['id'], $_POST['colid']))->rowCount()) {
     exit(AJAX_TRUE);
