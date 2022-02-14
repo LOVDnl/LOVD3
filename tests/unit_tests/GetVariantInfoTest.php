@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-02-10
+ * Modified    : 2022-02-14
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1493,6 +1493,24 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'warnings' => array(
                     'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                ),
+                'errors' => array(),
+            )),
+            array('g. 123_124insA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WWHITESPACE' => 'This variant description contains one or more whitespace characters (spaces, tabs, etc). Please remove these.',
+                ),
+                'errors' => array(),
+            )),
+            array(' g.123del', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'del',
+                'warnings' => array(
+                    'WWHITESPACE' => 'This variant description contains one or more whitespace characters (spaces, tabs, etc). Please remove these.',
                 ),
                 'errors' => array(),
             )),

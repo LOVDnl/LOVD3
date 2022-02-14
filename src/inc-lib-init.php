@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-10
+ * Modified    : 2022-02-14
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1111,7 +1111,16 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     );
 
     // Trim the variant and remove whitespaces.
+    $nLength = strlen($sVariant);
     $sVariant = preg_replace('/\s+/', '', $sVariant);
+    if (strlen($sVariant) != $nLength) {
+        // Whitespace was removed. Warn.
+        if ($bCheckHGVS) {
+            return false;
+        }
+        $aResponse['warnings']['WWHITESPACE'] =
+            'This variant description contains one or more whitespace characters (spaces, tabs, etc). Please remove these.';
+    }
 
 
     // Match the reference sequence if one was given.
