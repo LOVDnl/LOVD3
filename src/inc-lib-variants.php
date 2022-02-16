@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-15
+ * Modified    : 2022-02-16
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -617,6 +617,52 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // We're out of things that we can do.
     return $sReference . $sVariant; // Not HGVS.
+}
+
+
+
+
+
+function lovd_formatPosition ($nPosition, $nPositionIntron)
+{
+    // This function simply formats the given
+    //  numbers into a proper position string.
+    // Not to be confused with lovd_formatPositions().
+
+    if (!$nPosition || !is_numeric($nPosition)
+        || ($nPositionIntron && !is_numeric($nPositionIntron))) {
+        return false;
+    }
+
+    return $nPosition .
+        (!$nPositionIntron? '' :
+            ($nPositionIntron < 1? $nPositionIntron : '+' . $nPositionIntron));
+}
+
+
+
+
+
+function lovd_formatPositions ($aVariant)
+{
+    // This function simply formats the
+    //  full position string for the given variant.
+    // Not to be confused with lovd_formatPosition().
+
+    $sPositionStart = lovd_formatPosition(
+        $aVariant['position_start'],
+        (!isset($aVariant['position_start_intron']) ? NULL : $aVariant['position_start_intron']),
+    );
+    $sPositionEnd = lovd_formatPosition(
+        $aVariant['position_end'],
+        (!isset($aVariant['position_end_intron']) ? NULL : $aVariant['position_end_intron']),
+    );
+
+    if ($sPositionStart == $sPositionEnd) {
+        return $sPositionStart;
+    } else {
+        return $sPositionStart . '_' . $sPositionEnd;
+    }
 }
 
 
