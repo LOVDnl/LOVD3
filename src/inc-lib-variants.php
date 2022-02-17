@@ -998,6 +998,69 @@ function lovd_getVariantLength ($aVariant)
 
 
 
+function lovd_modifyVariantPosition ($aVariant, $nOffset = 0, $nLength = 0)
+{
+    // Takes the start position from the $aVariant array (g. based or c. based),
+    //  shifts it using the given offset, adds the given length,
+    //  and calculates the new positions (overwriting them).
+
+    if (!isset($aVariant['position_start'])
+        || (!is_int($nOffset) && !ctype_digit($nOffset))
+        || (!is_int($nLength) && !ctype_digit($nLength))) {
+        return false;
+    }
+
+    if (!$nLength) {
+        $nLength = lovd_getVariantLength($aVariant);
+    }
+
+    $aVariant['position_end'] = $aVariant['position_start'];
+    $bTranscript = isset($aVariant['position_start_intron']);
+    $bIntronic = ($bTranscript && $aVariant['position_start_intron']);
+    if ($bTranscript) {
+        $aVariant['position_end_intron'] = $aVariant['position_start_intron'];
+    }
+
+    $aOffsets = array();
+    if ($nOffset) {
+        $aOffsets[] = array('position_start', $nOffset);
+    }
+    if ($nOffset || $nLength > 1) {
+        $aOffsets[] = array('position_end', ($nOffset + $nLength - 1));
+    }
+
+    foreach ($aOffsets as list($sPosition, $nOffset)) {
+        if ($bIntronic) {
+            $nPositionIntron = $aVariant[$sPosition . '_intron'] + $nOffset;
+            // Compensate for the possibility that we just left the intron.
+            if (($aVariant[$sPosition . '_intron'] > 0 && $nPositionIntron < 0)
+                || ($aVariant[$sPosition . '_intron'] < 0 && $nPositionIntron > 0)) {
+                $nPosition = $aVariant[$sPosition] + $nPositionIntron;
+                $nPositionIntron = 0;
+            } else {
+                $nPosition = $aVariant[$sPosition];
+            }
+            $aVariant[$sPosition . '_intron'] = $nPositionIntron;
+
+        } else {
+            $nPosition = $aVariant[$sPosition] + $nOffset;
+        }
+        // Compensate for the possibility that we just entered or left the UTR.
+        if ($aVariant[$sPosition] > 0 && $nPosition <= 0) {
+            $nPosition --;
+        } elseif ($aVariant[$sPosition] < 0 && $nPosition >= 0) {
+            $nPosition ++;
+        }
+        $aVariant[$sPosition] = $nPosition;
+    }
+
+    return $aVariant;
+}
+
+
+
+
+
 function getMutalyzerMessages ($aOutput)
 {
     // Return an array of messages from mutalyzer's API output. Only messages
