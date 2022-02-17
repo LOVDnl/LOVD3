@@ -310,14 +310,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 // Substitution.
                 // Recalculate the position always; we might have started with a
                 //  range, but ended with just a single position.
-                list(,,$sPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset, 1));
                 return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . $sRef . '>' . $sAlt, $sVariant), $sType);
 
             } elseif ($nALTLength == 0) {
                 // Deletion.
-                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
-                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
-                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+                $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset, $nREFLength));
                 return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'del', $sVariant), $sType);
 
             } elseif ($nREFLength == 0) {
@@ -325,26 +323,20 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 if (substr($sAltOriginal, strrpos($sAltOriginal, $sAlt) - $nALTLength, $nALTLength) == $sAlt) {
                     // Duplication. Note that the start position might be quite
                     //  far from the actual insert.
-                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1 - $nALTLength);
-                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset);
-                    $sPosition = $sStartPosition . ($nALTLength == 1? '' : '_' . $sEndPosition);
+                    $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset - $nALTLength, $nALTLength));
                     return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'dup', $sVariant), $sType);
 
                 } else {
                     // Insertion. We don't need to worry about an offset of 0,
                     //  as we don't accept empty REFs - they can only have been
                     //  emptied by shifting.
-                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset);
-                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
-                    $sPosition = $sStartPosition . '_' . $sEndPosition;
+                    $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset - 1, 2));
                     return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'ins' . $sAlt, $sVariant), $sType);
                 }
 
             } else {
                 // Inversion or deletion-insertion. Both REF and ALT are >1.
-                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
-                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
-                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+                $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset, $nREFLength));
 
                 if ($sRef == strrev(str_replace(array('A', 'C', 'G', 'T'), array('T', 'G', 'C', 'A'), strtoupper($sAlt)))) {
                     // Inversion.
