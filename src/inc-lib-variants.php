@@ -873,56 +873,6 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 
 
 
-function lovd_getVariantEndPosition ($aVariant, $nLength)
-{
-    // Takes the start position from the $aVariant array (g. based or c. based), adds the given length,
-    //  and calculates the end position (overwriting it if needed).
-
-    if (!isset($aVariant['position_start'])
-        || (!is_int($nLength) && !ctype_digit($nLength))
-        || $nLength < 1) {
-        return false;
-    }
-
-    if (!empty($aVariant['position_start_intron'])) {
-        $aVariant['position_end_intron'] = $aVariant['position_start_intron'] + $nLength - 1;
-        // Compensate for the possibility that we just left the intron.
-        if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
-            $aVariant['position_end'] = $aVariant['position_start'] + $aVariant['position_end_intron'];
-            $aVariant['position_end_intron'] = 0;
-        } else {
-            $aVariant['position_end'] = $aVariant['position_start'];
-        }
-
-    } else {
-        if (isset($aVariant['position_end_intron'])) {
-            $aVariant['position_end_intron'] = 0;
-        }
-        $aVariant['position_end'] = $aVariant['position_start'] + $nLength - 1;
-    }
-
-    // Build return array.
-    $aReturn = array(
-        $aVariant['position_end'], // End position (genomic or exonic).
-        NULL, // (intronic, default value)
-        $aVariant['position_end'], // Formatted position string, to be extended.
-    );
-    if (isset($aVariant['position_end_intron'])) {
-        $aReturn[1] = $aVariant['position_end_intron'];
-        if ($aVariant['position_end_intron']) {
-            $aReturn[2] .= ($aVariant['position_end_intron'] < 1?
-                $aVariant['position_end_intron'] :
-                '+' . $aVariant['position_end_intron']);
-        }
-    }
-
-    return $aReturn;
-}
-
-
-
-
-
 function lovd_getVariantLength ($aVariant)
 {
     // This function receives an array in the format as given by
