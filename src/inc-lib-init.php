@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-14
+ * Modified    : 2022-02-18
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1171,7 +1171,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
             if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt)/', $sReferenceType))
-                || ($sVariant[0] == 'n' && !preg_match('/^([NX]R|ENST|LRGt)/', $sReferenceType))
+                || ($sVariant[0] == 'n' && !preg_match('/([NX]R|ENST|LRGt)/', $sReferenceType))
                 || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
