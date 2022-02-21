@@ -58,6 +58,8 @@ if (!$sVariant) {
             return $(this).data("id_ncbi") == "' . $sTranscript . '" 
         });
         oTranscriptField.val("");
+        oTranscriptField.prop("disabled", false);
+        oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
         var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
         $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
         $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
@@ -69,6 +71,8 @@ if (!$sVariant) {
         print('
         var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix? '' : '/' . $sGBSuffix) . '"]\');
         oGenomicVariant.val("");
+        oGenomicVariant.prop("disabled", false);
+        oGenomicVariant.siblings("img:first").attr({src: "gfx/trans.png"}).show();
         ');
     }
 
@@ -81,18 +85,23 @@ if (!$sVariant) {
 
 
 // Create a PHP function to easily update the dialogue.
-function update_dialogue($sText, $aButtons = array())
+function update_dialogue($sText, $sButtons='', $bCleanSlate=false)
 {
     // This function fills the variantCheckDialogue with the given
     //  text, adds the right buttons and sends it to the user.
-    print('
+    // If $bCleanSlate, it will remove the old text and start over;
+    //  if !$bCleanSlate, it will append.
+    print(($bCleanSlate? '
     // Updating the contents.
-    $("#variantCheckDialogue").html("' . $sText . '");
-    ');
+    $("#variantCheckDialogue").html("' . $sText . '<br><br>");
+    ' : '
+    // Appending to the contents.
+    $("#variantCheckDialogue").append("' . $sText . '<br><br>");
+    '));
 
-    print(($aButtons? '
+    print(($sButtons? '
     // Placing the buttons.
-    $("#variantCheckDialogue").dialog({buttons: $.extend({}, ' . implode(', ', $aButtons) . ')});
+    $("#variantCheckDialogue").dialog({buttons: $.extend({}, ' . $sButtons . ')});
     ' : '
     // Removing buttons.
     $("#variantCheckDialogue").dialog({buttons: {}});
@@ -103,23 +112,26 @@ function update_dialogue($sText, $aButtons = array())
 }
 
 
-// And a function to easily append to the dialogue.
-function append_to_dialogue($sText)
-{
-    // This function fills the variantCheckDialogue with the given
-    //  text, adds the right buttons and sends it to the user.
-    print('
-    // Updating the contents.
-    $("#variantCheckDialogue").append("' . $sText . '");
-    ');
-
-    // Sending the contents directly to the user.
-    flush();
+// Create a PHP function to easily update the images to the left of each step.
+function update_images_per_step ($nStep, $sImage) {
+    // This function takes a step in the format of an integer, and
+    //  replaces the image which was put next to this step by the
+    //  given $sImage.
+    print('$("#' . $nStep . '").attr({src: "' . $sImage . '"});');
 }
 
 
 
 
+// Preparing the steps.
+$sStepInitialChecks = 'statusChecks';
+$sStepMapping       = 'statusMapping';
+
+// Preparing the images.
+$sImageNeutral = 'gfx/trans.png';
+$sImagePassed   = 'gfx/check.png';
+$sImageFailed   = 'gfx/cross.png';
+$sImageLoading = 'gfx/lovd_loading.gif';
 
 // Preparing the buttons.
 $sButtonYes            = 'oButtonYes';
@@ -128,7 +140,46 @@ $sButtonOKValid        = 'oButtonOKValid';
 $sButtonOKInvalid      = 'oButtonOKInvalid';
 $sButtonOKCouldBeValid = 'oButtonOKCouldBeValid';
 
-
+// Preparing the JS for the buttons.
+print('
+// Preparing the buttons.
+var ' . $sButtonYes . ' = {"Yes":function () {
+    // The user accepts the given fixed variant.
+    // We will fill in this fixed variant, close the dialogue,
+    //  and perform a new call to this script by activating
+    //  the onChange.
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.val("' . lovd_fixHGVS($sVariant) . '");
+    $(this).dialog("close");
+    oInput.change();
+}};
+var ' . $sButtonNo . '  = {"No, I will take a look myself":function () {
+    // The user does not accept the given fixed variant.
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."}).show();
+    $(this).dialog("close");
+}};
+var ' . $sButtonOKValid . '  = {"OK":function () {
+    // The variant was mapped and looks just great!
+    // All steps have already been taken; the only
+    //  thing left to do is to close the dialogue.
+    $(this).dialog("close");
+}};
+var ' . $sButtonOKInvalid . '  = {"OK":function () {
+    // The user agrees to change their invalid input manually. 
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant could not be validated..."}).show();
+    $(this).dialog("close");
+}};
+var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
+    // We could not validate this variant, but the problem
+    //  lies with us. We will accept this variant and the
+    //  uncertainty that comes with it.
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
+    $(this).dialog("close");
+}};
+');
 
 
 
@@ -140,53 +191,17 @@ $("#variantCheckDialogue").dialog({
     draggable:true,resizable:false,minWidth:600,show:"fade",closeOnEscape:false,hide:"fade",modal:true,
     open: function(event, ui) { $(".ui-dialog-titlebar-close").hide(); }
 });
-
-// Notifying user of what is happening.
-$("#variantCheckDialogue").html("Performing initial checks...");
 ');
 
+update_dialogue(
+    '<IMG id=\"' . $sStepInitialChecks . '\" src=\"' . $sImageNeutral . '\" width=\"16\" height=\"16\"> Performing initial checks.' .
+    '<BR><IMG id=\"' . $sStepMapping . '\" src=\"' . $sImageNeutral . '\" width=\"16\" height=\"16\"> Mapping your variant.',
+    '',
+    true
+);
 // Ending the output buffering and sending the dialogue directly to the user.
 @ob_end_flush();
 flush();
-
-print('
-// Preparing the buttons.
-var ' . $sButtonYes . ' = {"Yes":function () {
-    // The user accepts the given fixed variant.
-    // We will fill in this fixed variant, close the dialogue,
-    //  and perform a new call to this script by activating
-    //  the onChange.
-    var oInput = $(\'input[name$="' . $sFieldName . '"]\');
-    oInput.val("' . lovd_fixHGVS($sVariant) . '");
-    $(this).dialog("close");
-    oInput.change();
-}};
-var ' . $sButtonNo . '  = {"No, I will take a look myself":function () {
-    // The user does not accept the given fixed variant.
-    var oInput = $(\'input[name$="' . $sFieldName . '"]\');
-    oInput.siblings("img:first").attr({src: "gfx/cross.png"}).show();
-    $(this).dialog("close");
-}};
-var ' . $sButtonOKValid . '  = {"OK":function () {
-    // The variant was mapped and looks just great!
-    var oInput = $(\'input[name$="' . $sFieldName . '"]\');
-    oInput.siblings("img:first").attr({src: "gfx/check.png"}).show();
-    $(this).dialog("close");
-}};
-var ' . $sButtonOKInvalid . '  = {"OK":function () {
-    // The user agrees to change its invalid input manually. 
-    var oInput = $(\'input[name$="' . $sFieldName . '"]\');
-    oInput.siblings("img:first").attr({src: "gfx/cross.png"}).show();
-    $(this).dialog("close");
-}};
-var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
-    // We could not validate this variant, but the problem lies with us.
-    //  We will accept this variant and the uncertainty that comes with it.
-    var oInput = $(\'input[name$="' . $sFieldName . '"]\');
-    oInput.siblings("img:first").attr({src: "gfx/check_orange.png"}).show();
-    $(this).dialog("close");
-}};
-');
 
 
 
@@ -200,11 +215,12 @@ if (!$bIsSupportedByLOVD) {
     // If the variant is not supported by LOVD, we cannot perform an HGVS check nor the mapping.
     // We will notify the user and end the script here.
 
+    update_images_per_step($sStepInitialChecks, $sImageFailed);
     update_dialogue(
         'Your variant contains syntax which our HGVS check cannot recognise. ' .
         'Therefore, we cannot validate your variant nor map it to other reference sequences. ' .
-        'Please thoroughly validate your variant by hand.',
-        array($sButtonOKCouldBeValid));
+        'Please thoroughly validate yofur variant by hand.',
+        $sButtonOKCouldBeValid);
     exit();
 }
 
@@ -222,6 +238,7 @@ if (!lovd_isHGVS($sVariant)) {
 
     // Let the user know that the given variant did not pass our HGVS check.
     $sResponse = 'Your variant (\"' . $sVariant . '\") did not pass our HGVS check.<br><br>';
+    update_images_per_step($sStepInitialChecks, $sImageFailed);
 
 
     // Show the user the warnings and errors we found through getVariantInfo.
@@ -240,7 +257,7 @@ if (!lovd_isHGVS($sVariant)) {
         // Good, we can propose a fix. If the user agrees with the fix,
         //  we can continue to the mapping.
         update_dialogue($sResponse . 'Did you mean \"' . $sFixedVariant . '\"?<br>',
-            array($sButtonYes, $sButtonNo));
+            $sButtonYes . ', ' . $sButtonNo);
 
         // Our 'Yes' button sets the steps in motion which change the user's
         //  input into the fixed variant, and reactivates the dialogue.
@@ -250,13 +267,10 @@ if (!lovd_isHGVS($sVariant)) {
     } else {
         // We could not propose a fix. We will end the script.
         update_dialogue($sResponse . 'Please check your variant for errors and try again.<br>',
-            array($sButtonOKInvalid));
+            $sButtonOKInvalid);
         exit();
     }
 }
-
-// Passed the HGVS check. Inform the user.
-update_dialogue('Your variant passed our HGVS syntax check.');
 
 
 
@@ -271,10 +285,11 @@ $bIsSupportedByVV =
 if (!$bIsSupportedByVV) {
     // If syntax was found which VariantValidator does not support, we
     //  cannot send the variant in for mapping. We will notify the
-    //  user of this and exit this script.
+    //  user and exit this script.
+    update_images_per_step($sStepInitialChecks, $sImageFailed);
     update_dialogue('Your variant contains syntax which VariantValidator cannot recognise. ' .
                     'Therefore, we cannot map your variant nor validate the positions.',
-                    array($sButtonOKCouldBeValid));
+                    $sButtonOKCouldBeValid);
     exit();
 }
 
@@ -282,43 +297,41 @@ if (!$bIsSupportedByVV) {
 
 
 
-// Prepare the call to VariantValidator to validate the variant.
-update_dialogue('Preparing the mapping...');
-
 // Retrieve the reference sequence from the info given through the URL.
 if (strpos($sRefSeqInfo, '-') === false) {
-    // The hashtag serves as our little communication tool; it tells
-    //  us that the given input was a GB suffix. When no hashtag was
-    //  found, we know that the input was the reference sequence of
-    //  a transcript.
+    // The '-' serves as our little communication tool; it tells
+    //  us that the given input was a GB suffix. When no '-' was
+    //  found, we know that the input was the reference sequence
+    //  of a transcript.
     $sType = 'VOT';
     $sReferenceSequence = $sRefSeqInfo;
 
 } else {
     // We know we got information on a GB. This is given through
-    //  JS in the format of <GB suffix>#<chromosome>.
+    //  JS in the format of <GB suffix>-<chromosome>.
     $sType = 'VOG';
     list($sCurrentGBSuffix, $sChromosome) = explode('-', $sRefSeqInfo);
 
     if (!$_SETT['human_builds'][$aActiveGBs[$sCurrentGBSuffix]]['supported_by_VV']) {
         // If the given genome build is not supported by VV, we cannot fully validate
         //  the variants... We will have to accept these variants into the database
-        //  anyway, since this issue lies with us. Fixme; Is this true though? Do we want to accept these variants?
-        update_dialogue(
-            'This genome build is not supported for mapping or validation.' .
-            ' Please start the mapping with a transcript ' . (count($aActiveGBs) > 1 ? '' : 'or a different genome build') . '.',
-            array($sButtonOKValid));
-        exit();
+        //  anyway, since this issue lies with us.
+        die('
+        $("#variantCheckDialogue").dialog("close");
+        var oInput = $(\'input[name="' . $sFieldName . '"]\');
+        oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."}).show();
+        ');
     }
 
     if (!isset($_SETT['human_builds'][$aActiveGBs[$sCurrentGBSuffix]]['ncbi_sequences'][$sChromosome])) {
         // The combination of chromosome and build is not known by LOVD.
         // Something probably went wrong on the user's end. We will inform
         //  the user and exit the script.
+        update_images_per_step($sStepInitialChecks, $sImageFailed);
         update_dialogue(
             'An unknown combination of genome build and chromosome was given.' .
-            ' This means we cannot perform the mapping. Please try again later.',
-            array($sButtonOKInvalid));
+            ' This means we cannot perform the mapping.',
+            $sButtonOKInvalid);
         exit();
     }
 
@@ -343,11 +356,12 @@ if (preg_match('/.*:[a-z]\./', $sVariant)) {
         // The user gave a refSeq within the variant description
         //  input which does not match our expectations. The variant
         //  is then likely to be wrong. We cannot accept it.
+        update_images_per_step($sStepInitialChecks, $sImageFailed);
         update_dialogue(
             'The reference sequence given in the input description, does not equal the' .
-            ' reference sequence matched to the variant automatically by LOVD. Please have' .
+            ' reference sequence matched to the variant by LOVD automatically. Please have' .
             ' another look and perhaps try again from a different input field.',
-            array($sButtonOKInvalid));
+            $sButtonOKInvalid);
         exit();
     }
 
@@ -361,17 +375,18 @@ if (preg_match('/.*:[a-z]\./', $sVariant)) {
 
 
 // Call VariantValidator.
-append_to_dialogue('<br>' . $sFullVariant . ' is ready.<br><br>Mapping the variant...');
+update_images_per_step($sStepInitialChecks, $sImagePassed);
+update_images_per_step($sStepMapping, $sImageLoading);
 
 require ROOT_PATH . 'class/variant_validator.php';
 $_VV = new LOVD_VV();
 $aMappedVariant = (
     $sType == 'VOG'?
     $_VV->verifyGenomic($sFullVariant, array(
-        'map_to_transcripts' => true,            // Should we map the variant to transcripts?
-        'predict_protein' => true,               // Should we get protein predictions?
-        'lift_over' => (count($aActiveGBs) > 1), // Should we get other genomic mappings of this variant?
-        'select_transcripts' => $aTranscripts,   // Should we limit our output to only a certain set of transcripts?
+        'map_to_transcripts' => empty($aTranscript),      // Should we map the variant to transcripts?
+        'predict_protein'    => empty($aTranscript),      // Should we get protein predictions?
+        'lift_over'          => (count($aActiveGBs) > 1), // Should we get other genomic mappings of this variant?
+        'select_transcripts' => (empty($aTranscripts)? array() : $aTranscripts),
     )) :
     $_VV->verifyVariant($sFullVariant, array('select_transcripts' => $aTranscripts))
 );
@@ -385,12 +400,12 @@ if (!empty($aMappedVariant['errors'])) {
     // The variant holds a fatal issue. We will exit the script and not
     //  accept this variant into the database.
 
+    update_images_per_step($sStepMapping, $sImageFailed);
     update_dialogue(
         'We could not valide nor map your variant because of the following problem(s):<br>- ' .
         implode('<br> -', $aMappedVariant['errors']) . '<br><br>' .
         'Please take another look at your variant and try again.',
-        array($sButtonOKInvalid));
-
+        $sButtonOKInvalid);
     exit();
 }
 
@@ -401,7 +416,7 @@ if (!empty($aMappedVariant['warnings'])) {
     if (isset($aMappedVariant['warnings']['WROLLBACK'])
         || isset($aMappedVariant['warnings']['WCORRECTED'])) {
         // The variant was corrected.
-        append_to_dialogue('Your variant was corrected to ' . $aMappedVariant['data']['DNA'] .
+        update_dialogue('Your variant was corrected to ' . $aMappedVariant['data']['DNA'] .
             ' to fully match HGVS guidelines.');
         $bImprovedByVV = true;
     }
@@ -411,7 +426,7 @@ if (!empty($aMappedVariant['warnings'])) {
         //  which is an issue with them, not us nor our user. We can only get
         //  the mapping on all genome builds, not on (other) transcripts.
         // We will notify the user.
-        append_to_dialogue('Your variant could not be fully validated due to unknown issues.');
+        update_dialogue('Your variant could not fully be validated due to unknown issues.');
         // Fixme; Either find a fix within VV, or Call Mutalyzer.
     }
 
@@ -422,11 +437,11 @@ if (!empty($aMappedVariant['warnings'])) {
     //  is left empty. This means we have no information on the mapping
     //  and there is not much we can do... We will inform the user that
     //  an unknown error occurred and that they should try again later.
+    update_images_per_step($sStepMapping, $sImageFailed);
     update_dialogue(
         'An unknown error occurred while trying to validate and map your variant.' .
         ' We are sorry for the inconvenience. Please try again later.',
-        array($sButtonOKInvalid));
-
+        $sButtonOKInvalid);
     exit();
 }
 
@@ -446,9 +461,9 @@ if ($sType == 'VOT' && count($aTranscripts) > 1) {
         !isset($aMappedVariant['data']['genomic_mappings']['hg38'])? // Yes=We have a genomic reference from our first call; No=We don't have a genomic reference.
             array() :
             $_VV->verifyGenomic($aMappedVariant['data']['genomic_mappings']['hg38'], array(
-                'map_to_transcripts' => true, // Should we map the variant to transcripts?
-                'predict_protein' => true,    // Should we get protein predictions?
-                'lift_over' => true,          // Should we get other genomic mappings of this variant?
+                'map_to_transcripts' => true,          // Should we map the variant to transcripts?
+                'predict_protein'    => true,          // Should we get protein predictions?
+                'lift_over'          => false,         // Should we get other genomic mappings of this variant?
                 'select_transcripts' => $aTranscripts, // Should we limit our output to only a certain set of transcripts?
             ))
     );
@@ -456,7 +471,7 @@ if ($sType == 'VOT' && count($aTranscripts) > 1) {
     if (!isset($aMappedViaGB['data']['transcript_mappings'])) {
         // If for any reason no genomic mappings were given, we cannot perform this
         //  extra step, and will thus miss some information. We will inform the user.
-        append_to_dialogue('Your variant could not be mapped to all transcripts due to unknown issues.');
+        update_dialogue('Your variant could not be mapped to all transcripts due to unknown issues.');
     }
 
     $aMappedVariant['data']['transcript_mappings'] = $aMappedViaGB['data']['transcript_mappings'];
@@ -472,83 +487,109 @@ if ($sType == 'VOT' && count($aTranscripts) > 1) {
 
 // Returning the mapping for transcript, RNA and protein variants.
 foreach($aTranscripts as $sTranscript) {
-    $aTranscriptData = ($sTranscript == $sReferenceSequence?
-        $aMappedVariant['data'] :
-        (isset($aMappedVariant['data']['transcript_mappings'][$sTranscript])?
-            $aMappedVariant['data']['transcript_mappings'][$sTranscript] :
-            array('DNA' => 'not_mapped', 'RNA' => 'not_mapped', 'protein' => 'not_mapped')
-        )
-    );
-    print('        
+    if (!isset($aMappedVariant['data']['transcript_mappings'][$sTranscript])
+        && $sTranscript != $sReferenceSequence) {
+        // If no mapping was found for this transcript, we skip it.
+        continue;
+    }
+    // Retrieving the info.
+    $aTranscriptData = ($sTranscript == $sReferenceSequence? // Yes=Variant of origin (stored directly in data); No=Other (stored in transcript_mappings)
+        $aMappedVariant['data'] : $aMappedVariant['data']['transcript_mappings'][$sTranscript]);
+
+    // Filling in the input fields.
+    print('
+    // Adding transcript info to the fields.        
     var oTranscriptField = $("input").filter(function() { 
         return $(this).data("id_ncbi") == "' . $sTranscript . '" 
     });
-    oTranscriptField.val("' . $aTranscriptData['DNA'] . '");
-    var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-    $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '");
-    $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '");
-    ');
+    
+    if (!oTranscriptField.prop("disabled")) {
+        oTranscriptField.val("' . $aTranscriptData['DNA'] . '");
+        oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+        oTranscriptField.prop("disabled", true);
+        var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
+        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '");
+        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '");
+    }');
 }
 
 // Returning the mapping for genomic variants.
 foreach($aActiveGBs as $sGBSuffix => $sGBID) {
-    if (!$_SETT['human_builds'][$sGBID]['supported_by_VV']) {
+    if (!$_SETT['human_builds'][$sGBID]['supported_by_VV']
+        || !isset($aMappedVariant['data']['genomic_mappings'][$sGBID]) ) {
         // If a genome build is active which is not supported by VV, we won't have
-        //  received mapping information on it. We will send a 'not_mapped' message.
-        $sMappedGenomicVariant = 'not_mapped';
+        //  received mapping information on it. We will skip this variant.
+        continue;
+    }
+    // Retrieving the info.
+    if ($sType == 'VOT') {
+        // When VV was called using a variant on transcript, we always
+        //  get only one possible mapping, which is formatted as a string.
+        $sMappedGenomicVariant = $aMappedVariant['data']['genomic_mappings'][$sGBID];
+
+    } elseif (isset($sCurrentGBSuffix) && $sGBSuffix == $sCurrentGBSuffix) {
+        // The current build is the build which is the direct reference of
+        //  our input variant. When this is the case, our output is already
+        //  formatted as a string as well.
+        $sMappedGenomicVariant = $aMappedVariant['data']['DNA'];
 
     } else {
-        // The genome build is supported by VV and we are thus good to go.
+        // Our output is formatted as an array, since multiple variants were possible.
+        $aMappedGenomicVariant = $aMappedVariant['data']['genomic_mappings'][$sGBID];
 
-        if (isset($sCurrentGBSuffix) && $sGBSuffix == $sCurrentGBSuffix) {
-            // The current GB is the GB which is the direct reference of our input variant.
-            // When this is the case, our output is already perfectly formatted as a string.
-            $sMappedGenomicVariant = $aMappedVariant['data']['DNA'];
-
-        } elseif ($sType == 'VOT') {
-            // When VV was called using a variant on transcript, we always
-            //  get only one possible mapping. It is thus formatted as a string.
-            $sMappedGenomicVariant = $aMappedVariant['data']['genomic_mappings'][$sGBID];
+        if (count($aMappedGenomicVariant) <= 1) {
+            // Only one variant was found. Great! We can simply take the first element.
+            $sMappedGenomicVariant = $aMappedGenomicVariant[0];
 
         } else {
-            // Our output is formatted as an array.
-            $aMappedGenomicVariant = $aMappedVariant['data']['genomic_mappings'][$sGBID];
+            // Multiple possible variants were found. We will give the user a heads-up,
+            //  and concatenate the variants cleanly as follows:
+            // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
+            //  NC_123456.1:g.1del^2_3del^4del.
+            update_dialogue('There were multiple genomic variant predictions for build ' . $sGBID . '.');
 
-            if (count($aMappedGenomicVariant) <= 1) {
-                // Only one variant was found. Great! We don't have to do anything.
-                $sMappedGenomicVariant = $aMappedGenomicVariant[0];
-
-            } else {
-                // Multiple possible genomic variants were found. We now need to
-                //  concatenate them cleanly. We will do this as follows:
-                // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del = NC_123456.1:g.1del^2_3del^4del.
-                // We'll also give the user a heads-up.
-                append_to_dialogue('There were multiple genomic variant predictions for build ' . $sGBID . '.');
-
-                $sMappedGenomicVariant =
-                    preg_replace('/(.*:[a-z]\.).*/', '', $aMappedGenomicVariant[0]) .
-                    implode('^',
-                        array_map(function ($sFullVariant) {
-                            return preg_replace('/.*:[a-z]\./', '', $sFullVariant);
-                        }, $aMappedGenomicVariant)
-                    );
-            }
+            $sMappedGenomicVariant =
+                preg_replace('/(.*:[a-z]\.).*/', '', $aMappedGenomicVariant[0]) .
+                implode('^',
+                    array_map(function ($sFullVariant) {
+                        return preg_replace('/.*:[a-z]\./', '', $sFullVariant);
+                    }, $aMappedGenomicVariant)
+                );
         }
     }
 
+    // Filling in the input field.
     print('
-        var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix? '' : '/' . $sGBSuffix) . '"]\');
-        oGenomicVariant.val("' . $sMappedGenomicVariant . '");
-    ');
+    // Adding genomic info the fields.
+    var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix? '' : '/' . $sGBSuffix) . '"]\');
+    oGenomicVariant.val("' . preg_replace('/.*:/', '', $sMappedGenomicVariant) . '");
+    oGenomicVariant.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+    oGenomicVariant.prop("disabled", true);
+    '); // Fixme; Find a cleaner way of cutting off the reference sequence.
 }
+
+
+
+
+
+// Because we automatically filled all non-blocked positions,
+//  all open transcript fields have been blocked. We don't
+//  want the user to block the transcript input at this point
+//  so we disable the 'Ignore this transcript' option.
+print('
+// Disabling the "ignore this transcript" option.
+var oIgnoreOption = $(\'input[name^="ignore_"]\');
+oIgnoreOption.parent().html("");
+');
 
 
 
 
 
 // Send final message to the user.
+update_images_per_step($sStepMapping, $sImagePassed);
 update_dialogue(
     'Your variant was successfully mapped' . (!isset($bImprovedByVV)? '' : ', improved') .
     ' and validated by VariantValidator. Thank you for your patience!',
-    array($sButtonOKValid));
+    $sButtonOKValid);
 ?>

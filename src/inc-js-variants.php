@@ -188,7 +188,7 @@ function lovd_checkHGVS(e) {
             + "&fieldName=" + encodeURIComponent(sFieldName)
             + "&refSeqInfo=" + encodeURIComponent(sRefSeqInfo)
             + "&transcripts=" + encodeURIComponent(sTranscripts))
-        // .fail(function(){alert("Error checking your variant, please try again later.");})
+        .fail(function(){alert("Error checking your variant, please try again later.");})
     ;
 }
 
@@ -549,19 +549,19 @@ function lovd_highlightInput (oElement)
 
 $(function ()
 {
-    var oGenomicVariant = $('#variantForm input[name="VariantOnGenome/DNA"]');
+    var oGenomicVariants = $('#variantForm input[name^="VariantOnGenome/DNA"]');
     var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
     // Add the button and image at the end of the genomic DNA field.
-    oGenomicVariant.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to transcript' + (oTranscriptVariants.length == 1? '' : 's') + '</BUTTON>');
+    oGenomicVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" align="top" width="16" height="16">&nbsp;');
     // Add an onChange event that runs lovd_checkHGVS.
-    oGenomicVariant.change(lovd_checkHGVS);
+    oGenomicVariants.change(lovd_checkHGVS);
 
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.
-        oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to genome</BUTTON>');
+        oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" align="top" width="16" height="16">&nbsp;');
         var nTranscriptVariants = oTranscriptVariants.size();
         for (i=0; i < nTranscriptVariants; i++) {
-            // Add an artificial attribute "id_ncbi" to the transcripts DNA input field. This is needed to link the response from Mutalyzer to this field, if needed.
+            // Add an artificial attribute "id_ncbi" to the transcripts DNA input field. This is needed to link the response from VariantValidator to this field.
             $(oTranscriptVariants[i]).data('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>)][0]);
         }
         // Add an onChange event that runs lovd_checkHGVS.
@@ -570,7 +570,7 @@ $(function ()
         var oProteinVariants = $('#variantForm input[name$="_VariantOnTranscript/Protein"]');
         if (oProteinVariants[0] != undefined) {
             // Add the buttons and images at the end of the protein description fields.
-            oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" style="display:inline;" align="top" width="16" height="16">&nbsp;<BUTTON class="proteinChange" type="button" onclick="lovd_getProteinChange(this); return false;" style="display:none;">Predict</BUTTON>');
+            oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" style="display:none;" align="top" width="16" height="16">&nbsp;');
         }
     }
 });
