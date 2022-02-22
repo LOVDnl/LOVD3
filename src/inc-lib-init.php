@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-18
+ * Modified    : 2022-02-22
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1137,7 +1137,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             ')$/', $sReferenceSequence)) {
             // Check if the reference sequence matches one of
             //  the possible formats.
-            if ($sTranscriptID !== false) {
+            if ($sTranscriptID) {
                 // A transcript ID has been passed to this function.
                 // We should check if it matches the transcript in the DNA field.
                 $sField = (substr($sReferenceSequence, 0, 3) == 'ENS'? 'id_ensembl' : 'id_ncbi');
