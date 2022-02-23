@@ -1654,6 +1654,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //  have been a typo.
         $aResponse['position_start_intron'] = ($aVariant['latest_start']? $aVariant['latest_intronic_start'] : $aVariant['earliest_intronic_start']);
         $aResponse['position_end_intron']   = ($aVariant['earliest_end']? $aVariant['earliest_intronic_end'] : $aResponse['position_start_intron']);
+        if (!$aVariant['earliest_end'] && $aVariant['latest_start']) {
+            $aResponse['position_start_intron'] = $aVariant['earliest_intronic_start'];
+        }
         return $aResponse;
     }
 
