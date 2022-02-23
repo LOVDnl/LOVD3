@@ -375,13 +375,18 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 // Combined variant (allele notation), don't mess with it.
                 return $sReference . $sVariant;
             }
+            // For anything not "del" or "dup", better not touch it. This is
+            //  also thrown for substitutions and even "?" as type, so don't
+            //  mess with what we don't understand.
+            if (!in_array($aVariant['type'], array('del', 'dup'))) {
+                return $sReference . $sVariant;
+            }
             // For normal dels and dups, don't remove the suffix if it doesn't
             //  match the length.
             $sSuffixClean = trim($sSuffix, '()');
             $nLength = lovd_getVariantLength($aVariant);
-            if (in_array($aVariant['type'], array('del', 'dup'))
-                && ((ctype_digit($sSuffixClean) && $sSuffixClean != $nLength)
-                    || (!ctype_digit($sSuffixClean) && strlen($sSuffixClean) != $nLength))) {
+            if ((ctype_digit($sSuffixClean) && $sSuffixClean != $nLength)
+                    || (!ctype_digit($sSuffixClean) && strlen($sSuffixClean) != $nLength)) {
                 // Don't mess with it.
                 return $sReference . $sVariant;
             }
