@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-22
+ * Modified    : 2022-02-23
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1161,10 +1161,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         'The transcript reference sequence found in the DNA description is a different version from the configured transcript.' .
                         ' Please adapt the DNA description to the configured transcript and then remove the reference sequence from the DNA field.';
                 } else {
-                    // This is an actual problem; the submitter used a
-                    //  different transcript than configured in LOVD.
-                    $aResponse['warnings']['WDIFFERENTTRANSCRIPT'] =
-                        'The transcript reference sequence found in the DNA description does not match the configured transcript.' .
+                    // This is an actual problem; the submitter used a different
+                    //  refseq than the transcript configured in LOVD.
+                    $aResponse['warnings']['WDIFFERENTREFSEQ'] =
+                        'The reference sequence found in the DNA description does not match the configured transcript.' .
                         ' Please adapt the DNA description to the configured transcript and then remove the reference sequence from the DNA field.';
                 }
             }

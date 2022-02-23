@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-02-21
+ * Modified    : 2022-02-23
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,7 +59,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             && (empty($aOutput['warnings'])
                 || empty(array_diff(
                         array_keys($aOutput['warnings']),
-                        array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTTRANSCRIPT')))
+                        array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTREFSEQ')))
             )) {
             $bHGVS = true;
         } else {
@@ -83,7 +83,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             'NM_123456.1:c.100del', 'NM_123456.1')['warnings']);
         $this->assertArrayHasKey('WTRANSCRIPTVERSION', lovd_getVariantInfo(
             'NM_123456.2:c.100del', 'NM_123456.1')['warnings']);
-        $this->assertArrayHasKey('WDIFFERENTTRANSCRIPT', lovd_getVariantInfo(
+        $this->assertArrayHasKey('WDIFFERENTREFSEQ', lovd_getVariantInfo(
             'NM_123457.2:c.100del', 'NM_123456.1')['warnings']);
     }
 
