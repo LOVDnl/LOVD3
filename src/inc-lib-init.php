@@ -2010,6 +2010,73 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
 
+function lovd_getVariantLength ($aVariant)
+{
+    // This function receives an array in the format as given by
+    //  lovd_getVariantInfo() and calculates the length of the variant.
+    // This length will only include intronic positions if the input contains
+    //  these. When the length cannot be determined due to crossing the center
+    //  of an intron, this function will return false.
+
+    $nBasicLength = $aVariant['position_end'] - $aVariant['position_start'] + 1;
+    if (empty($aVariant['position_start_intron'])
+        && empty($aVariant['position_end_intron'])) {
+        // Simple case; genomic variant or simply no introns involved.
+        return ($nBasicLength);
+
+    } elseif (empty($aVariant['position_start_intron'])) {
+        // So we have an intronic end, but not an intronic start.
+        // If the intronic end is negative, this means we're crossing the
+        //  center of an intron, and the length cannot be determined.
+        if ($aVariant['position_end_intron'] < 0) {
+            return false;
+        }
+        return ($nBasicLength + $aVariant['position_end_intron']);
+
+    } elseif (empty($aVariant['position_end_intron'])) {
+        // So we have an intronic start, but not an intronic end.
+        // If the intronic start is positive, this means we're crossing the
+        //  center of an intron, and the length cannot be determined.
+        if ($aVariant['position_start_intron'] > 0) {
+            return false;
+        }
+        return ($nBasicLength + abs($aVariant['position_start_intron']));
+    }
+
+    // Else, we have intronic positions both for the start and the end.
+    if ($aVariant['position_start'] == $aVariant['position_end']) {
+        // Same side of the intron. Just take the max minus the min.
+        // NOTE: $nBasicLength is already 1 even though no length has been
+        //  calculated yet. So we don't have to add that 1 here.
+        return (
+            $nBasicLength +
+            max(
+                $aVariant['position_start_intron'],
+                $aVariant['position_end_intron']
+            ) -
+            min(
+                $aVariant['position_start_intron'],
+                $aVariant['position_end_intron']
+            )
+        );
+
+    } elseif ($aVariant['position_start_intron'] > 0
+        || $aVariant['position_end_intron'] < 0) {
+        // Still nope.
+        return false;
+    }
+
+    // OK, just add the lengths.
+    return (
+        $nBasicLength
+        + abs($aVariant['position_start_intron'])
+        + $aVariant['position_end_intron']);
+}
+
+
+
+
+
 function lovd_getProjectFile ()
 {
     // Gets project file name (file name including possible project subdirectory).
