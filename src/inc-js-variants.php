@@ -184,7 +184,8 @@ function lovd_checkHGVS(e) {
     }).get().join('|');
 
     $.get("ajax/check_hgvs_dialogue.php?"
-            + "var=" + encodeURIComponent(sVariant)
+            + "action=check"
+            + "&var=" + encodeURIComponent(sVariant)
             + "&fieldName=" + encodeURIComponent(sFieldName)
             + "&refSeqInfo=" + encodeURIComponent(sRefSeqInfo)
             + "&transcripts=" + encodeURIComponent(sTranscripts))
