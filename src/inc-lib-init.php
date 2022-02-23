@@ -1746,14 +1746,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             // An insertion must always get two positions which are next to each other,
             //  since the inserted nucleotides will be placed in the middle of those.
             // Calculate the length of the variant properly, including intronic positions.
-            $nLength = lovd_getVariantLength(
-                array(
-                    'position_start' => $aVariant['earliest_start'],
-                    'position_start_intron' => $aVariant['earliest_intronic_start'],
-                    'position_end' => $aVariant['earliest_end'],
-                    'position_end_intron' => $aVariant['earliest_intronic_end'],
-                )
-            );
+            $nLength = lovd_getVariantLength($aResponse);
             if (!$nLength || $nLength > 2) {
                 if ($bCheckHGVS) {
                     return false;
@@ -1770,14 +1763,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             //  case, the two positions should not be neighbours, since that would imply that
             //  the position is certain.
             // Calculate the length of the variant properly, including intronic positions.
-            $nLength = lovd_getVariantLength(
-                array(
-                    'position_start' => $aVariant['earliest_start'],
-                    'position_start_intron' => $aVariant['earliest_intronic_start'],
-                    'position_end' => $aVariant['latest_start'],
-                    'position_end_intron' => $aVariant['latest_intronic_start'],
-                )
-            );
+            $nLength = lovd_getVariantLength($aResponse);
             if ($nLength == 2) {
                 if ($bCheckHGVS) {
                     return false;
