@@ -1621,8 +1621,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //  because the variant's position is a single, uncertain range.
         $aResponse['messages']['IPOSITIONRANGE'] = 'This variant description contains uncertain positions.';
         $aResponse['position_start'] = $aVariant['earliest_start'];
-        $aResponse['position_end'] = $aVariant['latest_start'];
 
+        if (in_array($aVariant['prefix'], array('n', 'c'))) {
+            $aResponse['position_start_intron'] = $aVariant['earliest_intronic_start'];
+        }
     }
 
 

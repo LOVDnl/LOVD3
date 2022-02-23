@@ -415,6 +415,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('c.(123+10_123+20)insA', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 10,
+                'position_end_intron' => 20,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_10)_20insA', array(
                 'position_start' => 10,
                 'position_end' => 20,
