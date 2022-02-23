@@ -405,6 +405,21 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('c.(123+10_123+11)insA', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 10,
+                'position_end_intron' => 11,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(
+                    'EPOSITIONFORMAT' =>
+                        'The two positions do not indicate a range longer than two bases. Please remove the parentheses if the positions are certain.',
+                ),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_10)insA', array(
                 'position_start' => 1,
                 'position_end' => 10,
@@ -642,6 +657,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             array('g.((1_5)insN[(50_60)])', array(
                 'position_start' => 1,
                 'position_end' => 5,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('c.(123+1_124-1)insN[(50_60)]', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'position_start_intron' => 1,
+                'position_end_intron' => -1,
                 'type' => 'ins',
                 'warnings' => array(),
                 'errors' => array(),

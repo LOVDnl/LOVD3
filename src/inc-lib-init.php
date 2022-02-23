@@ -1750,18 +1750,28 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
 
         } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])
-            && $aVariant['earliest_start'] != '?' && $aVariant['latest_start'] != '?'
-            && ($aVariant['latest_start'] - $aVariant['earliest_start']) == 1) {
+            && $aVariant['earliest_start'] != '?' && $aVariant['latest_start'] != '?') {
             // If the exact location of an insertion is unknown, this can be indicated
             //  by placing the positions in the range-format (e.g. c.(1_10)insA). In this
             //  case, the two positions should not be neighbours, since that would imply that
             //  the position is certain.
-            if ($bCheckHGVS) {
-                return false;
+            // Calculate the length of the variant properly, including intronic positions.
+            $nLength = lovd_getVariantLength(
+                array(
+                    'position_start' => $aVariant['earliest_start'],
+                    'position_start_intron' => $aVariant['earliest_intronic_start'],
+                    'position_end' => $aVariant['latest_start'],
+                    'position_end_intron' => $aVariant['latest_intronic_start'],
+                )
+            );
+            if ($nLength == 2) {
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                $aResponse['errors']['EPOSITIONFORMAT'] =
+                    'The two positions do not indicate a range longer than two bases.' .
+                    ' Please remove the parentheses if the positions are certain.';
             }
-            $aResponse['errors']['EPOSITIONFORMAT'] =
-                'The two positions do not indicate a range longer than two bases.' .
-                ' Please remove the parentheses if the positions are certain.';
         }
 
     } elseif ($aResponse['type'] == 'subst') {
