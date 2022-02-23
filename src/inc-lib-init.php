@@ -1711,9 +1711,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Checking all type-specific format requirements.
-    if ($aVariant['type'] == 'delins' && !$aVariant['earliest_end'] && strlen($aVariant['suffix']) == 1) {
-        // If an insertion/deletion deletes one base and replaces it by one, it should be called and
-        //  formatted as a substitution.
+    if ($aVariant['type'] == 'delins' && strlen($aVariant['suffix']) == 1
+        && !$aVariant['earliest_end'] && lovd_getVariantLength($aResponse) == 1) {
+        // If an insertion/deletion deletes one base and replaces it by one, it
+        //  should be called and formatted as a substitution.
         if ($bCheckHGVS) {
             return false;
         }
