@@ -1737,17 +1737,27 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             $aResponse['errors']['EPOSITIONFORMAT'] = 'Insertions should not be given more than two positions.';
 
-        } elseif ($aVariant['earliest_start'] != '?' && $aVariant['earliest_end'] != '?' &&
-                    ($aVariant['earliest_end'] - $aVariant['earliest_start'] > 1 &&
-                        !($aVariant['earliest_start'] == -1 && $aVariant['earliest_end'] == 1))) {
+        } elseif ($aVariant['earliest_start'] && $aVariant['earliest_end']
+            && $aVariant['earliest_start'] != '?' && $aVariant['earliest_end'] != '?') {
             // An insertion must always get two positions which are next to each other,
             //  since the inserted nucleotides will be placed in the middle of those.
-            if ($bCheckHGVS) {
-                return false;
+            // Calculate the length of the variant properly, including intronic positions.
+            $nLength = lovd_getVariantLength(
+                array(
+                    'position_start' => $aVariant['earliest_start'],
+                    'position_start_intron' => $aVariant['earliest_intronic_start'],
+                    'position_end' => $aVariant['earliest_end'],
+                    'position_end_intron' => $aVariant['earliest_intronic_end'],
+                )
+            );
+            if (!$nLength || $nLength > 2) {
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                $aResponse['errors']['EPOSITIONFORMAT'] =
+                    'An insertion must have taken place between two neighboring positions. ' .
+                    'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
             }
-            $aResponse['errors']['EPOSITIONFORMAT'] =
-                'An insertion must have taken place between two neighboring positions. ' .
-                'If the exact location is unknown, please indicate this by placing parentheses around the positions.';
 
         } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])
             && $aVariant['earliest_start'] != '?' && $aVariant['latest_start'] != '?') {
