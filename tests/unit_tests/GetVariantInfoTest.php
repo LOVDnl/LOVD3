@@ -405,6 +405,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('c.123+10_123+11insA', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'position_start_intron' => 10,
+                'position_end_intron' => 11,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('c.(123+10_123+11)insA', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -486,6 +495,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'EPOSITIONFORMAT' =>
                         'An insertion must have taken place between two neighboring positions. If the exact ' .
                         'location is unknown, please indicate this by placing parentheses around the positions.',
+                ),
+            )),
+            array('c.(123+1_124-1)insA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'position_start_intron' => 1,
+                'position_end_intron' => -1,
+                'type' => 'ins',
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
 
