@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-23
+ * Modified    : 2022-02-24
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -497,7 +497,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // Rare situation; Uncertain positions are given that should just be certain.
     if (isset($aVariant['errors']['EPOSITIONFORMAT'])
         && isset($aVariant['messages']['IPOSITIONRANGE'])
-        && $aVariant['type'] == 'ins' && lovd_getVariantLength($aVariant) == 2) {
+        && lovd_getVariantLength($aVariant) == 2
+        && in_array($aVariant['type'], array('ins', 'inv'))) {
         // E.g., c.(1_2)insA.
         $sPositions = lovd_formatPositions($aVariant);
         return $sReference . str_replace(
