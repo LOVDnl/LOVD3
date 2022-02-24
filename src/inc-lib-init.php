@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-23
+ * Modified    : 2022-02-24
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1772,6 +1772,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The two positions do not indicate a range longer than two bases.' .
                     ' Please remove the parentheses if the positions are certain.';
             }
+        }
+
+    } elseif ($aVariant['type'] == 'inv') {
+        if (lovd_getVariantLength($aResponse) == 1
+            && !isset($aResponse['messages']['IUNCERTAINPOSITIONS'])
+            && !($aVariant['latest_start'] && $aVariant['earliest_end'])) {
+            // An inversion must always have a length of more than one, unless
+            //  an uncertain range has been provided; then the calculated length
+            //  could be one while in reality, it's unknown. The exact
+            //  combination of a latest start and an earliest end is therefore
+            //  excluded; these are g.(A_B)_(C_D)inv variants.
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EPOSITIONFORMAT'] = 'Inversions require a length of at least two bases.';
         }
 
     } elseif ($aResponse['type'] == 'subst') {
