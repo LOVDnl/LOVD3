@@ -61,7 +61,7 @@ $sButtonOKInvalid      = 'oButtonOKInvalid';
 $sButtonOKCouldBeValid = 'oButtonOKCouldBeValid';
 
 // Preparing the JS for the buttons.
-// Fixme; Add to buttonOKValid and buttonOKCouldBeValid: mp5 translation of all input.
+// Fixme; Add to buttonOKValid and buttonOKCouldBeValid: md5 translation of all input.
 print('
 // Preparing the buttons.
 var ' . $sButtonYes . ' = {"Yes":function () {
@@ -153,7 +153,7 @@ if ($_REQUEST['action'] == 'check') {
         // Resetting all values.
         var oInput = $(\'input[name$="' . $sFieldName . '"]\');
         oInput.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-        '); // TODO: Remove the mp5 translated variant from the HTML.
+        '); // TODO: Remove the md5 translated variant from the HTML.
 
         // Returning the mapping for transcript, RNA and protein variants.
         foreach ($aTranscripts as $sTranscript) {
@@ -400,6 +400,19 @@ if ($_REQUEST['action'] == 'map') {
         $_VV->verifyVariant($sVariant, array('select_transcripts' => $aTranscripts))
     );
 
+    // Check for issues for which the user cannot be blamed.
+    if ($aMappedVariant === false
+        || in_array(array_keys($aMappedVariant['errors']), array(array('EBUILD'), array('ESYNTAX')))) {
+        // If our VV call returned false, or if we found an EBUILD or ESYNTAX
+        //  error, this is an issue that lies with us, not the user.
+        // We will have to allow these variants into the database.
+        update_dialogue(
+            'Something went wrong on our side, which means we could not map nor validate your variant.',
+            $sButtonOKCouldBeValid
+        );
+        exit();
+    }
+
 
     // Check if VariantValidator bumped into any issues.
     if (!empty($aMappedVariant['errors'])) {
@@ -408,7 +421,7 @@ if ($_REQUEST['action'] == 'map') {
 
         update_images_per_step($sStepMapping, $sImageFailed);
         update_dialogue(
-            'We could not valide nor map your variant because of the following problem(s):<br>- ' .
+            'We could not validate nor map your variant because of the following problem(s):<br>- ' .
             implode('<br> -', $aMappedVariant['errors']) . '<br><br>' .
             'Please take another look at your variant and try again.',
             $sButtonOKInvalid);
