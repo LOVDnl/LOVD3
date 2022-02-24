@@ -1787,6 +1787,20 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             }
             $aResponse['errors']['EPOSITIONFORMAT'] = 'Inversions require a length of at least two bases.';
+
+        } elseif (lovd_getVariantLength($aResponse) == 2
+            && isset($aResponse['messages']['IPOSITIONRANGE'])
+            && !isset($aResponse['messages']['IUNCERTAINPOSITIONS'])) {
+            // If the exact location of an inversion is unknown, this can be
+            //  indicated by placing the positions in the range-format (e.g.
+            //  c.(1_10)inv). In this case, the two positions should not be
+            //  neighbours, since that would imply that the position is certain.
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EPOSITIONFORMAT'] =
+                'The two positions do not indicate a range longer than two bases.' .
+                ' Please remove the parentheses if the positions are certain.';
         }
 
     } elseif ($aResponse['type'] == 'subst') {
