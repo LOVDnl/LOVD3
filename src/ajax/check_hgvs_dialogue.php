@@ -34,7 +34,6 @@ require ROOT_PATH . 'inc-lib-variants.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 
-// Preparing necessary functions and variables.
 // Retrieving the variant and the transcripts and genome builds to map to.
 $sVariant     = htmlspecialchars($_REQUEST['var']);
 $aTranscripts = explode('|', htmlspecialchars($_REQUEST['transcripts']));
@@ -42,6 +41,47 @@ $aActiveGBs   = $_DB->query('SELECT column_suffix, id FROM ' . TABLE_GENOME_BUIL
 
 // Retrieving the name of the input field.
 $sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
+
+
+
+// If the variant is empty, we want to reset all results of this script.
+if (!$sVariant) {
+    print('
+        // Resetting all values.
+        var oInput = $(\'input[name$="' . $sFieldName . '"]\');
+        oInput.siblings("img:first").attr({src: "gfx/trans.png"}).show();
+        '); // TODO: Remove the md5 translated variant from the HTML.
+
+    // Returning the mapping for transcript, RNA and protein variants.
+    foreach ($aTranscripts as $sTranscript) {
+        print('        
+            var oTranscriptField = $("input").filter(function() {
+                return $(this).data("id_ncbi") == "' . $sTranscript . '" 
+            });
+            oTranscriptField.val("");
+            oTranscriptField.prop("disabled", false);
+            oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
+            var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
+            ');
+    }
+
+    // Returning the mapping for genomic variants.
+    foreach ($aActiveGBs as $sGBSuffix => $sGBID) {
+        print('
+            var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
+            oGenomicVariant.val("");
+            oGenomicVariant.prop("disabled", false);
+            oGenomicVariant.siblings("img:first").attr({src: "gfx/trans.png"}).show();
+            ');
+    }
+
+    // Closing the script.
+    exit();
+}
+
+
 
 // Preparing the steps.
 $sStepInitialChecks = 'statusChecks';
@@ -146,43 +186,6 @@ function update_images_per_step($nStep, $sImage)
 
 // Performing initial checks.
 if ($_REQUEST['action'] == 'check') {
-
-    // If the variant is empty, we want to reset all results of this script.
-    if (!$sVariant) {
-        print('
-        // Resetting all values.
-        var oInput = $(\'input[name$="' . $sFieldName . '"]\');
-        oInput.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-        '); // TODO: Remove the md5 translated variant from the HTML.
-
-        // Returning the mapping for transcript, RNA and protein variants.
-        foreach ($aTranscripts as $sTranscript) {
-            print('        
-            var oTranscriptField = $("input").filter(function() {
-                return $(this).data("id_ncbi") == "' . $sTranscript . '" 
-            });
-            oTranscriptField.val("");
-            oTranscriptField.prop("disabled", false);
-            oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-            var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
-            ');
-        }
-
-        // Returning the mapping for genomic variants.
-        foreach ($aActiveGBs as $sGBSuffix => $sGBID) {
-            print('
-            var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
-            oGenomicVariant.val("");
-            oGenomicVariant.prop("disabled", false);
-            oGenomicVariant.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-            ');
-        }
-
-        // Closing the script.
-        exit();
-    }
 
     // Retrieving information on the reference sequence from the URL.
     $sRefSeqInfo  = htmlspecialchars($_REQUEST['refSeqInfo']);
