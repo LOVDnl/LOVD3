@@ -1419,6 +1419,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'ENOTSUPPORTED' => 'Currently, variant descriptions using "pter" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
                 ),
             )),
+            array('LRG_123:g.pter_1000000del', array(
+                'position_start' => 0,
+                'position_end' => 0,
+                'type' => '',
+                'warnings' => array(),
+                'errors' => array(
+                    'ENOTSUPPORTED' =>
+                        'Currently, variant descriptions using "pter" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
+                    'EWRONGREFERENCE' =>
+                        'The variant is missing a chromosomal reference sequence required for pter, cen, or qter positions.',
+                ),
+            )),
             array('n.5-2::10-3', array(
                 'position_start' => 0,
                 'position_end' => 0,

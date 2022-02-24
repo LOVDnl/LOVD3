@@ -1345,6 +1345,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['errors']['ENOTSUPPORTED'] =
                     'Currently, variant descriptions using "' . $sUnsupported . '" are not yet supported.' .
                     ' This does not necessarily mean the description is not valid HGVS.';
+
+                // We do have one requirement; chromosomal reference sequence.
+                if (isset($sReferenceType) && $sReferenceType != 'NC') {
+                    $aResponse['errors']['EWRONGREFERENCE'] =
+                        'The variant is missing a chromosomal reference sequence required for pter, cen, or qter positions.';
+                }
                 return $aResponse;
             }
         }
