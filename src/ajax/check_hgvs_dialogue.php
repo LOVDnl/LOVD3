@@ -480,7 +480,7 @@ if ($_REQUEST['action'] == 'map') {
                 'map_to_transcripts' => true,          // Should we map the variant to transcripts?
                 'predict_protein'    => true,          // Should we get protein predictions?
                 'lift_over'          => false,         // Should we get other genomic mappings of this variant?
-                'select_transcripts' => $aTranscripts, // Should we limit our output to only a certain set of transcripts?
+                'select_transcripts' => array_diff($aTranscripts, array($sReferenceSequence)), // Should we limit our output to only a certain set of transcripts?
             ))
         );
 
