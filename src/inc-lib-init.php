@@ -1923,7 +1923,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             //  no use to check the format of the suffix for a repeat variant.
             if (isset($aResponse['messages']['IPOSITIONRANGE'])
                 && !in_array($aVariant['type'], array('ins', 'delins'))) {
-                if (!preg_match('/^\([0-9]+(_[0-9]+)?\)$/', $aVariant['suffix'])) {
+                if (!preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                     // If the position is uncertain, then the suffix must show the
                     //  length of the variant within parentheses.
                     if ($bCheckHGVS) {
@@ -1932,6 +1932,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
                         ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
+
+                } else {
+                    // Length given; check sizes.
+                    list(,$nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
+                    if ($nSuffixMaxLength) {
+                        if ($nSuffixMaxLength < $nSuffixMinLength) {
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The possible lengths of the variant are not given in the correct order.';
+                        } elseif ($nSuffixMaxLength == $nSuffixMinLength) {
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The two possible lengths of the variant are the same.';
+                        }
+
+                        if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
+                            return false;
+                        }
+                    }
                 }
 
             } else {
