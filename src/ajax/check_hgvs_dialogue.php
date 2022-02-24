@@ -112,10 +112,10 @@ function update_dialogue($sText, $sButtons = '', $bCleanSlate = false)
     //  if !$bCleanSlate, it will append.
     print(($bCleanSlate ? '
     // Updating the contents.
-    $("#variantCheckDialogue").html("' . $sText . '<br><br>");
+    $("#variantCheckDialogue").html("' . $sText . '<br>");
     ' : '
     // Appending to the contents.
-    $("#variantCheckDialogue").append("' . $sText . '<br><br>");
+    $("#variantCheckDialogue").append("' . $sText . '<br>");
     '));
 
     print(($sButtons ? '
@@ -190,7 +190,7 @@ if ($_REQUEST['action'] == 'check') {
     // Opening the dialogue.
     print('
     // Setting up the dialogue.
-    $("body").append("<DIV id=\'variantCheckDialogue\' title=\'Mapping and validating your variant.\'></DIV>");
+    $("body").append("<DIV id=\'variantCheckDialogue\' title=\'Mapping and validating your variant using VariantValidator.\'></DIV>");
     $("#variantCheckDialogue").dialog({
         draggable:true,resizable:false,minWidth:600,show:"fade",closeOnEscape:false,hide:"fade",modal:true,
         open: function(event, ui) { $(".ui-dialog-titlebar-close").hide(); }
@@ -198,8 +198,7 @@ if ($_REQUEST['action'] == 'check') {
     ');
 
     update_dialogue(
-        '<IMG id=\"' . $sStepInitialChecks . '\" src=\"' . $sImageNeutral . '\" width=\"16\" height=\"16\"> Performing initial checks.' .
-        '<BR><IMG id=\"' . $sStepMapping . '\" src=\"' . $sImageNeutral . '\" width=\"16\" height=\"16\"> Mapping your variant.',
+        '<IMG id=\"' . $sStepInitialChecks . '\" src=\"' . $sImageNeutral . '\" width=\"16\" height=\"16\"> Performing initial checks.',
         '',
         true
     );
@@ -215,7 +214,7 @@ if ($_REQUEST['action'] == 'check') {
 
         update_images_per_step($sStepInitialChecks, $sImageFailed);
         update_dialogue(
-            'Your variant contains syntax which our HGVS check cannot recognise. ' .
+            '<br>Your variant contains syntax which our HGVS check cannot recognise. ' .
             'Therefore, we cannot validate your variant nor map it to other reference sequences. ' .
             'Please thoroughly validate your variant by hand.',
             $sButtonOKCouldBeValid);
@@ -232,7 +231,7 @@ if ($_REQUEST['action'] == 'check') {
         //  which we can interpret.
 
         // Let the user know that the given variant did not pass our HGVS check.
-        $sResponse = 'Your variant (\"' . $sVariant . '\") did not pass our HGVS check.<br><br>';
+        $sResponse = '<br>Your variant (\"' . $sVariant . '\") did not pass our HGVS check.<br><br>';
         update_images_per_step($sStepInitialChecks, $sImageFailed);
 
 
@@ -278,7 +277,7 @@ if ($_REQUEST['action'] == 'check') {
         //  cannot send the variant in for mapping. We will notify the
         //  user and exit this script.
         update_images_per_step($sStepInitialChecks, $sImageFailed);
-        update_dialogue('Your variant contains syntax which VariantValidator cannot recognise. ' .
+        update_dialogue('<br>Your variant contains syntax which VariantValidator cannot recognise. ' .
             'Therefore, we cannot map your variant nor validate the positions.',
             $sButtonOKCouldBeValid);
         exit();
@@ -317,7 +316,7 @@ if ($_REQUEST['action'] == 'check') {
             //  the user and exit the script.
             update_images_per_step($sStepInitialChecks, $sImageFailed);
             update_dialogue(
-                'An unknown combination of genome build and chromosome was given.' .
+                '<br>An unknown combination of genome build and chromosome was given.' .
                 ' This means we cannot perform the mapping.',
                 $sButtonOKInvalid);
             exit();
@@ -346,7 +345,7 @@ if ($_REQUEST['action'] == 'check') {
             //  is then likely to be wrong. We cannot accept it.
             update_images_per_step($sStepInitialChecks, $sImageFailed);
             update_dialogue(
-                'The reference sequence given in the input description, does not equal the' .
+                '<br>The reference sequence given in the input description, does not equal the' .
                 ' reference sequence matched to the variant by LOVD automatically. Please have' .
                 ' another look and perhaps try again from a different input field.',
                 $sButtonOKInvalid);
@@ -361,7 +360,7 @@ if ($_REQUEST['action'] == 'check') {
 
     // All checks have passed; we are ready for the mapping.
     update_images_per_step($sStepInitialChecks, $sImagePassed);
-    update_images_per_step($sStepMapping, $sImageLoading);
+    update_dialogue('<IMG id=\"' . $sStepMapping . '\" src=\"' . $sImageLoading . '\" width=\"16\" height=\"16\"> Mapping your variant.');
 
     print('
     $.get("ajax/check_hgvs_dialogue.php?"
@@ -406,8 +405,9 @@ if ($_REQUEST['action'] == 'map') {
         // If our VV call returned false, or if we found an EBUILD or ESYNTAX
         //  error, this is an issue that lies with us, not the user.
         // We will have to allow these variants into the database.
+        update_images_per_step($sStepMapping, $sImageFailed);
         update_dialogue(
-            'Something went wrong on our side, which means we could not map nor validate your variant.',
+            '<br>Something went wrong on our side, which means we could not map nor validate your variant.',
             $sButtonOKCouldBeValid
         );
         exit();
@@ -421,7 +421,7 @@ if ($_REQUEST['action'] == 'map') {
 
         update_images_per_step($sStepMapping, $sImageFailed);
         update_dialogue(
-            'We could not validate nor map your variant because of the following problem(s):<br>- ' .
+            '<br>We could not validate nor map your variant because of the following problem(s):<br>- ' .
             implode('<br> -', $aMappedVariant['errors']) . '<br><br>' .
             'Please take another look at your variant and try again.',
             $sButtonOKInvalid);
@@ -435,7 +435,7 @@ if ($_REQUEST['action'] == 'map') {
         if (isset($aMappedVariant['warnings']['WROLLBACK'])
             || isset($aMappedVariant['warnings']['WCORRECTED'])) {
             // The variant was corrected.
-            update_dialogue('Your variant was corrected to ' . $aMappedVariant['data']['DNA'] .
+            update_dialogue('<br>Your variant was corrected to ' . $aMappedVariant['data']['DNA'] .
                 ' to fully match HGVS guidelines.');
             $bImprovedByVV = true;
         }
@@ -445,7 +445,7 @@ if ($_REQUEST['action'] == 'map') {
             //  which is an issue with them, not us nor our user. We can only get
             //  the mapping on all genome builds, not on (other) transcripts.
             // We will notify the user.
-            update_dialogue('Your variant could not fully be validated due to unknown issues.');
+            update_dialogue('<br>Your variant could not fully be validated due to unknown issues.');
             // Fixme; Either find a fix within VV, or Call Mutalyzer.
         }
 
@@ -458,7 +458,7 @@ if ($_REQUEST['action'] == 'map') {
         //  an unknown error occurred and that they should try again later.
         update_images_per_step($sStepMapping, $sImageFailed);
         update_dialogue(
-            'An unknown error occurred while trying to validate and map your variant.' .
+            '<br>An unknown error occurred while trying to validate and map your variant.' .
             ' We are sorry for the inconvenience. Please try again later.',
             $sButtonOKInvalid);
         exit();
@@ -487,7 +487,7 @@ if ($_REQUEST['action'] == 'map') {
         if (!isset($aMappedViaGB['data']['transcript_mappings'])) {
             // If for any reason no genomic mappings were given, we cannot perform this
             //  extra step, and will thus miss some information. We will inform the user.
-            update_dialogue('Your variant could not be mapped to all transcripts due to unknown issues.');
+            update_dialogue('<br>Your variant could not be mapped to all transcripts due to unknown issues.');
         }
 
         $aMappedVariant['data']['transcript_mappings'] = $aMappedViaGB['data']['transcript_mappings'];
@@ -559,7 +559,7 @@ if ($_REQUEST['action'] == 'map') {
                 //  and concatenate the variants cleanly as follows:
                 // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
                 //  NC_123456.1:g.1del^2_3del^4del.
-                update_dialogue('There were multiple genomic variant predictions for build ' . $sGBID . '.');
+                update_dialogue('<br>There were multiple genomic variant predictions for build ' . $sGBID . '.');
 
                 $sMappedGenomicVariant =
                     preg_replace('/(.*:[a-z]\.).*/', '', $aMappedGenomicVariant[0]) .
@@ -596,7 +596,7 @@ if ($_REQUEST['action'] == 'map') {
     // Send final message to the user.
     update_images_per_step($sStepMapping, $sImagePassed);
     update_dialogue(
-        'Your variant was successfully mapped' . (!isset($bImprovedByVV) ? '' : ', improved') .
+        '<br>Your variant was successfully mapped' . (!isset($bImprovedByVV) ? '' : ', improved') .
         ' and validated by VariantValidator. Thank you for your patience!',
         $sButtonOKValid);
 }
