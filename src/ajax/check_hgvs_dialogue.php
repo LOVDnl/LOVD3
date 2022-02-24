@@ -78,7 +78,7 @@ if (!$sVariant) {
     }
 
     // Closing the script.
-    exit();
+    exit;
 }
 
 
@@ -221,7 +221,7 @@ if ($_REQUEST['action'] == 'check') {
             'Therefore, we cannot validate your variant nor map it to other reference sequences. ' .
             'Please thoroughly validate your variant by hand.',
             $sButtonOKCouldBeValid);
-        exit();
+        exit;
     }
 
 
@@ -265,7 +265,7 @@ if ($_REQUEST['action'] == 'check') {
             update_dialogue($sResponse . 'Please check your variant for errors and try again.<br>',
                 $sButtonOKInvalid);
         }
-        exit();
+        exit;
     }
 
 
@@ -283,7 +283,7 @@ if ($_REQUEST['action'] == 'check') {
         update_dialogue('<br>Your variant contains syntax which VariantValidator cannot recognise. ' .
             'Therefore, we cannot map your variant nor validate the positions.',
             $sButtonOKCouldBeValid);
-        exit();
+        exit;
     }
 
 
@@ -322,7 +322,7 @@ if ($_REQUEST['action'] == 'check') {
                 '<br>An unknown combination of genome build and chromosome was given.' .
                 ' This means we cannot perform the mapping.',
                 $sButtonOKInvalid);
-            exit();
+            exit;
         }
 
         $sReferenceSequence = $_SETT['human_builds'][$aActiveGBs[$sCurrentGBSuffix]]['ncbi_sequences'][$sChromosome];
@@ -352,7 +352,7 @@ if ($_REQUEST['action'] == 'check') {
                 ' reference sequence matched to the variant by LOVD automatically. Please have' .
                 ' another look and perhaps try again from a different input field.',
                 $sButtonOKInvalid);
-            exit();
+            exit;
         }
 
     } else {
@@ -413,7 +413,7 @@ if ($_REQUEST['action'] == 'map') {
             '<br>Something went wrong on our side, which means we could not map nor validate your variant.',
             $sButtonOKCouldBeValid
         );
-        exit();
+        exit;
     }
 
 
@@ -428,7 +428,7 @@ if ($_REQUEST['action'] == 'map') {
             implode('<br> -', $aMappedVariant['errors']) . '<br><br>' .
             'Please take another look at your variant and try again.',
             $sButtonOKInvalid);
-        exit();
+        exit;
     }
 
     // Check for warnings.
@@ -464,7 +464,7 @@ if ($_REQUEST['action'] == 'map') {
             '<br>An unknown error occurred while trying to validate and map your variant.' .
             ' We are sorry for the inconvenience. Please try again later.',
             $sButtonOKInvalid);
-        exit();
+        exit;
     }
 
 
