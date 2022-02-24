@@ -1934,8 +1934,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
 
                 } else {
-                    // Length given; check sizes.
+                    // Length given; check sizes and if this matches the
+                    //  variant's length.
                     list(,$nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
+                    $nVariantLength = lovd_getVariantLength($aResponse);
+
+                    // Make sure the suffix itself is OK.
                     if ($nSuffixMaxLength) {
                         if ($nSuffixMaxLength < $nSuffixMinLength) {
                             $aResponse['warnings']['WSUFFIXFORMAT'] =
@@ -1948,6 +1952,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
                             return false;
                         }
+                    }
+
+                    // For simple ranges, we can do a full check.
+                    if (!$aVariant['earliest_end'] && !$aVariant['latest_end']) {
+                        if (max($nSuffixMinLength, $nSuffixMaxLength) > $nVariantLength) {
+                            $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
+                                'The given length of the variant must fit between the given positions.';
+                        } elseif ($nVariantLength == (!$nSuffixMaxLength? $nSuffixMinLength :
+                                min($nSuffixMinLength, $nSuffixMaxLength))) {
+                            $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
+                                'The positions indicate a range equally long as the given length of the variant.' .
+                                ' Please remove the parentheses if the positions are certain, or adjust the positions or variant length.';
+                        }
+                    }
+
+                    if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH'])) {
+                        return false;
                     }
                 }
 

@@ -1288,7 +1288,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'inv',
-                'warnings' => array(),
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' => 'The given length of the variant must fit between the given positions.',
+                ),
                 'errors' => array(
                     'EPOSITIONFORMAT' =>
                         'The two positions do not indicate a range longer than two bases. Please remove the parentheses if the positions are certain.',
