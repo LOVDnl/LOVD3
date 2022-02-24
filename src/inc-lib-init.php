@@ -1958,12 +1958,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     if (!$aVariant['earliest_end'] && !$aVariant['latest_end']) {
                         if (max($nSuffixMinLength, $nSuffixMaxLength) > $nVariantLength) {
                             $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
-                                'The given length of the variant must fit between the given positions.';
+                                'The positions indicate a range smaller than the given length of the variant.' .
+                                ' Please adjust the positions or variant length.';
                         } elseif ($nVariantLength == (!$nSuffixMaxLength? $nSuffixMinLength :
                                 min($nSuffixMinLength, $nSuffixMaxLength))) {
                             $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
                                 'The positions indicate a range equally long as the given length of the variant.' .
-                                ' Please remove the parentheses if the positions are certain, or adjust the positions or variant length.';
+                                ' Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.';
                         }
                     }
 

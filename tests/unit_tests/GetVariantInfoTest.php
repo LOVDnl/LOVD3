@@ -1220,6 +1220,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_100)del(100)', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' =>
+                        'The positions indicate a range equally long as the given length of the variant. Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_100)del(30_30)', array(
                 'position_start' => 1,
                 'position_end' => 100,
@@ -1289,7 +1302,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'inv',
                 'warnings' => array(
-                    'WSUFFIXINVALIDLENGTH' => 'The given length of the variant must fit between the given positions.',
+                    'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range smaller than the given length of the variant. Please adjust the positions or variant length.',
                 ),
                 'errors' => array(
                     'EPOSITIONFORMAT' =>
