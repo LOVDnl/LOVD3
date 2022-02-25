@@ -177,7 +177,10 @@ function update_images_per_step($nStep, $sImage)
     // This function takes a step in the format of an integer, and
     //  replaces the image which was put next to this step by the
     //  given $sImage.
-    print('$("#' . $nStep . '").attr({src: "' . $sImage . '"});');
+    print('
+    // Updating one of the status images.
+    $("#' . $nStep . '").attr({src: "' . $sImage . '"});
+    ');
 }
 
 
@@ -372,8 +375,8 @@ if ($_REQUEST['action'] == 'check') {
             + "&fieldName=' . $sFieldName . '"
             + "&type=' . $sType . '"
             + "&refSeq=' . $sReferenceSequence . '"
-            + "&transcripts=' . implode('|', $aTranscripts) . '")
-        .fail(function(){alert("Error while trying to map your variant, please try again later.");})
+            + "&transcripts=' . implode('|', $aTranscripts) . '"
+    ).fail(function(){alert("An error occurred while trying to map your variant, please try again later.");})
     ');
 }
 
@@ -394,9 +397,9 @@ if ($_REQUEST['action'] == 'map') {
     $aMappedVariant = (
     $sType == 'VOG' ?
         $_VV->verifyGenomic($sVariant, array(
-            'map_to_transcripts' => empty($aTranscript),      // Should we map the variant to transcripts?
-            'predict_protein' => empty($aTranscript),      // Should we get protein predictions?
-            'lift_over' => (count($aActiveGBs) > 1), // Should we get other genomic mappings of this variant?
+            'map_to_transcripts' => !empty($aTranscript),     // Should we map the variant to transcripts?
+            'predict_protein'    => !empty($aTranscript),     // Should we get protein predictions?
+            'lift_over'          => (count($aActiveGBs) > 1), // Should we get other genomic mappings of this variant?
             'select_transcripts' => (empty($aTranscripts) ? array() : $aTranscripts),
         )) :
         $_VV->verifyVariant($sVariant, array('select_transcripts' => $aTranscripts))

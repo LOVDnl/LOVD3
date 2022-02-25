@@ -188,8 +188,8 @@ function lovd_checkHGVS(e) {
             + "&var=" + encodeURIComponent(sVariant)
             + "&fieldName=" + encodeURIComponent(sFieldName)
             + "&refSeqInfo=" + encodeURIComponent(sRefSeqInfo)
-            + "&transcripts=" + encodeURIComponent(sTranscripts))
-        .fail(function(){alert("Error checking your variant, please try again later.");})
+            + "&transcripts=" + encodeURIComponent(sTranscripts)
+    ).fail(function(){alert("Error checking your variant, please try again later.");})
     ;
 }
 
