@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-24
+ * Modified    : 2022-02-25
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1792,7 +1792,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['EPOSITIONFORMAT'] = 'Inversions require a length of at least two bases.';
+            $aResponse['errors']['EPOSITIONFORMAT'] =
+                'Inversions require a length of at least two bases.';
 
         } elseif (lovd_getVariantLength($aResponse) == 2
             && isset($aResponse['messages']['IPOSITIONRANGE'])
@@ -1890,21 +1891,24 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
 
-    // Finding out if the suffix is appropriately placed and is formatted as it should.
+    // Finding out if the suffix is appropriately placed and
+    //  is formatted as it should.
     if (!$aVariant['suffix']
         && (in_array($aVariant['type'], array('ins', 'delins'))
             || isset($aResponse['messages']['IPOSITIONRANGE']))) {
-        // Variants of type ins and delins need a suffix showing what has been inserted,
-        //  and variants which took place within a range need a suffix showing the length of the variant.
+        // Variants of type ins and delins need a suffix showing what has been
+        //  inserted and variants which took place within a range need a suffix
+        //  showing the length of the variant.
         if ($bCheckHGVS) {
             return false;
         }
-        $aResponse['errors']['ESUFFIXMISSING'] =
-            'The ' . (in_array($aVariant['type'], array('ins', 'delins'))? 'inserted sequence' : 'length') .
-            ' must be provided for ' .
-            (in_array($aVariant['type'], array('ins', 'delins'))?
-                'insertions or deletion-insertions' :
-                'variants which took place within an uncertain range') . '.';
+        if (in_array($aVariant['type'], array('ins', 'delins'))) {
+            $aResponse['errors']['ESUFFIXMISSING'] =
+                'The inserted sequence must be provided for insertions or deletion-insertions.';
+        } else {
+            $aResponse['errors']['ESUFFIXMISSING'] =
+                'The length must be provided for variants which took place within an uncertain range.';
+        }
 
     } elseif ($aVariant['suffix']) {
         if ($aResponse['type'] == 'repeat'
