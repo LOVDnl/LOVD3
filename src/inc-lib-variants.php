@@ -619,6 +619,25 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
 
 
+
+function lovd_getMD5TranslationOfVariants ($aVariants)
+{
+    // This function can be used to get a secret and unique
+    //  key for a certain set of variants.
+    // The function should be given an array of variants
+    //  that are to be translated into md5. The order of
+    //  the variants does not matter, since this function
+    //  will sort the variants before translating them into
+    //  an md5 hash.
+    sort($aVariants);
+    return md5(implode('', $aVariants));
+}
+
+
+
+
+
+
 /**
  * Predict a protein description of a variant and given transcript using the
  * Mutalyzer webservice.

@@ -101,7 +101,6 @@ $sButtonOKInvalid      = 'oButtonOKInvalid';
 $sButtonOKCouldBeValid = 'oButtonOKCouldBeValid';
 
 // Preparing the JS for the buttons.
-// Fixme; Add to buttonOKValid and buttonOKCouldBeValid: md5 translation of all input.
 print('
 // Preparing the buttons.
 var ' . $sButtonYes . ' = {"Yes":function () {
@@ -137,6 +136,7 @@ var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
     //  lies with us. We will accept this variant and the
     //  uncertainty that comes with it.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
     $(this).dialog("close");
 }};
@@ -503,6 +503,7 @@ if ($_REQUEST['action'] == 'map') {
 
 
     // Add mapping information to the right fields.
+    $aAllValidatedVariants = array();
 
     // Returning the mapping for transcript, RNA and protein variants.
     foreach ($aTranscripts as $sTranscript) {
@@ -514,6 +515,9 @@ if ($_REQUEST['action'] == 'map') {
         // Retrieving the info.
         $aTranscriptData = ($sTranscript == $sReferenceSequence ? // Yes=Variant of origin (stored directly in data); No=Other (stored in transcript_mappings)
             $aMappedVariant['data'] : $aMappedVariant['data']['transcript_mappings'][$sTranscript]);
+
+        // Adding the validated variant to the rest of the validated variants.
+        array_push($aAllValidatedVariants, $aTranscriptData['DNA']);
 
         // Filling in the input fields.
         print('
@@ -577,14 +581,19 @@ if ($_REQUEST['action'] == 'map') {
             }
         }
 
+        $sMappedGenomicVariant = preg_replace('/.*:/', '', $sMappedGenomicVariant); // Fixme; Find a cleaner way of cutting off the reference sequence.
+
+        // Adding the validated variant to the rest of the validated variants.
+        array_push($aAllValidatedVariants, $sMappedGenomicVariant);
+
         // Filling in the input field.
         print('
         // Adding genomic info the fields.
         var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
-        oGenomicVariant.val("' . preg_replace('/.*:/', '', $sMappedGenomicVariant) . '");
+        oGenomicVariant.val("' . $sMappedGenomicVariant . '");
         oGenomicVariant.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
         oGenomicVariant.prop("disabled", true);
-        '); // Fixme; Find a cleaner way of cutting off the reference sequence.
+        ');
     }
 
 
@@ -592,10 +601,15 @@ if ($_REQUEST['action'] == 'map') {
     //  all open transcript fields have been blocked. We don't
     //  want the user to block the transcript input at this point
     //  so we disable the 'Ignore this transcript' option.
+    // And now that we're all done, we can also fill in the md5
+    //  translation of our validated variants.
     print('
     // Disabling the "ignore this transcript" option.
     var oIgnoreOption = $(\'input[name^="ignore_"]\');
     oIgnoreOption.parent().html("");
+    
+    // Adding the md5 translation of the validated variants.
+    $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants($aAllValidatedVariants) . '"); 
     ');
 
 
