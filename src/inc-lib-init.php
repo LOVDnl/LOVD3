@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-25
+ * Modified    : 2022-02-28
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1259,7 +1259,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         $sVariant, $aMatches);
 
-    $aVariant = (!isset($aMatches[0]) ? array() : array(
+    $aVariant = (!isset($aMatches[0])? array() : array(
         // All information of the variant is stored into this associative array.
         // Notes: -If the information was not found, the positions are cast to 0
         //         and the variant type, parentheses, and suffix, are cast to an
@@ -1911,10 +1911,57 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
     } elseif ($aVariant['suffix']) {
-        if ($aResponse['type'] == 'repeat'
-            || (!in_array($aVariant['type'], array('ins', 'delins'))
-                && !isset($aResponse['messages']['IPOSITIONRANGE']))) {
-            // Repeats should never be given a suffix. If the variants are of a
+        if ($aResponse['type'] == 'repeat') {
+            // Repeats should never be given a suffix.
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+
+        } elseif (in_array($aVariant['type'], array('ins', 'delins'))) {
+            // For insertions and deletion-insertions, the suffix can be quite
+            //  complex. Check all possibilities.
+            if (substr_count($aVariant['suffix'], '[') != substr_count($aVariant['suffix'], ']')) {
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                    'The part after "' . $aResponse['type'] . '" contains unbalanced square brackets.';
+
+            } else {
+                $bSuffixIsSurroundedByBrackets = ($aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']');
+                $bMultipleInsertionsInSuffix = strpos($aVariant['suffix'], ';');
+
+                foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
+                        substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
+                    // Looping through all possible variants.
+                    if (!(
+                        (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                            // so no c.1_2ins[A]
+                            && (preg_match('/^[ACGTN]+$/', $sInsertion)                                                // c.1_2insATG
+                                || preg_match(
+                                    '/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion)          // c.1_2insN[40] or ..N[(1_2)]
+                                || (preg_match(                                                                        // c.1_2ins15+1_16-1
+                                    '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
+                                    && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) // if positions are simple, is A < B?
+                        ||
+                        ($bSuffixIsSurroundedByBrackets && strpos($sInsertion, ':')
+                            && ( // If we have brackets and we find a colon, we expect a full position or inversion.
+                                (substr($sInsertion, -3) == 'inv' && lovd_getVariantInfo($sInsertion, false, true))
+                                || lovd_getVariantInfo($sInsertion . 'del', false, true)
+                            )
+                        ))) {
+                        if ($bCheckHGVS) {
+                            return false;
+                        }
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.';
+                    }
+                }
+            }
+
+        } elseif (!in_array($aVariant['type'], array('ins', 'delins'))
+            && !isset($aResponse['messages']['IPOSITIONRANGE'])) {
+            // If the variants are of a
             //  type that is not ins or delins, they should only have a suffix
             //  if they were given a position range.
             if ($bCheckHGVS) {
@@ -1922,7 +1969,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
 
-        } elseif ($aResponse['type'] != 'repeat') {
+        } else {
             // We know that repeat variants should never get a suffix. Therefore, it is
             //  no use to check the format of the suffix for a repeat variant.
             if (isset($aResponse['messages']['IPOSITIONRANGE'])
@@ -1974,48 +2021,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
                     if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH'])) {
                         return false;
-                    }
-                }
-
-            } else {
-                // If the variant is not given within a range, it does
-                //  not need to get the length of the variant as a suffix.
-                // Now there are more possibilities, which we check below.
-                if (substr_count($aVariant['suffix'], '[') != substr_count($aVariant['suffix'], ']')) {
-                    if ($bCheckHGVS) {
-                        return false;
-                    }
-                    $aResponse['warnings']['WSUFFIXFORMAT'] =
-                        'The part after "' . $aResponse['type'] . '" contains unbalanced square brackets.';
-
-                } else {
-                    $bSuffixIsSurroundedByBrackets = ($aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']');
-                    $bMultipleInsertionsInSuffix = strpos($aVariant['suffix'], ';');
-
-                    foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
-                            substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
-                        // Looping through all possible variants.
-                        if (!(
-                            (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                            // so no c.1_2ins[A]
-                                && (preg_match('/^[ACGTN]+$/', $sInsertion)                                                // c.1_2insATG
-                                    || preg_match(
-                                        '/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion)          // c.1_2insN[40] or ..N[(1_2)]
-                                    || (preg_match(                                                                        // c.1_2ins15+1_16-1
-                                        '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
-                                        && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) // if positions are simple, is A < B?
-                            ||
-                            ($bSuffixIsSurroundedByBrackets && strpos($sInsertion, ':')
-                                && ( // If we have brackets and we find a colon, we expect a full position or inversion.
-                                    (substr($sInsertion, -3) == 'inv' && lovd_getVariantInfo($sInsertion, false, true))
-                                    || lovd_getVariantInfo($sInsertion . 'del', false, true)
-                                )
-                            ))) {
-                            if ($bCheckHGVS) {
-                                return false;
-                            }
-                            $aResponse['warnings']['WSUFFIXFORMAT'] =
-                                'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.';
-                        }
                     }
                 }
             }
