@@ -47,14 +47,14 @@ $sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
 // If the variant is empty, we want to reset all results of this script.
 if (!$sVariant) {
     print('
-        // Resetting all values.
-        var oInput = $(\'input[name$="' . $sFieldName . '"]\');
-        oInput.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-        '); // TODO: Remove the md5 translated variant from the HTML.
+        // Resetting the md5 key.
+        $(\'input[name="codedVariants"]\').val("");
+        ');
 
     // Resetting the mapping for transcript, RNA and protein variants.
     foreach ($aTranscripts as $sTranscript) {
-        print('        
+        print('
+            // Resetting the transcript fields.        
             var oTranscriptField = $("input").filter(function() {
                 return $(this).data("id_ncbi") == "' . $sTranscript . '" 
             });
@@ -70,6 +70,7 @@ if (!$sVariant) {
     // Resetting the mapping for genomic variants.
     foreach ($aActiveGBs as $sGBSuffix => $sGBID) {
         print('
+            // Resetting the genomic fields.
             var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
             oGenomicVariant.val("");
             oGenomicVariant.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
@@ -135,8 +136,8 @@ var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
     // We could not validate this variant, but the problem
     //  lies with us. We will accept this variant and the
     //  uncertainty that comes with it.
+    $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
     $(this).dialog("close");
 }};
@@ -609,7 +610,7 @@ if ($_REQUEST['action'] == 'map') {
     oIgnoreOption.parent().html("");
     
     // Adding the md5 translation of the validated variants.
-    $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants($aAllValidatedVariants) . '"); 
+    $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants($aAllValidatedVariants) . '");
     ');
 
 
