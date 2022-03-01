@@ -52,14 +52,14 @@ if (!$sVariant) {
         oInput.siblings("img:first").attr({src: "gfx/trans.png"}).show();
         '); // TODO: Remove the md5 translated variant from the HTML.
 
-    // Returning the mapping for transcript, RNA and protein variants.
+    // Resetting the mapping for transcript, RNA and protein variants.
     foreach ($aTranscripts as $sTranscript) {
         print('        
             var oTranscriptField = $("input").filter(function() {
                 return $(this).data("id_ncbi") == "' . $sTranscript . '" 
             });
             oTranscriptField.val("");
-            oTranscriptField.prop("disabled", false);
+            oTranscriptField.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
             oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
             var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
@@ -67,12 +67,12 @@ if (!$sVariant) {
             ');
     }
 
-    // Returning the mapping for genomic variants.
+    // Resetting the mapping for genomic variants.
     foreach ($aActiveGBs as $sGBSuffix => $sGBID) {
         print('
             var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
             oGenomicVariant.val("");
-            oGenomicVariant.prop("disabled", false);
+            oGenomicVariant.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
             oGenomicVariant.siblings("img:first").attr({src: "gfx/trans.png"}).show();
             ');
     }
@@ -529,7 +529,7 @@ if ($_REQUEST['action'] == 'map') {
     if (!oTranscriptField.prop("disabled")) {
         oTranscriptField.val("' . $aTranscriptData['DNA'] . '");
         oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-        oTranscriptField.prop("disabled", true);
+        oTranscriptField.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
         var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
         $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '");
         $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '");
@@ -592,7 +592,7 @@ if ($_REQUEST['action'] == 'map') {
         var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
         oGenomicVariant.val("' . $sMappedGenomicVariant . '");
         oGenomicVariant.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-        oGenomicVariant.prop("disabled", true);
+        oGenomicVariant.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
         ');
     }
 
