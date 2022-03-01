@@ -42,7 +42,11 @@ define('AJAX_CONNECTION_ERROR', '7');
 define('AJAX_NO_AUTH', '8');
 define('AJAX_DATA_ERROR', '9');
 
-$_SETT = array('objectid_length' => array('transcripts' => 8));
+$_SETT = array(
+    'objectid_length' => array('transcripts' => 8),
+    'variant_validator' => array(
+        'genome_builds' => array('hg19', 'hg38')),
+);
 ?>
 
 // function lovd_checkHGVS (e)
@@ -221,11 +225,11 @@ function lovd_convertPosition (oElement)
         if (oThisDNA.attr("name").indexOf("VariantOnTranscript") >= 0) {
             sSource = "VOT";
         } else {
-            pos = oThisDNA.attr("name").lastIndexOf("/");
-            sSource = oThisDNA.attr("name").substr(pos + 1);
+            sSource = oThisDNA.data('genomeBuild');
         }
         oVariantSource.val(sSource);
     }
+
     var oAllDNA = $('input[name$="_VariantOnTranscript/DNA"]');
     $(oAllDNA).removeClass().siblings('img:first').attr({
         src: 'gfx/trans.png',
@@ -235,12 +239,14 @@ function lovd_convertPosition (oElement)
         onmouseover: '',
         onmouseout: ''
     }).show();
+
     var oAllProteins = $('input[name$="_VariantOnTranscript/Protein"]');
     $(oAllProteins).siblings('img:first').attr({
         src: 'gfx/trans.png',
         alt: '',
         title: ''
     }).show();
+
     $(oThisDNA).siblings('img:first').attr({
         src: 'gfx/lovd_loading.gif',
         alt: 'Loading...',
@@ -250,7 +256,7 @@ function lovd_convertPosition (oElement)
         onmouseout: ''
     }).show();
 
-    if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
+    if (oThisDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
         // This function was called from the genomic variant, so build a list of genes and prepare the variant accordingly for mutalyzer.
         var sVariantNotation = 'chr<?php echo $_GET['chromosome']; ?>:' + oThisDNA.val();
         var aGenes = [];
@@ -274,7 +280,7 @@ function lovd_convertPosition (oElement)
         $.get('ajax/convert_position.php', { variant: sVariantNotation, gene: sGene },
             function(sData) {
                 if (sData != '<?php echo AJAX_DATA_ERROR; ?>' && sData != '<?php echo AJAX_FALSE; ?>' && sData != '<?php echo AJAX_NO_AUTH; ?>') {
-                    if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
+                    if (oThisDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
                         // This function was called from the genomic variant, so fill in the return values from mutalyzer in the transcript DNA fields.
                         aVariants = sData.split(';');
                         var nVariants = aVariants.length;

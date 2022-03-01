@@ -299,6 +299,12 @@ class LOVD_Custom extends LOVD_Object
                 $aFormData[$sPrefix . $sCol] = $aEntry;
             }
 
+            // The element data will be passed on, so that viewForm() can make sure it will be added to the HTML.
+            // NOTE: Element data is not stored in the database, but added by, for instance, getForm().
+            if (!empty($aCol['element_data'])) {
+                $aFormData[$sPrefix . $sCol][] = $aCol['element_data'];
+            }
+
             // Any custom links we want to mention?
             if (!empty($aCol['custom_links'])) {
                 $sLinks = '';
