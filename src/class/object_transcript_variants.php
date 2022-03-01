@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2021-08-12
- * For LOVD    : 3.0-27
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -275,7 +275,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         // Bypass LOVD_Custom::checkFields(), since it's functionality has been copied above.
         LOVD_Object::checkFields($aData, $zData, $aOptions);
 
-        lovd_checkXSS();
+        lovd_checkXSS($aData);
     }
 
 
@@ -426,9 +426,9 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         if ($sView == 'entry') {
             $zData['geneid_'] = '<A href="genes/' . $zData['geneid'] . '">' . $zData['geneid'] . '</A>';
             $zData['id_ncbi_'] = '<A href="transcripts/' . $zData['transcriptid'] . '">' . $zData['id_ncbi'] . '</A>';
-            $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid']{0}];
-            $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid']{1}];
-            if (LOVD_plus && lovd_verifyInstance('mgha', false)) { // Display the Genomizer URL in the VOT ViewEntry. TODO Once the ref and alt are separated we need to add it into this URL. Should we add this to the links table so as it can be used elsewhere?
+            $zData['effect_reported'] = $_SETT['var_effect'][$zData['effectid'][0]];
+            $zData['effect_concluded'] = $_SETT['var_effect'][$zData['effectid'][1]];
+            if (LOVD_plus && lovd_verifyInstance('mgha', false)) { // Display the Genomizer URL in the VOT ViewEntry.
                 $zData['genomizer_url_'] = '<A href="http://genomizer.com/?chr=' . $zData['chromosome'] . '&gene=' . $zData['geneid'] . '&ref_seq=' . $zData['id_ncbi'] . '&variant=' . $zData['VariantOnTranscript/DNA'] . '" target="_blank">Genomizer Link</A>';
                 if (isset($zData['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance'])) {
                     $zData['clinvar_'] = implode(', ', lovd_mapCodeToDescription(explode(',', $zData['VariantOnTranscript/dbNSFP/ClinVar/Clinical_Significance']), $_SETT['clinvar_var_effect']));
@@ -541,7 +541,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
 
             // Although these fields should of course exist, this method should not assume they do.
             if (in_array('effectid', $aGeneFields[$sGene])) {
-                $aData['effectid'] = $aData[$nTranscriptID . '_effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $aData[$nTranscriptID . '_effect_concluded'] : $zData[$nTranscriptID . '_effectid']{1});
+                $aData['effectid'] = $aData[$nTranscriptID . '_effect_reported'] . ($_AUTH['level'] >= LEVEL_CURATOR? $aData[$nTranscriptID . '_effect_concluded'] : $zData[$nTranscriptID . '_effectid'][1]);
             }
             if (in_array('position_c_start', $aGeneFields[$sGene])) {
                 $aData['position_c_start'] = $aData[$nTranscriptID . '_position_c_start'];

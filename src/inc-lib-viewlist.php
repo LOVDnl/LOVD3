@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-22
- * Modified    : 2020-10-12
- * For LOVD    : 3.0-25
+ * Modified    : 2021-11-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -80,11 +80,11 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
                         $sFormattedExpression .= 'Is empty';
                     } elseif (substr($sORExpression, 0, 2) == '!=') {
                         $sFormattedExpression .= 'Does not exactly match ' . trim($sORExpression, '!="');
-                    } elseif ($sORExpression{0} == '!') {
+                    } elseif ($sORExpression[0] == '!') {
                         $sFormattedExpression .= 'Does not contain ' . trim($sORExpression, '!=');
-                    } elseif ($sORExpression{0} == '=') {
+                    } elseif ($sORExpression[0] == '=') {
                         $sFormattedExpression .= 'Exactly matches ' . trim($sORExpression, '="');
-                    } elseif ($sORExpression{0} == '^') {
+                    } elseif ($sORExpression[0] == '^') {
                         $sFormattedExpression .= 'Starts with ' . ltrim($sORExpression, '^');
                     } elseif (substr($sORExpression, -1) == '$') {
                         $sFormattedExpression .= 'Ends with ' . rtrim($sORExpression, '$');
@@ -98,7 +98,7 @@ function lovd_formatSearchExpression ($sExpression, $sColumnType)
                 case 'DECIMAL_UNSIGNED':
                 case 'DATE':
                 case 'DATETIME':
-                    if (!in_array($sORExpression{0}, array('<', '>', '!'))) {
+                    if (!in_array($sORExpression[0], array('<', '>', '!'))) {
                         $sFormattedExpression .= '=' . $sORExpression;
                     } else {
                         $sFormattedExpression .= $sORExpression;

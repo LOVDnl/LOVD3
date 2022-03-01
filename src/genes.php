@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2021-06-15
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -139,7 +139,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     // View all entries.
 
     // Managers are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -150,7 +150,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     require ROOT_PATH . 'class/object_genes.php';
     $_DATA = new LOVD_Gene();
     $aVLOptions = array(
-        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER),
     );
     $_DATA->viewList('Genes', $aVLOptions);
 
@@ -337,7 +337,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 require ROOT_PATH . 'class/progress_bar.php';
 
                 $sFormNextPage = '<FORM action="' . $sPath . '" id="createGene" method="post">' . "\n" .
-                                 '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
+                                 '          <INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n" .
                                  '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
                                  '        </FORM>';
 
@@ -516,7 +516,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                             array('', '', 'submit', 'Continue &raquo;'),
                           );
         lovd_viewForm($aFormData);
-        print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+        print('<INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n");
         print('</TABLE></FORM>' . "\n\n");
         print('<SCRIPT type="text/javascript">' . "\n" .
               '  <!--' . "\n" .
@@ -715,7 +715,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                           ));
         lovd_viewForm($aForm);
 
-        print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+        print('<INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n");
         print('</FORM>' . "\n\n");
 
         $_T->printFooter();
@@ -916,7 +916,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                       ));
     lovd_viewForm($aForm);
 
-    print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+    print('<INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n");
     print('</FORM>' . "\n\n");
 
     $_T->printFooter();
@@ -1475,7 +1475,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
 
     // Load authorization, collaborators and up see statistics about all variants, not just the public ones.
     lovd_isAuthorized('gene', $sID);
-    $bSeeNonPublicVariants = ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
+    $bSeeNonPublicVariants = ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
 
     // Check if there are variants at all.
     $nVariants = $_DB->query('
@@ -1607,7 +1607,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
     // Load appropriate user level for this gene.
     lovd_isAuthorized('gene', $sID);
 
-    if (ACTION == 'authorize' && $_AUTH['level'] < LEVEL_MANAGER) {
+    if (ACTION == 'authorize' && (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER)) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $sID . '?sortCurators');
         exit;
     }
@@ -1787,7 +1787,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
             $_GET['search_userid'] = '!0';
         }
         $_GET['page_size'] = 10;
-        $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}", level: "{{zData_level}}"}, lovd_authorizeUser); return false;');
+        $_DATA->setRowLink('Genes_AuthorizeUser', 'javascript:lovd_passAndRemoveViewListRow(\'{{ViewListID}}\', \'{{ID}}\', {id: \'{{ID}}\', name: \'{{zData_name}}\', level: \'{{zData_level}}\'}, lovd_authorizeUser); return false;');
         $aVLOptions = array(
             'cols_to_skip' => array('orcid_id_', 'status_', 'last_login_', 'created_date_'),
             'track_history' => false,
@@ -1816,7 +1816,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
           '        <UL id="curator_list" class="sortable" style="margin-top : 0px; width : 550px;">' . "\n");
     // Now loop the items in the order given.
     foreach ($aCurators as $nID => $aVal) {
-        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . $aVal['name'] . ' (#' . $nID . ')</TD>');
+        print('          <LI id="li_' . $nID . '"><INPUT type="hidden" name="curators[]" value="' . $nID . '"><TABLE width="100%"><TR><TD class="handle" width="13" align="center"><IMG src="gfx/drag_vertical.png" alt="" title="Click and drag to sort" width="5" height="13"></TD><TD>' . htmlspecialchars($aVal['name']) . ' (#' . $nID . ')</TD>');
         if (ACTION == 'authorize') {
             print('<TD width="100" align="right"><INPUT type="checkbox" name="allow_edit[]" value="' . $nID . '" onchange="if (this.checked == true) { this.parentNode.nextSibling.children[0].disabled = false; } else if (' . $aVal['level'] . ' >= ' . LEVEL_MANAGER . ') { this.checked = true; } else { this.parentNode.nextSibling.children[0].checked = false; this.parentNode.nextSibling.children[0].disabled = true; }"' . ($aVal['allow_edit'] || $aVal['level'] >= LEVEL_MANAGER? ' checked' : '') . '></TD><TD width="75" align="right"><INPUT type="checkbox" name="shown[]" value="' . $nID . '"' . ($aVal['allow_edit']? ($aVal['shown']? ' checked' : '') : ' disabled') . '></TD><TD width="30" align="right">' . ($aVal['level'] >= $_AUTH['level'] && $nID != $_AUTH['id']? '&nbsp;' : '<A href="#" onclick="lovd_unauthorizeUser(\'Genes_AuthorizeUser\', \'' . $nID . '\'); return false;"><IMG src="gfx/mark_0.png" alt="Remove" width="11" height="11" border="0"></A>') . '</TD>');
         } else {

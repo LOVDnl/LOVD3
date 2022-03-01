@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2021-06-15
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -53,7 +53,7 @@ if (PATH_COUNT == 1 && !ACTION) {
     // View all entries.
 
     // Managers are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_MANAGER) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -67,7 +67,7 @@ if (PATH_COUNT == 1 && !ACTION) {
 
     require ROOT_PATH . 'class/object_users.php';
     $_DATA = new LOVD_User();
-    $_DATA->viewList('Users', array('show_options' => ($_AUTH['level'] >= LEVEL_MANAGER)));
+    $_DATA->viewList('Users', array('show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER)));
 
     $_T->printFooter();
     exit;
@@ -634,7 +634,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
     }
 
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post" onsubmit="return lovd_checkForm();">' . "\n" .
-          '        <INPUT type="hidden" name="orcid_id" value="' . $_POST['orcid_id'] . '">' . "\n");
+          '        <INPUT type="hidden" name="orcid_id" value="' . htmlspecialchars($_POST['orcid_id']) . '">' . "\n");
 
     // Array which will make up the form table.
     if (ACTION == 'create') {
@@ -912,7 +912,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Array which will make up the form table.
     $aForm = array(
                     array('POST', '', '', '', '40%', '14', '60%'),
-                    array('Deleting user', '', 'print', '<SPAN style="font-family: monospace;"><I>' . $zData['username'] . '</I></SPAN>, ' . $zData['name'] . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
+                    array('Deleting user', '', 'print', '<SPAN style="font-family: monospace;"><I>' . $zData['username'] . '</I></SPAN>, ' . htmlspecialchars($zData['name']) . ' (' . $_SETT['user_levels'][$zData['level']] . ')'),
                     // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
                     (!count($aCuratedGenes)? false :
                     array('&nbsp;', '', 'print', '<B>This user is the only curator of ' . count($aCuratedGenes) . ' gene' . (count($aCuratedGenes) == 1? '' : 's') . ': ' . implode(', ', $aCuratedGenes) . '. You will become the curator of ' . (count($aCuratedGenes) == 1? 'this gene' : 'these genes') . ' once this user is deleted.</B>')),
@@ -1325,7 +1325,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     // Show viewlist to select new users to share access with.
     $_DATA = new LOVD_User();
     $_DATA->setRowLink('users_share_access',
-        'javascript:lovd_passAndRemoveViewListRow("{{ViewListID}}", "{{ID}}", {id: "{{ID}}", name: "{{zData_name}}"}, lovd_addUserShareAccess); return false;');
+        'javascript:lovd_passAndRemoveViewListRow(\'{{ViewListID}}\', \'{{ID}}\', {id: \'{{ID}}\', name: \'{{zData_name}}\'}, lovd_addUserShareAccess); return false;');
     // The columns hidden here are also specified (enforced) in ajax/viewlist.php to make sure Submitters can't hack their way into the users table.
     $aVLOptions = array(
         'cols_to_skip' => array('username', 'status_', 'last_login_', 'created_date_', 'curates', 'level_'),

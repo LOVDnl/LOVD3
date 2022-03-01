@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2021-07-07
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -159,7 +159,7 @@ class LOVD_Phenotype extends LOVD_Custom
                       );
         parent::checkFields($aData, $zData, $aOptions);
 
-        lovd_checkXSS();
+        lovd_checkXSS($aData);
     }
 
 
@@ -256,7 +256,7 @@ class LOVD_Phenotype extends LOVD_Custom
 
         if ($sView == 'entry') {
             $zData['individualid_'] = '<A href="individuals/' . $zData['individualid'] . '">' . $zData['individualid'] . '</A>';
-            if ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
+            if ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']) {
                 $zData['individualid_'] .= ' <SPAN style="color : #' . $this->getStatusColor($zData['individual_statusid']) . '">(' . $_SETT['data_status'][$zData['individual_statusid']] . ')</SPAN>';
             }
             $zData['disease_'] = '<A href="diseases/' . $zData['diseaseid'] . '">' . $zData['disease'] . '</A>';

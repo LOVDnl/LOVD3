@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-17
- * Modified    : 2021-07-27
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -157,16 +157,20 @@ class LOVD_Custom extends LOVD_Object
         parent::__construct();
 
         // Hide entries that are not marked or public.
-        if ($_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
+        if (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) { // This check assumes lovd_isAuthorized() has already been called for gene-specific overviews.
             if (in_array($this->sCategory, array('VariantOnGenome', 'VariantOnTranscript'))) {
                 $sAlias = 'vog';
             } else {
-                $sAlias = strtolower($this->sCategory{0});
+                $sAlias = strtolower($this->sCategory[0]);
             }
 
-            // Construct list of user IDs for current user and users who share access with them.
-            $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
-            $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+            if ($_AUTH) {
+                // Construct list of user IDs for current user and users who share access with them.
+                $aOwnerIDs = array_merge(array($_AUTH['id']), lovd_getColleagues(COLLEAGUE_ALL));
+                $sOwnerIDsSQL = join(', ', $aOwnerIDs);
+            } else {
+                $sOwnerIDsSQL = '';
+            }
 
             $this->aSQLViewList['WHERE'] .= (!empty($this->aSQLViewList['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by IN (' . $sOwnerIDsSQL . '))') . '';
             $this->aSQLViewEntry['WHERE'] .= (!empty($this->aSQLViewEntry['WHERE'])? ' AND ' : '') . '(' . ($this->sObject == 'Screening'? 'i' : $sAlias) . '.statusid >= ' . STATUS_MARKED . (!$_AUTH? '' : ' OR (' . $sAlias . '.created_by = "' . $_AUTH['id'] . '" OR ' . $sAlias . '.owned_by IN (' . $sOwnerIDsSQL . '))') . ')';
@@ -333,7 +337,7 @@ class LOVD_Custom extends LOVD_Object
 
         $aViewEntry = array();
         foreach ($this->aColumns as $sID => $aCol) {
-            if (!$aCol['public_view'] && $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']) {
+            if (!$aCol['public_view'] && (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data'])) {
                 continue;
             }
             $aViewEntry[$sID] = $aCol['head_column'];
@@ -355,7 +359,7 @@ class LOVD_Custom extends LOVD_Object
         foreach ($this->aColumns as $sID => $aCol) {
             // In LOVD_plus, the public_view field is used to set if a custom column will be displayed in a VL or not.
             // So, in LOVD_plus we need to check for ALL USERS if a custom column has public_view flag turned on or not.
-            if (!$aCol['public_view'] && (LOVD_plus? true : $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data'])) {
+            if (!$aCol['public_view'] && (LOVD_plus? true : (!$_AUTH || $_AUTH['level'] < $_SETT['user_level_settings']['see_nonpublic_data']))) {
                 continue;
             }
             $bAlignRight = preg_match('/^(DEC|FLOAT|(TINY|SMALL|MEDIUM|BIG)?INT)/', $aCol['mysql_type']);
@@ -579,7 +583,7 @@ class LOVD_Custom extends LOVD_Object
 
         $zData = parent::prepareData($zData, $sView);
         foreach ($this->aColumns as $sCol => $aCol) {
-            if (!$aCol['public_view'] && $_AUTH['level'] < LEVEL_OWNER) {
+            if (!$aCol['public_view'] && (!$_AUTH || $_AUTH['level'] < LEVEL_OWNER)) {
                 continue;
             }
             if (!empty($aCol['custom_links'])) {

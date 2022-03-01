@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2021-08-13
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -63,7 +63,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     }
 
     // Managers and authorized curators are allowed to download this list...
-    if ($_AUTH['level'] >= LEVEL_CURATOR) {
+    if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
@@ -81,7 +81,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     $_DATA = new LOVD_Individual();
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+        'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR),
         'find_and_replace' => true,
         'curate_set' => true,
         'merge_set' => true,
@@ -206,7 +206,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             'cols_to_skip' => array('screeningid', 'individualid', 'created_date', 'edited_date'),
             'track_history' => false,
             'show_navigation' => false,
-            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR),
             'merge_set' => true,
         );
         // This ViewList ID is checked in ajax/viewlist.php. Don't just change it.
@@ -221,7 +221,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         // VOG needs to be first, so it groups by the VOG ID.
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVariantVLOptions = array(
-            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR),
         );
         $_DATA->viewList('CustomVL_VOT_for_I_VE', $aVariantVLOptions);
     }
@@ -558,6 +558,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
+    $aVariantsRemovable = $_DB->query('
+        SELECT s2v.variantid, MAX(s2.individualid)
+        FROM lovd_v3_screenings AS s
+          INNER JOIN lovd_v3_screenings2variants AS s2v ON (s.id = s2v.screeningid)
+          LEFT OUTER JOIN lovd_v3_screenings2variants AS s2v2 ON (s2v.variantid = s2v2.variantid AND s2v.screeningid != s2v2.screeningid)
+          LEFT OUTER JOIN lovd_v3_screenings AS s2 ON (s2v2.screeningid = s2.id AND s2.individualid != ?)
+        WHERE s.individualid = ?
+        GROUP BY s2v.variantid
+        HAVING MAX(s2.individualid) IS NULL', array($nID, $nID))->fetchAllColumn();
+    $nVariantsRemovable = count($aVariantsRemovable);
+
     if (!empty($_POST)) {
         lovd_errorClean();
 
@@ -572,31 +583,29 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         }
 
         if (!lovd_error()) {
-            // FIXME: All of this doesn't look right. We should first check which genes are linked to the *public variants*, if we're deleting them OR if this Ind is public.
-            //  Only then can you delete the variants when requested. Now it's the other way around, and the selection isn't done right.
             // Query text.
-            // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENE.
             $_DB->beginTransaction();
-            if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
-                $aOutput = $_DB->query('SELECT id FROM ' . TABLE_SCREENINGS . ' WHERE individualid = ?', array($nID))->fetchAllColumn();
-                if (count($aOutput)) {
-                    $_DB->query('DELETE vog FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vog.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($aOutput) - 1) . ')', $aOutput);
-                }
-            }
 
+            // Search for effected genes before the deletion, else we can't find the link.
             // Get genes which are modified only when individual and variant status is marked or public.
-            if ($_POST['statusid'] >= STATUS_MARKED) {
+            if ($zData['statusid'] >= STATUS_MARKED) {
                 $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
-                                      'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
-                                      'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
-                                      'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
-                                      'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
-                                      'WHERE vog.statusid >= ? AND s.individualid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
+                    'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
+                    'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
+                    'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
+                    'INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s.id = s2v.screeningid) ' .
+                    'WHERE vog.statusid >= ? AND s.individualid = ?', array(STATUS_MARKED, $nID))->fetchAllColumn();
             }
 
+            if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
+                // This also deletes the entries in TABLE_SCR2VAR.
+                $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
+            }
+
+            // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENE.
             $_DATA->deleteEntry($nID);
 
-            if ($_POST['statusid'] >= STATUS_MARKED && $aGenes) {
+            if ($zData['statusid'] >= STATUS_MARKED && $aGenes) {
                 // Change updated date for genes.
                 lovd_setUpdatedDate($aGenes);
             }
@@ -633,22 +642,26 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     $nVariants = $_DB->query('SELECT COUNT(DISTINCT s2v.variantid) FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s.individualid = ? GROUP BY s.individualid', array($nID))->fetchColumn();
-    $aOptions = array('remove' => 'Also remove all variants attached to this individual', 'keep' => 'Keep all attached variants as separate entries');
+    $aOptions = array('remove' => 'Yes, remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' attached to only this individual', 'keep' => 'No, keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
 
     // Array which will make up the form table.
     $aForm = array_merge(
                  array(
-                        array('POST', '', '', '', '45%', '14', '55%'),
-                        array('Deleting individual information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')</B>'),
+                        array('POST', '', '', '', '40%', '14', '60%'),
+                        array('Deleting individual information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')</B>'),
                         'skip',
                         array('', '', 'print', 'This individual entry has ' . ($nVariants? $nVariants : 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
-          'variants' => array('What should LOVD do with the attached variants?', '', 'select', 'remove_variants', 1, $aOptions, false, false, false),
+'variants_removable' => array('', '', 'print', (!$nVariantsRemovable? 'No variants will be removed.' : '<B>' . $nVariantsRemovable . ' variant' . ($nVariantsRemovable == 1? '' : 's') . ' will be removed, because ' . ($nVariantsRemovable == 1? 'it is' : 'these are'). ' not attached to other individuals!!!</B>')),
+          'variants' => array('Should LOVD remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these ' . $nVariantsRemovable . ' variants') . '?', '', 'select', 'remove_variants', 1, $aOptions, false, false, false),
                         array('', '', 'note', '<B>All phenotypes and screenings attached to this individual will be automatically removed' . ($nVariants? ' regardless' : '') . '!!!</B>'),
      'variants_skip' => 'skip',
                         array('Enter your password for authorization', '', 'password', 'password', 20),
                         array('', '', 'submit', 'Delete individual information entry'),
                       ));
-    if (!$nVariants) {
+    if (!$nVariantsRemovable) {
+        if (!$nVariants) {
+            unset($aForm['variants_removable']);
+        }
         unset($aForm['variants'], $aForm['variants_skip']);
     }
 

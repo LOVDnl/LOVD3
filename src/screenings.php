@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2021-08-13
- * For LOVD    : 3.0-27
+ * Modified    : 2022-02-10
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -78,7 +78,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     $_DATA = new LOVD_Screening();
     $aVLOptions = array(
         'cols_to_skip' => $aColsToHide,
-        'show_options' => ($_AUTH['level'] >= LEVEL_MANAGER),
+        'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_MANAGER),
         'find_and_replace' => true,
     );
     $_DATA->viewList('Screenings', $aVLOptions);
@@ -144,7 +144,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_DATA = new LOVD_CustomViewList(array('VariantOnGenome', 'Scr2Var', 'VariantOnTranscript'));
         $aVLOptions = array(
             'cols_to_skip' => array('transcriptid'),
-            'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+            'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR),
         );
         $_DATA->viewList('CustomVL_VOT_for_S_VE', $aVLOptions);
     }
@@ -899,7 +899,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             $_DB->commit();
 
             // Write to log...
-            lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID);
+            lovd_writeLog('Event', LOG_EVENT, 'Deleted screening information entry ' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')');
 
             // Thank the user...
             header('Refresh: 3; url=' . lovd_getInstallURL() . 'individuals/' . $zData['individualid']);
@@ -928,13 +928,13 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
     $nVariants = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
-    $aOptions = array('remove' => 'Yes, Remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' from this screening', 'keep' => 'No, Keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
+    $aOptions = array('remove' => 'Yes, remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' attached to only this screening', 'keep' => 'No, keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
 
     // Array which will make up the form table.
     $aForm = array_merge(
                  array(
                         array('POST', '', '', '', '40%', '14', '60%'),
-                        array('Deleting screening information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . $zData['owned_by_'] . ')</B>'),
+                        array('Deleting screening information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')</B>'),
                         'skip',
                         array('', '', 'print', 'This screening entry has ' . ($nVariants? $nVariants : 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
 'variants_removable' => array('', '', 'print', (!$nVariantsRemovable? 'No variants will be removed.' : '<B>' . $nVariantsRemovable . ' variant' . ($nVariantsRemovable == 1? '' : 's') . ' will be removed, because ' . ($nVariantsRemovable == 1? 'it is' : 'these are'). ' not attached to other screenings!!!</B>')),
