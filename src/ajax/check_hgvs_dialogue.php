@@ -47,35 +47,35 @@ $sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
 // If the variant is empty, we want to reset all results of this script.
 if (!$sVariant) {
     print('
-        // Resetting the md5 key.
-        $(\'input[name="codedVariants"]\').val("");
-        ');
+    // Resetting the md5 key.
+    $(\'input[name="codedVariants"]\').val("");
+    ');
 
     // Resetting the mapping for transcript, RNA and protein variants.
     foreach ($aTranscripts as $sTranscript) {
         print('
-            // Resetting the transcript fields.        
-            var oTranscriptField = $("input").filter(function() {
-                return $(this).data("id_ncbi") == "' . $sTranscript . '" 
-            });
-            oTranscriptField.val("");
-            oTranscriptField.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
-            oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-            var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
-            ');
+        // Resetting the transcript fields.        
+        var oTranscriptField = $("input").filter(function() {
+            return $(this).data("id_ncbi") == "' . $sTranscript . '" 
+        });
+        oTranscriptField.val("");
+        oTranscriptField.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
+        oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
+        var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
+        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
+        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
+        ');
     }
 
     // Resetting the mapping for genomic variants.
     foreach ($aActiveGBs as $sGBSuffix => $sGBID) {
         print('
-            // Resetting the genomic fields.
-            var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
-            oGenomicVariant.val("");
-            oGenomicVariant.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
-            oGenomicVariant.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-            ');
+        // Resetting the genomic fields.
+        var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
+        oGenomicVariant.val("");
+        oGenomicVariant.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
+        oGenomicVariant.siblings("img:first").attr({src: "gfx/trans.png"}).show();
+        ');
     }
 
     // Closing the script.
@@ -312,10 +312,10 @@ if ($_REQUEST['action'] == 'check') {
             //  the variants... We will have to accept these variants into the database
             //  anyway, since this issue lies with us.
             die('
-        $("#variantCheckDialogue").dialog("close");
-        var oInput = $(\'input[name="' . $sFieldName . '"]\');
-        oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."}).show();
-        ');
+            $("#variantCheckDialogue").dialog("close");
+            var oInput = $(\'input[name="' . $sFieldName . '"]\');
+            oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."}).show();
+            ');
         }
 
         if (!isset($_SETT['human_builds'][$aActiveGBs[$sCurrentGBSuffix]]['ncbi_sequences'][$sChromosome])) {
@@ -524,19 +524,19 @@ if ($_REQUEST['action'] == 'map') {
 
         // Filling in the input fields.
         print('
-    // Adding transcript info to the fields.        
-    var oTranscriptField = $("input").filter(function() { 
-        return $(this).data("id_ncbi") == "' . $sTranscript . '" 
-    });
-    
-    if (!oTranscriptField.prop("disabled")) {
-        oTranscriptField.val("' . $aTranscriptData['DNA'] . '");
-        oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-        oTranscriptField.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
-        var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '");
-        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '");
-    }');
+        // Adding transcript info to the fields.        
+        var oTranscriptField = $("input").filter(function() { 
+            return $(this).data("id_ncbi") == "' . $sTranscript . '" 
+        });
+        
+        if (!oTranscriptField.prop("disabled")) {
+            oTranscriptField.val("' . $aTranscriptData['DNA'] . '");
+            oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+            oTranscriptField.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
+            var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '");
+        }');
     }
 
     // Returning the mapping for genomic variants.
