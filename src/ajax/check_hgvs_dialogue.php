@@ -36,7 +36,7 @@ header('Content-type: text/javascript; charset=UTF-8');
 
 // Retrieving the variant and the transcripts and genome builds to map to.
 $sVariant     = htmlspecialchars($_REQUEST['var']);
-$aTranscripts = explode('|', htmlspecialchars($_REQUEST['transcripts']));
+$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', htmlspecialchars($_REQUEST['transcripts'])));
 $aActiveGBs   = $_DB->query('SELECT column_suffix, id FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
 
 // Retrieving the name of the input field.
@@ -400,7 +400,7 @@ if ($_REQUEST['action'] == 'map') {
             'map_to_transcripts' => !empty($aTranscript),     // Should we map the variant to transcripts?
             'predict_protein'    => !empty($aTranscript),     // Should we get protein predictions?
             'lift_over'          => (count($aActiveGBs) > 1), // Should we get other genomic mappings of this variant?
-            'select_transcripts' => (empty($aTranscripts) ? array() : $aTranscripts),
+            'select_transcripts' => $aTranscripts,
         )) :
         $_VV->verifyVariant($sVariant, array('select_transcripts' => $aTranscripts))
     );
