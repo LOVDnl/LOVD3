@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-28
+ * Modified    : 2022-03-01
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1301,7 +1301,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             //  process the variant like this. Then we overwrite the type, and
             //  we return what we have.
             // Note that variants like g.123A>C^124G>C don't reach us; they are
-            //  matched and returned with a WSUFFIXGIVEN.
+            //  matched and caught elsewhere.
             $aVariant = lovd_getVariantInfo(strstr($sVariant, '^', true) . '=');
             if ($aVariant !== false) {
                 $aVariant['type'] = '^';
@@ -1911,7 +1911,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
     } elseif ($aVariant['suffix']) {
-        if ($aResponse['type'] == 'repeat') {
+        // Check the suffix for each type of variant.
+        // First, exclude something that we don't support.
+        if (strpos($sVariant, '^') !== false) {
+            // "Or" syntax using a ^.
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['type'] = '^';
+            // We have to throw an ENOTSUPPORTED, although we're returning
+            //  positions. We currently cannot claim these are HGVS or not,
+            //  so an WNOTSUPPORTED isn't appropriate.
+            $aResponse['errors']['ENOTSUPPORTED'] =
+                'Currently, variant descriptions using "^" are not yet supported.' .
+                ' This does not necessarily mean the description is not valid HGVS.';
+            return $aResponse;
+
+        } elseif ($aResponse['type'] == 'repeat') {
             // Repeats should never be given a suffix.
             if ($bCheckHGVS) {
                 return false;
