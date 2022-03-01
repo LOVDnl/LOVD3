@@ -138,6 +138,7 @@ var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
     //  uncertainty that comes with it.
     $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
     $(this).dialog("close");
 }};
