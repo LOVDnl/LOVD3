@@ -504,7 +504,8 @@ if ($_REQUEST['action'] == 'map') {
     }
 
 
-    // Add mapping information to the right fields.
+    // Save an array with all validated variants, to later
+    //  use to make an md5 key of the input.
     $aAllValidatedVariants = array();
 
     // Returning the mapping for transcript, RNA and protein variants.
