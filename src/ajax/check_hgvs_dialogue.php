@@ -342,7 +342,7 @@ if ($_REQUEST['action'] == 'check') {
             //  the reference sequence in the variant description,
             //  but that is no problem at all, since the given
             //  refSeq matches our expectations.
-            $sVariant = $sVariant;
+            $sFullVariant = $sVariant;
 
         } else {
             // The user gave a refSeq within the variant description
@@ -359,7 +359,7 @@ if ($_REQUEST['action'] == 'check') {
 
     } else {
         // The given variant does not hold a reference sequence.
-        $sVariant = $sReferenceSequence . ':' . $sVariant;
+        $sFullVariant = $sReferenceSequence . ':' . $sVariant;
     }
 
 
@@ -370,7 +370,7 @@ if ($_REQUEST['action'] == 'check') {
     print('
     $.get("ajax/check_hgvs_dialogue.php?"
             + "action=map"
-            + "&var=' . $sVariant . '"
+            + "&var=' . $sFullVariant . '"
             + "&fieldName=' . $sFieldName . '"
             + "&type=' . $sType . '"
             + "&refSeq=' . $sReferenceSequence . '"
