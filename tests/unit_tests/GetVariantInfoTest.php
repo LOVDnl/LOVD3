@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-03-01
+ * Modified    : 2022-03-02
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1407,12 +1407,12 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             array('g.123A>C;124A>C', array(
                 'position_start' => 123,
                 'position_end' => 123,
-                'type' => 'subst',
-                'warnings' => array(
-                    'WSUFFIXGIVEN' =>
-                        'Nothing should follow "A>C".'
+                'type' => ';',
+                'warnings' => array(),
+                'errors' => array(
+                    'ENOTSUPPORTED' =>
+                        'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
                 ),
-                'errors' => array(),
             )),
             array('g.[123A>C;124A>C]', array(
                 'position_start' => 123,

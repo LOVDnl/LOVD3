@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-03-01
+ * Modified    : 2022-03-02
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1331,10 +1331,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'Currently, variant descriptions of combined variants are not yet supported.' .
                     ' This does not necessarily mean the description is not valid HGVS.' .
                     ' Please submit your variants separately.';
-                // Some valid descriptions throw a WUNBALANCEDPARENTHESES or a
-                //  WSUFFIXGIVEN. Remove these.
-                unset($aVariant['warnings']['WUNBALANCEDPARENTHESES']);
-                unset($aVariant['warnings']['WSUFFIXGIVEN']);
+                // Some descriptions throw some warnings.
+                $aVariant['warnings'] = array();
                 return $aVariant;
             }
         }
@@ -1936,7 +1934,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         } elseif (in_array($aVariant['type'], array('ins', 'delins'))) {
             // For insertions and deletion-insertions, the suffix can be quite
-            //  complex. Check all possibilities.
+            //  complex. Also, it doesn't depend on the variant's length, so all
+            //  checks are different. Check all possibilities.
             if (substr_count($aVariant['suffix'], '[') != substr_count($aVariant['suffix'], ']')) {
                 if ($bCheckHGVS) {
                     return false;
@@ -1974,6 +1973,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     }
                 }
             }
+
+        } elseif (strpos($aVariant['suffix'], ';') !== false) {
+            // Combined variants that should be split.
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['type'] = ';';
+            // We have to throw an ENOTSUPPORTED, although we're returning
+            //  positions. We currently cannot claim these are HGVS or not,
+            //  so an WNOTSUPPORTED isn't appropriate.
+            $aResponse['errors']['ENOTSUPPORTED'] =
+                'Currently, variant descriptions of combined variants are not yet supported.' .
+                ' This does not necessarily mean the description is not valid HGVS.' .
+                ' Please submit your variants separately.';
+            // Some descriptions throw some warnings.
+            $aResponse['warnings'] = array();
+            return $aResponse;
 
         } elseif (!in_array($aVariant['type'], array('ins', 'delins'))
             && !isset($aResponse['messages']['IPOSITIONRANGE'])) {
