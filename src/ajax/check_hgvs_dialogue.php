@@ -589,17 +589,9 @@ if ($_REQUEST['action'] == 'map') {
     }
 
 
-    // Because we automatically filled all non-blocked positions,
-    //  all open transcript fields have been blocked. We don't
-    //  want the user to block the transcript input at this point
-    //  so we disable the 'Ignore this transcript' option.
     // And now that we're all done, we can also fill in the md5
     //  translation of our validated variants.
-    print('
-    // Disabling the "ignore this transcript" option.
-    var oIgnoreOption = $(\'input[name^="ignore_"]\');
-    oIgnoreOption.parent().html("");
-    
+    print('   
     // Adding the md5 translation of the validated variants.
     $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants($aAllValidatedVariants) . '");
     ');
