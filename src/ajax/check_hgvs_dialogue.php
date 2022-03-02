@@ -34,10 +34,9 @@ require ROOT_PATH . 'inc-lib-variants.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 
-// Retrieving the variant and the transcripts and genome builds to map to.
+// Retrieving the variant and the transcripts to map to.
 $sVariant     = htmlspecialchars($_REQUEST['var']);
 $aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', htmlspecialchars($_REQUEST['transcripts'])));
-$aActiveGBs   = $_DB->query('SELECT column_suffix, id FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
 
 // Retrieving the name of the input field.
 $sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
@@ -64,19 +63,17 @@ if (!$sVariant) {
         var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
         $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
         $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
-        ');
+        '); // Fixme; Should this perhaps be rewritten using a JS loop, or by adjusting all variables at once in JS?
     }
 
     // Resetting the mapping for genomic variants.
-    foreach ($aActiveGBs as $sGBSuffix => $sGBID) {
-        print('
-        // Resetting the genomic fields.
-        var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
-        oGenomicVariant.val("");
-        oGenomicVariant.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
-        oGenomicVariant.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-        ');
-    }
+    print('
+    // Resetting the genomic fields.
+    var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
+    oGenomicVariants.val("");
+    oGenomicVariants.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
+    oGenomicVariants.siblings("img:first").attr({src: "gfx/trans.png"}).show();
+    ');
 
     // Closing the script.
     exit;
@@ -294,8 +291,8 @@ if ($_REQUEST['action'] == 'check') {
 
     // Retrieve the reference sequence from the info given through the URL.
     if (strpos($sRefSeqInfo, '-') === false) {
-        // The '-' serves as our little communication tool; it tells
-        //  us that the given input was a GB suffix. When no '-' was
+        // The '-' serves as a communication tool; it tells us that
+        //  the given input was a GB + chromosome. When no '-' is
         //  found, we know that the input was the reference sequence
         //  of a transcript.
         $sType = 'VOT';
@@ -305,9 +302,9 @@ if ($_REQUEST['action'] == 'check') {
         // We know we got information on a GB. This is given through
         //  JS in the format of <GB suffix>-<chromosome>.
         $sType = 'VOG';
-        list($sCurrentGBSuffix, $sChromosome) = explode('-', $sRefSeqInfo);
+        list($sGenomeBuildID, $sChromosome) = explode('-', $sRefSeqInfo);
 
-        if (!$_SETT['human_builds'][$aActiveGBs[$sCurrentGBSuffix]]['supported_by_VV']) {
+        if (!$_SETT['human_builds'][$sGenomeBuildID]['supported_by_VV']) {
             // If the given genome build is not supported by VV, we cannot fully validate
             //  the variants... We will have to accept these variants into the database
             //  anyway, since this issue lies with us.
@@ -318,7 +315,7 @@ if ($_REQUEST['action'] == 'check') {
             ');
         }
 
-        if (!isset($_SETT['human_builds'][$aActiveGBs[$sCurrentGBSuffix]]['ncbi_sequences'][$sChromosome])) {
+        if (!isset($_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome])) {
             // The combination of chromosome and build is not known by LOVD.
             // Something probably went wrong on the user's end. We will inform
             //  the user and exit the script.
@@ -330,7 +327,7 @@ if ($_REQUEST['action'] == 'check') {
             exit;
         }
 
-        $sReferenceSequence = $_SETT['human_builds'][$aActiveGBs[$sCurrentGBSuffix]]['ncbi_sequences'][$sChromosome];
+        $sReferenceSequence = $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome];
     }
 
 
@@ -378,6 +375,7 @@ if ($_REQUEST['action'] == 'check') {
             + "&type=' . $sType . '"
             + "&refSeq=' . $sReferenceSequence . '"
             + "&transcripts=' . implode('|', $aTranscripts) . '"
+            + "&genomeBuild=' . (!isset($sGenomeBuildID)? '' : $sGenomeBuildID) . '"
     ).fail(function(){alert("An error occurred while trying to map your variant, please try again later.");})
     ');
 }
@@ -392,6 +390,7 @@ if ($_REQUEST['action'] == 'map') {
     // Retrieving necessary information from the URL.
     $sType              = urldecode($_REQUEST['type']);
     $sReferenceSequence = urldecode($_REQUEST['refSeq']);
+    $sGenomeBuildID     = urldecode($_REQUEST['genomeBuild']);
 
     // Call VariantValidator.
     require ROOT_PATH . 'class/variant_validator.php';
@@ -401,7 +400,7 @@ if ($_REQUEST['action'] == 'map') {
         $_VV->verifyGenomic($sVariant, array(
             'map_to_transcripts' => !empty($aTranscript),     // Should we map the variant to transcripts?
             'predict_protein'    => !empty($aTranscript),     // Should we get protein predictions?
-            'lift_over'          => (count($aActiveGBs) > 1), // Should we get other genomic mappings of this variant?
+            'lift_over'          => (1 < (int) $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENOME_BUILDS)->fetchColumn()), // Should we get other genomic mappings of this variant?
             'select_transcripts' => $aTranscripts,
         )) :
         $_VV->verifyVariant($sVariant, array('select_transcripts' => $aTranscripts))
@@ -508,16 +507,20 @@ if ($_REQUEST['action'] == 'map') {
     //  use to make an md5 key of the input.
     $aAllValidatedVariants = array();
 
+    // Save the ['data']['DNA'] variant to the right type of mapping
+    //  to easily add it into the right fields.
+    if ($sType == 'VOT') {
+        // If the input type was a variant on transcript, the ['data']['DNA']
+        //  field holds information on a transcript mapping.
+        $aMappedVariant['data']['transcript_mappings'][$sReferenceSequence] = $aMappedVariant['data'];
+    } else {
+        // If the input was not a VOT, it was a genomic variant, meaning we
+        //  should add the information into the genomic mappings.
+        $aMappedVariant['data']['genomic_mappings'][$sGenomeBuildID] = $aMappedVariant['data']['DNA'];
+    }
+
     // Returning the mapping for transcript, RNA and protein variants.
-    foreach ($aTranscripts as $sTranscript) {
-        if (!isset($aMappedVariant['data']['transcript_mappings'][$sTranscript])
-            && $sTranscript != $sReferenceSequence) {
-            // If no mapping was found for this transcript, we skip it.
-            continue;
-        }
-        // Retrieving the info.
-        $aTranscriptData = ($sTranscript == $sReferenceSequence ? // Yes=Variant of origin (stored directly in data); No=Other (stored in transcript_mappings)
-            $aMappedVariant['data'] : $aMappedVariant['data']['transcript_mappings'][$sTranscript]);
+    foreach ($aMappedVariant['data']['transcript_mappings'] as $sTranscript => $aTranscriptData) {
 
         // Adding the validated variant to the rest of the validated variants.
         array_push($aAllValidatedVariants, $aTranscriptData['DNA']);
@@ -540,50 +543,34 @@ if ($_REQUEST['action'] == 'map') {
     }
 
     // Returning the mapping for genomic variants.
-    foreach ($aActiveGBs as $sGBSuffix => $sGBID) {
-        if (!$_SETT['human_builds'][$sGBID]['supported_by_VV']
-            || !isset($aMappedVariant['data']['genomic_mappings'][$sGBID])) {
-            // If a genome build is active which is not supported by VV, we won't have
-            //  received mapping information on it. We will skip this variant.
-            continue;
-        }
-        // Retrieving the info.
-        if ($sType == 'VOT') {
-            // When VV was called using a variant on transcript, we always
-            //  get only one possible mapping, which is formatted as a string.
-            $sMappedGenomicVariant = $aMappedVariant['data']['genomic_mappings'][$sGBID];
+    foreach ($aMappedVariant['data']['genomic_mappings'] as $sGBID => $aMappedGenomicVariant) {
+        if (is_string($aMappedGenomicVariant)) {
+            // The variant is a string. We don't need to make any edits.
+            $sMappedGenomicVariant = $aMappedGenomicVariant;
 
-        } elseif (isset($sCurrentGBSuffix) && $sGBSuffix == $sCurrentGBSuffix) {
-            // The current build is the build which is the direct reference of
-            //  our input variant. When this is the case, our output is already
-            //  formatted as a string as well.
-            $sMappedGenomicVariant = $aMappedVariant['data']['DNA'];
+        } elseif (count($aMappedGenomicVariant) == 1) {
+            // The variant is formatted as an array, since multiple variants were
+            //  possible. However, only one variant was found. We can simply take
+            //  the first element.
+            $sMappedGenomicVariant = $aMappedGenomicVariant[0];
 
         } else {
-            // Our output is formatted as an array, since multiple variants were possible.
-            $aMappedGenomicVariant = $aMappedVariant['data']['genomic_mappings'][$sGBID];
+            // Multiple possible variants were found. We will inform the user,
+            //  and concatenate the variants similarly to the example below:
+            // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
+            //  NC_123456.1:g.1del^2_3del^4del.
+            update_dialogue('<br>There were multiple genomic variant predictions for build ' . $sGBID . '.');
 
-            if (count($aMappedGenomicVariant) <= 1) {
-                // Only one variant was found. Great! We can simply take the first element.
-                $sMappedGenomicVariant = $aMappedGenomicVariant[0];
-
-            } else {
-                // Multiple possible variants were found. We will give the user a heads-up,
-                //  and concatenate the variants cleanly as follows:
-                // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
-                //  NC_123456.1:g.1del^2_3del^4del.
-                update_dialogue('<br>There were multiple genomic variant predictions for build ' . $sGBID . '.');
-
-                $sMappedGenomicVariant =
-                    preg_replace('/(.*:[a-z]\.).*/', '', $aMappedGenomicVariant[0]) .
-                    implode('^',
-                        array_map(function ($sFullVariant) {
-                            return preg_replace('/.*:[a-z]\./', '', $sFullVariant);
-                        }, $aMappedGenomicVariant)
-                    );
-            }
+            $sMappedGenomicVariant =
+                preg_replace('/(.*:[a-z]\.).*/', '', $aMappedGenomicVariant[0]) .
+                implode('^',
+                    array_map(function ($sFullVariant) {
+                        return preg_replace('/.*:[a-z]\./', '', $sFullVariant);
+                    }, $aMappedGenomicVariant)
+                );
         }
 
+        // Removing the reference sequence.
         $sMappedGenomicVariant = preg_replace('/.*:/', '', $sMappedGenomicVariant); // Fixme; Find a cleaner way of cutting off the reference sequence.
 
         // Adding the validated variant to the rest of the validated variants.
@@ -592,10 +579,12 @@ if ($_REQUEST['action'] == 'map') {
         // Filling in the input field.
         print('
         // Adding genomic info the fields.
-        var oGenomicVariant = $(\'#variantForm input[name$="VariantOnGenome/DNA' . (!$sGBSuffix ? '' : '/' . $sGBSuffix) . '"]\');
-        oGenomicVariant.val("' . $sMappedGenomicVariant . '");
-        oGenomicVariant.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-        oGenomicVariant.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
+        var oGenomicField = $("input").filter(function() { 
+            return $(this).data("genomeBuild") == "' . $sGBID . '" 
+        });
+        oGenomicField.val("' . $sMappedGenomicVariant . '");
+        oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+        oGenomicField.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
         ');
     }
 

@@ -181,7 +181,7 @@ function lovd_checkHGVS(e) {
     var sRefSeqInfo = (
         sFieldName[0] !== 'V'? // Yes=RefSeq is a transcript; No=RefSeq is genomic.
         $(this).data('id_ncbi') :
-        sFieldName.substring(sFieldName.indexOf('DNA') + 3).replace(/\//, '') + '-' + sChromosome
+        $(this).data('genomeBuild') + '-' + sChromosome
     );
     var sTranscripts = $($('#variantForm input[name$="_VariantOnTranscript/DNA"]')).map(function(){
         return $(this).data('id_ncbi');
