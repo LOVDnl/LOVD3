@@ -61,8 +61,8 @@ if (!$sVariant) {
         oTranscriptField.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
         oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
         var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
-        $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
+        $(\'#variantForm input[name^="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
+        $(\'#variantForm input[name^="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
         '); // Fixme; Should this perhaps be rewritten using a JS loop, or by adjusting all variables at once in JS?
     }
 
@@ -73,7 +73,7 @@ if (!$sVariant) {
     oGenomicVariants.val("");
     oGenomicVariants.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
     oGenomicVariants.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-    ');
+    '); // Fixme; this only changes the image next to the first genome build. Why?
 
     // Closing the script.
     exit;
