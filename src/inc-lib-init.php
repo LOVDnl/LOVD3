@@ -1619,8 +1619,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //  that the positions are uncertain, but somewhere within the range as
         //  given within the parentheses. We add a message to make sure users
         //  know our interpretation and can make sure they meant it as such.
-        // Note that IPOSITIONRANGE and IUNCERTAINPOSITIONS both send the same
-        //  message to the user about uncertain positions. However, internally,
+        // Note that IPOSITIONRANGE, IUNCERTAINPOSITIONS, and IUNCERTAINRANGE all send
+        //  the same message to the user about uncertain positions. However, internally,
         //  this notice is used to determine whether the variant needs a suffix
         //  because the variant's position is a single, uncertain range.
         $aResponse['messages']['IPOSITIONRANGE'] = 'This variant description contains uncertain positions.';
@@ -1629,6 +1629,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         if (in_array($aVariant['prefix'], array('n', 'c'))) {
             $aResponse['position_start_intron'] = $aVariant['earliest_intronic_start'];
         }
+
+    } elseif ($aVariant['earliest_end']
+        && ($aVariant['latest_start'] || $aVariant['latest_end'])) {
+        // Another class of unknown positions;
+        // g.(1_5)_(10_15) OR g.5_(10_15) OR g.(1_5)_10.
+        // We'll store the inner positions, but it's good to know that there is
+        //  uncertainty.
+        $aResponse['messages']['IUNCERTAINRANGE'] = 'This variant description contains uncertain positions.';
     }
 
 
