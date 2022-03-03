@@ -257,7 +257,14 @@ function lovd_convertPosition (oElement)
 
     if (oThisDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
         // This function was called from the genomic variant, so build a list of genes and prepare the variant accordingly for mutalyzer.
-        var sVariantNotation = 'chr<?php echo $_GET['chromosome']; ?>:' + oThisDNA.val();
+        var sChromosome = (
+            oChromosome.length ? // Yes=VOG form; No=VOT form.
+                oChromosome.val() :
+                $("td:contains('Chromosome')").last().filter(function () {
+                    return $(this).html() === "Chromosome";
+                }).siblings().eq(1).html()
+        );
+        var sVariantNotation = 'chr' + sChromosome + ':' + oThisDNA.val();
         var aGenes = [];
         for (nTranscriptID in aTranscripts) {
             if ($.inArray(aTranscripts[nTranscriptID][1], aGenes) == -1) {

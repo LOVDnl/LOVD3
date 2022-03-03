@@ -961,7 +961,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     print("\n" .
           '      </FORM>' . "\n\n");
 
-    lovd_includeJS('inc-js-variants.php?chromosome=' . $_POST['chromosome']);
+    lovd_includeJS('inc-js-variants.php');
 ?>
       <SCRIPT type="text/javascript">
 
@@ -2731,7 +2731,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     print("\n" .
           '      </FORM>' . "\n\n");
 
-    lovd_includeJS('inc-js-variants.php?chromosome=' . $zData['chromosome']);
+    lovd_includeJS('inc-js-variants.php');
 
     print('      <SCRIPT type="text/javascript">' . "\n" .
           '        var aUDrefseqs = {' . "\n");
