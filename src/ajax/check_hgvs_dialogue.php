@@ -372,7 +372,7 @@ if ($_REQUEST['action'] == 'check') {
             + "&refSeq=' . $sReferenceSequence . '"
             + "&transcripts=' . implode('|', $aTranscripts) . '"
             + "&genomeBuild=' . (!isset($sGenomeBuildID)? '' : $sGenomeBuildID) . '"
-    ).fail(function(){alert("An error occurred while trying to map your variant, please try again later.");})
+    ).fail(function(){alert("An error occurred while trying to map your variant, please try again later.");$("#variantCheckDialogue").dialog("close");})
     ');
 }
 
