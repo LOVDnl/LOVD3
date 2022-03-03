@@ -254,6 +254,19 @@ class LOVD_GenomeVariant extends LOVD_Custom
             }
         }
 
+        foreach ($aData as $sField => $sVariant) {
+            if (preg_match('/DNA/', $sField)) {
+                $aVariantInfo = lovd_getVariantInfo($sVariant, false);
+                if (!lovd_isHGVS($sVariant)
+                    && !isset($aVariantInfo['errors']['ENOTSUPPORTED']) // Supported by LOVD.
+                    && !(isset($aVariant['warnings']['WNOTSUPPORTED'])  // Supported by VariantValidator.
+                        || isset($aVariant['messages']['IUNCERTAINPOSITIONS'])
+                        || isset($aVariant['messages']['IPOSTIONRANGE']))) {
+                    lovd_errorAdd($sField, 'The variant ' . $sVariant . ' did not pass our checks. Please take another look and try again.');
+                }
+            }
+        }
+
         // Do this before running checkFields so that we have time to predict the DBID and fill it in.
         if (!empty($aData['VariantOnGenome/DNA']) // DNA filled in.
             && isset($this->aColumns['VariantOnGenome/DBID']) // DBID column active.

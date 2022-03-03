@@ -45,9 +45,7 @@ $sFieldName   = $_REQUEST['fieldName'];
 
 // Reset all values.
 print('
-// Resetting the md5 key.
-$(\'input[name="codedVariants"]\').val("");
-
+// Resetting all values.
 if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("acc")) {
     // Resetting the transcript fields.        
     var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
@@ -125,9 +123,7 @@ var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
     // We could not validate this variant, but the problem
     //  lies with us. We will accept this variant and the
     //  uncertainty that comes with it.
-    $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     oInput.val("' . addslashes($sVariant) . '").attr("class", "warn");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
     $(this).dialog("close");
@@ -507,10 +503,6 @@ if ($_REQUEST['action'] == 'map') {
     // We have the mapping data and can now send it to the
     //  input fields.
 
-    // Save an array with all validated variants, to later
-    //  use to make an md5 key of the input.
-    $aAllValidatedVariants = array();
-
     // Save the ['data']['DNA'] variant to the right type of mapping
     //  to easily add it into the right fields.
     if ($sType == 'VOT') {
@@ -589,14 +581,6 @@ if ($_REQUEST['action'] == 'map') {
         oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
         ');
     }
-
-
-    // And now that we're all done, we can also fill in the md5
-    //  translation of our validated variants.
-    print('   
-    // Adding the md5 translation of the validated variants.
-    $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants($aAllValidatedVariants) . '");
-    ');
 
 
     // Send final message to the user.
