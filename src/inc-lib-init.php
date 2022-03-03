@@ -2019,15 +2019,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         return false;
                     }
                 }
+                if (!$nSuffixMaxLength) {
+                    $nSuffixMaxLength = $nSuffixMinLength;
+                }
 
                 // For simple ranges, we can do a full check.
-                if (!$aVariant['earliest_end'] && !$aVariant['latest_end']) {
+                if (isset($aResponse['messages']['IPOSITIONRANGE'])) {
+                    // Variants like c.(1_2)del(5).
                     if (max($nSuffixMinLength, $nSuffixMaxLength) > $nVariantLength) {
                         $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
                             'The positions indicate a range smaller than the given length of the variant.' .
                             ' Please adjust the positions or variant length.';
-                    } elseif ($nVariantLength == (!$nSuffixMaxLength? $nSuffixMinLength :
-                            min($nSuffixMinLength, $nSuffixMaxLength))) {
+                    } elseif ($nVariantLength == min($nSuffixMinLength, $nSuffixMaxLength)) {
                         $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
                             'The positions indicate a range equally long as the given length of the variant.' .
                             ' Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.';
