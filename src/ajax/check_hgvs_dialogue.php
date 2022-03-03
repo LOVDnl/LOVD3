@@ -54,16 +54,14 @@ function reset_all_values()
     
     // Resetting the transcript fields.        
     var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
-    oTranscriptFields.val("");
-    oTranscriptFields.removeClass();
+    oTranscriptFields.val("").removeClass();
     oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"}).show();
-    $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("");
-    $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("");
+    $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("").removeClass();
+    $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("").removeClass();
     
     // Resetting the genomic fields.
     var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
-    oGenomicVariants.val("");
-    oGenomicVariants.removeClass();
+    oGenomicVariants.val("").removeClass();
     oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
     ');
 }
@@ -544,12 +542,11 @@ if ($_REQUEST['action'] == 'map') {
         });
         
         if (!oTranscriptField.prop("disabled")) {
-            oTranscriptField.val("' . $aTranscriptData['DNA'] . '");
+            oTranscriptField.val("' . $aTranscriptData['DNA'] . '").attr("class", "acc");;
             oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-            oTranscriptField.attr("class", "acc");
             var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '");
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "acc");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "acc");
         }');
     }
 
@@ -593,9 +590,8 @@ if ($_REQUEST['action'] == 'map') {
         var oGenomicField = $("input").filter(function() { 
             return $(this).data("genomeBuild") == "' . $sGBID . '" 
         });
-        oGenomicField.val("' . $sMappedGenomicVariant . '");
+        oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "acc");
         oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-        oGenomicField.attr("class", "acc");
         ');
     }
 
