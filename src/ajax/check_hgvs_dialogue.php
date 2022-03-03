@@ -43,15 +43,12 @@ $sFieldName   = $_REQUEST['fieldName'];
 
 
 
-// Initialise the function that will allow us to reset all values.
-function reset_all_values()
-{
-    // This function can be called to reset all values from the
-    //  output of this script.
-    print('
-    // Resetting the md5 key.
-    $(\'input[name="codedVariants"]\').val("");
-    
+// Reset all values.
+print('
+// Resetting the md5 key.
+$(\'input[name="codedVariants"]\').val("");
+
+if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("acc")) {
     // Resetting the transcript fields.        
     var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
     oTranscriptFields.val("").removeClass();
@@ -63,14 +60,12 @@ function reset_all_values()
     var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
     oGenomicVariants.val("").removeClass();
     oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
-    ');
 }
+');
 
 
 if (!$sVariant) {
-    // If the variant is empty, we should reset all values
-    //  and close the script.
-    reset_all_values();
+    // If the variant is empty, we can simply close the script.
     exit;
 }
 
@@ -510,9 +505,7 @@ if ($_REQUEST['action'] == 'map') {
     }
 
     // We have the mapping data and can now send it to the
-    //  input fields. Before we start, we reset all the fields
-    //  to make sure all the input is coherent.
-    reset_all_values();
+    //  input fields.
 
     // Save an array with all validated variants, to later
     //  use to make an md5 key of the input.
