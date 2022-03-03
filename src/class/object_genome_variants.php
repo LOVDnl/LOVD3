@@ -256,6 +256,11 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
         foreach ($aData as $sField => $sVariant) {
             if (preg_match('/DNA/', $sField)) {
+                // We want to check the input of all DNA fields: are these variant
+                //  descriptions indeed cleanly formatted? And if our check seems
+                //  to fail, is this perhaps because it holds syntax that we do
+                //  not support? If we DO support the syntax but the variant does
+                //  not seem to be HGVS, we will send an error.
                 $aVariantInfo = lovd_getVariantInfo($sVariant, false);
                 if (!lovd_isHGVS($sVariant)
                     && !isset($aVariantInfo['errors']['ENOTSUPPORTED']) // Supported by LOVD.
