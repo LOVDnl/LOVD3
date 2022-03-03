@@ -563,6 +563,17 @@ $(function ()
     // Add an onChange event that runs lovd_checkHGVS.
     oGenomicVariants.change(lovd_checkHGVS);
 
+    $('#variantForm select[name="chromosome"]').change(function (e) {
+        // We want to make sure that anytime the chromosome is updated,
+        //  the HGVS check and mapping is rerun using the new chromosome.
+        var sSource = $('#variantForm input[name="source"]').val();
+        if (sSource != '') {
+            $("input").filter(function() {
+                return $(this).data("genomeBuild") == sSource;
+            }).change();
+        }
+    });
+
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.
         oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" align="top" width="16" height="16">&nbsp;');
