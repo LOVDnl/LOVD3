@@ -43,39 +43,29 @@ $sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
 
 
 
-// If the variant is empty, we want to reset all results of this script.
+// We will reset all results and start from scratch.
+print('
+// Resetting the md5 key.
+$(\'input[name="codedVariants"]\').val("");
+
+// Resetting the transcript fields.        
+var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
+oTranscriptFields.val("");
+oTranscriptFields.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
+oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"}).show();
+$(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("");
+$(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("");
+
+// Resetting the genomic fields.
+var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
+oGenomicVariants.val("");
+oGenomicVariants.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
+oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
+');
+
+
 if (!$sVariant) {
-    print('
-    // Resetting the md5 key.
-    $(\'input[name="codedVariants"]\').val("");
-    ');
-
-    // Resetting the mapping for transcript, RNA and protein variants.
-    foreach ($aTranscripts as $sTranscript) {
-        print('
-        // Resetting the transcript fields.        
-        var oTranscriptField = $("input").filter(function() {
-            return $(this).data("id_ncbi") == "' . $sTranscript . '" 
-        });
-        oTranscriptField.val("");
-        oTranscriptField.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
-        oTranscriptField.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-        var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-        $(\'#variantForm input[name^="\' + sBaseOfFieldName + "RNA" + \'"]\').val("");
-        $(\'#variantForm input[name^="\' + sBaseOfFieldName + "Protein" + \'"]\').val("");
-        '); // Fixme; Should this perhaps be rewritten using a JS loop, or by adjusting all variables at once in JS?
-    }
-
-    // Resetting the mapping for genomic variants.
-    print('
-    // Resetting the genomic fields.
-    var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
-    oGenomicVariants.val("");
-    oGenomicVariants.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
-    oGenomicVariants.siblings("img:first").attr({src: "gfx/trans.png"}).show();
-    '); // Fixme; this only changes the image next to the first genome build. Why?
-
-    // Closing the script.
+    // If the variant is empty, we can close the script.
     exit;
 }
 
