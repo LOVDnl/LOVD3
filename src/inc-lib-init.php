@@ -1991,32 +1991,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['warnings'] = array();
             return $aResponse;
 
-        } elseif (!isset($aResponse['messages']['IPOSITIONRANGE'])) {
-            // If the variants are of a
-            //  type that is not ins or delins, they should only have a suffix
-            //  if they were given a position range.
-            if ($bCheckHGVS) {
-                return false;
-            }
-            $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
-
         } else {
-            // We know that repeat variants should never get a suffix. Therefore, it is
-            //  no use to check the format of the suffix for a repeat variant.
-            if (!preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
-                // If the position is uncertain, then the suffix must show the
-                //  length of the variant within parentheses.
-                if ($bCheckHGVS) {
-                    return false;
-                }
-                $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The length of the variant is not formatted following the HGVS guidelines.' .
-                    ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
+            // All other variants should get their suffix checked first, before
+            //  we warn that it shouldn't be there. Because if it contains a
+            //  different type of error, we should report that first.
 
-            } else {
+            // First check all length issues. Can we parse the suffix into a
+            //  simple length?
+            if (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
+                // g.123_124del(2), g.(100_200)del(50_60).
                 // Length given; check sizes and if this matches the
                 //  variant's length.
-                list(,$nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
+                list(, $nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
                 $nVariantLength = lovd_getVariantLength($aResponse);
 
                 // Make sure the suffix itself is OK.
@@ -2049,6 +2035,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
 
                 if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH'])) {
+                    return false;
+                }
+
+            } else {
+                // We couldn't parse the suffix.
+                if (isset($aResponse['messages']['IPOSITIONRANGE'])) {
+                    // If the position is uncertain, then the suffix must show the
+                    //  length of the variant within parentheses.
+                    $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        'The length of the variant is not formatted following the HGVS guidelines.' .
+                        ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
+                } else {
+                    // If the variants are of a
+                    //  type that is not ins or delins, they should only have a suffix
+                    //  if they were given a position range.
+                    $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+                }
+
+                if ($bCheckHGVS
+                    && (isset($aResponse['warnings']['WSUFFIXFORMAT']) || isset($aResponse['warnings']['WSUFFIXGIVEN']))) {
                     return false;
                 }
             }

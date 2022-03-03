@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-03-02
+ * Modified    : 2022-03-03
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1272,7 +1272,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'inv',
                 'warnings' => array(
-                    'WSUFFIXGIVEN' => 'Nothing should follow "inv".',
+                    'WSUFFIXINVALIDLENGTH' =>
+                        'The positions indicate a range smaller than the given length of the variant.' .
+                        ' Please adjust the positions or variant length.',
                 ),
                 'errors' => array(
                     'EPOSITIONFORMAT' => 'Inversions require a length of at least two bases.',
@@ -1282,9 +1284,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'inv',
-                'warnings' => array(
-                    'WSUFFIXGIVEN' => 'Nothing should follow "inv".',
-                ),
+                'warnings' => array(),
                 'errors' => array(),
             )),
             array('g.(1_100)inv(30)', array(
