@@ -35,11 +35,11 @@ header('Content-type: text/javascript; charset=UTF-8');
 
 
 // Retrieving the variant and the transcripts to map to.
-$sVariant     = htmlspecialchars($_REQUEST['var']);
-$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', htmlspecialchars($_REQUEST['transcripts'])));
+$sVariant     = $_REQUEST['var'];
+$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', $_REQUEST['transcripts']));
 
 // Retrieving the name of the input field.
-$sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
+$sFieldName   = $_REQUEST['fieldName'];
 
 
 
@@ -102,14 +102,14 @@ var ' . $sButtonYes . ' = {"Yes":function () {
     //  and perform a new call to this script by activating
     //  the onChange.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . lovd_fixHGVS($sVariant) . '");
+    oInput.val("' . addslashes(lovd_fixHGVS($sVariant)) . '");
     $(this).dialog("close");
     oInput.change();
 }};
 var ' . $sButtonNo . '  = {"No, I will take a look myself":function () {
     // The user does not accept the given fixed variant.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.attr("class", "err");
+    oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."}).show();
     $(this).dialog("close");
 }};
@@ -122,7 +122,7 @@ var ' . $sButtonOKValid . '  = {"OK":function () {
 var ' . $sButtonOKInvalid . '  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.attr("class", "err");
+    oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."}).show();
     $(this).dialog("close");
 }};
@@ -133,7 +133,7 @@ var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
     $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
-    oInput.attr("class", "warn");
+    oInput.val("' . addslashes($sVariant) . '").attr("class", "warn");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
     $(this).dialog("close");
 }};
@@ -234,7 +234,7 @@ if ($_REQUEST['action'] == 'check') {
         //  which we can interpret.
 
         // Let the user know that the given variant did not pass our HGVS check.
-        $sResponse = '<br>Your variant (\"' . $sVariant . '\") did not pass our HGVS check.<br><br>';
+        $sResponse = '<br>Your variant (\"' . htmlspecialchars($sVariant) . '\") did not pass our HGVS check.<br><br>';
         update_images_per_step($sStepInitialChecks, $sImageFailed);
 
 
@@ -243,7 +243,9 @@ if ($_REQUEST['action'] == 'check') {
 
         if (!empty($aVariantIssues)) {
             $sResponse .= 'We found the following problems:<br>- ';
-            $sResponse .= implode('<br> -', $aVariantIssues) . '<br><br>';
+            $sResponse .= implode('<br> -', array_map(function($sVariantIssue) {
+                    return addslashes($sVariantIssue);
+                }, $aVariantIssues)) . '<br><br>';
         }
 
 
@@ -369,7 +371,7 @@ if ($_REQUEST['action'] == 'check') {
     print('
     $.get("ajax/check_hgvs_dialogue.php?"
             + "action=map"
-            + "&var=' . $sFullVariant . '"
+            + "&var=' . urlencode($sFullVariant) . '"
             + "&fieldName=' . $sFieldName . '"
             + "&type=' . $sType . '"
             + "&refSeq=' . $sReferenceSequence . '"
@@ -387,9 +389,9 @@ if ($_REQUEST['action'] == 'check') {
 if ($_REQUEST['action'] == 'map') {
 
     // Retrieving necessary information from the URL.
-    $sType              = urldecode($_REQUEST['type']);
-    $sReferenceSequence = urldecode($_REQUEST['refSeq']);
-    $sGenomeBuildID     = urldecode($_REQUEST['genomeBuild']);
+    $sType              = $_REQUEST['type'];
+    $sReferenceSequence = $_REQUEST['refSeq'];
+    $sGenomeBuildID     = $_REQUEST['genomeBuild'];
 
     // Add the source of the variant which will be mapped.
     print('
