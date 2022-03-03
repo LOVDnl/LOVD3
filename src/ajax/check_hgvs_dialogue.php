@@ -43,29 +43,36 @@ $sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
 
 
 
-// We will reset all results and start from scratch.
-print('
-// Resetting the md5 key.
-$(\'input[name="codedVariants"]\').val("");
-
-// Resetting the transcript fields.        
-var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
-oTranscriptFields.val("");
-oTranscriptFields.removeClass();
-oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"}).show();
-$(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("");
-$(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("");
-
-// Resetting the genomic fields.
-var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
-oGenomicVariants.val("");
-oGenomicVariants.removeClass();
-oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
-');
+// Initialise the function that will allow us to reset all values.
+function reset_all_values()
+{
+    // This function can be called to reset all values from the
+    //  output of this script.
+    print('
+    // Resetting the md5 key.
+    $(\'input[name="codedVariants"]\').val("");
+    
+    // Resetting the transcript fields.        
+    var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
+    oTranscriptFields.val("");
+    oTranscriptFields.removeClass();
+    oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"}).show();
+    $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("");
+    $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("");
+    
+    // Resetting the genomic fields.
+    var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
+    oGenomicVariants.val("");
+    oGenomicVariants.removeClass();
+    oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
+    ');
+}
 
 
 if (!$sVariant) {
-    // If the variant is empty, we can close the script.
+    // If the variant is empty, we should reset all values
+    //  and close the script.
+    reset_all_values();
     exit;
 }
 
@@ -502,6 +509,10 @@ if ($_REQUEST['action'] == 'map') {
         unset($aMappedViaGB); // We don't need the rest of this information.
     }
 
+    // We have the mapping data and can now send it to the
+    //  input fields. Before we start, we reset all the fields
+    //  to make sure all the input is coherent.
+    reset_all_values();
 
     // Save an array with all validated variants, to later
     //  use to make an md5 key of the input.
