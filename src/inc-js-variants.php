@@ -573,6 +573,14 @@ $(function ()
         }
     });
 
+    // We disable the effect of the Enter key, since we do not want the user
+    //  to be able to easily submit the form (which is the default effect of Enter),
+    //  since this would mean the onchange would be bypassed and the HGVS check would
+    //  not be run.
+    $(document).on("keydown", "input[name*='DNA']", function(event) {
+        return event.key != "Enter";
+    });
+
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.
         oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" align="top" width="16" height="16">&nbsp;');
