@@ -51,7 +51,7 @@ $(\'input[name="codedVariants"]\').val("");
 // Resetting the transcript fields.        
 var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
 oTranscriptFields.val("");
-oTranscriptFields.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
+oTranscriptFields.removeClass();
 oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"}).show();
 $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("");
 $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("");
@@ -59,7 +59,7 @@ $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("");
 // Resetting the genomic fields.
 var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
 oGenomicVariants.val("");
-oGenomicVariants.css({"pointer-events": "auto", "background-color": "white", "color": "black"});
+oGenomicVariants.removeClass();
 oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
 ');
 
@@ -104,6 +104,7 @@ var ' . $sButtonYes . ' = {"Yes":function () {
 var ' . $sButtonNo . '  = {"No, I will take a look myself":function () {
     // The user does not accept the given fixed variant.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."}).show();
     $(this).dialog("close");
 }};
@@ -116,7 +117,8 @@ var ' . $sButtonOKValid . '  = {"OK":function () {
 var ' . $sButtonOKInvalid . '  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant could not be validated..."}).show();
+    oInput.attr("class", "err");
+    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."}).show();
     $(this).dialog("close");
 }};
 var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
@@ -126,6 +128,7 @@ var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
     $(\'input[name="codedVariants"]\').val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     $("#codedVariants").val("' . lovd_getMD5TranslationOfVariants(array($sVariant)) . '");
+    oInput.attr("class", "warn");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
     $(this).dialog("close");
 }};
@@ -301,6 +304,7 @@ if ($_REQUEST['action'] == 'check') {
             die('
             $("#variantCheckDialogue").dialog("close");
             var oInput = $(\'input[name="' . $sFieldName . '"]\');
+            oInput.attr("class", "warn");
             oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."}).show();
             ');
         }
@@ -531,7 +535,7 @@ if ($_REQUEST['action'] == 'map') {
         if (!oTranscriptField.prop("disabled")) {
             oTranscriptField.val("' . $aTranscriptData['DNA'] . '");
             oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-            oTranscriptField.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
+            oTranscriptField.attr("class", "acc");
             var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '");
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '");
@@ -580,7 +584,7 @@ if ($_REQUEST['action'] == 'map') {
         });
         oGenomicField.val("' . $sMappedGenomicVariant . '");
         oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
-        oGenomicField.css({"pointer-events": "none", "background-color": "lightgrey", "color": "grey"});
+        oGenomicField.attr("class", "acc");
         ');
     }
 

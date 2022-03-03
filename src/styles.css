@@ -108,7 +108,7 @@ table.error td {padding : 0px 4px;}
 
 
 
-/* Error messages on forms, required by lovd_errorPrint() */
+/* Error, warning and accepted messages on forms, required by lovd_errorPrint() */
 div.err                         {font-size : 11px; border : 1px solid #FF0000; background : #F3F3F3; padding : 5px;}
 input.err, textarea.err, button.err, select.err
                                 {border : 1px solid #EE0000;}
@@ -118,6 +118,10 @@ input.warn, textarea.warn, button.warn, select.warn
                                 {border : 1px solid #CCAA00;}
 input.warn:hover, input.warn:focus, textarea.warn:hover, textarea.warn:focus, button.warn:hover, select.warn:hover, select.warn:focus
                                 {background : #FFFFE8; border : 1px solid #AA6600;}
+input.acc, textarea.acc, button.acc, select.acc
+{background : #e9fae1; border : 1px solid #60b932;}
+input.acc:hover, input.acc:focus, textarea.acc:hover, textarea.acc:focus, button.acc:hover, select.acc:hover, select.acc:focus
+{background : #d7ffc4; border : 1px solid #448a21;}
 
 
 
