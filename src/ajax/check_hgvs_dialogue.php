@@ -382,6 +382,12 @@ if ($_REQUEST['action'] == 'map') {
     $sReferenceSequence = urldecode($_REQUEST['refSeq']);
     $sGenomeBuildID     = urldecode($_REQUEST['genomeBuild']);
 
+    // Add the source of the variant which will be mapped.
+    print('
+    // Add source.
+    $(\'#variantForm input[name="source"]\').val("' . ($sType == 'VOT'? $sType : $sGenomeBuildID) . '");
+    ');
+
     // Call VariantValidator.
     require ROOT_PATH . 'class/variant_validator.php';
     $_VV = new LOVD_VV();
