@@ -296,7 +296,7 @@ if ($_REQUEST['action'] == 'check') {
 
     } else {
         // We know we got information on a GB. This is given through
-        //  JS in the format of <GB suffix>-<chromosome>.
+        //  JS in the format of <genome build ID>-<chromosome>.
         $sType = 'VOG';
         list($sGenomeBuildID, $sChromosome) = explode('-', $sRefSeqInfo);
 
