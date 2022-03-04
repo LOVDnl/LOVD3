@@ -533,10 +533,6 @@ if ($_REQUEST['action'] == 'map') {
 
     // Returning the mapping for transcript, RNA and protein variants.
     foreach ($aMappedVariant['data']['transcript_mappings'] as $sTranscript => $aTranscriptData) {
-
-        // Adding the validated variant to the rest of the validated variants.
-        array_push($aAllValidatedVariants, $aTranscriptData['DNA']);
-
         // Filling in the input fields.
         print('
         // Adding transcript info to the fields.        
@@ -583,9 +579,6 @@ if ($_REQUEST['action'] == 'map') {
 
         // Removing the reference sequence.
         $sMappedGenomicVariant = preg_replace('/.*:/', '', $sMappedGenomicVariant); // Fixme; Find a cleaner way of cutting off the reference sequence.
-
-        // Adding the validated variant to the rest of the validated variants.
-        array_push($aAllValidatedVariants, $sMappedGenomicVariant);
 
         // Filling in the input field.
         print('
