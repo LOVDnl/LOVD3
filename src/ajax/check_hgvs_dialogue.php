@@ -207,7 +207,8 @@ if ($_REQUEST['action'] == 'check') {
             '<br>Your variant contains syntax which our HGVS check cannot recognise. ' .
             'Therefore, we cannot validate your variant nor map it to other reference sequences. ' .
             'Please thoroughly validate your variant by hand.',
-            $sButtonOKCouldBeValid);
+            $sButtonOKCouldBeValid
+        );
         exit;
     }
 
@@ -269,9 +270,11 @@ if ($_REQUEST['action'] == 'check') {
         //  cannot send the variant in for mapping. We will notify the
         //  user and exit this script.
         update_images_per_step($sStepInitialChecks, $sImageFailed);
-        update_dialogue('<br>Your variant contains syntax which VariantValidator cannot recognise. ' .
+        update_dialogue(
+            '<br>Your variant contains syntax which VariantValidator cannot recognise. ' .
             'Therefore, we cannot map your variant nor validate the positions.',
-            $sButtonOKCouldBeValid);
+            $sButtonOKCouldBeValid
+        );
         exit;
     }
 
@@ -311,7 +314,8 @@ if ($_REQUEST['action'] == 'check') {
             update_dialogue(
                 '<br>An unknown combination of genome build and chromosome was given.' .
                 ' This means we cannot perform the mapping.',
-                $sButtonOKInvalid);
+                $sButtonOKInvalid
+            );
             exit;
         }
 
@@ -341,7 +345,8 @@ if ($_REQUEST['action'] == 'check') {
                 '<br>The reference sequence given in the input description, does not equal the' .
                 ' reference sequence matched to the variant by LOVD automatically. Please have' .
                 ' another look and perhaps try again from a different input field.',
-                $sButtonOKInvalid);
+                $sButtonOKInvalid
+            );
             exit;
         }
 
@@ -425,7 +430,8 @@ if ($_REQUEST['action'] == 'map') {
             '<br>We could not validate nor map your variant because of the following problem(s):<br>- ' .
             implode('<br> -', $aMappedVariant['errors']) . '<br><br>' .
             'Please take another look at your variant and try again.',
-            $sButtonOKInvalid);
+            $sButtonOKInvalid
+        );
         exit;
     }
 
@@ -461,7 +467,8 @@ if ($_REQUEST['action'] == 'map') {
         update_dialogue(
             '<br>An unknown error occurred while trying to validate and map your variant.' .
             ' We are sorry for the inconvenience. Please try again later.',
-            $sButtonOKInvalid);
+            $sButtonOKInvalid
+        );
         exit;
     }
 
@@ -584,6 +591,7 @@ if ($_REQUEST['action'] == 'map') {
     update_dialogue(
         '<br>Your variant was successfully mapped' . (!isset($bImprovedByVV) ? '' : ', improved') .
         ' and validated by VariantValidator. Thank you for your patience!',
-        $sButtonOKValid);
+        $sButtonOKValid
+    );
 }
 ?>
