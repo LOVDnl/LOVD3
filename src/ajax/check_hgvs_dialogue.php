@@ -75,6 +75,8 @@ if (!$sVariant) {
 
 
 
+// Preparing variables to allow easy and readable updates of the dialogue.
+
 // Preparing the steps.
 $sStepInitialChecks = 'statusChecks';
 $sStepMapping       = 'statusMapping';
@@ -302,7 +304,7 @@ if ($_REQUEST['action'] == 'check') {
 
         if (!$_SETT['human_builds'][$sGenomeBuildID]['supported_by_VV']) {
             // If the given genome build is not supported by VV, we cannot fully validate
-            //  the variants... We will have to accept these variants into the database
+            //  the variant... We will have to accept these variants into the database
             //  anyway, since this issue lies with us.
             die('
             $("#variantCheckDialogue").dialog("close");
@@ -325,6 +327,8 @@ if ($_REQUEST['action'] == 'check') {
             exit;
         }
 
+        // All checks passed: we can now take the right reference
+        //  sequence by the GB ID and chromosome.
         $sReferenceSequence = $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome];
     }
 
@@ -338,8 +342,9 @@ if ($_REQUEST['action'] == 'check') {
         if ($sRefSeqInDescription == $sReferenceSequence) {
             // Perfect, no issues found; the user redundantly gave
             //  the reference sequence in the variant description,
-            //  but that is no problem at all, since the given
-            //  refSeq matches our expectations.
+            //  but that is no problem at all, since the given refSeq
+            //  matches our expectations. The reference sequence will
+            //  be cut from the description after the mapping.
             $sFullVariant = $sVariant;
 
         } else {
@@ -357,7 +362,9 @@ if ($_REQUEST['action'] == 'check') {
         }
 
     } else {
-        // The given variant does not hold a reference sequence.
+        // The variant in the input field does not hold a reference
+        //  sequence. We will add it to make a full variant that we
+        //  can then send to VariantValidator.
         $sFullVariant = $sReferenceSequence . ':' . $sVariant;
     }
 
@@ -403,15 +410,15 @@ if ($_REQUEST['action'] == 'map') {
     $aMappedVariant = (
     $sType == 'VOG' ?
         $_VV->verifyGenomic($sVariant, array(
-            'map_to_transcripts' => !empty($aTranscript),     // Should we map the variant to transcripts?
-            'predict_protein'    => !empty($aTranscript),     // Should we get protein predictions?
+            'map_to_transcripts' => !empty($aTranscript), // Should we map the variant to transcripts?
+            'predict_protein'    => !empty($aTranscript), // Should we get protein predictions?
             'lift_over'          => (1 < (int) $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENOME_BUILDS)->fetchColumn()), // Should we get other genomic mappings of this variant?
             'select_transcripts' => $aTranscripts,
         )) :
         $_VV->verifyVariant($sVariant, array('select_transcripts' => $aTranscripts))
     );
 
-    // Check for issues for which the user cannot be blamed.
+    // Check for issues on our end.
     if ($aMappedVariant === false
         || in_array(array_keys($aMappedVariant['errors']), array(array('EBUILD'), array('ESYNTAX')))) {
         // If our VV call returned false, or if we found an EBUILD or ESYNTAX
@@ -484,23 +491,24 @@ if ($_REQUEST['action'] == 'map') {
     //  on a VOT creation form, and there are multiple transcripts open,
     //  we want each transcript to get a mapping. To get this, we then
     //  need to call VariantValidator a second time using one of the
-    //  genomic variant as were returned using our first call.
+    //  genomic variants as were returned using our first call.
     if ($sType == 'VOT' && count($aTranscripts) > 1) {
 
         $aMappedViaGB = (
         !isset($aMappedVariant['data']['genomic_mappings']['hg38']) ? // Yes=We have a genomic reference from our first call; No=We don't have a genomic reference.
             array() :
             $_VV->verifyGenomic($aMappedVariant['data']['genomic_mappings']['hg38'], array(
-                'map_to_transcripts' => true,          // Should we map the variant to transcripts?
-                'predict_protein'    => true,          // Should we get protein predictions?
-                'lift_over'          => false,         // Should we get other genomic mappings of this variant?
-                'select_transcripts' => array_diff($aTranscripts, array($sReferenceSequence)), // Should we limit our output to only a certain set of transcripts?
+                'map_to_transcripts' => true,  // Should we map the variant to transcripts?
+                'predict_protein'    => true,  // Should we get protein predictions?
+                'lift_over'          => false, // Should we get other genomic mappings of this variant?
+                'select_transcripts' => array_diff($aTranscripts, array($sReferenceSequence)), // Which transcripts do we want to map to?
             ))
         );
 
         if (!isset($aMappedViaGB['data']['transcript_mappings'])) {
-            // If for any reason no genomic mappings were given, we cannot perform this
-            //  extra step, and will thus miss some information. We will inform the user.
+            // If for any reason no new transcript mappings were given,
+            //  we cannot perform this extra step, and will thus miss
+            //  some information. We will inform the user.
             update_dialogue('<br>Your variant could not be mapped to all transcripts due to unknown issues.');
         }
 
@@ -509,11 +517,10 @@ if ($_REQUEST['action'] == 'map') {
         unset($aMappedViaGB); // We don't need the rest of this information.
     }
 
-    // We have the mapping data and can now send it to the
-    //  input fields.
+    // We have the mapping data and can now send it to the input fields.
 
-    // Save the ['data']['DNA'] variant to the right type of mapping
-    //  to easily add it into the right fields.
+    // Save the ['data']['DNA'] variant to the right type of mapping to
+    //  easily add it into the right fields later.
     if ($sType == 'VOT') {
         // If the input type was a variant on transcript, the ['data']['DNA']
         //  field holds information on a transcript mapping.
