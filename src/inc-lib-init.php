@@ -2006,11 +2006,27 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             // First check all length issues. Can we parse the suffix into a
             //  simple length?
-            if (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
+            $nSuffixMinLength = $nSuffixMaxLength = 0;
+
+            if (ctype_digit($aVariant['suffix'])) {
+                // g.123_124del2.
+                if ($bCheckHGVS) {
+                    return false;
+                }
+                $nSuffixMinLength = $aVariant['suffix'];
+                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "(' . $nSuffixMinLength . ')".';
+
+            } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                 // g.123_124del(2), g.(100_200)del(50_60).
-                // Length given; check sizes and if this matches the
-                //  variant's length.
                 list(, $nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
+            }
+
+            if ($nSuffixMinLength && !isset($aResponse['messages']['IUNCERTAINPOSITIONS'])) {
+                // Length given; check sizes and if this matches the variant's length.
+                // We can not check this with question marks in the positions (IUNCERTAINPOSITION); there might not be
+                //  a maximum variant size and we won't know whether we have the inner or outer positions stored.
                 $nVariantLength = lovd_getVariantLength($aResponse);
 
                 // Make sure the suffix itself is OK.
@@ -2081,7 +2097,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     return false;
                 }
 
-            } else {
+            } elseif (!$nSuffixMinLength) {
                 // We couldn't parse the suffix.
                 if (isset($aResponse['messages']['IUNCERTAINRANGE'])) {
                     // Variants with three or more positions. The suffix isn't required.

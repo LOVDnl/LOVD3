@@ -1229,7 +1229,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. When indicating an uncertain position like this, the length of the variant must be provided between parentheses.',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "50" to "(50)".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1283,19 +1283,6 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
-            array('g.(100_200)_(400_500)del300', array(
-                'position_start' => 200,
-                'position_end' => 400,
-                'type' => 'del',
-                'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. ' .
-                        'If you didn\'t mean to specify a variant length, please remove the part after "del".',
-                ),
-                'errors' => array(),
-                'messages' => array(
-                    'IUNCERTAINRANGE' => 'This variant description contains uncertain positions.',
-                ),
-            )),
             array('g.(1_100)del(30_50)', array(
                 'position_start' => 1,
                 'position_end' => 100,
@@ -1316,6 +1303,41 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(100_200)_(400_500)delEX5', array(
+                'position_start' => 200,
+                'position_end' => 400,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. ' .
+                        'If you didn\'t mean to specify a variant length, please remove the part after "del".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(100_200)_(400_500)del300', array(
+                'position_start' => 200,
+                'position_end' => 400,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "300" to "(300)".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_200)_(400_500)del(300)', array(
+                'position_start' => 200,
+                'position_end' => 400,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.1inv(30)', array(
