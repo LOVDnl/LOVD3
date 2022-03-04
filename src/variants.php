@@ -947,7 +947,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
     // Table.
     print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?create&amp;reference=' . $_GET['reference'] . (isset($sGene)? '&amp;geneid=' . rawurlencode($sGene) : '') . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n" .
-          '        <INPUT name="codedVariants" type="hidden" value="' . (empty($_POST['codedVariants'])? '' : $_POST['codedVariants']) . '">' .
           '        <INPUT name="source" type="hidden" value="' . (empty($_POST['source'])? '' : $_POST['source']) . '"> ' . "\n");
 
     // Array which will make up the form table.
