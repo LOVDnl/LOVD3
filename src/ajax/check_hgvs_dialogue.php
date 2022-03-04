@@ -47,6 +47,12 @@ $sFieldName   = $_REQUEST['fieldName'];
 print('
 // Resetting all values.
 if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("acc")) {
+    // If any input in the form is of the class acc(epted), this means
+    //  that these input fields were filled in after full mapping and
+    //  validation of VariantValidator. If then, the script is called
+    //  again, we want to RESET these values, since we do not want to
+    //  risk having incoherent variants in the form simultaneously,
+    //  especially not those we have mapped and validated ourselves.
     // Resetting the transcript fields.        
     var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
     oTranscriptFields.val("").removeClass();
