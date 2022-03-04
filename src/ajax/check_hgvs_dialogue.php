@@ -153,9 +153,6 @@ function update_dialogue($sText, $sButtons = '', $bCleanSlate = false)
     // Removing buttons.
     $("#variantCheckDialogue").dialog({buttons: {}});
     '));
-
-    // Sending the contents directly to the user.
-    flush();
 }
 
 
