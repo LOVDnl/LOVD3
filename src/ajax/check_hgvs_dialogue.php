@@ -308,7 +308,7 @@ if ($_REQUEST['action'] == 'check') {
             //  anyway, since this issue lies with us.
             die('
             $("#variantCheckDialogue").dialog("close");
-            var oInput = $(\'input[name="' . $sFieldName . '"]\');
+            var oInput = $(\'input[name="' . addslashes($sFieldName) . '"]\');
             oInput.attr("class", "warn");
             oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."}).show();
             ');
