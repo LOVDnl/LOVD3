@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-03-03
+ * Modified    : 2022-03-04
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2051,16 +2051,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             } else {
                 // We couldn't parse the suffix.
-                if (isset($aResponse['messages']['IPOSITIONRANGE'])) {
-                    // If the position is uncertain, then the suffix must show the
-                    //  length of the variant within parentheses.
+                if (isset($aResponse['messages']['IUNCERTAINRANGE'])) {
+                    // Variants with three or more positions. The suffix isn't required.
+                    $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        'The length of the variant is not formatted following the HGVS guidelines.' .
+                        ' If you didn\'t mean to specify a variant length, please remove the part after "' . $aVariant['type'] . '".';
+                } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])) {
+                    // Variants like c.(1_2)del(5). The suffix is mandatory.
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
                         ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
                 } else {
-                    // If the variants are of a
-                    //  type that is not ins or delins, they should only have a suffix
-                    //  if they were given a position range.
+                    // Simple variants with one or two known positions, no uncertainties. The suffix is forbidden.
                     $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
                 }
 

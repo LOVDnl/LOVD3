@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-03-03
+ * Modified    : 2022-03-04
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1281,6 +1281,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(100_200)_(400_500)del300', array(
+                'position_start' => 200,
+                'position_end' => 400,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. ' .
+                        'If you didn\'t mean to specify a variant length, please remove the part after "del".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
             array('g.(1_100)del(30_50)', array(
