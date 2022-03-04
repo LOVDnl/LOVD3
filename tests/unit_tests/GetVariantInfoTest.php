@@ -1283,7 +1283,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "50" to "(50)".',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "50" to "N[50]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1291,6 +1291,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
             )),
             array('g.(1_100)del(30)', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delN[30]', array(
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
@@ -1305,6 +1317,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(100)" to "N[100]".',
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range equally long as the given length of the variant. Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.',
                 ),
@@ -1318,7 +1331,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The two possible lengths of the variant are the same.',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30_30)" to "N[30]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1326,6 +1339,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
             )),
             array('g.(1_100)del(30_50)', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30_50)" to "N[(30_50)]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delN[(30_50)]', array(
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
@@ -1340,7 +1365,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The possible lengths of the variant are not given in the correct order.',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(50_30)" to "N[(30_50)]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1365,7 +1390,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 400,
                 'type' => 'del',
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "300" to "(300)".',
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "300" to "N[300]".',
                 ),
                 'errors' => array(),
                 'messages' => array(
@@ -1376,7 +1401,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 200,
                 'position_end' => 400,
                 'type' => 'del',
-                'warnings' => array(),
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(300)" to "N[300]".',
+                ),
                 'errors' => array(),
                 'messages' => array(
                     'IUNCERTAINRANGE' => 'This variant description contains uncertain positions.',
@@ -1387,6 +1414,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'inv',
                 'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range shorter than the given length of the variant.' .
                         ' Please adjust the positions if the variant length is certain, or remove the variant length.',
@@ -1400,6 +1428,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 100,
                 'type' => 'inv',
                 'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range longer than the given length of the variant.' .
                         ' Please adjust the positions if the variant length is certain, or remove the variant length.',
@@ -1410,7 +1439,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'inv',
-                'warnings' => array(),
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
+                ),
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
@@ -1421,6 +1452,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'inv',
                 'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range smaller than the given length of the variant. Please adjust the positions or variant length.',
                 ),
                 'errors' => array(

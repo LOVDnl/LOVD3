@@ -2010,13 +2010,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             if (ctype_digit($aVariant['suffix'])) {
                 // g.123_124del2.
-                if ($bCheckHGVS) {
-                    return false;
-                }
                 $nSuffixMinLength = $aVariant['suffix'];
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
                     'The length of the variant is not formatted following the HGVS guidelines.' .
-                    ' Please rewrite "' . $aVariant['suffix'] . '" to "(' . $nSuffixMinLength . ')".';
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' . $nSuffixMinLength . ']".';
 
             } elseif (preg_match('/^[ACGTN]+$/', $aVariant['suffix'])) {
                 // g.123_124delAA.
@@ -2025,6 +2022,36 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                 // g.123_124del(2), g.(100_200)del(50_60).
                 list(, $nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
+                if ($nSuffixMaxLength && $nSuffixMinLength > $nSuffixMaxLength) {
+                    list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                }
+                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
+                    (!$nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength?
+                        $nSuffixMinLength :
+                        '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+
+            } elseif (preg_match('/^N\[([0-9]+|\(([0-9]+)_([0-9]+)\))\]$/', $aVariant['suffix'], $aRegs)) {
+                // g.123_124delN[2], g.(100_200)del[(50_60)].
+                if (count($aRegs) == 2) {
+                    list(, $nSuffixMinLength) = $aRegs;
+                } else {
+                    list(,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+
+                    if ($nSuffixMinLength > $nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength) {
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The length of the variant is not formatted following the HGVS guidelines.' .
+                            ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
+                            ($nSuffixMinLength == $nSuffixMaxLength?
+                                $nSuffixMinLength :
+                                '(' . $nSuffixMaxLength . '_' . $nSuffixMinLength . ')') . ']".';
+                        list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                    }
+                }
+            }
+            if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
+                return false;
             }
 
             if ($nSuffixMinLength && !isset($aResponse['messages']['IUNCERTAINPOSITIONS'])) {
@@ -2032,22 +2059,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 // We can not check this with question marks in the positions (IUNCERTAINPOSITION); there might not be
                 //  a maximum variant size and we won't know whether we have the inner or outer positions stored.
                 $nVariantLength = lovd_getVariantLength($aResponse);
-
-                // Make sure the suffix itself is OK.
-                if ($nSuffixMaxLength) {
-                    if ($nSuffixMaxLength < $nSuffixMinLength) {
-                        $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The possible lengths of the variant are not given in the correct order.';
-                        list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
-                    } elseif ($nSuffixMaxLength == $nSuffixMinLength) {
-                        $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The two possible lengths of the variant are the same.';
-                    }
-
-                    if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
-                        return false;
-                    }
-                }
                 if (!$nSuffixMaxLength) {
                     $nSuffixMaxLength = $nSuffixMinLength;
                 }
