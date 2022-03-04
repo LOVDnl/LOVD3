@@ -157,14 +157,13 @@ function update_dialogue($sText, $sButtons = '', $bCleanSlate = false)
 
 
 // Create a PHP function to easily update the images to the left of each step.
-function update_images_per_step($nStep, $sImage)
+function update_images_per_step($sStep, $sImage)
 {
-    // This function takes a step in the format of an integer, and
-    //  replaces the image which was put next to this step by the
-    //  given $sImage.
+    // This function takes a step, and replaces the image that
+    //  was put next to this step by the given $sImage.
     print('
     // Updating one of the status images.
-    $("#' . $nStep . '").attr({src: "' . $sImage . '"});
+    $("#' . $sStep . '").attr({src: "' . $sImage . '"});
     ');
 }
 
