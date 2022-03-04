@@ -2018,6 +2018,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The length of the variant is not formatted following the HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "(' . $nSuffixMinLength . ')".';
 
+            } elseif (preg_match('/^[ACGTN]+$/', $aVariant['suffix'])) {
+                // g.123_124delAA.
+                $nSuffixMinLength = strlen($aVariant['suffix']);
+
             } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                 // g.123_124del(2), g.(100_200)del(50_60).
                 list(, $nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
@@ -2108,7 +2112,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     // Variants like c.(1_2)del(5). The suffix is mandatory.
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
-                        ' When indicating an uncertain position like this, the length of the variant must be provided between parentheses.';
+                        ' When indicating an uncertain position like this, the length or sequence of the variant must be provided.';
                 } else {
                     // Simple variants with one or two known positions, no uncertainties. The suffix is forbidden.
                     $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';

@@ -1212,13 +1212,67 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_10delAAAAA', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' =>
+                        'The positions indicate a range longer than the given length of the variant.' .
+                        ' Please adjust the positions if the variant length is certain, or remove the variant length.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_10delAAAAAAAAAA', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".'
+                ),
+                'errors' => array(),
+            )),
+            array('g.(1_10)delAAAAAAAAAA', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' =>
+                        'The positions indicate a range equally long as the given length of the variant. Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.1_10delAAAAAAAAAAAAAAA', array(
+                'position_start' => 1,
+                'position_end' => 10,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' =>
+                        'The positions indicate a range shorter than the given length of the variant.' .
+                        ' Please adjust the positions if the variant length is certain, or remove the variant length.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.(1_100)del', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXMISSING' => 'The length must be provided for variants which took place within an uncertain range.',
+                ),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_100)delA', array(
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
-                'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. When indicating an uncertain position like this, the length of the variant must be provided between parentheses.',
-                ),
+                'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
@@ -1232,18 +1286,6 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "50" to "(50)".',
                 ),
                 'errors' => array(),
-                'messages' => array(
-                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
-                ),
-            )),
-            array('g.(1_100)del', array(
-                'position_start' => 1,
-                'position_end' => 100,
-                'type' => 'del',
-                'warnings' => array(),
-                'errors' => array(
-                    'ESUFFIXMISSING' => 'The length must be provided for variants which took place within an uncertain range.',
-                ),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
