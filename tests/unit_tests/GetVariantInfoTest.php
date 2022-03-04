@@ -1324,8 +1324,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'inv',
                 'warnings' => array(
                     'WSUFFIXINVALIDLENGTH' =>
-                        'The positions indicate a range smaller than the given length of the variant.' .
-                        ' Please adjust the positions or variant length.',
+                        'The positions indicate a range shorter than the given length of the variant.' .
+                        ' Please adjust the positions if the variant length is certain, or remove the variant length.',
                 ),
                 'errors' => array(
                     'EPOSITIONFORMAT' => 'Inversions require a length of at least two bases.',
@@ -1335,7 +1335,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'inv',
-                'warnings' => array(),
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' =>
+                        'The positions indicate a range longer than the given length of the variant.' .
+                        ' Please adjust the positions if the variant length is certain, or remove the variant length.',
+                ),
                 'errors' => array(),
             )),
             array('g.(1_100)inv(30)', array(

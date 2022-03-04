@@ -2018,6 +2018,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     if ($nSuffixMaxLength < $nSuffixMinLength) {
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The possible lengths of the variant are not given in the correct order.';
+                        list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                     } elseif ($nSuffixMaxLength == $nSuffixMinLength) {
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The two possible lengths of the variant are the same.';
@@ -2031,21 +2032,52 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $nSuffixMaxLength = $nSuffixMinLength;
                 }
 
-                // For simple ranges, we can do a full check.
-                if (isset($aResponse['messages']['IPOSITIONRANGE'])) {
+                if (isset($aResponse['messages']['IUNCERTAINRANGE'])) {
+                    // Variants with three or more positions. We have the inner positions stored; we know nothing about
+                    //  the outer range currently, so we can not check this.
+                    if ($nVariantLength == $nSuffixMinLength && $nSuffixMinLength == $nSuffixMaxLength) {
+                        $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
+                            'The positions indicate a range equally long as the given length of the variant.' .
+                            ' Please remove the variant length and position uncertainty if the positions are certain, or adjust the positions or variant length.';
+                    } elseif ($nVariantLength > $nSuffixMinLength) {
+                        $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
+                            'The positions indicate a range longer than the given length of the variant.' .
+                            ' Please adjust the positions if the variant length is certain, or adjust the variant length.';
+                    }
+
+                } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])) {
                     // Variants like c.(1_2)del(5).
-                    if (max($nSuffixMinLength, $nSuffixMaxLength) > $nVariantLength) {
+                    if ($nVariantLength < $nSuffixMaxLength) {
                         $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
                             'The positions indicate a range smaller than the given length of the variant.' .
                             ' Please adjust the positions or variant length.';
-                    } elseif ($nVariantLength == min($nSuffixMinLength, $nSuffixMaxLength)) {
+                    } elseif ($nVariantLength == $nSuffixMinLength) {
                         $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
                             'The positions indicate a range equally long as the given length of the variant.' .
                             ' Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.';
                     }
+
+                } else {
+                    // Simple variants with one or two known positions, no uncertainties.
+                    if ($nVariantLength < $nSuffixMaxLength) {
+                        // The positions are smaller than the max length, so the length is at least partially larger.
+                        $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
+                            'The positions indicate a range shorter than the given length of the variant.' .
+                            ' Please adjust the positions if the variant length is certain, or remove the variant length.';
+                    } elseif ($nVariantLength > $nSuffixMinLength) {
+                        // The positions are bigger than the min length, so the length is at least partially smaller.
+                        $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
+                            'The positions indicate a range longer than the given length of the variant.' .
+                            ' Please adjust the positions if the variant length is certain, or remove the variant length.';
+                    } else {
+                        // Length is not (partially) larger, is not (partially) smaller, so must be equal.
+                        // This is where the suffix becomes unnecessary.
+                        $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+                    }
                 }
 
-                if ($bCheckHGVS && isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH'])) {
+                if ($bCheckHGVS
+                    && (isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH']) || isset($aResponse['warnings']['WSUFFIXGIVEN']))) {
                     return false;
                 }
 
