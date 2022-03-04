@@ -192,8 +192,7 @@ function lovd_checkHGVS(e) {
             + "&fieldName=" + encodeURIComponent(sFieldName)
             + "&refSeqInfo=" + encodeURIComponent(sRefSeqInfo)
             + "&transcripts=" + encodeURIComponent(sTranscripts)
-    ).fail(function(){alert("An error occurred while checking your variant, please try again later.");$("#variantCheckDialogue").dialog("close");})
-    ;
+    ).fail(function(){alert("An error occurred while checking your variant, please try again later.");$("#variantCheckDialogue").dialog("close");});
 }
 
 
