@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-03-04
+ * Modified    : 2022-03-22
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1958,11 +1958,29 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
                         substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
                     // Looping through all possible variants.
-                    if (!(
+                    // Some have specific errors, so we handle these first.
+                    if (preg_match('/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion, $aRegs)) {
+                        // c.1_2insN[40] or ..N[(1_2)].
+                        if (isset($aRegs[3])) {
+                            // Range was given.
+                            list(, $nSuffixLength,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                            if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength >= $nSuffixMaxLength) {
+                                if ($bCheckHGVS) {
+                                    return false;
+                                }
+                                list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                    'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.' .
+                                    ' Please rewrite "' . $sInsertion . '" to "N[' .
+                                    ($nSuffixMinLength == $nSuffixMaxLength?
+                                        $nSuffixMinLength :
+                                        '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+                            }
+                        }
+
+                    } elseif (!(
                         (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                            // so no c.1_2ins[A]
                             && (preg_match('/^[ACGTN]+$/', $sInsertion)                                                // c.1_2insATG
-                                || preg_match(
-                                    '/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion)          // c.1_2insN[40] or ..N[(1_2)]
                                 || (preg_match(                                                                        // c.1_2ins15+1_16-1
                                     '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
                                     && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) // if positions are simple, is A < B?

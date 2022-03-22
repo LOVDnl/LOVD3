@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-03-04
+ * Modified    : 2022-03-22
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -357,11 +357,29 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
-            array('g.1_2ins5_10', array(
+            array('g.1_2insN[(5_10)]', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
                 'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(10_5)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[(10_5)]" to "N[(5_10)]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(10_10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[(10_10)]" to "N[10]".',
+                ),
                 'errors' => array(),
             )),
             array('g.1insA', array(
