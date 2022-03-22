@@ -2050,8 +2050,21 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $nSuffixMinLength :
                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
+            } elseif (preg_match('/^N\[([0-9]+)(?:_([0-9]+))\]$/', $aVariant['suffix'], $aRegs)) {
+                // g.(100_200)delN[50_60].
+                list(, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                if ($nSuffixMinLength > $nSuffixMaxLength) {
+                    list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                }
+                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
+                    ($nSuffixMinLength == $nSuffixMaxLength?
+                        $nSuffixMinLength :
+                        '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+
             } elseif (preg_match('/^N\[([0-9]+|\(([0-9]+)_([0-9]+)\))\]$/', $aVariant['suffix'], $aRegs)) {
-                // g.123_124delN[2], g.(100_200)del[(50_60)].
+                // g.123_124delN[2], g.(100_200)delN[(50_60)].
                 if (count($aRegs) == 2) {
                     list(, $nSuffixMinLength) = $aRegs;
                 } else {
