@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-24
+ * Modified    : 2022-03-22
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -400,6 +400,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Reformat wrongly described suffixes.
     if (isset($aVariant['warnings']['WSUFFIXFORMAT'])) {
+        if (isset($aVariant['warnings']['WSUFFIXINVALIDLENGTH'])) {
+            // In this case, the variant suffix is interpreted and understood to be broken. Let's not touch it.
+            return $sReference . $sVariant;
+        }
+
         list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
 
         if (ctype_digit($sSuffix)) {
