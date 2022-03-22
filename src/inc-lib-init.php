@@ -1959,7 +1959,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
                     // Looping through all possible variants.
                     // Some have specific errors, so we handle these first.
-                    if (preg_match('/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion, $aRegs)) {
+                    if (preg_match('/^[ACGTN]+\[([0-9]+|\?)_([0-9]+|\?)\]$/', $sInsertion, $aRegs)) {
+                        // c.1_2insN[10_20].
+                        if ($bCheckHGVS) {
+                            return false;
+                        }
+                        list(, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $sInsertion . '" to "N[' .
+                            ($nSuffixMinLength == $nSuffixMaxLength?
+                                $nSuffixMinLength :
+                                '(' . (strpos($sInsertion, '?') !== false || $nSuffixMinLength < $nSuffixMaxLength?
+                                    $nSuffixMinLength . '_' . $nSuffixMaxLength :
+                                    min($nSuffixMinLength, $nSuffixMaxLength) . '_' . max($nSuffixMinLength, $nSuffixMaxLength)) . ')') . ']".';
+
+                    } elseif (preg_match('/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion, $aRegs)) {
                         // c.1_2insN[40] or ..N[(1_2)].
                         if (isset($aRegs[3])) {
                             // Range was given.
@@ -2050,7 +2065,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $nSuffixMinLength :
                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
-            } elseif (preg_match('/^N\[([0-9]+)(?:_([0-9]+))\]$/', $aVariant['suffix'], $aRegs)) {
+            } elseif (preg_match('/^N\[([0-9]+)_([0-9]+)\]$/', $aVariant['suffix'], $aRegs)) {
                 // g.(100_200)delN[50_60].
                 list(, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                 if ($nSuffixMinLength > $nSuffixMaxLength) {

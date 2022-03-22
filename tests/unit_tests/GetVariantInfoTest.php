@@ -357,6 +357,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.1_2insN[5_10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[5_10]" to "N[(5_10)]".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1_2insN[(5_10)]', array(
                 'position_start' => 1,
                 'position_end' => 2,
