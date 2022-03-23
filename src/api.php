@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2021-09-17
+ * Modified    : 2022-23-03
  * For LOVD    : 3.0-28
  *
  * Supported URIs:
@@ -14,8 +14,8 @@
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}/unique
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_position=c.1234
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_position=c.1234+56_2345-67 (c.1234%2B56_2345-67)
- *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_position=g.12345678
- *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_position=g.1234_5678&position_match=exact|exclusive|partial
+ *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_position=hg19:g.12345678
+ *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_position=hg19:g.1234_5678&position_match=exact|exclusive|partial
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_Variant%2FDNA=c.1234C>G (c.1234C%3EG)
  *  3.0-beta-10  /api/rest.php/variants/{{ GENE }}?search_Variant%2FDBID=DMD_01234
  *  3.0-19       /api/rest.php/variants/{{ GENE }}?show_variant_effect=1
@@ -40,8 +40,9 @@
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data:hg19:chr1:123456-234567 (GET/HEAD)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -132,8 +133,8 @@ if ($sDataType == 'variants') {
         die('This gene does not have the VariantOnTranscript/DNA or the VariantOnGenome/DBID fields enabled, crucial for the API.');
     }
 
-    // Store if we have hg38 annotation or not (GV shared had a custom column for that).
-    $bDNA38 = $_DATA['Genome']->colExists('VariantOnGenome/DNA/hg38');
+    // Store all active genome builds.
+    $aActiveGBs = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
 
     $bUnique = ($nID == 'unique');
     if ($bUnique) {
@@ -239,7 +240,25 @@ if ($sDataType == 'variants') {
 
     } else {
         // Normal API output; Atom feed with one entry per variant.
-        // First build query.
+
+        // Prepare the SQL that will look for all genomic data.
+        // We will go through all active builds and prepare a query
+        //  that retrieves the information from each build individually.
+        $sPreparedGenomicQ = '';
+        foreach ($aActiveGBs as $sGBID => $sGBSuffix) {
+            $sUnderscoreSuffix = (!$sGBSuffix? '' : '_' . $sGBSuffix);
+            $sPreparedGenomicQ .= '
+                vog.chromosome, vog.`VariantOnGenome/DNA' . (!$sGBSuffix? '' : '/' . $sGBSuffix) . '`,
+                CONCAT("chr", vog.chromosome, ":",
+                    IF (
+                        vog.position_g_start' . $sUnderscoreSuffix . ' = vog.position_g_end' . $sUnderscoreSuffix . ',
+                        vog.position_g_start' . $sUnderscoreSuffix . ',
+                        CONCAT(vog.position_g_start' . $sUnderscoreSuffix . ', "_", vog.position_g_end' . $sUnderscoreSuffix . ')
+                    )
+                ) AS position_genomic' . $sUnderscoreSuffix . ', ';
+        }
+
+        // Then build the query.
         // Note that the MIN()s and MAX()es don't mean much if $bUnique is false, since we'll group by the vog.id anyway.
         $sQ = 'SELECT MIN(vog.id) AS id,
                  GROUP_CONCAT(
@@ -282,17 +301,9 @@ if ($sDataType == 'variants') {
                    ORDER BY t.id_ncbi
                    SEPARATOR ";"
                  ) AS _position_mRNA,
-                 ' . (!$bDNA38? '' : 'vog.chromosome, GROUP_CONCAT(DISTINCT IFNULL(vog.`VariantOnGenome/DNA/hg38`, "") SEPARATOR ";") AS `DNA/hg38`, ') . '
-                 CONCAT("chr", vog.chromosome, ":", 
-                   IF(
-                     vog.position_g_start = vog.position_g_end,
-                     vog.position_g_start,
-                     CONCAT(vog.position_g_start, "_", vog.position_g_end)
-                   )
-                 ) AS position_genomic,
+                 ' . $sPreparedGenomicQ . '
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
-                 vog.`VariantOnGenome/DNA`,
                  GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'vot.`VariantOnTranscript/DNA`
                    ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
                  vog.`VariantOnGenome/DBID`,
@@ -309,7 +320,7 @@ if ($sDataType == 'variants') {
                  LEFT OUTER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id AND i.statusid >= ' . STATUS_MARKED . ')
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uc ON (vog.created_by = uc.id)
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
-               WHERE ' . ($nRefSeqID? 't.id = ' . $nRefSeqID : 't.geneid = ' . $_DB->quote($sSymbol)) . ' AND vog.statusid >= ' . STATUS_MARKED;
+               WHERE vog.chromosome = ' . $sChromosome . ' AND ' . ($nRefSeqID? 't.id = ' . $nRefSeqID : 't.geneid = ' . $_DB->quote($sSymbol)) . ' AND vog.statusid >= ' . STATUS_MARKED;
         $bSearching = false;
         if ($nID) {
             $sFeedType = 'entry';
@@ -322,30 +333,63 @@ if ($sDataType == 'variants') {
                 if (!empty($_GET['search_' . $sField])) {
                     $bSearching = true;
                     if ($sField == 'position') {
-                        if ($sRefSeq && (preg_match('/^(g)\.([0-9]+)(_([0-9]+))?$/', $_GET['search_' . $sField], $aRegs) || preg_match('/^(c)\.([*-]?[0-9]+([+-][du]?[0-9]+)?)(_([*-]?[0-9]+([+-][du]?[0-9]+)?))?$/', $_GET['search_' . $sField], $aRegs))) {
-                            // $aRegs numbering:        1    2       3 4                                                                   1    2           3                  4 5           6
-                            // Mapping is only possible if there is a Reference Sequence.
+                        // The user wants to find variants on/within (a) certain position(s).
+                        if ($sRefSeq // Mapping is only possible if there is a reference sequence.
+                            && (preg_match('/^(c)\.([*-]?[0-9]+([+-][du]?[0-9]+)?)(_([*-]?[0-9]+([+-][du]?[0-9]+)?))?$/', $_GET['search_' . $sField], $aRegs)
+                                // $aRegs:     1    2           3                  4 5           6 Fixme; This code does not support m. and n. DNA.
+                                || preg_match('/^(g)\.([0-9]+)(_([0-9]+))?$/', substr($_GET['search_position'], strpos($_GET['search_position'], ':')), $aRegs))
+                                // $aRegs:        1    2       3 4
+                        ) {
                             if ($aRegs[1] == 'g') {
+                                // The user is looking for a specific genomic position.
+                                if (strpos($_GET['search_position'], ':') !== false) {
+                                    // If a ':' was found, the user specified a genome build.
+                                    list($sGB, $searchPosition) = explode(':', $_GET['search_position']);
+
+                                    if (!isset($aActiveGBs[$sGB])) {
+                                        // The genome build specified by the user is not active in the
+                                        //  database. We will send an error.
+                                        header('HTTP/1.0 404 Not Found');
+                                        die('The given genome build was not found in the database.');
+                                    }
+
+                                } else {
+                                    // The user did not specify a specific genome build.
+                                    if (count($aActiveGBs) == 1) {
+                                        // If there is only one build, we can simply use that one.
+                                        $sGB = array_keys($aActiveGBs)[0]; // Fixme; Can this be done? Function()[]?
+                                    } else {
+                                        // There are multiple active builds, yet the user did not
+                                        //  specify which one to use. We will send an error.
+                                        header('HTTP/1.0 400 Bad Request');
+                                        die('To search genomic positions, please identify which reference genome you want to use.');
+                                    }
+                                }
+
                                 if (empty($aRegs[3])) {
                                     // No range. Absolute location.
                                     $aRegs[4] = $aRegs[2];
                                 }
                                 // Very important in genomic positions: genes on antisense will have positions like g.5678_1234 in the database!!!
-                                $nMin = min($aRegs[2], $aRegs[4]);
-                                $nMax = max($aRegs[2], $aRegs[4]);
+                                $nMin = (int) min($aRegs[2], $aRegs[4]);
+                                $nMax = (int) max($aRegs[2], $aRegs[4]);
+                                $sUnderscorePlusSuffix = (!$aActiveGBs[$sGB]? '' : '_' . $aActiveGBs[$sGB]);
+
                                 if (!empty($_GET['position_match'])) {
                                     if ($_GET['position_match'] == 'exclusive') {
                                         // Mutation should be completely in the range.
-                                        $sQ .= ' AND vog.position_g_start ' . ($bSense? '>= ' . $nMin : '<= ' . $nMax) . ' AND vog.position_g_end ' . ($bSense? '<= ' . $nMax : '>= ' . $nMin);
+                                        $sQ .= ' AND vog.position_g_start' . $sUnderscorePlusSuffix . '>= ' . $nMin . ' AND vog.position_g_end' . $sUnderscorePlusSuffix . ' <= ' . $nMax;
                                         continue;
                                     } elseif ($_GET['position_match'] == 'partial') {
-                                        $sQ .= ' AND (vog.position_g_start BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR vog.position_g_end BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR (vog.position_g_start ' . ($bSense? '<= ' . $nMin : '>= ' . $nMax) . ' AND vog.position_g_end ' . ($bSense? '>= ' . $nMax : '<= ' . $nMin) . '))';
+                                        $sQ .= ' AND (vog.position_g_start' . $sUnderscorePlusSuffix . ' BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR vog.position_g_end' . $sUnderscorePlusSuffix . ' BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR (vog.position_g_start' . $sUnderscorePlusSuffix . ' <= ' . $nMin . ' AND vog.position_g_end' . $sUnderscorePlusSuffix . ' >= ' . $nMax . '))';
                                         continue;
                                     }
                                 }
                                 // Exact match, directly requested through $_GET['position_match'] or argument not given/recognized.
-                                $sQ .= ' AND position_' . $aRegs[1] . '_start = "' . ($bSense? $nMin : $nMax) . '" AND position_' . $aRegs[1] . '_end = "' . ($bSense? $nMax : $nMin) . '"';
+                                $sQ .= ' AND position_' . $aRegs[1] . '_start' . $sUnderscorePlusSuffix . ' = ' . $nMin . ' AND position_' . $aRegs[1] . '_end' . $sUnderscorePlusSuffix . ' = ' . $nMax;
+
                             } else {
+                                // The user is looking for a specific position on coding DNA.
                                 $aStart = lovd_convertDNAPositionToDB($nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $aRegs[2]);
                                 if (empty($aRegs[4])) {
                                     $aEnd = $aStart;
@@ -570,7 +614,7 @@ if ($sDataType == 'variants') {
     // Make all transformations.
     $aData = array_map(function ($zData)
     {
-        global $_CONF, $_SETT, $bDNA38, $bUnique, $nRefSeqID, $sChromosome, $sRefSeq, $sSymbol;
+        global $_SETT, $bUnique, $nRefSeqID, $sChromosome, $sRefSeq, $sSymbol, $aActiveGBs;
 
         // Format fields for JSON payload.
         // The Atom data will also use these transformations, but may have less fields and in a different order.
@@ -600,17 +644,20 @@ if ($sDataType == 'variants') {
             $zData['_position_mRNA'] = explode(';', $zData['_position_mRNA']);
         }
 
+        // Adding the genomic variants and positions for each build individually.
+        $aGenomicVariants = array();
+        $aGenomicPositions = array();
+        foreach ($aActiveGBs as $sGBID => $sGBSuffix) {
+            $aGenomicVariants[$sGBID] = 'chr' . $sChromosome . ':' . $zData['VariantOnGenome/DNA' . (!$sGBSuffix? '' : '/' . $sGBSuffix)];
+            $aGenomicPositions[$sGBID] = $zData['position_genomic' . (!$sGBSuffix? '' : '_' . $sGBSuffix)];
+        }
+
         $aReturn = array(
             'symbol' => $sSymbol,
             'id' => $zData['id'],
             'position_mRNA' => $zData['_position_mRNA'],
-            'position_genomic' => array(
-                $_CONF['refseq_build'] => $zData['position_genomic'],
-            ),
-            'variant_genomic' => array(
-                $_CONF['refseq_build'] => 'chr' . $sChromosome . ':' .
-                    $zData['VariantOnGenome/DNA'],
-            ),
+            'position_genomic' => $aGenomicPositions,
+            'variant_genomic' => $aGenomicVariants,
             'Variant/DNA' => explode(';;', $zData['__VariantOnTranscript/DNA']),
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
@@ -620,19 +667,6 @@ if ($sDataType == 'variants') {
             'edited_date' => date('c', strtotime($zData['edited_date'])),
         );
 
-        // GV shared and future LOVDs; if we have hg38 data, add that.
-        if (FORMAT == 'application/json' && $_CONF['refseq_build'] != 'hg38'
-            && $bDNA38 && $zData['DNA/hg38']) {
-            // We asked for a list, so we might get different values.
-            // Just pick the first that's filled in.
-            $zData['DNA/hg38'] = strstr(trim($zData['DNA/hg38'], ';') . ';', ';', true);
-            $aPositions = lovd_getVariantInfo($zData['DNA/hg38']);
-            $aReturn['position_genomic']['hg38'] = 'chr' . $zData['chromosome'] .
-                ':' . $aPositions['position_start'] .
-                ($aPositions['position_start'] == $aPositions['position_end']? '' : '_' . $aPositions['position_end']);
-            $aReturn['variant_genomic']['hg38'] = 'chr' . $zData['chromosome'] .
-                ':' . $zData['DNA/hg38'];
-        }
 
         if ($bUnique && FORMAT == 'application/json') {
             unset($aReturn['id']);
