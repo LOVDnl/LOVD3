@@ -261,12 +261,14 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 //  to fail, is this perhaps because it holds syntax that we do
                 //  not support? If we DO support the syntax but the variant does
                 //  not seem to be HGVS, we will send an error.
+                if (lovd_isHGVS($sVariant)) {
+                    // The variant looks good!
+                    continue;
+                }
                 $aVariantInfo = lovd_getVariantInfo($sVariant, false);
-                if (!lovd_isHGVS($sVariant)
-                    && !isset($aVariantInfo['errors']['ENOTSUPPORTED']) // Supported by LOVD.
-                    && !(isset($aVariant['warnings']['WNOTSUPPORTED'])  // Supported by VariantValidator.
-                        || isset($aVariant['messages']['IUNCERTAINPOSITIONS'])
-                        || isset($aVariant['messages']['IPOSTIONRANGE']))) {
+                if (array_diff(array_keys($aVariantInfo['errors']), array('ENOTSUPPORTED')) // Are there any errors other than ENOTSUPPORTED?
+                    || array_diff(array_keys($aVariantInfo['warnings']), array('WNOTSUPPORTED'))) { // Are there any warnings other than WNOTSUPPORTED?
+                    // There are problems that are not caused by lack of syntax support.
                     lovd_errorAdd($sField, 'The variant ' . $sVariant . ' did not pass our checks. Please take another look and try again.');
                 }
             }
