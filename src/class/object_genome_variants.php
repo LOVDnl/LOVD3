@@ -255,7 +255,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
         }
 
         foreach ($aData as $sField => $sVariant) {
-            if (preg_match('/DNA/', $sField)) {
+            if (strpos($sField, '/DNA/') !== false) {
                 // We want to check the input of all DNA fields: are these variant
                 //  descriptions indeed cleanly formatted? And if our check seems
                 //  to fail, is this perhaps because it holds syntax that we do
