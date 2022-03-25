@@ -47,8 +47,8 @@ $sFieldName   = $_REQUEST['fieldName'];
 // Reset all values.
 print('
 // Resetting all values.
-if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("acc")) {
-    // If any input in the form is of the class acc(epted), this means
+if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
+    // If any input in the form is of the class accept(ed), this means
     //  that these input fields were filled in after full mapping and
     //  validation of VariantValidator. If then, the script is called
     //  again, we want to RESET these values, since we do not want to
@@ -542,11 +542,11 @@ if ($_REQUEST['action'] == 'map') {
         });
         
         if (!oTranscriptField.prop("disabled")) {
-            oTranscriptField.val("' . $aTranscriptData['DNA'] . '").attr("class", "acc");;
+            oTranscriptField.val("' . $aTranscriptData['DNA'] . '").attr("class", "accept");;
             oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
             var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "acc");
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "acc");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "accept");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "accept");
         }');
     }
 
@@ -587,7 +587,7 @@ if ($_REQUEST['action'] == 'map') {
         var oGenomicField = $("input").filter(function() { 
             return $(this).data("genomeBuild") == "' . $sGBID . '" 
         });
-        oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "acc");
+        oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "accept");
         oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
         ');
     }
