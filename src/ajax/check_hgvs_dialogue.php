@@ -44,6 +44,13 @@ $sFieldName   = $_REQUEST['fieldName'];
 
 
 
+if (!$sVariant) {
+    // If the variant is empty, we can simply close the script.
+    exit;
+}
+
+
+
 // Reset all values.
 print('
 // Resetting all values.
@@ -67,12 +74,6 @@ if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
     oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
 }
 ');
-
-
-if (!$sVariant) {
-    // If the variant is empty, we can simply close the script.
-    exit;
-}
 
 
 
