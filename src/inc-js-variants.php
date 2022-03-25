@@ -496,7 +496,7 @@ $(function ()
         var oProteinVariants = $('#variantForm input[name$="_VariantOnTranscript/Protein"]');
         if (oProteinVariants[0] != undefined) {
             // Add the buttons and images at the end of the protein description fields.
-            oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" style="display:none;" align="top" width="16" height="16">&nbsp;');
+            oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" align="top" width="16" height="16">&nbsp;');
         }
     }
 });

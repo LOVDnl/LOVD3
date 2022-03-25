@@ -64,14 +64,14 @@ if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
     // Resetting the transcript fields.        
     var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
     oTranscriptFields.val("").removeClass();
-    oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"}).show();
+    oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"});
     $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("").removeClass();
     $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("").removeClass();
     
     // Resetting the genomic fields.
     var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
     oGenomicVariants.val("").removeClass();
-    oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
+    oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"});
 }
 ');
 
@@ -94,7 +94,7 @@ var ' . 'oButtonNo' . '  = {"No, I will take a look myself":function () {
     // The user does not accept the given fixed variant.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
-    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."}).show();
+    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."});
     $(this).dialog("close");
 }};
 var ' . 'oButtonOKValid' . '  = {"OK":function () {
@@ -107,7 +107,7 @@ var ' . 'oButtonOKInvalid' . '  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
-    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."}).show();
+    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."});
     $(this).dialog("close");
 }};
 var ' . 'oButtonOKCouldBeValid' . '  = {"OK":function () {
@@ -116,7 +116,7 @@ var ' . 'oButtonOKCouldBeValid' . '  = {"OK":function () {
     //  uncertainty that comes with it.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     oInput.val("' . addslashes($sVariant) . '").attr("class", "warn");
-    oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
+    oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."});
     $(this).dialog("close");
 }};
 ');
@@ -293,7 +293,7 @@ if ($_REQUEST['action'] == 'check') {
             $("#variantCheckDialogue").dialog("close");
             var oInput = $(\'input[name="' . addslashes($sFieldName) . '"]\');
             oInput.attr("class", "warn");
-            oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."}).show();
+            oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."});
             ');
         }
 
@@ -525,7 +525,7 @@ if ($_REQUEST['action'] == 'map') {
         
         if (!oTranscriptField.prop("disabled")) {
             oTranscriptField.val("' . $aTranscriptData['DNA'] . '").attr("class", "accept");;
-            oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+            oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"});
             var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "accept");
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "accept");
@@ -570,7 +570,7 @@ if ($_REQUEST['action'] == 'map') {
             return $(this).data("genomeBuild") == "' . $sGBID . '" 
         });
         oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "accept");
-        oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+        oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"});
         ');
     }
 
