@@ -575,17 +575,26 @@ if ($_REQUEST['action'] == 'map') {
     }
 
 
-    // Fill in all fields that remained empty.
+    // Fill and deactivate all fields that remained empty.
+    // Some fields might not have been filled after the mapping. Some
+    //  unknown issues have occurred here, most likely concerning the
+    //  reference sequence. Because we want to allow users to fill in
+    //  these fields without that resulting in a reset of all values,
+    //  we will deactivate the onChanges for these fields and warn the
+    //  user.
     print('
     // Fill in all fields that remained empty.
-    $(\'#variantForm input[name*="VariantOnGenome"]\').each(function(e){
-        if($(this).val()==="") {
-            $(this).val("g.?");
-        }
-    });
-    $(\'#variantForm input[name*="VariantOnTranscript"]\').each(function(e){
-        if($(this).val()==="" && !$(this).attr("name").endsWith("Exon")) {
-            $(this).val("c.?");
+    $(\'#variantForm input[name*="VariantOn"]\').each(function(e){
+        sName = $(this).attr("name");
+        if ($(this).val() === ""
+            && !(sName.endsWith("Exon") || sName.endsWith("DBID") || sName.endsWith("Reference"))) {
+            if (sName.includes("Genome")) {
+                $(this).val("g.?");
+            } else {
+                $(this).val((sName.endsWith("DNA")? "c" : (sName.endsWith("RNA")? "r" : "p")) + ".?");
+            }
+            $(this).off("change").attr("class", "warn");
+            $(this).siblings("img:first").attr({src: "gfx/check_orange.png", title: "Variant mapping failed! The HGVS check of this field is turned off to allow changes to be made freely. To turn the checks back on, refresh the page."});
         }
     });
     ');
