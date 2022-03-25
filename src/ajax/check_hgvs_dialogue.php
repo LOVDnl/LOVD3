@@ -575,6 +575,21 @@ if ($_REQUEST['action'] == 'map') {
     }
 
 
+    // Fill in all fields that remained empty.
+    print('
+    // Fill in all fields that remained empty.
+    $(\'#variantForm input[name*="VariantOnGenome"]\').each(function(e){
+        if($(this).val()==="") {
+            $(this).val("g.?");
+        }
+    });
+    $(\'#variantForm input[name*="VariantOnTranscript"]\').each(function(e){
+        if($(this).val()==="" && !$(this).attr("name").endsWith("Exon")) {
+            $(this).val("c.?");
+        }
+    });
+    ');
+
     // Send final message to the user.
     update_images_per_step('statusMapping', 'gfx/check.png');
     update_dialogue(
