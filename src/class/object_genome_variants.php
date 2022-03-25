@@ -364,7 +364,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             $this->aColumns[$sColumn]['description_form'] = '<B>Relative to ' . $aBuild['name'] . '.</B>' .
                 (!$this->aColumns[$sColumn]['description_form']? '' : '<BR>' . $this->aColumns[$sColumn]['description_form']);
             $this->aColumns[$sColumn]['element_data'] = array('genome_build' => $sBuild);
-            $this->aColumns[$sColumn]['form_type'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $this->aColumns[$sColumn]['form_type'][0]);
+            $this->aColumns[$sColumn]['form_type'][0] = str_replace('(HGVS format)', '(<A href="https://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $this->aColumns[$sColumn]['form_type'][0]);
         }
 
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
