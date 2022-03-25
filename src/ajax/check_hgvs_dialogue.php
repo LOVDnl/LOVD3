@@ -3,12 +3,13 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2020-09-22
- * Modified    : 2021-02-25
+ * Created     : 2021-01-20
+ * Modified    : 2022-03-25
  * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
