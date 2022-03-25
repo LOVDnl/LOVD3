@@ -188,7 +188,9 @@ function lovd_convertPosition (oElement)
                         for (i = 0; i < nVariants; i++) {
                             var aVariant = /^([A-Z]{2}_\d{6,9}\.\d{1,2}(?:\([A-Z0-9]+_v\d{3}\))?):([cn]\..+)$/.exec(aVariants[i]);
                             if (aVariant != null) {
-                                var oInput = $('#variantForm input[data-id_ncbi="' + aVariant[1] + '"]');
+                                var oInput = $("input").filter(function() {
+                                    return $(this).data("id_ncbi") === aVariant[1];
+                                });
                                 if (oInput[0] != undefined) {
                                     // If the transcript returned by mutalyzer is present in the form, fill in the respons from mutalyzer.
                                     oInput.val(aVariant[2]);
