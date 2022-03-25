@@ -114,12 +114,15 @@ var ' . 'oButtonOKCouldBeValid' . '  = {"OK":function () {
     // We could not validate this variant, but the problem
     //  lies with us. We will accept this variant and the
     //  uncertainty that comes with it.
+    // Just to be sure, we remove the reference sequence here,
+    //  because it might still be stuck to the variant
+    //  description from the mapping process.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . addslashes($sVariant) . '").attr("class", "warn");
+    oInput.val("' . substr(strstr(addslashes($sVariant), ':'), 1) . '").attr("class", "warn");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."});
     $(this).dialog("close");
 }};
-');
+'); // Fixme; Use lovd_removeRefSeq once the necessary code has been pulled in (from the branch feat/checkHGVSTool)
 
 
 // Create a PHP function to easily update the dialogue.
