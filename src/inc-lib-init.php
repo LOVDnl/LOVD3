@@ -2837,6 +2837,17 @@ function lovd_queryError ($sErrorCode, $sSQL, $sSQLError, $bHalt = true)
 
 
 
+function lovd_removeRefSeq ($sVariant)
+{
+    // This function removes the reference sequence from
+    //  a variant description.
+    return substr(strstr($sVariant, ':'), 1);
+}
+
+
+
+
+
 function lovd_requireAUTH ($nLevel = 0)
 {
     // Creates friendly output message if $_AUTH does not exist (or level too

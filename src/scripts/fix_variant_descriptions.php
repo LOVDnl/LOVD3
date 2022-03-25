@@ -203,7 +203,7 @@ class LOVD_VVAnalyses {
                 (isset($aVV['data']['DNA38_clean'])? $aVV['data']['DNA38_clean'] :
                     (!isset($aVV['data']['genomic_mappings']['hg38'])? '' :
                         (count($aVV['data']['genomic_mappings']['hg38']) == 1?
-                            substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1) :
+                            lovd_removeRefSeq($aVV['data']['genomic_mappings']['hg38'][0]) :
                             $aVV['data']['genomic_mappings']['hg38'])));
         }
         // Because of using array_merge_recursive() to merge $aVV and $aVVVOT,
@@ -524,7 +524,7 @@ class LOVD_VVAnalyses {
                             }
 
                             // Store this mapping, so we can see if all VOTs agree.
-                            $aMappedAlternatives[] = substr(strstr($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']], ':'), 1);
+                            $aMappedAlternatives[] = lovd_removeRefSeq($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']]);
 
                             // Also check the VOT itself. Perhaps its DNA should be different.
                             if ($aVOT['DNA'] != $aVVVot['data']['DNA']) {
@@ -669,7 +669,7 @@ class LOVD_VVAnalyses {
                 }
                 if ($aVV['warnings']) {
                     $this->panic($aVariant, array_merge_recursive($aVV,
-                        array('data' => array('DNA_clean' => substr(strstr($aVV['data']['DNA'], ':'), 1)))),
+                        array('data' => array('DNA_clean' => lovd_removeRefSeq($aVV['data']['DNA'])),
                         'Warnings found: {' . implode(';',
                             array_map(function ($sKey, $sVal) {
                                 return $sKey . ':' . $sVal;
@@ -679,12 +679,12 @@ class LOVD_VVAnalyses {
 
 
                 // Clean genomic DNAs field, remove NC from it.
-                $aVV['data']['DNA_clean'] = substr(strstr($aVV['data']['DNA'], ':'), 1);
+                $aVV['data']['DNA_clean'] = lovd_removeRefSeq($aVV['data']['DNA']);
                 $aVV['data']['DNA38_clean'] = '';
                 if ($this->bDNA38 && isset($aVV['data']['genomic_mappings']['hg38'])) {
                     if (count($aVV['data']['genomic_mappings']['hg38']) == 1) {
                         // We have a hg38 DNA column, and this variant has only one hg38 mapping.
-                        $aVV['data']['DNA38_clean'] = substr(strstr($aVV['data']['genomic_mappings']['hg38'][0], ':'), 1);
+                        $aVV['data']['DNA38_clean'] = lovd_removeRefSeq($aVV['data']['genomic_mappings']['hg38'][0]);
                     } else {
                         // If we're selecting the transcripts that LOVD uses, we
                         //  not only speed up the process, but also influence
@@ -772,7 +772,7 @@ class LOVD_VVAnalyses {
                             //  hg19 already said the hg38 should be, correct it.
 
                             // Clean genomic DNAs field, remove NC from it.
-                            $aVVHG38['data']['DNA_clean'] = substr(strstr($aVVHG38['data']['DNA'], ':'), 1);
+                            $aVVHG38['data']['DNA_clean'] = lovd_removeRefSeq($aVVHG38['data']['DNA']);
 
                             if ($aVV['data']['DNA38_clean'] == $aVVHG38['data']['DNA_clean']) {
                                 // It's actually the same variant! Just bad mapping.
