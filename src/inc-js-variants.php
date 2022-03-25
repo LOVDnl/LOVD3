@@ -151,6 +151,7 @@ function lovd_convertPosition (oElement)
 
     if (oThisDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
         // This function was called from the genomic variant, so build a list of genes and prepare the variant accordingly for mutalyzer.
+        var oChromosome = $('select[name="chromosome"]');
         var sChromosome = (
             oChromosome.length ? // Yes=VOG form; No=VOT form.
                 oChromosome.val() :
