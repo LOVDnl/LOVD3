@@ -80,7 +80,7 @@ if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
 // Preparing the JS for the buttons.
 print('
 // Preparing the buttons.
-var ' . 'oButtonYes' . ' = {"Yes":function () {
+var oButtonYes = {"Yes":function () {
     // The user accepts the given fixed variant.
     // We will fill in this fixed variant, close the dialogue,
     //  and perform a new call to this script by activating
@@ -90,27 +90,27 @@ var ' . 'oButtonYes' . ' = {"Yes":function () {
     $(this).dialog("close");
     oInput.change();
 }};
-var ' . 'oButtonNo' . '  = {"No, I will take a look myself":function () {
+var oButtonNo  = {"No, I will take a look myself":function () {
     // The user does not accept the given fixed variant.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."});
     $(this).dialog("close");
 }};
-var ' . 'oButtonOKValid' . '  = {"OK":function () {
+var oButtonOKValid  = {"OK":function () {
     // The variant was mapped and looks just great!
     // All steps have already been taken; the only
     //  thing left to do is to close the dialogue.
     $(this).dialog("close");
 }};
-var ' . 'oButtonOKInvalid' . '  = {"OK":function () {
+var oButtonOKInvalid  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."});
     $(this).dialog("close");
 }};
-var ' . 'oButtonOKCouldBeValid' . '  = {"OK":function () {
+var oButtonOKCouldBeValid  = {"OK":function () {
     // We could not validate this variant, but the problem
     //  lies with us. We will accept this variant and the
     //  uncertainty that comes with it.
@@ -238,7 +238,7 @@ if ($_REQUEST['action'] == 'check') {
             // Good, we can propose a fix. If the user agrees with the fix,
             //  we can continue to the mapping.
             update_dialogue($sResponse . 'Did you mean \"' . $sFixedVariant . '\"?<br>',
-                'oButtonYes' . ', ' . 'oButtonNo');
+                'oButtonYes, oButtonNo');
 
             // Our 'Yes' button sets the steps in motion which change the user's
             //  input into the fixed variant, and reactivates the dialogue.
