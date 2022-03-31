@@ -42,6 +42,8 @@ class LOVD_API_GA4GH
     private $API;                     // The API object.
     private $aURLElements = array();  // The current URL broken in parts.
     private $aFilters = array();      // Filters active on the data.
+    private $sActiveGB;
+    private $aActiveGBs;
     private $aTables = array(
         'variants' => array(
             'description' => 'Aggregated variant data, when available also containing information on individuals, their phenotypes, and their other variants.',
@@ -211,6 +213,11 @@ class LOVD_API_GA4GH
         // To not duplicate code.
         $this->aValueMappings['effect'] = $_SETT['var_effect_api'];
 
+        // Retrieve default genome build.
+        global $_DB;
+        $this->aActiveGBs = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllGroupAssoc();
+        $this->sActiveGB = array_keys($this->aActiveGBs)[0];
+
         return true;
     }
 
@@ -238,6 +245,37 @@ class LOVD_API_GA4GH
         $aComments[] = $aReturn;
 
         return $aComments;
+    }
+
+
+
+
+
+    private function convertAliasesToVML ($sBuild, $sChr)
+    {
+        // This function converts all aliases (variant descriptions that
+        //  are not of the specified build) into the VarioML Alias format.
+
+        global $_SETT;
+        return array_map(function($sGBID) use ($_SETT, $sChr) {
+            // We will go through all genome builds and return the required
+            //  info in the VarioML Alias format.
+            return array(
+                'ref_seq' => array(
+                    'source' => 'genbank',
+                    'accession' => $_SETT['human_builds'][$sGBID]['ncbi_sequences'][$sChr],
+                ),
+                'name' => array(
+                    'scheme' => 'HGVS',
+                    'value' => $sGBID,
+                ),
+            );
+        }, array_filter(array_keys($this->aActiveGBs)), function($sGBID) use ($sBuild) {
+            // We only want to get ALIASES (ALTERNATIVE variant descriptions).
+            // This means that we do not want to get the descriptions of the
+            //  specified build, since that one is not alternative.
+            return $sGBID != $sBuild;
+        });
     }
 
 
@@ -644,8 +682,6 @@ class LOVD_API_GA4GH
         // Shows table data view, first page only.
         // This doesn't actually list data yet, it's easier for us to implement
         //  it through pagination.
-        global $_CONF;
-
         $aOutput = array(
             'data_model' => array(
                 '$ref' => $this->aTables[$sTableName]['data_model'],
@@ -653,7 +689,7 @@ class LOVD_API_GA4GH
             'data' => array(),
             'pagination' => array(
                 'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/' .
-                    rawurlencode(str_replace('{{refseq_build}}', $_CONF['refseq_build'], $this->aTables[$sTableName]['first_page'])),
+                    rawurlencode(str_replace('{{refseq_build}}', $this->sActiveGB, $this->aTables[$sTableName]['first_page'])),
             ),
         );
 
@@ -668,21 +704,19 @@ class LOVD_API_GA4GH
     private function showTableDataPage ($sTableName, $aPage)
     {
         // Shows table data page.
-        global $_CONF, $_SETT;
+        global $_SETT;
 
         if ($sTableName == 'variants') {
             list(, $sBuild, $sChr, $sPosition) = array_pad($aPage, 4, '1');
 
-            if ($sBuild != $_CONF['refseq_build']) {
-                // We don't support this yet, because we can't use an index on a
-                //  search on the other genome build. Wait for LOVD 3.1.
+            if (!in_array($sBuild, array_keys($this->aActiveGBs))) {
+                // We can only support searches on genome builds that are
+                //  active in the database.
                 $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
-                if (!isset($_SETT['human_builds'][$sBuild])) {
-                    $this->API->aResponse = array('errors' => array('title' => 'Unrecognized genome build.'));
-                } else {
-                    $this->API->aResponse = array('errors' => array('title' => 'Unsupported genome build.'));
-                }
-                $this->API->aResponse['errors']['detail'] = 'We can not use genome build ' . $sBuild . '. Please choose from: \'' . $_CONF['refseq_build'] . '\'.';
+                $this->API->aResponse = array('errors' => array('title' =>
+                    (isset($_SETT['human_builds'][$sBuild])? 'Unsupported' : 'Unrecognized')  . ' genome build.')
+                );
+                $this->API->aResponse['errors']['detail'] = 'We cannot use genome build ' . $sBuild . '. Please choose from: \'' . implode('|', array_keys($this->aActiveGBs)) . '\'.';
                 return false;
 
             } elseif (!isset($_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr])) {
@@ -756,7 +790,7 @@ class LOVD_API_GA4GH
     private function showVariantDataPage ($sBuild, $sChr, $sPosition)
     {
         // Shows variant data page.
-        global $_DB, $_CONF, $_SETT;
+        global $_DB, $_SETT;
 
         $sTableName = 'variants';
         $nTimeLimit = 15; // After 15 seconds, just send what you have.
@@ -766,7 +800,7 @@ class LOVD_API_GA4GH
 
         // Check for required, and wanted columns.
         $aRequiredCols = array(
-            'VariantOnGenome/DNA',
+            'VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]),
             'VariantOnTranscript/DNA',
             'VariantOnTranscript/RNA',
             'VariantOnTranscript/Protein',
@@ -777,7 +811,6 @@ class LOVD_API_GA4GH
             'Individual/Remarks',
             'Phenotype/Additional',
             'Phenotype/Inheritance',
-            'VariantOnGenome/DNA/hg38',
             'VariantOnGenome/ClinicalClassification',
             'VariantOnGenome/ClinicalClassification/Method',
             'VariantOnGenome/dbSNP',
@@ -785,6 +818,25 @@ class LOVD_API_GA4GH
             'VariantOnGenome/Reference',
             'VariantOnGenome/Remarks',
         ));
+        $sGenomeBuildQ = '';
+        $sGenomeBuildConcatQ = '';
+        foreach ($this->aActiveGBs as $sGBID => $sGBSuffix) {
+            // We will prepare to get the right data for each active
+            //  genome build.
+            $sPreparedSuffix = !$sGBSuffix ? '' : '/' . $sGBSuffix;
+
+            if ($sGBID != $sBuild) {
+                // We only need extra data on genome builds that are
+                //  NOT the build as specified by the user, because
+                //  that build has been processed already.
+                $sGenomeBuildQ .= ', ' .
+                    'GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '`, "")' .
+                    ' ORDER BY vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '` SEPARATOR ";") AS DNA' . $sGBID;
+                $sGenomeBuildConcatQ .= ', "||", IFNULL(vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '`, "")';
+
+                $aColsToCheck[] = 'VariantOnGenome/DNA' . $sPreparedSuffix;
+            }
+        }
         // Select columns only if they're *globally* set to public.
         // Note that this means, for VOT and Phenotype columns, the gene- and
         //  disease-specific settings are ignored.
@@ -809,7 +861,6 @@ class LOVD_API_GA4GH
         $bIndRemarks = in_array('Individual/Remarks', $aCols);
         $bPhenotypeAdditional = in_array('Phenotype/Additional', $aCols);
         $bPhenotypeInheritance = in_array('Phenotype/Inheritance', $aCols);
-        $bDNA38 = in_array('VariantOnGenome/DNA/hg38', $aCols);
         $bClassification = in_array('VariantOnGenome/ClinicalClassification', $aCols);
         $bClassificationMethod = in_array('VariantOnGenome/ClinicalClassification/Method', $aCols);
         $bdbSNP = in_array('VariantOnGenome/dbSNP', $aCols);
@@ -844,12 +895,11 @@ class LOVD_API_GA4GH
         //  information and after that the full submission data.
         $sQ = 'SELECT
                  vog.chromosome,
-                 vog.position_g_start,
-                 vog.position_g_end,
+                 vog.position_g_start' . (!$this->aActiveGBs[$sBuild]? '' : '_' . $this->aActiveGBs[$sBuild]) . ',
+                 vog.position_g_end' . (!$this->aActiveGBs[$sBuild]? '' : '_' . $this->aActiveGBs[$sBuild]) . ',
                  GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
-                 vog.`VariantOnGenome/DNA` AS DNA' .
-            (!$bDNA38? '' : ',
-                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
+                 vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . '` AS DNA' .
+            $sGenomeBuildQ . ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", vog.effectid) ORDER BY vog.id SEPARATOR ";") AS effectids' .
             (!$bClassification? '' : ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", NULLIF(vog.`VariantOnGenome/ClinicalClassification`, ""), ":"' .
@@ -862,9 +912,8 @@ class LOVD_API_GA4GH
                  GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes,
                  GROUP_CONCAT(DISTINCT
                    IFNULL(i.id,
-                     CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||"' .
-            (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                     CONCAT(vog.id, "||", IFNULL(uc.default_license, "")' .
+            $sGenomeBuildConcatQ . ', "||",
                        vog.effectid, "||"' .
             (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
@@ -966,7 +1015,7 @@ class LOVD_API_GA4GH
                     'scheme' => 'HGVS',
                     'value' => $zData['DNA'],
                 ),
-                'aliases' => array(),
+                'aliases' => $this->convertAliasesToVML($sBuild, $sChr),
                 'locations' => array(
                     array(
                         'chr' => $sChr,
@@ -1022,20 +1071,7 @@ class LOVD_API_GA4GH
                     array($this, 'convertGeneToVML'), explode(';', $zData['genes']));
             }
 
-            if (!empty($zData['DNA38'])) {
-                foreach (explode(';', $zData['DNA38']) as $sDNA38) {
-                    $aReturn['aliases'][] = array(
-                        'ref_seq' => array(
-                            'source' => 'genbank',
-                            'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
-                        ),
-                        'name' => array(
-                            'scheme' => 'HGVS',
-                            'value' => $sDNA38,
-                        ),
-                    );
-                }
-            } else {
+            if (!$aReturn['aliases']) {
                 unset($aReturn['aliases']);
             }
 
@@ -1088,18 +1124,7 @@ class LOVD_API_GA4GH
                             'scheme' => 'HGVS',
                             'value' => $zData['DNA'],
                         ),
-                        'aliases' => (!$sDNA38? array() : array(
-                            array(
-                                'ref_seq' => array(
-                                    'source' => 'genbank',
-                                    'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
-                                ),
-                                'name' => array(
-                                    'scheme' => 'HGVS',
-                                    'value' => $sDNA38,
-                                ),
-                            ),
-                        )),
+                        'aliases' => $this->convertAliasesToVML($sBuild, $sChr),
                         'pathogenicities' => array(),
                     );
 
@@ -1553,18 +1578,7 @@ class LOVD_API_GA4GH
                             'scheme' => 'HGVS',
                             'value' => $sDNA,
                         ),
-                        'aliases' => (!$sDNA38? array() : array(
-                            array(
-                                'ref_seq' => array(
-                                    'source' => 'genbank',
-                                    'accession' => $_SETT['human_builds']['hg38']['ncbi_sequences'][$sChr],
-                                ),
-                                'name' => array(
-                                    'scheme' => 'HGVS',
-                                    'value' => $sDNA38,
-                                ),
-                            ),
-                        )),
+                        'aliases' => $this->convertAliasesToVML($sBuild, $sChr),
                         'pathogenicities' => array(),
                     );
 
@@ -1917,7 +1931,7 @@ class LOVD_API_GA4GH
             // We didn't receive everything. This must be because we're at the
             //  end of the chromosome. Let's look at the next.
             // The easiest way to find the "next" chromosome is by our list.
-            $aChrs = array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
+            $aChrs = array_keys($_SETT['human_builds'][$this->sActiveGB]['ncbi_sequences']);
             $nIndex = array_search($sChr, $aChrs);
             $nIndex ++;
             if (isset($aChrs[$nIndex])) {
