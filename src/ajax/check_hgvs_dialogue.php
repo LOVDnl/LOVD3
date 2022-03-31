@@ -591,7 +591,7 @@ if ($_REQUEST['action'] == 'map') {
     $(\'#variantForm input[name*="VariantOn"]\').each(function(e){
         sName = $(this).attr("name");
         if ($(this).val() === ""
-            && !(sName.endsWith("Exon") || sName.endsWith("DBID") || sName.endsWith("Reference"))) {
+            && (sName.includes("DNA") || sName.endsWith("RNA") || sName.endsWith("Protein"))) {
             if (sName.includes("Genome")) {
                 $(this).val("g.?");
             } else {
