@@ -257,30 +257,30 @@ class LOVD_API_GA4GH
         // This function converts all aliases (variant descriptions that
         //  are not of the specified build) into the VarioML Alias format.
 
-        global $_SETT;
-        return array_map(function($sGBID) use ($_SETT, $sChr) {
-            // We will go through all genome builds and return the required
-            //  info in the VarioML Alias format.
-            return array(
-                'ref_seq' => array(
-                    'source' => 'genbank',
-                    'accession' => $_SETT['human_builds'][$sGBID]['ncbi_sequences'][$sChr],
-                ),
-                'name' => array(
-                    'scheme' => 'HGVS',
-                    'value' => $sGBID,
-                ),
-            );
-        }, array_filter(array_keys($this->aActiveGBs)), function($sGBID) use ($sBuild) {
-            // We only want to get ALIASES (ALTERNATIVE variant descriptions).
-            // This means that we do not want to get the descriptions of the
-            //  specified build, since that one is not alternative.
-            return $sGBID != $sBuild;
-        });
+        return array_map(
+            function($sGBID) use ($sChr) {
+                // We will go through all genome builds and return the required
+                //  info in the VarioML Alias format.
+                global $_SETT;
+                return array(
+                    'ref_seq' => array(
+                        'source' => 'genbank',
+                        'accession' => $_SETT['human_builds'][$sGBID]['ncbi_sequences'][$sChr],
+                    ),
+                    'name' => array(
+                        'scheme' => 'HGVS',
+                        'value' => $sGBID,
+                    ),
+                );
+            },
+            array_filter(array_keys($this->aActiveGBs)), function($sGBID) use ($sBuild) {
+                // We only want to get ALIASES (ALTERNATIVE variant descriptions).
+                // This means that we do not want to get the descriptions of the
+                //  specified build, since that description is not alternative.
+                return $sGBID != $sBuild;
+            }
+        );
     }
-
-
-
 
 
     private function convertClassificationToVML ($sClassifications)
