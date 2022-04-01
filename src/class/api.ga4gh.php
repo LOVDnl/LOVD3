@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2022-03-31
+ * Modified    : 2022-04-01
  * For LOVD    : 3.5-pre-03
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -252,13 +252,13 @@ class LOVD_API_GA4GH
 
 
 
-    private function convertAliasesToVML ($sBuild, $sChr)
+    private function convertAliasesToVML ($zData, $sBuild, $sChr)
     {
         // This function converts all aliases (variant descriptions that
         //  are not of the specified build) into the VarioML Alias format.
 
         return array_map(
-            function($sGBID) use ($sChr) {
+            function($sGBID) use ($zData, $sChr) {
                 // We will go through all genome builds and return the required
                 //  info in the VarioML Alias format.
                 global $_SETT;
@@ -269,7 +269,7 @@ class LOVD_API_GA4GH
                     ),
                     'name' => array(
                         'scheme' => 'HGVS',
-                        'value' => $sGBID,
+                        'value' => $zData['DNA' . $sGBID],
                     ),
                 );
             },
@@ -820,7 +820,6 @@ class LOVD_API_GA4GH
             'VariantOnGenome/Remarks',
         ));
         $sGenomeBuildQ = '';
-        $sGenomeBuildConcatQ = '';
         foreach ($this->aActiveGBs as $sGBID => $sGBSuffix) {
             // We will prepare to get the right data for each active
             //  genome build.
@@ -833,7 +832,6 @@ class LOVD_API_GA4GH
                 $sGenomeBuildQ .= ', ' .
                     'GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '`, "")' .
                     ' ORDER BY vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '` SEPARATOR ";") AS DNA' . $sGBID;
-                $sGenomeBuildConcatQ .= ', "||", IFNULL(vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '`, "")';
 
                 $aColsToCheck[] = 'VariantOnGenome/DNA' . $sPreparedSuffix;
             }
@@ -913,9 +911,9 @@ class LOVD_API_GA4GH
                  GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes,
                  GROUP_CONCAT(DISTINCT
                    IFNULL(i.id,
-                     CONCAT(vog.id, "||", IFNULL(uc.default_license, "")' .
-            $sGenomeBuildConcatQ . ', "||",
-                       vog.effectid, "||"' .
+                     CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||", vog.effectid, "||",
+                        vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . '`, "||",' .
+
             (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
             (!$bClassificationMethod? '' : ',
@@ -991,7 +989,7 @@ class LOVD_API_GA4GH
         use (
             $tStart, $nTimeLimit,
             $aLicenses, $aLicensesSummaryData, $sBuild, $sChr,
-            $bdbSNP, $bDNA38, $bClassification, $bClassificationMethod, $bGeneticOrigin,
+            $bdbSNP, $bClassification, $bClassificationMethod, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
             $bPhenotypeAdditional, $bPhenotypeInheritance,
             $bVOGReference, $bVOGRemarks)
@@ -1016,7 +1014,7 @@ class LOVD_API_GA4GH
                     'scheme' => 'HGVS',
                     'value' => $zData['DNA'],
                 ),
-                'aliases' => $this->convertAliasesToVML($sBuild, $sChr),
+                'aliases' => $this->convertAliasesToVML($zData, $sBuild, $sChr),
                 'locations' => array(
                     array(
                         'chr' => $sChr,
@@ -1093,7 +1091,6 @@ class LOVD_API_GA4GH
                     list(
                         $nID,
                         $sLicense,
-                        $sDNA38,
                         $sEffects,
                         $sClassification,
                         $sClassificationMethod,
@@ -1125,7 +1122,7 @@ class LOVD_API_GA4GH
                             'scheme' => 'HGVS',
                             'value' => $zData['DNA'],
                         ),
-                        'aliases' => $this->convertAliasesToVML($sBuild, $sChr),
+                        'aliases' => $this->convertAliasesToVML($zData, $sBuild, $sChr),
                         'pathogenicities' => array(),
                     );
 
@@ -1312,9 +1309,7 @@ class LOVD_API_GA4GH
                           vog.id, "||",
                           vog.allele, "||",
                           vog.chromosome, "||",
-                          vog.`VariantOnGenome/DNA`, "||"' .
-                    (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                          vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . ', "||",
                        vog.effectid, "||"' .
                     (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
@@ -1555,7 +1550,6 @@ class LOVD_API_GA4GH
                         $nAllele,
                         $sChr,
                         $sDNA,
-                        $sDNA38,
                         $sEffects,
                         $sClassification,
                         $sClassificationMethod,
@@ -1579,7 +1573,7 @@ class LOVD_API_GA4GH
                             'scheme' => 'HGVS',
                             'value' => $sDNA,
                         ),
-                        'aliases' => $this->convertAliasesToVML($sBuild, $sChr),
+                        'aliases' => $this->convertAliasesToVML($zData, $sBuild, $sChr),
                         'pathogenicities' => array(),
                     );
 
