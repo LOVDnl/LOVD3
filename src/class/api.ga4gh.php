@@ -713,7 +713,7 @@ class LOVD_API_GA4GH
         if ($sTableName == 'variants') {
             list(, $sBuild, $sChr, $sPosition) = array_pad($aPage, 4, '1');
 
-            if (!in_array($sBuild, array_keys($this->aActiveGBs))) {
+            if (!isset($this->aActiveGBs[$sBuild])) {
                 // We can only support searches on genome builds that are
                 //  active in the database.
                 $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
