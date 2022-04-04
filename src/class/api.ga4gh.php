@@ -273,12 +273,10 @@ class LOVD_API_GA4GH
                     ),
                 );
             },
-            array_filter(array_keys($this->aActiveGBs)), function($sGBID) use ($sBuild) {
-                // We only want to get ALIASES (ALTERNATIVE variant descriptions).
-                // This means that we do not want to get the descriptions of the
-                //  specified build, since that description is not alternative.
-                return $sGBID != $sBuild;
-            }
+            // We only want to get ALIASES (ALTERNATIVE variant descriptions).
+            // This means that we do not want to get the descriptions of the
+            //  specified build, since that description is not alternative.
+            array_diff(array_keys($this->aActiveGBs), array($sBuild))
         );
     }
 
