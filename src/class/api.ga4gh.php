@@ -9,7 +9,7 @@
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
- * q             L. Werkman <L.Werkman@LUMC.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -281,6 +281,9 @@ class LOVD_API_GA4GH
             }
         );
     }
+
+
+
 
 
     private function convertClassificationToVML ($sClassifications)
