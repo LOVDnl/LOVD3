@@ -217,7 +217,7 @@ class LOVD_API_GA4GH
         // Retrieve default genome build.
         global $_DB;
         $this->aActiveGBs = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
-        $this->sActiveGB = array_keys($this->aActiveGBs)[0];
+        $this->sActiveGB = key($this->aActiveGBs);
 
         return true;
     }
