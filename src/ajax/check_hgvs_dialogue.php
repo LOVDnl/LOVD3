@@ -3,12 +3,13 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2020-09-22
- * Modified    : 2021-02-25
+ * Created     : 2022-02-26
+ * Modified    : 2022-03-31
  * For LOVD    : 3.0-27
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ *               L. Werkman <L.Werkman@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -43,11 +44,18 @@ $sFieldName   = $_REQUEST['fieldName'];
 
 
 
+if (!$sVariant) {
+    // If the variant is empty, we can simply close the script.
+    exit;
+}
+
+
+
 // Reset all values.
 print('
 // Resetting all values.
-if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("acc")) {
-    // If any input in the form is of the class acc(epted), this means
+if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
+    // If any input in the form is of the class accept(ed), this means
     //  that these input fields were filled in after full mapping and
     //  validation of VariantValidator. If then, the script is called
     //  again, we want to RESET these values, since we do not want to
@@ -56,48 +64,23 @@ if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("acc")) {
     // Resetting the transcript fields.        
     var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
     oTranscriptFields.val("").removeClass();
-    oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"}).show();
+    oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"});
     $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("").removeClass();
     $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("").removeClass();
     
     // Resetting the genomic fields.
     var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
     oGenomicVariants.val("").removeClass();
-    oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"}).show();
+    oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"});
 }
 ');
 
 
-if (!$sVariant) {
-    // If the variant is empty, we can simply close the script.
-    exit;
-}
-
-
-
-// Preparing variables to allow easy and readable updates of the dialogue.
-
-// Preparing the steps.
-$sStepInitialChecks = 'statusChecks';
-$sStepMapping       = 'statusMapping';
-
-// Preparing the images.
-$sImageNeutral = 'gfx/trans.png';
-$sImagePassed  = 'gfx/check.png';
-$sImageFailed  = 'gfx/cross.png';
-$sImageLoading = 'gfx/lovd_loading.gif';
-
-// Preparing the buttons.
-$sButtonYes            = 'oButtonYes';
-$sButtonNo             = 'oButtonNo';
-$sButtonOKValid        = 'oButtonOKValid';
-$sButtonOKInvalid      = 'oButtonOKInvalid';
-$sButtonOKCouldBeValid = 'oButtonOKCouldBeValid';
 
 // Preparing the JS for the buttons.
 print('
 // Preparing the buttons.
-var ' . $sButtonYes . ' = {"Yes":function () {
+var oButtonYes = {"Yes":function () {
     // The user accepts the given fixed variant.
     // We will fill in this fixed variant, close the dialogue,
     //  and perform a new call to this script by activating
@@ -107,36 +90,39 @@ var ' . $sButtonYes . ' = {"Yes":function () {
     $(this).dialog("close");
     oInput.change();
 }};
-var ' . $sButtonNo . '  = {"No, I will take a look myself":function () {
+var oButtonNo  = {"No, I will take a look myself":function () {
     // The user does not accept the given fixed variant.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
-    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."}).show();
+    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."});
     $(this).dialog("close");
 }};
-var ' . $sButtonOKValid . '  = {"OK":function () {
+var oButtonOKValid  = {"OK":function () {
     // The variant was mapped and looks just great!
     // All steps have already been taken; the only
     //  thing left to do is to close the dialogue.
     $(this).dialog("close");
 }};
-var ' . $sButtonOKInvalid . '  = {"OK":function () {
+var oButtonOKInvalid  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
     oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
-    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."}).show();
+    oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."});
     $(this).dialog("close");
 }};
-var ' . $sButtonOKCouldBeValid . '  = {"OK":function () {
+var oButtonOKCouldBeValid  = {"OK":function () {
     // We could not validate this variant, but the problem
     //  lies with us. We will accept this variant and the
     //  uncertainty that comes with it.
+    // Just to be sure, we remove the reference sequence here,
+    //  because it might still be stuck to the variant
+    //  description from the mapping process.
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . addslashes($sVariant) . '").attr("class", "warn");
-    oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."}).show();
+    oInput.val("' . substr(strstr(addslashes($sVariant), ':'), 1) . '").attr("class", "warn");
+    oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."});
     $(this).dialog("close");
 }};
-');
+'); // Fixme; Use lovd_removeRefSeq once the necessary code has been pulled in (from the branch feat/checkHGVSTool)
 
 
 // Create a PHP function to easily update the dialogue.
@@ -196,7 +182,7 @@ if ($_REQUEST['action'] == 'check') {
     ');
 
     update_dialogue(
-        '<IMG id=\"' . $sStepInitialChecks . '\" src=\"' . $sImageNeutral . '\" width=\"16\" height=\"16\"> Performing initial checks.',
+        '<IMG id=\"statusChecks\" src=\"gfx/trans.png\" width=\"16\" height=\"16\"> Performing initial checks.',
         '',
         true
     );
@@ -210,12 +196,12 @@ if ($_REQUEST['action'] == 'check') {
         // If the variant is not supported by LOVD, we cannot perform an HGVS check nor the mapping.
         // We will notify the user and end the script here.
 
-        update_images_per_step($sStepInitialChecks, $sImageFailed);
+        update_images_per_step('statusChecks', 'gfx/cross.png');
         update_dialogue(
             '<br>Your variant contains syntax which our HGVS check cannot recognise. ' .
             'Therefore, we cannot validate your variant nor map it to other reference sequences. ' .
             'Please thoroughly validate your variant by hand.',
-            $sButtonOKCouldBeValid
+            'oButtonOKCouldBeValid'
         );
         exit;
     }
@@ -231,7 +217,7 @@ if ($_REQUEST['action'] == 'check') {
 
         // Let the user know that the given variant did not pass our HGVS check.
         $sResponse = '<br>Your variant (\"' . htmlspecialchars($sVariant) . '\") did not pass our HGVS check.<br><br>';
-        update_images_per_step($sStepInitialChecks, $sImageFailed);
+        update_images_per_step('statusChecks', 'gfx/cross.png');
 
 
         // Show the user the warnings and errors we found through getVariantInfo.
@@ -252,7 +238,7 @@ if ($_REQUEST['action'] == 'check') {
             // Good, we can propose a fix. If the user agrees with the fix,
             //  we can continue to the mapping.
             update_dialogue($sResponse . 'Did you mean \"' . $sFixedVariant . '\"?<br>',
-                $sButtonYes . ', ' . $sButtonNo);
+                'oButtonYes, oButtonNo');
 
             // Our 'Yes' button sets the steps in motion which change the user's
             //  input into the fixed variant, and reactivates the dialogue.
@@ -261,7 +247,7 @@ if ($_REQUEST['action'] == 'check') {
         } else {
             // We could not propose a fix.
             update_dialogue($sResponse . 'Please check your variant for errors and try again.<br>',
-                $sButtonOKInvalid);
+                'oButtonOKInvalid');
         }
         exit;
     }
@@ -277,11 +263,11 @@ if ($_REQUEST['action'] == 'check') {
         // If syntax was found which VariantValidator does not support, we
         //  cannot send the variant in for mapping. We will notify the
         //  user and exit this script.
-        update_images_per_step($sStepInitialChecks, $sImageFailed);
+        update_images_per_step('statusChecks', 'gfx/cross.png');
         update_dialogue(
             '<br>Your variant contains syntax which VariantValidator cannot recognise. ' .
             'Therefore, we cannot map your variant nor validate the positions.',
-            $sButtonOKCouldBeValid
+            'oButtonOKCouldBeValid'
         );
         exit;
     }
@@ -310,7 +296,7 @@ if ($_REQUEST['action'] == 'check') {
             $("#variantCheckDialogue").dialog("close");
             var oInput = $(\'input[name="' . addslashes($sFieldName) . '"]\');
             oInput.attr("class", "warn");
-            oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."}).show();
+            oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."});
             ');
         }
 
@@ -318,11 +304,11 @@ if ($_REQUEST['action'] == 'check') {
             // The combination of chromosome and build is not known by LOVD.
             // Something probably went wrong on the user's end. We will inform
             //  the user and exit the script.
-            update_images_per_step($sStepInitialChecks, $sImageFailed);
+            update_images_per_step('statusChecks', 'gfx/cross.png');
             update_dialogue(
                 '<br>An unknown combination of genome build and chromosome was given.' .
                 ' This means we cannot perform the mapping.',
-                $sButtonOKInvalid
+                'oButtonOKInvalid'
             );
             exit;
         }
@@ -351,12 +337,12 @@ if ($_REQUEST['action'] == 'check') {
             // The user gave a refSeq within the variant description
             //  input which does not match our expectations. The variant
             //  is then likely to be wrong. We cannot accept it.
-            update_images_per_step($sStepInitialChecks, $sImageFailed);
+            update_images_per_step('statusChecks', 'gfx/cross.png');
             update_dialogue(
                 '<br>The reference sequence given in the input description, does not equal the' .
                 ' reference sequence matched to the variant by LOVD automatically. Please have' .
                 ' another look and perhaps try again from a different input field.',
-                $sButtonOKInvalid
+                'oButtonOKInvalid'
             );
             exit;
         }
@@ -370,8 +356,8 @@ if ($_REQUEST['action'] == 'check') {
 
 
     // All checks have passed; we are ready for the mapping.
-    update_images_per_step($sStepInitialChecks, $sImagePassed);
-    update_dialogue('<IMG id=\"' . $sStepMapping . '\" src=\"' . $sImageLoading . '\" width=\"16\" height=\"16\"> Mapping your variant.');
+    update_images_per_step('statusChecks', 'gfx/check.png');
+    update_dialogue('<IMG id=\"statusMapping\" src=\"gfx/lovd_loading.gif\" width=\"16\" height=\"16\"> Mapping your variant.');
 
     print('
     $.get("ajax/check_hgvs_dialogue.php?"
@@ -424,10 +410,11 @@ if ($_REQUEST['action'] == 'map') {
         // If our VV call returned false, or if we found an EBUILD or ESYNTAX
         //  error, this is an issue that lies with us, not the user.
         // We will have to allow these variants into the database.
-        update_images_per_step($sStepMapping, $sImageFailed);
+        update_images_per_step('statusMapping', 'gfx/cross.png');
         update_dialogue(
-            '<br>Something went wrong on our side, which means we could not map nor validate your variant.',
-            $sButtonOKCouldBeValid
+            '<br>This variant type is not supported by VariantValidator.' .
+            ' Therefore, we can only check the syntax and not perform the mapping.',
+            'oButtonOKCouldBeValid'
         );
         exit;
     }
@@ -438,12 +425,12 @@ if ($_REQUEST['action'] == 'map') {
         // The variant holds a fatal issue. We will exit the script and not
         //  accept this variant into the database.
 
-        update_images_per_step($sStepMapping, $sImageFailed);
+        update_images_per_step('statusMapping', 'gfx/cross.png');
         update_dialogue(
             '<br>We could not validate nor map your variant because of the following problem(s):<br>- ' .
             implode('<br> -', $aMappedVariant['errors']) . '<br><br>' .
             'Please take another look at your variant and try again.',
-            $sButtonOKInvalid
+            'oButtonOKInvalid'
         );
         exit;
     }
@@ -476,11 +463,11 @@ if ($_REQUEST['action'] == 'map') {
         //  is left empty. This means we have no information on the mapping
         //  and there is not much we can do... We will inform the user that
         //  an unknown error occurred and that they should try again later.
-        update_images_per_step($sStepMapping, $sImageFailed);
+        update_images_per_step('statusMapping', 'gfx/cross.png');
         update_dialogue(
             '<br>An unknown error occurred while trying to validate and map your variant.' .
             ' We are sorry for the inconvenience. Please try again later.',
-            $sButtonOKInvalid
+            'oButtonOKInvalid'
         );
         exit;
     }
@@ -541,11 +528,11 @@ if ($_REQUEST['action'] == 'map') {
         });
         
         if (!oTranscriptField.prop("disabled")) {
-            oTranscriptField.val("' . $aTranscriptData['DNA'] . '").attr("class", "acc");;
-            oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+            oTranscriptField.val("' . $aTranscriptData['DNA'] . '").attr("class", "accept");;
+            oTranscriptField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"});
             var sBaseOfFieldName = oTranscriptField.attr("name").substring(0, oTranscriptField.attr("name").indexOf("DNA"));
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "acc");
-            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "acc");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "accept");
+            $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "accept");
         }');
     }
 
@@ -586,18 +573,42 @@ if ($_REQUEST['action'] == 'map') {
         var oGenomicField = $("input").filter(function() { 
             return $(this).data("genomeBuild") == "' . $sGBID . '" 
         });
-        oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "acc");
-        oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"}).show();
+        oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "accept");
+        oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"});
         ');
     }
 
 
+    // Fill and deactivate all fields that remained empty.
+    // Some fields might not have been filled after the mapping. Some
+    //  unknown issues have occurred here, most likely concerning the
+    //  reference sequence. Because we want to allow users to fill in
+    //  these fields without that resulting in a reset of all values,
+    //  we will deactivate the onChanges for these fields and warn the
+    //  user.
+    print('
+    // Fill in all fields that remained empty.
+    $(\'#variantForm input[name*="VariantOn"]\').each(function(e){
+        sName = $(this).attr("name");
+        if ($(this).val() === ""
+            && (sName.includes("DNA") || sName.endsWith("RNA") || sName.endsWith("Protein"))) {
+            if (sName.includes("Genome")) {
+                $(this).val("g.?");
+            } else {
+                $(this).val((sName.endsWith("DNA")? "c" : (sName.endsWith("RNA")? "r" : "p")) + ".?");
+            }
+            $(this).off("change").attr("class", "warn");
+            $(this).siblings("img:first").attr({src: "gfx/check_orange.png", title: "Variant mapping failed! The HGVS check of this field is turned off to allow changes to be made freely. To turn the checks back on, refresh the page."});
+        }
+    });
+    ');
+
     // Send final message to the user.
-    update_images_per_step($sStepMapping, $sImagePassed);
+    update_images_per_step('statusMapping', 'gfx/check.png');
     update_dialogue(
         '<br>Your variant was successfully mapped' . (!isset($bImprovedByVV) ? '' : ', improved') .
         ' and validated by VariantValidator. Thank you for your patience!',
-        $sButtonOKValid
+        'oButtonOKValid'
     );
 }
 ?>

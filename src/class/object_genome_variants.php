@@ -255,18 +255,20 @@ class LOVD_GenomeVariant extends LOVD_Custom
         }
 
         foreach ($aData as $sField => $sVariant) {
-            if (preg_match('/DNA/', $sField)) {
+            if (strpos($sField, 'DNA') !== false) {
                 // We want to check the input of all DNA fields: are these variant
                 //  descriptions indeed cleanly formatted? And if our check seems
                 //  to fail, is this perhaps because it holds syntax that we do
                 //  not support? If we DO support the syntax but the variant does
                 //  not seem to be HGVS, we will send an error.
+                if (lovd_isHGVS($sVariant)) {
+                    // The variant looks good!
+                    continue;
+                }
                 $aVariantInfo = lovd_getVariantInfo($sVariant, false);
-                if (!lovd_isHGVS($sVariant)
-                    && !isset($aVariantInfo['errors']['ENOTSUPPORTED']) // Supported by LOVD.
-                    && !(isset($aVariant['warnings']['WNOTSUPPORTED'])  // Supported by VariantValidator.
-                        || isset($aVariant['messages']['IUNCERTAINPOSITIONS'])
-                        || isset($aVariant['messages']['IPOSTIONRANGE']))) {
+                if (array_diff(array_keys($aVariantInfo['errors']), array('ENOTSUPPORTED')) // Are there any errors other than ENOTSUPPORTED?
+                    || array_diff(array_keys($aVariantInfo['warnings']), array('WNOTSUPPORTED'))) { // Are there any warnings other than WNOTSUPPORTED?
+                    // There are problems that are not caused by lack of syntax support.
                     lovd_errorAdd($sField, 'The variant ' . $sVariant . ' did not pass our checks. Please take another look and try again.');
                 }
             }
@@ -362,7 +364,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             $this->aColumns[$sColumn]['description_form'] = '<B>Relative to ' . $aBuild['name'] . '.</B>' .
                 (!$this->aColumns[$sColumn]['description_form']? '' : '<BR>' . $this->aColumns[$sColumn]['description_form']);
             $this->aColumns[$sColumn]['element_data'] = array('genome_build' => $sBuild);
-            $this->aColumns[$sColumn]['form_type'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $this->aColumns[$sColumn]['form_type'][0]);
+            $this->aColumns[$sColumn]['form_type'][0] = str_replace('(HGVS format)', '(<A href="https://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $this->aColumns[$sColumn]['form_type'][0]);
         }
 
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.

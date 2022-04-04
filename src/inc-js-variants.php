@@ -151,6 +151,7 @@ function lovd_convertPosition (oElement)
 
     if (oThisDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
         // This function was called from the genomic variant, so build a list of genes and prepare the variant accordingly for mutalyzer.
+        var oChromosome = $('select[name="chromosome"]');
         var sChromosome = (
             oChromosome.length ? // Yes=VOG form; No=VOT form.
                 oChromosome.val() :
@@ -187,7 +188,9 @@ function lovd_convertPosition (oElement)
                         for (i = 0; i < nVariants; i++) {
                             var aVariant = /^([A-Z]{2}_\d{6,9}\.\d{1,2}(?:\([A-Z0-9]+_v\d{3}\))?):([cn]\..+)$/.exec(aVariants[i]);
                             if (aVariant != null) {
-                                var oInput = $('#variantForm input[data-id_ncbi="' + aVariant[1] + '"]');
+                                var oInput = $("input").filter(function() {
+                                    return $(this).data("id_ncbi") === aVariant[1];
+                                });
                                 if (oInput[0] != undefined) {
                                     // If the transcript returned by mutalyzer is present in the form, fill in the respons from mutalyzer.
                                     oInput.val(aVariant[2]);
@@ -496,7 +499,7 @@ $(function ()
         var oProteinVariants = $('#variantForm input[name$="_VariantOnTranscript/Protein"]');
         if (oProteinVariants[0] != undefined) {
             // Add the buttons and images at the end of the protein description fields.
-            oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" style="display:none;" align="top" width="16" height="16">&nbsp;');
+            oProteinVariants.parent().append('&nbsp;&nbsp;<IMG src="gfx/trans.png" align="top" width="16" height="16">&nbsp;');
         }
     }
 });

@@ -118,9 +118,9 @@ input.warn, textarea.warn, button.warn, select.warn
                                 {border : 1px solid #CCAA00;}
 input.warn:hover, input.warn:focus, textarea.warn:hover, textarea.warn:focus, button.warn:hover, select.warn:hover, select.warn:focus
                                 {background : #FFFFE8; border : 1px solid #AA6600;}
-input.acc, textarea.acc, button.acc, select.acc
+input.accept, textarea.accept, button.accept, select.accept
 {background : #e9fae1; border : 1px solid #60b932;}
-input.acc:hover, input.acc:focus, textarea.acc:hover, textarea.acc:focus, button.acc:hover, select.acc:hover, select.acc:focus
+input.accept:hover, input.accept:focus, textarea.accept:hover, textarea.accept:focus, button.accept:hover, select.accept:hover, select.accept:focus
 {background : #d7ffc4; border : 1px solid #448a21;}
 
 
