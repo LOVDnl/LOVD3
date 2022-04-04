@@ -43,7 +43,7 @@ class LOVD_API_GA4GH
     private $API;                     // The API object.
     private $aURLElements = array();  // The current URL broken in parts.
     private $aFilters = array();      // Filters active on the data.
-    private $sActiveGB;
+    private $sPrimaryGB;
     private $aActiveGBs;
     private $aTables = array(
         'variants' => array(
@@ -217,7 +217,7 @@ class LOVD_API_GA4GH
         // Retrieve default genome build.
         global $_DB;
         $this->aActiveGBs = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
-        $this->sActiveGB = key($this->aActiveGBs);
+        $this->sPrimaryGB = key($this->aActiveGBs);
 
         return true;
     }
@@ -693,7 +693,7 @@ class LOVD_API_GA4GH
             'data' => array(),
             'pagination' => array(
                 'next_page_url' => lovd_getInstallURL() . 'api/v' . $this->API->nVersion . '/ga4gh/table/' . $sTableName . '/' .
-                    rawurlencode(str_replace('{{refseq_build}}', $this->sActiveGB, $this->aTables[$sTableName]['first_page'])),
+                    rawurlencode(str_replace('{{refseq_build}}', $this->sPrimaryGB, $this->aTables[$sTableName]['first_page'])),
             ),
         );
 
@@ -1933,7 +1933,7 @@ class LOVD_API_GA4GH
             // We didn't receive everything. This must be because we're at the
             //  end of the chromosome. Let's look at the next.
             // The easiest way to find the "next" chromosome is by our list.
-            $aChrs = array_keys($_SETT['human_builds'][$this->sActiveGB]['ncbi_sequences']);
+            $aChrs = array_keys($_SETT['human_builds'][$this->sPrimaryGB]['ncbi_sequences']);
             $nIndex = array_search($sChr, $aChrs);
             $nIndex ++;
             if (isset($aChrs[$nIndex])) {
