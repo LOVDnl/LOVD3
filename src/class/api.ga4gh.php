@@ -1941,7 +1941,7 @@ class LOVD_API_GA4GH
             // We didn't receive everything. This must be because we're at the
             //  end of the chromosome. Let's look at the next.
             // The easiest way to find the "next" chromosome is by our list.
-            $aChrs = array_keys($_SETT['human_builds'][$this->sPrimaryGB]['ncbi_sequences']);
+            $aChrs = array_keys($_SETT['human_builds'][$sBuild]['ncbi_sequences']);
             $nIndex = array_search($sChr, $aChrs);
             $nIndex ++;
             if (isset($aChrs[$nIndex])) {
