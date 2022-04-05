@@ -806,20 +806,8 @@ class LOVD_API_GA4GH
             'VariantOnTranscript/RNA',
             'VariantOnTranscript/Protein',
         );
-        $aColsToCheck = array_merge($aRequiredCols, array(
-            'Individual/Gender',
-            'Individual/Reference',
-            'Individual/Remarks',
-            'Phenotype/Additional',
-            'Phenotype/Inheritance',
-            'VariantOnGenome/ClinicalClassification',
-            'VariantOnGenome/ClinicalClassification/Method',
-            'VariantOnGenome/dbSNP',
-            'VariantOnGenome/Genetic_origin',
-            'VariantOnGenome/Reference',
-            'VariantOnGenome/Remarks',
-        ));
 
+        // Build DNA queries and requirements per genome build.
         $sAliasesQ = '';
         $sMainDNAQuery = '';
         foreach ($this->aActiveGBs as $sGBID => $sGBSuffix) {
@@ -847,6 +835,20 @@ class LOVD_API_GA4GH
             // Put all fields in $aRequired.
             $aRequiredCols[] = 'VariantOnGenome/DNA' . $sSlashSuffix;
         }
+
+        $aColsToCheck = array_merge($aRequiredCols, array(
+            'Individual/Gender',
+            'Individual/Reference',
+            'Individual/Remarks',
+            'Phenotype/Additional',
+            'Phenotype/Inheritance',
+            'VariantOnGenome/ClinicalClassification',
+            'VariantOnGenome/ClinicalClassification/Method',
+            'VariantOnGenome/dbSNP',
+            'VariantOnGenome/Genetic_origin',
+            'VariantOnGenome/Reference',
+            'VariantOnGenome/Remarks',
+        ));
 
         // Select columns only if they're *globally* set to public.
         // Note that this means, for VOT and Phenotype columns, the gene- and
