@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2022-04-01
+ * Modified    : 2022-04-05
  * For LOVD    : 3.5-pre-03
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -802,7 +802,6 @@ class LOVD_API_GA4GH
 
         // Check for required, and wanted columns.
         $aRequiredCols = array(
-            'VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]),
             'VariantOnTranscript/DNA',
             'VariantOnTranscript/RNA',
             'VariantOnTranscript/Protein',
@@ -820,23 +819,35 @@ class LOVD_API_GA4GH
             'VariantOnGenome/Reference',
             'VariantOnGenome/Remarks',
         ));
-        $sGenomeBuildQ = '';
+
+        $sAliasesQ = '';
+        $sMainDNAQuery = '';
         foreach ($this->aActiveGBs as $sGBID => $sGBSuffix) {
             // We will prepare to get the right data for each active
             //  genome build.
-            $sPreparedSuffix = !$sGBSuffix ? '' : '/' . $sGBSuffix;
+            $sUnderscoreSuffix = (!$sGBSuffix? '' : '_' . $sGBSuffix);
+            $sSlashSuffix = (!$sGBSuffix ? '' : '/' . $sGBSuffix);
 
-            if ($sGBID != $sBuild) {
-                // We only need extra data on genome builds that are
-                //  NOT the build as specified by the user, because
-                //  that build has been processed already.
-                $sGenomeBuildQ .= ', ' .
-                    'GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '`, "")' .
-                    ' ORDER BY vog.`VariantOnGenome/DNA' . $sPreparedSuffix . '` SEPARATOR ";") AS DNA' . $sGBID;
+            if ($sBuild == $sGBID) {
+                // If the current GBID is the ID of our build, we need
+                //  to build the main DNA query of this one.
+                $sMainDNAQuery .= ',
+                 vog.position_g_start' . $sUnderscoreSuffix . ',
+                 vog.position_g_end' . $sUnderscoreSuffix . ',
+                 vog.`VariantOnGenome/DNA' . $sSlashSuffix . '` AS DNA';
 
-                $aColsToCheck[] = 'VariantOnGenome/DNA' . $sPreparedSuffix;
+            } else {
+                // If the current GBID is not the chosen build, we are
+                //  are dealing with aliases. We will safe these as
+                //  DNA<GBID>.
+                $sAliasesQ .= ', ' .
+                    'GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA' . $sSlashSuffix . '`, "")' .
+                    ' ORDER BY vog.`VariantOnGenome/DNA' . $sSlashSuffix . '` SEPARATOR ";") AS DNA' . $sGBID;
             }
+            // Put all fields in $aRequired.
+            $aRequiredCols[] = 'VariantOnGenome/DNA' . $sSlashSuffix;
         }
+
         // Select columns only if they're *globally* set to public.
         // Note that this means, for VOT and Phenotype columns, the gene- and
         //  disease-specific settings are ignored.
@@ -895,11 +906,8 @@ class LOVD_API_GA4GH
         //  information and after that the full submission data.
         $sQ = 'SELECT
                  vog.chromosome,
-                 vog.position_g_start' . (!$this->aActiveGBs[$sBuild]? '' : '_' . $this->aActiveGBs[$sBuild]) . ',
-                 vog.position_g_end' . (!$this->aActiveGBs[$sBuild]? '' : '_' . $this->aActiveGBs[$sBuild]) . ',
                  GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
-                 vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . '` AS DNA' .
-            $sGenomeBuildQ . ',
+                 ' . $sMainDNAQuery . $sAliasesQ . ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", vog.effectid) ORDER BY vog.id SEPARATOR ";") AS effectids' .
             (!$bClassification? '' : ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", NULLIF(vog.`VariantOnGenome/ClinicalClassification`, ""), ":"' .
