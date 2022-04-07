@@ -989,8 +989,9 @@ class LOVD_API_GA4GH
         }
         $aQ[] = STATUS_MARKED;
         $sQ .= '
-               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA' .
-            (!$this->aActiveGBs[$sBuild] ? '' : '/' . $this->aActiveGBs[$sBuild]) . '`';
+               GROUP BY vog.chromosome, vog.position_g_start' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
+            ', vog.position_g_end' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
+            ', vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild] ? '' : '/' . $this->aActiveGBs[$sBuild]) . '`';
         // If-Modified-Since filter must be on HAVING as it must be done *after* grouping.
         if (isset($this->aFilters['modified_since'])) {
             $sQ .= '
@@ -998,8 +999,9 @@ class LOVD_API_GA4GH
             $aQ[] = $this->aFilters['modified_since'];
         }
         $sQ .= '
-               ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA' .
-            (!$this->aActiveGBs[$sBuild] ? '' : '/' . $this->aActiveGBs[$sBuild]) . '`
+               ORDER BY vog.chromosome, vog.position_g_start' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
+            ', vog.position_g_end' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
+            ', vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild] ? '' : '/' . $this->aActiveGBs[$sBuild]) . '`
                LIMIT ' . $nLimit;
         $zData = $_DB->query($sQ, $aQ)->fetchAllAssoc();
         $n = count($zData);
