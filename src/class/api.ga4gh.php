@@ -908,7 +908,7 @@ class LOVD_API_GA4GH
         //  information and after that the full submission data.
         $sQ = 'SELECT
                  vog.chromosome,
-                 GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
+                 GROUP_CONCAT(vog.id SEPARATOR ";") AS ids
                  ' . $sMainDNAQuery . $sAliasesQ . ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", vog.effectid) ORDER BY vog.id SEPARATOR ";") AS effectids' .
             (!$bClassification? '' : ',
