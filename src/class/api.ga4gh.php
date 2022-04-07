@@ -275,8 +275,18 @@ class LOVD_API_GA4GH
             },
             // We only want to get ALIASES (ALTERNATIVE variant descriptions).
             // This means that we do not want to get the descriptions of the
-            //  specified build, since that description is not alternative.
-            array_diff(array_keys($this->aActiveGBs), array($sBuild))
+            //  specified build, since that description is not alternative
+            //  (hence the array_diff()).
+            // Because the array_diff() tangles with the keys that are
+            //  normally simply 0,1,2..., JSON will interpret the array as
+            //  multidimensional. This is avoided by running array_values() to
+            //  reset the keys.
+            array_values(
+                array_diff(
+                    array_keys($this->aActiveGBs),
+                    array($sBuild)
+                )
+            )
         );
     }
 
