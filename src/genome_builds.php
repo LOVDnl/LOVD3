@@ -167,7 +167,14 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
                 }
 
                 if ($bToAdd) {
-                    $_DB->query(rtrim($sSQL, ','));
+                    $_DB->query(
+                        ($sTable != TABLE_VARIANTS?
+                            rtrim($sSQL, ',') :
+                            $sSQL .
+                            ' ADD INDEX (chromosome, position_g_start_' . $_POST['column_suffix'] .
+                            ', position_g_end_' . $_POST['column_suffix'] . ')'
+                        )
+                    );
                 }
             }
 
