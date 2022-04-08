@@ -167,14 +167,14 @@ if (PATH_COUNT == 1 && ACTION == 'add') {
                 }
 
                 if ($bToAdd) {
-                    $_DB->query(
-                        ($sTable != TABLE_VARIANTS?
-                            rtrim($sSQL, ',') :
-                            $sSQL .
-                            ' ADD INDEX (chromosome, position_g_start_' . $_POST['column_suffix'] .
-                            ', position_g_end_' . $_POST['column_suffix'] . ')'
-                        )
-                    );
+                    if ($sTable == TABLE_VARIANTS) {
+                        // For the variants table, we will add an index
+                        //  to be able to quickly query the positions.
+                        $sSQL .=
+                        ' ADD INDEX (chromosome, position_g_start_' . $_POST['column_suffix'] .
+                        ', position_g_end_' . $_POST['column_suffix'] . ')';
+                    }
+                    $_DB->query(rtrim($sSQL, ','));
                 }
             }
 
