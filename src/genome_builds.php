@@ -372,6 +372,20 @@ if (PATH_COUNT == 2 && ACTION == 'remove') {
                 }
 
                 if ($bToRemove) {
+                    if ($sTable == TABLE_VARIANTS) {
+                        // If we are working with the variants table, we must
+                        //  additionally remove the indices specific to the GB.
+                        $sKeysAndIndexInfo = $_DB->query('SHOW CREATE TABLE ' . TABLE_VARIANTS)->fetchAllAssoc();
+                        if (preg_match(
+                            '/KEY `(.*)` \(`chromosome`,`position_g_start' . $sSuffixWithUnderscore . '`,`position_g_end' . $sSuffixWithUnderscore . '`\)/',
+                            $sKeysAndIndexInfo[0]['Create Table'], $aRegs)) {
+                            // We retrieve the name of the index in the list of
+                            //  indices as found through the SHOW CREATE TABLE
+                            //  query. If we found a matching index, we will
+                            //  remove this index along with the position fields.
+                            $sSQL .= ' DROP INDEX `' . $aRegs[1] . '`';
+                        }
+                    }
                     $_DB->query(rtrim($sSQL, ','));
                 }
             }
