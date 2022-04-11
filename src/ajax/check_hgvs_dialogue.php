@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2022-02-26
- * Modified    : 2022-04-08
+ * Modified    : 2022-04-11
  * For LOVD    : 3.0-27
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -50,16 +50,48 @@ if (!$sVariant) {
 }
 
 
-global $_DB;
-if (substr($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn(), 0, 2) == 'hg') {
-    // We want to reset all values if a variant input was changed, because
-    //  we want to keep all validated variants coherent.
-    // We only do this if the variants are found on human (hg) genomes,
-    //  because our checks (or at least the contents check) only works
-    //  on human genomes. For non-human variants, we cannot perform
-    //  mapping, so we can also not automatically create a coherent set
-    //  of variants, and must thus allow the user to create this set
-    //  themselves.
+
+// Retrieving information on the reference sequence from the URL.
+$sRefSeqInfo  = htmlspecialchars($_REQUEST['refSeqInfo']);
+
+// Retrieve the reference sequence from the info given through the URL.
+if (strpos($sRefSeqInfo, '-') === false) {
+    // The '-' serves as a communication tool; it tells us that
+    //  the given input was a GB + chromosome. When no '-' is
+    //  found, we know that the input was the reference sequence
+    //  of a transcript.
+    $sType = 'VOT';
+    $sReferenceSequence = $sRefSeqInfo;
+    global $_DB;
+    $bRefSeqIsSupportedByVV = (
+        'hg' == substr($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn(), 0, 2)
+    );
+
+} else {
+    // We know we got information on a GB. This is given through
+    //  JS in the format of <genome build ID>-<chromosome>.
+    $sType = 'VOG';
+    list($sGenomeBuildID, $sChromosome) = explode('-', $sRefSeqInfo);
+    $sReferenceSequence = (
+        !isset($_SETT['human_builds'][$sGenomeBuildID])?
+        '' : $sReferenceSequence = $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome]
+    );
+
+    $bRefSeqIsSupportedByVV = (
+        isset($_SETT['human_builds'][$sGenomeBuildID]) && $_SETT['human_builds'][$sGenomeBuildID]['supported_by_VV']
+    );
+}
+
+
+
+if ($bRefSeqIsSupportedByVV) {
+    // We want to reset all values if a variant input was changed,
+    //  because we want to keep all validated variants coherent.
+    // We only do this if the variants can be fully checked by
+    //  VariantValidator, because we can only map those. For variants
+    //  that we cannot map, we can also not automatically create a
+    //  coherent set of variants, and must thus allow the user to
+    //  create this set themselves.
     print('
     // Resetting all values.
     if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
@@ -176,10 +208,6 @@ function update_images_per_step($sStep, $sImage)
 
 // Performing initial checks.
 if ($_REQUEST['action'] == 'check') {
-
-    // Retrieving information on the reference sequence from the URL.
-    $sRefSeqInfo  = htmlspecialchars($_REQUEST['refSeqInfo']);
-
     // Opening the dialogue.
     print('
     // Setting up the dialogue.
@@ -282,22 +310,7 @@ if ($_REQUEST['action'] == 'check') {
     }
 
 
-    // Retrieve the reference sequence from the info given through the URL.
-    if (strpos($sRefSeqInfo, '-') === false) {
-        // The '-' serves as a communication tool; it tells us that
-        //  the given input was a GB + chromosome. When no '-' is
-        //  found, we know that the input was the reference sequence
-        //  of a transcript.
-        $sType = 'VOT';
-        $sReferenceSequence = $sRefSeqInfo;
-
-    } else {
-        // We know we got information on a GB. This is given through
-        //  JS in the format of <genome build ID>-<chromosome>.
-        $sType = 'VOG';
-        list($sGenomeBuildID, $sChromosome) = explode('-', $sRefSeqInfo);
-
-        if (!$_SETT['human_builds'][$sGenomeBuildID]['supported_by_VV']) {
+    if (!$bRefSeqIsSupportedByVV) {
             // If the given genome build is not supported by VV, we cannot fully validate
             //  the variant... We will have to accept these variants into the database
             //  anyway, since this issue lies with us.
@@ -307,24 +320,6 @@ if ($_REQUEST['action'] == 'check') {
             oInput.attr("class", "warn");
             oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."});
             ');
-        }
-
-        if (!isset($_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome])) {
-            // The combination of chromosome and build is not known by LOVD.
-            // Something probably went wrong on the user's end. We will inform
-            //  the user and exit the script.
-            update_images_per_step('statusChecks', 'gfx/cross.png');
-            update_dialogue(
-                '<br>An unknown combination of genome build and chromosome was given.' .
-                ' This means we cannot perform the mapping.',
-                'oButtonOKInvalid'
-            );
-            exit;
-        }
-
-        // All checks passed: we can now take the right reference
-        //  sequence by the GB ID and chromosome.
-        $sReferenceSequence = $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome];
     }
 
 
@@ -374,9 +369,8 @@ if ($_REQUEST['action'] == 'check') {
             + "&var=' . urlencode($sFullVariant) . '"
             + "&fieldName=' . $sFieldName . '"
             + "&type=' . $sType . '"
-            + "&refSeq=' . $sReferenceSequence . '"
+            + "&refSeqInfo=' . urlencode($_REQUEST['refSeqInfo']) . '"
             + "&transcripts=' . implode('|', $aTranscripts) . '"
-            + "&genomeBuild=' . (!isset($sGenomeBuildID)? '' : $sGenomeBuildID) . '"
     ).fail(function(){alert("An error occurred while trying to map your variant, please try again later.");$("#variantCheckDialogue").dialog("close");})
     ');
 }
@@ -387,17 +381,12 @@ if ($_REQUEST['action'] == 'check') {
 
 // Performing the mapping.
 if ($_REQUEST['action'] == 'map') {
-
-    // Retrieving necessary information from the URL.
-    $sType              = $_REQUEST['type'];
-    $sReferenceSequence = $_REQUEST['refSeq'];
-    $sGenomeBuildID     = $_REQUEST['genomeBuild'];
-
-    // Add the source of the variant which will be mapped.
+    // Add the source of the variant that will be mapped.
     print('
     // Add source.
     $(\'#variantForm input[name="source"]\').val("' . ($sType == 'VOT'? $sType : $sGenomeBuildID) . '");
     ');
+    var_dump($_REQUEST);
 
     // Call VariantValidator.
     require ROOT_PATH . 'class/variant_validator.php';
