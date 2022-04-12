@@ -357,7 +357,7 @@ if ($sDataType == 'variants') {
                                     // The user did not specify a specific genome build.
                                     if (count($aActiveGBs) == 1) {
                                         // If there is only one build, we can simply use that one.
-                                        $sGB = array_keys($aActiveGBs)[0]; // Fixme; Can this be done? Function()[]?
+                                        $sGB = key($aActiveGBs);
                                     } else {
                                         // There are multiple active builds, yet the user did not
                                         //  specify which one to use. We will send an error.
