@@ -36,6 +36,8 @@ header('Content-type: text/javascript; charset=UTF-8');
 
 
 // Retrieving the variant and the transcripts to map to.
+// We are using REQUEST and not GET or POST, because the
+//  input of this script can be both GET and POST.
 $sVariant     = htmlspecialchars($_REQUEST['var']);
 $aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', htmlspecialchars($_REQUEST['transcripts'])));
 
