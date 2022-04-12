@@ -147,7 +147,7 @@ var oButtonOKValid  = {"OK":function () {
 var oButtonOKInvalid  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
     var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
+    oInput.val("' . substr(strstr(addslashes($sVariant), ':'), 1) . '").attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."});
     $(this).dialog("close");
 }};
