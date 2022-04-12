@@ -1334,7 +1334,7 @@ class LOVD_API_GA4GH
                           vog.id, "||",
                           vog.allele, "||",
                           vog.chromosome, "||",
-                          vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . '`, "||",
+                          IFNULL(vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . '`, ""), "||",
                        vog.effectid, "||"' .
                     (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
