@@ -199,7 +199,7 @@ class LOVD_API_GA4GH
     function __construct (&$oAPI)
     {
         // Links the API to the private variable.
-        global $_SETT;
+        global $_SETT, $_DB;
 
         if (!is_object($oAPI) || !is_a($oAPI, 'LOVD_API')) {
             return false;
@@ -215,7 +215,6 @@ class LOVD_API_GA4GH
         $this->aValueMappings['effect'] = $_SETT['var_effect_api'];
 
         // Retrieve default genome build.
-        global $_DB;
         $this->aActiveGBs = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
         $this->sPrimaryGB = key($this->aActiveGBs);
 
