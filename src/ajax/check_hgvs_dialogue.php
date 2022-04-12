@@ -386,7 +386,6 @@ if ($_REQUEST['action'] == 'map') {
     // Add source.
     $(\'#variantForm input[name="source"]\').val("' . ($sType == 'VOT'? $sType : $sGenomeBuildID) . '");
     ');
-    var_dump($_REQUEST);
 
     // Call VariantValidator.
     require ROOT_PATH . 'class/variant_validator.php';
