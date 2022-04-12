@@ -728,7 +728,7 @@ class LOVD_API_GA4GH
                 $this->API->aResponse = array('errors' => array('title' =>
                     (isset($_SETT['human_builds'][$sBuild])? 'Unsupported' : 'Unrecognized')  . ' genome build.')
                 );
-                $this->API->aResponse['errors']['detail'] = 'We cannot use genome build ' . $sBuild . '. Please choose from: \'' . implode('|', array_keys($this->aActiveGBs)) . '\'.';
+                $this->API->aResponse['errors']['detail'] = 'We cannot use genome build ' . $sBuild . '. Please choose from: \'' . implode('\', \'', array_keys($this->aActiveGBs)) . '\'.';
                 return false;
 
             } elseif (!isset($_SETT['human_builds'][$sBuild]['ncbi_sequences'][$sChr])) {
