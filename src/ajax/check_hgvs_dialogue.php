@@ -36,11 +36,11 @@ header('Content-type: text/javascript; charset=UTF-8');
 
 
 // Retrieving the variant and the transcripts to map to.
-$sVariant     = $_REQUEST['var'];
-$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', $_REQUEST['transcripts']));
+$sVariant     = htmlspecialchars($_REQUEST['var']);
+$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', htmlspecialchars($_REQUEST['transcripts'])));
 
 // Retrieving the name of the input field.
-$sFieldName   = $_REQUEST['fieldName'];
+$sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
 
 
 
@@ -207,7 +207,7 @@ function update_images_per_step($sStep, $sImage)
 
 
 // Performing initial checks.
-if ($_REQUEST['action'] == 'check') {
+if (htmlspecialchars($_REQUEST['action']) == 'check') {
     // Opening the dialogue.
     print('
     // Setting up the dialogue.
@@ -369,7 +369,7 @@ if ($_REQUEST['action'] == 'check') {
             + "&var=' . urlencode($sFullVariant) . '"
             + "&fieldName=' . $sFieldName . '"
             + "&type=' . $sType . '"
-            + "&refSeqInfo=' . urlencode($_REQUEST['refSeqInfo']) . '"
+            + "&refSeqInfo=' . urlencode($sRefSeqInfo) . '"
             + "&transcripts=' . implode('|', $aTranscripts) . '"
     ).fail(function(){alert("An error occurred while trying to map your variant, please try again later.");$("#variantCheckDialogue").dialog("close");})
     ');
@@ -380,7 +380,7 @@ if ($_REQUEST['action'] == 'check') {
 
 
 // Performing the mapping.
-if ($_REQUEST['action'] == 'map') {
+if (htmlspecialchars($_REQUEST['action']) == 'map') {
     // Add the source of the variant that will be mapped.
     print('
     // Add source.
