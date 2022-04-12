@@ -344,7 +344,7 @@ if ($sDataType == 'variants') {
                                 // The user is looking for a specific genomic position.
                                 if (strpos($_GET['search_position'], ':') !== false) {
                                     // If a ':' was found, the user specified a genome build.
-                                    list($sGB, $searchPosition) = explode(':', $_GET['search_position']);
+                                    $sGB = strstr($_GET['search_position'], ':', true);
 
                                     if (!isset($aActiveGBs[$sGB])) {
                                         // The genome build specified by the user is not active in the
