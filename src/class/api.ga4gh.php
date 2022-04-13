@@ -261,38 +261,34 @@ class LOVD_API_GA4GH
     {
         // This function converts all aliases (variant descriptions that
         //  are not of the specified build) into the VarioML Alias format.
-
-        return array_map(
-            function($sGBID) use ($zData, $sChr) {
-                // We will go through all genome builds and return the required
-                //  info in the VarioML Alias format.
-                global $_SETT;
-                return array(
+        $aAliases = array();
+        global $_SETT;
+        // We will go through all builds to find the aliases.
+        foreach (array_keys($this->aActiveGBs) as $sGBID) {
+            if ($sGBID == $sBuild) {
+                // We only want to get ALIASES (ALTERNATIVE variant
+                //  descriptions). This means that we do not want to
+                //  get the descriptions of the specified build, since
+                //  that description is not alternative.
+                continue;
+            }
+            // It is possible for one DNA variant to be a concatenation
+            //  of multiple different DNA descriptions. These are then
+            //  concatenated by ';;'.
+            foreach (explode(';;', $zData['DNA' . $sGBID]) as $sAlias) {
+                $aAliases[] = array(
                     'ref_seq' => array(
                         'source' => 'genbank',
                         'accession' => $_SETT['human_builds'][$sGBID]['ncbi_sequences'][$sChr],
                     ),
                     'name' => array(
                         'scheme' => 'HGVS',
-                        'value' => $zData['DNA' . $sGBID],
+                        'value' => $sAlias,
                     ),
                 );
-            },
-            // We only want to get ALIASES (ALTERNATIVE variant descriptions).
-            // This means that we do not want to get the descriptions of the
-            //  specified build, since that description is not alternative
-            //  (hence the array_diff()).
-            // Because the array_diff() tangles with the keys that are
-            //  normally simply 0,1,2..., JSON will interpret the array as
-            //  multidimensional. This is avoided by running array_values() to
-            //  reset the keys.
-            array_values(
-                array_diff(
-                    array_keys($this->aActiveGBs),
-                    array($sBuild)
-                )
-            )
-        );
+            }
+        }
+        return $aAliases;
     }
 
 
@@ -842,7 +838,7 @@ class LOVD_API_GA4GH
                 //  DNA<GBID>.
                 $sAliasesQ .= ', ' .
                     'GROUP_CONCAT(DISTINCT NULLIF(vog.`' . $aGBSuffix['DNA'] . '`, "")' .
-                    ' ORDER BY vog.`' . $aGBSuffix['DNA'] . '` SEPARATOR ";") AS DNA' . $sGBID;
+                    ' ORDER BY vog.`' . $aGBSuffix['DNA'] . '` SEPARATOR ";;") AS DNA' . $sGBID;
             }
             // Put all DNA fields in $aRequired.
             $aRequiredCols[] = $aGBSuffix['DNA'];
