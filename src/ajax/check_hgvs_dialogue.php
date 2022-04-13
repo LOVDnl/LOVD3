@@ -406,9 +406,10 @@ if ($_REQUEST['action'] == 'map') {
         //  error, this is an issue that lies with us, not the user.
         // We will have to allow these variants into the database.
         update_images_per_step('statusMapping', 'gfx/cross.png');
-        update_dialogue(
-            '<br>This variant type is not supported by VariantValidator.' .
-            ' Therefore, we can only check the syntax and not perform the mapping.',
+        update_dialogue('<br>' .
+            ($aMappedVariant === false? 'An unknown issue occurred while calling VariantValidator.'
+                : 'This variant type is not supported by VariantValidator.') .
+            ' Therefore, we could only check the syntax and not perform the mapping.',
             'oButtonOKCouldBeValid'
         );
         exit;
