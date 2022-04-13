@@ -215,7 +215,13 @@ class LOVD_API_GA4GH
         $this->aValueMappings['effect'] = $_SETT['var_effect_api'];
 
         // Retrieve default genome build.
-        $this->aActiveGBs = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
+        $this->aActiveGBs = $_DB->query('
+        SELECT id,
+            CONCAT("VariantOnGenome/DNA", if(column_suffix = "", "", "/"), column_suffix) as "DNA",
+            CONCAT("position_g_start", if(column_suffix = "", "", "_"), column_suffix) as "position_start",
+            CONCAT("position_g_end", if(column_suffix = "", "", "_"), column_suffix) as "position_end"
+        FROM ' . TABLE_GENOME_BUILDS
+        )->fetchAllGroupAssoc();
         $this->sPrimaryGB = key($this->aActiveGBs);
 
         return true;
@@ -819,30 +825,27 @@ class LOVD_API_GA4GH
         // Build DNA queries and requirements per genome build.
         $sAliasesQ = '';
         $sMainDNAQuery = '';
-        foreach ($this->aActiveGBs as $sGBID => $sGBSuffix) {
+        foreach ($this->aActiveGBs as $sGBID => $aGBSuffix) {
             // We will prepare to get the right data for each active
             //  genome build.
-            $sUnderscoreSuffix = (!$sGBSuffix? '' : '_' . $sGBSuffix);
-            $sSlashSuffix = (!$sGBSuffix ? '' : '/' . $sGBSuffix);
-
             if ($sBuild == $sGBID) {
                 // If the current GBID is the ID of our build, we need
                 //  to build the main DNA query of this one.
                 $sMainDNAQuery .= ',
-                 vog.position_g_start' . $sUnderscoreSuffix . ' AS position_g_start,
-                 vog.position_g_end' . $sUnderscoreSuffix . ' AS position_g_end,
-                 vog.`VariantOnGenome/DNA' . $sSlashSuffix . '` AS DNA';
+                 vog.' . $aGBSuffix['position_start'] . ' AS position_g_start,
+                 vog.' . $aGBSuffix['position_end'] . ' AS position_g_end,
+                 vog.`' . $aGBSuffix['DNA'] . '` AS DNA';
 
             } else {
-                // If the current GBID is not the chosen build, we are
+                // If the current GBID is not the chosen build, we
                 //  are dealing with aliases. We will safe these as
                 //  DNA<GBID>.
                 $sAliasesQ .= ', ' .
-                    'GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA' . $sSlashSuffix . '`, "")' .
-                    ' ORDER BY vog.`VariantOnGenome/DNA' . $sSlashSuffix . '` SEPARATOR ";") AS DNA' . $sGBID;
+                    'GROUP_CONCAT(DISTINCT NULLIF(vog.`' . $aGBSuffix['DNA'] . '`, "")' .
+                    ' ORDER BY vog.`' . $aGBSuffix['DNA'] . '` SEPARATOR ";") AS DNA' . $sGBID;
             }
-            // Put all fields in $aRequired.
-            $aRequiredCols[] = 'VariantOnGenome/DNA' . $sSlashSuffix;
+            // Put all DNA fields in $aRequired.
+            $aRequiredCols[] = $aGBSuffix['DNA'];
         }
 
         $aColsToCheck = array_merge($aRequiredCols, array(
@@ -932,7 +935,7 @@ class LOVD_API_GA4GH
                  GROUP_CONCAT(DISTINCT
                    IFNULL(i.id,
                      CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||", vog.effectid, "||",
-                        IFNULL(vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . '`, ""), "||"' .
+                        IFNULL(vog.`' . $this->aActiveGBs[$sBuild]['DNA'] . '`, ""), "||"' .
 
             (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
@@ -988,9 +991,9 @@ class LOVD_API_GA4GH
         }
         $aQ[] = STATUS_MARKED;
         $sQ .= '
-               GROUP BY vog.chromosome, vog.position_g_start' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
-            ', vog.position_g_end' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
-            ', vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild] ? '' : '/' . $this->aActiveGBs[$sBuild]) . '`';
+               GROUP BY vog.chromosome, vog.' . $this->aActiveGBs[$sBuild]['position_start'] .
+            ', vog.' . $this->aActiveGBs[$sBuild]['position_end'] .
+            ', vog.`' . $this->aActiveGBs[$sBuild]['DNA'] . '`';
         // If-Modified-Since filter must be on HAVING as it must be done *after* grouping.
         if (isset($this->aFilters['modified_since'])) {
             $sQ .= '
@@ -998,9 +1001,9 @@ class LOVD_API_GA4GH
             $aQ[] = $this->aFilters['modified_since'];
         }
         $sQ .= '
-               ORDER BY vog.chromosome, vog.position_g_start' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
-            ', vog.position_g_end' . (!$this->aActiveGBs[$sBuild] ? '' : '_' . $this->aActiveGBs[$sBuild]) .
-            ', vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild] ? '' : '/' . $this->aActiveGBs[$sBuild]) . '`
+               ORDER BY vog.chromosome, vog.' . $this->aActiveGBs[$sBuild]['position_start'] .
+            ', vog.' . $this->aActiveGBs[$sBuild]['position_end'] .
+            ', vog.`' . $this->aActiveGBs[$sBuild]['DNA'] . '`
                LIMIT ' . $nLimit;
         $zData = $_DB->query($sQ, $aQ)->fetchAllAssoc();
         $n = count($zData);
@@ -1333,7 +1336,7 @@ class LOVD_API_GA4GH
                           vog.id, "||",
                           vog.allele, "||",
                           vog.chromosome, "||",
-                          IFNULL(vog.`VariantOnGenome/DNA' . (!$this->aActiveGBs[$sBuild]? '' : '/' . $this->aActiveGBs[$sBuild]) . '`, ""), "||",
+                          IFNULL(vog.`' . $this->aActiveGBs[$sBuild]['DNA'] . '`, ""), "||",
                        vog.effectid, "||"' .
                     (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
