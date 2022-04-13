@@ -72,7 +72,7 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
     list($sGenomeBuildID, $sChromosome) = explode('-', urldecode($_REQUEST['refSeqInfo']));
     $sReferenceSequence = (
         !isset($_SETT['human_builds'][$sGenomeBuildID])?
-        '' : $sReferenceSequence = $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome]
+        '' : $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome]
     );
 
     $bRefSeqIsSupportedByVV = (
