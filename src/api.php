@@ -134,7 +134,13 @@ if ($sDataType == 'variants') {
     }
 
     // Store all active genome builds.
-    $aActiveGBs = $_DB->query('SELECT id, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllCombine();
+    $aActiveGBs = $_DB->query('
+        SELECT id,
+            CONCAT("VariantOnGenome/DNA", if(column_suffix = "", "", "/"), column_suffix) as "DNA",
+            CONCAT("position_g_start", if(column_suffix = "", "", "_"), column_suffix) as "position_start",
+            CONCAT("position_g_end", if(column_suffix = "", "", "_"), column_suffix) as "position_end"
+        FROM ' . TABLE_GENOME_BUILDS
+    )->fetchAllGroupAssoc();
 
     $bUnique = ($nID == 'unique');
     if ($bUnique) {
@@ -245,17 +251,16 @@ if ($sDataType == 'variants') {
         // We will go through all active builds and prepare a query
         //  that retrieves the information from each build individually.
         $sPreparedGenomicQ = '';
-        foreach ($aActiveGBs as $sGBID => $sGBSuffix) {
-            $sUnderscoreSuffix = (!$sGBSuffix? '' : '_' . $sGBSuffix);
+        foreach ($aActiveGBs as $sGBID => $aGBFields) {
             $sPreparedGenomicQ .= '
-                vog.chromosome, vog.`VariantOnGenome/DNA' . (!$sGBSuffix? '' : '/' . $sGBSuffix) . '`,
+                vog.chromosome, vog.`' . $aGBFields['DNA'] . '`,
                 CONCAT("chr", vog.chromosome, ":",
                     IF (
-                        vog.position_g_start' . $sUnderscoreSuffix . ' = vog.position_g_end' . $sUnderscoreSuffix . ',
-                        vog.position_g_start' . $sUnderscoreSuffix . ',
-                        CONCAT(vog.position_g_start' . $sUnderscoreSuffix . ', "_", vog.position_g_end' . $sUnderscoreSuffix . ')
+                        vog.' . $aGBFields['position_start'] . ' = vog.' . $aGBFields['position_end'] . ',
+                        vog.' . $aGBFields['position_start'] . ',
+                        CONCAT(vog.' . $aGBFields['position_start'] . ', "_", vog.' . $aGBFields['position_end'] . ')
                     )
-                ) AS position_genomic' . $sUnderscoreSuffix . ', ';
+                ) AS position_genomic_' . $sGBID . ', ';
         }
 
         // Then build the query.
@@ -373,20 +378,19 @@ if ($sDataType == 'variants') {
                                 // Very important in genomic positions: genes on antisense will have positions like g.5678_1234 in the database!!!
                                 $nMin = (int) min($aRegs[2], $aRegs[4]);
                                 $nMax = (int) max($aRegs[2], $aRegs[4]);
-                                $sUnderscorePlusSuffix = (!$aActiveGBs[$sGB]? '' : '_' . $aActiveGBs[$sGB]);
 
                                 if (!empty($_GET['position_match'])) {
                                     if ($_GET['position_match'] == 'exclusive') {
                                         // Mutation should be completely in the range.
-                                        $sQ .= ' AND vog.position_g_start' . $sUnderscorePlusSuffix . '>= ' . $nMin . ' AND vog.position_g_end' . $sUnderscorePlusSuffix . ' <= ' . $nMax;
+                                        $sQ .= ' AND vog.' . $aActiveGBs[$sGB]['position_start'] . '>= ' . $nMin . ' AND vog.' . $aActiveGBs[$sGB]['position_end'] . ' <= ' . $nMax;
                                         continue;
                                     } elseif ($_GET['position_match'] == 'partial') {
-                                        $sQ .= ' AND (vog.position_g_start' . $sUnderscorePlusSuffix . ' BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR vog.position_g_end' . $sUnderscorePlusSuffix . ' BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR (vog.position_g_start' . $sUnderscorePlusSuffix . ' <= ' . $nMin . ' AND vog.position_g_end' . $sUnderscorePlusSuffix . ' >= ' . $nMax . '))';
+                                        $sQ .= ' AND (vog.' . $aActiveGBs[$sGB]['position_start'] . ' BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR vog.' . $aActiveGBs[$sGB]['position_end'] . ' BETWEEN ' . $nMin . ' AND ' . $nMax . ' OR (vog.' . $aActiveGBs[$sGB]['position_start'] . ' <= ' . $nMin . ' AND vog.' . $aActiveGBs[$sGB]['position_end'] . ' >= ' . $nMax . '))';
                                         continue;
                                     }
                                 }
                                 // Exact match, directly requested through $_GET['position_match'] or argument not given/recognized.
-                                $sQ .= ' AND position_' . $aRegs[1] . '_start' . $sUnderscorePlusSuffix . ' = ' . $nMin . ' AND position_' . $aRegs[1] . '_end' . $sUnderscorePlusSuffix . ' = ' . $nMax;
+                                $sQ .= ' AND ' . $aActiveGBs[$sGB]['position_start'] . ' = ' . $nMin . ' AND ' . $aActiveGBs[$sGB]['position_end'] . ' = ' . $nMax;
 
                             } else {
                                 // The user is looking for a specific position on coding DNA.
@@ -418,7 +422,10 @@ if ($sDataType == 'variants') {
         } else {
             $sQ .= ' GROUP BY vog.id';
         }
-        $sQ .= ' ORDER BY vog.position_g_start, vog.position_g_end, `VariantOnGenome/DNA`';
+        $sBuild = (isset($sGB)? $sGB : key($aActiveGBs));
+        $sQ .= ' ORDER BY vog.' . $aActiveGBs[$sBuild]['position_start'] .
+            ', vog.' . $aActiveGBs[$sBuild]['position_end'] .
+            ', vog.`' . $aActiveGBs[$sBuild]['DNA'] . '`';
     }
 
 
@@ -647,9 +654,9 @@ if ($sDataType == 'variants') {
         // Adding the genomic variants and positions for each build individually.
         $aGenomicVariants = array();
         $aGenomicPositions = array();
-        foreach ($aActiveGBs as $sGBID => $sGBSuffix) {
-            $aGenomicVariants[$sGBID] = 'chr' . $sChromosome . ':' . $zData['VariantOnGenome/DNA' . (!$sGBSuffix? '' : '/' . $sGBSuffix)];
-            $aGenomicPositions[$sGBID] = $zData['position_genomic' . (!$sGBSuffix? '' : '_' . $sGBSuffix)];
+        foreach ($aActiveGBs as $sGBID => $aGBSuffix) {
+            $aGenomicVariants[$sGBID] = 'chr' . $sChromosome . ':' . $zData[$aGBSuffix['DNA']];
+            $aGenomicPositions[$sGBID] = $zData['position_genomic_' . $sGBID];
         }
 
         $aReturn = array(
