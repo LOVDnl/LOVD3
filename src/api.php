@@ -728,7 +728,7 @@ if ($sDataType == 'variants') {
 
         $sContent = '';
         $zData['position_mRNA'] = $zData['position_mRNA'][0];
-        $zData['position_genomic'] = current($zData['position_genomic']); // JSON made this an array, so undo that here and take first value.
+        $zData['position_genomic'] = $zData['position_genomic'][(isset($sBuild)? $sBuild : key($this->aActiveGBs))]; // JSON made this an array, so undo that here and take first value.
         $zData['Variant/DNA'] = htmlspecialchars($zData['Variant/DNA'][0]);
         if (!empty($_GET['show_variant_effect'])) {
             // Optionally, add the variant effect to the output.
