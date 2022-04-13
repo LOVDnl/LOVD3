@@ -934,8 +934,7 @@ class LOVD_API_GA4GH
                  GROUP_CONCAT(DISTINCT t.geneid ORDER BY t.geneid SEPARATOR ";") AS genes,
                  GROUP_CONCAT(DISTINCT
                    IFNULL(i.id,
-                     CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||", vog.effectid, "||",
-                        IFNULL(vog.`' . $this->aActiveGBs[$sBuild]['DNA'] . '`, ""), "||"' .
+                     CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||", vog.effectid, "||"' .
 
             (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
