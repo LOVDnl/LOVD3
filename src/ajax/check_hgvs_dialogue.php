@@ -35,35 +35,31 @@ require ROOT_PATH . 'inc-lib-variants.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 
-// Retrieving the variant and the transcripts to map to.
+// Retrieving the transcripts to map to.
 // We are using REQUEST and not GET or POST, because the
 //  input of this script can be both GET and POST.
-$sVariant     = htmlspecialchars($_REQUEST['var']);
-$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', htmlspecialchars($_REQUEST['transcripts'])));
+$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', urldecode($_REQUEST['transcripts'])));
 
 // Retrieving the name of the input field.
-$sFieldName   = htmlspecialchars($_REQUEST['fieldName']);
+$sFieldName = urldecode($_REQUEST['fieldName']);
 
 
 
-if (!$sVariant) {
+if (!($_REQUEST['var'])) {
     // If the variant is empty, we can simply close the script.
     exit;
 }
 
 
 
-// Retrieving information on the reference sequence from the URL.
-$sRefSeqInfo  = htmlspecialchars($_REQUEST['refSeqInfo']);
-
 // Retrieve the reference sequence from the info given through the URL.
-if (strpos($sRefSeqInfo, '-') === false) {
+if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
     // The '-' serves as a communication tool; it tells us that
     //  the given input was a GB + chromosome. When no '-' is
     //  found, we know that the input was the reference sequence
     //  of a transcript.
     $sType = 'VOT';
-    $sReferenceSequence = $sRefSeqInfo;
+    $sReferenceSequence = urldecode($_REQUEST['refSeqInfo']);
     global $_DB;
     $bRefSeqIsSupportedByVV = (
         'hg' == substr($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn(), 0, 2)
@@ -73,7 +69,7 @@ if (strpos($sRefSeqInfo, '-') === false) {
     // We know we got information on a GB. This is given through
     //  JS in the format of <genome build ID>-<chromosome>.
     $sType = 'VOG';
-    list($sGenomeBuildID, $sChromosome) = explode('-', $sRefSeqInfo);
+    list($sGenomeBuildID, $sChromosome) = explode('-', urldecode($_REQUEST['refSeqInfo']));
     $sReferenceSequence = (
         !isset($_SETT['human_builds'][$sGenomeBuildID])?
         '' : $sReferenceSequence = $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome]
@@ -128,15 +124,15 @@ var oButtonYes = {"Yes":function () {
     // We will fill in this fixed variant, close the dialogue,
     //  and perform a new call to this script by activating
     //  the onChange.
-    var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . addslashes(lovd_fixHGVS($sVariant)) . '");
+    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
+    oInput.val("' . htmlspecialchars(lovd_fixHGVS($_REQUEST['var'])) . '");
     $(this).dialog("close");
     oInput.change();
 }};
 var oButtonNo  = {"No, I will take a look myself":function () {
     // The user does not accept the given fixed variant.
-    var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . addslashes($sVariant) . '").attr("class", "err");
+    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
+    oInput.val("' . htmlspecialchars($_REQUEST['var']) . '").attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."});
     $(this).dialog("close");
 }};
@@ -148,8 +144,8 @@ var oButtonOKValid  = {"OK":function () {
 }};
 var oButtonOKInvalid  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
-    var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . substr(strstr(addslashes($sVariant), ':'), 1) . '").attr("class", "err");
+    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
+    oInput.val("' . htmlspecialchars(substr(strstr($_REQUEST['var'], ':'), 1)) . '").attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."});
     $(this).dialog("close");
 }};
@@ -160,8 +156,8 @@ var oButtonOKCouldBeValid  = {"OK":function () {
     // Just to be sure, we remove the reference sequence here,
     //  because it might still be stuck to the variant
     //  description from the mapping process.
-    var oInput = $(\'input[name="' . $sFieldName . '"]\');
-    oInput.val("' . substr(strstr(addslashes($sVariant), ':'), 1) . '").attr("class", "warn");
+    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
+    oInput.val("' . htmlspecialchars(substr(strstr($_REQUEST['var'], ':'), 1)) . '").attr("class", "warn");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."});
     $(this).dialog("close");
 }};
@@ -209,7 +205,7 @@ function update_images_per_step($sStep, $sImage)
 
 
 // Performing initial checks.
-if (htmlspecialchars($_REQUEST['action']) == 'check') {
+if ($_REQUEST['action'] == 'check') {
     // Opening the dialogue.
     print('
     // Setting up the dialogue.
@@ -228,7 +224,7 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
 
 
     // Check whether this variant is supported by LOVD.
-    $aVariant = lovd_getVariantInfo($sVariant, false);
+    $aVariant = lovd_getVariantInfo($_REQUEST['var'], false);
     $bIsSupportedByLOVD = !isset($aVariant['errors']['ENOTSUPPORTED']);
 
     if (!$bIsSupportedByLOVD) {
@@ -247,7 +243,7 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
 
 
     // Perform our HGVS check.
-    if (!lovd_isHGVS($sVariant)) {
+    if (!lovd_isHGVS($_REQUEST['var'])) {
         // If the variant is not HGVS, we cannot send the variant to
         //  VariantValidator yet. We will try to see if our fixHGVS
         //  function knows what to do, but if not, we need to exit
@@ -255,7 +251,7 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
         //  which we can interpret.
 
         // Let the user know that the given variant did not pass our HGVS check.
-        $sResponse = '<br>Your variant (\"' . htmlspecialchars($sVariant) . '\") did not pass our HGVS check.<br><br>';
+        $sResponse = '<br>Your variant (\"' . htmlspecialchars($_REQUEST['var']) . '\") did not pass our HGVS check.<br><br>';
         update_images_per_step('statusChecks', 'gfx/cross.png');
 
 
@@ -271,12 +267,12 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
 
 
         // Show the fixed variant if fixHGVS was successful.
-        $sFixedVariant = lovd_fixHGVS($sVariant);
+        $sFixedVariant = lovd_fixHGVS($_REQUEST['var']);
 
-        if ($sFixedVariant !== $sVariant && lovd_isHGVS($sFixedVariant)) {
+        if ($sFixedVariant !== $_REQUEST['var'] && lovd_isHGVS($sFixedVariant)) {
             // Good, we can propose a fix. If the user agrees with the fix,
             //  we can continue to the mapping.
-            update_dialogue($sResponse . 'Did you mean \"' . $sFixedVariant . '\"?<br>',
+            update_dialogue($sResponse . 'Did you mean \"' . htmlspecialchars($sFixedVariant) . '\"?<br>',
                 'oButtonYes, oButtonNo');
 
             // Our 'Yes' button sets the steps in motion which change the user's
@@ -318,7 +314,7 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
             //  anyway, since this issue lies with us.
             die('
             $("#variantCheckDialogue").dialog("close");
-            var oInput = $(\'input[name="' . addslashes($sFieldName) . '"]\');
+            var oInput = $(\'input[name="' . htmlspecialchars(sFieldName) . '"]\');
             oInput.attr("class", "warn");
             oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "We validated the syntax, but could not validate the positions."});
             ');
@@ -327,9 +323,9 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
 
     // Check if the description itself holds a reference sequence.
     // if (lovd_holdsRefSeq($sVariant)) { Fixme; Update line below with this line once the necessary code has been pulled in -> Committed in feat/checkHGVSTool on January 14th 2022; ID 7abf9d70dc3094f5f9cfa0dfc43039c49b4217ff.
-    if (preg_match('/.*:[a-z]\./', $sVariant)) {
+    if (preg_match('/.*:[a-z]\./', $_REQUEST['var'])) {
         // The given variant description holds a reference sequence.
-        $sRefSeqInDescription = substr($sVariant, 0, strpos($sVariant, ':'));
+        $sRefSeqInDescription = substr($_REQUEST['var'], 0, strpos($_REQUEST['var'], ':'));
 
         if ($sRefSeqInDescription == $sReferenceSequence) {
             // Perfect, no issues found; the user redundantly gave
@@ -337,7 +333,7 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
             //  but that is no problem at all, since the given refSeq
             //  matches our expectations. The reference sequence will
             //  be cut from the description after the mapping.
-            $sFullVariant = $sVariant;
+            $sFullVariant = $_REQUEST['var'];
 
         } else {
             // The user gave a refSeq within the variant description
@@ -357,7 +353,7 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
         // The variant in the input field does not hold a reference
         //  sequence. We will add it to make a full variant that we
         //  can then send to VariantValidator.
-        $sFullVariant = $sReferenceSequence . ':' . $sVariant;
+        $sFullVariant = $sReferenceSequence . ':' . $_REQUEST['var'];
     }
 
 
@@ -369,10 +365,10 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
     $.get("ajax/check_hgvs_dialogue.php?"
             + "action=map"
             + "&var=' . urlencode($sFullVariant) . '"
-            + "&fieldName=' . $sFieldName . '"
+            + "&fieldName=' . urlencode($sFieldName) . '"
             + "&type=' . $sType . '"
-            + "&refSeqInfo=' . urlencode($sRefSeqInfo) . '"
-            + "&transcripts=' . implode('|', $aTranscripts) . '"
+            + "&refSeqInfo=' . urlencode($_REQUEST['refSeqInfo']) . '"
+            + "&transcripts=' . urlencode(implode('|', $aTranscripts)) . '"
     ).fail(function(){alert("An error occurred while trying to map your variant, please try again later.");$("#variantCheckDialogue").dialog("close");})
     ');
 }
@@ -382,7 +378,7 @@ if (htmlspecialchars($_REQUEST['action']) == 'check') {
 
 
 // Performing the mapping.
-if (htmlspecialchars($_REQUEST['action']) == 'map') {
+if ($_REQUEST['action'] == 'map') {
     // Add the source of the variant that will be mapped.
     print('
     // Add source.
@@ -394,13 +390,13 @@ if (htmlspecialchars($_REQUEST['action']) == 'map') {
     $_VV = new LOVD_VV();
     $aMappedVariant = (
     $sType == 'VOG' ?
-        $_VV->verifyGenomic($sVariant, array(
+        $_VV->verifyGenomic($_REQUEST['var'], array(
             'map_to_transcripts' => !empty($aTranscript), // Should we map the variant to transcripts?
             'predict_protein'    => !empty($aTranscript), // Should we get protein predictions?
             'lift_over'          => (1 < (int) $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENOME_BUILDS)->fetchColumn()), // Should we get other genomic mappings of this variant?
             'select_transcripts' => $aTranscripts,
         )) :
-        $_VV->verifyVariant($sVariant, array('select_transcripts' => $aTranscripts))
+        $_VV->verifyVariant($_REQUEST['var'], array('select_transcripts' => $aTranscripts))
     );
 
     // Check for issues on our end.
