@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-04-28
+ * Modified    : 2022-05-02
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -365,29 +365,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             //  location, which would mean the suffix IS necessary). We cannot
             //  be sure we may remove it, so we have to let this be.
             list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
-            // We currently don't support OR variants (^). In fact, if we don't
-            //  return it here, we'll mutilate it.
-            if ($sSuffix[0] == '^') {
-                return $sReference . $sVariant;
-            }
-            // For combined variants, return as-is.
-            if (preg_match('/^[](]?;/', $sSuffix)) {
-                // Combined variant (allele notation), don't mess with it.
-                return $sReference . $sVariant;
-            }
             // For anything not "del" or "dup", better not touch it. This is
             //  also thrown for substitutions and even "?" as type, so don't
             //  mess with what we don't understand.
             if (!in_array($aVariant['type'], array('del', 'dup'))) {
-                return $sReference . $sVariant;
-            }
-            // For normal dels and dups, don't remove the suffix if it doesn't
-            //  match the length.
-            $sSuffixClean = trim($sSuffix, '()');
-            $nLength = lovd_getVariantLength($aVariant);
-            if ((ctype_digit($sSuffixClean) && $sSuffixClean != $nLength)
-                    || (!ctype_digit($sSuffixClean) && strlen($sSuffixClean) != $nLength)) {
-                // Don't mess with it.
                 return $sReference . $sVariant;
             }
             return lovd_fixHGVS(
