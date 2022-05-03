@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-05-02
+ * Modified    : 2022-05-03
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -354,27 +354,22 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Remove the suffix if it is given to a variant type which should not hold one.
     if (isset($aVariant['warnings']['WSUFFIXGIVEN']) && !isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
+        // For anything not "del" or "dup", better not touch it. This can also be thrown for types that never should
+        //  have a suffix, like substitutions or repeats. So don't mess with what we don't understand.
+        if (!in_array($aVariant['type'], array('del', 'dup'))) {
+            return $sReference . $sVariant;
+        }
+        // Redundant variant suffixes that indicate a length, e.g. g.10_20del11 or g.1dupA, are already checked in
+        //  lovd_getVariantInfo() to makes sure that the length they indicate matches the given positions. If this does
+        //  not match, a WSUFFIXINVALIDLENGTH is thrown rather than a WSUFFIXGIVEN. And if a suffix isn't understood,
+        //  we'll see a WSUFFIXFORMAT. So for dels and dups, we can be sure we can drop the suffix now.
         // The warning message indicates where the unwanted suffix starts.
         // We take this string by isolating the part between the double quotes.
         list(,$sVariantType) = explode('"', $aVariant['warnings']['WSUFFIXGIVEN']);
-        if (!preg_match('/[0-9]+_[0-9]+' . $sVariantType . '\([0-9]+(_[0-9]+)?\)/', $sVariant)) {
-            // If the suffix is formatted such as '([0-9]+)', it indicated the
-            //  length of the variant. If we find this in variants of which the
-            //  positions are '[0-9]+_[0-9]+', it might be that the user forgot
-            //  to use brackets around the positions (indicating an uncertain
-            //  location, which would mean the suffix IS necessary). We cannot
-            //  be sure we may remove it, so we have to let this be.
-            list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
-            // For anything not "del" or "dup", better not touch it. This is
-            //  also thrown for substitutions and even "?" as type, so don't
-            //  mess with what we don't understand.
-            if (!in_array($aVariant['type'], array('del', 'dup'))) {
-                return $sReference . $sVariant;
-            }
-            return lovd_fixHGVS(
-                $sReference . $sBeforeType . $sVariantType .
-                str_repeat(')', (substr_count($sSuffix, ')') - substr_count($sSuffix, '('))), $sType);
-        }
+        list($sBeforeType, $sSuffix) = explode($sVariantType, $sVariant, 2);
+        return lovd_fixHGVS(
+            $sReference . $sBeforeType . $sVariantType .
+            str_repeat(')', (substr_count($sSuffix, ')') - substr_count($sSuffix, '('))), $sType);
     }
 
 
