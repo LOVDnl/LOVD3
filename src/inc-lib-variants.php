@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-05-03
+ * Modified    : 2022-05-04
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -383,10 +383,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
         list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
 
-        if (ctype_digit($sSuffix)) {
-            // Add parentheses in case they were forgotten (del/ins lengths).
-            return lovd_fixHGVS($sReference .
-                $sBeforeSuffix . $aVariant['type'] . '(' . $sSuffix . ')', $sType);
+        // Often, the solution to the problem will be given in the warning itself.
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WSUFFIXFORMAT'], $aRegs)) {
+            list(,, $sNewSuffix) = $aRegs;
+            return lovd_fixHGVS($sReference . $sBeforeSuffix . $aVariant['type'] . $sNewSuffix, $sType);
         }
 
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
