@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-03-22
+ * Modified    : 2022-05-05
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2164,7 +2164,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     // Variants with three or more positions. The suffix isn't required.
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
-                        ' If you didn\'t mean to specify a variant length, please remove the part after "' . $aVariant['type'] . '".';
+                        ' If you didn\'t mean to specify a variant length, please remove the part after "' . $aResponse['type'] . '".';
                 } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])) {
                     // Variants like c.(1_2)del(5). The suffix is mandatory.
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
@@ -2172,7 +2172,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         ' When indicating an uncertain position like this, the length or sequence of the variant must be provided.';
                 } else {
                     // Simple variants with one or two known positions, no uncertainties. The suffix is forbidden.
-                    $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+                    // Still, make a difference between "suffix sometimes allowed but not understood"
+                    //  and "suffix never allowed".
+                    if ($aResponse['type'] = 'subst') {
+                        $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
+                    } else {
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.';
+                    }
                 }
 
                 if ($bCheckHGVS
