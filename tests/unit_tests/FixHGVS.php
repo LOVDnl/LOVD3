@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-05-04
+ * Modified    : 2022-05-05
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -159,6 +159,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.123_124delAA', 'c.123_124del'),
             array('g.123_124del1', 'g.123_124del1'), // Unfixable.
             array('g.123_124del2', 'g.123_124del'),
+            array('g.123_124del(2)', 'g.123_124del'),
+            array('g.123_124delN[2]', 'g.123_124del'),
 
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
@@ -166,6 +168,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
+            array('c.1_2ins(50_20)', 'c.1_2insN[(20_50)]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);400_500]',
                   'c.1_2ins[NC_000001.10:g.100_(200_300);400_500]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);(400_500)]',
@@ -175,6 +178,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
             array('g.(100_200)del50', 'g.(100_200)delN[50]'),
+            array('g.(100_200)del(60_50)', 'g.(100_200)delN[(50_60)]'),
 
 
             // Question marks.
