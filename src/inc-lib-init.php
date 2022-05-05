@@ -1949,7 +1949,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     return false;
                 }
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The part after "' . $aResponse['type'] . '" contains unbalanced square brackets.';
+                    'The part after "' . $aVariant['type'] . '" contains unbalanced square brackets.';
 
             } else {
                 $bSuffixIsSurroundedByBrackets = ($aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']');
@@ -1966,7 +1966,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         }
                         list(, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.' .
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                             ' Please rewrite "' . $sInsertion . '" to "N[' .
                             ($nSuffixMinLength == $nSuffixMaxLength?
                                 $nSuffixMinLength :
@@ -1985,7 +1985,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                 }
                                 list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                                    'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.' .
+                                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                                     ' Please rewrite "' . $sInsertion . '" to "N[' .
                                     ($nSuffixMinLength == $nSuffixMaxLength?
                                         $nSuffixMinLength :
@@ -2010,7 +2010,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             return false;
                         }
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.';
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
                     }
                 }
             }
@@ -2164,7 +2164,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     // Variants with three or more positions. The suffix isn't required.
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
-                        ' If you didn\'t mean to specify a variant length, please remove the part after "' . $aResponse['type'] . '".';
+                        ' If you didn\'t mean to specify a variant length, please remove the part after "' . $aVariant['type'] . '".';
                 } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])) {
                     // Variants like c.(1_2)del(5). The suffix is mandatory.
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
@@ -2211,7 +2211,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
                     } else {
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The part after "' . $aResponse['type'] . '" does not follow HGVS guidelines.';
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
                     }
                 }
 
