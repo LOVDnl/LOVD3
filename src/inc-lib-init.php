@@ -2170,6 +2170,39 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
                         ' When indicating an uncertain position like this, the length or sequence of the variant must be provided.';
+                } elseif ($aVariant['type'] == 'del' && strpos($aVariant['suffix'], 'ins')) {
+                    // A very special case; deletions where the suffix contains "ins". This is usually a delNinsN case.
+                    // We can have this rewritten, but only when the length matches. We'll use a recursive call to find
+                    //  out if that's OK. Based on that, we'll devise our answer.
+                    list($sDeleted, $sInserted) = explode('ins', $aVariant['suffix'], 2);
+                    $aDeletion = lovd_getVariantInfo(str_replace($aVariant['suffix'], $sDeleted, $sVariant), $sTranscriptID);
+                    // If the suffix matches the variant's length, or the suffix is unparseable, then we'll get a WSUFFIXGIVEN.
+                    if (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXGIVEN'])) {
+                        // Another special case; a delins that should have been a substitution.
+                        if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[ACGTN]$/', $sDeleted)) {
+                            $aResponse['type'] = 'delins';
+                            $aResponse['warnings']['WWRONGTYPE'] =
+                                'A deletion-insertion of one base to one base should be described as a substitution.' .
+                                ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $sDeleted . '>' . $sInserted . '".';
+                        } else {
+                            // We're not going to check here if this is a delAinsAT here that should be a shifted ins
+                            //  or even check for insertions that should be dups. VV will handle that if we need it.
+                            // Simply tell them to rewrite it.
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "delins' . $sInserted . '".';
+                        }
+
+                    } elseif (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXINVALIDLENGTH'])) {
+                        // Length mismatched. Just pass it on.
+                        $aResponse['warnings'] = $aDeletion['warnings'];
+
+                    } else {
+                        // We got other warnings. Maybe the format is wrong? Just throw an error.
+                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
+                    }
+
                 } else {
                     // Simple variants with one or two known positions, no uncertainties. The suffix is forbidden.
                     // Still, make a difference between "suffix sometimes allowed but not understood"
@@ -2183,7 +2216,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
 
                 if ($bCheckHGVS
-                    && (isset($aResponse['warnings']['WSUFFIXFORMAT']) || isset($aResponse['warnings']['WSUFFIXGIVEN']))) {
+                    && (isset($aResponse['warnings']['WSUFFIXFORMAT'])
+                        || isset($aResponse['warnings']['WSUFFIXGIVEN'])
+                        || isset($aResponse['warnings']['WWRONGTYPE']))) {
                     return false;
                 }
             }
