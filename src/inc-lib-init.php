@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-05-05
+ * Modified    : 2022-05-06
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2178,9 +2178,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $aDeletion = lovd_getVariantInfo(str_replace($aVariant['suffix'], $sDeleted, $sVariant), $sTranscriptID);
                     // If the suffix matches the variant's length, or the suffix is unparseable, then we'll get a WSUFFIXGIVEN.
                     if (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXGIVEN'])) {
-                        // Another special case; a delins that should have been a substitution.
+                        $aResponse['type'] = 'delins';
                         if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[ACGTN]$/', $sDeleted)) {
-                            $aResponse['type'] = 'delins';
+                            // Another special case; a delins that should have been a substitution.
                             $aResponse['warnings']['WWRONGTYPE'] =
                                 'A deletion-insertion of one base to one base should be described as a substitution.' .
                                 ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $sDeleted . '>' . $sInserted . '".';
@@ -2195,6 +2195,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
                     } elseif (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXINVALIDLENGTH'])) {
                         // Length mismatched. Just pass it on.
+                        $aResponse['type'] = 'delins';
                         $aResponse['warnings'] = $aDeletion['warnings'];
 
                     } else {
