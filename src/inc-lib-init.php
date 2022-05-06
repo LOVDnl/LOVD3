@@ -2052,9 +2052,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The length of the variant is not formatted following the HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' . $nSuffixMinLength . ']".';
 
-            } elseif (preg_match('/^[ACGTN]+$/i', $aVariant['suffix'])) {
+            } elseif (preg_match('/^[ACGTNU]+$/i', $aVariant['suffix'])) {
                 // g.123_124delAA.
                 $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
+                if (strpos(strtoupper($aVariant['suffix']), 'U') !== false) {
+                    $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                        ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . str_replace('U', 'T', strtoupper($aVariant['suffix'])) . '".';
+                }
                 $nSuffixMinLength = strlen($aVariant['suffix']);
 
             } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
@@ -2104,9 +2109,17 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
             if (!$bCaseOK) {
-                $aResponse['warnings']['WWRONGCASE'] =
-                    'This not a valid HGVS description, due to characters being in the wrong case.' .
-                    ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
+                if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
+                    // Wrong case only, no U-characters detected.
+                    $aResponse['warnings']['WWRONGCASE'] =
+                        'This not a valid HGVS description, due to characters being in the wrong case.' .
+                        ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . strtoupper($aVariant['suffix']) . '".';
+                } else {
+                    // There's already a detailed warning on what to replace. Throw a general warning only.
+                    $aResponse['warnings']['WWRONGCASE'] =
+                        'This not a valid HGVS description, due to characters being in the wrong case.' .
+                        ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
+                }
             }
             if ($bCheckHGVS
                 && (isset($aResponse['warnings']['WSUFFIXFORMAT']) || isset($aResponse['warnings']['WWRONGCASE']))) {
@@ -2187,7 +2200,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     // A very special case; deletions where the suffix contains "ins". This is usually a delNinsN case.
                     // We can have this rewritten, but only when the length matches. We'll use a recursive call to find
                     //  out if that's OK. Based on that, we'll devise our answer.
-                    list($sDeleted, $sInserted) = array_map('strtoupper', explode('ins', strtolower($aVariant['suffix']), 2));
+                    list($sDeleted, $sInserted) = array_map('strtoupper', explode('ins', str_replace('u', 't', strtolower($aVariant['suffix'])), 2));
                     $aDeletion = lovd_getVariantInfo(str_replace($aVariant['suffix'], $sDeleted, $sVariant), $sTranscriptID);
                     // If the suffix matches the variant's length, or the suffix is unparseable, then we'll get a WSUFFIXGIVEN.
                     if (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXGIVEN'])) {

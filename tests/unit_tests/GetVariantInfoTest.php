@@ -1898,7 +1898,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 130,
                 'type' => 'del',
                 'warnings' => array(
+                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagatt" to "delGAGAGATT".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_130delgagagauu', array(
+                'position_start' => 123,
+                'position_end' => 130,
+                'type' => 'del',
+                'warnings' => array(
                     'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delgagagauu" to "delGAGAGATT".',
                 ),
                 'errors' => array(),
             )),
@@ -1907,7 +1917,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 130,
                 'type' => 'del',
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please rewrite "deln[8]" to "delN[8]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123delinsgagagauu', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => // Adding a WWRONGCASE here is difficult; the code handling insertions is too complex and we'd need to then fix lovd_fixHGVS() again also.
+                        'The part after "delins" does not follow HGVS guidelines.', // Idem for the suggestion how to fix it. It's too complex right now and lovd_fixHGVS() easily handles it anyway.
                 ),
                 'errors' => array(),
             )),
@@ -1921,7 +1941,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                         'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainst" to "A>T".',
                 ),
                 'errors' => array(),
-            )),            array('g. 123_124insA', array(
+            )),
+            array('g.123delainsu', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGTYPE' =>
+                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainsu" to "A>T".',
+                ),
+                'errors' => array(),
+            )),
+            array('g. 123_124insA', array(
                 'position_start' => 123,
                 'position_end' => 124,
                 'type' => 'ins',
