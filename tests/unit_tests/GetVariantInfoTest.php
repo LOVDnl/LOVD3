@@ -1893,7 +1893,35 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
-            array('g. 123_124insA', array(
+            array('g.123_130delgagagatt', array(
+                'position_start' => 123,
+                'position_end' => 130,
+                'type' => 'del',
+                'warnings' => array(
+                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_130deln[8]', array(
+                'position_start' => 123,
+                'position_end' => 130,
+                'type' => 'del',
+                'warnings' => array(
+                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123delainst', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGTYPE' =>
+                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainst" to "A>T".',
+                ),
+                'errors' => array(),
+            )),            array('g. 123_124insA', array(
                 'position_start' => 123,
                 'position_end' => 124,
                 'type' => 'ins',
