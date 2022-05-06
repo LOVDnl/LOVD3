@@ -2208,7 +2208,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     // Simple variants with one or two known positions, no uncertainties. The suffix is forbidden.
                     // Still, make a difference between "suffix sometimes allowed but not understood"
                     //  and "suffix never allowed".
-                    if ($aResponse['type'] = 'subst') {
+                    if ($aResponse['type'] == 'subst') {
                         $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
                     } else {
                         $aResponse['warnings']['WSUFFIXFORMAT'] =

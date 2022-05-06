@@ -311,6 +311,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1del<unknown>', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.',
+                ),
+                'errors' => array(),
+            )),
 
             // Insertions.
             array('g.1_2insA', array(
