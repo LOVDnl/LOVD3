@@ -40,7 +40,7 @@ Examples of unacceptable behavior include:
 
 Community leaders are responsible for clarifying and enforcing our standards of
 acceptable behavior and will take appropriate and fair corrective action in
-response to any behavior that they deem inappropriate, threatening, offensive,
+response to any behavior they deem inappropriate, threatening, offensive,
 or harmful.
 
 Community leaders have the right and responsibility to remove, edit, or reject
@@ -50,9 +50,9 @@ decisions when appropriate.
 
 ## Scope
 
-This Code of Conduct applies within all community spaces, and also applies when
+This Code of Conduct applies within all community spaces, also when
 an individual is officially representing the community in public spaces.
-Examples of representing our community include using an official e-mail address,
+Examples of representing our community include: using an official email address,
 posting via an official social media account, or acting as an appointed
 representative at an online or offline event.
 
