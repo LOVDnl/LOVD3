@@ -821,27 +821,27 @@ class LOVD_API_GA4GH
         // Build DNA queries and requirements per genome build.
         $sAliasesQ = '';
         $sMainDNAQuery = '';
-        foreach ($this->aActiveGBs as $sGBID => $aGBSuffix) {
+        foreach ($this->aActiveGBs as $sGBID => $aGBColumns) {
             // We will prepare to get the right data for each active
             //  genome build.
             if ($sBuild == $sGBID) {
                 // If the current GBID is the ID of our build, we need
                 //  to build the main DNA query of this one.
                 $sMainDNAQuery .= ',
-                 vog.' . $aGBSuffix['position_start'] . ' AS position_g_start,
-                 vog.' . $aGBSuffix['position_end'] . ' AS position_g_end,
-                 vog.`' . $aGBSuffix['DNA'] . '` AS DNA';
+                 vog.' . $aGBColumns['position_start'] . ' AS position_g_start,
+                 vog.' . $aGBColumns['position_end'] . ' AS position_g_end,
+                 vog.`' . $aGBColumns['DNA'] . '` AS DNA';
 
             } else {
                 // If the current GBID is not the chosen build, we
                 //  are dealing with aliases. We will safe these as
                 //  DNA<GBID>.
                 $sAliasesQ .= ', ' .
-                    'GROUP_CONCAT(DISTINCT NULLIF(vog.`' . $aGBSuffix['DNA'] . '`, "")' .
-                    ' ORDER BY vog.`' . $aGBSuffix['DNA'] . '` SEPARATOR "***") AS DNA' . $sGBID;
+                    'GROUP_CONCAT(DISTINCT NULLIF(vog.`' . $aGBColumns['DNA'] . '`, "")' .
+                    ' ORDER BY vog.`' . $aGBColumns['DNA'] . '` SEPARATOR "***") AS DNA' . $sGBID;
             }
             // Put all DNA fields in $aRequired.
-            $aRequiredCols[] = $aGBSuffix['DNA'];
+            $aRequiredCols[] = $aGBColumns['DNA'];
         }
 
         $aColsToCheck = array_merge($aRequiredCols, array(
@@ -915,14 +915,14 @@ class LOVD_API_GA4GH
         // Prepare query for aliases.
         $sPanelAliasesQ = '';
         $aPanelAliasesIDs = array();
-        foreach ($this->aActiveGBs as $sGBID => $aGBSuffix) {
+        foreach ($this->aActiveGBs as $sGBID => $aGBColumns) {
             // Build query code for the aliases.
             if ($sBuild != $sGBID) {
                 // If the current GBID is not the chosen build, we
                 //  are dealing with an alias!
                 $aPanelAliasesIDs[] = 'DNA' . $sGBID;
                 $sPanelAliasesQ .= '
-                            IFNULL(vog.`' . $aGBSuffix['DNA'] . '`, ""), "||", ';
+                            IFNULL(vog.`' . $aGBColumns['DNA'] . '`, ""), "||", ';
             }
         }
         // Fetch data. We do this in two steps; first the basic variant
@@ -1323,14 +1323,14 @@ class LOVD_API_GA4GH
             if ($aSubmissions) {
                 $sPanelAliasesQ = '';
                 $aPanelAliasesIDs = array();
-                foreach ($this->aActiveGBs as $sGBID => $aGBSuffix) {
+                foreach ($this->aActiveGBs as $sGBID => $aGBColumns) {
                     // Build query code for the aliases.
                     if ($sBuild != $sGBID) {
                         // If the current GBID is not the chosen build, we
                         //  are dealing with an alias!
                         $aPanelAliasesIDs[] = 'DNA' . $sGBID;
                         $sPanelAliasesQ .= '
-                            IFNULL(vog.`' . $aGBSuffix['DNA'] . '`, ""), "||",';
+                            IFNULL(vog.`' . $aGBColumns['DNA'] . '`, ""), "||",';
                     }
                 }
                 $aSubmissions = $_DB->query('
