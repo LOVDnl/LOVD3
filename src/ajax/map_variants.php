@@ -240,11 +240,11 @@ if (count($aActiveGBs) < 2) {
                         continue;
                     }
 
-                    $sVOG = $_DB->query(
+                    $sVariant = $_DB->query(
                         'SELECT VariantOnGenome/DNA FROM ' . TABLE_VARIANTS .
                         ' WHERE id = ' . $sVariantID
                     )->fetchColumn();
-                    if ($sVOG == '') {
+                    if ($sVariant == '') {
                         // Variant description is empty; no chance of lifting over from this build.
                         continue;
                     }
@@ -257,17 +257,68 @@ if (count($aActiveGBs) < 2) {
                         // Either way, we cannot perform lift overs for this one.
                         continue;
                     }
-                    // PERFORMING MAPPING:
 
+                    if (!isset($_SETT['human_builds'][$sSourceBuild][$sChr])
+                        || !$_SETT['human_builds'][$sSourceBuild]['supported_by_VV']) {
+                        // This reference sequence is not supported by VariantValidator,
+                        //  so mapping is also out of the question.
+                        continue;
+                    }
+
+                    // Adding reference sequence to the variant description.
+                    $sFullVariant = $_SETT['human_builds'][$sSourceBuild][$sChr] . ':' . $sVariant;
+//                    $sFullVariant = (lovd_holdsRefSeq($sVariant)?
+//                        $sVariant :
+//                        $_SETT['human_builds'][$sSourceBuild][$sChr] . ':' . $sVariant
+//                    ); TODO: Activate this code once the necessary function has been pulled in.
+
+                    // Performing the lift over
+                    $_VV = new LOVD_VV();
+                    $aVVResponse = ($_VV->verifyGenomicAndLiftOver($sVariant, array()));
+
+                    if ($aVVResponse == false
+                        || isset($aVVResponse[$sBuild])) {
+                        // Something went wrong... Possibly a network error?
+                        $bMappingTryAgain = true;
+                        continue;
+
+                    }
+                    if (!empty($aVVResponse['errors'])
+                        || empty($aVVResponse[$sBuild])) {
+                        // Something more serious went wrong.
+                        // TODO: Discuss these scenarios with Ivo:
+                        //  what situations are there and how do we want to respond?
+                        continue;
+                    }
+
+                    // Great! All checks have passed and the new description
+                    //  can be sent to the database.
+                    $aNewVariant = lovd_getVariantInfo($aVVResponse[$sBuild]);
+                    $_DB->query(
+                        'UPDATE ' . TABLE_VARIANTS .
+                        ' SET ' . $aGBColumns['DNA'] . ' = ' . $aVVResponse[$sBuild] .
+                        ', ' . $aGBColumns['position_start'] . ' = ' . $aNewVariant['position_start'] .
+                        ', ' . $aGBColumns['position_end'] . ' = ' . $aNewVariant['position_end'] .
+                        ' WHERE id = ' . $sVariantID
+                    );
+                    $bMappingSuccessful = true;
+                    break;
                 }
 
-                if (!isset($bMappingTried)) {
+                if (isset($bMappingSuccessful)) {
+                    // Add flag MAPPING_SUCCESSFUL:
+                    //  lift over has been performed and the description has been added!
 
+                } elseif (isset($bMappingTryAgain)) {
+                    // Add flag MAPPING_ERROR:
+                    //  variant could not be lifted over atm, but perhaps it could in the future.
+
+                } else {
+                    // Add flag MAPPING_NOT_RECOGNIZED:
+                    //  variant could not be lifted over for what is likely a valid reason...
                 }
             }
         }
-        // Add MAPPING_NOT_RECOGNIZED to variants that cannot be lifted over for whatever reason
-        // Add MAPPING_ERROR to variants that couldnt be lifted over but might be able to be so in the future
     }
 }
 
