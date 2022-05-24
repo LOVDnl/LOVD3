@@ -48,7 +48,7 @@ ignore_user_abort(true);
 
 // Process only a limited number of variants at once.
 $nRange = 100000;
-$nMaxVariants = 25;
+$nMaxVariants = 5; // Changed from 25 to 5 since time-consuming lift overs will be added.
 
 
 // Log errors only once every 5 minutes.
@@ -193,6 +193,83 @@ session_write_close();
 
 $sChromosome = null;
 $nVariants = 0;
+
+
+
+
+
+
+// Performing lift-overs so variants are described as relative to as many GBs as possible.
+$aActiveGBs = $_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchColumn();
+
+if (count($aActiveGBs) < 2) {
+    // Lift overs can only be performed if more than one GB is active.
+
+    foreach ($aActiveGBs as $sBuild => $aGBColumns) {
+        $aChr = $_DB->query(
+            'SELECT DISTINCT chromosome FROM ' . TABLE_VARIANTS .
+            ' WHERE ' . $aGBColumns['DNA'] . '= ""' . // DNA field of this GB is empty
+            '    AND mapping_flags & ' . MAPPING_ALLOW . // Mapping is allowed
+            '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) // Mapping is possible and necessary
+        )->fetchColumn();
+
+        if (!empty($aChr)) {
+            // There is more than one chromosome with missing variant description for this build.
+
+            // We pick a random chromosome to minimize the chances of multiple active users
+            //  activating lift overs on the same chromosome.
+            $sChr = array_rand($aChr);
+
+            $aVariantIDs = $_DB->query(
+                'SELECT id FROM ' . TABLE_VARIANTS .
+                ' WHERE chromosome = ' . $sChr . // Only taking our picked chromosome
+                '    AND ' . $aGBColumns['DNA'] . '= ""' . // DNA field of this GB is empty
+                '    AND mapping_flags & ' . MAPPING_ALLOW . // Mapping  is allowed
+                '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . // Mapping is possible and necessary
+                ' LIMIT ' . $nMaxVariants
+            )->fetchColumn();
+
+            // We will loop through all variants that are missing DNA descriptions.
+            foreach ($aVariantIDs as $sVariantID) {
+
+                // And we will loop through all alternative builds to try lift overs
+                //  from all possible references.
+                foreach ($aActiveGBs as $sSourceBuild => $aSourceGBColumns) {
+                    if ($sSourceBuild == $sBuild) {
+                        // We need to lift over TO $sBuild, so not FROM $sBuild.
+                        continue;
+                    }
+
+                    $sVOG = $_DB->query(
+                        'SELECT VariantOnGenome/DNA FROM ' . TABLE_VARIANTS .
+                        ' WHERE id = ' . $sVariantID
+                    )->fetchColumn();
+                    if ($sVOG == '') {
+                        // Variant description is empty; no chance of lifting over from this build.
+                        continue;
+                    }
+                    $aVariant = lovd_getVariantInfo($sVariantID);
+                    if ($aVariant == false
+                        || !empty($aVariant['errors']) || !empty($aVariant['warnings'])
+                        || isset($aVariant['messages']) || !empty($aVariant['messages'])) {
+                        // This variant is either not HGVS-compliant, not supported by our
+                        //  LOVD HGVS-check or it is not supported by VariantValidator.
+                        // Either way, we cannot perform lift overs for this one.
+                        continue;
+                    }
+                    // PERFORMING MAPPING:
+
+                }
+
+                if (!isset($bMappingTried)) {
+
+                }
+            }
+        }
+        // Add MAPPING_NOT_RECOGNIZED to variants that cannot be lifted over for whatever reason
+        // Add MAPPING_ERROR to variants that couldnt be lifted over but might be able to be so in the future
+    }
+}
 
 
 
