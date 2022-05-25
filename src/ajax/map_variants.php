@@ -235,13 +235,13 @@ if (count($aActiveGBs) > 1) {
             )->fetchColumn();
 
             // We will loop through all variants that are missing DNA descriptions.
-            foreach ($aVariantIDs as $sVariantID) {
+            foreach ($aVariantIDs as $nVariantID) {
 
                 // This variant is now in progress, which we will indicate by mapping flags.
                 $_DB->query(
                     'UPDATE ' . TABLE_VARIANTS .
                     ' SET mapping_flags = mapping_flags | ' . MAPPING_IN_PROGRESS .
-                    ' WHERE id = ?', array($sVariantID)
+                    ' WHERE id = ?', array($nVariantID)
                 );
 
                 $bMappingTryAgain = false;
@@ -255,7 +255,7 @@ if (count($aActiveGBs) > 1) {
                     }
 
                     $sVariant = $_DB->query("SELECT '{$aSourceGBColumns['DNA']}' FROM " . TABLE_VARIANTS .
-                        ' WHERE id = ? ', array($sVariantID))->fetchColumn();
+                        ' WHERE id = ? ', array($nVariantID))->fetchColumn();
                     if ($sVariant == '') {
                         // Variant description is empty; no chance of lifting over from this build.
                         continue;
@@ -350,7 +350,7 @@ if (count($aActiveGBs) > 1) {
                             preg_replace('/.*:/', '', $sNewVariant), // Trimmed the refseq.
                             (!isset($aNewVariant['position_start'])? 0 : $aNewVariant['position_start']),
                             (!isset($aNewVariant['position_end'])? 0 : $aNewVariant['position_end']),
-                            $sVariantID
+                            $nVariantID
                         )
                     );
 
@@ -369,7 +369,7 @@ if (count($aActiveGBs) > 1) {
                     'UPDATE ' . TABLE_VARIANTS .
                     ' SET mapping_flags = mapping_flags | ' .
                     ($bMappingTryAgain? MAPPING_ERROR : MAPPING_NOT_RECOGNIZED) .
-                    ' WHERE id = ?', array($sVariantID)
+                    ' WHERE id = ?', array($nVariantID)
                 );
             }
         }
