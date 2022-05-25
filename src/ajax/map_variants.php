@@ -214,7 +214,7 @@ if (count($aActiveGBs) > 1) {
     foreach ($aActiveGBs as $sBuild => $aGBColumns) {
         $aChr = $_DB->query(
             'SELECT DISTINCT chromosome FROM ' . TABLE_VARIANTS .
-            ' WHERE ' . $aGBColumns['DNA'] . '= ""' . // DNA field of this GB is empty
+            ' WHERE (' . $aGBColumns['DNA'] . ' = "" OR ISNULL(' . $aGBColumns['DNA'] . '))' . // DNA field is empty
             '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) // Mapping is possible and necessary
         )->fetchColumn();
 
@@ -227,10 +227,11 @@ if (count($aActiveGBs) > 1) {
 
             $aVariantIDs = $_DB->query(
                 'SELECT id FROM ' . TABLE_VARIANTS .
-                ' WHERE chromosome = ' . $sChr . // Only taking our picked chromosome
-                '    AND ' . $aGBColumns['DNA'] . '= ""' . // DNA field of this GB is empty
+                ' WHERE chromosome = ?' . // Only taking our picked chromosome
+                '    AND (' . $aGBColumns['DNA'] . ' = "" OR ISNULL(' . $aGBColumns['DNA'] . '))' . // DNA field is empty
                 '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . // Mapping is possible and necessary
-                ' LIMIT ' . $nMaxVariants
+                ' LIMIT ?',
+                array($sChr, $nMaxVariants)
             )->fetchColumn();
 
             // We will loop through all variants that are missing DNA descriptions.
@@ -253,8 +254,8 @@ if (count($aActiveGBs) > 1) {
                         continue;
                     }
 
-                    $sVariant = $_DB->query('SELECT VariantOnGenome/DNA FROM ' . TABLE_VARIANTS .
-                        ' WHERE id = ' . $sVariantID)->fetchColumn();
+                    $sVariant = $_DB->query("SELECT '{$aSourceGBColumns['DNA']}' FROM " . TABLE_VARIANTS .
+                        ' WHERE id = ? ', array($sVariantID))->fetchColumn();
                     if ($sVariant == '') {
                         // Variant description is empty; no chance of lifting over from this build.
                         continue;
