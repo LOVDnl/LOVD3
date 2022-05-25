@@ -215,7 +215,6 @@ if (count($aActiveGBs) > 1) {
         $aChr = $_DB->query(
             'SELECT DISTINCT chromosome FROM ' . TABLE_VARIANTS .
             ' WHERE ' . $aGBColumns['DNA'] . '= ""' . // DNA field of this GB is empty
-            '    AND mapping_flags & ' . MAPPING_ALLOW . // Mapping is allowed
             '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) // Mapping is possible and necessary
         )->fetchColumn();
 
@@ -230,7 +229,6 @@ if (count($aActiveGBs) > 1) {
                 'SELECT id FROM ' . TABLE_VARIANTS .
                 ' WHERE chromosome = ' . $sChr . // Only taking our picked chromosome
                 '    AND ' . $aGBColumns['DNA'] . '= ""' . // DNA field of this GB is empty
-                '    AND mapping_flags & ' . MAPPING_ALLOW . // Mapping  is allowed
                 '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . // Mapping is possible and necessary
                 ' LIMIT ' . $nMaxVariants
             )->fetchColumn();
