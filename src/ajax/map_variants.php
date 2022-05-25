@@ -291,7 +291,7 @@ if (count($aActiveGBs) < 1) {
                     $aVVResponse = ($_VV->verifyGenomicAndLiftOver($sVariant, array()));
 
                     if ($aVVResponse == false
-                        || isset($aVVResponse[$sBuild])) {
+                        || !isset($aVVResponse['data'][$sBuild])) {
                         // Something went wrong... Possibly a network error?
                         // These types of errors are not caused by the variant description
                         //  itself. It might very well be a temporary problem. Therefore,
@@ -302,7 +302,7 @@ if (count($aActiveGBs) < 1) {
                     }
 
                     if (!empty($aVVResponse['errors'])
-                        || empty($aVVResponse[$sBuild])) {
+                        || empty($aVVResponse['data'][$sBuild])) {
                         // Something more serious went wrong.
                         // TODO: Discuss these scenarios with Ivo:
                         //  what situations are there and how do we want to respond?
@@ -311,7 +311,7 @@ if (count($aActiveGBs) < 1) {
 
                     // Great! All checks have passed and the new description
                     //  can be sent to the database.
-                    $aNewVariant = lovd_getVariantInfo($aVVResponse[$sBuild]);
+                    $aNewVariant = lovd_getVariantInfo($aVVResponse['data'][$sBuild]);
                     $_DB->query(
                         'UPDATE ' . TABLE_VARIANTS .
                         ' SET ' . $aGBColumns['DNA'] . ' = ?' .
@@ -321,7 +321,7 @@ if (count($aActiveGBs) < 1) {
                         ' & ~' . MAPPING_IN_PROGRESS .
                         ' WHERE id = ?',
                         array(
-                            $aVVResponse[$sBuild],
+                            $aVVResponse['data'][$sBuild],
                             $aNewVariant['position_start'],
                             $aNewVariant['position_end'],
                             $sVariantID
