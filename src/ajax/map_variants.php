@@ -291,6 +291,10 @@ if (count($aActiveGBs) < 1) {
                     if ($aVVResponse == false
                         || isset($aVVResponse[$sBuild])) {
                         // Something went wrong... Possibly a network error?
+                        // These types of errors are not caused by the variant description
+                        //  itself. It might very well be a temporary problem. Therefore,
+                        //  we will add a try-again note to clarify that this variant might
+                        //  be fixable in the future.
                         $bMappingTryAgain = true;
                         continue;
                     }
