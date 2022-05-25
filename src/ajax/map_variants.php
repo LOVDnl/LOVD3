@@ -200,9 +200,15 @@ $nVariants = 0;
 
 
 // Performing lift-overs so variants are described as relative to as many GBs as possible.
-$aActiveGBs = $_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS)->fetchColumn();
+$aActiveGBs = $_DB->query('
+        SELECT id,
+            CONCAT("VariantOnGenome/DNA", if(column_suffix = "", "", "/"), column_suffix) as "DNA",
+            CONCAT("position_g_start", if(column_suffix = "", "", "_"), column_suffix) as "position_start",
+            CONCAT("position_g_end", if(column_suffix = "", "", "_"), column_suffix) as "position_end"
+        FROM ' . TABLE_GENOME_BUILDS
+)->fetchAllGroupAssoc();
 
-if (count($aActiveGBs) < 2) {
+if (count($aActiveGBs) < 1) {
     // Lift overs can only be performed if more than one GB is active.
 
     foreach ($aActiveGBs as $sBuild => $aGBColumns) {
@@ -232,7 +238,14 @@ if (count($aActiveGBs) < 2) {
             // We will loop through all variants that are missing DNA descriptions.
             foreach ($aVariantIDs as $sVariantID) {
 
-                // And we will loop through all alternative builds to try lift overs
+                // This variant is now in progress, which we will indicate by mapping flags.
+                $_DB->query(
+                    'UPDATE ' . TABLE_VARIANTS .
+                    ' SET mapping_flags = mapping_flags | ' . MAPPING_IN_PROGRESS .
+                    ' WHERE id = ?', $sVariantID
+                );
+
+                // Now we will loop through all alternative builds to try lift overs
                 //  from all possible references.
                 foreach ($aActiveGBs as $sSourceBuild => $aSourceGBColumns) {
                     if ($sSourceBuild == $sBuild) {
@@ -240,14 +253,13 @@ if (count($aActiveGBs) < 2) {
                         continue;
                     }
 
-                    $sVariant = $_DB->query(
-                        'SELECT VariantOnGenome/DNA FROM ' . TABLE_VARIANTS .
-                        ' WHERE id = ' . $sVariantID
-                    )->fetchColumn();
+                    $sVariant = $_DB->query('SELECT VariantOnGenome/DNA FROM ' . TABLE_VARIANTS .
+                        ' WHERE id = ' . $sVariantID)->fetchColumn();
                     if ($sVariant == '') {
                         // Variant description is empty; no chance of lifting over from this build.
                         continue;
                     }
+
                     $aVariant = lovd_getVariantInfo($sVariantID);
                     if ($aVariant == false
                         || !empty($aVariant['errors']) || !empty($aVariant['warnings'])
@@ -272,7 +284,7 @@ if (count($aActiveGBs) < 2) {
 //                        $_SETT['human_builds'][$sSourceBuild][$sChr] . ':' . $sVariant
 //                    ); TODO: Activate this code once the necessary function has been pulled in.
 
-                    // Performing the lift over
+                    // Performing the lift over.
                     $_VV = new LOVD_VV();
                     $aVVResponse = ($_VV->verifyGenomicAndLiftOver($sVariant, array()));
 
@@ -281,8 +293,8 @@ if (count($aActiveGBs) < 2) {
                         // Something went wrong... Possibly a network error?
                         $bMappingTryAgain = true;
                         continue;
-
                     }
+
                     if (!empty($aVVResponse['errors'])
                         || empty($aVVResponse[$sBuild])) {
                         // Something more serious went wrong.
@@ -296,27 +308,41 @@ if (count($aActiveGBs) < 2) {
                     $aNewVariant = lovd_getVariantInfo($aVVResponse[$sBuild]);
                     $_DB->query(
                         'UPDATE ' . TABLE_VARIANTS .
-                        ' SET ' . $aGBColumns['DNA'] . ' = ' . $aVVResponse[$sBuild] .
-                        ', ' . $aGBColumns['position_start'] . ' = ' . $aNewVariant['position_start'] .
-                        ', ' . $aGBColumns['position_end'] . ' = ' . $aNewVariant['position_end'] .
-                        ' WHERE id = ' . $sVariantID
+                        ' SET ' . $aGBColumns['DNA'] . ' = ?' .
+                        ', ' . $aGBColumns['position_start'] . ' = ?' .
+                        ', ' . $aGBColumns['position_end'] . ' = ?' .
+                        ', mapping_flags = mapping_flags | ' . MAPPING_DONE .
+                        ' & ~' . MAPPING_IN_PROGRESS .
+                        ' WHERE id = ?',
+                        array(
+                            $aVVResponse[$sBuild],
+                            $aNewVariant['position_start'],
+                            $aNewVariant['position_end'],
+                            $sVariantID
+                        )
                     );
                     $bMappingSuccessful = true;
                     break;
                 }
 
                 if (isset($bMappingSuccessful)) {
-                    // Add flag MAPPING_SUCCESSFUL:
-                    //  lift over has been performed and the description has been added!
-
-                } elseif (isset($bMappingTryAgain)) {
-                    // Add flag MAPPING_ERROR:
-                    //  variant could not be lifted over atm, but perhaps it could in the future.
-
-                } else {
-                    // Add flag MAPPING_NOT_RECOGNIZED:
-                    //  variant could not be lifted over for what is likely a valid reason...
+                    // The variant has been successfully mapped. We can try the next one.
+                    continue;
                 }
+
+                // We could not map this variant. Let's update the mapping flags.
+                // We will add a MAPPING_ERROR if something went wrong that is not likely
+                //  to be caused by the variant description itself, so might bring more
+                //  luck in future tries. We add MAPPING_NOT_RECOGNIZED to variants that
+                //  contained problems that are variant specific and are not likely to
+                //  work in future tries.
+                $_DB->query(
+                    'UPDATE ' . TABLE_VARIANTS .
+                    ' SET mapping_flags = mapping_flags | ' .
+                    (isset($bMappingTryAgain)? MAPPING_ERROR : MAPPING_NOT_RECOGNIZED) .
+                    ' & ~' . MAPPING_IN_PROGRESS .
+                    ' WHERE id = ?', $sVariantID
+                );
             }
         }
     }
