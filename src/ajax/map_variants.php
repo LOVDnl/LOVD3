@@ -345,7 +345,7 @@ if (count($aActiveGBs) < 1) {
                     ' SET mapping_flags = mapping_flags | ' .
                     (isset($bMappingTryAgain)? MAPPING_ERROR : MAPPING_NOT_RECOGNIZED) .
                     ' & ~' . MAPPING_IN_PROGRESS .
-                    ' WHERE id = ?', $sVariantID
+                    ' WHERE id = ?', array($sVariantID)
                 );
             }
         }
