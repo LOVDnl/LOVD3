@@ -108,7 +108,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
 
     // Do a quick HGVS check.
-    if (lovd_getVariantInfo($sReference . $sVariant, false, true)) {
+    if (lovd_isHGVS($sReference . $sVariant)) {
         // All good!
         return $sReference . $sVariant;
     }
@@ -614,6 +614,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // We're out of things that we can do.
     return $sReference . $sVariant; // Not HGVS.
 }
+
 
 
 

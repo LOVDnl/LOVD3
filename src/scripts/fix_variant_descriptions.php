@@ -549,7 +549,7 @@ class LOVD_VVAnalyses {
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
-                                    } elseif (lovd_getVariantInfo(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.'), 'c'), '', true)
+                                    } elseif (lovd_isHGVS(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.'), 'c'))
                                         || preg_match('/^r\.\[[0-9]+/', $aVOT['RNA'])) {
                                         // If the RNA variant looks like a full variant description,
                                         //  the current value must be better (or at least more
@@ -941,7 +941,7 @@ class LOVD_VVAnalyses {
                                     } elseif ($aVOT['RNA'] == str_replace('?', '', $aVVVot['data']['RNA'])
                                         || (strpos($aVOT['RNA'], 'spl') !== false && preg_match('/[0-9]+[+-][0-9]+/', $aVVVot['data']['DNA']))) {
                                         // We ignore small differences, where maybe the RNA has been verified.
-                                    } elseif (lovd_getVariantInfo(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.'), 'c'), '', true)
+                                    } elseif (lovd_isHGVS(lovd_fixHGVS('c' . strstr($aVOT['RNA'], '.'), 'c'))
                                         || preg_match('/^r\.\[[0-9]+/', $aVOT['RNA'])) {
                                         // If the RNA variant looks like a full variant description,
                                         //  the current value must be better (or at least more

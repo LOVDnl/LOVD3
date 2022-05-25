@@ -111,10 +111,14 @@ if (ACTION == 'check') {
     $_SESSION['csrf_tokens']['mobidetails_confirm'] = md5(uniqid());
     $sFormConfirmation = str_replace('{{CSRF_TOKEN}}', $_SESSION['csrf_tokens']['mobidetails_confirm'], $sFormConfirmation);
 
+    // This print statement and flush do not work.
+    // It seems that flush successfully forces the output
+    //  to the browser, but the browser does not seem to
+    //  execute the JS until the page has finished loading. (Chrome)
     print('
     $("#mobidetails_dialog").html("<IMG src=\'gfx/ajax_loading.gif\' alt=\'Please wait...\' width=\'100\' height=\'100\'>");
     ');
-    ob_end_flush();
+    @ob_end_flush();
     flush();
 
     // Now check with MobiDetails.

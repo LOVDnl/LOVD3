@@ -2369,6 +2369,18 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
 
 
 
+function lovd_isHGVS($sVariant)
+{
+    // This wrapper calls the HGVS check functionality of lovd_getVariantInfo.
+    // To increase readability, please use this function rather than a direct
+    //  call to getVariantInfo when checking the HGVS of a variant.
+    return lovd_getVariantInfo($sVariant, false, true);
+}
+
+
+
+
+
 function lovd_isOwner ($sType, $Data)
 {
     // Checks if the current user (specified by global $_AUTH) is owner of the
