@@ -242,7 +242,7 @@ if (count($aActiveGBs) < 1) {
                 $_DB->query(
                     'UPDATE ' . TABLE_VARIANTS .
                     ' SET mapping_flags = mapping_flags | ' . MAPPING_IN_PROGRESS .
-                    ' WHERE id = ?', $sVariantID
+                    ' WHERE id = ?', array($sVariantID)
                 );
 
                 // Now we will loop through all alternative builds to try lift overs
