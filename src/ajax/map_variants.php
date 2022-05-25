@@ -346,8 +346,6 @@ if (count($aActiveGBs) < 1) {
                         ' SET ' . $aGBColumns['DNA'] . ' = ?' .
                         ', ' . $aGBColumns['position_start'] . ' = ?' .
                         ', ' . $aGBColumns['position_end'] . ' = ?' .
-                        ', mapping_flags = mapping_flags | ' . MAPPING_DONE .
-                        ' & ~' . MAPPING_IN_PROGRESS .
                         ' WHERE id = ?',
                         array(
                             preg_replace('/.*:/', '', $sNewVariant), // Trimmed the refseq.
@@ -375,7 +373,6 @@ if (count($aActiveGBs) < 1) {
                     'UPDATE ' . TABLE_VARIANTS .
                     ' SET mapping_flags = mapping_flags | ' .
                     ($bMappingTryAgain? MAPPING_ERROR : MAPPING_NOT_RECOGNIZED) .
-                    ' & ~' . MAPPING_IN_PROGRESS .
                     ' WHERE id = ?', array($sVariantID)
                 );
             }
