@@ -245,7 +245,7 @@ if (count($aActiveGBs) < 1) {
                     ' WHERE id = ?', array($sVariantID)
                 );
 
-                list($bMappingTryAgain, $bMappingSuccessful) = array(false, false);
+                $bMappingTryAgain = false;
 
                 // Now we will loop through all alternative builds to try lift overs
                 //  from all possible references.
@@ -354,13 +354,10 @@ if (count($aActiveGBs) < 1) {
                             $sVariantID
                         )
                     );
-                    $bMappingSuccessful = true;
-                    break;
-                }
 
-                if ($bMappingSuccessful) {
-                    // The variant has successfully been mapped. We can try the next one.
-                    continue;
+                    // This variant is done. We can continue to the next and no
+                    //  longer need to try another GB.
+                    continue 2;
                 }
 
                 // We could not map this variant. Let's update the mapping flags.
