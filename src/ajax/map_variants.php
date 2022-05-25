@@ -208,7 +208,7 @@ $aActiveGBs = $_DB->query('
         FROM ' . TABLE_GENOME_BUILDS
 )->fetchAllGroupAssoc();
 
-if (count($aActiveGBs) < 1) {
+if (count($aActiveGBs) > 1) {
     // Lift overs can only be performed if more than one GB is active.
 
     foreach ($aActiveGBs as $sBuild => $aGBColumns) {
