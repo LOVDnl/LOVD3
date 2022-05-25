@@ -214,7 +214,7 @@ if (count($aActiveGBs) > 1) {
     foreach ($aActiveGBs as $sBuild => $aGBColumns) {
         $aChr = $_DB->query(
             'SELECT DISTINCT chromosome FROM ' . TABLE_VARIANTS .
-            ' WHERE (' . $aGBColumns['DNA'] . ' = "" OR ISNULL(' . $aGBColumns['DNA'] . '))' . // DNA field is empty
+            ' WHERE (`' . $aGBColumns['DNA'] . '` = "" OR `' . $aGBColumns['DNA'] . '` IS NULL)' . // DNA field is empty
             '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) // Mapping is possible and necessary
         )->fetchColumn();
 
@@ -228,7 +228,7 @@ if (count($aActiveGBs) > 1) {
             $aVariantIDs = $_DB->query(
                 'SELECT id FROM ' . TABLE_VARIANTS .
                 ' WHERE chromosome = ?' . // Only taking our picked chromosome
-                '    AND (' . $aGBColumns['DNA'] . ' = "" OR ISNULL(' . $aGBColumns['DNA'] . '))' . // DNA field is empty
+                '    AND (`' . $aGBColumns['DNA'] . '` = "" OR `' . $aGBColumns['DNA'] . '` IS NULL)' . // DNA field is empty
                 '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . // Mapping is possible and necessary
                 ' LIMIT ?',
                 array($sChr, $nMaxVariants)
@@ -254,7 +254,7 @@ if (count($aActiveGBs) > 1) {
                         continue;
                     }
 
-                    $sVariant = $_DB->query("SELECT '{$aSourceGBColumns['DNA']}' FROM " . TABLE_VARIANTS .
+                    $sVariant = $_DB->query("SELECT `{$aSourceGBColumns['DNA']}` FROM " . TABLE_VARIANTS .
                         ' WHERE id = ? ', array($nVariantID))->fetchColumn();
                     if ($sVariant == '') {
                         // Variant description is empty; no chance of lifting over from this build.
@@ -342,7 +342,7 @@ if (count($aActiveGBs) > 1) {
                     //  update its positions and mapping flags.
                     $_DB->query(
                         'UPDATE ' . TABLE_VARIANTS .
-                        ' SET ' . $aGBColumns['DNA'] . ' = ?' .
+                        ' SET `' . $aGBColumns['DNA'] . '` = ?' .
                         ', ' . $aGBColumns['position_start'] . ' = ?' .
                         ', ' . $aGBColumns['position_end'] . ' = ?' .
                         ' WHERE id = ?',
