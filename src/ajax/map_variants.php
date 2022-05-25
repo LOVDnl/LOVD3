@@ -332,7 +332,7 @@ if (count($aActiveGBs) < 1) {
                 }
 
                 if ($bMappingSuccessful) {
-                    // The variant has been successfully mapped. We can try the next one.
+                    // The variant has successfully been mapped. We can try the next one.
                     continue;
                 }
 
