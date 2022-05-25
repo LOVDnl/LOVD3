@@ -309,9 +309,38 @@ if (count($aActiveGBs) < 1) {
                         continue;
                     }
 
-                    // Great! All checks have passed and the new description
-                    //  can be sent to the database.
-                    $aNewVariant = lovd_getVariantInfo($aVVResponse['data'][$sBuild]);
+                    // Great! All checks have passed. Now all that is left to do is to
+                    //  ensure the variants are correctly concatenated in case multiple
+                    //  descriptions were found on the build in question.
+                    if (is_string($aVVResponse['data'][$sBuild])) {
+                        // The variant is a string. We don't need to make any edits.
+                        $sNewVariant = $aVVResponse['data'][$sBuild];
+
+                    } elseif (count($aVVResponse['data'][$sBuild]) == 1) {
+                        // The variant is formatted as an array, since multiple variants were
+                        //  possible. However, only one variant was found. We can simply take
+                        //  the first element.
+                        $sNewVariant = $aVVResponse['data'][$sBuild][0];
+
+                    } else {
+                        // Multiple possible variants were found. We will concatenate the
+                        //  variants similarly to the example below:
+                        // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
+                        //  NC_123456.1:g.1del^2_3del^4del.
+                        $sNewVariant =
+                            preg_replace('/(.*:[a-z]\.).*/', '', $aVVResponse['data'][$sBuild][0]) .
+                            implode('^',
+                                array_map(function ($sFullVariant) {
+                                    return preg_replace('/.*:[a-z]\./', '', $sFullVariant);
+                                }, $aVVResponse['data'][$sBuild])
+                            );
+                    }
+
+                    // Retrieving the positions.
+                    $aNewVariant = lovd_getVariantInfo($sNewVariant);
+
+                    // All set! We can now add the new description and
+                    //  update its positions and mapping flags.
                     $_DB->query(
                         'UPDATE ' . TABLE_VARIANTS .
                         ' SET ' . $aGBColumns['DNA'] . ' = ?' .
@@ -321,9 +350,9 @@ if (count($aActiveGBs) < 1) {
                         ' & ~' . MAPPING_IN_PROGRESS .
                         ' WHERE id = ?',
                         array(
-                            $aVVResponse['data'][$sBuild],
-                            $aNewVariant['position_start'],
-                            $aNewVariant['position_end'],
+                            preg_replace('/.*:/', '', $sNewVariant), // Trimmed the refseq.
+                            (!isset($aNewVariant['position_start'])? 0 : $aNewVariant['position_start']),
+                            (!isset($aNewVariant['position_end'])? 0 : $aNewVariant['position_end']),
                             $sVariantID
                         )
                     );
