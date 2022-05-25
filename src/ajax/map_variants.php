@@ -245,6 +245,8 @@ if (count($aActiveGBs) < 1) {
                     ' WHERE id = ?', array($sVariantID)
                 );
 
+                list($bMappingTryAgain, $bMappingSuccessful) = array(false, false);
+
                 // Now we will loop through all alternative builds to try lift overs
                 //  from all possible references.
                 foreach ($aActiveGBs as $sSourceBuild => $aSourceGBColumns) {
@@ -329,7 +331,7 @@ if (count($aActiveGBs) < 1) {
                     break;
                 }
 
-                if (isset($bMappingSuccessful)) {
+                if ($bMappingSuccessful) {
                     // The variant has been successfully mapped. We can try the next one.
                     continue;
                 }
@@ -343,7 +345,7 @@ if (count($aActiveGBs) < 1) {
                 $_DB->query(
                     'UPDATE ' . TABLE_VARIANTS .
                     ' SET mapping_flags = mapping_flags | ' .
-                    (isset($bMappingTryAgain)? MAPPING_ERROR : MAPPING_NOT_RECOGNIZED) .
+                    ($bMappingTryAgain? MAPPING_ERROR : MAPPING_NOT_RECOGNIZED) .
                     ' & ~' . MAPPING_IN_PROGRESS .
                     ' WHERE id = ?', array($sVariantID)
                 );
