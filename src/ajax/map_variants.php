@@ -261,7 +261,7 @@ if (count($aActiveGBs) > 1) {
                         continue;
                     }
 
-                    $aVariant = lovd_getVariantInfo($sVariantID);
+                    $aVariant = lovd_getVariantInfo($sVariant);
                     if ($aVariant == false
                         || !empty($aVariant['errors']) || !empty($aVariant['warnings'])
                         || isset($aVariant['messages']) || !empty($aVariant['messages'])) {
