@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-02-10
+ * Modified    : 2022-05-25
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -381,7 +381,7 @@ class LOVD_User extends LOVD_Object
                         'skip',
                         array('', '', 'print', '<B>Security</B>'),
                         'hr',
-             'level' => array('Level', ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Submitters</B> can submit, but not publish information in the database. Submitters can also create their own accounts, you don\'t need to do this for them.<BR><BR>In LOVD 3.0, <B>Curators</B> are Submitter-level users with Curator rights on certain genes. To create a Curator account, you need to create a Submitter and then grant this user rights on the necessary genes.', 'select', 'level', 1, $aUserLevels, false, false, false),
+             'level' => array('Level', (!$_AUTH || $_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Submitters</B> can submit, but not publish information in the database. Submitters can also create their own accounts, you don\'t need to do this for them.<BR><BR>In LOVD 3.0, <B>Curators</B> are Submitter-level users with Curator rights on certain genes. To create a Curator account, you need to create a Submitter and then grant this user rights on the necessary genes.', 'select', 'level', 1, $aUserLevels, false, false, false),
                         array('Allowed IP address list (optional)', 'To help prevent others to try and guess the username/password combination, you can restrict access to the account to a number of IP addresses or ranges.', 'text', 'allowed_ip', 20),
                         array('', '', 'note', 'Default value: *<BR>' . (strpos($_SERVER['REMOTE_ADDR'], ':') !== false? '' : '<I>Your current IP address: ' . $_SERVER['REMOTE_ADDR'] . '</I><BR>') . '<B>Please be extremely careful using this setting.</B> Using this setting too strictly, can deny the user access to LOVD, even if the correct credentials have been provided.<BR>Set to \'*\' to allow all IP addresses, use \'-\' to specify a range and use \';\' to separate addresses or ranges.'),
             'locked' => array('Locked', '', 'checkbox', 'locked'),
@@ -429,7 +429,7 @@ class LOVD_User extends LOVD_Object
         }
 
         if (LOVD_plus && isset($this->aFormData['level'])) {
-            $this->aFormData['level'][1] = ($_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Analyzers</B> can analyze individuals that are not analyzed yet by somebody else, but can not send variants for confirmation.<BR><B>Read-only</B> users can only see existing data in LOVD+, but can not start or edit any analyses or data.';
+            $this->aFormData['level'][1] = (!$_AUTH || $_AUTH['level'] != LEVEL_ADMIN? '' : '<B>Managers</B> basically have the same rights as you, but can\'t uninstall LOVD nor can they create or edit other Manager accounts.<BR>') . '<B>Analyzers</B> can analyze individuals that are not analyzed yet by somebody else, but can not send variants for confirmation.<BR><B>Read-only</B> users can only see existing data in LOVD+, but can not start or edit any analyses or data.';
         }
         return parent::getForm();
     }
