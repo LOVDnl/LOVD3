@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-09
- * Modified    : 2018-04-18
- * For LOVD    : 3.0-22
+ * Modified    : 2022-05-26
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -101,9 +101,9 @@ class Feed
         if ($sType == 'feed') {
             // Fill in the feed's variables.
             $this->sAtomFeed = str_replace('{{ FEED_TITLE }}', $sFeedTitle, $this->sAtomFeed);
-            $this->sAtomFeed = str_replace('{{ LOVD_URL }}', ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()), $this->sAtomFeed);
+            $this->sAtomFeed = str_replace('{{ LOVD_URL }}', ($_CONF['location_url']?: lovd_getInstallURL()), $this->sAtomFeed);
             $this->sAtomFeed = str_replace('{{ FEED_URL }}', $sFeedURL, $this->sAtomFeed);
-            $this->sAtomFeed = str_replace('{{ FEED_ID }}', ($sFeedID? $sFeedID : 'tag:' . $_SERVER['HTTP_HOST'] . ',' . $_STAT['install_date'] . ':' . $_STAT['signature']), $this->sAtomFeed);
+            $this->sAtomFeed = str_replace('{{ FEED_ID }}', ($sFeedID?: 'tag:' . $_SERVER['HTTP_HOST'] . ',' . $_STAT['install_date'] . ':' . $_STAT['signature']), $this->sAtomFeed);
             $this->sAtomFeed = str_replace('{{ LOVD_VERSION }}', $_SETT['system']['version'], $this->sAtomFeed);
 
             // Let the date of last update depend on the type of feed.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2022-01-12
+ * Modified    : 2022-05-26
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -83,7 +83,7 @@ class LOVD_Template
 
         $this->aMenu =
             array(
-                        'genes' => (!empty($_SESSION['currdb'])? $_SESSION['currdb'] . ' homepage' : 'View all genes'),
+                        'genes' => ($_SESSION['currdb']? $_SESSION['currdb'] . ' homepage' : 'View all genes'),
                         'gene_panels' => 'View all gene panels',
                         'genes_' =>
                          array(
@@ -170,8 +170,8 @@ class LOVD_Template
                                         array('config_free_edit.php', 'copy', 'Copy Column', 'Copy Column', 'lovd_free_edit_copy'),
                                         'vr',
 */
-                             '/genes/' . $_SESSION['currdb'] . '/columns' => array('menu_columns.png', 'View variant columns enabled in ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
-                             '/columns/VariantOnTranscript' => array('menu_columns_add.png', 'Add variant column to ' . ($_SESSION['currdb']? $_SESSION['currdb'] : 'gene'), ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
+                             '/genes/' . $_SESSION['currdb'] . '/columns' => array('menu_columns.png', 'View variant columns enabled in ' . ($_SESSION['currdb']?: 'gene'), ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
+                             '/columns/VariantOnTranscript' => array('menu_columns_add.png', 'Add variant column to ' . ($_SESSION['currdb']?: 'gene'), ($_AUTH && in_array($_SESSION['currdb'], $_AUTH['curates'])? LEVEL_CURATOR : LEVEL_MANAGER)),
 /*
                                         'vr',
                                         array('genes', 'manage', 'Edit gene db', 'Manage ' . $_SESSION['currdb'] . ' gene', 'lovd_database_edit'),

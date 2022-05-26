@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2021-09-17
+ * Modified    : 2022-05-26
  * For LOVD    : 3.0-28
  *
  * Supported URIs:
@@ -40,7 +40,7 @@
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data:hg19:chr1:123456-234567 (GET/HEAD)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -217,7 +217,7 @@ if ($sDataType == 'variants') {
 
             // Print header.
             header('Content-type: text/plain; charset=UTF-8');
-            print('track name="Variants in the LOVD ' . $sSymbol . ' database' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" description="Variants in LOVD ' . $sSymbol . ' db' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" visibility=' . (!empty($_GET['visibility']) && is_numeric($_GET['visibility'])? $_GET['visibility'] : 3) . ' itemRgb="On" db="' . $sBuild . '" url="' . ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants.php?select_db=' . $sSymbol . '&action=search_all&trackid=$$' . '"' . "\n\n");
+            print('track name="Variants in the LOVD ' . $sSymbol . ' database' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" description="Variants in LOVD ' . $sSymbol . ' db' . (!$nPMID? '' : ' (PMID:' . $nPMID . ')') . '" visibility=' . (!empty($_GET['visibility']) && is_numeric($_GET['visibility'])? $_GET['visibility'] : 3) . ' itemRgb="On" db="' . $sBuild . '" url="' . ($_CONF['location_url']?: lovd_getInstallURL()) . 'variants.php?select_db=' . $sSymbol . '&action=search_all&trackid=$$' . '"' . "\n\n");
 
             foreach ($aData as $r) {
                 list($nPositionStart, $nPositionEnd, $sVariantType, $sDNA) = array_values($r);
@@ -540,7 +540,7 @@ if ($sFeedType == 'feed') {
         set_time_limit(60);
         $sTitle = ($bSearching? ($n? 'R' : 'No r') . 'esults for your query of' : 'Listing of all genes in') . ' the database';
     }
-    $sLink = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'api/rest.php/' . $sDataType . ($sSymbol? '/' . $sSymbol : '') . (empty($bUnique)? '' : '/unique');
+    $sLink = ($_CONF['location_url']?: lovd_getInstallURL()) . 'api/rest.php/' . $sDataType . ($sSymbol? '/' . $sSymbol : '') . (empty($bUnique)? '' : '/unique');
     $sID   = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . $_STAT['installed_date'] . ':' . $_STAT['signature'] . '/REST_api';
 } else {
     $sTitle = $sLink = $sID = '';
@@ -669,11 +669,11 @@ if ($sDataType == 'variants') {
         // Prepare other fields to be included.
         $sTitle = substr($sSymbol, 0, strpos($sSymbol . '_', '_')) . ':' . htmlspecialchars($zData['Variant/DNA'][0]);
         if ($sFeedType == 'feed') {
-            $sSelfURL = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'api/rest.php/variants/' . $sSymbol . '/' . $zData['id'];
+            $sSelfURL = ($_CONF['location_url']?: lovd_getInstallURL()) . 'api/rest.php/variants/' . $sSymbol . '/' . $zData['id'];
         } else {
             $sSelfURL = '';
         }
-        $sAltURL               = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'variants/' . $sSymbol . '/' . $sRefSeq . '?search_VariantOnGenome%2FDBID=' . rawurlencode($zData['Variant/DBID']);
+        $sAltURL               = ($_CONF['location_url']?: lovd_getInstallURL()) . 'variants/' . $sSymbol . '/' . $sRefSeq . '?search_VariantOnGenome%2FDBID=' . rawurlencode($zData['Variant/DBID']);
         $sID                   = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . substr($zData['created_date'], 0, 10) . ':' . $sSymbol . '/' . $zData['id'];
         $sContributors         = implode(', ', $zData['owned_by']);
 
@@ -763,11 +763,11 @@ if ($sDataType == 'variants') {
         // Prepare other fields to be included.
         $sTitle = $zData['id'];
         if ($sFeedType == 'feed') {
-            $sSelfURL = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'api/rest.php/genes/' . $zData['id'];
+            $sSelfURL = ($_CONF['location_url']?: lovd_getInstallURL()) . 'api/rest.php/genes/' . $zData['id'];
         } else {
             $sSelfURL = '';
         }
-        $sAltURL             = ($_CONF['location_url']? $_CONF['location_url'] : lovd_getInstallURL()) . 'genes/' . $zData['id'];
+        $sAltURL             = ($_CONF['location_url']?: lovd_getInstallURL()) . 'genes/' . $zData['id'];
         $sID                 = 'tag:' . $_SERVER['HTTP_HOST'] . ',' . substr($zData['created_date'], 0, 10) . ':' . $zData['id'];
         $sContributors       = htmlspecialchars(implode(', ', $zData['curators']));
         $sContent = '';

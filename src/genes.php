@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-02-10
+ * Modified    : 2022-05-26
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -558,8 +558,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_POST['refseq_UD'] = $zData['refseq_UD'];
                 $_POST['chromosome'] = $zData['chromosome'];
                 $_POST['id_hgnc'] = $zData['id_hgnc'];
-                $_POST['id_entrez'] = ($zData['id_entrez']? $zData['id_entrez'] : '');
-                $_POST['id_omim'] = ($zData['id_omim']? $zData['id_omim'] : '');
+                $_POST['id_entrez'] = ($zData['id_entrez']?: '');
+                $_POST['id_omim'] = ($zData['id_omim']?: '');
 
                 $_DATA['Genes']->insertEntry($_POST, $aFields);
 
