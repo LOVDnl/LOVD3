@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-02-10
+ * Modified    : 2022-05-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -169,7 +169,9 @@ if (ACTION == 'create') {
         define('PAGE_TITLE', 'Add transcript entry to a gene');
 
         // Is user authorized in any gene?
-        lovd_isAuthorized('gene', $_AUTH['curates']);
+        if ($_AUTH) {
+            lovd_isAuthorized('gene', $_AUTH['curates']);
+        }
         lovd_requireAUTH(LEVEL_CURATOR);
 
         $_T->printHeader();
