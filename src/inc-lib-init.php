@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-05-26
+ * Modified    : 2022-05-30
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -930,7 +930,7 @@ function lovd_getCurrentPageTitle ()
             // We have to take the user's level into account, so that we won't
             //  disclose information when people try random IDs!
             // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
-            $bIsAuthorized = (lovd_isAuthorized('variant', $ID, false) !== false);
+            $bIsAuthorized = (lovd_isAuthorized('user', $ID, false) !== false);
             if ($bIsAuthorized) {
                 list($sName, $sCity, $sCountry) =
                     $_DB->query('
