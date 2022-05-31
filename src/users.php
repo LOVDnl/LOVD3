@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2022-05-26
+ * Modified    : 2022-05-31
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1142,22 +1142,32 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         exit;
     }
 
-    if ($_AUTH && $_AUTH['id'] == $nID) {
-        // Require submitter clearance.
-        lovd_requireAUTH();
-
-        lovd_showInfoTable('Below are lists of your unfinished submissions', 'information');
-    } else {
-        // Require manager clearance.
-        lovd_requireAUTH(LEVEL_MANAGER);
-
-        lovd_showInfoTable('Below are lists of this user\'s unfinished submissions', 'information');
-    }
-
     if (!empty($zData['saved_work'])) {
         $zData['saved_work'] = unserialize($zData['saved_work']);
     } else {
         $zData['saved_work'] = array();
+    }
+
+    if ($_AUTH && $_AUTH['id'] == $nID) {
+        // Require submitter clearance.
+        lovd_requireAUTH();
+
+        if ($zData['saved_work']) {
+            lovd_showInfoTable('Below are lists of your unfinished submissions.', 'information');
+        }
+   } else {
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_MANAGER);
+
+        if ($zData['saved_work']) {
+            lovd_showInfoTable('Below are lists of this user\'s unfinished submissions.', 'information');
+        }
+    }
+
+    if (!$zData['saved_work']) {
+        lovd_showInfoTable('There are no unfinished submissions to show.', 'information');
+        $_T->printFooter();
+        exit;
     }
 
     $_T->printTitle('Individuals', 'H4');
