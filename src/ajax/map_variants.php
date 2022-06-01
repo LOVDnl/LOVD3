@@ -355,10 +355,10 @@ if (count($aActiveGBs) > 1) {
                             // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
                             //  NC_123456.1:g.1del^2_3del^4del.
                             $sNewVariant =
-                                preg_replace('/(.*:[a-z]\.).*/', '', $aVVResponse['data'][$sToFillBuild][0]) .
+                                strstr($aVVResponse['data'][$sToFillBuild][0], ':') .
                                 implode('^',
                                     array_map(function ($sFullVariant) {
-                                        return preg_replace('/.*:[a-z]\./', '', $sFullVariant);
+                                        return substr(strstr($sFullVariant, ':'), 1);
                                     }, $aVVResponse['data'][$sToFillBuild])
                                 );
                         }
