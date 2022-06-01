@@ -223,7 +223,7 @@ if (count($aActiveGBs) > 1) {
 
             // We pick a random chromosome to minimize the chances of multiple active users
             //  activating lift overs on the same chromosome.
-            $sChr = array_rand($aChr);
+            $sChr = $aChr[array_rand($aChr)];
 
             $aVariantIDs = $_DB->query(
                 'SELECT id FROM ' . TABLE_VARIANTS .
