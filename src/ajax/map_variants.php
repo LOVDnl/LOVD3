@@ -216,7 +216,7 @@ if (count($aActiveGBs) > 1) {
             'SELECT DISTINCT chromosome FROM ' . TABLE_VARIANTS .
             ' WHERE (`' . $aGBColumns['DNA'] . '` = "" OR `' . $aGBColumns['DNA'] . '` IS NULL)' . // DNA field is empty
             '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) // Mapping is possible and necessary
-        )->fetchColumn();
+        )->fetchAllColumn();
 
         if (!empty($aChr)) {
             // There is more than one chromosome with missing variant description for this build.
