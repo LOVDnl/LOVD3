@@ -256,7 +256,7 @@ if (count($aActiveGBs) > 1) {
                         function($sGBID) use ($_SETT, $aActiveGBs, $nVariantID, $_DB, $sChr) {
                             // This function returns the FULL genomic description (so including
                             //  reference sequence) found for each GB of the current variant.
-                            return $_SETT['human_builds'][$sGBID][$sChr] . ':' . $_DB->query(
+                            return $_SETT['human_builds'][$sGBID]['ncbi_sequences'][$sChr] . ':' . $_DB->query(
                                 "SELECT {$aActiveGBs[$sGBID]['DNA']} FROM " . TABLE_VARIANTS .
                                 ' WHERE id = ?', array($nVariantID)
                             )->fetchColumn();
