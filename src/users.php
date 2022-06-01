@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2022-05-31
+ * Modified    : 2022-06-01
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1203,7 +1203,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         if ($_AUTH['id'] == $nID) {
             $_DATA->setRowLink('Screenings_submissions', 'submit/screening/' . $_DATA->sRowID);
         } else {
-            $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
+            $_DATA->setRowLink('Screenings_submissions', 'screenings/' . $_DATA->sRowID);
         }
         $aVLOptions = array(
             'cols_to_skip' => array('owned_by_', 'created_date', 'edited_date'),
