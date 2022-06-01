@@ -230,9 +230,9 @@ if (count($aActiveGBs) > 1) {
                 ' WHERE chromosome = ?' . // Only taking our picked chromosome
                 '    AND (`' . $aGBColumns['DNA'] . '` = "" OR `' . $aGBColumns['DNA'] . '` IS NULL)' . // DNA field is empty
                 '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . // Mapping is possible and necessary
-                ' LIMIT ?',
-                array($sChr, $nMaxVariants)
-            )->fetchColumn();
+                ' LIMIT ' . (int) $nMaxVariants,
+                array($sChr)
+            )->fetchAllColumn();
 
             // These variant are now in progress, which we will indicate by mapping flags.
             $_DB->query(
