@@ -238,7 +238,8 @@ if (count($aActiveGBs) > 1) {
             $_DB->query(
                 'UPDATE ' . TABLE_VARIANTS .
                 ' SET mapping_flags = mapping_flags | ' . MAPPING_IN_PROGRESS .
-                " WHERE id IN ({implode(', ', $aVariantIDs)})"
+                ' WHERE id IN (' . str_repeat('?, ', count($aVariantIDs)-1) . '?)',
+                $aVariantIDs
             );
 
             // We will loop through all variants that are missing DNA descriptions.
