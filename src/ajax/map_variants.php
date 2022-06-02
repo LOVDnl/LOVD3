@@ -355,7 +355,7 @@ if (count($aActiveGBs) > 1) {
                             // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
                             //  NC_123456.1:g.1del^2_3del^4del.
                             $sNewVariant =
-                                strstr($aVVResponse['data'][$sToFillBuild][0], ':') .
+                                strstr($aVVResponse['data'][$sToFillBuild][0], ':', true) .
                                 implode('^',
                                     array_map(function ($sFullVariant) {
                                         return substr(strstr($sFullVariant, ':'), 1);
