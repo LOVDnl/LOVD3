@@ -409,7 +409,7 @@ if (count($aActiveGBs) > 1) {
             }
         }
     }
-    exit($nVariantDescriptionsFilled . ' variants were filled successfully.');
+    exit(AJAX_TRUE . "\t" . 99 . "\t" . $nVariantDescriptionsFilled . ' empty descriptions were filled by successful lift overs.');
 }
 
 
