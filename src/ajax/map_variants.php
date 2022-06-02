@@ -375,7 +375,7 @@ if (count($aActiveGBs) > 1) {
                             ', ' . $aActiveGBs[$sToFillBuild]['position_end'] . ' = ?' .
                             ' WHERE id = ?',
                             array(
-                                preg_replace('/.*:/', '', $sNewVariant), // Trimmed the refseq.
+                                substr(strstr($sNewVariant, ':'), 1), // Trimmed the refseq.
                                 (!isset($aNewVariant['position_start']) ? 0 : $aNewVariant['position_start']),
                                 (!isset($aNewVariant['position_end']) ? 0 : $aNewVariant['position_end']),
                                 $nVariantID
