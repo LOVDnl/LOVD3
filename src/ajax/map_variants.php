@@ -327,33 +327,25 @@ if (count($aActiveGBs) > 1) {
 
                         // The description is currently empty. Let's see if we have the info
                         //  to fill it!
-                        if (!isset($aVVResponse['data'][$sToFillBuild])
-                            || !empty($aVVResponse['data'][$sBuild])) {
-                            // Data is missing.
-                            if ((!isset($_SETT['human_builds'][$sSourceBuild][$sChr])
-                                || !$_SETT['human_builds'][$sSourceBuild]['supported_by_VV'])) {
-                                // This genome build is not supported by VariantValidator, so this
-                                //  was never going to work and will also not work in the future
-                                //  (or at least for as long as LOVD is not updated)...
-                                continue;
-                            }
-                            // This problem might be temporary. Let's make sure this variant
-                            //  will be given a second chance!
-                            $bMappingTryAgain = true;
+                        if (!isset($aVVResponse['data']['genomic_mappings'][$sToFillBuild])
+                            || empty($aVVResponse['data']['genomic_mappings'][$sToFillBuild])) {
+                            // Data is missing; the variant cannot be filled in the field of
+                            //  this build.
+                            continue;
                         }
 
 
                         // We seem to have found suitable data! Let's prepare to send it in!
-                        if (is_string($aVVResponse['data'][$sToFillBuild])) {
+                        if (is_string($aVVResponse['data']['genomic_mappings'][$sToFillBuild])) {
                             // VariantValidator's response is a string. We don't need to make any
                             //  edits.
-                            $sNewVariant = $aVVResponse['data'][$sToFillBuild];
+                            $sNewVariant = $aVVResponse['data']['genomic_mappings'][$sToFillBuild];
 
-                        } elseif (count($aVVResponse['data'][$sToFillBuild]) == 1) {
+                        } elseif (count($aVVResponse['data']['genomic_mappings'][$sToFillBuild]) == 1) {
                             // The variant is formatted as an array, since multiple variants were
                             //  possible. However, only one variant was found. We can simply take
                             //  the first element.
-                            $sNewVariant = $aVVResponse['data'][$sToFillBuild][0];
+                            $sNewVariant = $aVVResponse['data']['genomic_mappings'][$sToFillBuild][0];
 
                         } else {
                             // Multiple possible variants were found. We will concatenate the
@@ -361,11 +353,11 @@ if (count($aActiveGBs) > 1) {
                             // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
                             //  NC_123456.1:g.1del^2_3del^4del.
                             $sNewVariant =
-                                strstr($aVVResponse['data'][$sToFillBuild][0], ':', true) .
+                                strstr($aVVResponse['data']['genomic_mappings'][$sToFillBuild][0], ':', true) .
                                 implode('^',
                                     array_map(function ($sFullVariant) {
                                         return substr(strstr($sFullVariant, ':'), 1);
-                                    }, $aVVResponse['data'][$sToFillBuild])
+                                    }, $aVVResponse['data']['genomic_mappings'][$sToFillBuild])
                                 );
                         }
 
