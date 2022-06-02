@@ -320,8 +320,8 @@ if (count($aActiveGBs) > 1) {
                     }
 
                     // Great! Now we can add the received descriptions to all empty genomic fields.
-                    foreach ($aGenomicDescriptions as $sToFillBuild => $sOriginalVariant) {
-                        if ($sOriginalVariant) {
+                    foreach ($aGenomicDescriptions as $sToFillBuild => $sToFillVariant) {
+                        if ($sToFillVariant) {
                             // The original description of this build was not empty!
                             // We will not change this value. VariantValidator might have
                             //  changed/improved the variant, but because this process is
