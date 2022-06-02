@@ -213,6 +213,10 @@ if (count($aActiveGBs) > 1) {
     require ROOT_PATH . 'class/variant_validator.php';
     $_VV = new LOVD_VV();
 
+    // In this variable, we will store the amount of variants that were successfully
+    //  filled in after lift over.
+    $nVariantDescriptionsFilled = 0;
+
     foreach ($aActiveGBs as $sBuild => $aGBColumns) {
         $aChr = $_DB->query(
             'SELECT DISTINCT chromosome FROM ' . TABLE_VARIANTS .
@@ -379,6 +383,7 @@ if (count($aActiveGBs) > 1) {
                                 $nVariantID
                             )
                         );
+                        $nVariantDescriptionsFilled ++;
                     }
 
                     // This variant is done. We can continue to the next and no
@@ -401,6 +406,7 @@ if (count($aActiveGBs) > 1) {
             }
         }
     }
+    exit($nVariantDescriptionsFilled . ' variants were filled successfully.');
 }
 
 
