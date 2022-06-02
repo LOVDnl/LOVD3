@@ -210,6 +210,8 @@ $aActiveGBs = $_DB->query('
 
 if (count($aActiveGBs) > 1) {
     // Lift overs can only be performed if more than one GB is active.
+    require ROOT_PATH . 'class/variant_validator.php';
+    $_VV = new LOVD_VV();
 
     foreach ($aActiveGBs as $sBuild => $aGBColumns) {
         $aChr = $_DB->query(
@@ -293,7 +295,6 @@ if (count($aActiveGBs) > 1) {
                     }
 
                     // Performing the lift over.
-                    $_VV = new LOVD_VV();
                     $aVVResponse = ($_VV->verifyGenomicAndLiftOver($sSourceVariant, array()));
 
                     if ($aVVResponse == false) {
