@@ -290,8 +290,8 @@ if (count($aActiveGBs) > 1) {
                     }
 
                     $aVariant = lovd_getVariantInfo($sSourceVariant);
-                    if ($aVariant == false
-                        || !empty($aVariant['errors']) || !empty($aVariant['warnings'])
+                    if ($aVariant == false || !empty($aVariant['errors'])
+                        || !empty(array_diff(array_keys($aVariant['warnings']), array('WTRANSCRIPTFOUND')))
                         || isset($aVariant['messages']) || !empty($aVariant['messages'])) {
                         // This variant is either not HGVS-compliant, not supported by our
                         //  LOVD HGVS-check or it is not supported by VariantValidator.
@@ -299,8 +299,8 @@ if (count($aActiveGBs) > 1) {
                         continue;
                     }
 
-                    if (!isset($_SETT['human_builds'][$sSourceBuild][$sChr])
-                        || !$_SETT['human_builds'][$sSourceBuild]['supported_by_VV']) {
+                    if (!isset($_SETT['human_builds'][$sSourceBuild])) {
+                        // TODO: In the future, add "|| if !$_SETT['human_builds'][$sSourceBuild]['supported_by_VV']"
                         // This reference sequence is not supported by VariantValidator,
                         //  so mapping is also out of the question.
                         continue;
