@@ -205,7 +205,8 @@ $aActiveGBs = $_DB->query('
             CONCAT("VariantOnGenome/DNA", if(column_suffix = "", "", "/"), column_suffix) as "DNA",
             CONCAT("position_g_start", if(column_suffix = "", "", "_"), column_suffix) as "position_start",
             CONCAT("position_g_end", if(column_suffix = "", "", "_"), column_suffix) as "position_end"
-        FROM ' . TABLE_GENOME_BUILDS
+        FROM ' . TABLE_GENOME_BUILDS . '
+        ORDER BY RAND()'
 )->fetchAllGroupAssoc();
 
 if (count($aActiveGBs) > 1) {
@@ -236,6 +237,7 @@ if (count($aActiveGBs) > 1) {
                 ' WHERE chromosome = ?' . // Only taking our picked chromosome
                 '    AND (`' . $aGBColumns['DNA'] . '` = "" OR `' . $aGBColumns['DNA'] . '` IS NULL)' . // DNA field is empty
                 '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . // Mapping is possible and necessary
+                ' ORDER BY RAND()' . // We want to order randomly to make sure all variants get a chance.
                 ' LIMIT ' . (int) $nMaxVariants,
                 array($sChr)
             )->fetchAllColumn();
