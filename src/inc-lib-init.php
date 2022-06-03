@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-06-02
+ * Modified    : 2022-06-03
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -808,7 +808,9 @@ function lovd_getCurrentPageTitle ()
 
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
-    if (ACTION == 'add') {
+    if (!ACTION && PATH_COUNT == 1) {
+        $sTitle = 'All ';
+    } elseif (ACTION == 'add') {
         $sTitle = 'Add/enable ';
     } elseif (ACTION == 'authorize') {
         $sTitle = 'Authorize curators for ';
@@ -849,8 +851,12 @@ function lovd_getCurrentPageTitle ()
         $sTitle .= 'custom ';
     }
 
-    // Capitalize the first letter, trim off the last 's' from the data object.
-    $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
+    if (substr($sTitle, 0, 4) == 'All ') {
+        $sTitle .= $sObject;
+    } else {
+        // Capitalize the first letter, trim off the last 's' from the data object.
+        $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
+    }
 
     if ($sObject == 'users' && ACTION != 'boot') {
         $sTitle .= ' account';
@@ -885,8 +891,12 @@ function lovd_getCurrentPageTitle ()
         // We're accessing just one entry.
         if ($sObject == 'genes') {
             $sTitle = preg_replace('/gene$/', ' the ' . $ID . ' gene', $sTitle);
-        } elseif ($sObject == 'columns') {
-            $sTitle .= ' ' . $ID;
+        } elseif (!ctype_digit($ID)) {
+            if ($sObject == 'individuals') {
+                $sTitle = 'All ' . $sObject . ' with variants in gene ' . $ID;
+            } else {
+                $sTitle .= ' ' . $ID;
+            }
         } else {
             $sTitle .= ' #' . $ID;
         }
