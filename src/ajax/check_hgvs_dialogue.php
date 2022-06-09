@@ -82,38 +82,6 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
 
 
 
-if ($bRefSeqIsSupportedByVV) {
-    // We want to reset all values if a variant input was changed,
-    //  because we want to keep all validated variants coherent.
-    // We only do this if the variants can be fully checked by
-    //  VariantValidator, because we can only map those. For variants
-    //  that we cannot map, we can also not automatically create a
-    //  coherent set of variants, and must thus allow the user to
-    //  create this set themselves.
-    print('
-    // Resetting all values.
-    if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
-        // If any input in the form is of the class accept(ed), this means
-        //  that these input fields were filled in after full mapping and
-        //  validation of VariantValidator. If then, the script is called
-        //  again, we want to RESET these values, since we do not want to
-        //  risk having incoherent variants in the form simultaneously,
-        //  especially not those we have mapped and validated ourselves.
-        // Resetting the transcript fields.        
-        var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
-        oTranscriptFields.val("").removeClass();
-        oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"});
-        $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("").removeClass();
-        $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("").removeClass();
-        
-        // Resetting the genomic fields.
-        var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
-        oGenomicVariants.val("").removeClass();
-        oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"});
-    }
-    ');
-}
-
 
 
 // Preparing the JS for the buttons.
