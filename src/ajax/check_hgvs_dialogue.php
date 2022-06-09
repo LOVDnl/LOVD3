@@ -227,7 +227,7 @@ if ($_REQUEST['action'] == 'check') {
     // This array will be used later on in the checkFields() function after
     //  the submission has been posted, to ensure that the variants were really
     //  actually validated.
-    if (!isset(['VV']['validated_variants'])) {
+    if (!isset($_SESSION['VV']['validated_variants'])) {
         $_SESSION['VV']['validated_variants'] = array();
     }
 
