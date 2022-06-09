@@ -245,7 +245,7 @@ if (count($aActiveGBs) > 1) {
             ' LIMIT ' . (int) $nMaxVariants,
             array($sChr)
         )->fetchAllColumn();
-        $aVariantUpdates = array_merge($aVariantUpdates, $aVariantIDs);
+        $aVariantUpdates = array_fill_keys($aVariantIDs, true);
 
         // These variant are now in progress, which we will indicate by mapping flags.
         $_DB->query(
