@@ -267,12 +267,14 @@ class LOVD_GenomeVariant extends LOVD_Custom
                     // VOT.
                     $sReference = $_DB->query(
                         'SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
+                        // Get the transcript ID from the field name.
                         strstr($sField, '_', true)
                     )->fetchColumn();
                 } else {
                     // VOG.
                     $sReference = $_DB->query(
                         'SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE column_suffix = ?',
+                        // Get the column suffix from the field name.
                         (!substr($sField, strlen('VariantOnGenome/DNA'))?
                             '' :
                             substr($sField, strlen('VariantOnGenome/DNA/'))
