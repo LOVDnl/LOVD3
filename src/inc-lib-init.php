@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-06-08
+ * Modified    : 2022-06-09
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -844,8 +844,10 @@ function lovd_getCurrentPageTitle ()
             $sTitle .= 'settings for the &quot;' . $sColumnID . '&quot; custom data column enabled for ';
         }
     }
-    // Object name changes for columns and links.
-    if ($sObject == 'columns') {
+    // Object name changes.
+    if ($sObject == 'announcements') {
+        $sTitle .= 'system ';
+    } elseif ($sObject == 'columns') {
         $sTitle .= 'custom data ';
     } elseif ($sObject == 'links') {
         $sTitle .= 'custom ';
@@ -861,7 +863,9 @@ function lovd_getCurrentPageTitle ()
     if ($sObject == 'users' && ACTION != 'boot') {
         $sTitle .= ' account';
     } elseif (ACTION == 'create') {
-        $sTitle .= ' entry';
+        if ($sObject != 'announcements') {
+            $sTitle .= ' entry';
+        }
         // For a target?
         if (isset($_GET['target'])) {
             // $_GET['target'] should be checked already when we get here,
@@ -923,6 +927,11 @@ function lovd_getCurrentPageTitle ()
 
     // Add details, if available.
     switch ($sObject) {
+        case 'announcements':
+            $sPreview = lovd_shortenString($_DB->query('SELECT REPLACE(announcement, "\r\n", " ") FROM ' . TABLE_ANNOUNCEMENTS . '
+                WHERE id = ?', array($ID))->fetchColumn(), 50);
+            $sTitle .= ' ("' . $sPreview . '")';
+            break;
         case 'columns':
             $sHeader = $_DB->query('SELECT head_column FROM ' . TABLE_COLS . '
                 WHERE id = ?', array($ID))->fetchColumn();
