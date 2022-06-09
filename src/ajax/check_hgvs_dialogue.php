@@ -425,7 +425,8 @@ if ($_REQUEST['action'] == 'map') {
             'oButtonOKCouldBeValid'
         );
         // Adding the variant to $_SESSION to mark it as validated.
-        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][$_REQUEST['var']] = true;
+        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][
+            substr(strstr($_REQUEST['var'], ':'), 1)] = true;
         exit;
     }
 
