@@ -256,21 +256,41 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
         foreach ($aData as $sField => $sVariant) {
             if (strpos($sField, 'DNA') !== false) {
-                // We want to check the input of all DNA fields: are these variant
-                //  descriptions indeed cleanly formatted? And if our check seems
-                //  to fail, is this perhaps because it holds syntax that we do
-                //  not support? If we DO support the syntax but the variant does
-                //  not seem to be HGVS, we will send an error.
-                if (lovd_isHGVS($sVariant)) {
-                    // The variant looks good!
+                // We want to check the input of all DNA fields: if their description passed
+                //  all our HGVS checks, it will have been added to $_SESSION.
+
+                // Before we can check $_SESSION, we need to retrieve the key to which it
+                //  should have been added, which is the GB ID for a VOG and the reference
+                //  sequence for a VOT.
+                global $_DB;
+                if (strpos($sField, 'Transcript') !== false) {
+                    // VOT.
+                    $sReference = $_DB->query(
+                        'SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE ID = ?',
+                        strstr($sField, '_', true)
+                    )->fetchColumn();
+                } else {
+                    // VOG.
+                    $sReference = $_DB->query(
+                        'SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE ID = ?',
+                        (!substr($sField, strlen('VariantOnGenome/DNA'))?
+                            '' :
+                            substr($sField, strlen('VariantOnGenome/DNA/'))
+                        )
+                    )->fetchColumn();
+                }
+                // We have the key, so now let's see if the variant has been added.
+
+                if (isset($_SESSION['VV']['validated_variants'][$sReference][$sVariant])) {
+                    // The variant in this field has been validated!
                     continue;
                 }
-                $aVariantInfo = lovd_getVariantInfo($sVariant, false);
-                if (array_diff(array_keys($aVariantInfo['errors']), array('ENOTSUPPORTED')) // Are there any errors other than ENOTSUPPORTED?
-                    || array_diff(array_keys($aVariantInfo['warnings']), array('WNOTSUPPORTED'))) { // Are there any warnings other than WNOTSUPPORTED?
-                    // There are problems that are not caused by lack of syntax support.
-                    lovd_errorAdd($sField, 'The variant ' . $sVariant . ' did not pass our checks. Please take another look and try again.');
-                }
+
+                // This field's variant was not fully validated! It should
+                //  not be sent to the database. Let's add an error.
+                lovd_errorAdd($sField,
+                    'The variant ' . $sVariant . ' did not pass our checks. Please take another look and try again.'
+                );
             }
         }
 
