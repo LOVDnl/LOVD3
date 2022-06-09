@@ -275,7 +275,8 @@ class LOVD_GenomeVariant extends LOVD_Custom
                     $sReference = $_DB->query(
                         'SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE column_suffix = ?',
                         // Get the column suffix from the field name.
-                        array((!substr($sField, strlen('VariantOnGenome/DNA'))?
+                        array((
+                            !substr($sField, strlen('VariantOnGenome/DNA'))?
                             '' :
                             substr($sField, strlen('VariantOnGenome/DNA/'))
                         ))
