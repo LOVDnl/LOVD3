@@ -882,7 +882,7 @@ class LOVD_VV
             //  NM, we end up with only one NM here.
             $aJSON = current($aJSON);
 
-            // Add a warning in case we submitted a intronic variant while not
+            // Add a warning in case we submitted an intronic variant while not
             //  using an NC reference sequence.
             if (preg_match('/^N[MR]_.+[0-9]+[+-][0-9]+/', $sVariant)) {
                 $aData['warnings']['WINTRONICWITHOUTNC'] = 'Without using a genomic reference sequence, intronic bases can not be verified.' .

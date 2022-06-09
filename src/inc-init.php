@@ -360,6 +360,7 @@ $_SETT = array(
                             'hg18' =>
                                      array(
                                             'ncbi_name'      => 'Build 36.1',
+                                            'supported_by_VV' => false,
                                          // FIXME: This information is also stored in the chromosomes table.
                                          // Remove it from here?
                                             'ncbi_sequences' =>
@@ -394,6 +395,7 @@ $_SETT = array(
                             'hg19' =>
                                      array(
                                             'ncbi_name'      => 'GRCh37',
+                                            'supported_by_VV' => true,
                                          // FIXME: This information is also stored in the chromosomes table.
                                          // Remove it from here?
                                             'ncbi_sequences' =>
@@ -429,6 +431,7 @@ $_SETT = array(
                             'hg38' =>
                                      array(
                                             'ncbi_name'      => 'GRCh38',
+                                            'supported_by_VV' => true,
                                          // FIXME: This information is also stored in the chromosomes table.
                                          // Remove it from here?
                                             'ncbi_sequences' =>

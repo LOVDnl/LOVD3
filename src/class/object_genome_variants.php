@@ -222,20 +222,6 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
 
 
-    function buildForm ($sPrefix = '')
-    {
-        $aForm = parent::buildForm($sPrefix);
-        // Link to HGVS for nomenclature.
-        if (isset($aForm[$sPrefix . 'VariantOnGenome/DNA'])) {
-            $aForm[$sPrefix . 'VariantOnGenome/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnGenome/DNA'][0]);
-        }
-        return $aForm;
-    }
-
-
-
-
-
     function checkFields ($aData, $zData = false, $aOptions = array())
     {
         global $_AUTH, $_SETT;
@@ -265,6 +251,26 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 lovd_errorAdd('effect_reported', 'The \'Affects function (as reported)\' field ' .
                     'may not be "' . $_SETT['var_effect'][0] . '" when variant status is "' .
                     $_SETT['data_status'][STATUS_MARKED] . '" or "' . $_SETT['data_status'][STATUS_OK] . '".');
+            }
+        }
+
+        foreach ($aData as $sField => $sVariant) {
+            if (strpos($sField, 'DNA') !== false) {
+                // We want to check the input of all DNA fields: are these variant
+                //  descriptions indeed cleanly formatted? And if our check seems
+                //  to fail, is this perhaps because it holds syntax that we do
+                //  not support? If we DO support the syntax but the variant does
+                //  not seem to be HGVS, we will send an error.
+                if (lovd_isHGVS($sVariant)) {
+                    // The variant looks good!
+                    continue;
+                }
+                $aVariantInfo = lovd_getVariantInfo($sVariant, false);
+                if (array_diff(array_keys($aVariantInfo['errors']), array('ENOTSUPPORTED')) // Are there any errors other than ENOTSUPPORTED?
+                    || array_diff(array_keys($aVariantInfo['warnings']), array('WNOTSUPPORTED'))) { // Are there any warnings other than WNOTSUPPORTED?
+                    // There are problems that are not caused by lack of syntax support.
+                    lovd_errorAdd($sField, 'The variant ' . $sVariant . ' did not pass our checks. Please take another look and try again.');
+                }
             }
         }
 
@@ -351,9 +357,15 @@ class LOVD_GenomeVariant extends LOVD_Custom
             }
         }
 
-        // Add genome build name to VOG/DNA field.
-        $this->aColumns['VariantOnGenome/DNA']['description_form'] = '<B>Relative to ' . $_CONF['refseq_build'] . ' / ' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '.</B>' .
-            (!$this->aColumns['VariantOnGenome/DNA']['description_form']? '' : '<BR>' . $this->aColumns['VariantOnGenome/DNA']['description_form']);
+        // Add genome build name and element data to VOG/DNA fields, and add in the link to the HGVS website.
+        $aActiveBuilds = $_DB->query('SELECT id, name, column_suffix FROM ' . TABLE_GENOME_BUILDS)->fetchAllGroupAssoc();
+        foreach ($aActiveBuilds as $sBuild => $aBuild) {
+            $sColumn = 'VariantOnGenome/DNA' . (!$aBuild['column_suffix']? '' : '/' . $aBuild['column_suffix']);
+            $this->aColumns[$sColumn]['description_form'] = '<B>Relative to ' . $aBuild['name'] . '.</B>' .
+                (!$this->aColumns[$sColumn]['description_form']? '' : '<BR>' . $this->aColumns[$sColumn]['description_form']);
+            $this->aColumns[$sColumn]['element_data'] = array('genome_build' => $sBuild);
+            $this->aColumns[$sColumn]['form_type'][0] = str_replace('(HGVS format)', '(<A href="https://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $this->aColumns[$sColumn]['form_type'][0]);
+        }
 
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
         // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.

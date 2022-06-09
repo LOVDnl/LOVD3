@@ -891,7 +891,7 @@ function lovd_viewForm ($a,
      * 'end_fieldset',
      * array('<header>', '<help_text>', 'print', '<text>'),
      * array('<header>', '<help_text>', 'note', '<text>'),
-     * array('<header>', '<help_text>', 'text|password|file', '<field_name>', <field_size>),
+     * array('<header>', '<help_text>', 'text|password|file', '<field_name>', <field_size>, '<element_data>'),
      * array('<header>', '<help_text>', 'textarea', '<field_name>', <field_cols>, <field_rows>),
      * array('<header>', '<help_text>', 'select', '<field_name>', <field_size>, <data> (array, key => val|query, [0] => [1]), <select>:true|false|select_text, <multiple>:true|false, <select_all_link>:true|false|link_text),
      * array('<header>', '<help_text>', 'checkbox', '<field_name>'),
@@ -1011,12 +1011,22 @@ function lovd_viewForm ($a,
 
 
             } elseif (in_array($aField[2], array('text', 'file'))) {
-                list($sHeader, $sHelp, $sType, $sName, $nSize) = $aField;
+                $aField = array_pad($aField, 6, array());
+                list($sHeader, $sHelp, $sType, $sName, $nSize, $aElementData) = $aField;
                 if (!isset($GLOBALS['_' . $sMethod][$sName])) {
                     $GLOBALS['_' . $sMethod][$sName] = '';
                 }
 
-                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' . (!lovd_errorFindField($sName)? '' : ' class="err"') . '>' . $sDataSuffix);
+                // When $aElementData is given, it will be added into the HTML code in a 'data-...' format,
+                //  so that jQuery can easily extract it and use it.
+                array_walk($aElementData, function (&$sVal, $sKey) {
+                    $sVal = 'data-' . str_replace('_', '-', $sKey) . '="' . htmlspecialchars($sVal) . '"';
+                });
+
+                print('<INPUT type="' . $sType . '" name="' . $sName . '" size="' . $nSize . '" ' .
+                    (!$aElementData? '' : implode(' ', $aElementData)) .
+                    ' value="' . htmlspecialchars($GLOBALS['_' . $sMethod][$sName]) . '"' .
+                    (!lovd_errorFindField($sName)? '' : ' class="err"') . '>' . $sDataSuffix);
                 continue;
 
 
