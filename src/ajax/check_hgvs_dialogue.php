@@ -247,7 +247,7 @@ if ($_REQUEST['action'] == 'check') {
             'oButtonOKCouldBeValid'
         );
         // Adding the variant to $_SESSION to mark it as validated.
-        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)] = $_REQUEST['var'];
+        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][$_REQUEST['var']] = true;
         exit;
     }
 
@@ -315,7 +315,7 @@ if ($_REQUEST['action'] == 'check') {
             'oButtonOKCouldBeValid'
         );
         // Adding the variant to $_SESSION to mark it as validated.
-        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)] = $_REQUEST['var'];
+        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][$_REQUEST['var']] = true;
         exit;
     }
 
@@ -425,7 +425,7 @@ if ($_REQUEST['action'] == 'map') {
             'oButtonOKCouldBeValid'
         );
         // Adding the variant to $_SESSION to mark it as validated.
-        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)] = $_REQUEST['var'];
+        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][$_REQUEST['var']] = true;
         exit;
     }
 
@@ -546,7 +546,7 @@ if ($_REQUEST['action'] == 'map') {
         }');
 
         // Adding this variant to the array of validated variants to mark it as validated.
-        $_SESSION['VV']['validated_variants'][$sTranscript] = $aTranscriptData['DNA'];
+        $_SESSION['VV']['validated_variants'][$sTranscript][$aTranscriptData['DNA']] = true;
     }
 
     // Returning the mapping for genomic variants.
@@ -591,7 +591,7 @@ if ($_REQUEST['action'] == 'map') {
         ');
 
         // Adding the variant to the array of validated variants to mark it as validated.
-        $_SESSION['VV']['validated_variants'][$sGBID] = $sMappedGenomicVariant;
+        $_SESSION['VV']['validated_variants'][$sGBID][$sMappedGenomicVariant] = true;
     }
 
 
