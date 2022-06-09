@@ -266,13 +266,13 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 if (strpos($sField, 'Transcript') !== false) {
                     // VOT.
                     $sReference = $_DB->query(
-                        'SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE ID = ?',
+                        'SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
                         strstr($sField, '_', true)
                     )->fetchColumn();
                 } else {
                     // VOG.
                     $sReference = $_DB->query(
-                        'SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE ID = ?',
+                        'SELECT id FROM ' . TABLE_GENOME_BUILDS . ' WHERE column_suffix = ?',
                         (!substr($sField, strlen('VariantOnGenome/DNA'))?
                             '' :
                             substr($sField, strlen('VariantOnGenome/DNA/'))
