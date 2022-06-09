@@ -583,7 +583,7 @@ if ($_REQUEST['action'] == 'map') {
             } else {
                 $(this).val((sName.endsWith("DNA")? "c" : (sName.endsWith("RNA")? "r" : "p")) + ".?");
             }
-            $(this).off("change").attr("class", "warn");
+            $(this).attr("class", "warn");
             $(this).siblings("img:first").attr({src: "gfx/check_orange.png", title: "Variant mapping failed! The HGVS check of this field is turned off to allow changes to be made freely. To turn the checks back on, refresh the page."});
         }
     });
