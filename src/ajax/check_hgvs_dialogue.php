@@ -124,15 +124,15 @@ var oButtonYes = {"Yes":function () {
     // We will fill in this fixed variant, close the dialogue,
     //  and perform a new call to this script by activating
     //  the onChange.
-    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
-    oInput.val("' . htmlspecialchars(lovd_fixHGVS($_REQUEST['var'])) . '");
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.val(decodeURI("' . rawurlencode(lovd_fixHGVS($_REQUEST['var'])) . '"));
     $(this).dialog("close");
     oInput.change();
 }};
 var oButtonNo  = {"No, I will take a look myself":function () {
     // The user does not accept the given fixed variant.
-    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
-    oInput.val("' . htmlspecialchars($_REQUEST['var']) . '").attr("class", "err");
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.val(decodeURI("' . rawurlencode($_REQUEST['var']) . '")).attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Please check the HGVS syntax of your variant description before sending it into the database."});
     $(this).dialog("close");
 }};
@@ -144,8 +144,8 @@ var oButtonOKValid  = {"OK":function () {
 }};
 var oButtonOKInvalid  = {"OK":function () {
     // The user agrees to change their invalid input manually. 
-    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
-    oInput.val("' . htmlspecialchars(substr(strstr($_REQUEST['var'], ':'), 1)) . '").attr("class", "err");
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.val(decodeURI("' . rawurlencode(substr(strstr($_REQUEST['var'], ':'), 1)) . '")).attr("class", "err");
     oInput.siblings("img:first").attr({src: "gfx/cross.png", title: "Your variant is not validated..."});
     $(this).dialog("close");
 }};
@@ -156,8 +156,8 @@ var oButtonOKCouldBeValid  = {"OK":function () {
     // Just to be sure, we remove the reference sequence here,
     //  because it might still be stuck to the variant
     //  description from the mapping process.
-    var oInput = $(\'input[name="' . htmlspecialchars($sFieldName) . '"]\');
-    oInput.val("' . htmlspecialchars(substr(strstr($_REQUEST['var'], ':'), 1)) . '").attr("class", "warn");
+    var oInput = $(\'input[name="' . $sFieldName . '"]\');
+    oInput.val(decodeURI("' . rawurlencode(substr(strstr($_REQUEST['var'], ':'), 1)) . '")).attr("class", "warn");
     oInput.siblings("img:first").attr({src: "gfx/check_orange.png", title: "Your variant could not be (in)validated..."});
     $(this).dialog("close");
 }};
