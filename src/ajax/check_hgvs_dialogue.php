@@ -223,6 +223,14 @@ if ($_REQUEST['action'] == 'check') {
     );
 
 
+    // Setting the SESSION array in which we will store all validated variants.
+    // This array will be used later on in the checkFields() function after
+    //  the submission has been posted, to ensure that the variants were really
+    //  actually validated.
+    if (!isset(['VV']['validated_variants'])) {
+        $_SESSION['VV']['validated_variants'] = array();
+    }
+
     // Check whether this variant is supported by LOVD.
     $aVariant = lovd_getVariantInfo($_REQUEST['var'], false);
     $bIsSupportedByLOVD = !isset($aVariant['errors']['ENOTSUPPORTED']);
@@ -233,11 +241,13 @@ if ($_REQUEST['action'] == 'check') {
 
         update_images_per_step('statusChecks', 'gfx/cross.png');
         update_dialogue(
-            '<br>Your variant contains syntax which our HGVS check cannot recognise. ' .
+            '<br>Your variant contains syntax that our HGVS check cannot recognise. ' .
             'Therefore, we cannot validate your variant nor map it to other reference sequences. ' .
             'Please thoroughly validate your variant by hand.',
             'oButtonOKCouldBeValid'
         );
+        // Adding the variant to $_SESSION to mark it as validated.
+        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)] = $_REQUEST['var'];
         exit;
     }
 
@@ -304,6 +314,8 @@ if ($_REQUEST['action'] == 'check') {
             'Therefore, we cannot map your variant nor validate the positions.',
             'oButtonOKCouldBeValid'
         );
+        // Adding the variant to $_SESSION to mark it as validated.
+        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)] = $_REQUEST['var'];
         exit;
     }
 
@@ -412,6 +424,8 @@ if ($_REQUEST['action'] == 'map') {
             ' Therefore, we could only check the syntax and not perform the mapping.',
             'oButtonOKCouldBeValid'
         );
+        // Adding the variant to $_SESSION to mark it as validated.
+        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)] = $_REQUEST['var'];
         exit;
     }
 
@@ -530,6 +544,9 @@ if ($_REQUEST['action'] == 'map') {
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "accept");
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "accept");
         }');
+
+        // Adding this variant to the array of validated variants to mark it as validated.
+        $_SESSION['VV']['validated_variants'][$sTranscript] = $aTranscriptData['DNA'];
     }
 
     // Returning the mapping for genomic variants.
@@ -572,9 +589,13 @@ if ($_REQUEST['action'] == 'map') {
         oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "accept");
         oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"});
         ');
+
+        // Adding the variant to the array of validated variants to mark it as validated.
+        $_SESSION['VV']['validated_variants'][$sGBID] = $sMappedGenomicVariant;
     }
 
 
+    // TODO: Check whether the below code does not conflict with the $_SESSION enforce method.
     // Fill and deactivate all fields that remained empty.
     // Some fields might not have been filled after the mapping. Some
     //  unknown issues have occurred here, most likely concerning the
