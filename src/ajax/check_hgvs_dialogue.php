@@ -45,7 +45,7 @@ $sFieldName = htmlspecialchars($_REQUEST['fieldName']);
 
 
 
-if (!($_REQUEST['var'])) {
+if (!empty($_REQUEST['var'])) {
     // If the variant is empty, we can simply close the script.
     exit;
 }
