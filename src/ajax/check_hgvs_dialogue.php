@@ -584,7 +584,6 @@ if ($_REQUEST['action'] == 'map') {
     }
 
 
-    // TODO: Check whether the below code does not conflict with the $_SESSION enforce method.
     // Fill and deactivate all fields that remained empty.
     // Some fields might not have been filled after the mapping. Some
     //  unknown issues have occurred here, most likely concerning the
