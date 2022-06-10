@@ -41,7 +41,7 @@ header('Content-type: text/javascript; charset=UTF-8');
 $aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', urldecode($_REQUEST['transcripts'])));
 
 // Retrieving the name of the input field.
-$sFieldName = urldecode($_REQUEST['fieldName']);
+$sFieldName = htmlspecialchars(urldecode($_REQUEST['fieldName']));
 
 
 
