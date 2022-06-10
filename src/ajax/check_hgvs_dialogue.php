@@ -38,10 +38,10 @@ header('Content-type: text/javascript; charset=UTF-8');
 // Retrieving the transcripts to map to.
 // We are using REQUEST and not GET or POST, because the
 //  input of this script can be both GET and POST.
-$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', urldecode($_REQUEST['transcripts'])));
+$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', $_REQUEST['transcripts']));
 
 // Retrieving the name of the input field.
-$sFieldName = htmlspecialchars(urldecode($_REQUEST['fieldName']));
+$sFieldName = htmlspecialchars($_REQUEST['fieldName']);
 
 
 
@@ -59,7 +59,7 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
     //  found, we know that the input was the reference sequence
     //  of a transcript.
     $sType = 'VOT';
-    $sReferenceSequence = urldecode($_REQUEST['refSeqInfo']);
+    $sReferenceSequence = $_REQUEST['refSeqInfo'];
     global $_DB;
     $bRefSeqIsSupportedByVV = (
         'hg' == substr($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn(), 0, 2)
@@ -69,7 +69,7 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
     // We know we got information on a GB. This is given through
     //  JS in the format of <genome build ID>-<chromosome>.
     $sType = 'VOG';
-    list($sGenomeBuildID, $sChromosome) = explode('-', urldecode($_REQUEST['refSeqInfo']));
+    list($sGenomeBuildID, $sChromosome) = explode('-', $_REQUEST['refSeqInfo']);
     $sReferenceSequence = (
         !isset($_SETT['human_builds'][$sGenomeBuildID])?
         '' : $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome]
