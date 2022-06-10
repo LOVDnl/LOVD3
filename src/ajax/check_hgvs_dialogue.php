@@ -36,8 +36,8 @@ header('Content-type: text/javascript; charset=UTF-8');
 
 
 // Check whether all required input was given.
-if (!(empty($_REQUEST['var']) && empty($_REQUEST['action'])
-    && empty($_REQUEST['fieldName']) && empty($_REQUEST['refSeqInfo']))) {
+if (empty($_REQUEST['var']) || empty($_REQUEST['action'])
+    || empty($_REQUEST['fieldName']) || empty($_REQUEST['refSeqInfo']))) {
     // If any of these variables are missing, we cannot correctly
     //  perform any checks, so we will exit the script.
     exit;
