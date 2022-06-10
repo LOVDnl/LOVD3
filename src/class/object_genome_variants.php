@@ -224,7 +224,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
     function checkFields ($aData, $zData = false, $aOptions = array())
     {
-        global $_AUTH, $_SETT;
+        global $_AUTH, $_DB, $_SETT;
 
         // Mandatory fields.
         $this->aCheckMandatory =
@@ -262,7 +262,6 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 // Before we can check $_SESSION, we need to retrieve the key to which it
                 //  should have been added, which is the GB ID for a VOG and the reference
                 //  sequence for a VOT.
-                global $_DB;
                 if (strpos($sField, 'Transcript') !== false) {
                     // VOT.
                     $sReference = $_DB->query(
