@@ -35,21 +35,26 @@ require ROOT_PATH . 'inc-lib-variants.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 
+// Check whether all required input was given.
+if (empty($_REQUEST['var']) || empty($_REQUEST['action'])
+    || empty($_REQUEST['fieldName']) || empty($_REQUEST['refSeqInfo']))) {
+    // If any of these variables are missing, we cannot correctly
+    //  perform any checks, so we will exit the script.
+    exit;
+}
+if (!isset($_REQUEST['transcripts'])) {
+    // Let's assume the transcripts were empty if this variable was not set.
+    $_REQUEST['transcripts'] = '';
+}
+
+
 // Retrieving the transcripts to map to.
 // We are using REQUEST and not GET or POST, because the
 //  input of this script can be both GET and POST.
-$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', urldecode($_REQUEST['transcripts'])));
+$aTranscripts = (empty($_REQUEST['transcripts'])? array() : explode('|', $_REQUEST['transcripts']));
 
 // Retrieving the name of the input field.
-$sFieldName = urldecode($_REQUEST['fieldName']);
-
-
-
-if (!($_REQUEST['var'])) {
-    // If the variant is empty, we can simply close the script.
-    exit;
-}
-
+$sFieldName = htmlspecialchars($_REQUEST['fieldName']);
 
 
 // Retrieve the reference sequence from the info given through the URL.
@@ -59,17 +64,16 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
     //  found, we know that the input was the reference sequence
     //  of a transcript.
     $sType = 'VOT';
-    $sReferenceSequence = urldecode($_REQUEST['refSeqInfo']);
-    global $_DB;
+    $sReferenceSequence = $_REQUEST['refSeqInfo'];
     $bRefSeqIsSupportedByVV = (
-        'hg' == substr($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn(), 0, 2)
+        'hg' == $_DB->query('SELECT LEFT(id, 2) FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn()
     );
 
 } else {
     // We know we got information on a GB. This is given through
     //  JS in the format of <genome build ID>-<chromosome>.
     $sType = 'VOG';
-    list($sGenomeBuildID, $sChromosome) = explode('-', urldecode($_REQUEST['refSeqInfo']));
+    list($sGenomeBuildID, $sChromosome) = explode('-', $_REQUEST['refSeqInfo']);
     $sReferenceSequence = (
         !isset($_SETT['human_builds'][$sGenomeBuildID])?
         '' : $_SETT['human_builds'][$sGenomeBuildID]['ncbi_sequences'][$sChromosome]
@@ -81,38 +85,6 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
 }
 
 
-
-if ($bRefSeqIsSupportedByVV) {
-    // We want to reset all values if a variant input was changed,
-    //  because we want to keep all validated variants coherent.
-    // We only do this if the variants can be fully checked by
-    //  VariantValidator, because we can only map those. For variants
-    //  that we cannot map, we can also not automatically create a
-    //  coherent set of variants, and must thus allow the user to
-    //  create this set themselves.
-    print('
-    // Resetting all values.
-    if ($(\'#variantForm input[name*="VariantOn"]\').hasClass("accept")) {
-        // If any input in the form is of the class accept(ed), this means
-        //  that these input fields were filled in after full mapping and
-        //  validation of VariantValidator. If then, the script is called
-        //  again, we want to RESET these values, since we do not want to
-        //  risk having incoherent variants in the form simultaneously,
-        //  especially not those we have mapped and validated ourselves.
-        // Resetting the transcript fields.        
-        var oTranscriptFields = $(\'#variantForm input[name$="VariantOnTranscript/DNA"]\');
-        oTranscriptFields.val("").removeClass();
-        oTranscriptFields.siblings("img").attr({src: "gfx/trans.png"});
-        $(\'#variantForm input[name$="VariantOnTranscript/RNA"]\').val("").removeClass();
-        $(\'#variantForm input[name$="VariantOnTranscript/Protein"]\').val("").removeClass();
-        
-        // Resetting the genomic fields.
-        var oGenomicVariants = $(\'#variantForm input[name^="VariantOnGenome/DNA"]\');
-        oGenomicVariants.val("").removeClass();
-        oGenomicVariants.siblings("img").attr({src: "gfx/trans.png"});
-    }
-    ');
-}
 
 
 
@@ -201,6 +173,23 @@ function update_images_per_step($sStep, $sImage)
 }
 
 
+// Create a PHP function to easily add a variant to $_SESSION['VV']['validated_variants']
+function saveVariantToValidatedList($sVariant, $sKey)
+{
+    // This function saves the given variant to the $_SESSION array in which
+    //  all validated variants are listed. To correctly do so, it also needs
+    //  the key ($sKey) that links the variant to the field it was put in.
+    // This
+    $_SESSION['VV']['validated_variants'][$sKey][
+        // Fixme; For a variant like g.1_2ins[NC_000001.2:g.1_123], this code
+        //  bumps into a problem. Fix that by using lovd_holdsRefSeq or
+        //  lovd_trimRefSeq, which are more specific checks, once the
+        //  necessary code has been pulled in.
+        (strpos($sVariant,':') == false? $sVariant : substr(strstr($sVariant, ':'), 1))
+    ] = true;
+}
+
+
 
 
 
@@ -223,6 +212,14 @@ if ($_REQUEST['action'] == 'check') {
     );
 
 
+    // Setting the SESSION array in which we will store all validated variants.
+    // This array will be used later on in the checkFields() function after
+    //  the submission has been posted, to ensure that the variants were really
+    //  actually validated.
+    if (!isset($_SESSION['VV']['validated_variants'])) {
+        $_SESSION['VV']['validated_variants'] = array();
+    }
+
     // Check whether this variant is supported by LOVD.
     $aVariant = lovd_getVariantInfo($_REQUEST['var'], false);
     $bIsSupportedByLOVD = !isset($aVariant['errors']['ENOTSUPPORTED']);
@@ -233,11 +230,13 @@ if ($_REQUEST['action'] == 'check') {
 
         update_images_per_step('statusChecks', 'gfx/cross.png');
         update_dialogue(
-            '<br>Your variant contains syntax which our HGVS check cannot recognise. ' .
+            '<br>Your variant contains syntax that our HGVS check cannot recognise. ' .
             'Therefore, we cannot validate your variant nor map it to other reference sequences. ' .
             'Please thoroughly validate your variant by hand.',
             'oButtonOKCouldBeValid'
         );
+        // Adding the variant to $_SESSION to mark it as validated.
+        saveVariantToValidatedList($_REQUEST['var'], ($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence));
         exit;
     }
 
@@ -304,6 +303,8 @@ if ($_REQUEST['action'] == 'check') {
             'Therefore, we cannot map your variant nor validate the positions.',
             'oButtonOKCouldBeValid'
         );
+        // Adding the variant to $_SESSION to mark it as validated.
+        saveVariantToValidatedList($_REQUEST['var'], ($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence));
         exit;
     }
 
@@ -412,6 +413,8 @@ if ($_REQUEST['action'] == 'map') {
             ' Therefore, we could only check the syntax and not perform the mapping.',
             'oButtonOKCouldBeValid'
         );
+        // Adding the variant to $_SESSION to mark it as validated.
+        saveVariantToValidatedList(substr(strstr($_REQUEST['var'], ':'), 1), ($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence));
         exit;
     }
 
@@ -530,6 +533,9 @@ if ($_REQUEST['action'] == 'map') {
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "RNA" + \'"]\').val("' . $aTranscriptData['RNA'] . '").attr("class", "accept");
             $(\'#variantForm input[name$="\' + sBaseOfFieldName + "Protein" + \'"]\').val("' . $aTranscriptData['protein'] . '").attr("class", "accept");
         }');
+
+        // Adding this variant to the array of validated variants to mark it as validated.
+        saveVariantToValidatedList($aTranscriptData['DNA'], $sTranscript);
     }
 
     // Returning the mapping for genomic variants.
@@ -572,6 +578,9 @@ if ($_REQUEST['action'] == 'map') {
         oGenomicField.val("' . $sMappedGenomicVariant . '").attr("class", "accept");
         oGenomicField.siblings("img:first").attr({src: "gfx/check.png", title: "Validated"});
         ');
+
+        // Adding the variant to the array of validated variants to mark it as validated.
+        saveVariantToValidatedList($sMappedGenomicVariant, $sGBID);
     }
 
 
@@ -593,8 +602,8 @@ if ($_REQUEST['action'] == 'map') {
             } else {
                 $(this).val((sName.endsWith("DNA")? "c" : (sName.endsWith("RNA")? "r" : "p")) + ".?");
             }
-            $(this).off("change").attr("class", "warn");
-            $(this).siblings("img:first").attr({src: "gfx/check_orange.png", title: "Variant mapping failed! The HGVS check of this field is turned off to allow changes to be made freely. To turn the checks back on, refresh the page."});
+            $(this).attr("class", "warn");
+            $(this).siblings("img:first").attr({src: "gfx/check_orange.png", title: "Variant mapping failed! Please fill this field manually."});
         }
     });
     ');
