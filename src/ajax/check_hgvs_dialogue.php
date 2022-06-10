@@ -35,6 +35,19 @@ require ROOT_PATH . 'inc-lib-variants.php';
 header('Content-type: text/javascript; charset=UTF-8');
 
 
+// Check whether all required input was given.
+if (!(isset($_REQUEST['var']) && isset($_REQUEST['action'])
+    && isset($_REQUEST['fieldName']) && isset($_REQUEST['refSeqInfo']))) {
+    // If any of these variables are missing, we cannot correctly
+    //  perform any checks, so we will exit the script.
+    exit;
+}
+if (!isset($_REQUEST['transcripts'])) {
+    // Let's assume the transcripts were empty if this variable was not set.
+    $_REQUEST['transcripts'] = '';
+}
+
+
 // Retrieving the transcripts to map to.
 // We are using REQUEST and not GET or POST, because the
 //  input of this script can be both GET and POST.
