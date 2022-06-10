@@ -182,9 +182,9 @@ function saveVariantToValidatedList($sVariant, $sKey)
     // This
     $_SESSION['VV']['validated_variants'][$sKey][
         // Fixme; For a variant like g.1_2ins[NC_000001.2:g.1_123], this code
-        //  bumps into a problem. Fix that by using lovd_holdsRefSeq, which
-        //  is a more specific check, once the necessary code has been pulled
-        //  in.
+        //  bumps into a problem. Fix that by using lovd_holdsRefSeq or
+        //  lovd_trimRefSeq, which are more specific checks, once the
+        //  necessary code has been pulled in.
         (strpos($sVariant,':') == false? $sVariant : substr(strstr($sVariant, ':'), 1))
     ] = true;
 }
