@@ -61,7 +61,7 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
     $sType = 'VOT';
     $sReferenceSequence = $_REQUEST['refSeqInfo'];
     $bRefSeqIsSupportedByVV = (
-        'hg' == substr($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn(), 0, 2)
+        'hg' == $_DB->query('SELECT LEFT(id, 2) FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn()
     );
 
 } else {
