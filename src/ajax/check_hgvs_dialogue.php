@@ -60,7 +60,6 @@ if (strpos($_REQUEST['refSeqInfo'], '-') === false) {
     //  of a transcript.
     $sType = 'VOT';
     $sReferenceSequence = $_REQUEST['refSeqInfo'];
-    global $_DB;
     $bRefSeqIsSupportedByVV = (
         'hg' == substr($_DB->query('SELECT id FROM ' . TABLE_GENOME_BUILDS . ' LIMIT 1')->fetchColumn(), 0, 2)
     );
