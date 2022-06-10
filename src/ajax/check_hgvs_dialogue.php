@@ -181,6 +181,23 @@ function update_images_per_step($sStep, $sImage)
 }
 
 
+// Create a PHP function to easily add a variant to $_SESSION['VV']['validated_variants']
+function saveVariantToValidatedList($sVariant, $sKey)
+{
+    // This function saves the given variant to the $_SESSION array in which
+    //  all validated variants are listed. To correctly do so, it also needs
+    //  the key ($sKey) that links the variant to the field it was put in.
+    // This
+    $_SESSION['VV']['validated_variants'][$sKey][
+        // Fixme; For a variant like g.1_2ins[NC_000001.2:g.1_123], this code
+        //  bumps into a problem. Fix that by using lovd_holdsRefSeq, which
+        //  is a more specific check, once the necessary code has been pulled
+        //  in.
+        (strpos($sVariant,':') == false? $sVariant : substr(strstr($sVariant, ':'), 1))
+    ] = true;
+}
+
+
 
 
 
@@ -227,7 +244,7 @@ if ($_REQUEST['action'] == 'check') {
             'oButtonOKCouldBeValid'
         );
         // Adding the variant to $_SESSION to mark it as validated.
-        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][$_REQUEST['var']] = true;
+        saveVariantToValidatedList($_REQUEST['var'], ($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence));
         exit;
     }
 
@@ -295,7 +312,7 @@ if ($_REQUEST['action'] == 'check') {
             'oButtonOKCouldBeValid'
         );
         // Adding the variant to $_SESSION to mark it as validated.
-        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][$_REQUEST['var']] = true;
+        saveVariantToValidatedList($_REQUEST['var'], ($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence));
         exit;
     }
 
@@ -405,8 +422,7 @@ if ($_REQUEST['action'] == 'map') {
             'oButtonOKCouldBeValid'
         );
         // Adding the variant to $_SESSION to mark it as validated.
-        $_SESSION['VV']['validated_variants'][($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence)][
-            substr(strstr($_REQUEST['var'], ':'), 1)] = true;
+        saveVariantToValidatedList(substr(strstr($_REQUEST['var'], ':'), 1), ($sType == 'VOG'? $sGenomeBuildID : $sReferenceSequence));
         exit;
     }
 
@@ -527,7 +543,7 @@ if ($_REQUEST['action'] == 'map') {
         }');
 
         // Adding this variant to the array of validated variants to mark it as validated.
-        $_SESSION['VV']['validated_variants'][$sTranscript][$aTranscriptData['DNA']] = true;
+        saveVariantToValidatedList($aTranscriptData['DNA'], $sTranscript);
     }
 
     // Returning the mapping for genomic variants.
@@ -572,7 +588,7 @@ if ($_REQUEST['action'] == 'map') {
         ');
 
         // Adding the variant to the array of validated variants to mark it as validated.
-        $_SESSION['VV']['validated_variants'][$sGBID][$sMappedGenomicVariant] = true;
+        saveVariantToValidatedList($sMappedGenomicVariant, $sGBID);
     }
 
 
