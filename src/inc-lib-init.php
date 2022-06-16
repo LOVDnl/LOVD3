@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-06-15
+ * Modified    : 2022-06-16
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -853,6 +853,8 @@ function lovd_getCurrentPageTitle ()
         $sTitle .= 'custom ';
     } elseif ($sObject == 'logs') {
         $sTitle .= 'system ';
+    } elseif ($sObject == 'references') {
+        $sTitle .= 'data for ';
     }
 
     if (substr($sTitle, 0, 4) == 'All ') {
