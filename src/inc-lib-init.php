@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-06-17
+ * Modified    : 2022-06-20
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -3266,7 +3266,7 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
 
     // Insert new line in logs table.
     $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
-        array($sLog, $sTime, ($nAuthID?: ($_AUTH['id']?: NULL)), $sEvent, $sMessage), false);
+        array($sLog, $sTime, ($nAuthID?: ($_AUTH? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 ?>
