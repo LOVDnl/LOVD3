@@ -1971,7 +1971,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         $_BAR->setMessage('Loading transcript information for ' . $sSymbol . '...', 'done');
 
                                         $aTranscripts = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol));
-                                        if (!empty($aTranscripts)) {
+                                        if (!empty($aTranscripts) && empty($aTranscripts['faultcode'])) {
                                             foreach ($aTranscripts as $aTranscript) {
                                                 // Remember the data for each of this gene's transcripts. We may insert them as needed.
                                                 $aFieldsTranscript[$sSymbol][$aTranscript['id']] = array(
