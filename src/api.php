@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2022-05-26
+ * Modified    : 2022-06-24
  * For LOVD    : 3.0-28
  *
  * Supported URIs:
@@ -397,7 +397,7 @@ if ($sDataType == 'variants') {
         FROM ' . TABLE_GENES . ' AS g
           LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid)
           LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (g.created_by = u.id)
-          LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1)
+          LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1 AND show_order != 0)
           LEFT OUTER JOIN ' . TABLE_USERS . ' AS cur ON (u2g.userid = cur.id)
         WHERE 1=1';
 
