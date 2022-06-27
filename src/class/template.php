@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2022-06-22
+ * Modified    : 2022-06-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -725,7 +725,11 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // Add curator info to header.
         if ($sCurrSymbol && $sCurrGene) {
             $sCurators = '';
-            $aCurators = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.geneid = ? AND u2g.allow_edit = 1 AND u2g.show_order > 0 ORDER BY u2g.show_order ASC, u.level DESC, u.name ASC', array($sCurrSymbol))->fetchAllAssoc();
+            $aCurators = $_DB->query('
+                SELECT u.name, u.email
+                FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid)
+                WHERE u2g.geneid = ? AND u2g.allow_edit = 1 AND u2g.show_order != 0
+                ORDER BY u2g.show_order ASC, u.level DESC, u.name ASC', array($sCurrSymbol))->fetchAllAssoc();
             $nCurators = count($aCurators);
             foreach ($aCurators as $i => $z) {
                 $i ++;

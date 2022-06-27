@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2022-05-27
+ * Modified    : 2022-06-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -121,7 +121,14 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $aData = array('genes' => array(), 'users' => array(), 'diseases' => array());
 
         // First, get the gene info (we store name, diseases, date last updated and curator ids).
-        $q = $_DB->query('SELECT g.id, g.name, g.updated_date, GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1 AND u2g.show_order > 0) LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0 GROUP BY g.id ORDER BY g.id', array());
+        $q = $_DB->query('
+            SELECT g.id, g.name, g.updated_date,
+                   GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases
+            FROM ' . TABLE_GENES . ' AS g
+              LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid AND u2g.allow_edit = 1 AND u2g.show_order != 0)
+              LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid)
+              LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE u2g.show_order > 0
+            GROUP BY g.id ORDER BY g.id', array());
         while ($z = $q->fetchAssoc()) {
             $aData['genes'][$z['id']] =
                      array(

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-06-08
+ * Modified    : 2022-06-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1764,7 +1764,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
 
         // Retrieve current curators and collaborators, order by current order.
         // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
-        $qCurators = $_DB->query('SELECT u.id, u.name, c.allow_edit, (c.show_order > 0) AS shown, u.level FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id) WHERE c.geneid = ? ' . (ACTION == 'authorize'? '' : 'AND c.allow_edit = 1 ') . 'ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
+        $qCurators = $_DB->query('
+            SELECT u.id, u.name, c.allow_edit, (c.show_order != 0) AS shown, u.level
+            FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id)
+            WHERE c.geneid = ? ' . (ACTION == 'authorize'? '' : 'AND c.allow_edit = 1 ') . '
+            ORDER BY (c.show_order > 0) DESC, c.show_order, u.level DESC, u.name', array($sID));
         while ($z = $qCurators->fetchAssoc()) {
             $aCurators[$z['id']] = $z;
         }
