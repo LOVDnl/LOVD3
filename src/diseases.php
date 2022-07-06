@@ -172,7 +172,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($_PE[1]))->fetchAllColumn();
     $n = count($aDiseases);
     if (!$n) {
-        define('PAGE_TITLE', 'Disease with abbreviation ' . $_PE[1]);
+        define('PAGE_TITLE', lovd_getCurrentPageTitle());
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
@@ -198,7 +198,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('LOG_EVENT', 'DiseaseCreate');
 
     // Require curator clearance.
-    lovd_isAuthorized('gene', $_AUTH['curates']);
+    if ($_AUTH) {
+        lovd_isAuthorized('gene', $_AUTH['curates']);
+    }
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'inc-lib-actions.php';

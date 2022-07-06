@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-02-10
+ * Modified    : 2022-06-20
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -808,7 +808,9 @@ function lovd_getCurrentPageTitle ()
 
     // Start with the action, if any exists.
     $sTitle = ltrim(ACTION . ' ');
-    if (ACTION == 'add') {
+    if (!ACTION && PATH_COUNT == 1) {
+        $sTitle = 'All ';
+    } elseif (ACTION == 'add') {
         $sTitle = 'Add/enable ';
     } elseif (ACTION == 'authorize') {
         $sTitle = 'Authorize curators for ';
@@ -842,20 +844,33 @@ function lovd_getCurrentPageTitle ()
             $sTitle .= 'settings for the &quot;' . $sColumnID . '&quot; custom data column enabled for ';
         }
     }
-    // Object name changes for columns and links.
-    if ($sObject == 'columns') {
+    // Object name changes.
+    if ($sObject == 'announcements') {
+        $sTitle .= 'system ';
+    } elseif ($sObject == 'columns') {
         $sTitle .= 'custom data ';
     } elseif ($sObject == 'links') {
         $sTitle .= 'custom ';
+    } elseif ($sObject == 'logs') {
+        $sTitle .= 'system ';
+    } elseif ($sObject == 'references') {
+        $sTitle .= 'data for ';
     }
 
-    // Capitalize the first letter, trim off the last 's' from the data object.
-    $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
+    if (substr($sTitle, 0, 4) == 'All ') {
+        $sTitle .= $sObject;
+    } else {
+        // Capitalize the first letter, trim off the last 's' from the data object.
+        $sTitle = ucfirst($sTitle . substr($sObject, 0, -1));
+    }
 
     if ($sObject == 'users' && ACTION != 'boot') {
-        $sTitle .= ' account';
+        // This handles both "user" as well as "users", case-insensitively.
+        $sTitle = str_replace('ser', 'ser account', $sTitle);
     } elseif (ACTION == 'create') {
-        $sTitle .= ' entry';
+        if ($sObject != 'announcements') {
+            $sTitle .= ' entry';
+        }
         // For a target?
         if (isset($_GET['target'])) {
             // $_GET['target'] should be checked already when we get here,
@@ -884,18 +899,47 @@ function lovd_getCurrentPageTitle ()
     if ($ID) {
         // We're accessing just one entry.
         if ($sObject == 'genes') {
-            $sTitle = preg_replace('/gene$/', ' the ' . $ID . ' gene', $sTitle);
-        } elseif ($sObject == 'columns') {
-            $sTitle .= ' ' . $ID;
+            if (!ACTION) {
+                $sTitle = 'The ' . $ID . ' gene homepage';
+            } else {
+                $sTitle = preg_replace('/gene$/', ' the ' . $ID . ' gene', $sTitle);
+            }
+        } elseif (!ctype_digit($ID)) {
+            if ($sObject == 'diseases') {
+                $sTitle = 'Diseases with abbreviation ' . $ID;
+                return $sTitle; // Stop further processing.
+            } elseif ($sObject == 'individuals') {
+                $sTitle = 'All ' . $sObject . ' with variants in gene ' . $ID;
+            } elseif ($sObject == 'screenings') {
+                $sTitle = 'All ' . $sObject . ' for gene ' . $ID;
+            } elseif ($sObject == 'transcripts') {
+                $sTitle = 'All ' . $sObject . ' active for the ' . $ID . ' gene';
+            } else {
+                $sTitle .= ' ' . $ID;
+            }
         } else {
             $sTitle .= ' #' . $ID;
         }
-    } else {
+    }
+
+    // More annotation based on $_GET variables.
+    if (!ACTION && !empty($_GET['search_created_by']) && ctype_digit($_GET['search_created_by'])) {
+        $sObject = 'users';
+        $ID = $_GET['search_created_by'];
+        $sTitle .= ' created by user account #' . $ID;
+    }
+
+    if (!$ID) {
         return $sTitle;
     }
 
     // Add details, if available.
     switch ($sObject) {
+        case 'announcements':
+            $sPreview = lovd_shortenString($_DB->query('SELECT REPLACE(announcement, "\r\n", " ") FROM ' . TABLE_ANNOUNCEMENTS . '
+                WHERE id = ?', array($ID))->fetchColumn(), 50);
+            $sTitle .= ' ("' . $sPreview . '")';
+            break;
         case 'columns':
             $sHeader = $_DB->query('SELECT head_column FROM ' . TABLE_COLS . '
                 WHERE id = ?', array($ID))->fetchColumn();
@@ -930,7 +974,7 @@ function lovd_getCurrentPageTitle ()
             // We have to take the user's level into account, so that we won't
             //  disclose information when people try random IDs!
             // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
-            $bIsAuthorized = (lovd_isAuthorized('variant', $ID, false) !== false);
+            $bIsAuthorized = (lovd_isAuthorized('user', $ID, false) !== false);
             if ($bIsAuthorized) {
                 list($sName, $sCity, $sCountry) =
                     $_DB->query('
@@ -3222,7 +3266,7 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
 
     // Insert new line in logs table.
     $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
-        array($sLog, $sTime, ($nAuthID? $nAuthID : ($_AUTH['id']? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
+        array($sLog, $sTime, ($nAuthID?: ($_AUTH? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }
 ?>

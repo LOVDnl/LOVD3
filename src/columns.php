@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2022-01-17
+ * Modified    : 2022-05-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,7 +65,9 @@ if (PATH_COUNT < 3 && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
-    lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if they are one at all.
+    if ($_AUTH) {
+        lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if they are one at all.
+    }
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_columns.php';
@@ -119,7 +121,9 @@ if (PATH_COUNT > 2 && !ACTION) {
     $_T->printHeader();
     $_T->printTitle();
 
-    lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if they are one at all.
+    if ($_AUTH) {
+        lovd_isAuthorized('gene', $_AUTH['curates']); // Will set user's level to LEVEL_CURATOR if they are one at all.
+    }
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'class/object_columns.php';
@@ -1213,7 +1217,9 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
-        lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+        if ($_AUTH) {
+            lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+        }
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
@@ -1588,7 +1594,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     // Required clearance depending on which type of column is being added.
     $aTableInfo = lovd_getTableInfoByCategory($sCategory);
     if ($aTableInfo['shared']) {
-        lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+        if ($_AUTH) {
+            lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+        }
         lovd_requireAUTH(LEVEL_CURATOR);
     } else {
         lovd_requireAUTH(LEVEL_MANAGER);
