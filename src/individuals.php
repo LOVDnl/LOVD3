@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2022-02-10
+ * Modified    : 2022-06-03
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -67,7 +67,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'All individuals' . (isset($sGene)? ' with variants in gene ' . $sGene : ''));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -241,7 +241,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'IndividualCreate');
 
-    lovd_isAuthorized('gene', $_AUTH['curates']);
+    if ($_AUTH) {
+        lovd_isAuthorized('gene', $_AUTH['curates']);
+    }
     lovd_requireAUTH($_SETT['user_level_settings']['submit_new_data']);
 
     require ROOT_PATH . 'class/object_individuals.php';
@@ -650,7 +652,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                         array('POST', '', '', '', '40%', '14', '60%'),
                         array('Deleting individual information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')</B>'),
                         'skip',
-                        array('', '', 'print', 'This individual entry has ' . ($nVariants? $nVariants : 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
+                        array('', '', 'print', 'This individual entry has ' . ($nVariants?: 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
 'variants_removable' => array('', '', 'print', (!$nVariantsRemovable? 'No variants will be removed.' : '<B>' . $nVariantsRemovable . ' variant' . ($nVariantsRemovable == 1? '' : 's') . ' will be removed, because ' . ($nVariantsRemovable == 1? 'it is' : 'these are'). ' not attached to other individuals!!!</B>')),
           'variants' => array('Should LOVD remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these ' . $nVariantsRemovable . ' variants') . '?', '', 'select', 'remove_variants', 1, $aOptions, false, false, false),
                         array('', '', 'note', '<B>All phenotypes and screenings attached to this individual will be automatically removed' . ($nVariants? ' regardless' : '') . '!!!</B>'),

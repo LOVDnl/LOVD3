@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-02-10
+ * Modified    : 2022-05-27
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -616,7 +616,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
 
     lovd_requireAUTH(
         (!empty($_PE[1])? LEVEL_MANAGER :
-            (empty($_GET['target']) && !lovd_isAuthorized('gene', $_AUTH['curates'], false)? LEVEL_CURATOR :
+            (empty($_GET['target']) && !($_AUTH && lovd_isAuthorized('gene', $_AUTH['curates'], false))? LEVEL_CURATOR :
                 $_SETT['user_level_settings']['submit_new_data'])));
 
     $bSubmit = false;
@@ -1971,7 +1971,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         $_BAR->setMessage('Loading transcript information for ' . $sSymbol . '...', 'done');
 
                                         $aTranscripts = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $aGenesChecked[$sSymbol]['refseq_UD'], 'geneName' => $sSymbol));
-                                        if (!empty($aTranscripts)) {
+                                        if (!empty($aTranscripts) && empty($aTranscripts['faultcode'])) {
                                             foreach ($aTranscripts as $aTranscript) {
                                                 // Remember the data for each of this gene's transcripts. We may insert them as needed.
                                                 $aFieldsTranscript[$sSymbol][$aTranscript['id']] = array(

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2021-11-10
+ * Modified    : 2022-05-27
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -547,7 +547,9 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
 
 
 // Require at least curator clearance.
-lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+if ($_AUTH) {
+    lovd_isAuthorized('gene', $_AUTH['curates']); // Any gene will do.
+}
 lovd_requireAUTH(LEVEL_CURATOR);
 if ($_AUTH['level'] == LEVEL_CURATOR) {
     // If user has level curator, only simulate is allowed.

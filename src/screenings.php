@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2022-02-10
+ * Modified    : 2022-06-06
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -65,7 +65,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
         }
     }
 
-    define('PAGE_TITLE', 'All screenings' . (isset($sGene)? ' for gene ' . $sGene : ''));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -936,7 +936,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                         array('POST', '', '', '', '40%', '14', '60%'),
                         array('Deleting screening information entry', '', 'print', '<B>' . $nID . ' (Owner: ' . htmlspecialchars($zData['owned_by_']) . ')</B>'),
                         'skip',
-                        array('', '', 'print', 'This screening entry has ' . ($nVariants? $nVariants : 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
+                        array('', '', 'print', 'This screening entry has ' . ($nVariants?: 0) . ' variant' . ($nVariants == 1? '' : 's') . ' attached.'),
 'variants_removable' => array('', '', 'print', (!$nVariantsRemovable? 'No variants will be removed.' : '<B>' . $nVariantsRemovable . ' variant' . ($nVariantsRemovable == 1? '' : 's') . ' will be removed, because ' . ($nVariantsRemovable == 1? 'it is' : 'these are'). ' not attached to other screenings!!!</B>')),
           'variants' => array('Should LOVD remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these ' . $nVariantsRemovable . ' variants') . '?', '', 'select', 'remove_variants', 1, $aOptions, false, false, false),
      'variants_skip' => 'skip',
