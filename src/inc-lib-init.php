@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-05-06
+ * Modified    : 2022-07-07
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1252,7 +1252,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         '((?:[ACGTU]+|\.)>(?:[ACGTRYSWKMBDHUVN]+|\.)' .      //  | (substitution)
         '|([ACGTU]+\[[0-9]+])+' .                            //  | (repeat sequence)
         '|[ACGTU]*=(\/{1,2}[ACGTU]*>[ACGTRYSWKMBDHUVN]+)?' . //  | (wild types, mosaics, or chimerics)
-        '|ins|dup|delins|del|inv|sup|\?' .                   //  V
+        '|ins|dup|con|delins|del|inv|sup|\?' .               //  V
         '|\|(gom|lom|met=|.+))' .                            // 20. Type of variant.
 
         '(.*)))/i',                                          // 24. Suffix.
@@ -1444,6 +1444,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif (strpos($aVariant['type'], '>')) {
         $aResponse['type'] = 'subst';
+
+    } elseif ($aVariant['type'] == 'con') {
+        if ($bCheckHGVS) {
+            return false;
+        }
+        $aResponse['type'] = 'delins';
+        $aResponse['warnings']['WWRONGTYPE'] =
+            'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".';
 
     } elseif (substr($aVariant['type'], -1) == ']') {
         $aResponse['type'] = 'repeat';
@@ -1940,10 +1948,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
 
-        } elseif (in_array($aVariant['type'], array('ins', 'delins'))) {
-            // For insertions and deletion-insertions, the suffix can be quite
-            //  complex. Also, it doesn't depend on the variant's length, so all
-            //  checks are different. Check all possibilities.
+        } elseif (in_array($aResponse['type'], array('ins', 'delins'))) {
+            // Note: Using $aResponse's type here, because 'con' is changed to 'delins' there.
+            // For insertions and deletion-insertions, the suffix can be quite complex. Also, it doesn't depend on the
+            //  variant's length, so all checks are different. Check all possibilities.
             // Case problems are not checked here. Although it would perhaps help to provide a better warning,
             //  lovd_fixHGVS() already takes care of all issues, so we don't really need to check here.
             if (substr_count($aVariant['suffix'], '[') != substr_count($aVariant['suffix'], ']')) {

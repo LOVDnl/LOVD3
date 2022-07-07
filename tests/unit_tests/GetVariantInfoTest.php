@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-05-06
+ * Modified    : 2022-07-07
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -581,6 +581,25 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'delins',
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delAinsGG" to "delinsGG".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.100_200con400_500', array(
+                'position_start' => 100,
+                'position_end' => 200,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123conNC_000001.10:100_200', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
+                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines.',
                 ),
                 'errors' => array(),
             )),
