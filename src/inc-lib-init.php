@@ -1621,6 +1621,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if ($bCheckHGVS) {
                     return false;
                 }
+                // NOTE: This overwrites any previous warnings. Both warnings generated in the beginning (positions that
+                //  are, or are prefixed with, 0) and warnings generated in the code directly above.
                 $aResponse['warnings']['WPOSITIONFORMAT'] = $sPositionWarning .
                     ' Please verify your description and try again.';
             }

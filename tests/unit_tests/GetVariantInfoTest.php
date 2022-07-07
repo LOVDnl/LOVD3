@@ -1191,6 +1191,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_(1_2)del', array( // To show that these warnings don't stack. Two issues, only one warning is thrown.
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' => 'This variant description contains two positions that are the same. Please verify your description and try again.'
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IUNCERTAINRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.2_1del', array(
                 'position_start' => 1,
                 'position_end' => 2,
