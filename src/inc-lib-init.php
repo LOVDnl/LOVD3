@@ -1285,14 +1285,29 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // Doing this here, to show we use $aMatches and that this code should be updated if the regexp is updated.
     // Check for "0" in positions. We need to do this on $aMatches, because no type casting has taken place there.
+    $aZeroValues = array('0', '-0', '+0');
     foreach (array(5, 6, 9, 10, 14, 15, 17, 18) as $i) {
-        if (isset($aMatches[$i]) && in_array($aMatches[$i], array('0', '-0', '+0'))) {
-            $aResponse['errors']['EPOSITIONFORMAT'] =
-                'This variant description contains an invalid position: "0". Please verify your description and try again.';
-            break;
+        if (isset($aMatches[$i])) {
+            if (in_array($aMatches[$i], $aZeroValues)) {
+                $aResponse['errors']['EPOSITIONFORMAT'] =
+                    'This variant description contains an invalid position: "0". Please verify your description and try again.';
+                break;
+            } else {
+                foreach ($aZeroValues as $sZeroValue) {
+                    if (substr($aMatches[$i], 0, strlen($sZeroValue)) === $sZeroValue) {
+                        // Stack warnings, so all problems are highlighted.
+                        $aResponse['warnings']['WPOSITIONFORMAT'] =
+                            (isset($aResponse['warnings']['WPOSITIONFORMAT'])?
+                                $aResponse['warnings']['WPOSITIONFORMAT'] : 'Variant positions should not be prefixed by a 0.') .
+                            ' Please rewrite "' . $aMatches[$i] . '" to "' .
+                            ($sZeroValue[0] == '+'? '+' : '') . (int) $aMatches[$i] . '".';
+                    }
+                }
+            }
         }
     }
-    if (isset($aResponse['errors']['EPOSITIONFORMAT']) && $bCheckHGVS) {
+    if ($bCheckHGVS
+        && (isset($aResponse['errors']['EPOSITIONFORMAT']) || isset($aResponse['warnings']['WPOSITIONFORMAT']))) {
         return false;
     }
 

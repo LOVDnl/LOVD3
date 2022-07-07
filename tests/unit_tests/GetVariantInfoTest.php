@@ -1160,6 +1160,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'EPOSITIONFORMAT' => 'This variant description contains an invalid position: "0". Please verify your description and try again.'
                 ),
             )),
+            array('c.-010+01del', array(
+                'position_start' => -10,
+                'position_end' => -10,
+                'position_start_intron' => 1,
+                'position_end_intron' => 1,
+                'type' => 'del',
+                'warnings' => array(
+                    'WPOSITIONFORMAT' => 'Variant positions should not be prefixed by a 0. Please rewrite "-010" to "-10". Please rewrite "+01" to "+1".'
+                ),
+                'errors' => array(),
+            )),
             array('g.0_1del', array(
                 'position_start' => 1,
                 'position_end' => 1,
