@@ -1283,6 +1283,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'suffix'                  => (!isset($aMatches[24])? '' : $aMatches[24]),
     ));
 
+    // Doing this here, to show we use $aMatches and that this code should be updated if the regexp is updated.
+    // Check for "0" in positions. We need to do this on $aMatches, because no type casting has taken place there.
+    foreach (array(5, 6, 9, 10, 14, 15, 17, 18) as $i) {
+        if (isset($aMatches[$i]) && in_array($aMatches[$i], array('0', '-0', '+0'))) {
+            $aResponse['errors']['EPOSITIONFORMAT'] =
+                'This variant description contains an invalid position: "0". Please verify your description and try again.';
+            break;
+        }
+    }
+    if (isset($aResponse['errors']['EPOSITIONFORMAT']) && $bCheckHGVS) {
+        return false;
+    }
+
     if (!isset($aVariant['complete']) || $aVariant['complete'] != $sVariant) {
         // If the complete match is not set or does not equal the given variant,
         //  then the variant is not HGVS-compliant, and we cannot extract any
