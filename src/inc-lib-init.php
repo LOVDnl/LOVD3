@@ -1606,12 +1606,23 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  unknown. This means that e.g. c.(1_2)_(5_6)del will be returned as having a position_start of 2, and
     //  a position_end of 5. However, if we find a variant such as c.(1_?)_(?_6)del, we will save the outer
     //  positions (so a position_start of 1 and a position_end of 6).
+    // Remember: When there are no parentheses, only earliest_start and earliest_end are set.
+    //           Not having an earliest_end, means there was only one position set or one range with parentheses.
+    //           Having one range with parentheses, sets the earliest and latest start positions.
     $aResponse['position_start'] =
-        (!$aVariant['latest_start'] || $aVariant['latest_start'] == '?'? $aVariant['earliest_start'] : $aVariant['latest_start']);
+        (!$aVariant['latest_start'] || $aVariant['latest_start'] == '?' || !$aVariant['earliest_end']?
+            $aVariant['earliest_start'] : $aVariant['latest_start']);
 
     if (!$aVariant['earliest_end']) {
-        $aResponse['position_end'] = $aResponse['position_start'];
+        if ($aVariant['latest_start']) {
+            // Not having an end, but having a latest start happens for variants like c.(100_200)del(10).
+            $aResponse['position_end'] = $aVariant['latest_start'];
+        } else {
+            // Single-position variants.
+            $aResponse['position_end'] = $aResponse['position_start'];
+        }
     } elseif ($aVariant['earliest_end'] != '?' || !$aVariant['latest_end']) {
+        // Earliest end is not unknown, or simply the only choice we have.
         $aResponse['position_end'] = $aVariant['earliest_end'];
     } else {
         $aResponse['position_end'] = $aVariant['latest_end'];
@@ -1632,7 +1643,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         //  this notice is used to determine whether the variant needs a suffix
         //  because the variant's position is a single, uncertain range.
         $aResponse['messages']['IPOSITIONRANGE'] = 'This variant description contains uncertain positions.';
-        $aResponse['position_start'] = $aVariant['earliest_start'];
 
         if (in_array($aVariant['prefix'], array('n', 'c'))) {
             $aResponse['position_start_intron'] = $aVariant['earliest_intronic_start'];
