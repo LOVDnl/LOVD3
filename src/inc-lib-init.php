@@ -1805,9 +1805,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
     } elseif ($aVariant['type'] == 'inv') {
-        if (lovd_getVariantLength($aResponse) == 1
-            && !isset($aResponse['messages']['IUNCERTAINPOSITIONS'])
-            && !($aVariant['latest_start'] && $aVariant['earliest_end'])) {
+        if (!isset($aResponse['messages']['IUNCERTAINPOSITIONS'])
+            && !($aVariant['latest_start'] && $aVariant['earliest_end'])
+            && lovd_getVariantLength($aResponse) == 1) {
             // An inversion must always have a length of more than one, unless
             //  an uncertain range has been provided; then the calculated length
             //  could be one while in reality, it's unknown. The exact
@@ -1819,9 +1819,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['errors']['EPOSITIONFORMAT'] =
                 'Inversions require a length of at least two bases.';
 
-        } elseif (lovd_getVariantLength($aResponse) == 2
-            && isset($aResponse['messages']['IPOSITIONRANGE'])
-            && !isset($aResponse['messages']['IUNCERTAINPOSITIONS'])) {
+        } elseif (isset($aResponse['messages']['IPOSITIONRANGE'])
+            && !isset($aResponse['messages']['IUNCERTAINPOSITIONS'])
+            && lovd_getVariantLength($aResponse) == 2) {
             // If the exact location of an inversion is unknown, this can be
             //  indicated by placing the positions in the range-format (e.g.
             //  c.(1_10)inv). In this case, the two positions should not be
@@ -2360,6 +2360,11 @@ function lovd_getVariantLength ($aVariant)
     // This length will only include intronic positions if the input contains
     //  these. When the length cannot be determined due to crossing the center
     //  of an intron, this function will return false.
+
+    if (!isset($aVariant['position_start']) || !isset($aVariant['position_end'])
+        || $aVariant['position_start'] == '?' || $aVariant['position_end'] == '?') {
+        return false;
+    }
 
     $nBasicLength = $aVariant['position_end'] - $aVariant['position_start'] + 1;
     if (empty($aVariant['position_start_intron'])
