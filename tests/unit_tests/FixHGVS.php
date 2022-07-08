@@ -92,6 +92,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
+            array('c.A123C', 'c.123A>C'),
 
             // Lowercase nucleotides and other case issues.
             array('C.123C>a', 'c.123C>A'),

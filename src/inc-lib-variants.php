@@ -171,6 +171,13 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
     }
 
+    // Protein formatting for DNA variants.
+    if (preg_match('/^([cgmn]\.)([ACGTUN]+)([0-9]+)([ACGTUN]+)$/', $sVariant, $aRegs)) {
+        // Rebuild the variant into a substitution.
+        list(, $sPrefix, $sRef, $nPosition, $sAlt) = $aRegs;
+        return lovd_fixHGVS($sReference . $sPrefix . $nPosition . $sRef . '>' . $sAlt, $sType);
+    }
+
     // Remove redundant prefixes due to copy/paste errors (g.12_g.23del to g.12_23del).
     // But only remove them if there isn't another refseq in front of it
     //  (like for complex insertions).
