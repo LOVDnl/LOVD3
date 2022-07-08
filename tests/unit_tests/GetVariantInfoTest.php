@@ -259,7 +259,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'ETOOMANYPOSITIONS' => 'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.'
                 ),
             )),
-            array('g.123A>Ciets', array(
+            array('g.123A>C<unknown>', array(
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
