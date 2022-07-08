@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-06-30
+ * Modified    : 2022-07-08
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -245,11 +245,20 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (ctype_upper($sVariant[0])) {
             return lovd_fixHGVS($sReference . strtolower($sVariant[0]) . substr($sVariant, 1), $sType);
 
-        // If not the prefix, then it must be because of the variant type
-        //  (lovd_getVariantInfo() currently doesn't check the suffix).
         } elseif ($aVariant['type'] == 'subst') {
+            // If not the prefix, try the bases. First up, substitutions.
             return lovd_fixHGVS($sReference . $sVariant[0] .
                 str_replace('U', 'T', strtoupper(substr($sVariant, 1))), $sType);
+
+        } elseif (($aVariant['type'] == 'del' || $aVariant['type'] == 'delins')
+            && preg_match('/^(.+)del([ACGTUN\[0-9\]]+)?(?:ins([ACGTUN\[0-9\]]+))?$/i', $sVariant, $aRegs)
+            && ($aRegs[2] != strtoupper($aRegs[2])
+                || (isset($aRegs[3]) && $aRegs[3] != strtoupper($aRegs[3])))) {
+            // Deletions and deletion-insertion events.
+            // Note: A "delins" can also look like "delAinsG".
+            return lovd_fixHGVS($sReference . $aRegs[1] . 'del' .
+                str_replace('U', 'T', strtoupper($aRegs[2]) .
+                    (!isset($aRegs[3])? '' : 'ins' . strtoupper($aRegs[3]))), $sType);
         }
     }
 
