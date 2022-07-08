@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-07
+ * Modified    : 2022-07-08
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2364,12 +2364,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $sFieldName = str_replace('_intron', ' in intron', $sFieldName);
                     }
 
-                    if (!isset($aResponse['warnings']['WPOSITIONSLIMIT'])) {
-                        $aResponse['warnings']['WPOSITIONSLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sFieldName . '.';
+                    if (!isset($aResponse['warnings']['WPOSITIONLIMIT'])) {
+                        $aResponse['warnings']['WPOSITIONLIMIT'] = 'Position is beyond the possible limits of its type: ' . $sFieldName . '.';
                     } else {
                         // Append.
-                        $aResponse['warnings']['WPOSITIONSLIMIT'] =
-                            str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONSLIMIT'], '.')) . ', ' . $sFieldName . '.';
+                        $aResponse['warnings']['WPOSITIONLIMIT'] =
+                            str_replace(array('Position is ', ' its '), array('Positions are ', ' their '), rtrim($aResponse['warnings']['WPOSITIONLIMIT'], '.')) . ', ' . $sFieldName . '.';
                     }
                 }
             }

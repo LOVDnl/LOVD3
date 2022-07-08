@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-07-07
+ * Modified    : 2022-07-08
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -59,7 +59,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             && (empty($aOutput['warnings'])
                 || empty(array_diff(
                         array_keys($aOutput['warnings']),
-                        array('WNOTSUPPORTED', 'WPOSITIONSLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTREFSEQ')))
+                        array('WNOTSUPPORTED', 'WPOSITIONLIMIT', 'WTRANSCRIPTFOUND', 'WDIFFERENTREFSEQ')))
             )) {
             $bHGVS = true;
         } else {
@@ -1176,7 +1176,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONSLIMIT' => 'Position is beyond the possible limits of its type: start.'
+                    'WPOSITIONLIMIT' => 'Position is beyond the possible limits of its type: start.'
                 ),
                 'errors' => array(
                     'EPOSITIONFORMAT' => 'This variant description contains an invalid position: "0". Please verify your description and try again.'
@@ -1269,7 +1269,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: start, end.',
+                    'WPOSITIONLIMIT' => 'Positions are beyond the possible limits of their type: start, end.',
                 ),
                 'errors' => array(),
             )),
@@ -1280,7 +1280,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => -2147483648,
                 'type' => 'del',
                 'warnings' => array(
-                    'WPOSITIONSLIMIT' => 'Positions are beyond the possible limits of their type: start, start in intron, end, end in intron.',
+                    'WPOSITIONLIMIT' => 'Positions are beyond the possible limits of their type: start, start in intron, end, end in intron.',
                 ),
                 'errors' => array(),
             )),
