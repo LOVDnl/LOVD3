@@ -166,13 +166,6 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
     }
 
-    // Replace the outdated "con" type with "delins".
-    // This used to check also if the delins needed square brackets around the
-    //  insertion, but we moved that code to generalize it.
-    if (strpos($sVariant, 'con') !== false) {
-        return lovd_fixHGVS($sReference . str_replace('con', 'delins', $sVariant), $sType);
-    }
-
     // Remove redundant prefixes due to copy/paste errors (g.12_g.23del to g.12_23del).
     // But only remove them if there isn't another refseq in front of it
     //  (like for complex insertions).
@@ -264,6 +257,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Change the variant type (if possible) if the wrong type was chosen.
     if (isset($aVariant['warnings']['WWRONGTYPE'])) {
+        // lovd_getVariantInfo() already often provides the fix.
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WWRONGTYPE'], $aRegs)) {
+            list(, $sOldType, $sNewType) = $aRegs;
+            return lovd_fixHGVS($sReference . str_replace($sOldType, $sNewType, $sVariant), $sType);
+        }
+
         if ($aVariant['type'] == 'subst') {
             // Handle all notations of substitutions regardless of the length of
             //  the REF and ALT; recognize deletions, insertions, duplications,

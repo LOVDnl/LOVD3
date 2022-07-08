@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-05-05
+ * Modified    : 2022-07-08
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -97,6 +97,9 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('C.123a>u', 'c.123A>T'),
             array('g.123insactg', 'g.123insACTG'),
             array('g.123delinsgagagauu', 'g.123delinsGAGAGATT'),
+            array('g.123_130delgagagatt', 'g.123_130del'),
+            array('g.123_130delgagagauu', 'g.123_130del'),
+            array('g.123_130deln[8]', 'g.123_130del'),
             array('g.123a>g', 'g.123A>G'),
             array('g.100_101ins[nc_000010.1:g.100_200;aaaa;n[10]]', 'g.100_101ins[NC_000010.1:g.100_200;AAAA;N[10]]'),
             array('lrg_123t1:c.100del', 'LRG_123t1:c.100del'),
@@ -124,6 +127,9 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123_124AAA>GC', 'g.123_124AAA>GC'), // Unfixable.
             array('g.123A>.', 'g.123del'),
             array('g.123AA>.', 'g.123_124del'),
+            array('g.123delAinsG', 'g.123A>G'),
+            array('g.123delainst', 'g.123A>T'),
+            array('g.123delainsu', 'g.123A>T'),
 
             // Wild type requires no bases.
             array('c.123T=', 'c.123='),
@@ -240,7 +246,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             //  (still results in an invalid description - more work needed,
             //   or variants currently not supported and returned as-is).
             array('g.(100_200)[ins50]', 'g.(100_200)[ins50]'),
-            array('g.123delAinsG', 'g.123delAinsG'), // Should be g.123A>G.
             // Real problem is a typo in the last position; could we recognize this?
             array('g.(150138199_150142492)_(150145873_15147218)del',
                   'g.(15147218_150142492)_(150138199_150145873)del'),
