@@ -502,8 +502,17 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Swap positions if necessary.
     if (isset($aVariant['warnings']['WPOSITIONFORMAT'])) {
-        $aPositions = array();
+        // Before we start manually trying to figure out what's going on, try the suggested instructions.
+        // Currently, these instructions are only given for positions that start with a 0, which should be removed.
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WPOSITIONFORMAT'], $aRegs)) {
+            list(, $sOldPosition, $sNewPosition) = $aRegs;
+            // FIXME: This may be too simplistic. The pattern may be too small, causing unwanted changes.
+            // These warnings may be stacked. Using this pattern, we'll just grab the last one.
+            // So it may take a few iterations before everything is fixed.
+            return lovd_fixHGVS($sReference . str_replace($sOldPosition, $sNewPosition, $sVariant), $sType);
+        }
 
+        $aPositions = array();
         preg_match(
             '/^([cgmn])\.' .                         // 1.  Prefix.
             '((' .

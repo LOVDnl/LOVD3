@@ -239,6 +239,9 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.(*50_500)_(100_1)del', 'c.(1_100)_(500_*50)del'),
             array('c.(500_*50)_(1_100)del', 'c.(1_100)_(500_*50)del'),
 
+            // Other position-related things.
+            array('c.-010+01del', 'c.-10+1del'),
+
             // Variants with reference sequences, testing various fixes.
             array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
             array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
