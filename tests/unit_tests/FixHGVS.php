@@ -167,6 +167,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123_124del2', 'g.123_124del'),
             array('g.123_124del(2)', 'g.123_124del'),
             array('g.123_124delN[2]', 'g.123_124del'),
+            array('g.123delAinsGG', 'g.123delinsGG'),
 
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),

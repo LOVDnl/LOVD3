@@ -391,14 +391,15 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             return $sReference . $sVariant;
         }
 
-        list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
-
         // Often, the solution to the problem will be given in the warning itself.
+        // Do this first, because delAinsG variants we can't handle otherwise, as "delins" can't be found in those
+        //  variants, and the suffix can't be isolated properly.
         if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WSUFFIXFORMAT'], $aRegs)) {
-            list(,, $sNewSuffix) = $aRegs;
-            return lovd_fixHGVS($sReference . $sBeforeSuffix . $aVariant['type'] . $sNewSuffix, $sType);
+            list(, $sOldSuffix, $sNewSuffix) = $aRegs;
+            return lovd_fixHGVS($sReference . str_replace($sOldSuffix, $sNewSuffix, $sVariant), $sType);
         }
 
+        list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
