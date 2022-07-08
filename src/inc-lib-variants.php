@@ -111,6 +111,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // Replace special – (hyphen, minus, en dash, em dash) with a simple - (hyphen-minus).
     $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
 
+    // Rare, but seen; "c," as prefix instead of "c.".
+    if (substr($sVariant, 0, 2) == $sType . ',') {
+        $sVariant[1] = '.';
+    }
+
     // Do a quick HGVS check.
     if (lovd_getVariantInfo($sReference . $sVariant, false, true)) {
         // All good!

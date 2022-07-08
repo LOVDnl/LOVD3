@@ -85,12 +85,13 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             //  and the range is fixed to a single position.
             array('g.140712592-140712592C>T', 'g.140712592C>T'),
 
-            // Whitespace and other copy/paste errors.
+            // Whitespace, other typos, and copy/paste errors.
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
             array('c.–123del', 'c.-123del'),
             array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
+            array('c,123del', 'c.123del'),
 
             // Lowercase nucleotides and other case issues.
             array('C.123C>a', 'c.123C>A'),
