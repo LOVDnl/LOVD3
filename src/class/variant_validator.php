@@ -959,7 +959,7 @@ class LOVD_VV
                     unset($aJSON['validation_warnings'][$nKey + 1]);
                 }
 
-                $aData['warnings'][] = $aJSON['validation_warnings'];
+                $aData['warnings'] += $aJSON['validation_warnings'];
             }
 
             if ($aData['data']['DNA']) {
