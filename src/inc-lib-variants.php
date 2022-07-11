@@ -692,11 +692,11 @@ function lovd_formatPositions ($aVariant)
 
     $sPositionStart = lovd_formatPosition(
         $aVariant['position_start'],
-        (!isset($aVariant['position_start_intron']) ? NULL : $aVariant['position_start_intron']),
+        (!isset($aVariant['position_start_intron'])? NULL : $aVariant['position_start_intron'])
     );
     $sPositionEnd = lovd_formatPosition(
         $aVariant['position_end'],
-        (!isset($aVariant['position_end_intron']) ? NULL : $aVariant['position_end_intron']),
+        (!isset($aVariant['position_end_intron'])? NULL : $aVariant['position_end_intron'])
     );
 
     if ($sPositionStart == $sPositionEnd) {
