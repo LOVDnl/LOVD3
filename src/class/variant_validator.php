@@ -43,6 +43,7 @@ class LOVD_VV
     // public $sURL = 'https://www35.lamp.le.ac.uk/'; // The URL of the VV testing endpoint.
     public $aResponse = array( // The standard response body.
         'data' => array(),
+        'messages' => array(),
         'warnings' => array(),
         'errors' => array(),
     );
@@ -957,10 +958,19 @@ class LOVD_VV
                         || strpos($sWarning, 'Refer to http://varnomen.hgvs.org/') !== false) {
                         // We silently skip these warnings.
                         unset($aJSON['validation_warnings'][$nKey]);
+
+                    } elseif (preg_match(
+                        '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
+                        $sWarning, $aRegs)) {
+                        // This is not that important, but we won't completely discard it, either.
+                        $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+                        unset($aJSON['validation_warnings'][$nKey]);
+                        break;
                     }
                 }
 
-                $aData['warnings'] += $aJSON['validation_warnings'];
+                // Anything left, gets added to our list.
+                $aData['warnings'] += array_values($aJSON['validation_warnings']);
             }
 
             if ($aData['data']['DNA']) {
