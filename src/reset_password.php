@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-20
- * Modified    : 2021-07-13
- * For LOVD    : 3.0-27
+ * Modified    : 2022-06-21
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -99,8 +99,8 @@ if (!$_AUTH && $_CONF['allow_unlock_accounts']) {
             $nLength = strlen($sFormat);
             $sPasswd = '';
             for ($i = 0; $i < $nLength; $i ++) {
-                $sType = $sFormat{$i};
-                $sPasswd .= $aChars[$sType]{mt_rand(0, strlen($aChars[$sType]) - 1)};
+                $sType = $sFormat[$i];
+                $sPasswd .= $aChars[$sType][mt_rand(0, strlen($aChars[$sType]) - 1)];
             }
 
             // Update database.

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-02-10
+ * Modified    : 2022-05-26
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1178,7 +1178,7 @@ class LOVD_Object
                     // 4: alias, if present.
                     // Try to see which table(s) is/are used here.
                     $aTables = array();
-                    $sTable = ($aRegs[2][$i]? $aRegs[2][$i] : $aRegs[3][$i]);
+                    $sTable = ($aRegs[2][$i]?: $aRegs[3][$i]);
                     if ($sTable) {
                         $aTables[] = $sTable;
                     } else {
@@ -1193,7 +1193,7 @@ class LOVD_Object
                         }
                     }
                     // Key: alias or, when not available, the SELECT statement (table.col).
-                    $aColumnsUsed[($aRegs[4][$i]? $aRegs[4][$i] : $aRegs[1][$i])] = array(
+                    $aColumnsUsed[($aRegs[4][$i]?: $aRegs[1][$i])] = array(
                         'SQL' => $aRegs[1][$i],
                         'tables' => $aTables,
                     );
@@ -1486,7 +1486,7 @@ class LOVD_Object
                 }
             }
         }
-        return ($nID? $nID : true);
+        return ($nID?: true);
     }
 
 
