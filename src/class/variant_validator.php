@@ -950,13 +950,14 @@ class LOVD_VV
                 // Not a previously seen error, handled through the flag value.
                 // We'll assume a warning.
 
-                // VV throws two warnings for del100 variants, because of the '100'.
-                if (($nKey = array_search('Trailing digits are not permitted in HGVS variant descriptions',
-                        $aJSON['validation_warnings'])) !== false) {
-                    // We silently skip these warnings.
-                    unset($aJSON['validation_warnings'][$nKey]);
-                    // Also unset the next line, which contains the link to the docs.
-                    unset($aJSON['validation_warnings'][$nKey + 1]);
+                // This can be a whole list, so loop through it.
+                foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
+                    // VV throws two warnings for del100 variants, because of the '100'.
+                    if ($sWarning == 'Trailing digits are not permitted in HGVS variant descriptions'
+                        || strpos($sWarning, 'Refer to http://varnomen.hgvs.org/') !== false) {
+                        // We silently skip these warnings.
+                        unset($aJSON['validation_warnings'][$nKey]);
+                    }
                 }
 
                 $aData['warnings'] += $aJSON['validation_warnings'];
