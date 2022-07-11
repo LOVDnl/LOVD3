@@ -188,7 +188,7 @@ if (!ACTION && (empty($_PE[1])
 
 
 if (PATH_COUNT == 2 && $_PE[1] == 'in_gene' && !ACTION
-    && (!(LOVD_plus || LOVD_light) || (!empty($_GET['search_geneid']) && !empty('search_VariantOnTranscript/DNA')))) {
+    && (!(LOVD_plus || LOVD_light) || (!empty($_GET['search_geneid']) && !empty($_GET['search_VariantOnTranscript/DNA'])))) {
     // URL: /variants/in_gene
     // View all entries effecting a transcript.
 
