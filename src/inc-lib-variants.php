@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-07-08
+ * Modified    : 2022-07-11
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -114,6 +114,23 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // Rare, but seen; "c," as prefix instead of "c.".
     if (substr($sVariant, 0, 2) == $sType . ',') {
         $sVariant[1] = '.';
+    }
+
+    // More special characters arising from copying variants from PDFs. Some journals decide to use specialized fonts to
+    //  create markup for normal characters, such as the > in a substitution. This is a terrible idea, as
+    //  text-recognition then completely fails and copying the variant from the PDF results in a misformatted variant.
+    // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
+    // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
+    // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")
+    // "!" seen in CRB1_32351147_Liu-2020.pdf ("C!T")
+    // "." seen in MERTK_19403518_Charbel%20Issa-2009.pdf ("c.2189+1G.T")
+    // "4" seen in MERTK_30851773_Bhatia-2019.pdf ("c.1647T4G")
+    // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
+    // Because " " has already been trimmed to "", make pattern optional.
+    // Note the "u" modifier to allow for UTF-8 characters.
+    if (preg_match('/^([cgmn]\.[0-9_+-]+[ACGTU])[®?!.4→]?([ACGTRYSWKMBDHUVN])$/u', $sVariant, $aRegs)) {
+        // One of these characters has been found specifically in a substitution pattern. Replace it.
+        return $sReference . $aRegs[1] . '>' . $aRegs[2];
     }
 
     // Do a quick HGVS check.

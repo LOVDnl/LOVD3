@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-07-08
+ * Modified    : 2022-07-11
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -93,6 +93,13 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
             array('c.A123C', 'c.123A>C'),
+            array('c.216G A', 'c.216G>A'), // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
+            array('c.1106G®A', 'c.1106G>A'), // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
+            array('c.220T?C', 'c.220T>C'), // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")
+            array('c.1576C!T', 'c.1576C>T'), // "!" seen in CRB1_32351147_Liu-2020.pdf ("C!T")
+            array('c.2189+1G.T', 'c.2189+1G>T'), // "." seen in MERTK_19403518_Charbel%20Issa-2009.pdf ("c.2189+1G.T")
+            array('c.1647T4G', 'c.1647T>G'), // "4" seen in MERTK_30851773_Bhatia-2019.pdf ("c.1647T4G")
+            array('c.1040T→C', 'c.1040T>C'), // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
 
             // Lowercase nucleotides and other case issues.
             array('C.123C>a', 'c.123C>A'),
