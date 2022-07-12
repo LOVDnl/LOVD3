@@ -959,7 +959,8 @@ class LOVD_VV
                         // We silently skip these warnings.
                         unset($aJSON['validation_warnings'][$nKey]);
 
-                    } elseif (strpos($sWarning, ' is pending therefore changes may be made to the LRG reference sequence') !== false) {
+                    } elseif (strpos($sWarning, ' is pending therefore changes may be made to the LRG reference sequence') !== false
+                        || $sWarning == 'RefSeqGene record not available') {
                         // We don't care about this - we started with an NM anyway.
                         unset($aJSON['validation_warnings'][$nKey]);
 
