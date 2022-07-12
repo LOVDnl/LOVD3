@@ -970,6 +970,16 @@ class LOVD_VV
                         // This is not that important, but we won't completely discard it, either.
                         $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
                         unset($aJSON['validation_warnings'][$nKey]);
+
+                    } elseif (strpos($sWarning, 'Caution should be used when reporting the displayed variant descriptions') !== false
+                        || strpos($sWarning, 'The displayed variants may be artefacts of aligning') !== false) {
+                        // Both these warnings are thrown at the same time when there are mismatches between the
+                        //  genomic reference sequence (in general, the genome build) and the transcript.
+                        // We could discard one and handle the other, but in this case, we're a bit more flexible.
+                        // This message might be repeated when there are gapped alignments with multiple genome builds
+                        //  (untested), but currently, we just store one warning message.
+                        $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
+                        unset($aJSON['validation_warnings'][$nKey]);
                     }
                 }
 
