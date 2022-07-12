@@ -390,6 +390,10 @@ class LOVD_VV
             }
         }
         // If we didn't get the build right here, then the whole call will fail.
+        // Also, only NCs will work.
+        if (!$sBuild || substr($sVariantNC, 0, 2) != 'NC') {
+            return false;
+        }
 
         // Transcript list should be a list, or 'all'.
         if (!$aOptions['select_transcripts']
