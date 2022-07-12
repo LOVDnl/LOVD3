@@ -568,15 +568,10 @@ class LOVD_VV
                             'protein' => '',
                         );
                         if ($aTranscript['gap_statement'] || $aTranscript['gapped_alignment_warning']) {
-                            // Store this in warnings.
-                            $sWarning = '';
-                            if ($aTranscript['gap_statement']) {
-                                $sWarning = rtrim($aTranscript['gap_statement'], '.') . '.';
-                            }
-                            if ($aTranscript['gapped_alignment_warning']) {
-                                $sWarning .= (!$sWarning? '' : ' ') . rtrim($aTranscript['gapped_alignment_warning'], '.') . '.';
-                            }
-                            $aData['warnings']['WGAP'] = $sWarning;
+                            // This message might be repeated for multiple transcripts when there are gapped alignments,
+                            //  and perhaps repeated also for multiple genome builds (untested).
+                            // Currently, we just store one warning message.
+                            $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
                         }
                         if ($aTranscript['t_hgvs']) {
                             $aMapping['DNA'] = substr(strstr($aTranscript['t_hgvs'], ':'), 1);
