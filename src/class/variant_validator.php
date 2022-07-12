@@ -404,7 +404,7 @@ class LOVD_VV
         $aJSON = $this->callVV('LOVD/lovd', array(
             'genome_build' => $sBuild,
             'variant_description' => $sVariant,
-            'transcripts' => 'all',
+            'transcripts' => 'refseq', // 'all' includes Ensembl transcripts that currently (July 2022) are very slow.
             'select_transcripts' => (!is_array($aOptions['select_transcripts'])?
                 $aOptions['select_transcripts'] :
                 implode('|', $aOptions['select_transcripts'])),
