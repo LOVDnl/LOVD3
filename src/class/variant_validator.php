@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-07-11
+ * Modified    : 2022-07-12
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -959,13 +959,16 @@ class LOVD_VV
                         // We silently skip these warnings.
                         unset($aJSON['validation_warnings'][$nKey]);
 
+                    } elseif (strpos($sWarning, ' is pending therefore changes may be made to the LRG reference sequence') !== false) {
+                        // We don't care about this - we started with an NM anyway.
+                        unset($aJSON['validation_warnings'][$nKey]);
+
                     } elseif (preg_match(
                         '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
                         $sWarning, $aRegs)) {
                         // This is not that important, but we won't completely discard it, either.
                         $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
                         unset($aJSON['validation_warnings'][$nKey]);
-                        break;
                     }
                 }
 
