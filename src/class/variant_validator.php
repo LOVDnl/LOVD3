@@ -441,6 +441,12 @@ class LOVD_VV
                             } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
                                 // ESYNTAX error.
                                 $aData['errors']['ESYNTAX'] = $sError;
+                            } elseif (strpos($sError, $sVariant . ' updated to ') !== false) {
+                                // Recently, VV published an update that generates an error even when the variant
+                                //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
+                                //  elsewhere, so hide that here.
+                                $aJSON[$sVariant]['genomic_variant_error'] = '';
+                                break;
                             } else {
                                 // Unrecognized error.
                                 $aData['errors'][] = $sError;
