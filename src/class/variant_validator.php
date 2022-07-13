@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-07-12
+ * Modified    : 2022-07-13
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -433,7 +433,8 @@ class LOVD_VV
                             if ($sError == 'Length implied by coordinates must equal sequence deletion length') {
                                 // EINCONSISTENTLENGTH error.
                                 $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
-                            } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false) {
+                            } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false
+                                || preg_match('/^Failed to fetch .+ out of range/', $sError)) {
                                 // ERANGE error.
                                 $aData['errors']['ERANGE'] = $sError;
                             } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
