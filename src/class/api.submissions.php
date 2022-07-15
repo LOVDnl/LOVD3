@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-11-10
+ * Modified    : 2022-07-15
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -308,7 +308,8 @@ class LOVD_API_Submissions
         if (is_array($aInput)) {
             foreach ($aInput as $sKey => $Value) {
                 // Attributes or text values can never be repeated, so check only possible arrays.
-                if ($sKey[0] != '@' && $sKey[0] != '#') {
+                // Using substr() because $sKey could be an integer and then $sKey[0] throws notices.
+                if (!in_array(substr($sKey, 0, 1), array('@', '#'))) {
                     // Check if this key is listed as one that can be repeated.
                     if (in_array((string) $sKey, $this->aRepeatableElements['varioml'])) {
                         // This element can be repeated. Make sure it's a proper array of values.
