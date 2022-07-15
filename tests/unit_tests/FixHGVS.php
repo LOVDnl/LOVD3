@@ -70,7 +70,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123=', 'g.123='),
             array('c.?', 'c.?'),
             array('c.123?', 'c.123?'),
-            array('c.(1_100)del(20)', 'c.(1_100)delN[20]'),
 
 
 
