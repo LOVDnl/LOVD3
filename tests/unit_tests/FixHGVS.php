@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-07-11
+ * Modified    : 2022-07-15
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -185,6 +185,9 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
             array('c.1_2ins(50_20)', 'c.1_2insN[(20_50)]'),
+            array('g.1_2insN[5_10]', 'g.1_2insN[(5_10)]'),
+            array('g.1_2insN[(10_5)]', 'g.1_2insN[(5_10)]'),
+            array('g.1_2insN[(10_10)]', 'g.1_2insN[10]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);400_500]',
                   'c.1_2ins[NC_000001.10:g.100_(200_300);400_500]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);(400_500)]',
@@ -194,8 +197,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
             array('g.(100_200)del50', 'g.(100_200)delN[50]'),
+            array('g.(100_200)del(50_50)', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(60_50)', 'g.(100_200)delN[(50_60)]'),
-
 
             // Question marks.
             // Note, that some of these variants do *not* need fixing and
