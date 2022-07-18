@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-07-11
+ * Modified    : 2022-07-15
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -454,7 +454,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             $nParts = count($aParts);
 
             foreach ($aParts as $i => $sPart) {
-                if (preg_match('/^[ACGTU]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
+                if (preg_match('/^[ACGTNU]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
                     // Looks good, but make sure the case is good, too.
                     $aParts[$i] = $sPart = str_replace('U', 'T', strtoupper($sPart));
                 }
