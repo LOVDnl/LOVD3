@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2021-04-15
- * For LOVD    : 3.0-27
+ * Modified    : 2022-07-13
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -43,6 +43,7 @@ class LOVD_VV
     // public $sURL = 'https://www35.lamp.le.ac.uk/'; // The URL of the VV testing endpoint.
     public $aResponse = array( // The standard response body.
         'data' => array(),
+        'messages' => array(),
         'warnings' => array(),
         'errors' => array(),
     );
@@ -389,6 +390,10 @@ class LOVD_VV
             }
         }
         // If we didn't get the build right here, then the whole call will fail.
+        // Also, only NCs will work.
+        if (!$sBuild || substr($sVariantNC, 0, 2) != 'NC') {
+            return false;
+        }
 
         // Transcript list should be a list, or 'all'.
         if (!$aOptions['select_transcripts']
@@ -399,7 +404,7 @@ class LOVD_VV
         $aJSON = $this->callVV('LOVD/lovd', array(
             'genome_build' => $sBuild,
             'variant_description' => $sVariant,
-            'transcripts' => 'all',
+            'transcripts' => 'refseq', // 'all' includes Ensembl transcripts that currently (July 2022) are very slow.
             'select_transcripts' => (!is_array($aOptions['select_transcripts'])?
                 $aOptions['select_transcripts'] :
                 implode('|', $aOptions['select_transcripts'])),
@@ -428,7 +433,8 @@ class LOVD_VV
                             if ($sError == 'Length implied by coordinates must equal sequence deletion length') {
                                 // EINCONSISTENTLENGTH error.
                                 $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
-                            } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false) {
+                            } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false
+                                || preg_match('/^Failed to fetch .+ out of range/', $sError)) {
                                 // ERANGE error.
                                 $aData['errors']['ERANGE'] = $sError;
                             } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
@@ -440,6 +446,12 @@ class LOVD_VV
                             } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
                                 // ESYNTAX error.
                                 $aData['errors']['ESYNTAX'] = $sError;
+                            } elseif (strpos($sError, $sVariant . ' updated to ') !== false) {
+                                // Recently, VV published an update that generates an error even when the variant
+                                //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
+                                //  elsewhere, so hide that here.
+                                $aJSON[$sVariant]['genomic_variant_error'] = '';
+                                break;
                             } else {
                                 // Unrecognized error.
                                 $aData['errors'][] = $sError;
@@ -515,7 +527,8 @@ class LOVD_VV
                     // Check for g.1_1del to g.1del.
                     $bRangeChanged = (substr_count($sDNAOri, '_') > substr_count($sDNACorrected, '_'));
 
-                    if ($aVariantOri == $aVariantCorrected && !$bRangeChanged) {
+                    if (array_diff_key($aVariantOri, array('warnings' => array()))
+                        == array_diff_key($aVariantCorrected, array('warnings' => array())) && !$bRangeChanged) {
                         // Positions and type are the same, small corrections like delG to del.
                         // We let these pass silently.
                     } elseif ($aVariantOri['type'] != $aVariantCorrected['type'] || $bRangeChanged) {
@@ -560,15 +573,10 @@ class LOVD_VV
                             'protein' => '',
                         );
                         if ($aTranscript['gap_statement'] || $aTranscript['gapped_alignment_warning']) {
-                            // Store this in warnings.
-                            $sWarning = '';
-                            if ($aTranscript['gap_statement']) {
-                                $sWarning = rtrim($aTranscript['gap_statement'], '.') . '.';
-                            }
-                            if ($aTranscript['gapped_alignment_warning']) {
-                                $sWarning .= (!$sWarning? '' : ' ') . rtrim($aTranscript['gapped_alignment_warning'], '.') . '.';
-                            }
-                            $aData['warnings']['WGAP'] = $sWarning;
+                            // This message might be repeated for multiple transcripts when there are gapped alignments,
+                            //  and perhaps repeated also for multiple genome builds (untested).
+                            // Currently, we just store one warning message.
+                            $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
                         }
                         if ($aTranscript['t_hgvs']) {
                             $aMapping['DNA'] = substr(strstr($aTranscript['t_hgvs'], ':'), 1);
@@ -905,7 +913,8 @@ class LOVD_VV
                     // Check for c.1_1del to c.1del.
                     $bRangeChanged = (substr_count($sDNAOri, '_') > substr_count($sDNACorrected, '_'));
 
-                    if ($aVariantOri == $aVariantCorrected && !$bRangeChanged) {
+                    if (array_diff_key($aVariantOri, array('warnings' => array()))
+                        == array_diff_key($aVariantCorrected, array('warnings' => array())) && !$bRangeChanged) {
                         // Positions and type are the same, small corrections like delG to del.
                         // We let these pass silently.
                     } elseif ($aVariantOri['type'] != $aVariantCorrected['type'] || $bRangeChanged) {
@@ -948,16 +957,40 @@ class LOVD_VV
                 // Not a previously seen error, handled through the flag value.
                 // We'll assume a warning.
 
-                // VV throws two warnings for del100 variants, because of the '100'.
-                if (($nKey = array_search('Trailing digits are not permitted in HGVS variant descriptions',
-                        $aJSON['validation_warnings'])) !== false) {
-                    // We silently skip these warnings.
-                    unset($aJSON['validation_warnings'][$nKey]);
-                    // Also unset the next line, which contains the link to the docs.
-                    unset($aJSON['validation_warnings'][$nKey + 1]);
+                // This can be a whole list, so loop through it.
+                foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
+                    // VV throws two warnings for del100 variants, because of the '100'.
+                    if ($sWarning == 'Trailing digits are not permitted in HGVS variant descriptions'
+                        || strpos($sWarning, 'Refer to http://varnomen.hgvs.org/') !== false) {
+                        // We silently skip these warnings.
+                        unset($aJSON['validation_warnings'][$nKey]);
+
+                    } elseif (strpos($sWarning, ' is pending therefore changes may be made to the LRG reference sequence') !== false
+                        || $sWarning == 'RefSeqGene record not available') {
+                        // We don't care about this - we started with an NM anyway.
+                        unset($aJSON['validation_warnings'][$nKey]);
+
+                    } elseif (preg_match(
+                        '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
+                        $sWarning, $aRegs)) {
+                        // This is not that important, but we won't completely discard it, either.
+                        $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+                        unset($aJSON['validation_warnings'][$nKey]);
+
+                    } elseif (strpos($sWarning, 'Caution should be used when reporting the displayed variant descriptions') !== false
+                        || strpos($sWarning, 'The displayed variants may be artefacts of aligning') !== false) {
+                        // Both these warnings are thrown at the same time when there are mismatches between the
+                        //  genomic reference sequence (in general, the genome build) and the transcript.
+                        // We could discard one and handle the other, but in this case, we're a bit more flexible.
+                        // This message might be repeated when there are gapped alignments with multiple genome builds
+                        //  (untested), but currently, we just store one warning message.
+                        $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
+                        unset($aJSON['validation_warnings'][$nKey]);
+                    }
                 }
 
-                $aData['warnings'][] = $aJSON['validation_warnings'];
+                // Anything left, gets added to our list.
+                $aData['warnings'] += array_values($aJSON['validation_warnings']);
             }
 
             if ($aData['data']['DNA']) {

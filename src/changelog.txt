@@ -5,6 +5,81 @@
  *************/
 
 /***************************
+ * 3.0 Build 28 (tag:3.0-28)
+ * 2022-07-18
+ *********/
+ * Applied several fixes to the LOVD2-style API. There was a problem with
+   searching and the unique variant view didn't always show the variant descrip-
+   tion on the alternative genome build. Also, removed a gene's MIM accession
+   when it's empty.
+   Closes #548: "LOVD2-style API showing unique variant view with JSON output
+   picks random entries for alternative genome build".
+ * Several internal XSS issues were fixed, adding protection against stored XSS.
+ * Fixed not updating a gene's timestamp when an Individual is deleted.
+ * Fixed variants linked to multiple individuals getting deleted when one of the
+   individuals would be deleted. Note that normally, variants cannot be linked
+   to multiple individuals.
+ * Fixed warning shown when editing somebody else's data.
+ * Fixed several PHP warnings and notices throughout the code.
+ * Remove graphs from LOVD light.
+   Closes #564: "LOVD light's status page crashes".
+ * Allow passing the classification method to the submission API using the
+   pathogenicity's @source value. Allowed values for @source are currently;
+   "ACMG", "ACGS", "EAHAD-CFDB", "ENIGMA", "IARC", "InSiGHT", "kConFab", and
+   "other".
+   Closes #568: "Make it easier to provide the classification method when using
+   the submission API".
+ * Improve lovd_getVariantInfo() and lovd_fixHGVS(). Added functionality to deal
+   with repeats, fixed bugs in the interpretation of positions, cleaned up the
+   way wildtypes and '?' types were handled, made even more specific warning and
+   error messages, implemented decisions on how to handle uncertain variants,
+   expanded the test cases.
+   Closes #566: "Improve lovd_getVariantInfo() and lovd_fixHGVS()".
+ * Fix LOVD for PHP8. LOVD was incompatible with PHP8 due to the removal of
+   curly braces as a string access operator.
+   Closes #571: "LOVD incompatible with PHP8".
+ * Multiple-selection lists didn't show pre-selected values on Windows browsers
+   when the field itself didn't have focus, due to a styling issue. This problem
+   does not exist on Linux. Removed some styling of the lists, so all users can
+   see the pre-selected items.
+   Closes #570: "Pre-selected items are not visible in multiple-selection list
+   when list is not in focus".
+ * Updated the copyright statement to 2022.
+ * Completely rebuilt the URL validation on the system settings form.
+   Closes #577: "Blind SSRF vulnerability on lovd3 database url".
+ * Corrected grammar in code of conduct, and fixed link to code of conduct from
+   the readme.
+ * Fixed bug in generating page titles, improved generated page titles, and let
+   more pages use generated page titles.
+ * Don't needlessly show VLs on the user's unfinished submission page.
+ * Fixed row link when viewing other user's unfinished submissions.
+ * Enable the "Your submissions" link that was defined but not enabled.
+ * Removed hidden curators from the LOVD2-style API, genes output.
+   Closes #590: "REST JSON API includes hidden curator names".
+ * Fixed link to LRGs.
+   Closes #599: "LOVD uses wrong protocol to open LRG web pages".
+ * Added a /diseases/[OMIMID] redirect. This makes it easier to check if a
+   disease with a certain OMIMID is configured in an LOVD instance.
+   Closes #591: "Allow for /diseases/[OMIMID] forwards".
+ * Fixed several issues in our Variant Validator library. Small changes like
+   delA to del were misinterpreted as a WROLLFORWARD, caused by a change on our
+   side. Properly store warnings as one list, not a list within lists.
+   Restructure the filtering of the warnings a bit. Catch IREFSEQUPDATED
+   messages, alerting us about updated refseqs. Silently remove LRG-related
+   errors when running verifyVariant(). Also let verifyVariant() ignore
+   "RefSeqGene record not available". Throw WALIGNMENTGAPS when necessary, and
+   hide VV's warnings. Fix recognizing WROLLFORWARD. Sync LOVD with VV endpoint
+   and replace WGAP by WALIGNMENTGAPS. Clarify that verifyGenomic() needs an NC
+   (not an LRG or so). Also, just return false if we have no build, so we don't
+   need to call VV and handle the output. We know it'll fail. Ignore slow
+   Ensembl transcripts when using verifyGenomic(). Also use the new VV warning
+   code in the variant fixing script. Handle out of range errors for variants
+   close to the ends of the NCs.
+   Closes #583: "Adapt VV library for recent change that throws warnings for
+   silent corrections".
+
+
+/***************************
  * 3.0 Build 27 (tag:3.0-27)
  * 2021-08-17
  *********/
