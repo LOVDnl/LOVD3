@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2022-02-10
+ * Modified    : 2022-07-01
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -88,6 +88,20 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /diseases/00001
     // View specific entry.
 
+    // Special case; if we're detecting an OMIM ID, we forward the user.
+    // LOVD Disease IDs contain five integers. If we encounter six, and the ID
+    //  starts with a digit of at least 1 but no higher than 6, check first if
+    //  we know this integer as an OMIM ID.
+    if (strlen($_PE[1]) == 6 && $_PE[1][0] && (int) $_PE[1][0] < 7) {
+        $nDisease = $_DB->query(
+            'SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?',
+            array($_PE[1]))->fetchColumn();
+        if ($nDisease) {
+            header('Location: ' . lovd_getInstallURL() . 'diseases/' . $nDisease, 301);
+            exit;
+        }
+    }
+
     $nID = lovd_getCurrentID();
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
@@ -158,7 +172,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($_PE[1]))->fetchAllColumn();
     $n = count($aDiseases);
     if (!$n) {
-        define('PAGE_TITLE', 'Disease with abbreviation ' . $_PE[1]);
+        define('PAGE_TITLE', lovd_getCurrentPageTitle());
         $_T->printHeader();
         $_T->printTitle();
         lovd_showInfoTable('No such ID!', 'stop');
@@ -184,7 +198,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     define('LOG_EVENT', 'DiseaseCreate');
 
     // Require curator clearance.
-    lovd_isAuthorized('gene', $_AUTH['curates']);
+    if ($_AUTH) {
+        lovd_isAuthorized('gene', $_AUTH['curates']);
+    }
     lovd_requireAUTH(LEVEL_CURATOR);
 
     require ROOT_PATH . 'inc-lib-actions.php';

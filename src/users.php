@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2022-02-10
+ * Modified    : 2022-06-17
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,7 +57,7 @@ if (PATH_COUNT == 1 && !ACTION) {
         define('FORMAT_ALLOW_TEXTPLAIN', true);
     }
 
-    define('PAGE_TITLE', 'User accounts');
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
 
@@ -188,7 +188,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
             $_T->printHeader();
             $_T->printTitle();
             if (!$_CONF['allow_submitter_registration']) {
-                $sGeneSymbol = ($_SESSION['currdb']? $_SESSION['currdb'] : 'DMD'); // Used as an example gene symbol, use the current gene symbol if possible.
+                $sGeneSymbol = ($_SESSION['currdb']?: 'DMD'); // Used as an example gene symbol, use the current gene symbol if possible.
                 $sMessage = 'Submitter registration is not active in this LOVD installation. If you wish to submit data, please check the list of gene variant databases in our <A href="http://www.LOVD.nl/LSDBs" target="_blank">list of LSDBs</A>.<BR>Our LSDB list can also be reached by typing <I>GENESYMBOL.lovd.nl</I> in your browser address bar, like <I><A href="http://' . $sGeneSymbol . '.lovd.nl" target="_blank">' . $sGeneSymbol . '.lovd.nl</A></I>.';
             } elseif (LOVD_plus) {
                 // LOVD+ doesn't allow for submitter registrations, because submitters already achieve rights.
@@ -1142,22 +1142,32 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         exit;
     }
 
-    if ($_AUTH && $_AUTH['id'] == $nID) {
-        // Require submitter clearance.
-        lovd_requireAUTH();
-
-        lovd_showInfoTable('Below are lists of your unfinished submissions', 'information');
-    } else {
-        // Require manager clearance.
-        lovd_requireAUTH(LEVEL_MANAGER);
-
-        lovd_showInfoTable('Below are lists of this user\'s unfinished submissions', 'information');
-    }
-
     if (!empty($zData['saved_work'])) {
         $zData['saved_work'] = unserialize($zData['saved_work']);
     } else {
         $zData['saved_work'] = array();
+    }
+
+    if ($_AUTH && $_AUTH['id'] == $nID) {
+        // Require submitter clearance.
+        lovd_requireAUTH();
+
+        if ($zData['saved_work']) {
+            lovd_showInfoTable('Below are lists of your unfinished submissions.', 'information');
+        }
+   } else {
+        // Require manager clearance.
+        lovd_requireAUTH(LEVEL_MANAGER);
+
+        if ($zData['saved_work']) {
+            lovd_showInfoTable('Below are lists of this user\'s unfinished submissions.', 'information');
+        }
+    }
+
+    if (!$zData['saved_work']) {
+        lovd_showInfoTable('There are no unfinished submissions to show.', 'information');
+        $_T->printFooter();
+        exit;
     }
 
     $_T->printTitle('Individuals', 'H4');
@@ -1193,7 +1203,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
         if ($_AUTH['id'] == $nID) {
             $_DATA->setRowLink('Screenings_submissions', 'submit/screening/' . $_DATA->sRowID);
         } else {
-            $_DATA->setRowLink('Individuals_submissions', 'screenings/' . $_DATA->sRowID);
+            $_DATA->setRowLink('Screenings_submissions', 'screenings/' . $_DATA->sRowID);
         }
         $aVLOptions = array(
             'cols_to_skip' => array('owned_by_', 'created_date', 'edited_date'),

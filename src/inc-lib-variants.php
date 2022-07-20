@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-02-10
+ * Modified    : 2022-07-15
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -71,6 +71,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // In case users forgot to remove the starting ':'.
     $sVariant = ltrim($sVariant, ':');
 
+    if (!$sVariant) {
+        return $sReference . $sVariant;
+    }
+
     if (!in_array($sType, array('g', 'm', 'c', 'n'))) {
         // If type is not given, default to something.
         // We usually just default to 'g'. But when it's obviously something
@@ -106,6 +110,28 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Replace special – (hyphen, minus, en dash, em dash) with a simple - (hyphen-minus).
     $sVariant = str_replace(array('‐', '−', '–', '—'), '-', $sVariant);
+
+    // Rare, but seen; "c," as prefix instead of "c.".
+    if (substr($sVariant, 0, 2) == $sType . ',') {
+        $sVariant[1] = '.';
+    }
+
+    // More special characters arising from copying variants from PDFs. Some journals decide to use specialized fonts to
+    //  create markup for normal characters, such as the > in a substitution. This is a terrible idea, as
+    //  text-recognition then completely fails and copying the variant from the PDF results in a misformatted variant.
+    // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
+    // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
+    // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")
+    // "!" seen in CRB1_32351147_Liu-2020.pdf ("C!T")
+    // "." seen in MERTK_19403518_Charbel%20Issa-2009.pdf ("c.2189+1G.T")
+    // "4" seen in MERTK_30851773_Bhatia-2019.pdf ("c.1647T4G")
+    // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
+    // Because " " has already been trimmed to "", make pattern optional.
+    // Note the "u" modifier to allow for UTF-8 characters.
+    if (preg_match('/^([cgmn]\.[0-9_+-]+[ACGTU])[®?!.4→]?([ACGTRYSWKMBDHUVN])$/u', $sVariant, $aRegs)) {
+        // One of these characters has been found specifically in a substitution pattern. Replace it.
+        return $sReference . $aRegs[1] . '>' . $aRegs[2];
+    }
 
     // Do a quick HGVS check.
     if (lovd_getVariantInfo($sReference . $sVariant, false, true)) {
@@ -162,11 +188,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return lovd_fixHGVS($sReference . $sType . ($sVariant[0] == '.'? '' : '.') . $sVariant, $sType);
     }
 
-    // Replace the outdated "con" type with "delins".
-    // This used to check also if the delins needed square brackets around the
-    //  insertion, but we moved that code to generalize it.
-    if (strpos($sVariant, 'con') !== false) {
-        return lovd_fixHGVS($sReference . str_replace('con', 'delins', $sVariant), $sType);
+    // Protein formatting for DNA variants.
+    if (preg_match('/^([cgmn]\.)([ACGTUN]+)([0-9]+)([ACGTUN]+)$/', $sVariant, $aRegs)) {
+        // Rebuild the variant into a substitution.
+        list(, $sPrefix, $sRef, $nPosition, $sAlt) = $aRegs;
+        return lovd_fixHGVS($sReference . $sPrefix . $nPosition . $sRef . '>' . $sAlt, $sType);
     }
 
     // Remove redundant prefixes due to copy/paste errors (g.12_g.23del to g.12_23del).
@@ -228,10 +254,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             return lovd_fixHGVS($sReference . $sType . substr($sVariant, 1), $sType);
         }
 
-    } elseif (!empty($aVariant['errors']
+    } elseif (!empty($aVariant['errors'])
         && !isset($aVariant['errors']['ESUFFIXMISSING'])
         && !isset($aVariant['errors']['EPOSITIONFORMAT'])
-        && isset($aVariant['warnings']['WTOOMUCHUNKNOWN']))) {
+        && isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
         return $sReference . $sVariant; // Not HGVS.
     }
 
@@ -241,16 +267,31 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (ctype_upper($sVariant[0])) {
             return lovd_fixHGVS($sReference . strtolower($sVariant[0]) . substr($sVariant, 1), $sType);
 
-        // If not the prefix, then it must be because of the variant type
-        //  (lovd_getVariantInfo() currently doesn't check the suffix).
         } elseif ($aVariant['type'] == 'subst') {
+            // If not the prefix, try the bases. First up, substitutions.
             return lovd_fixHGVS($sReference . $sVariant[0] .
                 str_replace('U', 'T', strtoupper(substr($sVariant, 1))), $sType);
+
+        } elseif (($aVariant['type'] == 'del' || $aVariant['type'] == 'delins')
+            && preg_match('/^(.+)del([ACGTUN\[0-9\]]+)?(?:ins([ACGTUN\[0-9\]]+))?$/i', $sVariant, $aRegs)
+            && ($aRegs[2] != strtoupper($aRegs[2])
+                || (isset($aRegs[3]) && $aRegs[3] != strtoupper($aRegs[3])))) {
+            // Deletions and deletion-insertion events.
+            // Note: A "delins" can also look like "delAinsG".
+            return lovd_fixHGVS($sReference . $aRegs[1] . 'del' .
+                str_replace('U', 'T', strtoupper($aRegs[2]) .
+                    (!isset($aRegs[3])? '' : 'ins' . strtoupper($aRegs[3]))), $sType);
         }
     }
 
     // Change the variant type (if possible) if the wrong type was chosen.
     if (isset($aVariant['warnings']['WWRONGTYPE'])) {
+        // lovd_getVariantInfo() already often provides the fix.
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WWRONGTYPE'], $aRegs)) {
+            list(, $sOldType, $sNewType) = $aRegs;
+            return lovd_fixHGVS($sReference . str_replace($sOldType, $sNewType, $sVariant), $sType);
+        }
+
         if ($aVariant['type'] == 'subst') {
             // Handle all notations of substitutions regardless of the length of
             //  the REF and ALT; recognize deletions, insertions, duplications,
@@ -306,14 +347,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 // Substitution.
                 // Recalculate the position always; we might have started with a
                 //  range, but ended with just a single position.
-                list(,,$sPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
+                $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset, 1));
                 return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . $sRef . '>' . $sAlt, $sVariant), $sType);
 
             } elseif ($nALTLength == 0) {
                 // Deletion.
-                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
-                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
-                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+                $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset, $nREFLength));
                 return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'del', $sVariant), $sType);
 
             } elseif ($nREFLength == 0) {
@@ -321,26 +360,20 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 if (substr($sAltOriginal, strrpos($sAltOriginal, $sAlt) - $nALTLength, $nALTLength) == $sAlt) {
                     // Duplication. Note that the start position might be quite
                     //  far from the actual insert.
-                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1 - $nALTLength);
-                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset);
-                    $sPosition = $sStartPosition . ($nALTLength == 1? '' : '_' . $sEndPosition);
+                    $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset - $nALTLength, $nALTLength));
                     return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'dup', $sVariant), $sType);
 
                 } else {
                     // Insertion. We don't need to worry about an offset of 0,
                     //  as we don't accept empty REFs - they can only have been
                     //  emptied by shifting.
-                    list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset);
-                    list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
-                    $sPosition = $sStartPosition . '_' . $sEndPosition;
+                    $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset - 1, 2));
                     return lovd_fixHGVS($sReference . str_replace($aRegs[0], $sPosition . 'ins' . $sAlt, $sVariant), $sType);
                 }
 
             } else {
                 // Inversion or deletion-insertion. Both REF and ALT are >1.
-                list(,,$sStartPosition) = lovd_getVariantEndPosition($aVariant, $nOffset + 1);
-                list(,,$sEndPosition)   = lovd_getVariantEndPosition($aVariant, $nOffset + $nREFLength);
-                $sPosition = $sStartPosition . ($nREFLength == 1? '' : '_' . $sEndPosition);
+                $sPosition = lovd_formatPositions(lovd_modifyVariantPosition($aVariant, $nOffset, $nREFLength));
 
                 if ($sRef == strrev(str_replace(array('A', 'C', 'G', 'T'), array('T', 'G', 'C', 'A'), strtoupper($sAlt)))) {
                     // Inversion.
@@ -358,55 +391,44 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Remove the suffix if it is given to a variant type which should not hold one.
     if (isset($aVariant['warnings']['WSUFFIXGIVEN']) && !isset($aVariant['warnings']['WTOOMUCHUNKNOWN'])) {
+        // For anything not "del" or "dup", better not touch it. This can also be thrown for types that never should
+        //  have a suffix, like substitutions or repeats. So don't mess with what we don't understand.
+        if (!in_array($aVariant['type'], array('del', 'dup'))) {
+            return $sReference . $sVariant;
+        }
+        // Redundant variant suffixes that indicate a length, e.g. g.10_20del11 or g.1dupA, are already checked in
+        //  lovd_getVariantInfo() to makes sure that the length they indicate matches the given positions. If this does
+        //  not match, a WSUFFIXINVALIDLENGTH is thrown rather than a WSUFFIXGIVEN. And if a suffix isn't understood,
+        //  we'll see a WSUFFIXFORMAT. So for dels and dups, we can be sure we can drop the suffix now.
         // The warning message indicates where the unwanted suffix starts.
         // We take this string by isolating the part between the double quotes.
         list(,$sVariantType) = explode('"', $aVariant['warnings']['WSUFFIXGIVEN']);
-        if (!preg_match('/[0-9]+_[0-9]+' . $sVariantType . '\([0-9]+(_[0-9]+)?\)/', $sVariant)) {
-            // If the suffix is formatted such as '([0-9]+)', it indicated the
-            //  length of the variant. If we find this in variants of which the
-            //  positions are '[0-9]+_[0-9]+', it might be that the user forgot
-            //  to use brackets around the positions (indicating an uncertain
-            //  location, which would mean the suffix IS necessary). We cannot
-            //  be sure we may remove it, so we have to let this be.
-            list($sBeforeType,$sSuffix) = explode($sVariantType, $sVariant, 2);
-            // We currently don't support OR variants (^). In fact, if we don't
-            //  return it here, we'll mutilate it.
-            if ($sSuffix[0] == '^') {
-                return $sReference . $sVariant;
-            }
-            // For combined variants, return as-is.
-            if (preg_match('/^[](]?;/', $sSuffix)) {
-                // Combined variant (allele notation), don't mess with it.
-                return $sReference . $sVariant;
-            }
-            // For normal dels and dups, don't remove the suffix if it doesn't
-            //  match the length.
-            $sSuffixClean = trim($sSuffix, '()');
-            $nLength = lovd_getVariantLength($aVariant);
-            if (in_array($aVariant['type'], array('del', 'dup'))
-                && ((ctype_digit($sSuffixClean) && $sSuffixClean != $nLength)
-                    || (!ctype_digit($sSuffixClean) && strlen($sSuffixClean) != $nLength))) {
-                // Don't mess with it.
-                return $sReference . $sVariant;
-            }
-            return lovd_fixHGVS(
-                $sReference . $sBeforeType . $sVariantType .
-                str_repeat(')', (substr_count($sSuffix, ')') - substr_count($sSuffix, '('))), $sType);
-        }
+        list($sBeforeType, $sSuffix) = explode($sVariantType, $sVariant, 2);
+        return lovd_fixHGVS(
+            $sReference . $sBeforeType . $sVariantType .
+            str_repeat(')', (substr_count($sSuffix, ')') - substr_count($sSuffix, '('))), $sType);
     }
 
 
 
     // Reformat wrongly described suffixes.
     if (isset($aVariant['warnings']['WSUFFIXFORMAT'])) {
-        list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
-
-        if (ctype_digit($sSuffix)) {
-            // Add parentheses in case they were forgotten (del/ins lengths).
-            return lovd_fixHGVS($sReference .
-                $sBeforeSuffix . $aVariant['type'] . '(' . $sSuffix . ')', $sType);
+        if (isset($aVariant['warnings']['WSUFFIXINVALIDLENGTH'])
+            || !$aVariant['type']) {
+            // In this case, the variant suffix is interpreted and understood to be broken,
+            //  or the type couldn't even properly be interpreted. Let's not touch it.
+            return $sReference . $sVariant;
         }
 
+        // Often, the solution to the problem will be given in the warning itself.
+        // Do this first, because delAinsG variants we can't handle otherwise, as "delins" can't be found in those
+        //  variants, and the suffix can't be isolated properly.
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WSUFFIXFORMAT'], $aRegs)) {
+            list(, $sOldSuffix, $sNewSuffix) = $aRegs;
+            return lovd_fixHGVS($sReference . str_replace($sOldSuffix, $sNewSuffix, $sVariant), $sType);
+        }
+
+        list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
@@ -432,7 +454,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             $nParts = count($aParts);
 
             foreach ($aParts as $i => $sPart) {
-                if (preg_match('/^[ACGTU]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
+                if (preg_match('/^[ACGTNU]+$/i', $sPart) || preg_match('/^N\[/i', $sPart)) {
                     // Looks good, but make sure the case is good, too.
                     $aParts[$i] = $sPart = str_replace('U', 'T', strtoupper($sPart));
                 }
@@ -493,10 +515,33 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         }
     }
 
+    // Rare situation; Uncertain positions are given that should just be certain.
+    if (isset($aVariant['errors']['EPOSITIONFORMAT'])
+        && isset($aVariant['messages']['IPOSITIONRANGE'])
+        && lovd_getVariantLength($aVariant) == 2
+        && in_array($aVariant['type'], array('ins', 'inv'))) {
+        // E.g., c.(1_2)insA.
+        $sPositions = lovd_formatPositions($aVariant);
+        return $sReference . str_replace(
+            '(' . $sPositions . ')',
+            $sPositions,
+            $sVariant
+        );
+    }
+
     // Swap positions if necessary.
     if (isset($aVariant['warnings']['WPOSITIONFORMAT'])) {
-        $aPositions = array();
+        // Before we start manually trying to figure out what's going on, try the suggested instructions.
+        // Currently, these instructions are only given for positions that start with a 0, which should be removed.
+        if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WPOSITIONFORMAT'], $aRegs)) {
+            list(, $sOldPosition, $sNewPosition) = $aRegs;
+            // FIXME: This may be too simplistic. The pattern may be too small, causing unwanted changes.
+            // These warnings may be stacked. Using this pattern, we'll just grab the last one.
+            // So it may take a few iterations before everything is fixed.
+            return lovd_fixHGVS($sReference . str_replace($sOldPosition, $sNewPosition, $sVariant), $sType);
+        }
 
+        $aPositions = array();
         preg_match(
             '/^([cgmn])\.' .                         // 1.  Prefix.
             '((' .
@@ -613,6 +658,52 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // We're out of things that we can do.
     return $sReference . $sVariant; // Not HGVS.
+}
+
+
+
+
+
+function lovd_formatPosition ($nPosition, $nPositionIntron)
+{
+    // This function simply formats the given
+    //  numbers into a proper position string.
+    // Not to be confused with lovd_formatPositions().
+
+    if (!$nPosition || !is_numeric($nPosition)
+        || ($nPositionIntron && !is_numeric($nPositionIntron))) {
+        return false;
+    }
+
+    return $nPosition .
+        (!$nPositionIntron? '' :
+            ($nPositionIntron < 1? $nPositionIntron : '+' . $nPositionIntron));
+}
+
+
+
+
+
+function lovd_formatPositions ($aVariant)
+{
+    // This function simply formats the
+    //  full position string for the given variant.
+    // Not to be confused with lovd_formatPosition().
+
+    $sPositionStart = lovd_formatPosition(
+        $aVariant['position_start'],
+        (!isset($aVariant['position_start_intron'])? NULL : $aVariant['position_start_intron'])
+    );
+    $sPositionEnd = lovd_formatPosition(
+        $aVariant['position_end'],
+        (!isset($aVariant['position_end_intron'])? NULL : $aVariant['position_end_intron'])
+    );
+
+    if ($sPositionStart == $sPositionEnd) {
+        return $sPositionStart;
+    } else {
+        return $sPositionStart . '_' . $sPositionEnd;
+    }
 }
 
 
@@ -818,117 +909,63 @@ function lovd_getRNAProteinPrediction ($sReference, $sGene, $sNCBITranscriptID, 
 
 
 
-function lovd_getVariantEndPosition ($aVariant, $nLength)
+function lovd_modifyVariantPosition ($aVariant, $nOffset = 0, $nLength = 0)
 {
-    // Takes the start position from the $aVariant array (g. based or c. based), adds the given length,
-    //  and calculates the end position (overwriting it if needed).
+    // Takes the start position from the $aVariant array (g. based or c. based),
+    //  shifts it using the given offset, adds the given length,
+    //  and calculates the new positions (overwriting them).
 
     if (!isset($aVariant['position_start'])
-        || (!is_int($nLength) && !ctype_digit($nLength))
-        || $nLength < 1) {
+        || (!is_int($nOffset) && !ctype_digit($nOffset))
+        || (!is_int($nLength) && !ctype_digit($nLength))) {
         return false;
     }
 
-    if (!empty($aVariant['position_start_intron'])) {
-        $aVariant['position_end_intron'] = $aVariant['position_start_intron'] + $nLength - 1;
-        // Compensate for the possibility that we just left the intron.
-        if ($aVariant['position_start_intron'] < 0 && $aVariant['position_end_intron'] > 0) {
-            $aVariant['position_end'] = $aVariant['position_start'] + $aVariant['position_end_intron'];
-            $aVariant['position_end_intron'] = 0;
+    if (!$nLength) {
+        $nLength = lovd_getVariantLength($aVariant);
+    }
+
+    $aVariant['position_end'] = $aVariant['position_start'];
+    $bTranscript = isset($aVariant['position_start_intron']);
+    $bIntronic = ($bTranscript && $aVariant['position_start_intron']);
+    if ($bTranscript) {
+        $aVariant['position_end_intron'] = $aVariant['position_start_intron'];
+    }
+
+    $aOffsets = array();
+    if ($nOffset) {
+        $aOffsets[] = array('position_start', $nOffset);
+    }
+    if ($nOffset || $nLength > 1) {
+        $aOffsets[] = array('position_end', ($nOffset + $nLength - 1));
+    }
+
+    foreach ($aOffsets as list($sPosition, $nOffset)) {
+        if ($bIntronic) {
+            $nPositionIntron = $aVariant[$sPosition . '_intron'] + $nOffset;
+            // Compensate for the possibility that we just left the intron.
+            if (($aVariant[$sPosition . '_intron'] > 0 && $nPositionIntron < 0)
+                || ($aVariant[$sPosition . '_intron'] < 0 && $nPositionIntron > 0)) {
+                $nPosition = $aVariant[$sPosition] + $nPositionIntron;
+                $nPositionIntron = 0;
+            } else {
+                $nPosition = $aVariant[$sPosition];
+            }
+            $aVariant[$sPosition . '_intron'] = $nPositionIntron;
+
         } else {
-            $aVariant['position_end'] = $aVariant['position_start'];
+            $nPosition = $aVariant[$sPosition] + $nOffset;
         }
-
-    } else {
-        if (isset($aVariant['position_end_intron'])) {
-            $aVariant['position_end_intron'] = 0;
+        // Compensate for the possibility that we just entered or left the UTR.
+        if ($aVariant[$sPosition] > 0 && $nPosition <= 0) {
+            $nPosition --;
+        } elseif ($aVariant[$sPosition] < 0 && $nPosition >= 0) {
+            $nPosition ++;
         }
-        $aVariant['position_end'] = $aVariant['position_start'] + $nLength - 1;
+        $aVariant[$sPosition] = $nPosition;
     }
 
-    // Build return array.
-    $aReturn = array(
-        $aVariant['position_end'], // End position (genomic or exonic).
-        NULL, // (intronic, default value)
-        $aVariant['position_end'], // Formatted position string, to be extended.
-    );
-    if (isset($aVariant['position_end_intron'])) {
-        $aReturn[1] = $aVariant['position_end_intron'];
-        if ($aVariant['position_end_intron']) {
-            $aReturn[2] .= ($aVariant['position_end_intron'] < 1?
-                $aVariant['position_end_intron'] :
-                '+' . $aVariant['position_end_intron']);
-        }
-    }
-
-    return $aReturn;
-}
-
-
-
-
-
-function lovd_getVariantLength ($aVariant)
-{
-    // This function receives an array in the format as given by
-    //  lovd_getVariantInfo() and calculates the length of the variant.
-    // This length will only include intronic positions if the input contains
-    //  these. When the length cannot be determined due to crossing the center
-    //  of an intron, this function will return false.
-
-    $nBasicLength = $aVariant['position_end'] - $aVariant['position_start'] + 1;
-    if (empty($aVariant['position_start_intron'])
-        && empty($aVariant['position_end_intron'])) {
-        // Simple case; genomic variant or simply no introns involved.
-        return ($nBasicLength);
-
-    } elseif (empty($aVariant['position_start_intron'])) {
-        // So we have an intronic end, but not an intronic start.
-        // If the intronic end is negative, this means we're crossing the
-        //  center of an intron, and the length cannot be determined.
-        if ($aVariant['position_end_intron'] < 0) {
-            return false;
-        }
-        return ($nBasicLength + $aVariant['position_end_intron']);
-
-    } elseif (empty($aVariant['position_end_intron'])) {
-        // So we have an intronic start, but not an intronic end.
-        // If the intronic start is positive, this means we're crossing the
-        //  center of an intron, and the length cannot be determined.
-        if ($aVariant['position_start_intron'] > 0) {
-            return false;
-        }
-        return ($nBasicLength + abs($aVariant['position_start_intron']));
-    }
-
-    // Else, we have intronic positions both for the start and the end.
-    if ($aVariant['position_start'] == $aVariant['position_end']) {
-        // Same side of the intron. Just take the max minus the min.
-        // NOTE: $nBasicLength is already 1 even though no length has been
-        //  calculated yet. So we don't have to add that 1 here.
-        return (
-            $nBasicLength +
-            max(
-                $aVariant['position_start_intron'],
-                $aVariant['position_end_intron']
-            ) -
-            min(
-                $aVariant['position_start_intron'],
-                $aVariant['position_end_intron']
-            )
-        );
-
-    } elseif ($aVariant['position_start_intron'] > 0
-        || $aVariant['position_end_intron'] < 0) {
-        // Still nope.
-        return false;
-    }
-
-    // OK, just add the lengths.
-    return (
-        $nBasicLength
-        + abs($aVariant['position_start_intron'])
-        + $aVariant['position_end_intron']);
+    return $aVariant;
 }
 
 

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2020-11-09
- * For LOVD    : 3.0-26
+ * Modified    : 2022-07-12
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -637,8 +637,8 @@ class LOVD_VVAnalyses {
                 // Also panic when we have a warning, to make sure we catch everything.
                 unset($aVV['warnings']['WCORRECTED']);
                 unset($aVV['warnings']['WROLLFORWARD']);
-                if (isset($aVV['warnings']['WGAP'])) {
-                    // Ignore WGAP warnings when the predicted cDNA is the same
+                if (isset($aVV['warnings']['WALIGNMENTGAPS'])) {
+                    // Ignore WALIGNMENTGAPS warnings when the predicted cDNA is the same
                     //  as the current cDNA, or when the predicted cDNA is WT.
                     // Also, all VKGL variants will just be overwritten as we
                     //  know they are detected on the genome.
@@ -655,7 +655,7 @@ class LOVD_VVAnalyses {
                         || substr($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], -1) == '='
                         || strpos($aVV['data']['transcript_mappings'][$sTranscript]['DNA'], '>') !== false) {
                         // Match, or WT.
-                        unset($aVV['warnings']['WGAP']);
+                        unset($aVV['warnings']['WALIGNMENTGAPS']);
                     }
                 }
                 if (isset($aVV['warnings']['WFLAG'])) {
