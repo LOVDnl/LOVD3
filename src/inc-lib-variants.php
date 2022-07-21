@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-07-15
- * For LOVD    : 3.0-28
+ * Modified    : 2022-07-21
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -50,7 +50,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // Check for a reference sequence. We won't check it here, so we won't be
     //  very strict.
-    if (lovd_holdsRefSeq($sVariant)) {
+    if (preg_match('/^(ENS[GT]|LRG_([0-9]+t)?|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/i', $sVariant, $aRegs)) {
         // Something that looks like a reference sequence is prefixing the
         //  variant. Cut it off and store it separately. We'll return it, but
         //  this way we can actually check the variant itself.
