@@ -42,7 +42,11 @@ define('AJAX_CONNECTION_ERROR', '7');
 define('AJAX_NO_AUTH', '8');
 define('AJAX_DATA_ERROR', '9');
 
-$_SETT = array('objectid_length' => array('transcripts' => 8));
+$_SETT = array(
+    'objectid_length' => array('transcripts' => 8),
+    'variant_validator' => array(
+        'genome_builds' => array('hg19', 'hg38')),
+);
 ?>
 
 function lovd_checkHGVS (e)
@@ -80,7 +84,7 @@ function lovd_checkHGVS (e)
 
     if (e.type == 'change' && !bHGVS && oVariantDNA.val()) {
         // This is a "real" onChange call(), we couldn't match the variant, but we do have something filled in. Check with Mutalyzer!
-        if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA') {
+        if (oVariantDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
             var sVariantNotation = 'g:' + oVariantDNA.val(); // The actual chromosome is not important, it's just the variant syntax that matters here.
         } else {
             var sVariantNotation = 'c:' + oVariantDNA.val(); // The actual transcript is not important, it's just the variant syntax that matters here.
@@ -186,11 +190,11 @@ function lovd_convertPosition (oElement)
         if (oThisDNA.attr("name").indexOf("VariantOnTranscript") >= 0) {
             sSource = "VOT";
         } else {
-            pos = oThisDNA.attr("name").lastIndexOf("/");
-            sSource = oThisDNA.attr("name").substr(pos + 1);
+            sSource = oThisDNA.data('genomeBuild');
         }
         oVariantSource.val(sSource);
     }
+
     var oAllDNA = $('input[name$="_VariantOnTranscript/DNA"]');
     $(oAllDNA).removeClass().siblings('img:first').attr({
         src: 'gfx/trans.png',
@@ -200,12 +204,14 @@ function lovd_convertPosition (oElement)
         onmouseover: '',
         onmouseout: ''
     }).show();
+
     var oAllProteins = $('input[name$="_VariantOnTranscript/Protein"]');
     $(oAllProteins).siblings('img:first').attr({
         src: 'gfx/trans.png',
         alt: '',
         title: ''
     }).show();
+
     $(oThisDNA).siblings('img:first').attr({
         src: 'gfx/lovd_loading.gif',
         alt: 'Loading...',
@@ -215,7 +221,7 @@ function lovd_convertPosition (oElement)
         onmouseout: ''
     }).show();
 
-    if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
+    if (oThisDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
         // This function was called from the genomic variant, so build a list of genes and prepare the variant accordingly for mutalyzer.
         var sVariantNotation = 'chr<?php echo $_GET['chromosome']; ?>:' + oThisDNA.val();
         var aGenes = [];
@@ -239,7 +245,7 @@ function lovd_convertPosition (oElement)
         $.get('ajax/convert_position.php', { variant: sVariantNotation, gene: sGene },
             function(sData) {
                 if (sData != '<?php echo AJAX_DATA_ERROR; ?>' && sData != '<?php echo AJAX_FALSE; ?>' && sData != '<?php echo AJAX_NO_AUTH; ?>') {
-                    if (oThisDNA.attr('name') == 'VariantOnGenome/DNA') {
+                    if (oThisDNA.filter("[name^='VariantOnGenome/DNA']").size()) {
                         // This function was called from the genomic variant, so fill in the return values from mutalyzer in the transcript DNA fields.
                         aVariants = sData.split(';');
                         var nVariants = aVariants.length;
@@ -515,20 +521,28 @@ function lovd_highlightInput (oElement)
 
 $(function ()
 {
-    var oGenomicVariant = $('#variantForm input[name="VariantOnGenome/DNA"]');
+    var oGenomicVariants = $('#variantForm input[name^="VariantOnGenome/DNA"]');
     var oTranscriptVariants = $('#variantForm input[name$="_VariantOnTranscript/DNA"]');
-    // Add the button and image at the end of the genomic DNA field.
-    oGenomicVariant.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to transcript' + (oTranscriptVariants.length == 1? '' : 's') + '</BUTTON>');
     // Add an onChange event that runs lovd_checkHGVS.
-    oGenomicVariant.change(lovd_checkHGVS);
+    oGenomicVariants.change(lovd_checkHGVS);
     // Add same function to the onKeyUp event, but then it will check itself if the variant is likely to be complete.
-    oGenomicVariant.keyup(lovd_checkHGVS);
+    oGenomicVariants.keyup(lovd_checkHGVS);
 
-    if (oGenomicVariant.val() !== '') {
+    if (oGenomicVariants.val() !== '') {
         // Variant field already has content, check HGVS now because if we're on an edit form we
         // want the buttons to be ready.
-        oGenomicVariant.change();
+        oGenomicVariants.change();
     }
+
+    // Add the button and image at the end of the genomic DNA fields.
+    var aSupportedBuilds = ["<?php echo implode('" , "', $_SETT['variant_validator']['genome_builds']); ?>"];
+    for (i=0; i < oGenomicVariants.length; i++) {
+        var oGenomicVariant = oGenomicVariants.eq(i);
+        if (aSupportedBuilds.includes(oGenomicVariant.data('genome-build'))) {
+            oGenomicVariant.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to transcript' + (oTranscriptVariants.length == 1? '' : 's') + '</BUTTON>');
+        }
+    }
+
 
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.

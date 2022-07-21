@@ -833,18 +833,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // If the source is a transcript, we describe it with an empty string.
                 $_POST['source'] = '';
 
-            } else {
-                // If the source of the variant is not a transcript, it is a genome build.
-                //  We will then send the ID of this genome build to the database.
-                // We have received the last piece of the field used, which may
-                //  be a genome build (from VOG/DNA/hg38) or "DNA" (from VOG/DNA).
-                $sColumnSuffix = ($_POST['source'] == 'DNA'? '' : $_POST['source']);
-
-                // Get the ID by its column suffix and give this as the source.
-                $sID = $_DB->query(
-                    'SELECT id FROM ' . TABLE_GENOME_BUILDS . '
-                     WHERE column_suffix = ?', array($sColumnSuffix))->fetchColumn();
-                $_POST['source'] = $sID;
+            } elseif (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENOME_BUILDS . ' WHERE ID = ?', array($_POST['source']))->fetchColumn()) {
+                unset($aFieldsGenome[array_search('source', $aFieldsGenome)]);
             }
 
             $_POST['owned_by'] = ($_AUTH['level'] >= LEVEL_CURATOR? $_POST['owned_by'] : $_AUTH['id']);
@@ -957,7 +947,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
     // Table.
     print('      <FORM id="variantForm" action="' . CURRENT_PATH . '?create&amp;reference=' . $_GET['reference'] . (isset($sGene)? '&amp;geneid=' . rawurlencode($sGene) : '') . (isset($_POST['screeningid'])? '&amp;target=' . $_GET['target'] : '') . '" method="post">' . "\n" .
-          '        <INPUT name="source" type="hidden" value="' . (empty($_POST['source'])? '' : $_POST['source']) . '"> ' . "\n");
+          '        <INPUT name="source" type="hidden" value="' . (empty($_POST['source'])? '' : htmlspecialchars($_POST['source'])) . '"> ' . "\n");
 
     // Array which will make up the form table.
     $aForm = array_merge(

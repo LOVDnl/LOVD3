@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2022-02-10
+ * Modified    : 2022-07-21
  * For LOVD    : 3.0-28
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -56,7 +56,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
     function __construct ()
     {
         // Default constructor.
-        global $_AUTH, $_CONF, $_SETT;
+        global $_AUTH, $_DB, $_SETT;
 
         // SQL code for loading an entry for an edit form.
         $this->sSQLLoadEntry = 'SELECT vog.*, ' .
@@ -208,28 +208,30 @@ class LOVD_GenomeVariant extends LOVD_Custom
 
         $this->sSortDefault = 'VariantOnGenome/DNA';
 
-        // 2015-10-09; 3.0-14; Add genome build name to the VOG/DNA field.
-        $this->aColumnsViewEntry['VariantOnGenome/DNA'] .= ' (Relative to ' . $_CONF['refseq_build'] . ' / ' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . ')';
-        $this->aColumnsViewList['VariantOnGenome/DNA']['view'][0] .= ' (' . $_CONF['refseq_build'] . ')';
+        // For efficiency's sake, adapt genomic DNA fields for VLs, VEs, and forms all in one place.
+        $aActiveBuilds = $_DB->query('
+            SELECT id, name, CONCAT_WS("/", "VariantOnGenome/DNA", NULLIF(column_suffix, "")) AS column_name
+            FROM ' . TABLE_GENOME_BUILDS)->fetchAllGroupAssoc();
+        foreach ($aActiveBuilds as $sBuild => $aBuild) {
+            // Add "(hg19)" or "(hg38)" to VLs headers.
+            $this->aColumnsViewList[$aBuild['column_name']]['view'][0] .= ' (' . $sBuild . ')';
+            // Add "(Relative to hg19 / GRCh37)" to VE field names.
+            $this->aColumnsViewEntry[$aBuild['column_name']] .= ' (Relative to ' . $aBuild['name'] . ')';
+            // Add "(Relative to hg19 / GRCh37)" to field descriptions (will be converted to a note).
+            $this->aColumns[$aBuild['column_name']]['description_form'] = '<B>Relative to ' . $aBuild['name'] . '.</B>' .
+                (!$this->aColumns[$aBuild['column_name']]['description_form']? '' : '<BR>' . $this->aColumns[$aBuild['column_name']]['description_form']);
+            // Also add element data to the form field, and a link to the HGVS varnomen site.
+            $this->aColumns[$aBuild['column_name']]['element_data'] = array('genome_build' => $sBuild);
+            $this->aColumns[$aBuild['column_name']]['form_type'][0] = str_replace(
+                '(HGVS format)',
+                '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)',
+                $this->aColumns[$aBuild['column_name']]['form_type'][0]);
+        }
 
         // Because the information is publicly available, remove some columns for the public.
         $this->unsetColsByAuthLevel();
 
         $this->sRowLink = 'variants/{{ID}}';
-    }
-
-
-
-
-
-    function buildForm ($sPrefix = '')
-    {
-        $aForm = parent::buildForm($sPrefix);
-        // Link to HGVS for nomenclature.
-        if (isset($aForm[$sPrefix . 'VariantOnGenome/DNA'])) {
-            $aForm[$sPrefix . 'VariantOnGenome/DNA'][0] = str_replace('(HGVS format)', '(<A href="http://varnomen.hgvs.org/recommendations/DNA" target="_blank">HGVS format</A>)', $aForm[$sPrefix . 'VariantOnGenome/DNA'][0]);
-        }
-        return $aForm;
     }
 
 
@@ -350,10 +352,6 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 }
             }
         }
-
-        // Add genome build name to VOG/DNA field.
-        $this->aColumns['VariantOnGenome/DNA']['description_form'] = '<B>Relative to ' . $_CONF['refseq_build'] . ' / ' . $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_name'] . '.</B>' .
-            (!$this->aColumns['VariantOnGenome/DNA']['description_form']? '' : '<BR>' . $this->aColumns['VariantOnGenome/DNA']['description_form']);
 
         // FIXME; right now two blocks in this array are put in, and optionally removed later. However, the if() above can build an entire block, such that one of the two big unset()s can be removed.
         // A similar if() to create the "authorization" block, or possibly an if() in the building of this form array, is easier to understand and more efficient.

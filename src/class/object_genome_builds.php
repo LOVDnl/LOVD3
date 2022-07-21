@@ -123,7 +123,7 @@ class LOVD_GenomeBuild extends LOVD_Object
             $sDNAColumn = 'VariantOnGenome/DNA' . (!$zData['column_suffix']? '' : '/') . $zData['column_suffix'];
             $nPercentComplete = (int) $_DB->query(
                 'SELECT ROUND(
-                   (SELECT COUNT(*) FROM ' . TABLE_VARIANTS. '
+                   (SELECT COUNT(*) FROM ' . TABLE_VARIANTS . '
                     WHERE `' . $sDNAColumn . '` IS NOT NULL AND
                       `' . $sDNAColumn . '` != "") / (
                     SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ') * 100)')->fetchColumn();
