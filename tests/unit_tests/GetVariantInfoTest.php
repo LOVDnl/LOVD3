@@ -1984,8 +1984,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end_intron' => 0,
                 'type' => 'del',
                 'warnings' => array(
-                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequences are switched around.' .
-                        ' Expected: genomic(transcript); found: transcript(genomic).',
+                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequences have been swapped. Please rewrite "NM_123456.1(NC_123456.1)" to "NC_123456.1(NM_123456.1)".',
                 ),
                 'errors' => array(),
             )),

@@ -1185,7 +1185,7 @@ function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
         'checks' => array(
             'missingVersion'           => '/[NX][CGMRTW]_[0-9]{6,9}(\)|' . $sEnd . ')/',
             'cannotReferenceIntronic'  => '/^(?!((N[CGTW]|LRG|ENSG)))/',
-            'swappedCodingAndGenomic' => '/^[NX]M_[0-9]{6}\.[0-9]+?\(N[CGTW]_[0-9]{6,9}\.[0-9]+?\)' . $sEnd . '/',
+            'swappedCodingAndGenomic' => '/^([NX]M_[0-9]{6}\.[0-9]*)\((N[CGTW]_[0-9]{6,9}\.[0-9]*)\)' . $sEnd . '/',
         ),
     );
 }
@@ -1319,10 +1319,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The reference sequence is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
 
-            } elseif (preg_match($aRefSeqPatterns['checks']['swappedCodingAndGenomic'], $sReferenceSequence)) {
+            } elseif (preg_match($aRefSeqPatterns['checks']['swappedCodingAndGenomic'], $sReferenceSequence, $aRegs)) {
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
-                    'The genomic and transcript reference sequences are switched around.' .
-                    ' Expected: genomic(transcript); found: transcript(genomic).';
+                    'The genomic and transcript reference sequences have been swapped.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
