@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2020-12-23
+ * Modified    : 2022-07-15
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Loes Werkman <L.Werkman@LUMC.nl>
  *
@@ -28,6 +28,10 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+// This test refuses to execute unless configured in the phpunit.xml and by using --configuration.
+// Also renaming it to *Test.php doesn't help, and direct calls to this files return immediately without output.
+// Can not find a reason for this.
 
 require_once 'src/inc-lib-init.php'; // For the dependency on lovd_getVariantInfo().
 require_once 'src/inc-lib-variants.php'; // For lovd_fixHGVS().
@@ -66,7 +70,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123=', 'g.123='),
             array('c.?', 'c.?'),
             array('c.123?', 'c.123?'),
-            array('c.(1_100)del(20)', 'c.(1_100)del(20)'),
 
 
 
@@ -81,28 +84,64 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             //  and the range is fixed to a single position.
             array('g.140712592-140712592C>T', 'g.140712592C>T'),
 
-            // Whitespace and other copy/paste errors.
+            // Whitespace, other typos, and copy/paste errors.
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
             array('c.–123del', 'c.-123del'),
             array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
+            array('c,123del', 'c.123del'),
+            array('c.A123C', 'c.123A>C'),
+            array('c.216G A', 'c.216G>A'), // " " seen in AIPL1_20702822_Jacobson-2011.pdf ("c.216G A")
+            array('c.1106G®A', 'c.1106G>A'), // "®" seen in CACNA1F_9662399_Strom-1998.pdf ("1106G®A")
+            array('c.220T?C', 'c.220T>C'), // "?" seen in CACNA1F_12111638_Wutz-2002.pdf ("220T?C")
+            array('c.1576C!T', 'c.1576C>T'), // "!" seen in CRB1_32351147_Liu-2020.pdf ("C!T")
+            array('c.2189+1G.T', 'c.2189+1G>T'), // "." seen in MERTK_19403518_Charbel%20Issa-2009.pdf ("c.2189+1G.T")
+            array('c.1647T4G', 'c.1647T>G'), // "4" seen in MERTK_30851773_Bhatia-2019.pdf ("c.1647T4G")
+            array('c.1040T→C', 'c.1040T>C'), // "→" seen in NYX_11062472_Pusch-2000.pdf ("1040T→C")
 
-            // Lowercase nucleotides.
+            // Lowercase nucleotides and other case issues.
+            array('C.123C>a', 'c.123C>A'),
+            array('C.123a>u', 'c.123A>T'),
             array('g.123insactg', 'g.123insACTG'),
+            array('g.123delinsgagagauu', 'g.123delinsGAGAGATT'),
+            array('g.123_130delgagagatt', 'g.123_130del'),
+            array('g.123_130delgagagauu', 'g.123_130del'),
+            array('g.123_130deln[8]', 'g.123_130del'),
             array('g.123a>g', 'g.123A>G'),
+            array('g.100_101ins[nc_000010.1:g.100_200;aaaa;n[10]]', 'g.100_101ins[NC_000010.1:g.100_200;AAAA;N[10]]'),
+            array('lrg_123t1:c.100del', 'LRG_123t1:c.100del'),
 
             // U given instead of T.
             array('g.123insAUG', 'g.123insATG'),
 
-            // Conversions and substitutions that should be delins variants.
+            // Variant types should be something else.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
-            array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:100_200]'),
+            array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:g.100_200]'),
             array('g.123A>GC', 'g.123delinsGC'),
-            array('g.123_124AT>GC', 'g.123_124delinsGC'),
+            array('g.123A>AA', 'g.123dup'),
+            array('g.123AA>AC', 'g.124A>C'),
+            array('g.123AA>GA', 'g.123A>G'),
+            array('g.123AA>TT', 'g.123_124inv'),
+            array('g.123AA>GC', 'g.123_124delinsGC'),
+            array('g.123AA>AAAA', 'g.123_124dup'),
+            array('g.123AA>AGCA', 'g.123_124insGC'),
+            array('c.123+1AA>GC', 'c.123+1_123+2delinsGC'),
+            array('c.123-1AA>GC', 'c.123-1_123delinsGC'),
+            array('g.123_124AA>AA', 'g.123_124='),
+            array('g.123_124AA>AC', 'g.124A>C'),
+            array('g.123_124AA>GA', 'g.123A>G'),
+            array('g.123_124AA>GC', 'g.123_124delinsGC'),
+            array('g.123_124AAA>GC', 'g.123_124AAA>GC'), // Unfixable.
+            array('g.123A>.', 'g.123del'),
+            array('g.123AA>.', 'g.123_124del'),
+            array('g.123delAinsG', 'g.123A>G'),
+            array('g.123delainst', 'g.123A>T'),
+            array('g.123delainsu', 'g.123A>T'),
 
             // Wild type requires no bases.
             array('c.123T=', 'c.123='),
+            array('c.123t=', 'c.123='),
             array('c.123_124TG=', 'c.123_124='),
             array('c.(123_124TG=)', 'c.(123_124=)'),
 
@@ -112,7 +151,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123||bsrC', 'g.123|bsrC'),
 
             // Double parentheses.
-            array('g.((123_234))del(50)', 'g.(123_234)del(50)'),
+            array('g.((123_234))del(50)', 'g.(123_234)delN[50]'),
             array('g.((123_234)_(345_456)del', 'g.(123_234)_(345_456)del'),
             array('g.(123_234)_(345_456))del', 'g.(123_234)_(345_456)del'),
 
@@ -121,9 +160,22 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // Redundant parentheses.
             array('c.1_2ins(A)', 'c.1_2insA'),
+            array('c.(1_2)insA', 'c.1_2insA'),
+            array('c.(123+10_123+11)insA', 'c.123+10_123+11insA'),
+            array('c.(1_2)inv', 'c.1_2inv'),
 
             // Superfluous suffixes.
             array('c.123delA', 'c.123del'),
+            array('c.123delAA', 'c.123delAA'), // Unfixable.
+            array('g.123del1', 'g.123del'),
+            array('g.123del2', 'g.123del2'), // Unfixable.
+            array('c.123_124delA', 'c.123_124delA'), // Unfixable.
+            array('c.123_124delAA', 'c.123_124del'),
+            array('g.123_124del1', 'g.123_124del1'), // Unfixable.
+            array('g.123_124del2', 'g.123_124del'),
+            array('g.123_124del(2)', 'g.123_124del'),
+            array('g.123_124delN[2]', 'g.123_124del'),
+            array('g.123delAinsGG', 'g.123delinsGG'),
 
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
@@ -131,10 +183,21 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
+            array('c.1_2ins(50_20)', 'c.1_2insN[(20_50)]'),
+            array('g.1_2insN[5_10]', 'g.1_2insN[(5_10)]'),
+            array('g.1_2insN[(10_5)]', 'g.1_2insN[(5_10)]'),
+            array('g.1_2insN[(10_10)]', 'g.1_2insN[10]'),
+            array('c.1_2ins[NC_000001.10:100_(300_200);400_500]',
+                  'c.1_2ins[NC_000001.10:g.100_(200_300);400_500]'),
+            array('c.1_2ins[NC_000001.10:100_(300_200);(400_500)]',
+                  'c.1_2ins[NC_000001.10:g.100_(200_300);N[(400_500)]]'),
+            array('c.1_2ins[NC_000001.10(100_200)_300]',
+                  'c.1_2ins[NC_000001.10:g.(100_200)_300]'),
             array('g.((1_5)ins(50))', 'g.((1_5)insN[50])'),
             array('g.1_2ins[ACT;(20)]', 'g.1_2ins[ACT;N[20]]'),
-            array('g.(100_200)del50', 'g.(100_200)del(50)'),
-
+            array('g.(100_200)del50', 'g.(100_200)delN[50]'),
+            array('g.(100_200)del(50_50)', 'g.(100_200)delN[50]'),
+            array('g.(100_200)del(60_50)', 'g.(100_200)delN[(50_60)]'),
 
             // Question marks.
             // Note, that some of these variants do *not* need fixing and
@@ -165,9 +228,11 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             array('g.(?_5)_(10_?)del', 'g.(?_5)_(10_?)del'),
             array('g.(5_?)_(?_10)del', 'g.(5_10)del'),
-            array('g.(5_?)_(?_10)del(3)', 'g.(5_10)del(3)'),
+            array('g.(5_?)_(?_10)del(3)', 'g.(5_10)delN[3]'),
 
             array('g.(?_?)_(?_?)del', 'g.?del'),
+            array('g.?_?insAAA', 'g.?_?insAAA'), // Negative control.
+            array('g.?_(?_?)insAAA', 'g.?_?insAAA'),
 
             // Combining sorting and solving redundant question marks.
             array('g.(10_?)_(?_5)del', 'g.(5_10)del'),
@@ -178,7 +243,15 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.(5_1)_10dup', 'g.(1_5)_10dup'),
             array('g.1_(7_5)dup', 'g.1_(5_7)dup'),
             array('g.(7_5)_1dup', 'g.1_(5_7)dup'),
+            array('g.(200_100)_(50_?)del', 'g.(?_50)_(100_200)del'),
+            array('g.(?_300)_(200_100)del', 'g.(100_200)_(300_?)del'),
             array('c.5+1_5-1dup', 'c.5-1_5+1dup'),
+            array('c.*2_1del', 'c.1_*2del'),
+            array('c.(*50_500)_(100_1)del', 'c.(1_100)_(500_*50)del'),
+            array('c.(500_*50)_(1_100)del', 'c.(1_100)_(500_*50)del'),
+
+            // Other position-related things.
+            array('c.-010+01del', 'c.-10+1del'),
 
             // Variants with reference sequences, testing various fixes.
             array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
@@ -187,22 +260,48 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Swapping reference sequences.
             array('NM_123456.1(NC_123456.1):c.100del', 'NC_123456.1(NM_123456.1):c.100del'),
 
+            // Where we can still improve
+            //  (still results in an invalid description - more work needed,
+            //   or variants currently not supported and returned as-is).
+            array('g.(100_200)[ins50]', 'g.(100_200)[ins50]'),
+            // Real problem is a typo in the last position; could we recognize this?
+            array('g.(150138199_150142492)_(150145873_15147218)del',
+                  'g.(15147218_150142492)_(150138199_150145873)del'),
+            array('g.123^124A>C', 'g.123^124A>C'),
+            array('g.123A>C^124G>C', 'g.123A>C^124G>C'),
+            array('g.123A>C;124A>C', 'g.123A>C;124A>C'),
+            array('g.[123A>C;124A>C]', 'g.[123A>C;124A>C]'),
+            array('g.[123A>C(;)124A>C]', 'g.[123A>C(;)124A>C]'),
+            array('g.[123A>C];[124A>C]', 'g.[123A>C];[124A>C]'),
+
+
 
             // UNFIXABLE VARIANTS.
+            array('', ''),
             array('g.1delinsA', 'g.1delinsA'),
             array('c.1AC[20]', 'c.1AC[20]'),
             array('c.1_2A>G', 'c.1_2A>G'),
+            array('g.123A>C<unknown>', 'g.123A>C<unknown>'),
+            array('g.1del<unknown>', 'g.1del<unknown>'),
             array('g.=', 'g.='),
             array('c.1insA', 'c.1insA'),
+            array('c.0_1del', 'c.0_1del'),
+            array('g.0_1del', 'g.0_1del'),
             array('c.1_2ins', 'c.1_2ins'),
+            array('c.10+0del', 'c.10+0del'),
             array('c.1_10insA', 'c.1_10insA'),
-            array('c.(1_2)insA', 'c.(1_2)insA'),
             array('c.1_20insBLA', 'c.1_20insBLA'),
             array('c.1_100insA', 'c.1_100insA'),
             array('c.1_100del(10)', 'c.1_100del(10)'),
+            array('g.1_100inv(30)', 'g.1_100inv(30)'),
             array('g.123-5dup', 'g.123-5dup'),
             array('m.123-5dup', 'm.123-5dup'),
             array('g.*1_*2del', 'g.*1_*2del'),
+            array('g.123.>.', 'g.123.>.'),
+            array('g.123.>C', 'g.123.>C'),
+            array('c.(-100_-74ins)ins(69_111)', 'c.(-100_-74ins)ins(69_111)'), // Used to cause an infinite recursion.
+            array('g.(200_100)?', 'g.(100_200)?'),
+            array('g.(?_100?_200_?)dup', 'g.(?_100?_200_?)dup'),
         );
     }
 }

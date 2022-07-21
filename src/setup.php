@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2021-03-31
- * For LOVD    : 3.0-27
+ * Modified    : 2022-05-26
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -75,7 +75,7 @@ print('      <TABLE border="0" cellpadding="0" cellspacing="0" width="100%">' . 
       '              <TR>' . "\n" .
       '                <TD>' . "\n" .
       '                  Installed : ' . $_STAT['installed_date'] . '<BR>' . "\n" .
-      '                  Updated : ' . ($_STAT['updated_date']? $_STAT['updated_date'] : '-') . '</TD></TR>' . "\n" .
+      '                  Updated : ' . ($_STAT['updated_date']?: '-') . '</TD></TR>' . "\n" .
       '              <TR>' . "\n" .
       '                <TH>Statistics</TH></TR>' . "\n" .
       '              <TR>' . "\n" .

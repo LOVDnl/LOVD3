@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2021-10-13
+ * Modified    : 2022-02-10
  * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -54,7 +54,7 @@ if (!$_SETT['customization_settings']['graphs_enable']) {
 
 
 require ROOT_PATH . 'class/graphs.php';
-$bSeeNonPublicVariants = ($_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
+$bSeeNonPublicVariants = ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
 $_G = new LOVD_Graphs();
 lovd_includeJS('lib/flot/jquery.flot.min.js');
 lovd_includeJS('lib/flot/jquery.flot.pie.min.js');
@@ -121,9 +121,9 @@ foreach ($zGenes as $aGene) {
     print('  <TR class="data" id="' . $aGene['id'] . '" valign="top" style="cursor : pointer;" onclick="window.location.href=\'' . lovd_getInstallURL() . 'genes/' . rawurlencode($aGene['id']) . '\';">' . "\n" .
           '    <TD class="ordered"><A href="genes/' . rawurlencode($aGene['id']) . '" class="hide"><B>' . $aGene['id'] . '</B></A></TD>' . "\n" .
           '    <TD>' . $aGene['name'] . '</TD>' . "\n" .
-          '    <TD align="right">' . ($nCollaborators? $nCollaborators : NULL) . '</TD>' . "\n" .
-          '    <TD align="right">' . ($aGene['curators']? $aGene['curators'] : NULL) . '</TD>' . "\n" .
-          '    <TD align="right">' . ($aGene['updated_date']? $aGene['updated_date'] : 'N/A') . '</TD>' . "\n" .
+          '    <TD align="right">' . ($nCollaborators?: NULL) . '</TD>' . "\n" .
+          '    <TD align="right">' . ($aGene['curators']?: NULL) . '</TD>' . "\n" .
+          '    <TD align="right">' . ($aGene['updated_date']?: 'N/A') . '</TD>' . "\n" .
           '  </TR>' . "\n");
     $nTotalCollaborators += ($aGene['collaborators'] - $aGene['curators']);
     $nTotalCurators += $aGene['curators'];

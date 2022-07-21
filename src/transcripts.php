@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2021-04-15
- * For LOVD    : 3.0-27
+ * Modified    : 2022-06-07
+ * For LOVD    : 3.0-28
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -55,7 +55,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]))
         $_GET['search_geneid'] = '="' . $sGene . '"';
         lovd_isAuthorized('gene', $sGene);
     }
-    define('PAGE_TITLE', 'All transcripts' . (!$sGene? '' : ' active for the ' . $sGene . ' gene'));
+    define('PAGE_TITLE', lovd_getCurrentPageTitle());
     $_T->printHeader();
     $_T->printTitle();
     if ($sGene) {
@@ -74,7 +74,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]))
     }
     $aVLOptions = array(
         'cols_to_skip' => ($sGene? array('geneid') : array()),
-        'show_options' => ($_AUTH['level'] >= LEVEL_CURATOR),
+        'show_options' => ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR),
     );
     $_DATA->viewList('Transcripts', $aVLOptions);
 
@@ -169,7 +169,9 @@ if (ACTION == 'create') {
         define('PAGE_TITLE', 'Add transcript entry to a gene');
 
         // Is user authorized in any gene?
-        lovd_isAuthorized('gene', $_AUTH['curates']);
+        if ($_AUTH) {
+            lovd_isAuthorized('gene', $_AUTH['curates']);
+        }
         lovd_requireAUTH(LEVEL_CURATOR);
 
         $_T->printHeader();
@@ -250,7 +252,7 @@ if (ACTION == 'create') {
         $_POST['workID'] = $nTime['sec'] . $nTime['usec'];
 
         $sFormNextPage = '<FORM action="' . $sPath . '" id="createTranscript" method="post">' . "\n" .
-                         '          <INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n" .
+                         '          <INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n" .
                          '          <INPUT type="submit" value="Continue &raquo;">' . "\n" .
                          '        </FORM>';
 
@@ -470,7 +472,7 @@ if (ACTION == 'create') {
                       ));
     lovd_viewForm($aForm);
 
-    print('<INPUT type="hidden" name="workID" value="' . $_POST['workID'] . '">' . "\n");
+    print('<INPUT type="hidden" name="workID" value="' . htmlspecialchars($_POST['workID']) . '">' . "\n");
     print('</FORM>' . "\n\n");
 
     $_T->printFooter();
