@@ -261,9 +261,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return $sReference . $sVariant; // Not HGVS.
     }
 
-    // Swap the reference sequences if they were wrongly sorted.
-    if (isset($aVariant['warnings']['WREFERENCEFORMAT'])) {
-        return lovd_fixHGVS(preg_replace('/(.*)\((.*)\)/', '$2($1)', $sReference) . $sVariant, $sType);
+    // Swap the reference sequences if they are used in the wrong order.
+    if (isset($aVariant['warnings']['WREFERENCEFORMAT'])
+        && preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WREFERENCEFORMAT'], $aRegs)) {
+        return lovd_fixHGVS($aRegs[2] . ':' . $sVariant, $sType);
     }
 
     // Fix case problems.
