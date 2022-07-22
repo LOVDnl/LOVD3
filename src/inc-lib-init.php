@@ -1126,14 +1126,13 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
-function lovd_getMatchingDNATypesOfRefSeq ($s, $bFullVariantDescription=null)
+function lovd_getMatchingDNATypesOfRefSeq ($s)
 {
     // Depends on lovd_getRefSeqPatterns().
     // Returns all the DNA types which fit a given reference sequence.
     // The variable $s could be a full variant description, or it might
-    //  just be a reference sequence. A user could let us know by
-    //  filling in $bFullVariantDescription.
-    $aPatterns = lovd_getRefSeqPatterns($bFullVariantDescription);
+    //  just be a reference sequence.
+    $aPatterns = lovd_getRefSeqPatterns();
 
     // Get matching DNA types.
     foreach($aPatterns['refSeqPatternToDNAType'] as $sPattern => $aDNATypes) {
@@ -1150,37 +1149,31 @@ function lovd_getMatchingDNATypesOfRefSeq ($s, $bFullVariantDescription=null)
 
 
 
-function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
+function lovd_getRefSeqPatterns ()
 {
     // This function stores and returns all the patterns necessary to
     //  match reference sequences.
-    // The patterns will be ended with a certain 'ending pattern' based
-    //  on whether they will be run on a full variant description or on
-    //  a complete reference sequence. The ending pattern will accept
-    //  both possibilities if this is set to unknown (null), but should
-    //  be set to either true or false when it IS known.
-    $sEnd = ($bFullVariantDescription === null? '(:.*|$)' : ($bFullVariantDescription? ':.*' : '$'));
 
     return array(
         'general' => array(
-            'lenient' => '/^[A-Z_.t0-9()]+' . $sEnd . '/',
+            'lenient' => '/^[A-Z_.t0-9()]+:/',
             'strict'  => '/^([NX][CGMRTW]_[0-9]{6,9}\.[0-9]+' .
                 '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX]M_[0-9]{6,9}\.[0-9]+\)' .
                 '|ENS[TG][0-9]{11}\.[0-9]+' .
                 '|LRG_[0-9]{3}(t[0-9]+)?' .
-                ')' . $sEnd . '/',
+                ')$/',
         ),
         'DNATypeToRefSeqPattern' => array(
-            'c' => '/([NX]M|ENST|LRG_[0-9]+t[0-9]+'    . $sEnd . ')/',
-            'g' => '/^(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/',
-            'm' => '/^(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/',
+            'c' => '/([NX]M|ENST|LRG_[0-9]+t[0-9]+)/',
+            'g' => '/^(N[CGTW]|ENSG|LRG[^t]+(:|$))/',
+            'm' => '/^(N[CGTW]|ENSG|LRG[^t]+(:|$))/',
             'n' => '/^[NX]R/',
         ),
         'refSeqPatternToDNAType' => array(
-            '/[NX]M/'                                 => array('c'),
-            '/(ENST|LRG_[0-9]+t[0-9]+' . $sEnd . ')/' => array('n', 'c'),
-            '/[NX]R/'                                 => array('n'),
-            '/(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/'  => array('g', 'm'),
+            '/[NX]M/'                         => array('c'),
+            '/^(ENST|LRG_[0-9]+t[0-9]+)/'     => array('n', 'c'),
+            '/[NX]R/'                         => array('n'),
+            '/^(N[CGTW]|ENSG|LRG[^t]+(:|$))/' => array('g', 'm'),
         ),
     );
 }
@@ -1237,7 +1230,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // Let's see if it matches the expected format.
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
-        $aRefSeqPatterns = lovd_getRefSeqPatterns(false);
+        $aRefSeqPatterns = lovd_getRefSeqPatterns();
         if (preg_match($aRefSeqPatterns['general']['strict'], $sReferenceSequence)) {
             // Check if the reference sequence matches one of
             //  the possible formats.
@@ -2670,12 +2663,12 @@ function lovd_hideEmail ($s)
 
 
 
-function lovd_holdsRefSeq ($sVariantDescription) : bool
+function lovd_holdsRefSeq ($sVariantDescription)
 {
     // Depends on lovd_getRefSeqPatterns().
     // Finds out whether the general pattern of a reference
     //  sequence was found in a variant description.
-    $aPatterns = lovd_getRefSeqPatterns(true);
+    $aPatterns = lovd_getRefSeqPatterns();
 
     return preg_match($aPatterns['general']['lenient'], $sVariantDescription);
 }
