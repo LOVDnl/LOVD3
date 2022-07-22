@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-21
+ * Modified    : 2022-07-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1218,6 +1218,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'position_start' => 0,
         'position_end'   => 0,
         'type'           => '',
+        'range'          => false,
         'warnings'       => array(),
         'errors'         => array(),
     );
@@ -1330,6 +1331,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
         }
     }
+    // Preliminary determination of a range. This can have false positives, like g.1delins100_200,
+    //  but once we have split off the suffix, we'll try again.
+    $aResponse['range'] = (strpos($sVariant, '_') !== false);
 
 
     // All information of interest will be placed into an associative array.
@@ -1505,6 +1509,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Clean position string. We'll use it for reporting later on.
     if ($aVariant['positions']) {
         $aVariant['positions'] = strstr($aVariant['positions'], $aVariant['type'], true);
+        // And now with more precision.
+        $aResponse['range'] = (strpos($aVariant['positions'], '_') !== false);
     }
 
     // Check the variant's case.
