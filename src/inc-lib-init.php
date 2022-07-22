@@ -1183,7 +1183,6 @@ function lovd_getRefSeqPatterns ($bFullVariantDescription=null)
             '/(N[CGTW]|ENSG|LRG[^t]+' . $sEnd . ')/'  => array('g', 'm'),
         ),
         'checks' => array(
-            'missingVersion'           => '/[NX][CGMRTW]_[0-9]{6,9}(\)|' . $sEnd . ')/',
             'cannotReferenceIntronic'  => '/^(?!((N[CGTW]|LRG|ENSG)))/',
             'swappedCodingAndGenomic' => '/^([NX]M_[0-9]{6}\.[0-9]*)\((N[CGTW]_[0-9]{6,9}\.[0-9]*)\)' . $sEnd . '/',
         ),
@@ -1315,7 +1314,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            if (preg_match($aRefSeqPatterns['checks']['missingVersion'], $sReferenceSequence)) {
+            if (preg_match('/([NX][CGMRTW]_[0-9]{6,9}|ENS[TG][0-9]{11})(\)|$)/', $sReferenceSequence)) {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
