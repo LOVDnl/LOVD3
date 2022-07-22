@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-07-13
- * For LOVD    : 3.0-28
+ * Modified    : 2022-07-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -344,7 +344,7 @@ class LOVD_VV
 
         // Don't send variants that are too big; VV can't currently handle them.
         if (function_exists('lovd_getVariantInfo')) {
-            $aPositions = lovd_getVariantInfo(substr(strstr($sVariant, ':'), 1));
+            $aPositions = lovd_getVariantInfo($sVariant);
             // These sizes are approximate and slightly on the safe side;
             //  simple measurements have shown a maximum duplication size of
             //  250KB, and a max deletion of 900KB, requiring a full minute.
@@ -520,18 +520,15 @@ class LOVD_VV
                 // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
                 if (function_exists('lovd_getVariantInfo')) {
                     // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                    $sDNAOri = substr($sVariant, strlen($sVariantNC) + 1);
-                    $aVariantOri = lovd_getVariantInfo($sDNAOri);
-                    $sDNACorrected = substr($aData['data']['DNA'], strlen($sVariantNC) + 1);
-                    $aVariantCorrected = lovd_getVariantInfo($sDNACorrected);
-                    // Check for g.1_1del to g.1del.
-                    $bRangeChanged = (substr_count($sDNAOri, '_') > substr_count($sDNACorrected, '_'));
+                    $aVariantOri = lovd_getVariantInfo($sVariant);
+                    $aVariantCorrected = lovd_getVariantInfo($aData['data']['DNA']);
 
                     if (array_diff_key($aVariantOri, array('warnings' => array()))
-                        == array_diff_key($aVariantCorrected, array('warnings' => array())) && !$bRangeChanged) {
+                        == array_diff_key($aVariantCorrected, array('warnings' => array()))) {
                         // Positions and type are the same, small corrections like delG to del.
                         // We let these pass silently.
-                    } elseif ($aVariantOri['type'] != $aVariantCorrected['type'] || $bRangeChanged) {
+                    } elseif ($aVariantOri['type'] != $aVariantCorrected['type']
+                        || $aVariantOri['range'] != $aVariantCorrected['range']) {
                         // An insertion actually being a duplication.
                         // A deletion-insertion which is actually something else.
                         // A g.1_1del that should be g.1del.
@@ -541,7 +538,7 @@ class LOVD_VV
                         // 3' forwarding of deletions, insertions, duplications
                         //  and deletion-insertion events.
                         $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                            (!substr_count($sDNAOri, '_')? ' has' : 's have') .
+                            (!$aVariantOri['range']? ' has' : 's have') .
                             ' been corrected.';
                     }
 
@@ -906,28 +903,25 @@ class LOVD_VV
                 // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
                 if (function_exists('lovd_getVariantInfo')) {
                     // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                    $sDNAOri = substr(strstr($sVariant, ':'), 1);
-                    $aVariantOri = lovd_getVariantInfo($sDNAOri);
-                    $sDNACorrected = substr(strstr($aData['data']['DNA'], ':'), 1);
-                    $aVariantCorrected = lovd_getVariantInfo($sDNACorrected);
-                    // Check for c.1_1del to c.1del.
-                    $bRangeChanged = (substr_count($sDNAOri, '_') > substr_count($sDNACorrected, '_'));
+                    $aVariantOri = lovd_getVariantInfo($sVariant);
+                    $aVariantCorrected = lovd_getVariantInfo($aData['data']['DNA']);
 
                     if (array_diff_key($aVariantOri, array('warnings' => array()))
-                        == array_diff_key($aVariantCorrected, array('warnings' => array())) && !$bRangeChanged) {
+                        == array_diff_key($aVariantCorrected, array('warnings' => array()))) {
                         // Positions and type are the same, small corrections like delG to del.
                         // We let these pass silently.
-                    } elseif ($aVariantOri['type'] != $aVariantCorrected['type'] || $bRangeChanged) {
+                    } elseif ($aVariantOri['type'] != $aVariantCorrected['type']
+                        || $aVariantOri['range'] != $aVariantCorrected['range']) {
                         // An insertion actually being a duplication.
                         // A deletion-insertion which is actually something else.
-                        // A g.1_1del that should be g.1del.
+                        // A c.1_1del that should be c.1del.
                         $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
                     } else {
                         // Positions are different, but type is the same.
                         // 3' forwarding of deletions, insertions, duplications
                         //  and deletion-insertion events.
                         $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                            (!substr_count($sDNAOri, '_')? ' has' : 's have') .
+                            (!$aVariantOri['range']? ' has' : 's have') .
                             ' been corrected.';
                     }
 
