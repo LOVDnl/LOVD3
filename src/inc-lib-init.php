@@ -1158,9 +1158,9 @@ function lovd_getRefSeqPatterns ()
         'general' => array(
             'lenient' => '/^[A-Z_.t0-9()]+:/',
             'strict'  => '/^([NX][CGMRTW]_[0-9]{6,9}\.[0-9]+' .
-                '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX]M_[0-9]{6,9}\.[0-9]+\)' .
+                '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)' .
                 '|ENS[TG][0-9]{11}\.[0-9]+' .
-                '|LRG_[0-9]{3}(t[0-9]+)?' .
+                '|LRG_[0-9]+(t[0-9]+)?' .
                 ')$/',
         ),
         'DNATypeToRefSeqPattern' => array(
@@ -1170,10 +1170,10 @@ function lovd_getRefSeqPatterns ()
             'n' => '/^[NX]R/',
         ),
         'refSeqPatternToDNAType' => array(
-            '/[NX]M/'                         => array('c'),
-            '/^(ENST|LRG_[0-9]+t[0-9]+)/'     => array('n', 'c'),
-            '/[NX]R/'                         => array('n'),
-            '/^(N[CGTW]|ENSG|LRG[^t]+(:|$))/' => array('g', 'm'),
+            '/[NX]M_/'                    => array('c'),
+            '/[NX]R_/'                    => array('n'),
+            '/^(ENST|LRG_[0-9]+t[0-9]+)/' => array('c', 'n'),
+            '/^(N[CGTW]|ENSG|LRG)/'       => array('g', 'm'),
         ),
     );
 }
