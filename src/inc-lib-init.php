@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-25
+ * Modified    : 2022-07-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1162,12 +1162,6 @@ function lovd_getRefSeqPatterns ()
                 '|ENS[TG][0-9]{11}\.[0-9]+' .
                 '|LRG_[0-9]+(t[0-9]+)?' .
                 ')$/',
-        ),
-        'DNATypeToRefSeqPattern' => array(
-            'c' => '/([NX]M|ENST|LRG_[0-9]+t[0-9]+)/',
-            'g' => '/^(N[CGTW]|ENSG|LRG[^t]+(:|$))/',
-            'm' => '/^(N[CGTW]|ENSG|LRG[^t]+(:|$))/',
-            'n' => '/^[NX]R/',
         ),
         'refSeqPatternToDNAType' => array(
             '/[NX]M_/'                    => array('c'),
