@@ -35,6 +35,14 @@
 //  this in $_SETT because tests need it (and don't include inc-init.php).
 $_LIBRARIES = array(
     'regex_patterns' => array(
+        'refseq' => array(
+            'strict'  =>
+                '/^([NX][CGMRTW]_[0-9]{6,9}\.[0-9]+' .
+                '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)' .
+                '|ENS[TG][0-9]{11}\.[0-9]+' .
+                '|LRG_[0-9]+(t[0-9]+)?' .
+                ')$/',
+        ),
         'refseq_to_DNA_type' => array(
             '/[NX]M_/'                    => array('c'),
             '/[NX]R_/'                    => array('n'),
@@ -1174,11 +1182,6 @@ function lovd_getRefSeqPatterns ()
     return array(
         'general' => array(
             'lenient' => '/^[A-Z_.t0-9()]+:/',
-            'strict'  => '/^([NX][CGMRTW]_[0-9]{6,9}\.[0-9]+' .
-                '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)' .
-                '|ENS[TG][0-9]{11}\.[0-9]+' .
-                '|LRG_[0-9]+(t[0-9]+)?' .
-                ')$/',
         ),
     );
 }
@@ -1202,7 +1205,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  this information will be added to the response array in the form
     //  of warnings (if not fatal) or errors (when the syntax issues are
     //  such that they make the variant ambiguous or implausible).
-    global $_DB;
+    global $_DB, $_LIBRARIES;
 
     static $aTranscriptOffsets = array();
     $aResponse = array(
@@ -1235,8 +1238,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // Let's see if it matches the expected format.
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
-        $aRefSeqPatterns = lovd_getRefSeqPatterns();
-        if (preg_match($aRefSeqPatterns['general']['strict'], $sReferenceSequence)) {
+        if (preg_match($_LIBRARIES['regex_patterns']['refseq']['strict'], $sReferenceSequence)) {
             // Check if the reference sequence matches one of
             //  the possible formats.
             if ($sTranscriptID) {
