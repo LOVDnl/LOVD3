@@ -36,6 +36,7 @@
 $_LIBRARIES = array(
     'regex_patterns' => array(
         'refseq' => array(
+            'basic' => '/^[A-Z_.t0-9()]+$/',
             'strict'  =>
                 '/^([NX][CGMRTW]_[0-9]{6,9}\.[0-9]+' .
                 '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)' .
@@ -1174,22 +1175,6 @@ function lovd_getMatchingDNATypesOfRefSeq ($s)
 
 
 
-function lovd_getRefSeqPatterns ()
-{
-    // This function stores and returns all the patterns necessary to
-    //  match reference sequences.
-
-    return array(
-        'general' => array(
-            'lenient' => '/^[A-Z_.t0-9()]+:/',
-        ),
-    );
-}
-
-
-
-
-
 function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = false)
 {
     // Parses the variant, and returns the position fields (2 for genomic
@@ -1322,7 +1307,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
-                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.'; // Fixme; should we store this information in getRefSeqPatterns maybe?
+                    ' Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.';
             }
         }
     }
@@ -2672,12 +2657,15 @@ function lovd_hideEmail ($s)
 
 function lovd_holdsRefSeq ($sVariantDescription)
 {
-    // Depends on lovd_getRefSeqPatterns().
     // Finds out whether the general pattern of a reference
     //  sequence was found in a variant description.
-    $aPatterns = lovd_getRefSeqPatterns();
+    global $_LIBRARIES;
 
-    return preg_match($aPatterns['general']['lenient'], $sVariantDescription);
+    return (
+        strpos($sVariantDescription, ':') !== false
+        &&
+        preg_match($_LIBRARIES['regex_patterns']['refseq']['basic'], strstr($sVariantDescription, ':', true))
+    );
 }
 
 
