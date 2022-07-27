@@ -3722,10 +3722,7 @@ function lovd_variantRemoveRefSeq ($sVariant)
 {
     // This function removes the reference sequence from a variant description.
 
-    if (!is_string($sVariant) || strpos($sVariant, ':') === false) {
-        // If the variant is not of type string, we cannot remove a reference sequence from it.
-        // The same is true for descriptions that do not hold a ':'
-        //  (separating the variant from the reference sequence).
+    if (!lovd_variantHasRefSeq($sVariant)) {
         return $sVariant;
     }
 
