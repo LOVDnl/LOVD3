@@ -518,7 +518,7 @@ class LOVD_VVAnalyses {
                             // If not, this is probably an import error where the wrong
                             //  transcript ID was selected. Yes, even if the chromosome is the same,
                             //  this might be the case. But we have to draw the line somewhere.
-                            $sMappedRefSeq = strstr($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']], ':', true);
+                            $sMappedRefSeq = lovd_getVariantRefSeq($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']]);
                             if ($sCurrentRefSeq != $sMappedRefSeq) {
                                 $this->panic($aVariant, $aVV, 'While handling EREF error, found that LOVD\'s mapping is on a transcript on a different chromosome (' . $sCurrentRefSeq . ' => ' . $sMappedRefSeq . ').');
                             }
@@ -827,7 +827,7 @@ class LOVD_VVAnalyses {
                         //  transcript ID was selected. Yes, even if the chromosome is the same,
                         //  this might be the case. But we have to draw the line somewhere.
                         if ($aVVVot && !$aVVVot['errors']) {
-                            $sMappedRefSeq = strstr($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']], ':', true);
+                            $sMappedRefSeq = lovd_getVariantRefSeq($aVVVot['data']['genomic_mappings'][$_CONF['refseq_build']]);
                             if ($sCurrentRefSeq != $sMappedRefSeq) {
                                 $this->panic($aVariant, $aVV, 'While handling missing transcript annotation, found that LOVD\'s mapping is on a transcript on a different chromosome (' . $sCurrentRefSeq . ' => ' . $sMappedRefSeq . ').');
                             }

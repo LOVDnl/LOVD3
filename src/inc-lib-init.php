@@ -2547,6 +2547,21 @@ function lovd_getVariantPrefixesByRefSeq ($s)
 
 
 
+function lovd_getVariantRefSeq ($sVariant)
+{
+    // This function isolates and returns the reference sequence from a variant description, if there is any.
+
+    if (!lovd_variantHasRefSeq($sVariant)) {
+        return false;
+    }
+
+    return strstr($sVariant, ':', true);
+}
+
+
+
+
+
 function lovd_getProjectFile ()
 {
     // Gets project file name (file name including possible project subdirectory).
