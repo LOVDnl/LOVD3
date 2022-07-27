@@ -1153,28 +1153,6 @@ function lovd_getInstallURL ($bFull = true)
 
 
 
-function lovd_getMatchingDNATypesOfRefSeq ($s)
-{
-    // Returns all the DNA types which fit a given reference sequence.
-    // The variable $s could be a full variant description, or it might
-    //  just be a reference sequence.
-    global $_LIBRARIES;
-
-    // Get matching DNA types.
-    foreach($_LIBRARIES['regex_patterns']['refseq_to_DNA_type'] as $sPattern => $aDNATypes) {
-        if (preg_match($sPattern, $s)) {
-            return $aDNATypes;
-        }
-    }
-
-    // No matches found.
-    return array();
-}
-
-
-
-
-
 function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = false)
 {
     // Parses the variant, and returns the position fields (2 for genomic
@@ -1258,7 +1236,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
 
-            if (!in_array($sVariant[0], lovd_getMatchingDNATypesOfRefSeq($sReferenceSequence))) {
+            if (!in_array($sVariant[0], lovd_getVariantPrefixesByRefSeq($sReferenceSequence))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
@@ -2541,6 +2519,28 @@ function lovd_getVariantLength ($aVariant)
         $nBasicLength
         + abs($aVariant['position_start_intron'])
         + $aVariant['position_end_intron']);
+}
+
+
+
+
+
+function lovd_getVariantPrefixesByRefSeq ($s)
+{
+    // Returns all the DNA type prefixes which fit a given reference sequence.
+    // The variable $s could be a full variant description, or it might
+    //  just be a reference sequence.
+    global $_LIBRARIES;
+
+    // Get matching DNA type prefixes.
+    foreach($_LIBRARIES['regex_patterns']['refseq_to_DNA_type'] as $sPattern => $aDNATypes) {
+        if (preg_match($sPattern, $s)) {
+            return $aDNATypes;
+        }
+    }
+
+    // No matches found.
+    return array();
 }
 
 
