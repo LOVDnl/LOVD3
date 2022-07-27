@@ -3405,27 +3405,6 @@ function lovd_queryError ($sErrorCode, $sSQL, $sSQLError, $bHalt = true)
 
 
 
-function lovd_removeRefSeq ($sVariant)
-{
-    // This function removes the reference sequence from a
-    //  variant description.
-
-    if (!is_string($sVariant) || strpos($sVariant, ':') === false) {
-        // If the variant is not of type string, we cannot
-        //  remove a reference sequence from it.
-        // The same is true for variants that do not hold a
-        //  ':' (separating the 'variant' from the reference
-        //  sequence).
-        return $sVariant;
-    }
-
-    return substr(strstr($sVariant, ':'), 1);
-}
-
-
-
-
-
 function lovd_requireAUTH ($nLevel = 0)
 {
     // Creates friendly output message if $_AUTH does not exist (or level too
@@ -3732,6 +3711,24 @@ function lovd_variantHasRefSeq ($sVariantDescription)
         &&
         preg_match($_LIBRARIES['regex_patterns']['refseq']['basic'], strstr($sVariantDescription, ':', true))
     );
+}
+
+
+
+
+
+function lovd_variantRemoveRefSeq ($sVariant)
+{
+    // This function removes the reference sequence from a variant description.
+
+    if (!is_string($sVariant) || strpos($sVariant, ':') === false) {
+        // If the variant is not of type string, we cannot remove a reference sequence from it.
+        // The same is true for descriptions that do not hold a ':'
+        //  (separating the variant from the reference sequence).
+        return $sVariant;
+    }
+
+    return substr(strstr($sVariant, ':'), 1);
 }
 
 
