@@ -3700,16 +3700,17 @@ function lovd_validateIP ($sRange, $sIP)
 
 
 
-function lovd_variantHasRefSeq ($sVariantDescription)
+function lovd_variantHasRefSeq ($sVariant)
 {
-    // Finds out whether the general pattern of a reference
-    //  sequence was found in a variant description.
+    // This function returns whether the general pattern of a reference sequence was found in a variant description.
     global $_LIBRARIES;
 
     return (
-        strpos($sVariantDescription, ':') !== false
+        is_string($sVariant)
         &&
-        preg_match($_LIBRARIES['regex_patterns']['refseq']['basic'], strstr($sVariantDescription, ':', true))
+        strpos($sVariant, ':') !== false
+        &&
+        preg_match($_LIBRARIES['regex_patterns']['refseq']['basic'], strstr($sVariant, ':', true))
     );
 }
 
