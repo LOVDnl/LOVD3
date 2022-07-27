@@ -1196,7 +1196,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Match the reference sequence if one was given.
-    if (lovd_holdsRefSeq($sVariant)) {
+    if (lovd_variantHasRefSeq($sVariant)) {
         // The user seems to have written down a reference sequence.
         // Let's see if it matches the expected format.
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
@@ -2655,23 +2655,6 @@ function lovd_hideEmail ($s)
 
 
 
-function lovd_holdsRefSeq ($sVariantDescription)
-{
-    // Finds out whether the general pattern of a reference
-    //  sequence was found in a variant description.
-    global $_LIBRARIES;
-
-    return (
-        strpos($sVariantDescription, ':') !== false
-        &&
-        preg_match($_LIBRARIES['regex_patterns']['refseq']['basic'], strstr($sVariantDescription, ':', true))
-    );
-}
-
-
-
-
-
 function lovd_includeJS ($sFile, $nPrefix = 3)
 {
     // Searches for and includes a .js include file.
@@ -3732,6 +3715,23 @@ function lovd_validateIP ($sRange, $sIP)
         $b = $bPart;
     }
     return $b;
+}
+
+
+
+
+
+function lovd_variantHasRefSeq ($sVariantDescription)
+{
+    // Finds out whether the general pattern of a reference
+    //  sequence was found in a variant description.
+    global $_LIBRARIES;
+
+    return (
+        strpos($sVariantDescription, ':') !== false
+        &&
+        preg_match($_LIBRARIES['regex_patterns']['refseq']['basic'], strstr($sVariantDescription, ':', true))
+    );
 }
 
 
