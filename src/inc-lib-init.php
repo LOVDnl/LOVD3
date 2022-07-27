@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-26
+ * Modified    : 2022-07-27
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,6 +29,24 @@
  * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
+
+// A place to store values used by multiple functions. It doesn't really make
+//  sense to define a function simply to store information. But we can't put
+//  this in $_SETT because tests need it (and don't include inc-init.php).
+$_LIBRARIES = array(
+    'regex_patterns' => array(
+        'refseq_to_DNA_type' => array(
+            '/[NX]M_/'                    => array('c'),
+            '/[NX]R_/'                    => array('n'),
+            '/^(ENST|LRG_[0-9]+t[0-9]+)/' => array('c', 'n'),
+            '/^(N[CGTW]_[0-9]+\.[0-9]+$|ENSG|LRG_[0-9]+$)/' => array('g', 'm'),
+        ),
+    ),
+);
+
+
+
+
 
 function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
 {
@@ -1128,14 +1146,13 @@ function lovd_getInstallURL ($bFull = true)
 
 function lovd_getMatchingDNATypesOfRefSeq ($s)
 {
-    // Depends on lovd_getRefSeqPatterns().
     // Returns all the DNA types which fit a given reference sequence.
     // The variable $s could be a full variant description, or it might
     //  just be a reference sequence.
-    $aPatterns = lovd_getRefSeqPatterns();
+    global $_LIBRARIES;
 
     // Get matching DNA types.
-    foreach($aPatterns['refSeqPatternToDNAType'] as $sPattern => $aDNATypes) {
+    foreach($_LIBRARIES['regex_patterns']['refseq_to_DNA_type'] as $sPattern => $aDNATypes) {
         if (preg_match($sPattern, $s)) {
             return $aDNATypes;
         }
@@ -1162,12 +1179,6 @@ function lovd_getRefSeqPatterns ()
                 '|ENS[TG][0-9]{11}\.[0-9]+' .
                 '|LRG_[0-9]+(t[0-9]+)?' .
                 ')$/',
-        ),
-        'refSeqPatternToDNAType' => array(
-            '/[NX]M_/'                    => array('c'),
-            '/[NX]R_/'                    => array('n'),
-            '/^(ENST|LRG_[0-9]+t[0-9]+)/' => array('c', 'n'),
-            '/^(N[CGTW]_[0-9]+\.[0-9]+$|ENSG|LRG_[0-9]+$)/' => array('g', 'm'),
         ),
     );
 }
