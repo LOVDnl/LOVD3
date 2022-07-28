@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-27
+ * Modified    : 2022-07-28
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1196,6 +1196,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Match the reference sequence if one was given.
+    $sReferenceSequence = '';
     if (lovd_variantHasRefSeq($sVariant)) {
         // The user seems to have written down a reference sequence.
         // Let's see if it matches the expected format.
@@ -1441,7 +1442,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     ' This does not necessarily mean the description is not valid HGVS.';
 
                 // We do have one requirement; chromosomal reference sequence.
-                if (isset($sReferenceSequence) && substr($sReferenceSequence, 0, 2) != 'NC') {
+                if ($sReferenceSequence && substr($sReferenceSequence, 0, 2) != 'NC') {
                     $aResponse['errors']['EWRONGREFERENCE'] =
                         'The variant is missing a chromosomal reference sequence required for pter, cen, or qter positions.';
                 }
