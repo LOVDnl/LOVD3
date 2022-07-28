@@ -1202,7 +1202,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // Let's see if it matches the expected format.
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
-        if (preg_match($_LIBRARIES['regex_patterns']['refseq']['strict'], $sReferenceSequence)) {
+        if (lovd_isValidRefSeq($sReferenceSequence)) {
             // Check if the reference sequence matches one of
             //  the possible formats.
             if ($sTranscriptID) {
@@ -2964,6 +2964,22 @@ function lovd_isOwner ($sType, $Data)
     $q = $_DB->query($sQ, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
 
     return ($q !== false && intval($q->fetchColumn()) == count($Data));
+}
+
+
+
+
+
+function lovd_isValidRefSeq ($sRefSeq)
+{
+    // This function checks if the given string is a valid reference sequence description.
+    global $_LIBRARIES;
+
+    return (bool) (
+        is_string($sRefSeq)
+        &&
+        preg_match($_LIBRARIES['regex_patterns']['refseq']['strict'], $sRefSeq)
+    );
 }
 
 
