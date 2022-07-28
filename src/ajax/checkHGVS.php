@@ -3,8 +3,8 @@
  *
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
- * Created     : 2021-12-03
- * Modified    : 2022-07-27
+ * Created     : 2011-09-06
+ * Modified    : 2022-07-28
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -29,13 +29,48 @@
  *
  *************/
 
-if ($_REQUEST['var'] == '') {
-    exit;
+define('ROOT_PATH', '../');
+// Stop the session from sending any cache or no-cache headers. Alternative: ini_set() session.cache_limiter.
+session_cache_limiter('public');
+require ROOT_PATH . 'inc-init.php';
+// HGVS syntax check result expires in a day.
+header('Expires: ' . date('r', time() + (24 * 60 * 60)));
+
+session_write_close();
+
+if (!empty($_GET['variant'])) {
+    // HGVS check from the submission form, previously done using Mutalyzer and coded in 2011.
+
+    if (!preg_match('/^(c:[cn]|g:[mg])\./', $_GET['variant'])) {
+        die(AJAX_DATA_ERROR);
+    }
+
+    // Take the c. or g. off.
+    $_GET['variant'] = substr($_GET['variant'], 2);
+
+    // Requires at least LEVEL_SUBMITTER.
+    if (!$_AUTH) {
+        die(AJAX_NO_AUTH);
+    }
+
+    if (lovd_getVariantInfo($sVariant, false, true)) {
+        // Variant is HGVS-compliant.
+        die(AJAX_TRUE);
+    } else {
+        die(AJAX_FALSE);
+    }
 }
 
-define('ROOT_PATH', './../');
+
+
+
+
+if (empty($_REQUEST['var'])) {
+    die(AJAX_DATA_ERROR);
+}
+
+// HGVS check from the special HGVS syntax validation form.
 require ROOT_PATH . 'inc-lib-variants.php';
-require ROOT_PATH . 'inc-init.php';
 
 if ($_REQUEST['callVV'] == 'true') {
     require ROOT_PATH . 'class/variant_validator.php';
