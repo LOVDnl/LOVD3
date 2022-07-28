@@ -1274,7 +1274,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            if (preg_match('/([NX][CGMRTW]_[0-9]{6,9}|ENS[TG][0-9]{11})(\)|$)/', $sReferenceSequence)) {
+            // Check for missing version. We don't want to yet define another pattern. Just check it helps adding a dot.
+            if (lovd_isValidRefSeq(preg_replace('/([0-9]{6})([()]|$)/', '$1.1$2', $sReferenceSequence))) {
+                // OK, adding a .1 helped. So, version is missing.
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
