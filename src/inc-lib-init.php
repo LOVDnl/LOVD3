@@ -1257,7 +1257,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         break;
                 }
 
-            } elseif (!preg_match('/^(N[CGTW]|LRG|ENSG)/', $sReferenceSequence)
+            } elseif (!preg_match('/^(N[CGTW]|LRG)/', $sReferenceSequence)
                 && (preg_match('/[0-9]+[-+]([0-9]+|\?)/', $sVariant))) {
                 // If a variant has intronic positions, it must have a
                 //  reference that contains those positions.
