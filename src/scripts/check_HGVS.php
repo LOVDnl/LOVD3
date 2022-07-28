@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-12-03
- * Modified    : 2021-12-09
- * For LOVD    : 3.5-pre-02
+ * Modified    : 2022-07-28
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               L. Werkman <L.Werkman@LUMC.nl>
  *
@@ -29,32 +29,16 @@
  *
  *************/
 
-const ROOT_PATH = './';
-const TAB_SELECTED = 'setup';
+define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
-require_once(ROOT_PATH . 'inc-lib-init.php');
-
-if ($_AUTH) {
-    // If authorized, check for updates.
-    require ROOT_PATH . 'inc-upgrade.php';
-}
 
 
 
 
 
-if (PATH_COUNT == 5 && !ACTION) {
+if (!ACTION) {
     // URL: /checkHGVS
-    // Main page of the checker.
-
-    define('PAGE_TITLE', 'HGVS Checker');
-
-    $_T->printHeader(false);
-    $_T->printTitle();
-
-    echo 'Back to main...';
-
-    $_T->printFooter();
+    header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?checkOne');
     exit;
 }
 
@@ -62,15 +46,12 @@ if (PATH_COUNT == 5 && !ACTION) {
 
 
 
-if (PATH_COUNT == 1 && substr(ACTION, 0, 5) ==  'check') {
+if (PATH_COUNT == 2 && substr(ACTION, 0, 5) == 'check') {
     // URL: /checkHGVS?checkOne or /checkHGVS?checkList
 
     define('METHOD', (substr(ACTION, -3) == 'One'? 'single' : 'list'));
     define('PAGE_TITLE', (METHOD == 'single'? 'Single variant' : 'Batch') . ' HGVS Check');
     define('LOG_EVENT', 'CheckHGVS');
-
-    require ROOT_PATH . 'inc-lib-form.php';
-    require ROOT_PATH . 'inc-lib-variants.php';
 
     $_T->printHeader(false);
     $_T->printTitle();
