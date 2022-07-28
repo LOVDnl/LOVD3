@@ -53,7 +53,7 @@ if (!empty($_GET['variant'])) {
         die(AJAX_NO_AUTH);
     }
 
-    if (lovd_getVariantInfo($sVariant, false, true)) {
+    if (lovd_getVariantInfo($_GET['variant'], false, true)) {
         // Variant is HGVS-compliant.
         die(AJAX_TRUE);
     } else {
