@@ -72,8 +72,7 @@ if (empty($_REQUEST['var'])) {
 // HGVS check from the special HGVS syntax validation form.
 
 require ROOT_PATH . 'inc-lib-variants.php';
-
-if ($_REQUEST['callVV'] == 'true') {
+if (!empty($_REQUEST['callVV']) && $_REQUEST['callVV'] == 'true') {
     require ROOT_PATH . 'class/variant_validator.php';
 }
 
@@ -96,12 +95,12 @@ if ($_REQUEST['method'] == 'single') {
     $sVariant = $_REQUEST['var'];
 
     // First check to see if the variant is HGVS.
-    $bIsHGVS = lovd_getVariantInfo($sVariant, false, true);
+    $bIsHGVS = lovd_getVariantInfo($_REQUEST['var'], false, true);
 
     $sResponse .= 'The given variant ' . ($bIsHGVS ? 'passed' : 'did not pass') . ' our syntax check.<br><br>';
 
     // Warn the user if a reference sequence is missing.
-    if (!lovd_variantHasRefSeq($sVariant) && $_REQUEST['callVV'] == 'false') {
+    if (!lovd_variantHasRefSeq($_REQUEST['var']) && $_REQUEST['callVV'] == 'false') {
         $sResponse .= '<i>' .
         'Please note that your variant is missing a reference sequence.<br>' .
         'Although this is not necessary for our syntax check, a variant description does ' .
@@ -114,7 +113,7 @@ if ($_REQUEST['method'] == 'single') {
 
     if (!$bIsHGVS) {
         // Call lovd_getVariantInfo to get the warnings and errors.
-        $aVariantInfo = lovd_getVariantInfo($sVariant, false);
+        $aVariantInfo = lovd_getVariantInfo($_REQUEST['var'], false);
 
         // Add the warning and error messages.
         if ($aVariantInfo) {
@@ -136,9 +135,9 @@ if ($_REQUEST['method'] == 'single') {
 
 
         // Return the fixed variant (if it was actually fixed).
-        $sFixedVariant = lovd_fixHGVS($sVariant);
+        $sFixedVariant = lovd_fixHGVS($_REQUEST['var']);
 
-        if ($sVariant == $sFixedVariant) {
+        if ($_REQUEST['var'] == $sFixedVariant) {
             $sResponse .= 'Sadly, we could not (safely) fix your variant...<br><br>';
             unset($sFixedVariant); // If no changes were made, we don't need this variable.
 
@@ -167,18 +166,18 @@ if ($_REQUEST['method'] == 'single') {
         } else {
             // We cannot run VariantValidator if no
             //  reference sequence was provided.
-            if (!lovd_variantHasRefSeq($sVariant)) {
+            if (!lovd_variantHasRefSeq($_REQUEST['var'])) {
                 $sResponse .= 'Please provide a reference sequence to run VariantValidator.';
 
             } else {
-                $sVariant = (!isset($sFixedVariant) || !lovd_getVariantInfo($sFixedVariant, false, true) ?
-                    $sVariant : $sFixedVariant);
+                $_REQUEST['var'] = (!isset($sFixedVariant) || !lovd_getVariantInfo($sFixedVariant, false, true) ?
+                    $_REQUEST['var'] : $sFixedVariant);
 
                 // Call VariantValidator.
                 $_VV = new LOVD_VV();
-                $aValidatedVariant = ($sVariant[strpos($sVariant, ':') + 1] == 'g'?
-                    $_VV->verifyGenomic($sVariant, array()) :
-                    $_VV->verifyVariant($sVariant, array()));
+                $aValidatedVariant = ($_REQUEST['var'][strpos($_REQUEST['var'], ':') + 1] == 'g'?
+                    $_VV->verifyGenomic($_REQUEST['var'], array()) :
+                    $_VV->verifyVariant($_REQUEST['var'], array()));
 
 
                 // Returning the results.
@@ -209,9 +208,6 @@ if ($_REQUEST['method'] == 'single') {
 
 // Run when a list of variants was given.
 if ($_REQUEST['method'] == 'list') {
-    $sVariants = urldecode($_REQUEST['var']);
-
-
     $bAllIsHGVS = true;
     $bAllHoldRefSeqs = true;
 
@@ -225,7 +221,7 @@ if ($_REQUEST['method'] == 'list') {
           '<TH style=\"background : #90E090;\">Result of VariantValidator</TH>') .
         '</TR>';
 
-    foreach (explode("\n", $sVariants) as $sVariant) {
+    foreach (explode("\n", $_REQUEST['var']) as $sVariant) {
         if ($sVariant == '') {
             $sTable .= '<TR></TR>';
 
