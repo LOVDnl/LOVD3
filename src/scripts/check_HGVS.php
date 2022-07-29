@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-12-03
- * Modified    : 2022-07-28
+ * Modified    : 2022-07-29
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -37,7 +37,7 @@ require ROOT_PATH . 'inc-init.php';
 
 
 if (!ACTION) {
-    // URL: /checkHGVS
+    // URL: /scripts/check_HGVS.php
     header('Location: ' . lovd_getInstallURL() . CURRENT_PATH . '?checkOne');
     exit;
 }
@@ -47,7 +47,8 @@ if (!ACTION) {
 
 
 if (PATH_COUNT == 2 && substr(ACTION, 0, 5) == 'check') {
-    // URL: /checkHGVS?checkOne or /checkHGVS?checkList
+    // URL: /scripts/check_HGVS.php?checkOne
+    // URL: /scripts/check_HGVS.php?checkList
 
     define('METHOD', (substr(ACTION, -3) == 'One'? 'single' : 'list'));
     define('PAGE_TITLE', (METHOD == 'single'? 'Single variant' : 'Batch') . ' HGVS Check');
@@ -79,7 +80,7 @@ if (PATH_COUNT == 2 && substr(ACTION, 0, 5) == 'check') {
     print(
     '<SCRIPT>
         function showResponse() {
-            $.get("ajax/checkHGVS.php?var=" + encodeURIComponent($("#variant").val()) + "&method=' . METHOD . '&callVV=" + $("#callVV").is(":checked"))
+            $.get("ajax/check_HGVS.php?var=" + encodeURIComponent($("#variant").val()) + "&method=' . METHOD . '&callVV=" + $("#callVV").is(":checked"))
             .fail(function(){alert("Error checking variant, please try again later.");})
             ;
         }
