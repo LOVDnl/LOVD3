@@ -124,7 +124,16 @@ foreach ($aVariants as $sVariant => $aVariant) {
             array_keys($aVariant['variant_info']['warnings']) == array('WNOTSUPPORTED')
         )
     );
-    if (!$aVariant['is_hgvs']) {
+    // But compensate for ENOTSUPPORTED.
+    if (!$aVariant['is_hgvs']
+        && isset($aVariant['variant_info']['errors']['ENOTSUPPORTED'])
+        && count($aVariant['variant_info']['errors']) == 1) {
+        // We don't actually know if this is HGVS or not.
+        $aVariant['is_hgvs'] = null;
+        $aVariant['fixed_variant'] = $sVariant;
+        $aVariant['fixed_variant_is_hgvs'] = null;
+    }
+    if ($aVariant['is_hgvs'] === false) {
         $aVariant['fixed_variant'] = lovd_fixHGVS($sVariant);
         $aVariant['fixed_variant_is_hgvs'] = lovd_getVariantInfo($aVariant['fixed_variant'], false, true);
     }
@@ -186,7 +195,11 @@ if ($_REQUEST['method'] == 'single') {
     // First check to see if the variant is HGVS.
     $bIsHGVS = $aVariants[$sVariant]['is_hgvs'];
 
-    $sResponse = 'The given variant ' . ($bIsHGVS ? 'passed' : 'did not pass') . ' our syntax check.<BR><BR>';
+    $sResponse =
+        'The given variant ' .
+        ($bIsHGVS === null? 'contains syntax currently not supported by this service.' :
+            ($bIsHGVS? 'passed' : 'did not pass') . ' our syntax check.') .
+        '<BR><BR>';
 
     // Warn the user if a reference sequence is missing.
     if (!$aVariants[$sVariant]['has_refseq'] && !$bVV) {
@@ -198,7 +211,7 @@ if ($_REQUEST['method'] == 'single') {
 
     // Show whether the variant was correct through a check or a cross.
     print('
-$("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");');
+$("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' : ($bIsHGVS? 'check' : 'cross')) . '.png");');
 
     if (!$bIsHGVS) {
         // Call lovd_getVariantInfo to get the warnings and errors.
@@ -229,7 +242,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
             $sResponse .= 'Sadly, we could not (safely) fix your variant...<BR><BR>';
             unset($sFixedVariant); // If no changes were made, we don't need this variable.
 
-        } else {
+        } elseif ($sFixedVariant) {
             $sFixedVariantPlusLink = '<A href=\"\" onclick=\"$(\'#variant\').val(\'' . $sFixedVariant . '\'); $(\'#checkButton\').click() ; return false;\">' . $sFixedVariant . '</A>';
 
             if ($aVariants[$sVariant]['fixed_variant_is_hgvs']) {
@@ -259,8 +272,8 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
     $sTable = '<TABLE id=\"responseTable\" border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\">' .
         '<TR>' .
            '<TH style=\"background : #90E090;\">Variant</TH>' .
-           '<TH style=\"background : #90E090;\">Is HGVS? (T/F)</TH>' .
-           '<TH style=\"background : #90E090;\">Fixed variant</TH>' .
+           '<TH style=\"background : #90E090;\">Valid&nbsp;syntax?</TH>' .
+           '<TH style=\"background : #90E090;\">Fixed&nbsp;variant</TH>' .
            '<TH style=\"background : #90E090;\">Warnings and errors</TH>' .
            (!$bVV? '' :
           '<TH style=\"background : #90E090;\">Result of VariantValidator</TH>') .
@@ -276,11 +289,15 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
             // if it was HGVS and orange if it was fixed.
             $sFixedVariant = $aVariant['fixed_variant'];
             $bFixedIsHGVS = $aVariant['fixed_variant_is_hgvs'];
-            $sColor = ($bIsHGVS? 'green' : ($sVariant == $sFixedVariant || !$bFixedIsHGVS? 'red' : 'orange'));
+            $sColor = ($bIsHGVS? 'green' :
+                ($bIsHGVS === null || $bFixedIsHGVS? 'orange' : 'red'));
 
             $sTable .= '<TR valign=\"top\" class=\"col' . ucfirst($sColor) .'\">' .
                 '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
-                '<TD>' . ($bIsHGVS? 'T' : 'F') . '</TD>';
+                '<TD><IMG src=\"gfx/' .
+                    ($bIsHGVS? 'mark_1.png\" alt=\"Valid syntax' :
+                        ($bIsHGVS === null? 'lovd_form_question.png\" alt=\"Unsupported syntax' :
+                            'mark_0.png\" alt=\"Invalid syntax')) . '\"></TD>';
 
             if ($bIsHGVS) {
                 $sTable .= '<TD></TD><TD></TD>';
