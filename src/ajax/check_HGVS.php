@@ -172,7 +172,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
 
             } else {
                 // Call VariantValidator.
-                $aValidatedVariant = ($_REQUEST['var'][strpos($_REQUEST['var'], ':') + 1] == 'g' ?
+                $aValidatedVariant = (in_array($_REQUEST['var'][strpos($_REQUEST['var'], ':') + 1], array('g', 'm'))?
                     $_VV->verifyGenomic($_REQUEST['var']) :
                     $_VV->verifyVariant($_REQUEST['var']));
 
@@ -218,8 +218,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
 
     foreach (explode("\n", $_REQUEST['var']) as $sVariant) {
         if ($sVariant == '') {
-            $sTable .= '<TR></TR>';
-
+            continue;
         } else {
             $sVariant = rtrim($sVariant); // Removing floating whitespaces.
 
@@ -230,9 +229,13 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
             }
 
             $bIsHGVS = lovd_getVariantInfo($sVariant, false, true);
-            $sColour = 'green';
+            // Color = red if the variant could not be improved, green
+            // if it was HGVS and orange if it was fixed.
+            $sFixedVariant = lovd_fixHGVS($sVariant);
+            $bFixedIsHGVS = lovd_getVariantInfo($sFixedVariant, false, true);
+            $sColor = ($bIsHGVS? 'green' : ($sVariant == $sFixedVariant || !$bFixedIsHGVS? 'red' : 'orange'));
 
-            $sTable .= '<TR valign=\"top\" class=\"col' . ucfirst($sColour) .'\">' .
+            $sTable .= '<TR valign=\"top\" class=\"col' . ucfirst($sColor) .'\">' .
                 '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
                 '<TD>' . ($bIsHGVS? 'T' : 'F') . '</TD>';
 
@@ -246,7 +249,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
                         $sTable .= '<TD>could not run VariantValidator: missing required reference sequence.</TD>';
 
                     } else {
-                        $aValidatedVariant = ($sVariant[strpos($sVariant, ':') + 1] == 'g'?
+                        $aValidatedVariant = (in_array($sVariant[strpos($sVariant, ':') + 1], array('g', 'm'))?
                             $_VV->verifyGenomic($sVariant) :
                             $_VV->verifyVariant($sVariant));
 
@@ -272,14 +275,8 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
                 // The variant is not HGVS.
                 $bAllIsHGVS = false;
                 $aVariantInfo = lovd_getVariantInfo($sVariant, false);
-                $sFixedVariant = lovd_fixHGVS($sVariant);
-                $bFixedIsHGVS = lovd_getVariantInfo($sFixedVariant, false, true);
 
                 $sTable .= '<TD>' . htmlspecialchars((!$bFixedIsHGVS? $sVariant : $sFixedVariant)) . '</TD>';
-
-                // Colour = red if the variant could not be improved, green
-                // if it was HGVS and orange if it was fixed.
-                $sColour = ($sVariant == $sFixedVariant || !$bFixedIsHGVS? 'red' : 'orange');
 
                 if (empty($aVariantInfo['warnings']) && empty($aVariantInfo['errors'])
                     && $sFixedVariant != $sVariant && $bFixedIsHGVS) {
@@ -289,7 +286,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
                     $sTable .= '<TD>' .
                         (empty($aVariantInfo['errors'])? '' :
                             '<B>Errors: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['errors'])))) .
-                        (!$aVariantInfo['warnings'] || !$aVariantInfo['errors']? '' : '<BR>') .
+                        (empty($aVariantInfo['warnings']) || empty($aVariantInfo['errors'])? '' : '<BR>') .
                         (empty($aVariantInfo['warnings'])? '' :
                             '<B>Warnings: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['warnings'])))) .
                         '</TD>';
