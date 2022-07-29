@@ -91,17 +91,105 @@ $("#response").html("");');
 
 
 
+// Handling both single submissions and list submissions using the same code.
+// This removes duplication, or perhaps worse, differences in implementation.
+$bList = (!empty($_REQUEST['method']) && $_REQUEST['method'] == 'list');
+// Put the variants in an array, assigning them as keys.
+$aVariants = array_fill_keys(
+    // This is not a normal form; JS combines the values without adding a \r.
+    array_map('trim', explode("\n", $_REQUEST['var'])),
+    array()
+);
+
+foreach ($aVariants as $sVariant => $aVariant) {
+    if (!trim($sVariant)) {
+        unset($aVariants[$sVariant]);
+        continue;
+    }
+    $sVariant = trim($sVariant);
+
+    $aVariant['fixed_variant'] = '';
+    $aVariant['fixed_variant_is_hgvs'] = false;
+    $aVariant['variant_info'] = lovd_getVariantInfo($sVariant, false);
+
+    $aVariant['has_refseq'] = lovd_variantHasRefSeq($sVariant);
+    $aVariant['is_hgvs'] = (
+        is_array($aVariant['variant_info'])
+        &&
+        empty($aVariant['variant_info']['errors'])
+        &&
+        (
+            empty($aVariant['variant_info']['warnings'])
+            ||
+            array_keys($aVariant['variant_info']['warnings']) == array('WNOTSUPPORTED')
+        )
+    );
+    if (!$aVariant['is_hgvs']) {
+        $aVariant['fixed_variant'] = lovd_fixHGVS($sVariant);
+        $aVariant['fixed_variant_is_hgvs'] = lovd_getVariantInfo($aVariant['fixed_variant'], false, true);
+    }
+
+    $aVariant['VV'] = '';
+    if ($bVV) {
+        if (!empty($aVariant['variant_info'])
+            && (!empty($aVariant['variant_info']['errors']['ENOTSUPPORTED'])
+                || !empty($aVariant['variant_info']['warnings']['WNOTSUPPORTED']))) {
+            $aVariant['VV'] = 'This variant description is not currently supported by VariantValidator.';
+        } elseif (!$aVariant['is_hgvs']) {
+            $aVariant['VV'] = 'Please first correct the variant description to run VariantValidator.';
+        } elseif (!$aVariant['has_refseq']) {
+            $aVariant['VV'] = 'Please provide a reference sequence to run VariantValidator.';
+
+        } else {
+            // Call VariantValidator. Use the outcome of lovd_getVariantInfo()
+            //  to determine whether this is a genomic variant or not.
+            $aVV = (!isset($aVariant['variant_info']['position_start_intron'])?
+                    $_VV->verifyGenomic($sVariant) :
+                    $_VV->verifyVariant($sVariant));
+
+            if ($aVV === false) {
+                $aVariant['VV'] = 'Internal error occurred';
+            } elseif (!empty($aVV['data']['DNA']) && $sVariant != $aVV['data']['DNA']) {
+                // We don't check for WCORRECTED here, because the VV library accepts some changes
+                //  without setting WCORRECTED. We want to show every difference.
+                // This here may actually create WCORRECTED.
+                $aVV['warnings']['WCORRECTED'] = 'The variant description was automatically corrected to ' . $aVV['data']['DNA'] . '.';
+                unset($aVV['warnings']['WROLLFORWARD']); // In case it exists.
+                $aVariant['fixed_variant'] = $aVV['data']['DNA'];
+                $aVariant['fixed_variant_is_hgvs'] = true;
+            } elseif (!$aVV['errors'] && !$aVV['warnings']) {
+                $aVariant['VV'] = 'The variant description passed the validation.';
+            }
+
+            // This can't be an elseif () because we may have filled the warnings array in the previous block.
+            if ($aVV['errors'] || $aVV['warnings']) {
+                $aVariant['VV'] =
+                    (!$aVV['errors']? '' :
+                        '<B>Error' . (count($aVV['errors']) == 1? '' : 's') . ':</B><BR>- ' . implode('<BR>- ', $aVV['errors']) .
+                         (!$aVV['warnings']? '' : '<BR>')) .
+                    (!$aVV['warnings']? '' :
+                        '<B>Warning' . (count($aVV['warnings']) == 1? '' : 's') . ':</B><BR>- ' . implode('<BR>- ', $aVV['warnings']));
+            }
+        }
+    }
+    $aVariants[$sVariant] = $aVariant;
+}
+
+
+
+
+
 if ($_REQUEST['method'] == 'single') {
     // The form for one single variant was used.
-    $sVariant = $_REQUEST['var'];
+    $sVariant = current(array_keys($aVariants));
 
     // First check to see if the variant is HGVS.
-    $bIsHGVS = lovd_getVariantInfo($_REQUEST['var'], false, true);
+    $bIsHGVS = $aVariants[$sVariant]['is_hgvs'];
 
     $sResponse = 'The given variant ' . ($bIsHGVS ? 'passed' : 'did not pass') . ' our syntax check.<BR><BR>';
 
     // Warn the user if a reference sequence is missing.
-    if (!lovd_variantHasRefSeq($_REQUEST['var']) && !$bVV) {
+    if (!$aVariants[$sVariant]['has_refseq'] && !$bVV) {
         $sResponse .= '<I>' .
             'Please note that your variant is missing a reference sequence.<BR>' .
             'Although this is not necessary for our syntax check, a variant description does ' .
@@ -114,7 +202,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
 
     if (!$bIsHGVS) {
         // Call lovd_getVariantInfo to get the warnings and errors.
-        $aVariantInfo = lovd_getVariantInfo($_REQUEST['var'], false);
+        $aVariantInfo = $aVariants[$sVariant]['variant_info'];
 
         // Add the warning and error messages.
         if ($aVariantInfo) {
@@ -134,18 +222,17 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
             ($aCleanedMessages['errors'] ? '<B>Errors:</B><BR> - ' . str_replace("\n", '<BR>', ($aCleanedMessages['errors'])) . '<BR>' : '') . '<BR>' .
             '<B>Automatically fixed variant:</B><BR>';
 
-
         // Return the fixed variant (if it was actually fixed).
-        $sFixedVariant = lovd_fixHGVS($_REQUEST['var']);
+        $sFixedVariant = $aVariants[$sVariant]['fixed_variant'];
 
-        if ($_REQUEST['var'] == $sFixedVariant) {
+        if ($sVariant == $sFixedVariant) {
             $sResponse .= 'Sadly, we could not (safely) fix your variant...<BR><BR>';
             unset($sFixedVariant); // If no changes were made, we don't need this variable.
 
         } else {
             $sFixedVariantPlusLink = '<A href=\"\" onclick=\"$(\'#variant\').val(\'' . $sFixedVariant . '\'); $(\'#checkButton\').click() ; return false;\">' . $sFixedVariant . '</A>';
 
-            if (lovd_getVariantInfo($sFixedVariant, false, true)) {
+            if ($aVariants[$sVariant]['fixed_variant_is_hgvs']) {
                 $sResponse .= 'Did you mean ' . $sFixedVariantPlusLink . '?<BR>';
             } else {
                 $sResponse .= 'We could not (safely) turn your variant into a syntax that passes our tests, but this suggestion might be an improvement: ' . $sFixedVariantPlusLink . '.<BR>';
@@ -156,45 +243,8 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
 
     // Running VariantValidator.
     if ($bVV) {
-        $sResponse .= '<BR><B>Running VariantValidator:</B><BR>';
-
-        // We only want to run VariantValidator on HGVS variants.
-        if (!$bIsHGVS) {
-            $sResponse .=
-                'VariantValidator can only be run using HGVS descriptions. Please take another look at your variant' .
-                (isset($sFixedVariant) ? '' : ' and our recommended fixes') . ', and try again.';
-
-        } else {
-            // We cannot run VariantValidator if no
-            //  reference sequence was provided.
-            if (!lovd_variantHasRefSeq($_REQUEST['var'])) {
-                $sResponse .= 'Please provide a reference sequence to run VariantValidator.';
-
-            } else {
-                // Call VariantValidator.
-                $aValidatedVariant = (in_array($_REQUEST['var'][strpos($_REQUEST['var'], ':') + 1], array('g', 'm'))?
-                    $_VV->verifyGenomic($_REQUEST['var']) :
-                    $_VV->verifyVariant($_REQUEST['var']));
-
-                // Returning the results.
-                if ($aValidatedVariant === false) {
-                    $sResponse .= 'Internal error occurred';
-
-                } elseif (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']) {
-                    $sResponse .= 'The variant passed the validation.';
-
-                } elseif (in_array('WCORRECTED', array_keys($aValidatedVariant['warnings']))) {
-                    $sResponse .= 'Your variant was corrected to: ' . $aValidatedVariant['data']['DNA'] . '.';
-
-                } else {
-                    $sResponse .=
-                        (!$aValidatedVariant['warnings'] ? '' :
-                            '<B>Warnings:</B><BR> - ' . implode('<BR> - ', $aValidatedVariant['warnings'])) . '<BR>' .
-                        (!$aValidatedVariant['errors'] ? '' :
-                            '<B>Errors:</B><BR> - ' . implode('<BR> - ', $aValidatedVariant['errors']));
-                }
-            }
-        }
+        $sResponse .= '<BR><B>Running VariantValidator:</B><BR>' .
+        $aVariants[$sVariant]['VV'];
     }
 
 
@@ -216,23 +266,16 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
           '<TH style=\"background : #90E090;\">Result of VariantValidator</TH>') .
         '</TR>';
 
-    foreach (explode("\n", $_REQUEST['var']) as $sVariant) {
-        if ($sVariant == '') {
-            continue;
-        } else {
-            $sVariant = rtrim($sVariant); // Removing floating whitespaces.
-
+    foreach ($aVariants as $sVariant => $aVariant) {
+        if (true) {
             // Storing info on whether we find any variants which are missing
             //  reference sequences.
-            if ($bAllHoldRefSeqs && !lovd_variantHasRefSeq($sVariant)) {
-                $bAllHoldRefSeqs = false;
-            }
-
-            $bIsHGVS = lovd_getVariantInfo($sVariant, false, true);
+            $bAllHoldRefSeqs &= $aVariant['has_refseq'];
+            $bIsHGVS = $aVariant['is_hgvs'];
             // Color = red if the variant could not be improved, green
             // if it was HGVS and orange if it was fixed.
-            $sFixedVariant = lovd_fixHGVS($sVariant);
-            $bFixedIsHGVS = lovd_getVariantInfo($sFixedVariant, false, true);
+            $sFixedVariant = $aVariant['fixed_variant'];
+            $bFixedIsHGVS = $aVariant['fixed_variant_is_hgvs'];
             $sColor = ($bIsHGVS? 'green' : ($sVariant == $sFixedVariant || !$bFixedIsHGVS? 'red' : 'orange'));
 
             $sTable .= '<TR valign=\"top\" class=\"col' . ucfirst($sColor) .'\">' .
@@ -243,29 +286,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
                 $sTable .= '<TD></TD><TD></TD>';
 
                 if ($bVV) {
-                    if (!lovd_variantHasRefSeq($sVariant)) {
-                        // We can only call VariantValidator if the variant
-                        //  is HGVS and holds a reference sequence.
-                        $sTable .= '<TD>could not run VariantValidator: missing required reference sequence.</TD>';
-
-                    } else {
-                        $aValidatedVariant = (in_array($sVariant[strpos($sVariant, ':') + 1], array('g', 'm'))?
-                            $_VV->verifyGenomic($sVariant) :
-                            $_VV->verifyVariant($sVariant));
-
-                        if ($aValidatedVariant === false) {
-                            $sTable .= '<TD>internal error occurred.</TD>';
-
-                        } elseif (in_array('WCORRECTED', array_keys($aValidatedVariant['warnings']))) {
-                                $sTable .= '<TD>variant was corrected to: ' . $aValidatedVariant['data']['DNA'] . '.</TD>';
-
-                        } else {
-                            $sTable .= '<TD>' . (!$aValidatedVariant['errors'] && !$aValidatedVariant['warnings']?
-                            'passed variant validation' :
-                            'failed validation: - ' . implode('. - ',
-                            array_merge($aValidatedVariant['errors'], $aValidatedVariant['warnings']))) . '.</TD>';
-                        }
-                    }
+                    $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
                 }
 
                 $sTable .= '</TR>';
@@ -274,7 +295,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
             } else {
                 // The variant is not HGVS.
                 $bAllIsHGVS = false;
-                $aVariantInfo = lovd_getVariantInfo($sVariant, false);
+                $aVariantInfo = $aVariant['variant_info'];
 
                 $sTable .= '<TD>' . htmlspecialchars((!$bFixedIsHGVS? $sVariant : $sFixedVariant)) . '</TD>';
 
@@ -294,7 +315,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
 
                 // Call VariantValidator.
                 if ($bVV) {
-                    $sTable .= '<TD>could not run VariantValidator: description is not HGVS.</TD>';
+                    $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
                 }
             }
             $sTable .= '</TR>';
