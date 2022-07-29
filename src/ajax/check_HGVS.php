@@ -74,6 +74,7 @@ if (empty($_REQUEST['var'])) {
 require ROOT_PATH . 'inc-lib-variants.php';
 if (!empty($_REQUEST['callVV']) && $_REQUEST['callVV'] == 'true') {
     require ROOT_PATH . 'class/variant_validator.php';
+    $_VV = new LOVD_VV();
     $bVV = true;
 } else {
     $bVV = false;
@@ -81,7 +82,7 @@ if (!empty($_REQUEST['callVV']) && $_REQUEST['callVV'] == 'true') {
 
 header('Content-type: text/javascript; charset=UTF-8');
 
-// Resetting the check/cross sign next to the written variant.
+// Reset the form (check/cross sign, validation output).
 print('
 $("#checkResult").attr("src", "gfx/trans.png");
 $("#response").html("");');
@@ -170,15 +171,10 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
                 $sResponse .= 'Please provide a reference sequence to run VariantValidator.';
 
             } else {
-                $_REQUEST['var'] = (!isset($sFixedVariant) || !lovd_getVariantInfo($sFixedVariant, false, true) ?
-                    $_REQUEST['var'] : $sFixedVariant);
-
                 // Call VariantValidator.
-                $_VV = new LOVD_VV();
                 $aValidatedVariant = ($_REQUEST['var'][strpos($_REQUEST['var'], ':') + 1] == 'g' ?
-                    $_VV->verifyGenomic($_REQUEST['var'], array()) :
-                    $_VV->verifyVariant($_REQUEST['var'], array()));
-
+                    $_VV->verifyGenomic($_REQUEST['var']) :
+                    $_VV->verifyVariant($_REQUEST['var']));
 
                 // Returning the results.
                 if ($aValidatedVariant === false) {
@@ -250,10 +246,9 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS ? 'check' : 'cross') . '.png");
                         $sTable .= '<TD>could not run VariantValidator: missing required reference sequence.</TD>';
 
                     } else {
-                        $_VV = new LOVD_VV();
                         $aValidatedVariant = ($sVariant[strpos($sVariant, ':') + 1] == 'g'?
-                            $_VV->verifyGenomic($sVariant, array()) :
-                            $_VV->verifyVariant($sVariant, array()));
+                            $_VV->verifyGenomic($sVariant) :
+                            $_VV->verifyVariant($sVariant));
 
                         if ($aValidatedVariant === false) {
                             $sTable .= '<TD>internal error occurred.</TD>';
