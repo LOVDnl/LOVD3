@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-07-28
+ * Modified    : 2022-07-29
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -70,6 +70,7 @@ if (empty($_REQUEST['var'])) {
 }
 
 // HGVS check from the special HGVS syntax validation form.
+
 require ROOT_PATH . 'inc-lib-variants.php';
 
 if ($_REQUEST['callVV'] == 'true') {
@@ -116,14 +117,21 @@ if ($_REQUEST['method'] == 'single') {
         $aVariantInfo = lovd_getVariantInfo($sVariant, false);
 
         // Add the warning and error messages.
-        $aCleanedMessages = array(
-            'warnings' => htmlspecialchars(implode("\n - ", array_values($aVariantInfo['warnings']))),
-            'errors' => htmlspecialchars(implode("\n - ", array_values($aVariantInfo['errors']))),
-        );
+        if ($aVariantInfo) {
+            $aCleanedMessages = array(
+                'warnings' => htmlspecialchars(implode("\n - ", array_values($aVariantInfo['warnings']))),
+                'errors' => htmlspecialchars(implode("\n - ", array_values($aVariantInfo['errors']))),
+            );
+        } else {
+            $aCleanedMessages = array(
+                'warnings' => '',
+                'errors' => 'This entry is not recognized as a variant.',
+            );
+        }
 
-        $sResponse .= ($aVariantInfo['warnings'] ? '<b>Warnings:</b><br> - ' . str_replace("\n", '<br>', $aCleanedMessages['warnings']) . '<br>' : '') .
-            ($aVariantInfo['warnings'] && $aVariantInfo['errors'] ? '<br>' : '') .
-            ($aVariantInfo['errors'] ? '<b>Errors:</b><br> - ' . str_replace("\n", '<br>', ($aCleanedMessages['errors'])) . '<br>' : '') . '<br>' .
+        $sResponse .= ($aCleanedMessages['warnings']? '<b>Warnings:</b><br> - ' . str_replace("\n", '<br>', $aCleanedMessages['warnings']) . '<br>' : '') .
+            ($aCleanedMessages['warnings'] && $aCleanedMessages['errors']? '<br>' : '') .
+            ($aCleanedMessages['errors']? '<b>Errors:</b><br> - ' . str_replace("\n", '<br>', ($aCleanedMessages['errors'])) . '<br>' : '') . '<br>' .
             '<b>Automatically fixed variant:</b><br>';
 
 
