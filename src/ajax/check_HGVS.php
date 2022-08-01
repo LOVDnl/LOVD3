@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-07-29
+ * Modified    : 2022-08-01
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -196,17 +196,17 @@ if ($_REQUEST['method'] == 'single') {
     $bIsHGVS = $aVariants[$sVariant]['is_hgvs'];
 
     $sResponse =
-        'The given variant ' .
+        '<B>' . htmlspecialchars($sVariant) . ' ' .
         ($bIsHGVS === null? 'contains syntax currently not supported by this service.' :
             ($bIsHGVS? 'passed' : 'did not pass') . ' our syntax check.') .
-        '<BR><BR>';
+        '</B><BR>';
 
     // Warn the user if a reference sequence is missing.
     if (!$aVariants[$sVariant]['has_refseq'] && !$bVV) {
-        $sResponse .= '<I>' .
-            'Please note that your variant is missing a reference sequence.<BR>' .
+        $sResponse .=
+            'Please note that your variant description is missing a reference sequence. ' .
             'Although this is not necessary for our syntax check, a variant description does ' .
-            'need a reference to be fully informative and HGVS compliant.</I><BR><BR>';
+            'need a reference sequence to be fully informative and HGVS compliant.<BR><BR>';
     }
 
     // Show whether the variant was correct through a check or a cross.
