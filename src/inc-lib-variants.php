@@ -548,8 +548,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             list(, $sOldPosition, $sNewPosition) = $aRegs;
             // These warnings may be stacked. Using this pattern, we'll just grab the last one.
             // So it may take a few iterations before everything is fixed.
+            // FIXME: This is a place for a possible infinite recursion. When the preg_replace() below fails because
+            //  the pattern doesn't match, we'll recurse infinitely. Fixed two instances already, but in case I
+            //  overlooked yet another situation, better re-code using a preg_match and a str_replace() using $aRegs.
             return lovd_fixHGVS($sReference . preg_replace(
-                '/([^0-9])' . preg_quote($sOldPosition) . '([^0-9])/',
+                '/(' . (ctype_digit($sOldPosition[0])? '[^0-9]' : '.') . ')' . preg_quote($sOldPosition) . '([^0-9])/',
                 '${1}' . $sNewPosition . '$2', $sVariant), $sType);
         }
 
