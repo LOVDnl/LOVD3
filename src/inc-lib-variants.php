@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-07-21
+ * Modified    : 2022-08-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -280,8 +280,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
         } elseif (($aVariant['type'] == 'del' || $aVariant['type'] == 'delins')
             && preg_match('/^(.+)del([ACGTUN\[0-9\]]+)?(?:ins([ACGTUN\[0-9\]]+))?$/i', $sVariant, $aRegs)
-            && ($aRegs[2] != strtoupper($aRegs[2])
-                || (isset($aRegs[3]) && $aRegs[3] != strtoupper($aRegs[3])))) {
+            && (
+                (isset($aRegs[2]) && $aRegs[2] != strtoupper($aRegs[2]))
+                ||
+                (isset($aRegs[3]) && $aRegs[3] != strtoupper($aRegs[3])))) {
             // Deletions and deletion-insertion events.
             // Note: A "delins" can also look like "delAinsG".
             return lovd_fixHGVS($sReference . $aRegs[1] . 'del' .
