@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-08-01
+ * Modified    : 2022-08-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -157,27 +157,22 @@ foreach ($aVariants as $sVariant => $aVariant) {
                     $_VV->verifyVariant($sVariant));
 
             if ($aVV === false) {
-                $aVariant['VV'] = 'Internal error occurred';
+                $aVariant['VV'] = 'An internal error within VariantValidator occurred when trying to validate your variant.';
             } elseif (!empty($aVV['data']['DNA']) && $sVariant != $aVV['data']['DNA']) {
                 // We don't check for WCORRECTED here, because the VV library accepts some changes
                 //  without setting WCORRECTED. We want to show every difference.
                 // This here may actually create WCORRECTED.
-                $aVV['warnings']['WCORRECTED'] = 'The variant description was automatically corrected to ' . $aVV['data']['DNA'] . '.';
+                $aVV['warnings']['WCORRECTED'] = 'The variant description was automatically corrected to <B>' . $aVV['data']['DNA'] . '</B>.';
                 unset($aVV['warnings']['WROLLFORWARD']); // In case it exists.
                 $aVariant['fixed_variant'] = $aVV['data']['DNA'];
                 $aVariant['fixed_variant_is_hgvs'] = true;
-            } elseif (!$aVV['errors'] && !$aVV['warnings']) {
-                $aVariant['VV'] = 'The variant description passed the validation.';
             }
 
-            // This can't be an elseif () because we may have filled the warnings array in the previous block.
-            if ($aVV['errors'] || $aVV['warnings']) {
-                $aVariant['VV'] =
-                    (!$aVV['errors']? '' :
-                        '<B>Error' . (count($aVV['errors']) == 1? '' : 's') . ':</B><BR>- ' . implode('<BR>- ', $aVV['errors']) .
-                         (!$aVV['warnings']? '' : '<BR>')) .
-                    (!$aVV['warnings']? '' :
-                        '<B>Warning' . (count($aVV['warnings']) == 1? '' : 's') . ':</B><BR>- ' . implode('<BR>- ', $aVV['warnings']));
+            if (!$aVV['errors'] && !$aVV['warnings']) {
+                $aVariant['VV'] = 'The variant description passed the validation by VariantValidator.';
+            } else {
+                $aVariant['VV'] = 'VariantValidator encountered one or more issues:<BR>' .
+                    '- ' . implode('<BR>- ', array_merge($aVV['errors'], $aVV['warnings']));
             }
         }
     }
