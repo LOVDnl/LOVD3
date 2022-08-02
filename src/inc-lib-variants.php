@@ -278,6 +278,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             return lovd_fixHGVS($sReference . $sVariant[0] .
                 str_replace('U', 'T', strtoupper(substr($sVariant, 1))), $sType);
 
+        } elseif (ctype_lower($aVariant['type'])
+            && strpos($sVariant, $aVariant['type']) === false
+            && stripos($sVariant, $aVariant['type']) !== false) {
+            // Case problem in the variant type itself; i.e., g.123DEL.
+            return lovd_fixHGVS($sReference . str_ireplace($aVariant['type'], $aVariant['type'], $sVariant), $sType);
+
         } elseif (($aVariant['type'] == 'del' || $aVariant['type'] == 'delins')
             && preg_match('/^(.+)del([ACGTUN\[0-9\]]+)?(?:ins([ACGTUN\[0-9\]]+))?$/i', $sVariant, $aRegs)
             && (
