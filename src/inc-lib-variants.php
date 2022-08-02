@@ -433,7 +433,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         //  variants, and the suffix can't be isolated properly.
         if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WSUFFIXFORMAT'], $aRegs)) {
             list(, $sOldSuffix, $sNewSuffix) = $aRegs;
-            return lovd_fixHGVS($sReference . str_replace($sOldSuffix, $sNewSuffix, $sVariant), $sType);
+            // To prevent a disaster when g.100del1 gets replaced to g.N[1]00delN[1], replace only the last occurrence.
+            // I'm not 100% percent sure if $sVariant always ends with $sOldSuffix, so just be a bit more intelligent.
+            $nPosition = strrpos($sVariant, $sOldSuffix);
+            return lovd_fixHGVS($sReference . substr_replace($sVariant, $sNewSuffix, $nPosition, strlen($sOldSuffix)), $sType);
         }
 
         list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
