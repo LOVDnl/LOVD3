@@ -546,10 +546,11 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         // Currently, these instructions are only given for positions that start with a 0, which should be removed.
         if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WPOSITIONFORMAT'], $aRegs)) {
             list(, $sOldPosition, $sNewPosition) = $aRegs;
-            // FIXME: This may be too simplistic. The pattern may be too small, causing unwanted changes.
             // These warnings may be stacked. Using this pattern, we'll just grab the last one.
             // So it may take a few iterations before everything is fixed.
-            return lovd_fixHGVS($sReference . str_replace($sOldPosition, $sNewPosition, $sVariant), $sType);
+            return lovd_fixHGVS($sReference . preg_replace(
+                '/([^0-9])' . preg_quote($sOldPosition) . '([^0-9])/',
+                '${1}' . $sNewPosition . '$2', $sVariant), $sType);
         }
 
         $aPositions = array();
