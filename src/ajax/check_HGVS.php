@@ -111,6 +111,10 @@ foreach ($aVariants as $sVariant => $aVariant) {
     $aVariant['fixed_variant'] = '';
     $aVariant['fixed_variant_is_hgvs'] = false;
     $aVariant['variant_info'] = lovd_getVariantInfo($sVariant, false);
+    if ($aVariant['variant_info']) {
+        $aVariant['variant_info']['errors'] = array_map('htmlspecialchars', $aVariant['variant_info']['errors']);
+        $aVariant['variant_info']['warnings'] = array_map('htmlspecialchars', $aVariant['variant_info']['warnings']);
+    }
 
     $aVariant['has_refseq'] = lovd_variantHasRefSeq($sVariant);
     $aVariant['is_hgvs'] = (
@@ -136,6 +140,19 @@ foreach ($aVariants as $sVariant => $aVariant) {
     if ($aVariant['is_hgvs'] === false) {
         $aVariant['fixed_variant'] = lovd_fixHGVS($sVariant);
         $aVariant['fixed_variant_is_hgvs'] = lovd_getVariantInfo($aVariant['fixed_variant'], false, true);
+        if (!$aVariant['variant_info']) {
+            $aVariant['variant_info'] = array(
+                'errors' => array('This entry is not recognized as a variant.'),
+                'warnings' => array(),
+            );
+        }
+        if ($aVariant['fixed_variant'] != $sVariant) {
+            if ($aVariant['fixed_variant_is_hgvs']) {
+                $aVariant['variant_info']['warnings'][] = 'Did you mean <A href=\"#\" onclick=\"$(\'#variant\').val(\'' . $aVariant['fixed_variant'] . '\'); $(\'#checkButton\').click(); return false;\">' . $aVariant['fixed_variant'] . '</A>?';
+            } else {
+                $aVariant['variant_info']['warnings'][] = 'We could not automatically correct your variant description, but this suggestion may be an improvement: ' . htmlspecialchars($aVariant['fixed_variant']) . '.<BR>';
+            }
+        }
     }
 
     $aVariant['VV'] = '';
@@ -189,6 +206,7 @@ if ($_REQUEST['method'] == 'single') {
 
     // First check to see if the variant is HGVS.
     $bIsHGVS = $aVariants[$sVariant]['is_hgvs'];
+    $aVariantInfo = $aVariants[$sVariant]['variant_info'];
 
     $sResponse =
         '<B>' . htmlspecialchars($sVariant) . ' ' .
@@ -198,62 +216,27 @@ if ($_REQUEST['method'] == 'single') {
 
     // Warn the user if a reference sequence is missing.
     if (!$aVariants[$sVariant]['has_refseq'] && !$bVV) {
-        $sResponse .=
+        $aVariantInfo['warnings'][] =
             'Please note that your variant description is missing a reference sequence. ' .
             'Although this is not necessary for our syntax check, a variant description does ' .
-            'need a reference sequence to be fully informative and HGVS compliant.<BR><BR>';
+            'need a reference sequence to be fully informative and HGVS compliant.';
+    }
+
+    $aMessages = array_merge($aVariantInfo['errors'], $aVariantInfo['warnings']);
+    if ($bVV) {
+        $aMessages[] = $aVariants[$sVariant]['VV'];
+    }
+    if ($aMessages) {
+        if (count($aMessages) == 1) {
+            $sResponse .= current($aMessages) . '<BR><BR>';
+        } else {
+            $sResponse .= '<UL style=\"margin: 0px;\"><LI>' . implode('</LI><LI>', $aMessages) . '</LI></UL>';
+        }
     }
 
     // Show whether the variant was correct through a check or a cross.
     print('
 $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' : ($bIsHGVS? 'check' : 'cross')) . '.png");');
-
-    if (!$bIsHGVS) {
-        // Call lovd_getVariantInfo to get the warnings and errors.
-        $aVariantInfo = $aVariants[$sVariant]['variant_info'];
-
-        // Add the warning and error messages.
-        if ($aVariantInfo) {
-            $aCleanedMessages = array(
-                'warnings' => htmlspecialchars(implode("\n - ", array_values($aVariantInfo['warnings']))),
-                'errors' => htmlspecialchars(implode("\n - ", array_values($aVariantInfo['errors']))),
-            );
-        } else {
-            $aCleanedMessages = array(
-                'warnings' => '',
-                'errors' => 'This entry is not recognized as a variant.',
-            );
-        }
-
-        $sResponse .= ($aCleanedMessages['warnings'] ? '<B>Warnings:</B><BR> - ' . str_replace("\n", '<BR>', $aCleanedMessages['warnings']) . '<BR>' : '') .
-            ($aCleanedMessages['warnings'] && $aCleanedMessages['errors'] ? '<BR>' : '') .
-            ($aCleanedMessages['errors'] ? '<B>Errors:</B><BR> - ' . str_replace("\n", '<BR>', ($aCleanedMessages['errors'])) . '<BR>' : '') . '<BR>' .
-            '<B>Automatically fixed variant:</B><BR>';
-
-        // Return the fixed variant (if it was actually fixed).
-        $sFixedVariant = $aVariants[$sVariant]['fixed_variant'];
-
-        if ($sVariant == $sFixedVariant) {
-            $sResponse .= 'Sadly, we could not (safely) fix your variant...<BR><BR>';
-            unset($sFixedVariant); // If no changes were made, we don't need this variable.
-
-        } elseif ($sFixedVariant) {
-            $sFixedVariantPlusLink = '<A href=\"\" onclick=\"$(\'#variant\').val(\'' . $sFixedVariant . '\'); $(\'#checkButton\').click() ; return false;\">' . $sFixedVariant . '</A>';
-
-            if ($aVariants[$sVariant]['fixed_variant_is_hgvs']) {
-                $sResponse .= 'Did you mean ' . $sFixedVariantPlusLink . '?<BR>';
-            } else {
-                $sResponse .= 'We could not (safely) turn your variant into a syntax that passes our tests, but this suggestion might be an improvement: ' . $sFixedVariantPlusLink . '.<BR>';
-            }
-        }
-    }
-
-
-    // Running VariantValidator.
-    if ($bVV) {
-        $sResponse .= '<BR><B>Running VariantValidator:</B><BR>' .
-        $aVariants[$sVariant]['VV'];
-    }
 
 
 
@@ -318,10 +301,10 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
                 } else {
                     $sTable .= '<TD>' .
                         (empty($aVariantInfo['errors'])? '' :
-                            '<B>Errors: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['errors'])))) .
+                            '<B>Errors: - </B>' . implode(' - ', array_values($aVariantInfo['errors']))) .
                         (empty($aVariantInfo['warnings']) || empty($aVariantInfo['errors'])? '' : '<BR>') .
                         (empty($aVariantInfo['warnings'])? '' :
-                            '<B>Warnings: - </B>' . htmlspecialchars(implode(' - ', array_values($aVariantInfo['warnings'])))) .
+                            '<B>Warnings: - </B>' . implode(' - ', array_values($aVariantInfo['warnings']))) .
                         '</TD>';
                 }
 
