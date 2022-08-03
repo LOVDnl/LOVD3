@@ -298,18 +298,11 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
 
                 $sTable .= '<TD>' . htmlspecialchars((!$bFixedIsHGVS? '-' : $sFixedVariant)) . '</TD>';
 
-                if (empty($aVariantInfo['warnings']) && empty($aVariantInfo['errors'])
-                    && $sFixedVariant != $sVariant && $bFixedIsHGVS) {
-                    $sTable .= '<TD>The variant description has been corrected.</TD>';
-
-                } else {
-                    $sTable .= '<TD>' .
-                        (empty($aVariantInfo['errors'])? '' :
-                            '<B>Errors: - </B>' . implode(' - ', array_values($aVariantInfo['errors']))) .
-                        (empty($aVariantInfo['warnings']) || empty($aVariantInfo['errors'])? '' : '<BR>') .
-                        (empty($aVariantInfo['warnings'])? '' :
-                            '<B>Warnings: - </B>' . implode(' - ', array_values($aVariantInfo['warnings']))) .
-                        '</TD>';
+                if (true) {
+                    $sTable .= '<TD>- ' .
+                        implode('<BR>- ',
+                            array_map('strip_tags',
+                                array_merge($aVariantInfo['errors'], $aVariantInfo['warnings']))) . '</TD>';
                 }
 
                 // Call VariantValidator.
