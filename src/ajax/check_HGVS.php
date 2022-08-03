@@ -267,6 +267,8 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
             //  reference sequences.
             $bAllHoldRefSeqs &= $aVariant['has_refseq'];
             $bIsHGVS = $aVariant['is_hgvs'];
+            $bAllIsHGVS &= $bIsHGVS;
+            $aVariantInfo = $aVariant['variant_info'];
             // Color = red if the variant could not be improved, green
             // if it was HGVS and orange if it was fixed.
             $sFixedVariant = $aVariant['fixed_variant'];
@@ -274,41 +276,21 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
             $sColor = ($bIsHGVS && !$sFixedVariant? 'green' :
                 ($bIsHGVS === null || $bFixedIsHGVS? 'orange' : 'red'));
 
-            $sTable .= '<TR valign=\"top\" class=\"col' . ucfirst($sColor) .'\">' .
-                '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
-                '<TD><IMG src=\"gfx/' .
-                    ($bIsHGVS? 'mark_1.png\" alt=\"Valid syntax' :
-                        ($bIsHGVS === null? 'lovd_form_question.png\" alt=\"Unsupported syntax' :
-                            'mark_0.png\" alt=\"Invalid syntax')) . '\"></TD>';
-
-            if ($bIsHGVS) {
-                $sTable .= '<TD>' . (!$sFixedVariant? '-' : htmlspecialchars($sFixedVariant)) . '</TD><TD>-</TD>';
-
-                if ($bVV) {
-                    $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
-                }
-
-                $sTable .= '</TR>';
-
-
-            } else {
-                // The variant is not HGVS.
-                $bAllIsHGVS = false;
-                $aVariantInfo = $aVariant['variant_info'];
-
-                $sTable .= '<TD>' . htmlspecialchars((!$bFixedIsHGVS? '-' : $sFixedVariant)) . '</TD>';
-
-                if (true) {
-                    $sTable .= '<TD>- ' .
-                        implode('<BR>- ',
-                            array_map('strip_tags',
-                                array_merge($aVariantInfo['errors'], $aVariantInfo['warnings']))) . '</TD>';
-                }
-
-                // Call VariantValidator.
-                if ($bVV) {
-                    $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
-                }
+            $sTable .=
+                '<TR valign=\"top\" class=\"col' . ucfirst($sColor) .'\">' .
+                    '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
+                    '<TD><IMG src=\"gfx/' .
+                        ($bIsHGVS? 'mark_1.png\" alt=\"Valid syntax' :
+                            ($bIsHGVS === null? 'lovd_form_question.png\" alt=\"Unsupported syntax' :
+                                'mark_0.png\" alt=\"Invalid syntax')) . '\"></TD>' .
+                    '<TD>' . (!$bFixedIsHGVS? '-' : htmlspecialchars($sFixedVariant)) . '</TD>' .
+                    '<TD>' .
+                        ($bIsHGVS? '-' : '- ' .
+                            implode('<BR>- ',
+                                array_map('strip_tags',
+                                    array_merge($aVariantInfo['errors'], $aVariantInfo['warnings'])))) . '</TD>';
+            if ($bVV) {
+                $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
             }
             $sTable .= '</TR>';
         }
