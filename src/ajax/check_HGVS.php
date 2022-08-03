@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-08-02
+ * Modified    : 2022-08-03
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -175,14 +175,18 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
             if ($aVV === false) {
                 $aVariant['VV'] = 'An internal error within VariantValidator occurred when trying to validate your variant.';
-            } elseif (!empty($aVV['data']['DNA']) && $sVariant != $aVV['data']['DNA']) {
-                // We don't check for WCORRECTED here, because the VV library accepts some changes
-                //  without setting WCORRECTED. We want to show every difference.
-                // This here may actually create WCORRECTED.
-                $aVV['warnings']['WCORRECTED'] = 'The variant description was automatically corrected to <B>' . $aVV['data']['DNA'] . '</B>.';
-                unset($aVV['warnings']['WROLLFORWARD']); // In case it exists.
-                $aVariant['fixed_variant'] = $aVV['data']['DNA'];
-                $aVariant['fixed_variant_is_hgvs'] = true;
+            } elseif (!empty($aVV['data']['DNA'])) {
+                // Our VV library removed the refseq, put it back.
+                $aVV['data']['DNA'] = lovd_getVariantRefSeq($sVariant) . ':' . $aVV['data']['DNA'];
+                if ($sVariant != $aVV['data']['DNA']) {
+                    // We don't check for WCORRECTED here, because the VV library accepts some changes
+                    //  without setting WCORRECTED. We want to show every difference.
+                    // This here may actually create WCORRECTED.
+                    $aVV['warnings']['WCORRECTED'] = 'The variant description was automatically corrected to <B>' . $aVV['data']['DNA'] . '</B>.';
+                    unset($aVV['warnings']['WROLLFORWARD']); // In case it exists.
+                    $aVariant['fixed_variant'] = $aVV['data']['DNA'];
+                    $aVariant['fixed_variant_is_hgvs'] = true;
+                }
             }
 
             if (!$aVV['errors'] && !$aVV['warnings']) {
