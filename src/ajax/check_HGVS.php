@@ -271,7 +271,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
             // if it was HGVS and orange if it was fixed.
             $sFixedVariant = $aVariant['fixed_variant'];
             $bFixedIsHGVS = $aVariant['fixed_variant_is_hgvs'];
-            $sColor = ($bIsHGVS? 'green' :
+            $sColor = ($bIsHGVS && !$sFixedVariant? 'green' :
                 ($bIsHGVS === null || $bFixedIsHGVS? 'orange' : 'red'));
 
             $sTable .= '<TR valign=\"top\" class=\"col' . ucfirst($sColor) .'\">' .
@@ -282,7 +282,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
                             'mark_0.png\" alt=\"Invalid syntax')) . '\"></TD>';
 
             if ($bIsHGVS) {
-                $sTable .= '<TD></TD><TD></TD>';
+                $sTable .= '<TD>' . (!$sFixedVariant? '-' : htmlspecialchars($sFixedVariant)) . '</TD><TD>-</TD>';
 
                 if ($bVV) {
                     $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
@@ -296,7 +296,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
                 $bAllIsHGVS = false;
                 $aVariantInfo = $aVariant['variant_info'];
 
-                $sTable .= '<TD>' . htmlspecialchars((!$bFixedIsHGVS? $sVariant : $sFixedVariant)) . '</TD>';
+                $sTable .= '<TD>' . htmlspecialchars((!$bFixedIsHGVS? '-' : $sFixedVariant)) . '</TD>';
 
                 if (empty($aVariantInfo['warnings']) && empty($aVariantInfo['errors'])
                     && $sFixedVariant != $sVariant && $bFixedIsHGVS) {
