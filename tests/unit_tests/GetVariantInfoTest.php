@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-08-02
+ * Modified    : 2022-08-05
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1847,7 +1847,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'This not a valid HGVS description, please verify your input after "|".',
+                    'ENOTSUPPORTED' => 'This is not a valid HGVS description, please verify your input after "|".',
                 ),
             )),
 
@@ -1975,7 +1975,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'This not a valid HGVS description, please verify your input after "|".',
+                    'ENOTSUPPORTED' => 'This is not a valid HGVS description, please verify your input after "|".',
                 ),
             )),
 
@@ -2181,7 +2181,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
                 ),
                 'errors' => array(),
             )),
@@ -2191,7 +2191,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
                 ),
                 'errors' => array(),
             )),
@@ -2201,7 +2201,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagatt" to "delGAGAGATT".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagatt" to "delGAGAGATT".',
                 ),
                 'errors' => array(),
             )),
@@ -2211,7 +2211,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delgagagauu" to "delGAGAGATT".',
                 ),
                 'errors' => array(),
@@ -2222,7 +2222,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please rewrite "deln[8]" to "delN[8]".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "deln[8]" to "delN[8]".',
                 ),
                 'errors' => array(),
             )),
@@ -2243,7 +2243,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'delins',
                 'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WWRONGTYPE' =>
                         'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainst" to "A>T".',
                 ),
@@ -2255,7 +2255,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'delins',
                 'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WWRONGTYPE' =>
                         'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainsu" to "A>T".',
                 ),

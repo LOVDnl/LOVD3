@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-28
+ * Modified    : 2022-08-05
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1274,7 +1274,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            // Check for missing version. We don't want to yet define another pattern. Just check it helps adding a dot.
+            // Check for missing version. We don't want to yet define another pattern.
+            // Just check if it helps to add a version number.
             if (lovd_isValidRefSeq(preg_replace('/([0-9]{6})([()]|$)/', '$1.1$2', $sReferenceSequence))) {
                 // OK, adding a .1 helped. So, version is missing.
                 $aResponse['errors']['EREFERENCEFORMAT'] =
@@ -1487,7 +1488,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             return false;
         }
         $aResponse['warnings']['WWRONGCASE'] =
-            'This not a valid HGVS description, due to characters being in the wrong case.' .
+            'This is not a valid HGVS description, due to characters being in the wrong case.' .
             ' Please check the use of upper- and lowercase characters.';
     }
 
@@ -1530,7 +1531,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['ENOTSUPPORTED'] = 'This not a valid HGVS description, please verify your input after "|".';
+            $aResponse['errors']['ENOTSUPPORTED'] = 'This is not a valid HGVS description, please verify your input after "|".';
         }
         $aResponse['type'] = 'met';
 
@@ -2233,12 +2234,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
                     // Wrong case only, no U-characters detected.
                     $aResponse['warnings']['WWRONGCASE'] =
-                        'This not a valid HGVS description, due to characters being in the wrong case.' .
+                        'This is not a valid HGVS description, due to characters being in the wrong case.' .
                         ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . strtoupper($aVariant['suffix']) . '".';
                 } else {
                     // There's already a detailed warning on what to replace. Throw a general warning only.
                     $aResponse['warnings']['WWRONGCASE'] =
-                        'This not a valid HGVS description, due to characters being in the wrong case.' .
+                        'This is not a valid HGVS description, due to characters being in the wrong case.' .
                         ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
                 }
             }
@@ -2329,7 +2330,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $bCaseOK = ($aVariant['suffix'] == $sDeleted . 'ins' . $sInserted);
                         if (!$bCaseOK) {
                             $aResponse['warnings']['WWRONGCASE'] =
-                                'This not a valid HGVS description, due to characters being in the wrong case.' .
+                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
                                 ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
                         }
                         if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[ACGTN]$/', $sDeleted)) {
