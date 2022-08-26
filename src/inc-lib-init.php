@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-08-05
+ * Modified    : 2022-08-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -38,7 +38,8 @@ $_LIBRARIES = array(
         'refseq' => array(
             'basic' => '/^[A-Z_.t0-9()]+$/',
             'strict'  =>
-                '/^([NX][CGMRTW]_[0-9]{6,9}\.[0-9]+' .
+                '/^([NX][CGMRTW]_[0-9]{6}\.[0-9]+' .
+                '|[NX][MR]_[0-9]{9}\.[0-9]+' .
                 '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)' .
                 '|ENS[TG][0-9]{11}\.[0-9]+' .
                 '|LRG_[0-9]+(t[0-9]+)?' .
@@ -57,21 +58,24 @@ $_LIBRARIES = array(
 
 
 
-function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
+function lovd_arrayInsertAfter ($sKey, &$a, $sKeyToInsert, $ValueToInsert)
 {
-    // Insert $new_key, $new_value pair after entry $key in array $array.
-    // Courtesy of http://eosrei.net/
-    if (array_key_exists($key, $array)) {
-        $new = array();
-        foreach ($array as $k => $value) {
-            $new[$k] = $value;
-            if ($k === $key) {
-                $new[$new_key] = $new_value;
+    // Insert $sKeyToInsert having $ValueToInsert,
+    //  after entry $sKey in array $aOri.
+    // Based on code by Brad Erickson (http://eosrei.net/comment/287).
+    // MIT licensed code, compatible with GPL.
+    if (array_key_exists($sKey, $a)) {
+        $aNew = array();
+        foreach ($a as $k => $value) {
+            $aNew[$k] = $value;
+            if ($k === $sKey) {
+                $aNew[$sKeyToInsert] = $ValueToInsert;
             }
         }
-        return $new;
+        $a = $aNew;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
 
@@ -1286,6 +1290,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'The genomic and transcript reference sequences have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
+
+            } elseif (preg_match('/^([NX][CGMRTW])([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user forgot the underscore.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI reference sequences require an underscore between the prefix and the numeric ID.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .

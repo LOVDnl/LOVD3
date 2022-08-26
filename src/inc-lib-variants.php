@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-08-02
+ * Modified    : 2022-08-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -27,7 +27,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with LOVD. If not, see <http://www.gnu.org/licenses/>.
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
 
@@ -48,9 +48,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // $sType stores the DNA type (c, g, m, or n) to allow for this function to
     //  fully validate the variant and, optionally, its reference sequence.
 
-    // Check for a reference sequence. We won't check it here, so we won't be
-    //  very strict.
-    if (preg_match('/^(ENS[GT]|LRG_([0-9]+t)?|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/i', $sVariant, $aRegs)) {
+    // Check for a reference sequence. We need something relaxed to allow for
+    //  broken refseqs, but something strict because we don't check for a colon
+    //  so don't want to eat off the actual variant. Also, we can't use
+    //  lovd_variantHasRefSeq here, as that requires a colon and just returns a
+    //  boolean. Since we accept not having a boolean, we need the $aRegs.
+    if (preg_match('/^[A-Z]{2,}[_.t0-9]*/i', $sVariant, $aRegs)) {
         // Something that looks like a reference sequence is prefixing the
         //  variant. Cut it off and store it separately. We'll return it, but
         //  this way we can actually check the variant itself.
@@ -261,10 +264,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return $sReference . $sVariant; // Not HGVS.
     }
 
-    // Swap the reference sequences if they are used in the wrong order.
+    // Make fixes to the reference sequences as indicated by lovd_getVariantInfo().
     if (isset($aVariant['warnings']['WREFERENCEFORMAT'])
         && preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WREFERENCEFORMAT'], $aRegs)) {
-        return lovd_fixHGVS($aRegs[2] . ':' . $sVariant, $sType);
+        return lovd_fixHGVS(str_replace($aRegs[1], $aRegs[2], $sReference . $sVariant), $sType);
     }
 
     // Fix case problems.
@@ -449,6 +452,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
+            // FIXME: It would make more sense including this in lovd_getVariantInfo().
+            //  That function should anyway detect the error, and can then simply let us know what the fix should be like.
             // Suffix could contain a closing parenthesis that opens in the beginning of the variant.
             // Don't let it mess up our parsing. Parentheses must be balanced in the entire variant (we checked).
             $bClosingParenthesis = false;
@@ -480,6 +485,33 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                     // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
                     $aParts[$i] = str_replace(array('(', ')'), '', $sPart);
 
+                } elseif (preg_match('/^([-*]?[0-9]+)_([-*]?[0-9]+)$/', $sPart, $aRegs)) {
+                    // The positions of the inserted sequence might have been
+                    //  given as 'ins20_10' instead of 'ins10_20'.
+                    list(, $sFirst, $sLast) = $aRegs;
+                    if ($sFirst == $sLast) {
+                        // Just one single position.
+                        $aParts[$i] = $sFirst;
+                    } elseif ($sFirst[0] == '*') {
+                        // First position is 3' UTR. If the last is, too, then
+                        //  we'll need to compare. Otherwise, first goes last.
+                        $sFirst = substr($sFirst, 1);
+                        if ($sLast[0] == '*') {
+                            // Both positions are in the UTR.
+                            $sLast = substr($sLast, 1);
+                            if ($sFirst > $sLast) {
+                                $aParts[$i] = "*${sLast}_*${sFirst}";
+                            }
+                        } else {
+                            $aParts[$i] = "${sLast}_*${sFirst}";
+                        }
+                    } elseif ($sLast[0] != '*') {
+                        // Fully numeric positions. Change only if in wrong order.
+                        if ($sFirst > $sLast) {
+                            $aParts[$i] = "${sLast}_${sFirst}";
+                        }
+                    }
+
                 } elseif (preg_match('/^\([0-9]+(?:_[0-9]+)?\)$/', $sPart, $aRegs)) {
                     // The length of a variant was formatted as 'ins(length)'
                     //  instead of 'insN[length]' or 'ins(min_max)' instead
@@ -488,7 +520,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                         array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
                         array('N[${1}]', 'N[(${1})]'), $sPart);
 
-                } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/i', $sPart)) {
+                } elseif (preg_match('/^[A-Z_.t0-9()]+/i', $sPart)) {
+                    // This is similar to lovd_variantHasRefSeq(), but then without the requirement for a colon.
                     // This is a full position with refseq. Often, mistakes are
                     //  made in this suffix. So check it.
                     // Append '=' to convert the position into something we can
