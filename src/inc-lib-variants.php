@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-08-02
+ * Modified    : 2022-08-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -27,7 +27,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with LOVD. If not, see <http://www.gnu.org/licenses/>.
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
 
@@ -449,6 +449,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
+            // FIXME: It would make more sense including this in lovd_getVariantInfo().
+            //  That function should anyway detect the error, and can then simply let us know what the fix should be like.
             // Suffix could contain a closing parenthesis that opens in the beginning of the variant.
             // Don't let it mess up our parsing. Parentheses must be balanced in the entire variant (we checked).
             $bClosingParenthesis = false;
@@ -479,6 +481,33 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 if (preg_match('/^\([ACTG]+\)$/', $sPart) || preg_match('/^N\[\([0-9]+\)\]/', $sPart)) {
                     // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
                     $aParts[$i] = str_replace(array('(', ')'), '', $sPart);
+
+                } elseif (preg_match('/^([-*]?[0-9]+)_([-*]?[0-9]+)$/', $sPart, $aRegs)) {
+                    // The positions of the inserted sequence might have been
+                    //  given as 'ins20_10' instead of 'ins10_20'.
+                    list(, $sFirst, $sLast) = $aRegs;
+                    if ($sFirst == $sLast) {
+                        // Just one single position.
+                        $aParts[$i] = $sFirst;
+                    } elseif ($sFirst[0] == '*') {
+                        // First position is 3' UTR. If the last is, too, then
+                        //  we'll need to compare. Otherwise, first goes last.
+                        $sFirst = substr($sFirst, 1);
+                        if ($sLast[0] == '*') {
+                            // Both positions are in the UTR.
+                            $sLast = substr($sLast, 1);
+                            if ($sFirst > $sLast) {
+                                $aParts[$i] = "*${sLast}_*${sFirst}";
+                            }
+                        } else {
+                            $aParts[$i] = "${sLast}_*${sFirst}";
+                        }
+                    } elseif ($sLast[0] != '*') {
+                        // Fully numeric positions. Change only if in wrong order.
+                        if ($sFirst > $sLast) {
+                            $aParts[$i] = "${sLast}_${sFirst}";
+                        }
+                    }
 
                 } elseif (preg_match('/^\([0-9]+(?:_[0-9]+)?\)$/', $sPart, $aRegs)) {
                     // The length of a variant was formatted as 'ins(length)'

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-08-02
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-26
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -200,6 +200,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.(100_200)del50', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(50_50)', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(60_50)', 'g.(100_200)delN[(50_60)]'),
+            array('g.1_5delins20_10', 'g.1_5delins10_20'),
 
             // Question marks.
             // Note, that some of these variants do *not* need fixing and
