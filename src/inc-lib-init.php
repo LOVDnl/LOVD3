@@ -1289,6 +1289,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'The genomic and transcript reference sequences have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
+
+            } elseif (preg_match('/^([NX][CGMRTW])([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user forgot the underscore.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI reference sequences require an underscore between the prefix and the numeric ID.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
