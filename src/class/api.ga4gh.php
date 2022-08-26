@@ -184,10 +184,10 @@ class LOVD_API_GA4GH
             ),
         ),
     );
-    private $bAuthorized = false;
-    private $bLocal = false;
-    private $bReturnBody = true;
-    private $bVarCache = false;
+    private $bAuthorized = false;     // Have correct Authorization headers been passed?
+    private $bLocal = false;          // Does the request originate from a local IP?
+    private $bReturnBody = true;      // Return the body? false for HEAD requests.
+    private $bVarCache = false;       // Are we being called by varcache?
 
 
 

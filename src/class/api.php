@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-07-09
- * For LOVD    : 3.0-27
+ * Modified    : 2022-08-26
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -241,7 +241,7 @@ class LOVD_API
 
             // Verify method. This depends on the resource.
             if (!in_array($_SERVER['REQUEST_METHOD'], $this->aResourcesSupported[$this->sResource])) {
-                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]);
+                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]) . '.';
                 $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
             }
 
@@ -250,7 +250,7 @@ class LOVD_API
                 // Remove POST from options, before we mention it.
                 // FIXME: Yes, this currently means there are no methods left...
                 unset($this->aResourcesSupported[$this->sResource][array_search('POST', $this->aResourcesSupported[$this->sResource])]);
-                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]);
+                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]) . '.';
                 $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
             }
 
