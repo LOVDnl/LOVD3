@@ -48,9 +48,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // $sType stores the DNA type (c, g, m, or n) to allow for this function to
     //  fully validate the variant and, optionally, its reference sequence.
 
-    // Check for a reference sequence. We won't check it here, so we won't be
-    //  very strict.
-    if (preg_match('/^(ENS[GT]|LRG_([0-9]+t)?|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/i', $sVariant, $aRegs)) {
+    // Check for a reference sequence. We need something relaxed to allow for
+    //  broken refseqs, but something strict because we don't check for a colon
+    //  so don't want to eat off the actual variant. Also, we can't use
+    //  lovd_variantHasRefSeq here, as that requires a colon and just returns a
+    //  boolean. Since we accept not having a boolean, we need the $aRegs.
+    if (preg_match('/^[A-Z]{2,}[_.t0-9]*/i', $sVariant, $aRegs)) {
         // Something that looks like a reference sequence is prefixing the
         //  variant. Cut it off and store it separately. We'll return it, but
         //  this way we can actually check the variant itself.
@@ -261,10 +264,10 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return $sReference . $sVariant; // Not HGVS.
     }
 
-    // Swap the reference sequences if they are used in the wrong order.
+    // Make fixes to the reference sequences as indicated by lovd_getVariantInfo().
     if (isset($aVariant['warnings']['WREFERENCEFORMAT'])
         && preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WREFERENCEFORMAT'], $aRegs)) {
-        return lovd_fixHGVS($aRegs[2] . ':' . $sVariant, $sType);
+        return lovd_fixHGVS(str_replace($aRegs[1], $aRegs[2], $sReference . $sVariant), $sType);
     }
 
     // Fix case problems.
@@ -517,7 +520,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                         array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
                         array('N[${1}]', 'N[(${1})]'), $sPart);
 
-                } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/i', $sPart)) {
+                } elseif (preg_match('/^[A-Z_.t0-9()]+/i', $sPart)) {
+                    // This is similar to lovd_variantHasRefSeq(), but then without the requirement for a colon.
                     // This is a full position with refseq. Often, mistakes are
                     //  made in this suffix. So check it.
                     // Append '=' to convert the position into something we can
