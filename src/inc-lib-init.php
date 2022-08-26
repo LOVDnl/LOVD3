@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-08-05
+ * Modified    : 2022-08-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -57,21 +57,24 @@ $_LIBRARIES = array(
 
 
 
-function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
+function lovd_arrayInsertAfter ($sKey, &$a, $sKeyToInsert, $ValueToInsert)
 {
-    // Insert $new_key, $new_value pair after entry $key in array $array.
-    // Courtesy of http://eosrei.net/
-    if (array_key_exists($key, $array)) {
-        $new = array();
-        foreach ($array as $k => $value) {
-            $new[$k] = $value;
-            if ($k === $key) {
-                $new[$new_key] = $new_value;
+    // Insert $sKeyToInsert having $ValueToInsert,
+    //  after entry $sKey in array $aOri.
+    // Based on code by Brad Erickson (http://eosrei.net/comment/287).
+    // MIT licensed code, compatible with GPL.
+    if (array_key_exists($sKey, $a)) {
+        $aNew = array();
+        foreach ($a as $k => $value) {
+            $aNew[$k] = $value;
+            if ($k === $sKey) {
+                $aNew[$sKeyToInsert] = $ValueToInsert;
             }
         }
-        return $new;
+        $a = $aNew;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
 
