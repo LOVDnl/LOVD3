@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2022-06-24
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-29
+ * For LOVD    : 3.0-29
  *
  * Supported URIs:
  *  3.0-26       /api/rest.php/get_frequencies (POST)
@@ -413,7 +413,7 @@ if ($sDataType == 'variants') {
             if (!empty($_GET['search_' . $sField])) {
                 $bSearching = true;
                 if ($sField == 'symbol') {
-                    $sQ .= ' AND g.id = "' . $_DB->quote(GET['search_' . $sField]) . '"';
+                    $sQ .= ' AND g.id = ' . $_DB->quote($_GET['search_' . $sField]);
                 } elseif ($sField == 'position' && preg_match('/^chr([0-9]{1,2}|[MXY])(:[0-9]{1,9}(_[0-9]+)?)?$/', $_GET['search_' . $sField], $aRegs)) {
                     // $aRegs numbering:                             1                2           3
                     @list(, $sChromosome, $sPositionStart, $sPositionEnd) = $aRegs;
