@@ -984,7 +984,7 @@ if (!defined('NOT_INSTALLED')) {
             } else {
                 // Replace with what we have in the database, so we won't run into issues on other pages when CurrDB is used for navigation to other tabs.
                 $_SESSION['currdb'] = $_SETT['currdb']['id'];
-                if (strtoupper($_PE[1]) == strtoupper($_SESSION['currdb'])) {
+                if (!empty($_PE[1]) && strtoupper($_PE[1]) == strtoupper($_SESSION['currdb'])) {
                     // Also update the URL, just in case.
                     $_PE[1] = $_SESSION['currdb'];
                 }
