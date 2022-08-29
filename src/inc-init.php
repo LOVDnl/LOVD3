@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-15
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-29
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -984,6 +984,10 @@ if (!defined('NOT_INSTALLED')) {
             } else {
                 // Replace with what we have in the database, so we won't run into issues on other pages when CurrDB is used for navigation to other tabs.
                 $_SESSION['currdb'] = $_SETT['currdb']['id'];
+                if (!empty($_PE[1]) && strtoupper($_PE[1]) == strtoupper($_SESSION['currdb'])) {
+                    // Also update the URL, just in case.
+                    $_PE[1] = $_SESSION['currdb'];
+                }
             }
         } else {
             $_SESSION['currdb'] = false;

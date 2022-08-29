@@ -34,7 +34,7 @@ for file in ${GLOB}/test_results/error_screenshots/*; do
     else
         echo $RETURN | jq -r .link;
         echo -n 'Expires in ';
-        echo $RETURN | jq -r .expiry;
+        echo $RETURN | jq -r .expires;
     fi
 
     rm -f "${file}"
