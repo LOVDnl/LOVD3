@@ -131,7 +131,8 @@ foreach ($aVariants as $sVariant => $aVariant) {
     // But compensate for ENOTSUPPORTED.
     if (!$aVariant['is_hgvs']
         && isset($aVariant['variant_info']['errors']['ENOTSUPPORTED'])
-        && count($aVariant['variant_info']['errors']) == 1) {
+        && count($aVariant['variant_info']['errors']) == 1
+        && empty($aVariant['variant_info']['warnings'])) {
         // We don't actually know if this is HGVS or not.
         $aVariant['is_hgvs'] = null;
         $aVariant['fixed_variant'] = $sVariant;
