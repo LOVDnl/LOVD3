@@ -197,6 +197,14 @@ foreach ($aVariants as $sVariant => $aVariant) {
                     '- ' . implode('<BR>- ', array_merge($aVV['errors'], $aVV['warnings']));
             }
         }
+
+    } elseif (!$aVariant['has_refseq']) {
+        // No VV requested, but no refseq. Better still inform the user.
+        // We'd throw a message if we'd have the option.
+        $aVariant['variant_info']['warnings']['IREFSEQMISSING'] =
+            'Please note that your variant description is missing a reference sequence. ' .
+            'Although this is not necessary for our syntax check, a variant description does ' .
+            'need a reference sequence to be fully informative and HGVS-compliant.';
     }
     $aVariants[$sVariant] = $aVariant;
 }
@@ -218,14 +226,6 @@ if ($_REQUEST['method'] == 'single') {
         ($bIsHGVS === null? 'contains syntax currently not supported by this service.' :
             ($bIsHGVS? 'passed' : 'did not pass') . ' our syntax check.') .
         '</B><BR>';
-
-    // Warn the user if a reference sequence is missing.
-    if (!$aVariants[$sVariant]['has_refseq'] && !$bVV) {
-        $aVariantInfo['warnings'][] =
-            'Please note that your variant description is missing a reference sequence. ' .
-            'Although this is not necessary for our syntax check, a variant description does ' .
-            'need a reference sequence to be fully informative and HGVS-compliant.';
-    }
 
     $aMessages = array_merge($aVariantInfo['errors'], $aVariantInfo['warnings']);
     if ($bVV) {
@@ -303,11 +303,6 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
     // Create response.
     $sResponse = ($bAllIsHGVS? 'All of the variants passed our syntax check!' :
                                'Some of the variants did not pass our syntax check...') .
-
-                   ($bAllHoldRefSeqs || $bVV? '' : '<BR><BR><I>' .
-                        'Please note that at least one of your variants is missing a reference sequence.<BR>' .
-                        'Although this is not necessary for our syntax check, a variant description does ' .
-                        'need a reference to be fully informative and HGVS-compliant.</I><BR>') .
 
                   '<BR><BR>' .
                    $sTable .
