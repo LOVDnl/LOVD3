@@ -226,20 +226,18 @@ foreach ($aVariants as $sVariant => $aVariant) {
 if ($_REQUEST['method'] == 'single') {
     // The form for one single variant was used.
     $sVariant = current(array_keys($aVariants));
+    $aVariant = $aVariants[$sVariant];
 
     // First check to see if the variant is HGVS.
-    $bIsHGVS = $aVariants[$sVariant]['is_hgvs'];
-    $aVariantInfo = $aVariants[$sVariant]['variant_info'];
-
     $sResponse =
         '<B>' . htmlspecialchars($sVariant) . ' ' .
-        ($bIsHGVS === null? 'contains syntax currently not supported by this service.' :
-            ($bIsHGVS? 'passed' : 'did not pass') . ' our syntax check.') .
+        ($aVariant['is_hgvs'] === null? 'contains syntax currently not supported by this service.' :
+            ($aVariant['is_hgvs']? 'passed' : 'did not pass') . ' our syntax check.') .
         '</B><BR>';
 
-    $aMessages = array_merge($aVariantInfo['errors'], $aVariantInfo['warnings']);
+    $aMessages = array_merge($aVariant['variant_info']['errors'], $aVariant['variant_info']['warnings']);
     if ($bVV) {
-        $aMessages[] = $aVariants[$sVariant]['VV'];
+        $aMessages[] = $aVariant['VV'];
     }
     if ($aMessages) {
         if (count($aMessages) == 1) {
@@ -251,7 +249,7 @@ if ($_REQUEST['method'] == 'single') {
 
     // Show whether the variant was correct through a check or a cross.
     print('
-$("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' : ($bIsHGVS? 'check' : 'cross')) . '.png");');
+$("#checkResult").attr("src", "gfx/' . ($aVariant['is_hgvs'] === null? 'lovd_form_question' : ($aVariant['is_hgvs']? 'check' : 'cross')) . '.png");');
 
 
 
@@ -260,7 +258,6 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
 } elseif ($_REQUEST['method'] == 'list') {
     // The form for multiple variants was used.
     $bAllIsHGVS = true;
-    $bAllHoldRefSeqs = true;
 
     $sTable = '<TABLE id=\"responseTable\" border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\">' .
         '<TR>' .
@@ -276,26 +273,21 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
         if (true) {
             // Storing info on whether we find any variants which are missing
             //  reference sequences.
-            $bAllHoldRefSeqs &= $aVariant['has_refseq'];
-            $bIsHGVS = $aVariant['is_hgvs'];
-            $bAllIsHGVS &= $bIsHGVS;
-            $aVariantInfo = $aVariant['variant_info'];
-            $sFixedVariant = $aVariant['fixed_variant'];
-            $bFixedIsHGVS = $aVariant['fixed_variant_is_hgvs'];
+            $bAllIsHGVS &= $aVariant['is_hgvs'];
 
             $sTable .=
                 '<TR valign=\"top\" class=\"col' . ucfirst($aVariant['color']) .'\">' .
                     '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
                     '<TD><IMG src=\"gfx/' .
-                        ($bIsHGVS? 'mark_1.png\" alt=\"Valid syntax' :
-                            ($bIsHGVS === null? 'lovd_form_question.png\" alt=\"Unsupported syntax' :
+                        ($aVariant['is_hgvs']? 'mark_1.png\" alt=\"Valid syntax' :
+                            ($aVariant['is_hgvs'] === null? 'lovd_form_question.png\" alt=\"Unsupported syntax' :
                                 'mark_0.png\" alt=\"Invalid syntax')) . '\"></TD>' .
-                    '<TD>' . (!$bFixedIsHGVS? '-' : htmlspecialchars($sFixedVariant)) . '</TD>' .
+                    '<TD>' . (!$aVariant['fixed_variant_is_hgvs']? '-' : htmlspecialchars($aVariant['fixed_variant'])) . '</TD>' .
                     '<TD>' .
-                        ($bIsHGVS? '-' : '- ' .
+                        ($aVariant['is_hgvs']? '-' : '- ' .
                             implode('<BR>- ',
                                 array_map('strip_tags',
-                                    array_merge($aVariantInfo['errors'], $aVariantInfo['warnings'])))) . '</TD>';
+                                    array_merge($aVariant['variant_info']['errors'], $aVariant['variant_info']['warnings'])))) . '</TD>';
             if ($bVV) {
                 $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
             }
