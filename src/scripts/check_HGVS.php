@@ -117,15 +117,29 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
     </main>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
 <SCRIPT type="text/javascript">
     function showResponse(sMethod)
     {
-        $.get("ajax/check_HGVS.php?var=" + encodeURIComponent($("#variant").val()) + "&method=" + sMethod + "&callVV=" + $("#callVV").is(":checked"))
-        .fail(function(){alert("Error checking variant, please try again later.");})
-        ;
+        // This function sends the data over to the ajax script, formats, and displays the response.
+        if (sMethod == undefined || $("#" + sMethod) == null) {
+            alert("showResponse() called with an incorrect method.");
+            return false;
+        }
+
+        var sInput = $("#" + sMethod).val();
+        var bCallVV = $("#" + sMethod + "UseVV").is(":checked");
+        $.get(
+            "ajax/check_HGVS.php?var=" + encodeURIComponent(sInput) + "&callVV=" + bCallVV
+        ).fail(
+            function()
+            {
+                alert("Error checking variant, please try again later.");
+            }
+        );
+        return false;
     }
 
 
