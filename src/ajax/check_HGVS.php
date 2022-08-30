@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-08-03
+ * Modified    : 2022-08-30
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -142,7 +142,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
         $aVariant['fixed_variant_is_hgvs'] = lovd_getVariantInfo($aVariant['fixed_variant'], false, true);
         if (!$aVariant['variant_info']) {
             $aVariant['variant_info'] = array(
-                'errors' => array('This entry is not recognized as a variant.'),
+                'errors' => array('Failed to recognize a variant description in your input.'),
                 'warnings' => array(),
             );
         }
@@ -223,7 +223,7 @@ if ($_REQUEST['method'] == 'single') {
         $aVariantInfo['warnings'][] =
             'Please note that your variant description is missing a reference sequence. ' .
             'Although this is not necessary for our syntax check, a variant description does ' .
-            'need a reference sequence to be fully informative and HGVS compliant.';
+            'need a reference sequence to be fully informative and HGVS-compliant.';
     }
 
     $aMessages = array_merge($aVariantInfo['errors'], $aVariantInfo['warnings']);
@@ -306,7 +306,7 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
                    ($bAllHoldRefSeqs || $bVV? '' : '<BR><BR><I>' .
                         'Please note that at least one of your variants is missing a reference sequence.<BR>' .
                         'Although this is not necessary for our syntax check, a variant description does ' .
-                        'need a reference to be fully informative and HGVS compliant.</I><BR>') .
+                        'need a reference to be fully informative and HGVS-compliant.</I><BR>') .
 
                   '<BR><BR>' .
                    $sTable .
