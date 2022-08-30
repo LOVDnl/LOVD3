@@ -206,6 +206,16 @@ foreach ($aVariants as $sVariant => $aVariant) {
             'Although this is not necessary for our syntax check, a variant description does ' .
             'need a reference sequence to be fully informative and HGVS-compliant.';
     }
+
+    // The variant's status color.
+    // Green if it's HGVS and there's no improvement from VV.
+    // Orange if it's ENOTSUPPORTED, or if we have a fix that's HGVS.
+    // Red, otherwise. We don't get the variant at all, or we couldn't find an HGVS-compliant fix.
+    $aVariant['color'] =
+        ($aVariant['is_hgvs'] && !$aVariant['fixed_variant']? 'green' :
+            ($aVariant['is_hgvs'] === null || $aVariant['fixed_variant_is_hgvs']? 'orange' :
+                'red'));
+
     $aVariants[$sVariant] = $aVariant;
 }
 
@@ -270,15 +280,11 @@ $("#checkResult").attr("src", "gfx/' . ($bIsHGVS === null? 'lovd_form_question' 
             $bIsHGVS = $aVariant['is_hgvs'];
             $bAllIsHGVS &= $bIsHGVS;
             $aVariantInfo = $aVariant['variant_info'];
-            // Color = red if the variant could not be improved, green
-            // if it was HGVS and orange if it was fixed.
             $sFixedVariant = $aVariant['fixed_variant'];
             $bFixedIsHGVS = $aVariant['fixed_variant_is_hgvs'];
-            $sColor = ($bIsHGVS && !$sFixedVariant? 'green' :
-                ($bIsHGVS === null || $bFixedIsHGVS? 'orange' : 'red'));
 
             $sTable .=
-                '<TR valign=\"top\" class=\"col' . ucfirst($sColor) .'\">' .
+                '<TR valign=\"top\" class=\"col' . ucfirst($aVariant['color']) .'\">' .
                     '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
                     '<TD><IMG src=\"gfx/' .
                         ($bIsHGVS? 'mark_1.png\" alt=\"Valid syntax' :
