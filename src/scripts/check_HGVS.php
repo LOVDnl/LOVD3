@@ -107,7 +107,10 @@ if (PATH_COUNT == 2 && substr(ACTION, 0, 5) == 'check') {
 
             var link = document.createElement("a");
             link.setAttribute("href", fileContent);
-            link.setAttribute("download", "LOVD_HGVSCheck ' . date("Y-m-d H.i.s") . '.txt");
+            var d = new Date();
+            // Offset the timezone.
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            link.setAttribute("download", "LOVD_HGVSCheck_" + d.toISOString().slice(0, 19) + ".txt");
             document.body.appendChild(link);
 
             link.click();
