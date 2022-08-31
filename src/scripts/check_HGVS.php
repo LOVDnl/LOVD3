@@ -180,16 +180,27 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         var sBody = '<ul class="list-group list-group-flush">';
                         if (aVariant.is_hgvs == null) {
                             sBody +=
-                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + ' text-warning"></i>' +
-                                ' This variant description contains unsupported syntax.</li>\n';
+                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + '"></i>' +
+                                ' This variant description contains unsupported syntax.' +
+                                ' Although we aim to support all of the HGVS nomenclature rules,' +
+                                ' some complex variants are not fully implemented yet in our syntax checker.</li>\n';
                         } else if (!aVariant.is_hgvs) {
                             sBody +=
-                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + ' text-danger"></i>' +
+                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + '"></i>' +
                                 ' This variant description is invalid.</li>\n';
                         } else {
                             sBody +=
-                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + ' text-success"></i>' +
+                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + '"></i>' +
                                 ' This variant description\'s syntax is valid.</li>\n';
+                            if (!bCallVV) {
+                                sBody +=
+                                    '<li class="list-group-item list-group-item-warning"><i class="bi bi-exclamation-circle-fill"></i>' +
+                                    ' This variant has not been validated on the sequence level.' +
+                                    ('WNOTSUPPORTED' in aVariant.variant_info.warnings?
+                                     ' This variant description is not currently supported for sequence-level validation.' :
+                                     ' For sequence-level validation, please select the VariantValidator option.')
+                                    '</li>\n';
+                            }
                         }
                         sBody += '</ul>';
 
