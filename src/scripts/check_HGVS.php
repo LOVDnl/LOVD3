@@ -53,27 +53,6 @@ if (ACTION || PATH_COUNT > 2) {
 
     <title>HGVS DNA variant description syntax checker</title>
     <BASE href="<?php echo lovd_getInstallURL(); ?>">
-
-    <style type="text/css">
-        /* See:
-          https://getbootstrap.com/docs/5.0/utilities/colors/
-          for the default colors and:
-          https://www.rapidtables.com/convert/color/hex-to-rgb.html
-          to translate them to RGB.
-         */
-        div.card-syntax-success div.card-header {background-color: rgba(25, 135, 84, 0.5);}
-        div.card-syntax-warning div.card-header {background-color: rgba(255, 193, 7, 0.5);}
-        div.card-syntax-danger  div.card-header {background-color: rgba(220, 53, 69, 0.5);}
-        div.card-syntax-success div.card-body,
-        div.card-syntax-success li.list-group-item,
-        div.card-syntax-success div.card-footer {background-color: rgba(25, 135, 84, 0.1);}
-        div.card-syntax-warning div.card-body,
-        div.card-syntax-warning li.list-group-item,
-        div.card-syntax-warning div.card-footer {background-color: rgba(255, 193, 7, 0.1);}
-        div.card-syntax-danger  div.card-body,
-        div.card-syntax-danger  li.list-group-item,
-        div.card-syntax-danger  div.card-footer {background-color: rgba(220, 53, 69, 0.1);}
-    </style>
 </head>
 <body class="bg-light">
 
@@ -110,7 +89,7 @@ if (ACTION || PATH_COUNT > 2) {
                         </div>
                         <div class="py-2">
                             <input type="checkbox" class="form-check-input" id="singleVariantUseVV">
-                            <label class="form-check-label" for="singleVariantUseVV">Besides checking the syntax, also use VariantValidator.org to validate this variant on the sequence level (slower)</label>
+                            <label class="form-check-label mx-2" for="singleVariantUseVV">Besides checking the syntax, also use VariantValidator.org to validate this variant on the sequence level (slower)</label>
                         </div>
                         <div class="py-2">
                             <button class="btn btn-primary" type="submit" id="singleVariantButton">Validate this variant description</button>
@@ -126,7 +105,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         </div>
                         <div class="py-2">
                             <input type="checkbox" class="form-check-input" id="multipleVariantsUseVV">
-                            <label class="form-check-label" for="multipleVariantsUseVV">Besides checking the syntax, also use VariantValidator.org to validate these variants on the sequence level (slower)</label>
+                            <label class="form-check-label mx-2" for="multipleVariantsUseVV">Besides checking the syntax, also use VariantValidator.org to validate these variants on the sequence level (slower)</label>
                         </div>
                         <div class="py-2">
                             <button class="btn btn-primary" type="submit" id="multipleVariantsButton">Validate these variant descriptions</button>
@@ -198,21 +177,27 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         var sIcon = (aVariant.is_hgvs == null? 'question' : aVariant.is_hgvs? 'check' : 'x') + '-circle-fill';
 
                         // What's in the body?
-                        var sBody = '<ul class="list-group list-group-flush"><li class="list-group-item">';
+                        var sBody = '<ul class="list-group list-group-flush">';
                         if (aVariant.is_hgvs == null) {
-                            sBody += '<i class="bi bi-' + sIcon + ' text-warning"></i> This variant description contains unsupported syntax.';
+                            sBody +=
+                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + ' text-warning"></i>' +
+                                ' This variant description contains unsupported syntax.</li>\n';
                         } else if (!aVariant.is_hgvs) {
-                            sBody += '<i class="bi bi-' + sIcon + ' text-danger"></i> This variant description is invalid.';
+                            sBody +=
+                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + ' text-danger"></i>' +
+                                ' This variant description is invalid.</li>\n';
                         } else {
-                            sBody += '<i class="bi bi-' + sIcon + ' text-success"></i> This variant description\'s syntax is valid.';
+                            sBody +=
+                                '<li class="list-group-item list-group-item-' + sStyle + '"><i class="bi bi-' + sIcon + ' text-success"></i>' +
+                                ' This variant description\'s syntax is valid.</li>\n';
                         }
-                        sBody += '</li></ul>';
+                        sBody += '</ul>';
 
                         $("#" + sMethod + "Response").append(
                             '\n' +
-                            '<div class="card w-100 mb-3 border-' + sStyle + ' card-syntax-' + sStyle + '">\n' +
-                              '<div class="card-header border-' + sStyle + '">\n' +
-                                '<h5 class="card-title mb-0"><i class="bi bi-' + sIcon + ' text-' + sStyle + '"></i> ' + sVariant + '</h5>\n' +
+                            '<div class="card w-100 mb-3 border-' + sStyle + '">\n' +
+                              '<div class="card-header border-' + sStyle + ' bg-' + sStyle + ' text-white">\n' +
+                                '<h5 class="card-title mb-0"><i class="bi bi-' + sIcon + '"></i> ' + sVariant + '</h5>\n' +
                               '</div>\n'
                               + sBody + '\n' +
                             '</div>'
