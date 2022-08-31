@@ -121,6 +121,21 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
 <SCRIPT type="text/javascript">
+    $("#hgvsTabsContent").find(
+        "input[type=text], textarea"
+    ).keyup(
+        function ()
+        {
+            if ($(this).val() == '') {
+                $(this).parents('form').find('button').prop('disabled', true);
+            } else {
+                $(this).parents('form').find('button').prop('disabled', false);
+            }
+        }
+    ).keyup();
+
+
+
     function showResponse(sMethod)
     {
         // This function sends the data over to the ajax script, formats, and displays the response.
