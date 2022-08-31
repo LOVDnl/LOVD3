@@ -121,6 +121,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
 <SCRIPT type="text/javascript">
+    // Disable buttons when there is nothing to submit.
     $("#hgvsTabsContent").find(
         "input[type=text], textarea"
     ).keyup(
@@ -133,6 +134,16 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
             }
         }
     ).keyup();
+
+    // Disable buttons when clicked and indicate the process is loading.
+    $("#hgvsTabsContent").find("button").click(
+        function ()
+        {
+            $(this).parents("form").submit();
+            $(this).prop('disabled', true).append('\n&nbsp;\n<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+            return true;
+        }
+    );
 
 
 
