@@ -95,7 +95,7 @@ if (ACTION || PATH_COUNT > 2) {
                             <button class="btn btn-primary" type="submit">Validate this variant description</button>
                         </div>
                     </FORM>
-                    <DIV id="py-2 singleVariantResponse"></DIV>
+                    <DIV class="py-2" id="singleVariantResponse"></DIV>
                 </div>
                 <div class="py-3 tab-pane fade" id="multiple" role="tabpanel">
                     <FORM onsubmit="showResponse('multipleVariants'); return false;" action="">
@@ -111,7 +111,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             <button class="btn btn-primary" type="submit">Validate these variant descriptions</button>
                         </div>
                     </FORM>
-                    <DIV id="py-2 multipleVariantsResponse"></DIV>
+                    <DIV class="py-2" id="multipleVariantsResponse"></DIV>
                 </div>
         </div>
     </main>
@@ -157,8 +157,18 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
         var sInput = $("#" + sMethod).val();
         var bCallVV = $("#" + sMethod + "UseVV").is(":checked");
-        $.get(
-            "ajax/check_HGVS.php?var=" + encodeURIComponent(sInput) + "&callVV=" + bCallVV
+        $.getJSON(
+            "ajax/check_HGVS.php?var=" + encodeURIComponent(sInput) + "&callVV=" + bCallVV,
+            function (data)
+            {
+                // If we get here, the JSON was already parsed, and we know it was successful.
+                // We should have received an object with variants as keys, and their results as the value.
+
+                // Empty previous result.
+                $("#" + sMethod + "Response").html("");
+
+                return true;
+            }
         ).fail(
             function()
             {
