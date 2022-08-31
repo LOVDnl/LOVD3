@@ -53,6 +53,27 @@ if (ACTION || PATH_COUNT > 2) {
 
     <title>HGVS DNA variant description syntax checker</title>
     <BASE href="<?php echo lovd_getInstallURL(); ?>">
+
+    <style type="text/css">
+        /* See:
+          https://getbootstrap.com/docs/5.0/utilities/colors/
+          for the default colors and:
+          https://www.rapidtables.com/convert/color/hex-to-rgb.html
+          to translate them to RGB.
+         */
+        div.card-syntax-success div.card-header {background-color: rgba(25, 135, 84, 0.5);}
+        div.card-syntax-warning div.card-header {background-color: rgba(255, 193, 7, 0.5);}
+        div.card-syntax-danger  div.card-header {background-color: rgba(220, 53, 69, 0.5);}
+        div.card-syntax-success div.card-body,
+        div.card-syntax-success li.list-group-item,
+        div.card-syntax-success div.card-footer {background-color: rgba(25, 135, 84, 0.1);}
+        div.card-syntax-warning div.card-body,
+        div.card-syntax-warning li.list-group-item,
+        div.card-syntax-warning div.card-footer {background-color: rgba(255, 193, 7, 0.1);}
+        div.card-syntax-danger  div.card-body,
+        div.card-syntax-danger  li.list-group-item,
+        div.card-syntax-danger  div.card-footer {background-color: rgba(220, 53, 69, 0.1);}
+    </style>
 </head>
 <body class="bg-light">
 
@@ -166,6 +187,38 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
                 // Empty previous result.
                 $("#" + sMethod + "Response").html("");
+
+                // Loop through the results.
+                $.each(
+                    data,
+                    function (sVariant, aVariant)
+                    {
+                        // Style used, icon used?
+                        var sStyle = (aVariant.color == 'green'? 'success' : aVariant.color == 'orange'? 'warning' : 'danger');
+                        var sIcon = (aVariant.is_hgvs == null? 'question' : aVariant.is_hgvs? 'check' : 'x') + '-circle-fill';
+
+                        // What's in the body?
+                        var sBody = '<ul class="list-group list-group-flush"><li class="list-group-item">';
+                        if (aVariant.is_hgvs == null) {
+                            sBody += '<i class="bi bi-' + sIcon + ' text-warning"></i> This variant description contains unsupported syntax.';
+                        } else if (!aVariant.is_hgvs) {
+                            sBody += '<i class="bi bi-' + sIcon + ' text-danger"></i> This variant description is invalid.';
+                        } else {
+                            sBody += '<i class="bi bi-' + sIcon + ' text-success"></i> This variant description\'s syntax is valid.';
+                        }
+                        sBody += '</li></ul>';
+
+                        $("#" + sMethod + "Response").append(
+                            '\n' +
+                            '<div class="card w-100 mb-3 border-' + sStyle + ' card-syntax-' + sStyle + '">\n' +
+                              '<div class="card-header border-' + sStyle + '">\n' +
+                                '<h5 class="card-title mb-0"><i class="bi bi-' + sIcon + ' text-' + sStyle + '"></i> ' + sVariant + '</h5>\n' +
+                              '</div>\n'
+                              + sBody + '\n' +
+                            '</div>'
+                        );
+                    }
+                );
 
                 // Reset button.
                 $("#" + sMethod + "Button").html(
