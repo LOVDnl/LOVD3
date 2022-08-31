@@ -92,7 +92,7 @@ if (ACTION || PATH_COUNT > 2) {
                             <label class="form-check-label" for="singleVariantUseVV">Besides checking the syntax, also use VariantValidator.org to validate this variant on the sequence level (slower)</label>
                         </div>
                         <div class="py-2">
-                            <button class="btn btn-primary" type="submit">Validate this variant description</button>
+                            <button class="btn btn-primary" type="submit" id="singleVariantButton">Validate this variant description</button>
                         </div>
                     </FORM>
                     <DIV class="py-2" id="singleVariantResponse"></DIV>
@@ -108,7 +108,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             <label class="form-check-label" for="multipleVariantsUseVV">Besides checking the syntax, also use VariantValidator.org to validate these variants on the sequence level (slower)</label>
                         </div>
                         <div class="py-2">
-                            <button class="btn btn-primary" type="submit">Validate these variant descriptions</button>
+                            <button class="btn btn-primary" type="submit" id="multipleVariantsButton">Validate these variant descriptions</button>
                         </div>
                     </FORM>
                     <DIV class="py-2" id="multipleVariantsResponse"></DIV>
@@ -166,6 +166,11 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
                 // Empty previous result.
                 $("#" + sMethod + "Response").html("");
+
+                // Reset button.
+                $("#" + sMethod + "Button").html(
+                    $("#" + sMethod + "Button").html().replace("&nbsp;", "").trim()
+                ).prop("disabled", false).find("span").remove();
 
                 return true;
             }
