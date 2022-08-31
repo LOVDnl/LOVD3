@@ -80,12 +80,7 @@ if (!empty($_REQUEST['callVV']) && $_REQUEST['callVV'] == 'true') {
     $bVV = false;
 }
 
-header('Content-type: text/javascript; charset=UTF-8');
-
-// Reset the form (check/cross sign, validation output).
-print('
-$("#checkResult").attr("src", "gfx/trans.png");
-$("#response").html("");');
+header('Content-type: application/json; charset=UTF-8');
 
 
 
@@ -93,7 +88,6 @@ $("#response").html("");');
 
 // Handling both single submissions and list submissions using the same code.
 // This removes duplication, or perhaps worse, differences in implementation.
-$bList = (!empty($_REQUEST['method']) && $_REQUEST['method'] == 'list');
 // Put the variants in an array, assigning them as keys.
 $aVariants = array_fill_keys(
     // This is not a normal form; JS combines the values without adding a \r.
@@ -208,9 +202,9 @@ foreach ($aVariants as $sVariant => $aVariant) {
     }
 
     // The variant's status color.
-    // Green if it's HGVS and there's no improvement from VV.
-    // Orange if it's ENOTSUPPORTED, or if we have a fix that's HGVS.
-    // Red, otherwise. We don't get the variant at all, or we couldn't find an HGVS-compliant fix.
+    // Green if it's HGVS and there's no improvement from VV. (bootstrap: success)
+    // Orange if it's ENOTSUPPORTED, or if we have a fix that's HGVS. (bootstrap: warning)
+    // Red, otherwise. We don't get the variant at all, or we couldn't find an HGVS-compliant fix. (bootstrap: danger)
     $aVariant['color'] =
         ($aVariant['is_hgvs'] && !$aVariant['fixed_variant']? 'green' :
             ($aVariant['is_hgvs'] === null || $aVariant['fixed_variant_is_hgvs']? 'orange' :
@@ -219,99 +213,5 @@ foreach ($aVariants as $sVariant => $aVariant) {
     $aVariants[$sVariant] = $aVariant;
 }
 
-
-
-
-
-if ($_REQUEST['method'] == 'single') {
-    // The form for one single variant was used.
-    $sVariant = current(array_keys($aVariants));
-    $aVariant = $aVariants[$sVariant];
-
-    // First check to see if the variant is HGVS.
-    $sResponse =
-        '<B>' . htmlspecialchars($sVariant) . ' ' .
-        ($aVariant['is_hgvs'] === null? 'contains syntax currently not supported by this service.' :
-            ($aVariant['is_hgvs']? 'passed' : 'did not pass') . ' our syntax check.') .
-        '</B><BR>';
-
-    $aMessages = array_merge($aVariant['variant_info']['errors'], $aVariant['variant_info']['warnings']);
-    if ($bVV) {
-        $aMessages[] = $aVariant['VV'];
-    }
-    if ($aMessages) {
-        if (count($aMessages) == 1) {
-            $sResponse .= current($aMessages) . '<BR><BR>';
-        } else {
-            $sResponse .= '<UL style=\"margin: 0px;\"><LI>' . implode('</LI><LI>', $aMessages) . '</LI></UL>';
-        }
-    }
-
-    // Show whether the variant was correct through a check or a cross.
-    print('
-$("#checkResult").attr("src", "gfx/' . ($aVariant['is_hgvs'] === null? 'lovd_form_question' : ($aVariant['is_hgvs']? 'check' : 'cross')) . '.png");');
-
-
-
-
-
-} elseif ($_REQUEST['method'] == 'list') {
-    // The form for multiple variants was used.
-    $bAllIsHGVS = true;
-
-    $sTable = '<TABLE id=\"responseTable\" border=\"0\" cellpadding=\"10\" cellspacing=\"1\" class=\"data\">' .
-        '<TR>' .
-           '<TH style=\"background : #90E090;\">Variant</TH>' .
-           '<TH style=\"background : #90E090;\">Valid&nbsp;syntax?</TH>' .
-           '<TH style=\"background : #90E090;\">Fixed&nbsp;variant</TH>' .
-           '<TH style=\"background : #90E090;\">Warnings and errors</TH>' .
-           (!$bVV? '' :
-          '<TH style=\"background : #90E090;\">Result of VariantValidator</TH>') .
-        '</TR>';
-
-    foreach ($aVariants as $sVariant => $aVariant) {
-        if (true) {
-            // Storing info on whether we find any variants which are missing
-            //  reference sequences.
-            $bAllIsHGVS &= $aVariant['is_hgvs'];
-
-            $sTable .=
-                '<TR valign=\"top\" class=\"col' . ucfirst($aVariant['color']) .'\">' .
-                    '<TD>' . htmlspecialchars($sVariant) . '</TD>' .
-                    '<TD><IMG src=\"gfx/' .
-                        ($aVariant['is_hgvs']? 'mark_1.png\" alt=\"Valid syntax' :
-                            ($aVariant['is_hgvs'] === null? 'lovd_form_question.png\" alt=\"Unsupported syntax' :
-                                'mark_0.png\" alt=\"Invalid syntax')) . '\"></TD>' .
-                    '<TD>' . (!$aVariant['fixed_variant_is_hgvs']? '-' : htmlspecialchars($aVariant['fixed_variant'])) . '</TD>' .
-                    '<TD>' .
-                        ($aVariant['is_hgvs']? '-' : '- ' .
-                            implode('<BR>- ',
-                                array_map('strip_tags',
-                                    array_merge($aVariant['variant_info']['errors'], $aVariant['variant_info']['warnings'])))) . '</TD>';
-            if ($bVV) {
-                $sTable .= '<TD>' . $aVariant['VV'] . '</TD>';
-            }
-            $sTable .= '</TR>';
-        }
-    }
-
-    $sTable .= '</TABLE>';
-
-
-    // Create response.
-    $sResponse = ($bAllIsHGVS? 'All of the variants passed our syntax check!' :
-                               'Some of the variants did not pass our syntax check...') .
-
-                  '<BR><BR>' .
-                   $sTable .
-                  '<BR>' .
-                  '<BUTTON onclick=\"downloadResponse();\">Download result</BUTTON>';
-}
-
-
-
-
-// Print the response.
-print('
-$("#response").html("' . $sResponse . '");');
+echo json_encode($aVariants);
 ?>
