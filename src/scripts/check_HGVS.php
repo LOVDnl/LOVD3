@@ -230,7 +230,33 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             }
                         );
 
-                        // Add the IREFSEQMISSING last.
+                        // Add VV's output, if present. As this can be both an array or an object, let's use jQuery.
+                        $.each(
+                            aVariant.VV,
+                            function (sCode, sMessage)
+                            {
+                                var sStyle = 'danger';
+                                var sIcon = 'dash-circle-fill';
+                                if (sCode == 'ENOTSUPPORTED') {
+                                    // The user saw this message already.
+                                    return;
+                                } else if (sCode == 'WNOTSUPPORTED') {
+                                    sStyle = 'secondary';
+                                    sIcon = 'info-circle-fill';
+                                } else if (sCode == 'EINTERNAL') {
+                                    sIcon = 'x-circle-fill';
+                                } else if (sCode == 'WCORRECTED') {
+                                    sStyle = 'warning';
+                                    sIcon = 'arrow-right-circle-fill';
+                                } else if (sCode == 'IOK') {
+                                    sStyle = 'success';
+                                    sIcon = 'check-circle-fill';
+                                }
+                                aMessages.push({'style': sStyle, 'icon': sIcon, 'body': sMessage});
+                            }
+                        );
+
+                        // Add the IREFSEQMISSING last (never set if we called VV).
                         if ("IREFSEQMISSING" in aVariant.variant_info.warnings && !("EFAIL" in aVariant.variant_info.errors)) {
                             aMessages.push({'style': 'secondary', 'icon': 'info-circle-fill', 'body': aVariant.variant_info.warnings.IREFSEQMISSING});
                         };
