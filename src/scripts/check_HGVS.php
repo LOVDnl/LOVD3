@@ -172,8 +172,8 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                     data,
                     function (sVariant, aVariant)
                     {
-                        // Style used, icon used?
-                        var sStyle = (aVariant.color == 'green'? 'success' : aVariant.color == 'orange'? 'warning' : 'danger');
+                        // Style used, icon used? I don't like bootstrap's "warning" colors much, so make it "secondary".
+                        var sStyle = (aVariant.color == 'green'? 'success' : aVariant.color == 'orange'? 'secondary' : 'danger');
                         var sIcon = (aVariant.is_hgvs == null? 'question' : aVariant.is_hgvs? 'check' : 'x') + '-circle-fill';
 
                         // What's in the body?
@@ -181,7 +181,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         if (aVariant.is_hgvs == null) {
                             sBody +=
                                 '<li class="list-group-item list-group-item-' + sStyle + ' d-flex"><i class="bi bi-' + sIcon + ' me-2"></i><div>' +
-                                ' This variant description contains unsupported syntax.' +
+                                'This variant description contains unsupported syntax.' +
                                 ' Although we aim to support all of the HGVS nomenclature rules,' +
                                 ' some complex variants are not fully implemented yet in our syntax checker.</div></li>\n';
                         } else if (!aVariant.is_hgvs) {
@@ -189,25 +189,25 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                                 '<li class="list-group-item list-group-item-' + sStyle + ' d-flex"><i class="bi bi-' + sIcon + ' me-2"></i><div>' +
                                 ("EFAIL" in aVariant.variant_info.errors?
                                     aVariant.variant_info.errors.EFAIL :
-                                    ' This variant description is invalid.') +
+                                    'This variant description is invalid.') +
                                 '</div></li>\n';
                         } else {
                             sBody +=
                                 '<li class="list-group-item list-group-item-' + sStyle + ' d-flex"><i class="bi bi-' + sIcon + ' me-2"></i><div>' +
-                                ' This variant description\'s syntax is valid.</div></li>\n';
+                                'This variant description\'s syntax is valid.</div></li>\n';
                             if (!bCallVV) {
                                 if ('WNOTSUPPORTED' in aVariant.variant_info.warnings) {
                                     sBody +=
                                         '<li class="list-group-item list-group-item-' + sStyle + ' d-flex">' +
                                         '<i class="bi bi-info-circle-fill me-2"></i><div>' +
-                                        ' This variant has not been validated on the sequence level.' +
+                                        'This variant has not been validated on the sequence level.' +
                                         ' However, this variant description is not currently supported for sequence-level validation.' +
                                         '</div></li>\n';
                                 } else {
                                     sBody +=
-                                        '<li class="list-group-item list-group-item-warning d-flex">' +
+                                        '<li class="list-group-item list-group-item-secondary d-flex">' +
                                         '<i class="bi bi-exclamation-circle-fill me-2"></i><div>' +
-                                        ' This variant has not been validated on the sequence level.' +
+                                        'This variant has not been validated on the sequence level.' +
                                         ' For sequence-level validation, please select the VariantValidator option.' +
                                         '</div></li>\n';
                                 }
@@ -217,9 +217,9 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
                         $("#" + sMethod + "Response").append(
                             '\n' +
-                            '<div class="card w-100 mb-3 border-' + sStyle + '">\n' +
-                              '<div class="card-header border-' + sStyle + ' bg-' + sStyle + ' text-white">\n' +
-                                '<h5 class="card-title mb-0"><i class="bi bi-' + sIcon + '"></i> ' + sVariant + '</h5>\n' +
+                            '<div class="card w-100 mb-3 border-' + sStyle + ' bg-' + sStyle + '">\n' +
+                              '<div class="card-header text-white">\n' +
+                                '<h5 class="card-title mb-0"><i class="bi bi-' + sIcon + ' me-1"></i> ' + sVariant + '</h5>\n' +
                               '</div>\n'
                               + sBody + '\n' +
                             '</div>'
