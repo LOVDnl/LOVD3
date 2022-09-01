@@ -173,8 +173,8 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                     function (sVariant, aVariant)
                     {
                         // Style used, icon used? I don't like bootstrap's "warning" colors much, so make it "secondary".
-                        var sStyle = (aVariant.color == 'green'? 'success' : aVariant.color == 'orange'? 'secondary' : 'danger');
-                        var sIcon = (aVariant.is_hgvs == null? 'question' : aVariant.is_hgvs? 'check' : (aVariant.color == 'orange'? 'x' : 'exclamation')) + '-circle-fill';
+                        var sStyle = (aVariant.color == 'green'? 'success' : (aVariant.color == 'orange'? 'secondary' : 'danger'));
+                        var sIcon = (aVariant.is_hgvs == null? 'question' : (aVariant.color == 'orange'? 'x' : (aVariant.is_hgvs? 'check' : 'exclamation'))) + '-circle-fill';
 
                         // What's in the body?
                         var aMessages = [];
