@@ -187,19 +187,30 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         } else if (!aVariant.is_hgvs) {
                             sBody +=
                                 '<li class="list-group-item list-group-item-' + sStyle + ' d-flex"><i class="bi bi-' + sIcon + ' me-2"></i><div>' +
-                                ' This variant description is invalid.</div></li>\n';
+                                ("EFAIL" in aVariant.variant_info.errors?
+                                    aVariant.variant_info.errors.EFAIL :
+                                    ' This variant description is invalid.') +
+                                '</div></li>\n';
                         } else {
                             sBody +=
                                 '<li class="list-group-item list-group-item-' + sStyle + ' d-flex"><i class="bi bi-' + sIcon + ' me-2"></i><div>' +
                                 ' This variant description\'s syntax is valid.</div></li>\n';
                             if (!bCallVV) {
-                                sBody +=
-                                    '<li class="list-group-item list-group-item-warning d-flex"><i class="bi bi-exclamation-circle-fill me-2"></i><div>' +
-                                    ' This variant has not been validated on the sequence level.' +
-                                    ('WNOTSUPPORTED' in aVariant.variant_info.warnings?
-                                        ' This variant description is not currently supported for sequence-level validation.' :
-                                        ' For sequence-level validation, please select the VariantValidator option.') +
-                                    '</div></li>\n';
+                                if ('WNOTSUPPORTED' in aVariant.variant_info.warnings) {
+                                    sBody +=
+                                        '<li class="list-group-item list-group-item-' + sStyle + ' d-flex">' +
+                                        '<i class="bi bi-info-circle-fill me-2"></i><div>' +
+                                        ' This variant has not been validated on the sequence level.' +
+                                        ' However, this variant description is not currently supported for sequence-level validation.' +
+                                        '</div></li>\n';
+                                } else {
+                                    sBody +=
+                                        '<li class="list-group-item list-group-item-warning d-flex">' +
+                                        '<i class="bi bi-exclamation-circle-fill me-2"></i><div>' +
+                                        ' This variant has not been validated on the sequence level.' +
+                                        ' For sequence-level validation, please select the VariantValidator option.' +
+                                        '</div></li>\n';
+                                }
                             }
                         }
                         sBody += '</ul>';

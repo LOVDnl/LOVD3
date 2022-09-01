@@ -137,7 +137,9 @@ foreach ($aVariants as $sVariant => $aVariant) {
         $aVariant['fixed_variant_is_hgvs'] = lovd_getVariantInfo($aVariant['fixed_variant'], false, true);
         if (!$aVariant['variant_info']) {
             $aVariant['variant_info'] = array(
-                'errors' => array('Failed to recognize a variant description in your input.'),
+                'errors' => array(
+                    'EFAIL' => 'Failed to recognize a variant description in your input.'
+                ),
                 'warnings' => array(),
             );
         }
