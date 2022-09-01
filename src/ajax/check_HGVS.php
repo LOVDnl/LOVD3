@@ -143,13 +143,6 @@ foreach ($aVariants as $sVariant => $aVariant) {
                 'warnings' => array(),
             );
         }
-        if ($aVariant['fixed_variant'] != $sVariant) {
-            if ($aVariant['fixed_variant_is_hgvs']) {
-                $aVariant['variant_info']['warnings'][] = 'Did you mean <A href=\"#\" onclick=\"$(\'#variant\').val(\'' . $aVariant['fixed_variant'] . '\'); $(\'#checkButton\').click(); return false;\">' . $aVariant['fixed_variant'] . '</A>?';
-            } else {
-                $aVariant['variant_info']['warnings'][] = 'We could not automatically correct your variant description, but this suggestion may be an improvement: ' . htmlspecialchars($aVariant['fixed_variant']) . '.<BR>';
-            }
-        }
     }
 
     $aVariant['VV'] = array();

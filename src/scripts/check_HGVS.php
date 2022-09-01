@@ -256,6 +256,12 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             }
                         );
 
+                        // If not VV, but we fixed the variant, mention this.
+                        if (!("WCORRECTED" in aVariant.VV) && aVariant.fixed_variant != sVariant && aVariant.fixed_variant_is_hgvs) {
+                            aMessages.push({'style': 'warning', 'icon': 'arrow-right-circle-fill', 'body':
+                                'We suggest that perhaps the correct variant description is <B>' + aVariant.fixed_variant + '</B>.'});
+                        }
+
                         // Add the IREFSEQMISSING last (never set if we called VV).
                         if ("IREFSEQMISSING" in aVariant.variant_info.warnings && !("EFAIL" in aVariant.variant_info.errors)) {
                             aMessages.push({'style': 'secondary', 'icon': 'info-circle-fill', 'body': aVariant.variant_info.warnings.IREFSEQMISSING});
