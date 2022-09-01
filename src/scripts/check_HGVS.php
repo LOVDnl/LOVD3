@@ -203,8 +203,8 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             aVariant.variant_info.errors,
                             function (sCode, sError)
                             {
-                                var sStyle = 'danger'; // Local scope, I hope?
-                                var sIcon = 'exclamation-circle-fill'; // Local scope, I hope?
+                                var sStyle = 'danger';
+                                var sIcon = 'exclamation-circle-fill';
                                 if (sCode == 'ENOTSUPPORTED') {
                                     sStyle = 'secondary';
                                     sError =
@@ -215,6 +215,25 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                                 aMessages.push({'style': sStyle, 'icon': sIcon, 'body': sError});
                             }
                         );
+
+                        // Add warnings. As warnings can be both an array or an object, let's use jQuery.
+                        $.each(
+                            aVariant.variant_info.warnings,
+                            function (sCode, sWarning)
+                            {
+                                var sStyle = 'secondary';
+                                var sIcon = 'x-circle-fill';
+                                if (sCode == 'IREFSEQMISSING' || sCode == 'WNOTSUPPORTED') {
+                                    return;
+                                }
+                                aMessages.push({'style': sStyle, 'icon': sIcon, 'body': sWarning});
+                            }
+                        );
+
+                        // Add the IREFSEQMISSING last.
+                        if ("IREFSEQMISSING" in aVariant.variant_info.warnings && !("EFAIL" in aVariant.variant_info.errors)) {
+                            aMessages.push({'style': 'secondary', 'icon': 'info-circle-fill', 'body': aVariant.variant_info.warnings.IREFSEQMISSING});
+                        };
 
                         var sBody = '<ul class="list-group list-group-flush">';
                         aMessages.forEach(
