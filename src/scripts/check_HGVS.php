@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-12-03
- * Modified    : 2022-08-30
+ * Modified    : 2022-09-01
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -174,21 +174,11 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                     {
                         // Style used, icon used? I don't like bootstrap's "warning" colors much, so make it "secondary".
                         var sStyle = (aVariant.color == 'green'? 'success' : aVariant.color == 'orange'? 'secondary' : 'danger');
-                        var sIcon = (aVariant.is_hgvs == null? 'question' : aVariant.is_hgvs? 'check' : 'x') + '-circle-fill';
+                        var sIcon = (aVariant.is_hgvs == null? 'question' : aVariant.is_hgvs? 'check' : (aVariant.color == 'orange'? 'x' : 'exclamation')) + '-circle-fill';
 
                         // What's in the body?
                         var aMessages = [];
-                        if (aVariant.is_hgvs == null) {
-                            aMessages.push({'style': sStyle, 'icon': sIcon, 'body':
-                                'This variant description contains unsupported syntax.' +
-                                ' Although we aim to support all of the HGVS nomenclature rules,' +
-                                ' some complex variants are not fully implemented yet in our syntax checker.'});
-                        } else if (!aVariant.is_hgvs) {
-                            aMessages.push({'style': sStyle, 'icon': sIcon, 'body':
-                                ("EFAIL" in aVariant.variant_info.errors?
-                                    aVariant.variant_info.errors.EFAIL :
-                                    'This variant description is invalid.')});
-                        } else {
+                        if (aVariant.is_hgvs) {
                             aMessages.push({'style': sStyle, 'icon': sIcon, 'body':
                                 'This variant description\'s syntax is valid.'});
                             if (!bCallVV) {
@@ -202,7 +192,29 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                                         ' For sequence-level validation, please select the VariantValidator option.'});
                                 }
                             }
+
+                        } else if (aVariant.is_hgvs != null && !("EFAIL" in aVariant.variant_info.errors)) {
+                            aMessages.push({'style': sStyle, 'icon': sIcon, 'body':
+                                'This variant description is invalid.'});
                         }
+
+                        // Add errors. As errors can be both an array or an object, let's use jQuery.
+                        $.each(
+                            aVariant.variant_info.errors,
+                            function (sCode, sError)
+                            {
+                                var sStyle = 'danger'; // Local scope, I hope?
+                                var sIcon = 'exclamation-circle-fill'; // Local scope, I hope?
+                                if (sCode == 'ENOTSUPPORTED') {
+                                    sStyle = 'secondary';
+                                    sError =
+                                        'This variant description contains unsupported syntax.' +
+                                        ' Although we aim to support all of the HGVS nomenclature rules,' +
+                                        ' some complex variants are not fully implemented yet in our syntax checker.';
+                                }
+                                aMessages.push({'style': sStyle, 'icon': sIcon, 'body': sError});
+                            }
+                        );
 
                         var sBody = '<ul class="list-group list-group-flush">';
                         aMessages.forEach(
