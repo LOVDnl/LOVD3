@@ -152,16 +152,18 @@ foreach ($aVariants as $sVariant => $aVariant) {
         }
     }
 
-    $aVariant['VV'] = '';
+    $aVariant['VV'] = array();
     if ($bVV) {
         if (!empty($aVariant['variant_info'])
-            && (!empty($aVariant['variant_info']['errors']['ENOTSUPPORTED'])
-                || !empty($aVariant['variant_info']['warnings']['WNOTSUPPORTED']))) {
-            $aVariant['VV'] = 'This variant description is not currently supported by VariantValidator.';
+            && !empty($aVariant['variant_info']['errors']['ENOTSUPPORTED'])) {
+            $aVariant['VV']['ENOTSUPPORTED'] = 'This variant description is not currently supported by VariantValidator.';
+        } elseif (!empty($aVariant['variant_info'])
+            && !empty($aVariant['variant_info']['warnings']['WNOTSUPPORTED'])) {
+            $aVariant['VV']['WNOTSUPPORTED'] = 'This variant description is not currently supported by VariantValidator.';
         } elseif (!$aVariant['is_hgvs']) {
-            $aVariant['VV'] = 'Please first correct the variant description to run VariantValidator.';
+            $aVariant['VV']['EFAIL'] = 'Please first correct the variant description to run VariantValidator.';
         } elseif (!$aVariant['has_refseq']) {
-            $aVariant['VV'] = 'Please provide a reference sequence to run VariantValidator.';
+            $aVariant['VV']['EREFSEQMISSING'] = 'Please provide a reference sequence to run VariantValidator.';
 
         } else {
             // Call VariantValidator. Use the outcome of lovd_getVariantInfo()
@@ -171,26 +173,34 @@ foreach ($aVariants as $sVariant => $aVariant) {
                     $_VV->verifyVariant($sVariant));
 
             if ($aVV === false) {
-                $aVariant['VV'] = 'An internal error within VariantValidator occurred when trying to validate your variant.';
+                $aVariant['VV']['EINTERNAL'] = 'An internal error within VariantValidator occurred when trying to validate your variant.';
             } elseif (!empty($aVV['data']['DNA'])) {
                 // Our VV library removed the refseq, put it back.
                 $aVV['data']['DNA'] = lovd_getVariantRefSeq($sVariant) . ':' . $aVV['data']['DNA'];
                 if ($sVariant != $aVV['data']['DNA']) {
                     // We don't check for WCORRECTED here, because the VV library accepts some changes
                     //  without setting WCORRECTED. We want to show every difference.
-                    // This here may actually create WCORRECTED.
-                    $aVV['warnings']['WCORRECTED'] = 'The variant description was automatically corrected to <B>' . $aVV['data']['DNA'] . '</B>.';
+                    $aVariant['VV']['WCORRECTED'] = 'VariantValidator automatically corrected the variant description to <B>' . $aVV['data']['DNA'] . '</B>.';
+                    unset($aVV['warnings']['WCORRECTED']); // In case it exists.
                     unset($aVV['warnings']['WROLLFORWARD']); // In case it exists.
                     $aVariant['fixed_variant'] = $aVV['data']['DNA'];
                     $aVariant['fixed_variant_is_hgvs'] = true;
                 }
-            }
 
-            if (!$aVV['errors'] && !$aVV['warnings']) {
-                $aVariant['VV'] = 'The variant description passed the validation by VariantValidator.';
-            } else {
-                $aVariant['VV'] = 'VariantValidator encountered one or more issues:<BR>' .
-                    '- ' . implode('<BR>- ', array_merge($aVV['errors'], $aVV['warnings']));
+                if (!$aVV['errors'] && !$aVV['warnings'] && !$aVariant['VV']) {
+                    $aVariant['VV']['IOK'] = 'The variant description passed the validation by VariantValidator.';
+                } else {
+                    $aVariant['VV'] = array_merge(
+                        $aVariant['VV'],
+                        array_map(
+                            function ($sValue)
+                            {
+                                return 'VariantValidator: ' . $sValue;
+                            },
+                            array_merge($aVV['errors'], $aVV['warnings'])
+                        )
+                    );
+                }
             }
         }
 
