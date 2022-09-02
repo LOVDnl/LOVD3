@@ -91,8 +91,13 @@ if (ACTION || PATH_COUNT > 2) {
                             <input type="checkbox" class="form-check-input" id="singleVariantUseVV">
                             <label class="form-check-label mx-2" for="singleVariantUseVV">Besides checking the syntax, also use VariantValidator.org to validate this variant on the sequence level (slower)</label>
                         </div>
-                        <div class="py-2">
-                            <button class="btn btn-primary" type="submit" id="singleVariantButton">Validate this variant description</button>
+                        <div class="py-2 d-flex justify-content-between">
+                            <div>
+                                <button class="btn btn-primary" type="submit" id="singleVariantButton">Validate this variant description</button>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary d-none" id="singleVariantDownloadButton">Download this result</button>
+                            </div>
                         </div>
                     </FORM>
                     <DIV class="py-2" id="singleVariantResponse"></DIV>
@@ -107,8 +112,13 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             <input type="checkbox" class="form-check-input" id="multipleVariantsUseVV">
                             <label class="form-check-label mx-2" for="multipleVariantsUseVV">Besides checking the syntax, also use VariantValidator.org to validate these variants on the sequence level (slower)</label>
                         </div>
-                        <div class="py-2">
-                            <button class="btn btn-primary" type="submit" id="multipleVariantsButton">Validate these variant descriptions</button>
+                        <div class="py-2 d-flex justify-content-between">
+                            <div>
+                                <button class="btn btn-primary" type="submit" id="multipleVariantsButton">Validate these variant descriptions</button>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary d-none" id="multipleVariantsDownloadButton">Download these results</button>
+                            </div>
                         </div>
                     </FORM>
                     <DIV class="py-2" id="multipleVariantsResponse"></DIV>
@@ -166,6 +176,9 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
                 // Empty previous result.
                 $("#" + sMethod + "Response").html("");
+
+                // Remove download button, in case it's shown.
+                $("#" + sMethod + "DownloadButton").addClass("d-none");
 
                 // Loop through the results.
                 $.each(
@@ -356,9 +369,18 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                     '</div>');
 
                 // Reset button.
+                $("#" + sMethod + "Button").find("span").remove();
                 $("#" + sMethod + "Button").html(
-                    $("#" + sMethod + "Button").html().replace("&nbsp;", "").trim()
-                ).prop("disabled", false).find("span").remove();
+                    $("#" + sMethod + "Button").html().replace(/&nbsp;/g, "").trim()
+                ).prop("disabled", false);
+
+                // Enable download button.
+                $("#" + sMethod + "DownloadButton").removeClass("d-none").click(
+                    function ()
+                    {
+                        downloadResponse(sMethod);
+                    }
+                );
 
                 return true;
             }
@@ -373,30 +395,60 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
 
 
-    function downloadResponse()
+    function downloadResponse (sMethod)
     {
-        var fileContent = "data:text/tab-seperated-values;charset=utf-8,";
-
-        for(var i=0; i<$("#responseTable tr").length; i++){
-            row = $("#responseTable tr").eq(i);
-            fileContent += encodeURI(row.children().eq(0).text()) + "\t" // variant
-                         + encodeURI(row.children().eq(1).children().prop("alt")) + "\t" // isHGVS
-                         + encodeURI(row.children().eq(2).text()) + "\t" // fixedVariant
-                         + encodeURI(row.children().eq(3).text())        // warnings and errors
-                         + (!$("#callVV").is(":checked")? "" :           // result of VariantValidator
-                             "\t" + encodeURI(row.children().eq(4).text()))
-                         + "\r\n";
+        // Download the result or results into a tab-delimited file.
+        if (sMethod == undefined || $("#" + sMethod + "Response") == null) {
+            alert("downloadResponse() called with an incorrect method.");
+            return false;
         }
+
+        // Add a spinner and disable the button while we're working.
+        $("#" + sMethod + "DownloadButton").prop('disabled', true).append('\n&nbsp;\n<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+
+        var aCards = $("#" + sMethod + "Response div.card");
+        var fileContent =
+            "data:text/tab-seperated-values;charset=utf-8," +
+            '"Input"\t"Status"\t"Suggested correction"\t"Messages"\n';
+
+        // Loop through cards and convert them into tab-delimited data.
+        $.each(
+            aCards,
+            function (index, aCard)
+            {
+                // Collect the body first.
+                var sBody = '';
+                $(aCard).find("li.list-group-item").each(
+                    function ()
+                    {
+                        sBody += $(this).data("type") + ": " + $(this).text() + " ";
+                    }
+                );
+                fileContent +=
+                    '"' + $(aCard).children("div.card-header").text().trim() + '"\t' +
+                    '"' + $(aCard).data("status") + '"\t' +
+                    '"' + $(aCard).find("li.list-group-item-warning b").text() + '"\t' +
+                    '"' + sBody.trim() + '"\r\n';
+            }
+        );
 
         var link = document.createElement("a");
         link.setAttribute("href", fileContent);
         var d = new Date();
         // Offset the timezone.
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-        link.setAttribute("download", "LOVD_HGVSCheck_" + d.toISOString().slice(0, 19) + ".txt");
+        link.setAttribute("download", "LOVD_checkHGVS_" + d.toISOString().slice(0, 19) + ".txt");
         document.body.appendChild(link);
-
         link.click();
+
+        // Reset button.
+        $("#" + sMethod + "DownloadButton").find("span").remove();
+        $("#" + sMethod + "DownloadButton").html(
+            $("#" + sMethod + "DownloadButton").html().replace(/&nbsp;/g, "").trim()
+        ).prop("disabled", false);
+
+        // Clean up.
+        link.remove();
     }
 </SCRIPT>
 
