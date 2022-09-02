@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-08-26
+ * Modified    : 2022-09-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -712,6 +712,103 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // We're out of things that we can do.
     return $sReference . $sVariant; // Not HGVS.
+}
+
+
+
+
+
+function lovd_fixHGVSGetConfidence ($sVariant, $sFixedVariant = null, $aVariantInfo = null, $aFixedVariantInfo = null)
+{
+    // This function calculates the confidence that we have in the validity of the corrected output of lovd_fixHGVS().
+    // Returns "high", "medium", or "low".
+
+    // First, get all arguments ready.
+    if (!$sVariant) {
+        return false;
+    }
+    if ($sFixedVariant === null) {
+        $sFixedVariant = lovd_fixHGVS($sVariant);
+    }
+    if ($sVariant == $sFixedVariant) {
+        return false;
+    }
+    if ($aVariantInfo === null) {
+        $aVariantInfo = lovd_getVariantInfo($sVariant, false);
+    }
+    if ($aFixedVariantInfo === null) {
+        $aFixedVariantInfo = lovd_getVariantInfo($sFixedVariant, false);
+    }
+    if (!$aFixedVariantInfo
+        || !empty($aFixedVariantInfo['errors']) || !empty($aFixedVariantInfo['warnings'])) {
+        return false;
+    }
+
+    // So, we suggest some changes, and the result is HGVS-compliant.
+    // We choose not to show non-HGVS compliant suggestions here.
+    // We anyway pass on the errors and warnings to the user,
+    //  so they can always try to fix things and try again.
+
+    // Now, let's add a confidence score.
+    // High, for corrections that we're very sure about.
+    // Medium, for corrections that are a bit more complex.
+    // Low, for everything else.
+    // We'll probably tinker a lot with these values.
+
+    // If the original variant wasn't recognized at all, add a "medium" confidence.
+    if (!$aVariantInfo) {
+        return 'medium';
+    }
+
+    // Remove stuff that we feel confident about.
+    $aErrors = array_diff_key(
+        $aVariantInfo['errors'],
+        array_fill_keys(array('ENOTSUPPORTED', 'EPIPEMISSING'), 1)
+    );
+    if (isset($aErrors['ETOOMANYPOSITIONS']) && isset($aVariantInfo['warnings']['WWRONGTYPE'])) {
+        // ETOOMANYPOSITIONS can be thrown for substitutions
+        //  that should be deletions, insertions, or deletion-insertions.
+        unset($aErrors['ETOOMANYPOSITIONS']);
+    }
+    $aWarnings = array_diff_key(
+        $aVariantInfo['warnings'],
+        array_fill_keys(array('WREFERENCEFORMAT', 'WWHITESPACE', 'WWRONGCASE', 'WWRONGTYPE'), 1)
+    );
+    // But, compensate for WWRONGCASE that should also have had a WSUFFIXGIVEN.
+    // Currently, in this case sometimes only WWRONGCASE is given, while lovd_fixHGVS()
+    //  also removes the suffix. This should result in a medium confidence.
+    if (!$aWarnings && array_keys($aVariantInfo['warnings']) == array('WWRONGCASE')) {
+        // Determine if we should have seen a WSUFFIXGIVEN as well.
+        $sSuffix = substr(stristr($sVariant, $aVariantInfo['type']), strlen($aVariantInfo['type']));
+        $sFixedSuffix = substr(stristr($sFixedVariant, $aVariantInfo['type']), strlen($aVariantInfo['type']));
+        if ($sSuffix && !$sFixedSuffix && !preg_match('/^N\[[0-9]+\]$/i', $sSuffix)) {
+            // There was a suffix, now it's gone. And this suffix wasn't in the N[n] format.
+            // Switch to a medium confidence.
+            $aWarnings['WSUFFIXGIVEN'] = 1;
+        }
+    }
+
+    if (empty($aErrors) && empty($aWarnings)) {
+        // OK, we're very confident that we were right about these corrections!
+        return 'high';
+    }
+
+    // Remove stuff that we feel less confident about.
+    $aErrors = array_diff_key(
+        $aErrors,
+        array_fill_keys(array('EFALSEINTRONIC', 'EFALSEUTR', 'EPOSITIONFORMAT'), 1)
+    );
+    $aWarnings = array_diff_key(
+        $aWarnings,
+        array_fill_keys(array('WBASESGIVEN', 'WPOSITIONFORMAT', 'WSUFFIXFORMAT', 'WSUFFIXGIVEN', 'WTOOMUCHUNKNOWN'), 1)
+    );
+    if (empty($aErrors) && empty($aWarnings)) {
+        // OK, we're very confident that we were right about these corrections!
+        return 'medium';
+    } else {
+        // Well, at least we seem to have generated something HGVS-like, but it's quite vague.
+        return 'low';
+    }
 }
 
 
