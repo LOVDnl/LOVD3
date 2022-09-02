@@ -49,7 +49,7 @@ if (ACTION || PATH_COUNT > 2) {
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <!-- Bootstrap Font Icon CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css" rel="stylesheet">
 
     <title>HGVS DNA variant description syntax checker</title>
     <BASE href="<?php echo lovd_getInstallURL(); ?>">
@@ -297,6 +297,57 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         );
                     }
                 );
+
+                // Mention the stats. We're collecting this all from what we've printed on the screen.
+                // I think that's easier than to pollute the code above with counts.
+                aCards = $("#" + sMethod + "Response div.card");
+                var nVariants = aCards.length;
+                var nVariantsSuccess = 0;
+                var nVariantsNotSupported = 0;
+                var nVariantsWarning = 0;
+                var nVariantsError = 0;
+                $.each(
+                    aCards,
+                    function (index, aCard)
+                    {
+                        // Determine, per card, what category it falls into.
+
+                        // Anything with a yellow line (a suggested fix), can be fixed.
+                        if ($(aCard).find("li.list-group-item-warning").length) {
+                            nVariantsWarning ++;
+                            return;
+                        }
+
+                        // Otherwise, if we find any red line, it's bad.
+                        if ($(aCard).find("li.list-group-item-danger").length) {
+                            nVariantsError ++;
+                            return;
+                        }
+
+                        // Cards only gray are unsupported.
+                        if (!$(aCard).find("li.list-group-item").not("li.list-group-item-secondary").length) {
+                            nVariantsNotSupported ++;
+                            return;
+                        }
+
+                        // Then we must be left with green cards with some silent warnings (VV not run, refseq not given).
+                        nVariantsSuccess ++;
+                    }
+                );
+                $("#" + sMethod + "Response").prepend(
+                    '\n' +
+                    '<div class="alert alert-primary" role="alert">\n' +
+                    (sMethod == 'singleVariant' && nVariants == 1? '' :
+                        '<div><i class="bi bi-clipboard2-check me-1"></i>' + nVariants + ' variant' + (nVariants == 1? '' : 's') + ' received.</div>\n') +
+                    (!nVariantsSuccess? '' :
+                        '<div><i class="bi bi-check-circle-fill me-1"></i>' + nVariantsSuccess + ' variant' + (nVariantsSuccess == 1? '' : 's') + ' validated successfully.</div>\n') +
+                    (!nVariantsNotSupported? '' :
+                        '<div><i class="bi bi-question-circle-fill me-1"></i>' + nVariantsNotSupported + ' variant' + (nVariantsNotSupported == 1? ' is' : 's are') + ' not supported.</div>\n') +
+                    (!nVariantsWarning? '' :
+                        '<div><i class="bi bi-dash-circle-fill me-1"></i>' + nVariantsWarning + ' variant' + (nVariantsWarning == 1? '' : 's') + ' can be fixed.</div>\n') +
+                    (!nVariantsError? '' :
+                        '<div><i class="bi bi-exclamation-circle-fill me-1"></i>' + nVariantsError + ' variant' + (nVariantsError == 1? '' : 's') + ' failed to validate.</div>\n') +
+                    '</div>');
 
                 // Reset button.
                 $("#" + sMethod + "Button").html(
