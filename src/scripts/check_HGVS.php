@@ -301,39 +301,43 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                 // Mention the stats. We're collecting this all from what we've printed on the screen.
                 // I think that's easier than to pollute the code above with counts.
                 aCards = $("#" + sMethod + "Response div.card");
-                var nVariants = aCards.length;
-                var nVariantsSuccess = 0;
-                var nVariantsNotSupported = 0;
-                var nVariantsWarning = 0;
-                var nVariantsError = 0;
                 $.each(
                     aCards,
                     function (index, aCard)
                     {
                         // Determine, per card, what category it falls into.
+                        // We'll store it in the data so that the download feature can use it, too.
+                        // However, note that when using .data() rather than .attr() to set data-* fields, the DOM
+                        //  doesn't actually get changed. Interesting read at:
+                        //  https://learningjquery.com/2011/09/using-jquerys-data-apis
+                        // This also means that you find this data, you can't use the normal jQuery attribute selection
+                        //  methods. find("div.card[data-status='success']") simply won't find anything.
+                        // jQueryUI has a :data() selector, but we don't have jQuery UI here.
+                        // You could also solve this my building a complex filter; see:
+                        //  https://stackoverflow.com/questions/7344361/how-to-select-elements-with-jquery-that-have-a-certain-value-in-a-data-attribute/7344459#7344459
+                        //  $("div.card").filter(function(){return($(this).data('status') == 'success');})
+                        //  but that's a bit too much. Therefore, we use attr() here.
 
                         // Anything with a yellow line (a suggested fix), can be fixed.
                         if ($(aCard).find("li.list-group-item-warning").length) {
-                            nVariantsWarning ++;
-                            return;
+                            $(aCard).attr('data-status', 'warning');
+                        } else if ($(aCard).find("li.list-group-item-danger").length) {
+                            // Otherwise, if we find any red line, it's bad.
+                            $(aCard).attr('data-status', 'error');
+                        } else if (!$(aCard).find("li.list-group-item").not("li.list-group-item-secondary").length) {
+                            // Cards only gray are unsupported.
+                            $(aCard).attr('data-status', 'unsupported');
+                        } else {
+                            // Then we must be left with green cards with some silent warnings (VV not run, refseq not given).
+                            $(aCard).attr('data-status', 'success');
                         }
-
-                        // Otherwise, if we find any red line, it's bad.
-                        if ($(aCard).find("li.list-group-item-danger").length) {
-                            nVariantsError ++;
-                            return;
-                        }
-
-                        // Cards only gray are unsupported.
-                        if (!$(aCard).find("li.list-group-item").not("li.list-group-item-secondary").length) {
-                            nVariantsNotSupported ++;
-                            return;
-                        }
-
-                        // Then we must be left with green cards with some silent warnings (VV not run, refseq not given).
-                        nVariantsSuccess ++;
                     }
                 );
+                var nVariants = aCards.length;
+                var nVariantsSuccess = $(aCards).filter("[data-status='success']").length;
+                var nVariantsNotSupported = $(aCards).filter("[data-status='unsupported']").length;
+                var nVariantsWarning = $(aCards).filter("[data-status='warning']").length;
+                var nVariantsError = $(aCards).filter("[data-status='error']").length;
                 $("#" + sMethod + "Response").prepend(
                     '\n' +
                     '<div class="alert alert-primary" role="alert">\n' +
