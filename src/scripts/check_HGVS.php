@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-12-03
- * Modified    : 2022-09-01
+ * Modified    : 2022-09-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -258,8 +258,14 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
                         // If not VV, but we fixed the variant, mention this.
                         if (!("WCORRECTED" in aVariant.VV) && aVariant.fixed_variant != sVariant && aVariant.fixed_variant_is_hgvs) {
+                            sMessage = 'We automatically corrected the variant description to';
+                            if (aVariant.fixed_variant_confidence == 'medium') {
+                                sMessage = 'We suggest that perhaps the correct variant description is';
+                            } else {
+                                sMessage = 'Maybe you meant to describe the variant as';
+                            }
                             aMessages.push({'style': 'warning', 'icon': 'arrow-right-circle-fill', 'body':
-                                'We suggest that perhaps the correct variant description is <B>' + aVariant.fixed_variant + '</B>.'});
+                                sMessage + ' <B>' + aVariant.fixed_variant + '</B>.'});
                         }
 
                         // Add the IREFSEQMISSING last (never set if we called VV).
