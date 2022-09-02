@@ -147,7 +147,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
 
 
-    function showResponse(sMethod)
+    function showResponse (sMethod)
     {
         // This function sends the data over to the ajax script, formats, and displays the response.
         if (sMethod == undefined || $("#" + sMethod) == null) {
@@ -179,22 +179,22 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         // What's in the body?
                         var aMessages = [];
                         if (aVariant.is_hgvs) {
-                            aMessages.push({'style': sStyle, 'icon': sIcon, 'body':
+                            aMessages.push({'style': sStyle, 'icon': sIcon, 'data': 'OK', 'body':
                                 'This variant description\'s syntax is valid.'});
                             if (!bCallVV) {
                                 if ('WNOTSUPPORTED' in aVariant.variant_info.warnings) {
-                                    aMessages.push({'style': sStyle, 'icon': 'info-circle-fill', 'body':
+                                    aMessages.push({'style': sStyle, 'icon': 'info-circle-fill', 'data': 'Note', 'body':
                                         'This variant has not been validated on the sequence level.' +
                                         ' However, this variant description is not currently supported for sequence-level validation.'});
                                 } else {
-                                    aMessages.push({'style': 'secondary', 'icon': 'exclamation-circle-fill', 'body':
+                                    aMessages.push({'style': 'secondary', 'icon': 'exclamation-circle-fill', 'data': 'Note', 'body':
                                         'This variant has not been validated on the sequence level.' +
                                         ' For sequence-level validation, please select the VariantValidator option.'});
                                 }
                             }
 
                         } else if (aVariant.is_hgvs != null && !("EFAIL" in aVariant.variant_info.errors)) {
-                            aMessages.push({'style': sStyle, 'icon': sIcon, 'body':
+                            aMessages.push({'style': sStyle, 'icon': sIcon, 'data': 'Error', 'body':
                                 'This variant description is invalid.'});
                         }
 
@@ -205,14 +205,16 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             {
                                 var sStyle = 'danger';
                                 var sIcon = 'exclamation-circle-fill';
+                                var sData = 'Error';
                                 if (sCode == 'ENOTSUPPORTED') {
                                     sStyle = 'secondary';
                                     sError =
                                         'This variant description contains unsupported syntax.' +
                                         ' Although we aim to support all of the HGVS nomenclature rules,' +
                                         ' some complex variants are not fully implemented yet in our syntax checker.';
+                                    sData = 'Note';
                                 }
-                                aMessages.push({'style': sStyle, 'icon': sIcon, 'body': sError});
+                                aMessages.push({'style': sStyle, 'icon': sIcon, 'data': sData, 'body': sError});
                             }
                         );
 
@@ -226,7 +228,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                                 if (sCode == 'IREFSEQMISSING' || sCode == 'WNOTSUPPORTED') {
                                     return;
                                 }
-                                aMessages.push({'style': sStyle, 'icon': sIcon, 'body': sWarning});
+                                aMessages.push({'style': sStyle, 'icon': sIcon, 'data': 'Warning', 'body': sWarning});
                             }
                         );
 
@@ -252,7 +254,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                                     sStyle = 'success';
                                     sIcon = 'check-circle-fill';
                                 }
-                                aMessages.push({'style': sStyle, 'icon': sIcon, 'body': sMessage});
+                                aMessages.push({'style': sStyle, 'icon': sIcon, 'data': 'VariantValidator', 'body': sMessage});
                             }
                         );
 
@@ -264,13 +266,13 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             } else {
                                 sMessage = 'Maybe you meant to describe the variant as';
                             }
-                            aMessages.push({'style': 'warning', 'icon': 'arrow-right-circle-fill', 'body':
+                            aMessages.push({'style': 'warning', 'icon': 'arrow-right-circle-fill', 'data': 'Correction', 'body':
                                 sMessage + ' <B>' + aVariant.fixed_variant + '</B>.'});
                         }
 
                         // Add the IREFSEQMISSING last (never set if we called VV).
                         if ("IREFSEQMISSING" in aVariant.variant_info.warnings && !("EFAIL" in aVariant.variant_info.errors)) {
-                            aMessages.push({'style': 'secondary', 'icon': 'info-circle-fill', 'body': aVariant.variant_info.warnings.IREFSEQMISSING});
+                            aMessages.push({'style': 'secondary', 'icon': 'info-circle-fill', 'data': 'Note', 'body': aVariant.variant_info.warnings.IREFSEQMISSING});
                         };
 
                         var sBody = '<ul class="list-group list-group-flush">';
@@ -278,7 +280,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                             function (aMessage)
                             {
                                 sBody +=
-                                    '<li class="list-group-item list-group-item-' + aMessage.style + ' d-flex">' +
+                                    '<li class="list-group-item list-group-item-' + aMessage.style + ' d-flex" data-type="' + aMessage.data + '">' +
                                     '<i class="bi bi-' + aMessage.icon + ' me-2"></i><div>' +
                                     aMessage.body +
                                     '</div></li>\n';
