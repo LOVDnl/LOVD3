@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-08-30
+ * Modified    : 2022-09-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -103,6 +103,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
     $sVariant = trim($sVariant);
 
     $aVariant['fixed_variant'] = '';
+    $aVariant['fixed_variant_confidence'] = false;
     $aVariant['fixed_variant_is_hgvs'] = false;
     $aVariant['variant_info'] = lovd_getVariantInfo($sVariant, false);
     if ($aVariant['variant_info']) {
@@ -134,7 +135,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
     }
     if ($aVariant['is_hgvs'] === false) {
         $aVariant['fixed_variant'] = lovd_fixHGVS($sVariant);
-        $aVariant['fixed_variant_is_hgvs'] = lovd_getVariantInfo($aVariant['fixed_variant'], false, true);
+        $aVariant['fixed_variant_variant_info'] = lovd_getVariantInfo($aVariant['fixed_variant'], false);
         if (!$aVariant['variant_info']) {
             $aVariant['variant_info'] = array(
                 'errors' => array(
@@ -143,6 +144,39 @@ foreach ($aVariants as $sVariant => $aVariant) {
                 'warnings' => array(),
             );
         }
+
+        // We normally don't show non-HGVS compliant suggestions. Exception;
+        // Treat the result as HGVS compliant (i.e., accept suggestion and show)
+        //  when all we had was a WTOOMUCHUNKNOWN and now we get a ESUFFIXMISSING.
+        // The issue is that WTOOMUCHUNKNOWN suggests a fix, so it's stupid to then not show it.
+        // Also, add the error to the current list, so it's not lost.
+        if ($aVariant['variant_info'] && $aVariant['fixed_variant_variant_info']
+            && array_keys($aVariant['variant_info']['errors'] + $aVariant['variant_info']['warnings']) == array('WTOOMUCHUNKNOWN')
+            && array_keys($aVariant['fixed_variant_variant_info']['errors'] + $aVariant['fixed_variant_variant_info']['warnings']) == array('ESUFFIXMISSING')) {
+            $aVariant['variant_info']['errors'] += $aVariant['fixed_variant_variant_info']['errors']; // For the output.
+            unset($aVariant['fixed_variant_variant_info']['errors']['ESUFFIXMISSING']);
+        }
+
+        // Then check if the fix is HGVS-compliant.
+        $aVariant['fixed_variant_is_hgvs'] = (
+            is_array($aVariant['fixed_variant_variant_info'])
+            &&
+            empty($aVariant['fixed_variant_variant_info']['errors'])
+            &&
+            (
+                empty($aVariant['fixed_variant_variant_info']['warnings'])
+                ||
+                array_keys($aVariant['fixed_variant_variant_info']['warnings']) == array('WNOTSUPPORTED')
+            )
+        );
+
+        // And add the confidence for us.
+        $aVariant['fixed_variant_confidence'] = lovd_fixHGVSGetConfidence(
+            $sVariant,
+            $aVariant['fixed_variant'],
+            $aVariant['variant_info'],
+            $aVariant['fixed_variant_variant_info']
+        );
     }
 
     $aVariant['VV'] = array();
