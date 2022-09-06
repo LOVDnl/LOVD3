@@ -145,13 +145,26 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
         }
     ).keyup();
 
-    // Disable buttons when clicked and indicate the process is loading.
+    // Set handlers for buttons. Do this once, because every definition of .click() will just add up, not overwrite.
+    // Disable buttons when clicked, indicate the process is loading.
     $("#hgvsTabsContent").find("button").click(
         function ()
         {
-            $(this).parents("form").submit();
+            // Disable the button and show it's busy.
             $(this).prop('disabled', true).append('\n&nbsp;\n<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+            // Empty previous result.
+            $("#" + this.id.replace('Button', '') + "Response").html("");
+            // Remove download button, in case it's shown.
+            $("#" + this.id.replace('Button', '') + "DownloadButton").addClass("d-none");
+            $(this).parents("form").submit();
             return true;
+        }
+    );
+    $("#hgvsTabsContent").find("button[id$='DownloadButton']").click(
+        function ()
+        {
+            $(this).prop('disabled', true).append('\n&nbsp;\n<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+            downloadResponse(this.id.replace('DownloadButton', ''));
         }
     );
 
@@ -173,12 +186,6 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
             {
                 // If we get here, the JSON was already parsed, and we know it was successful.
                 // We should have received an object with variants as keys, and their results as the value.
-
-                // Empty previous result.
-                $("#" + sMethod + "Response").html("");
-
-                // Remove download button, in case it's shown.
-                $("#" + sMethod + "DownloadButton").addClass("d-none");
 
                 // Loop through the results.
                 $.each(
@@ -368,19 +375,14 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         '<div><i class="bi bi-exclamation-circle-fill me-1"></i>' + nVariantsError + ' variant' + (nVariantsError == 1? '' : 's') + ' failed to validate.</div>\n') +
                     '</div>');
 
-                // Reset button.
+                // Reset the submit button.
                 $("#" + sMethod + "Button").find("span").remove();
                 $("#" + sMethod + "Button").html(
                     $("#" + sMethod + "Button").html().replace(/&nbsp;/g, "").trim()
                 ).prop("disabled", false);
 
-                // Enable download button.
-                $("#" + sMethod + "DownloadButton").removeClass("d-none").click(
-                    function ()
-                    {
-                        downloadResponse(sMethod);
-                    }
-                );
+                // Enable the download button.
+                $("#" + sMethod + "DownloadButton").removeClass("d-none");
 
                 return true;
             }
@@ -402,9 +404,6 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
             alert("downloadResponse() called with an incorrect method.");
             return false;
         }
-
-        // Add a spinner and disable the button while we're working.
-        $("#" + sMethod + "DownloadButton").prop('disabled', true).append('\n&nbsp;\n<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
 
         var aCards = $("#" + sMethod + "Response div.card");
         var fileContent =
