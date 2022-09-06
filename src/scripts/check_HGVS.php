@@ -312,8 +312,9 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         $("#" + sMethod + "Response").append(
                             '\n' +
                             '<div class="card w-100 mb-3 border-' + sStyle + ' bg-' + sStyle + '">\n' +
-                              '<div class="card-header text-white">\n' +
-                                '<h5 class="card-title mb-0"><i class="bi bi-' + sIcon + ' me-1"></i> ' + sVariant + '</h5>\n' +
+                              '<div class="card-header text-white d-flex justify-content-between">\n' +
+                                '<div><h5 class="card-title mb-0"><i class="bi bi-' + sIcon + ' me-1"></i> <B>' + sVariant + '</B></h5></div>\n' +
+                                '<div><i class="bi bi-caret-down-fill ps-5"></i></div>\n' +
                               '</div>\n'
                               + sBody + '\n' +
                             '</div>'
@@ -384,6 +385,22 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
                 // Enable the download button.
                 $("#" + sMethod + "DownloadButton").removeClass("d-none");
+
+                // Allow cards to close/open.
+                $("#" + sMethod + "Response div.card-header i[class*='bi-caret']").click(
+                    function ()
+                    {
+                        if ($(this).hasClass("bi-caret-down-fill")) {
+                            // Hide.
+                            $(this).parents("div.card").children("ul").hide();
+                            $(this).removeClass("bi-caret-down-fill").addClass("bi-caret-left-fill");
+                        } else {
+                            // Show.
+                            $(this).parents("div.card").children("ul").show();
+                            $(this).removeClass("bi-caret-left-fill").addClass("bi-caret-down-fill");
+                        }
+                    }
+                );
 
                 return true;
             }
