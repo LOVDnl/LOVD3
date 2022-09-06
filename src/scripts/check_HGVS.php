@@ -424,9 +424,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
         }
 
         var aCards = $("#" + sMethod + "Response div.card");
-        var fileContent =
-            "data:text/tab-seperated-values;charset=utf-8," +
-            '"Input"\t"Status"\t"Suggested correction"\t"Messages"\n';
+        var fileContent = '';
 
         // Loop through cards and convert them into tab-delimited data.
         $.each(
@@ -449,7 +447,11 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                     '"' + sBody.trim() + '"\r\n';
             }
         );
-        fileContent += '\r\n';
+        // Use base64 encoding so that Firefox will also create a valid file (was missing newlines and tabs).
+        fileContent =
+            "data:text/tab-seperated-values;base64," + btoa(
+            '"Input"\t"Status"\t"Suggested correction"\t"Messages"\r\n' +
+            fileContent + '\r\n');
 
         var link = document.createElement("a");
         link.setAttribute("href", fileContent);
