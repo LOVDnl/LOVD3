@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-09-02
+ * Modified    : 2022-09-06
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -91,7 +91,8 @@ header('Content-type: application/json; charset=UTF-8');
 // Put the variants in an array, assigning them as keys.
 $aVariants = array_fill_keys(
     // This is not a normal form; JS combines the values without adding a \r.
-    array_map('trim', explode("\n", $_REQUEST['var'])),
+    array_map('htmlspecialchars',
+        array_map('trim', explode("\n", $_REQUEST['var']))),
     array()
 );
 
