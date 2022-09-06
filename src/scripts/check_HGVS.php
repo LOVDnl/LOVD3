@@ -85,10 +85,10 @@ if (ACTION || PATH_COUNT > 2) {
                 <div class="py-3 tab-pane fade show active" id="single" role="tabpanel">
                     <FORM onsubmit="showResponse('singleVariant'); return false;" action="">
                         <div class="py-2">
-                            <input type="text" class="form-control" id="singleVariant" placeholder="NM_002225.3:c.157C>T" value="">
+                            <input type="text" class="form-control" id="singleVariant" name="singleVariant" placeholder="NM_002225.3:c.157C>T" value="">
                         </div>
                         <div class="py-2">
-                            <input type="checkbox" class="form-check-input" id="singleVariantUseVV">
+                            <input type="checkbox" class="form-check-input" id="singleVariantUseVV" name="singleVariantUseVV">
                             <label class="form-check-label mx-2" for="singleVariantUseVV">Besides checking the syntax, also use VariantValidator.org to validate this variant on the sequence level (slower)</label>
                         </div>
                         <div class="py-2 d-flex justify-content-between">
@@ -105,11 +105,11 @@ if (ACTION || PATH_COUNT > 2) {
                 <div class="py-3 tab-pane fade" id="multiple" role="tabpanel">
                     <FORM onsubmit="showResponse('multipleVariants'); return false;" action="">
                         <div class="py-2">
-                            <textarea class="form-control" id="multipleVariants" placeholder="NM_002225.3:c.157C>T
+                            <textarea class="form-control" id="multipleVariants" name="multipleVariants" placeholder="NM_002225.3:c.157C>T
 NC_000015.9:g.40699840C>T" rows="3"></textarea>
                         </div>
                         <div class="py-2">
-                            <input type="checkbox" class="form-check-input" id="multipleVariantsUseVV">
+                            <input type="checkbox" class="form-check-input" id="multipleVariantsUseVV" name="multipleVariantsUseVV">
                             <label class="form-check-label mx-2" for="multipleVariantsUseVV">Besides checking the syntax, also use VariantValidator.org to validate these variants on the sequence level (slower)</label>
                         </div>
                         <div class="py-2 d-flex justify-content-between">
