@@ -157,7 +157,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
             // Remove download button, in case it's shown.
             $("#" + this.id.replace('Button', '') + "DownloadButton").addClass("d-none");
             $(this).parents("form").submit();
-            return true;
+            return false;
         }
     );
     $("#hgvsTabsContent").find("button[id$='DownloadButton']").click(
@@ -402,7 +402,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
                     }
                 );
 
-                return true;
+                return false;
             }
         ).fail(
             function()
