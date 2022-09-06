@@ -147,7 +147,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
 
     // Set handlers for buttons. Do this once, because every definition of .click() will just add up, not overwrite.
     // Disable buttons when clicked, indicate the process is loading.
-    $("#hgvsTabsContent").find("button").click(
+    $("#hgvsTabsContent").find("button[type='submit']").click(
         function ()
         {
             // Disable the button and show it's busy.
@@ -165,6 +165,7 @@ NC_000015.9:g.40699840C>T" rows="3"></textarea>
         {
             $(this).prop('disabled', true).append('\n&nbsp;\n<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
             downloadResponse(this.id.replace('DownloadButton', ''));
+            return false; // Don't submit the form.
         }
     );
 
