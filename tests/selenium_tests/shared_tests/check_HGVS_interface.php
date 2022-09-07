@@ -155,5 +155,70 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
             )
         );
     }
+
+
+
+
+
+    /**
+     * @depends testSingleVariant
+     */
+    public function testSingleVariantDownload ()
+    {
+        // Test the single variant download.
+
+        // The download location is set to "/tmp"
+        //  in getWebDriverInstance() @ inc-lib-test.php.
+        $aFilesBefore = scandir('/tmp');
+        $this->clickButton('Download this result');
+        $this->waitUntil(function () use ($aFilesBefore) {
+            // Let's hope nothing gets deleted now,
+            //  and no new files get added that aren't the download file.
+            return (count(scandir('/tmp')) > count($aFilesBefore));
+        });
+        $aPossibleDownloadFiles = array_diff(scandir('/tmp'), $aFilesBefore);
+        $this->assertGreaterThanOrEqual(1, count($aPossibleDownloadFiles));
+
+        if (count($aPossibleDownloadFiles) == 1) {
+            $sDownloadFile = current($aPossibleDownloadFiles);
+        } else {
+            foreach ($aPossibleDownloadFiles as $sFile) {
+                // Just assume the first match.
+                if (preg_match('/^LOVD_checkHGVS_[0-9T_-]+\.txt$/', $sFile)) {
+                    $sDownloadFile = $sFile;
+                    break;
+                }
+            }
+        }
+
+        // Now compare the two files.
+        $this->assertEquals(
+            array(
+                array(
+                    '"Input"',
+                    '"Status"',
+                    '"Suggested correction"',
+                    '"Messages"',
+                ),
+                array(
+                    '"c.100del"',
+                    '"success"',
+                    '""',
+                    '"OK: This variant description\'s syntax is valid. Note: This variant has not been validated on the sequence level. For sequence-level validation, please select the VariantValidator option. Note: Please note that your variant description is missing a reference sequence. Although this is not necessary for our syntax check, a variant description does need a reference sequence to be fully informative and HGVS-compliant."',
+                )
+            ),
+            array_map(
+                function ($sVal)
+                {
+                    return explode("\t", $sVal);
+                }, explode(
+                    "\r\n",
+                    rtrim(
+                        file_get_contents('/tmp/' . $sDownloadFile)
+                    )
+                )
+            )
+        );
+    }
 }
 ?>
