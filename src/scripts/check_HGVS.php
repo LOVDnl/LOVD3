@@ -107,7 +107,7 @@ if (ACTION || (defined('PATH_COUNT') && PATH_COUNT > 2)) {
                     <FORM onsubmit="showResponse('multipleVariants'); return false;" action="">
                         <div class="py-2">
                             <textarea class="form-control" id="multipleVariants" name="multipleVariants" placeholder="NM_002225.3:c.157C>T
-NC_000015.9:g.40699840C>T" rows="3"></textarea>
+NC_000015.9:g.40699840C>T" rows="5"></textarea>
                         </div>
                         <div class="py-2">
                             <input type="checkbox" class="form-check-input" id="multipleVariantsUseVV" name="multipleVariantsUseVV">
