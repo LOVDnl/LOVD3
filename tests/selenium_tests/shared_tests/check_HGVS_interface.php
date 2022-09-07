@@ -99,5 +99,61 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->findElement(WebDriverBy::tagName('h1'))->getText()
         );
     }
+
+
+
+
+
+    /**
+     * @depends testInterfaceIsUp
+     */
+    public function testSingleVariant ()
+    {
+        // Test the single variant interface.
+
+        // Enter variant and submit.
+        $this->enterValue('singleVariant', 'c.100del');
+        $this->unCheck('singleVariantUseVV');
+        $this->clickButton('Validate this variant description');
+
+        // Wait for alert, then check the output.
+        $sXPathAlert = '//div[@id="singleVariantResponse"]/div[contains(@class, "alert")]';
+        $this->waitForElement(WebDriverBy::xpath($sXPathAlert));
+        $this->assertEquals(
+            '1 variant validated successfully.',
+            $this->driver->findElement(WebDriverBy::xpath($sXPathAlert))->getText()
+        );
+
+        // Use our card testing function, to save us from code repetition.
+        $this->checkCard(
+            '//div[@id="singleVariantResponse"]/div[contains(@class, "card")]',
+            array(
+                array(
+                    'class' => 'bg-success',
+                    'icon' => 'bi-check-circle-fill',
+                    'variant' => 'c.100del',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-success',
+                            'icon' => 'bi-check-circle-fill',
+                            'value' => 'This variant description\'s syntax is valid.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-secondary',
+                            'icon' => 'bi-exclamation-circle-fill',
+                            'value' => 'This variant has not been validated on the sequence level. For sequence-level validation, please select the VariantValidator option.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-secondary',
+                            'icon' => 'bi-info-circle-fill',
+                            'value' =>
+                                'Please note that your variant description is missing a reference sequence.' .
+                                ' Although this is not necessary for our syntax check, a variant description does need a reference sequence to be fully informative and HGVS-compliant.',
+                        ),
+                    ),
+                )
+            )
+        );
+    }
 }
 ?>
