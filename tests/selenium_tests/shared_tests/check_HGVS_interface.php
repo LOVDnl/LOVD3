@@ -86,5 +86,18 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
                 $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul'))->isDisplayed());
         }
     }
+
+
+
+
+
+    public function testInterfaceIsUp ()
+    {
+        $this->driver->get(ROOT_URL . '/src/scripts/check_HGVS.php');
+        $this->assertEquals(
+            'HGVS DNA variant description syntax checker',
+            $this->driver->findElement(WebDriverBy::tagName('h1'))->getText()
+        );
+    }
 }
 ?>
