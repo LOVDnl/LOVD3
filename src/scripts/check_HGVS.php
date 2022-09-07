@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-12-03
- * Modified    : 2022-09-06
+ * Modified    : 2022-09-07
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -32,7 +32,8 @@
 define('ROOT_PATH', '../');
 require ROOT_PATH . 'inc-init.php';
 
-if (ACTION || PATH_COUNT > 2) {
+// PATH_COUNT is not set when LOVD isn't installed.
+if (ACTION || (defined('PATH_COUNT') && PATH_COUNT > 2)) {
     // !URL: /scripts/check_HGVS.php
     // This is not the basic URL. We have an ACTION or additional stuff behind the URL.
     header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $_PE[1]);
