@@ -115,7 +115,7 @@
         </testsuite>
         <testsuite name="submitter_tests">
             <!-- Submitter tests; authorization, submission, access sharing,
-                 LOVD2 data file conversion, simple curation by a Curator.
+                 LOVD2 data file conversion, simple curation by a Curator, checkHGVS interface.
                  Takes ~3.5 minutes. -->
             <file>shared_tests/install_LOVD.php</file>
             <file>shared_tests/create_gene_IVD.php</file>
@@ -151,6 +151,7 @@
             <file>shared_tests/delete_disease_IVA_not_authorized.php</file>
             <file>shared_tests/login_as_curator.php</file>
             <file>shared_tests/curate_submission_step_by_step.php</file>
+            <file>shared_tests/check_HGVS_interface.php</file>
             <file>shared_tests/uninstall_LOVD.php</file>
         </testsuite>
     </testsuites>
