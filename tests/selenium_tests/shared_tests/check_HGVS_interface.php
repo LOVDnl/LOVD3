@@ -220,5 +220,178 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
             )
         );
     }
+
+
+
+
+
+    /**
+     * @depends testSingleVariantDownload
+     */
+    public function testMultipleVariants ()
+    {
+        // Test the multiple variants interface.
+
+        // Switch interfaces.
+        $this->clickButton('Check a list of variants');
+
+        // Enter variants and submit.
+        $this->enterValue('multipleVariants', '
+c.100delA
+c.100del
+c.100
+c.1ATG[2]
+g.qter_cendel
+NM_004006.3:100del
+NM_004006.3:c.100del');
+        $this->check('multipleVariantsUseVV');
+        $this->clickButton('Validate these variant descriptions');
+
+        // Wait for alert, then check the output.
+        $sXPathAlert = '//div[@id="multipleVariantsResponse"]/div[contains(@class, "alert")]';
+        $this->waitForElement(WebDriverBy::xpath($sXPathAlert));
+        $this->assertEquals(
+            '7 variants received. 1 variant validated successfully. 1 variant is not supported. 3 variants can be fixed. 2 variants failed to validate.',
+            str_replace("\n", ' ', $this->driver->findElement(WebDriverBy::xpath($sXPathAlert))->getText())
+        );
+
+        // Use our card testing function, to save us from code repetition.
+        $this->checkCard(
+            '//div[@id="multipleVariantsResponse"]/div[contains(@class, "card")]',
+            array(
+                array(
+                    'class' => 'bg-secondary',
+                    'icon' => 'bi-x-circle-fill',
+                    'variant' => 'c.100delA',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-secondary',
+                            'icon' => 'bi-x-circle-fill',
+                            'value' => 'This variant description is invalid.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-secondary',
+                            'icon' => 'bi-x-circle-fill',
+                            'value' => 'Nothing should follow "del".',
+                        ),
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-dash-circle-fill',
+                            'value' => 'Please first correct the variant description to run VariantValidator.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-warning',
+                            'icon' => 'bi-arrow-right-circle-fill',
+                            'value' => 'We suggest that perhaps the correct variant description is c.100del.',
+                        ),
+                    ),
+                ),
+                array(
+                    'class' => 'bg-success',
+                    'icon' => 'bi-check-circle-fill',
+                    'variant' => 'c.100del',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-success',
+                            'icon' => 'bi-check-circle-fill',
+                            'value' => 'This variant description\'s syntax is valid.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-dash-circle-fill',
+                            'value' => 'Please provide a reference sequence to run VariantValidator.',
+                        ),
+                    ),
+                ),
+                array(
+                    'class' => 'bg-danger',
+                    'icon' => 'bi-exclamation-circle-fill',
+                    'variant' => 'c.100',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-exclamation-circle-fill',
+                            'value' => 'Failed to recognize a variant description in your input.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-dash-circle-fill',
+                            'value' => 'Please first correct the variant description to run VariantValidator.',
+                        ),
+                    ),
+                ),
+                array(
+                    'class' => 'bg-success',
+                    'icon' => 'bi-check-circle-fill',
+                    'variant' => 'c.1ATG[2]',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-success',
+                            'icon' => 'bi-check-circle-fill',
+                            'value' => 'This variant description\'s syntax is valid.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-secondary',
+                            'icon' => 'bi-info-circle-fill',
+                            'value' => 'This variant description is not currently supported by VariantValidator.',
+                        ),
+                    ),
+                ),
+                array(
+                    'class' => 'bg-secondary',
+                    'icon' => 'bi-question-circle-fill',
+                    'variant' => 'g.qter_cendel',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-secondary',
+                            'icon' => 'bi-exclamation-circle-fill',
+                            'value' =>
+                                'This variant description contains unsupported syntax.' .
+                                ' Although we aim to support all of the HGVS nomenclature rules, some complex variants are not fully implemented yet in our syntax checker.',
+                        ),
+                    ),
+                ),
+                array(
+                    'class' => 'bg-secondary',
+                    'icon' => 'bi-x-circle-fill',
+                    'variant' => 'NM_004006.3:100del',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-exclamation-circle-fill',
+                            'value' => 'Failed to recognize a variant description in your input.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-dash-circle-fill',
+                            'value' => 'Please first correct the variant description to run VariantValidator.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-warning',
+                            'icon' => 'bi-arrow-right-circle-fill',
+                            'value' => 'Maybe you meant to describe the variant as NM_004006.3:c.100del.',
+                        ),
+                    ),
+                ),
+                array(
+                    'class' => 'bg-secondary',
+                    'icon' => 'bi-x-circle-fill',
+                    'variant' => 'NM_004006.3:c.100del',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-secondary',
+                            'icon' => 'bi-check-circle-fill',
+                            'value' => 'This variant description\'s syntax is valid.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-warning',
+                            'icon' => 'bi-arrow-right-circle-fill',
+                            'value' => 'VariantValidator automatically corrected the variant description to NM_004006.3:c.101del.',
+                        ),
+                    ),
+                ),
+            )
+        );
+    }
 }
 ?>
