@@ -201,7 +201,7 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                         // What's in the body?
                         var aMessages = [];
                         if (aVariant.is_hgvs) {
-                            aMessages.push({'style': sStyle, 'icon': sIcon, 'data': 'OK', 'body':
+                            aMessages.push({'style': sStyle, 'icon': 'check-circle-fill', 'data': 'OK', 'body':
                                 'This variant description\'s syntax is valid.'});
                             if (!bCallVV) {
                                 if ('WNOTSUPPORTED' in aVariant.variant_info.warnings) {
