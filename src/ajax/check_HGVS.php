@@ -97,11 +97,11 @@ $aVariants = array_fill_keys(
 );
 
 foreach ($aVariants as $sVariant => $aVariant) {
-    if (!trim($sVariant)) {
+    $sVariant = trim(html_entity_decode($sVariant));
+    if (!$sVariant) {
         unset($aVariants[$sVariant]);
         continue;
     }
-    $sVariant = trim($sVariant);
 
     $aVariant['fixed_variant'] = '';
     $aVariant['fixed_variant_confidence'] = false;
@@ -250,7 +250,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
             ($aVariant['is_hgvs'] === null || $aVariant['fixed_variant_is_hgvs']? 'orange' :
                 'red'));
 
-    $aVariants[$sVariant] = $aVariant;
+    $aVariants[htmlspecialchars($sVariant)] = $aVariant;
 }
 
 echo json_encode($aVariants);
