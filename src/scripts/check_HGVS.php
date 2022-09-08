@@ -175,12 +175,25 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
     function showResponse (sMethod)
     {
         // This function sends the data over to the ajax script, formats, and displays the response.
-        if (sMethod == undefined || $("#" + sMethod) == null) {
+        var oCard = null;
+
+        if (typeof sMethod == 'object' && 'object' in sMethod && 'variant' in sMethod) {
+            // An object has been passed to us. This happens when we need to replace a card.
+            oCard = sMethod;
+            sMethod = oCard.object.parent().attr("id").replace("Response", "");
+            var sInput = oCard.variant;
+
+        } else if (typeof sMethod == 'string' && sMethod.length > 0 && $("#" + sMethod).length == 1) {
+            // We received a string linking to the input form.
+            var sInput = $("#" + sMethod).val();
+            var bCallVV = $("#" + sMethod + "UseVV").is(":checked");
+
+        } else {
+            // We received nothing, a faulty object, or a string that doesn't lead us to the input field.
             alert("showResponse() called with an incorrect method.");
             return false;
         }
 
-        var sInput = $("#" + sMethod).val();
         var bCallVV = $("#" + sMethod + "UseVV").is(":checked");
         $.getJSON(
             "ajax/check_HGVS.php?var=" + encodeURIComponent(sInput) + "&callVV=" + bCallVV,
