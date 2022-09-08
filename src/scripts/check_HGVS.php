@@ -323,16 +323,21 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                         );
                         sBody += '</ul>';
 
-                        $("#" + sMethod + "Response").append(
-                            '\n' +
+                        // Add the card to the response field, or replace a card if that is requested.
+                        var sCard =
                             '<div class="card w-100 mb-3 border-' + sStyle + ' bg-' + sStyle + '">\n' +
                               '<div class="card-header text-white d-flex justify-content-between">\n' +
                                 '<div><h5 class="card-title mb-0"><i class="bi bi-' + sIcon + ' me-1"></i> <B>' + sVariant + '</B></h5></div>\n' +
                                 '<div><i class="bi bi-caret-down-fill ps-5"></i></div>\n' +
                               '</div>\n'
                               + sBody + '\n' +
-                            '</div>'
-                        );
+                            '</div>';
+
+                        if (oCard) {
+                            oCard.object.replaceWith(sCard);
+                        } else {
+                            $("#" + sMethod + "Response").append('\n' + sCard);
+                        }
                     }
                 );
 
