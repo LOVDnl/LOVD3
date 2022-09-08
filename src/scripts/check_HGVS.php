@@ -301,6 +301,7 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                             } else {
                                 sMessage = 'Maybe you meant to describe the variant as';
                             }
+                            // This message will be edited later.
                             aMessages.push({'style': 'warning', 'icon': 'arrow-right-circle-fill', 'data': 'Correction', 'body':
                                 sMessage + ' <B>' + aVariant.fixed_variant + '</B>.'});
                         }
@@ -410,6 +411,41 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
 
                 // Enable the download button.
                 $("#" + sMethod + "DownloadButton").removeClass("d-none");
+
+                // Add links to suggested corrections, but only if they don't have links already.
+                $.each(
+                    $(aCards).filter("[data-status='warning']").not(':has("a")'),
+                    function (index, aCard)
+                    {
+                        // Add links for entries that can be corrected.
+                        var sOriVariant = $(aCard).find("h5").text().trim();
+                        var oB = $(aCard).find("ul li[data-type='Correction'] b");
+                        var sNewVariant = oB.text().trim();
+                        oB.html('<A href="#" class="link-dark">' + sNewVariant + '<i class="bi bi-pencil-square ms-1"></i></A>');
+                        $(oB).find("a").click(
+                            function ()
+                            {
+                                // Replace the variant in the input.
+                                $("#" + sMethod).val(
+                                    $("#" + sMethod).val().replace(new RegExp('(^|\n)' + sOriVariant + '($|\n)'), '$1' + sNewVariant + '$2')
+                                );
+                                // Show that we're working here. Leaving bootstap a bit for pure CSS to overlap the borders of the card as well.
+                                // Just pure Bootstrap (classes start-0 top-0 end-0 bottom-0) will not overlap the border of the card, which is a bit ugly.
+                                $(aCard).append(
+                                    '<div class="position-absolute d-flex" style="z-index: 10; background-color: rgba(255, 255, 255, 0.5); width: 102%; height: 102%; left: -1%; top: -1%;">' +
+                                        '<div class="w-100 d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div></div>' +
+                                    '</div>');
+                                // Reset this card only. Call showResponse() with an object,
+                                //  so it understands it's just one card that needs to be replaced.
+                                showResponse({
+                                    object: $(aCard),
+                                    variant: sNewVariant
+                                });
+                                return false;
+                            }
+                        );
+                    }
+                );
 
                 // Allow cards to close/open, but only if they don't have a handler already.
                 // (OK, there's no real way of finding out with a simple selector, so we cheat using data attributes)
