@@ -381,8 +381,7 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                 var nVariantsNotSupported = $(aCards).filter("[data-status='unsupported']").length;
                 var nVariantsWarning = $(aCards).filter("[data-status='warning']").length;
                 var nVariantsError = $(aCards).filter("[data-status='error']").length;
-                $("#" + sMethod + "Response").prepend(
-                    '\n' +
+                var sAlert =
                     '<div class="alert alert-primary" role="alert">\n' +
                     (sMethod == 'singleVariant' && nVariants == 1? '' :
                         '<div><i class="bi bi-clipboard2-check me-1"></i>' + nVariants + ' variant' + (nVariants == 1? '' : 's') + ' received.</div>\n') +
@@ -394,7 +393,14 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                         '<div><i class="bi bi-dash-circle-fill me-1"></i>' + nVariantsWarning + ' variant' + (nVariantsWarning == 1? '' : 's') + ' can be fixed.</div>\n') +
                     (!nVariantsError? '' :
                         '<div><i class="bi bi-exclamation-circle-fill me-1"></i>' + nVariantsError + ' variant' + (nVariantsError == 1? '' : 's') + ' failed to validate.</div>\n') +
-                    '</div>');
+                    '</div>';
+
+                // If alert is already present, replace it. Otherwise, add it.
+                if ($("#" + sMethod + "Response div.alert").length) {
+                    $("#" + sMethod + "Response div.alert").replaceWith(sAlert);
+                } else {
+                    $("#" + sMethod + "Response").prepend('\n' + sAlert);
+                }
 
                 // Reset the submit button.
                 $("#" + sMethod + "Button").find("span").remove();
