@@ -253,5 +253,15 @@ foreach ($aVariants as $sVariant => $aVariant) {
     $aVariants[htmlspecialchars($sVariant)] = $aVariant;
 }
 
+// Prevent any XSS here, by simply escaping all errors, warnings, VV messages, suggested corrections, etc.
+array_walk_recursive(
+    $aVariants,
+    function (&$sValue, $sKey)
+    {
+        // Only strings are sent through; we won't get array values here.
+        $sValue = htmlspecialchars($sValue);
+    }
+);
+
 echo json_encode($aVariants);
 ?>
