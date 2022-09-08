@@ -411,8 +411,9 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                 // Enable the download button.
                 $("#" + sMethod + "DownloadButton").removeClass("d-none");
 
-                // Allow cards to close/open.
-                $("#" + sMethod + "Response div.card-header i[class*='bi-caret']").click(
+                // Allow cards to close/open, but only if they don't have a handler already.
+                // (OK, there's no real way of finding out with a simple selector, so we cheat using data attributes)
+                $("#" + sMethod + "Response div.card-header i[class*='bi-caret']").not("[data-onclick-set]").click(
                     function ()
                     {
                         if ($(this).hasClass("bi-caret-down-fill")) {
@@ -425,7 +426,7 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                             $(this).removeClass("bi-caret-left-fill").addClass("bi-caret-down-fill");
                         }
                     }
-                );
+                ).attr("data-onclick-set", true);
 
                 return false;
             }
