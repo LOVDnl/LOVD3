@@ -154,7 +154,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
         if ($aVariant['variant_info'] && $aVariant['fixed_variant_variant_info']
             && array_keys($aVariant['variant_info']['errors'] + $aVariant['variant_info']['warnings']) == array('WTOOMUCHUNKNOWN')
             && array_keys($aVariant['fixed_variant_variant_info']['errors'] + $aVariant['fixed_variant_variant_info']['warnings']) == array('ESUFFIXMISSING')) {
-            $aVariant['variant_info']['errors'] += $aVariant['fixed_variant_variant_info']['errors']; // For the output.
+            $aVariant['variant_info']['errors'] += array_map('htmlspecialchars', $aVariant['fixed_variant_variant_info']['errors']); // For the output.
             unset($aVariant['fixed_variant_variant_info']['errors']['ESUFFIXMISSING']);
         }
 
@@ -223,7 +223,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
                         array_map(
                             function ($sValue)
                             {
-                                return 'VariantValidator: ' . $sValue;
+                                return 'VariantValidator: ' . htmlspecialchars($sValue);
                             },
                             array_merge($aVV['errors'], $aVV['warnings'])
                         )
@@ -252,16 +252,6 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
     $aVariants[htmlspecialchars($sVariant)] = $aVariant;
 }
-
-// Prevent any XSS here, by simply escaping all errors, warnings, VV messages, suggested corrections, etc.
-array_walk_recursive(
-    $aVariants,
-    function (&$sValue, $sKey)
-    {
-        // Only strings are sent through; we won't get array values here.
-        $sValue = htmlspecialchars($sValue);
-    }
-);
 
 echo json_encode($aVariants);
 ?>
