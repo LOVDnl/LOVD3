@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2022-09-06
- * Modified    : 2022-09-07
+ * Modified    : 2022-09-09
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -75,6 +75,32 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
                 $this->assertEquals(
                     $aItem['value'],
                     $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul/li[' . $nItem . ']'))->getText()
+                );
+            }
+
+            // If this card has a suggestion, click it.
+            if ($this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))) {
+                // Because VV might fix things after fixHGVS() has fixed it, let's loop.
+                while ($this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))) {
+                    // Scroll into view first, because we keep getting exceptions otherwise.
+                    $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))->getLocationOnScreenOnceScrolledIntoView();
+                    $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))->click();
+                    // I was first using $this->waitUntil(WebDriverExpectedCondition::not(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath(...))));
+                    //  but that simply timed out. It never detected the loss of the element!
+                    $this->waitUntil(
+                        function () use ($sXPathCards, $nKey)
+                        {
+                            return !$this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//div[contains(@class, "spinner-border")]'));
+                        }
+                    );
+                }
+
+                // Card should be replaced now.
+                $this->assertTrue($this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . '][contains(@class, "bg-success")]')));
+                $this->assertTrue($this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div/div[1]/h5/i[contains(@class, "bi-check-circle-fill")]')));
+                $this->assertNotEquals(
+                    $aCard['variant'],
+                    $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div/div[1]'))->getText()
                 );
             }
 
