@@ -801,6 +801,24 @@ class LOVD_VV
             return false;
         }
 
+        // See https://github.com/openvar/variantValidator/issues/421.
+        // Sometimes VV returns incomplete output that seems to be based on somebody else's input.
+        // But even then, a warning is thrown, so we can detect this easily.
+        // We could loop and keep calling VV until we get back what we expect, but this might lead to an endless loop.
+        // So, for now, simply repeat the call *once* if we find this problem.
+        if ($aJSON['flag'] == 'warning'
+            && array_keys(array_diff_key($aJSON, array('metadata' => 1, 'flag' => 1))) == array('validation_warning_1')
+            && $aJSON['validation_warning_1']['submitted_variant'] != $sVariant) {
+            // We got an empty warning with somebody else's input. We can't use this at all. Repeat or return false.
+            if (empty($aOptions['repeated_call'])) {
+                // This adds some overhead (re-processing of input and a recursive function call),
+                //  but it's the simplest method.
+                return $this->verifyVariant($sVariant, array_merge($aOptions, array('repeated_call' => 1)));
+            } else {
+                return false;
+            }
+        }
+
         $aData = $this->aResponse;
 
         // Discard the meta data.
