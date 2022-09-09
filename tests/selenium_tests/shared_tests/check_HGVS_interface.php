@@ -418,6 +418,13 @@ NM_004006.3:c.100del');
                 ),
             )
         );
+
+        // The alert should have changed now because we have variants to fix; check.
+        $sXPathAlert = '//div[@id="multipleVariantsResponse"]/div[contains(@class, "alert")]';
+        $this->assertEquals(
+            '7 variants received. 3 variants validated successfully. 1 variant is not supported. 3 variants failed to validate.',
+            str_replace("\n", ' ', $this->driver->findElement(WebDriverBy::xpath($sXPathAlert))->getText())
+        );
     }
 }
 ?>
