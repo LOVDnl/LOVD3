@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-08
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-26
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -30,21 +30,52 @@
  *
  *************/
 
-function lovd_arrayInsertAfter ($key, array &$array, $new_key, $new_value)
+// A place to store values used by multiple functions. It doesn't really make
+//  sense to define a function simply to store information. But we can't put
+//  this in $_SETT because tests need it (and don't include inc-init.php).
+$_LIBRARIES = array(
+    'regex_patterns' => array(
+        'refseq' => array(
+            'basic' => '/^[A-Z_.t0-9()]+$/',
+            'strict'  =>
+                '/^([NX][CGMRTW]_[0-9]{6}\.[0-9]+' .
+                '|[NX][MR]_[0-9]{9}\.[0-9]+' .
+                '|N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)' .
+                '|ENS[TG][0-9]{11}\.[0-9]+' .
+                '|LRG_[0-9]+(t[0-9]+)?' .
+                ')$/',
+        ),
+        'refseq_to_DNA_type' => array(
+            '/[NX]M_/'                    => array('c'),
+            '/[NX]R_/'                    => array('n'),
+            '/^(ENST|LRG_[0-9]+t[0-9]+)/' => array('c', 'n'),
+            '/^(N[CGTW]_[0-9]+\.[0-9]+$|ENSG|LRG_[0-9]+$)/' => array('g', 'm'),
+        ),
+    ),
+);
+
+
+
+
+
+function lovd_arrayInsertAfter ($sKey, &$a, $sKeyToInsert, $ValueToInsert)
 {
-    // Insert $new_key, $new_value pair after entry $key in array $array.
-    // Courtesy of http://eosrei.net/
-    if (array_key_exists($key, $array)) {
-        $new = array();
-        foreach ($array as $k => $value) {
-            $new[$k] = $value;
-            if ($k === $key) {
-                $new[$new_key] = $new_value;
+    // Insert $sKeyToInsert having $ValueToInsert,
+    //  after entry $sKey in array $aOri.
+    // Based on code by Brad Erickson (http://eosrei.net/comment/287).
+    // MIT licensed code, compatible with GPL.
+    if (array_key_exists($sKey, $a)) {
+        $aNew = array();
+        foreach ($a as $k => $value) {
+            $aNew[$k] = $value;
+            if ($k === $sKey) {
+                $aNew[$sKeyToInsert] = $ValueToInsert;
             }
         }
-        return $new;
+        $a = $aNew;
+        return true;
     }
-    return FALSE;
+    return false;
 }
 
 
@@ -1141,7 +1172,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  this information will be added to the response array in the form
     //  of warnings (if not fatal) or errors (when the syntax issues are
     //  such that they make the variant ambiguous or implausible).
-    global $_DB;
+    global $_DB, $_LIBRARIES;
 
     static $aTranscriptOffsets = array();
     $aResponse = array(
@@ -1150,6 +1181,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'position_start' => 0,
         'position_end'   => 0,
         'type'           => '',
+        'range'          => false,
         'warnings'       => array(),
         'errors'         => array(),
     );
@@ -1168,17 +1200,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
 
     // Match the reference sequence if one was given.
-    if (preg_match('/^[A-Z_.t0-9()]+:[gcmn]/', $sVariant)) {
+    $sReferenceSequence = '';
+    if (lovd_variantHasRefSeq($sVariant)) {
         // The user seems to have written down a reference sequence.
         // Let's see if it matches the expected format.
         list($sReferenceSequence, $sVariant) = explode(':', $sVariant, 2);
 
-        if (preg_match('/^(' .
-            '[NX][CGMRTW]_[0-9]{6,9}\.[0-9]+|' .
-            'N[CGTW]_[0-9]{6}\.[0-9]+\([NX][MR]_[0-9]{6,9}\.[0-9]+\)|' .
-            'ENS[TG][0-9]{11}\.[0-9]+|' .
-            'LRG_[0-9]{3}(t[0-9]+)?' .
-            ')$/', $sReferenceSequence)) {
+        if (lovd_isValidRefSeq($sReferenceSequence)) {
             // Check if the reference sequence matches one of
             //  the possible formats.
             if ($sTranscriptID) {
@@ -1213,10 +1241,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
 
-            $sReferenceType = preg_replace('/[0-9_.-]/', '', $sReferenceSequence);
-            if (($sVariant[0] == 'c' && !preg_match('/([NX]M|ENST|LRGt)/', $sReferenceType))
-                || ($sVariant[0] == 'n' && !preg_match('/([NX]R|ENST|LRGt)/', $sReferenceType))
-                || (in_array($sVariant[0], array('g', 'm')) && !preg_match('/^(N[CGTW]|ENSG|LRG)$/', $sReferenceType))) {
+            if (!in_array($sVariant[0], lovd_getVariantPrefixesByRefSeq($sReferenceSequence))) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
@@ -1236,7 +1261,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         break;
                 }
 
-            } elseif (!preg_match('/^(N[CGTW]|LRG|ENSG)/', $sReferenceType)
+            } elseif (!preg_match('/^(N[CGTW]|LRG)/', $sReferenceSequence)
                 && (preg_match('/[0-9]+[-+]([0-9]+|\?)/', $sVariant))) {
                 // If a variant has intronic positions, it must have a
                 //  reference that contains those positions.
@@ -1249,18 +1274,29 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         } else {
             // The user seems to have tried to add a reference sequence, but it
-            //  was not formatted correctly. We will return an error.
+            //  was not formatted correctly. We will return errors or warnings accordingly.
             if ($bCheckHGVS) {
                 return false;
             }
-            if (preg_match('/^(' .
-                '[NX][CGMRTW]_[0-9]{6,9}|' .
-                'N[CGTW]_[0-9]{6}(\.[0-9]+)?\([NX][MR]_[0-9]{6,9}(\.[0-9]+)?\)|' .
-                'ENS[TG][0-9]{11}' .
-                ')$/', $sReferenceSequence)) {
+            // Check for missing version. We don't want to yet define another pattern.
+            // Just check if it helps to add a version number.
+            if (lovd_isValidRefSeq(preg_replace('/([0-9]{6})([()]|$)/', '$1.1$2', $sReferenceSequence))) {
+                // OK, adding a .1 helped. So, version is missing.
                 $aResponse['errors']['EREFERENCEFORMAT'] =
-                    'The reference sequence used is missing the required version number.' .
+                    'The reference sequence is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
+
+            } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\((N[CGTW]_[0-9]{6}\.[0-9]+)\)$/', $sReferenceSequence, $aRegs)) {
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'The genomic and transcript reference sequences have been swapped.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
+
+            } elseif (preg_match('/^([NX][CGMRTW])([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user forgot the underscore.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI reference sequences require an underscore between the prefix and the numeric ID.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
@@ -1268,6 +1304,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
         }
     }
+    // Preliminary determination of a range. This can have false positives, like g.1delins100_200,
+    //  but once we have split off the suffix, we'll try again.
+    $aResponse['range'] = (strpos($sVariant, '_') !== false);
 
 
     // All information of interest will be placed into an associative array.
@@ -1417,7 +1456,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     ' This does not necessarily mean the description is not valid HGVS.';
 
                 // We do have one requirement; chromosomal reference sequence.
-                if (isset($sReferenceType) && $sReferenceType != 'NC') {
+                if ($sReferenceSequence && substr($sReferenceSequence, 0, 2) != 'NC') {
                     $aResponse['errors']['EWRONGREFERENCE'] =
                         'The variant is missing a chromosomal reference sequence required for pter, cen, or qter positions.';
                 }
@@ -1443,6 +1482,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     // Clean position string. We'll use it for reporting later on.
     if ($aVariant['positions']) {
         $aVariant['positions'] = strstr($aVariant['positions'], $aVariant['type'], true);
+        // And now with more precision.
+        $aResponse['range'] = (strpos($aVariant['positions'], '_') !== false);
     }
 
     // Check the variant's case.
@@ -1458,7 +1499,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             return false;
         }
         $aResponse['warnings']['WWRONGCASE'] =
-            'This not a valid HGVS description, due to characters being in the wrong case.' .
+            'This is not a valid HGVS description, due to characters being in the wrong case.' .
             ' Please check the use of upper- and lowercase characters.';
     }
 
@@ -1501,7 +1542,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if ($bCheckHGVS) {
                 return false;
             }
-            $aResponse['errors']['ENOTSUPPORTED'] = 'This not a valid HGVS description, please verify your input after "|".';
+            $aResponse['errors']['ENOTSUPPORTED'] = 'This is not a valid HGVS description, please verify your input after "|".';
         }
         $aResponse['type'] = 'met';
 
@@ -2204,12 +2245,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
                     // Wrong case only, no U-characters detected.
                     $aResponse['warnings']['WWRONGCASE'] =
-                        'This not a valid HGVS description, due to characters being in the wrong case.' .
+                        'This is not a valid HGVS description, due to characters being in the wrong case.' .
                         ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . strtoupper($aVariant['suffix']) . '".';
                 } else {
                     // There's already a detailed warning on what to replace. Throw a general warning only.
                     $aResponse['warnings']['WWRONGCASE'] =
-                        'This not a valid HGVS description, due to characters being in the wrong case.' .
+                        'This is not a valid HGVS description, due to characters being in the wrong case.' .
                         ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
                 }
             }
@@ -2300,7 +2341,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $bCaseOK = ($aVariant['suffix'] == $sDeleted . 'ins' . $sInserted);
                         if (!$bCaseOK) {
                             $aResponse['warnings']['WWRONGCASE'] =
-                                'This not a valid HGVS description, due to characters being in the wrong case.' .
+                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
                                 ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
                         }
                         if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[ACGTN]$/', $sDeleted)) {
@@ -2493,6 +2534,43 @@ function lovd_getVariantLength ($aVariant)
         $nBasicLength
         + abs($aVariant['position_start_intron'])
         + $aVariant['position_end_intron']);
+}
+
+
+
+
+
+function lovd_getVariantPrefixesByRefSeq ($s)
+{
+    // Returns all the DNA type prefixes which fit a given reference sequence.
+    // The variable $s could be a full variant description, or it might
+    //  just be a reference sequence.
+    global $_LIBRARIES;
+
+    // Get matching DNA type prefixes.
+    foreach($_LIBRARIES['regex_patterns']['refseq_to_DNA_type'] as $sPattern => $aDNATypes) {
+        if (preg_match($sPattern, $s)) {
+            return $aDNATypes;
+        }
+    }
+
+    // No matches found.
+    return array();
+}
+
+
+
+
+
+function lovd_getVariantRefSeq ($sVariant)
+{
+    // This function isolates and returns the reference sequence from a variant description, if there is any.
+
+    if (!lovd_variantHasRefSeq($sVariant)) {
+        return false;
+    }
+
+    return strstr($sVariant, ':', true);
 }
 
 
@@ -2900,6 +2978,22 @@ function lovd_isOwner ($sType, $Data)
     $q = $_DB->query($sQ, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
 
     return ($q !== false && intval($q->fetchColumn()) == count($Data));
+}
+
+
+
+
+
+function lovd_isValidRefSeq ($sRefSeq)
+{
+    // This function checks if the given string is a valid reference sequence description.
+    global $_LIBRARIES;
+
+    return (bool) (
+        is_string($sRefSeq)
+        &&
+        preg_match($_LIBRARIES['regex_patterns']['refseq']['strict'], $sRefSeq)
+    );
 }
 
 
@@ -3646,6 +3740,39 @@ function lovd_validateIP ($sRange, $sIP)
         $b = $bPart;
     }
     return $b;
+}
+
+
+
+
+
+function lovd_variantHasRefSeq ($sVariant)
+{
+    // This function returns whether the general pattern of a reference sequence was found in a variant description.
+    global $_LIBRARIES;
+
+    return (
+        is_string($sVariant)
+        &&
+        strpos($sVariant, ':') !== false
+        &&
+        preg_match($_LIBRARIES['regex_patterns']['refseq']['basic'], strstr($sVariant, ':', true))
+    );
+}
+
+
+
+
+
+function lovd_variantRemoveRefSeq ($sVariant)
+{
+    // This function removes the reference sequence from a variant description.
+
+    if (!lovd_variantHasRefSeq($sVariant)) {
+        return $sVariant;
+    }
+
+    return substr(strstr($sVariant, ':'), 1);
 }
 
 

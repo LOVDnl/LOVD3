@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2022-07-15
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-26
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -883,59 +883,6 @@ class LOVD_API_Submissions
 
 
 
-    private function jsonDecode ($sInput)
-    {
-        // Attempts to decode the given JSON string, and handles any error.
-        // Returns the array if successfully decoded, but throws any errors
-        //  directly to the output.
-
-        $aJSONErrors = array(
-            JSON_ERROR_DEPTH => 'The maximum stack depth has been exceeded',
-            JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
-            JSON_ERROR_CTRL_CHAR => 'Control character error, possibly incorrectly encoded',
-            JSON_ERROR_SYNTAX => 'Syntax error',
-        );
-        if (PHP_VERSION_ID >= 50303) {
-            $aJSONErrors[JSON_ERROR_UTF8] = 'Malformed UTF-8 characters, possibly incorrectly encoded';
-            if (PHP_VERSION_ID >= 50500) {
-                $aJSONErrors[JSON_ERROR_RECURSION] = 'One or more recursive references in the value to be encoded';
-                $aJSONErrors[JSON_ERROR_INF_OR_NAN] = 'One or more NAN or INF values in the value to be encoded';
-                $aJSONErrors[JSON_ERROR_UNSUPPORTED_TYPE] = 'A value of a type that cannot be encoded was given';
-            } else {
-                // This makes sure they can be referenced, but can never occur.
-                define('JSON_ERROR_RECURSION', 0);
-                define('JSON_ERROR_INF_OR_NAN', 0);
-                define('JSON_ERROR_UNSUPPORTED_TYPE', 0);
-            }
-        } else {
-            // This makes sure they can be referenced, but can never occur.
-            define('JSON_ERROR_UTF8', 0);
-        }
-
-        // Attempt to decode.
-        $aInput = json_decode($sInput, true);
-
-        // If not successful, try if a non-UTF8 string is the error.
-        if ($aInput === NULL && json_last_error() == JSON_ERROR_UTF8) {
-            // Encode to UTF8, and try again.
-            $aInput = json_decode(utf8_encode($sInput), true);
-        }
-
-        if ($aInput === NULL) {
-            // Handle errors.
-            $this->API->aResponse['errors'][] = 'Error parsing JSON input. Error: ' . $aJSONErrors[json_last_error()] . '.';
-            $this->API->nHTTPStatus = 400; // Send 400 Bad Request.
-            return false;
-        }
-
-        // If we're still here, we have properly decoded data.
-        return $aInput;
-    }
-
-
-
-
-
     public function processPOST ()
     {
         // Handle POST requests for submissions.
@@ -986,7 +933,7 @@ class LOVD_API_Submissions
         }
 
         // If it appears to be JSON, have PHP try and convert it into an array.
-        $aInput = $this->jsonDecode($sInputClean);
+        $aInput = $this->API->jsonDecode($sInputClean);
         // If $aInput is false, we failed somewhere. Function should have set response and HTTP status.
         if ($aInput === false) {
             return false;

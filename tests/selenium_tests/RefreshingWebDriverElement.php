@@ -65,6 +65,8 @@ class RefreshingWebElement extends RemoteWebElement {
     public function click ()
     {
         try {
+            // This sometimes fails with a "UnrecognizedExceptionException", even with a catch.
+            // When that happens, scroll into view first (see check_HGVS_interface.php).
             return $this->tryWithRefresh('click');
         } catch (UnknownServerException $e) {
             if (strpos($e->getMessage(), 'Element is not clickable at point') !== false) {

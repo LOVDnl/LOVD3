@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2021-07-09
- * For LOVD    : 3.0-27
+ * Modified    : 2022-08-26
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -241,7 +241,7 @@ class LOVD_API
 
             // Verify method. This depends on the resource.
             if (!in_array($_SERVER['REQUEST_METHOD'], $this->aResourcesSupported[$this->sResource])) {
-                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]);
+                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]) . '.';
                 $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
             }
 
@@ -250,7 +250,7 @@ class LOVD_API
                 // Remove POST from options, before we mention it.
                 // FIXME: Yes, this currently means there are no methods left...
                 unset($this->aResourcesSupported[$this->sResource][array_search('POST', $this->aResourcesSupported[$this->sResource])]);
-                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]);
+                $this->aResponse['errors'][] = 'Method not allowed here. Options: ' . implode(', ', $this->aResourcesSupported[$this->sResource]) . '.';
                 $this->sendHeader(405, true); // Send 405 Method Not Allowed, print response, and quit.
             }
 
@@ -334,6 +334,59 @@ class LOVD_API
         }
 
         return $sResponse;
+    }
+
+
+
+
+
+    public function jsonDecode ($sInput)
+    {
+        // Attempts to decode the given JSON string, and handles any error.
+        // Returns the array if successfully decoded, but throws any errors
+        //  directly to the output.
+
+        $aJSONErrors = array(
+            JSON_ERROR_DEPTH => 'The maximum stack depth has been exceeded',
+            JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
+            JSON_ERROR_CTRL_CHAR => 'Control character error, possibly incorrectly encoded',
+            JSON_ERROR_SYNTAX => 'Syntax error',
+        );
+        if (PHP_VERSION_ID >= 50303) {
+            $aJSONErrors[JSON_ERROR_UTF8] = 'Malformed UTF-8 characters, possibly incorrectly encoded';
+            if (PHP_VERSION_ID >= 50500) {
+                $aJSONErrors[JSON_ERROR_RECURSION] = 'One or more recursive references in the value to be encoded';
+                $aJSONErrors[JSON_ERROR_INF_OR_NAN] = 'One or more NAN or INF values in the value to be encoded';
+                $aJSONErrors[JSON_ERROR_UNSUPPORTED_TYPE] = 'A value of a type that cannot be encoded was given';
+            } else {
+                // This makes sure they can be referenced, but can never occur.
+                define('JSON_ERROR_RECURSION', 0);
+                define('JSON_ERROR_INF_OR_NAN', 0);
+                define('JSON_ERROR_UNSUPPORTED_TYPE', 0);
+            }
+        } else {
+            // This makes sure they can be referenced, but can never occur.
+            define('JSON_ERROR_UTF8', 0);
+        }
+
+        // Attempt to decode.
+        $aInput = json_decode($sInput, true);
+
+        // If not successful, try if a non-UTF8 string is the error.
+        if ($aInput === NULL && json_last_error() == JSON_ERROR_UTF8) {
+            // Encode to UTF8, and try again.
+            $aInput = json_decode(utf8_encode($sInput), true);
+        }
+
+        if ($aInput === NULL) {
+            // Handle errors.
+            $this->aResponse['errors'][] = 'Error parsing JSON input. Error: ' . $aJSONErrors[json_last_error()] . '.';
+            $this->nHTTPStatus = 400; // Send 400 Bad Request.
+            return false;
+        }
+
+        // If we're still here, we have properly decoded data.
+        return $aInput;
     }
 
 

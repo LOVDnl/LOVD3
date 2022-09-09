@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-07-08
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-05
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
@@ -100,6 +100,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -109,6 +110,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -116,6 +118,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -125,6 +128,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -132,6 +136,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EFALSEUTR' => 'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "-123" which describes a position in the 5\' UTR, is invalid when using the "g" prefix.',
@@ -141,6 +146,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EFALSEUTR' => 'Only coding transcripts (c. prefix) have a UTR region. Therefore, position "*123" which describes a position in the 3\' UTR, is invalid when using the "g" prefix.',
@@ -152,6 +158,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 4,
                 'position_end_intron' => -20,
                 'type' => 'dup',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EFALSEINTRONIC' => 'Only transcripts (c. or n. prefixes) have introns. Therefore, this variant description with a position in an intron is invalid when using the "m" prefix.',
@@ -163,6 +170,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => -125000,
                 'position_end_intron' => -125000,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EFALSEINTRONIC' => 'Only transcripts (c. or n. prefixes) have introns. Therefore, this variant description with a position in an intron is invalid when using the "g" prefix. Did you perhaps try to indicate a range? If so, please use an underscore (_) to indicate a range.',
@@ -174,6 +182,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -181,6 +190,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGTYPE' => 'This substitution does not seem to contain any data. Please provide bases that were replaced.',
@@ -190,6 +200,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 124,
                 'type' => 'subst',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'ETOOMANYPOSITIONS' => 'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.'
@@ -199,6 +210,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' =>
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
@@ -209,6 +221,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGTYPE' =>
@@ -219,6 +232,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' =>
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
@@ -229,6 +243,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' =>
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion?',
@@ -239,6 +254,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 124,
                 'type' => 'subst',
+                'range' => true,
                 'warnings' => array(
                     'WWRONGTYPE' =>
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
@@ -251,6 +267,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 124,
                 'type' => 'subst',
+                'range' => true,
                 'warnings' => array(
                     'WWRONGTYPE' =>
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion-insertion?',
@@ -263,6 +280,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "A>C".',
                 ),
@@ -274,6 +292,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -281,6 +300,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 170,
                 'type' => 'dup',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -288,6 +308,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 125,
                 'type' => 'dup',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "dup".'
                 ),
@@ -299,6 +320,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 300,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -306,6 +328,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
@@ -315,6 +338,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines.',
                 ),
@@ -326,6 +350,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -333,6 +358,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -340,6 +366,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -347,6 +374,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
@@ -356,6 +384,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -363,6 +392,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -370,6 +400,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[5_10]" to "N[(5_10)]".',
                 ),
@@ -379,6 +410,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -386,6 +418,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[(10_5)]" to "N[(5_10)]".',
                 ),
@@ -395,6 +428,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[(10_10)]" to "N[10]".',
                 ),
@@ -404,6 +438,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'ins',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONMISSING' =>
@@ -414,6 +449,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' => 'This variant description contains two positions that are the same. Please verify your description and try again.',
@@ -423,6 +459,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'ESUFFIXMISSING' => 'The inserted sequence must be provided for insertions or deletion-insertions.',
@@ -432,6 +469,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' =>
@@ -447,6 +485,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 10,
                 'position_end_intron' => 11,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -456,6 +495,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 10,
                 'position_end_intron' => 11,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' =>
@@ -469,6 +509,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -481,6 +522,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 10,
                 'position_end_intron' => 20,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' =>
@@ -494,6 +536,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 10,
                 'position_end_intron' => 20,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -504,6 +547,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 10,
                 'position_end' => 20,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' => 'Insertions should not be given more than two positions.',
@@ -516,6 +560,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' =>
@@ -529,6 +574,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 1,
                 'position_end_intron' => -1,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' =>
@@ -542,6 +588,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 1,
                 'position_end_intron' => -1,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -554,6 +601,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 5,
                 'type' => 'delins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -561,6 +609,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'delins',
+                'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A deletion-insertion of one base to one base should be described as a substitution.',
                 ),
@@ -570,6 +619,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'delins',
+                'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delAinsG" to "A>G".',
                 ),
@@ -579,6 +629,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'delins',
+                'range' => false,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delAinsGG" to "delinsGG".',
                 ),
@@ -588,6 +639,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 100,
                 'position_end' => 200,
                 'type' => 'delins',
+                'range' => true,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
                 ),
@@ -597,6 +649,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'delins',
+                'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
                     'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines.',
@@ -607,6 +660,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 5,
                 'type' => 'delins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -614,6 +668,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 5,
                 'type' => 'delins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "delins" does not follow HGVS guidelines.',
                 ),
@@ -623,6 +678,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 100,
                 'position_end' => 200,
                 'type' => 'delins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -632,6 +688,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'delins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -641,6 +698,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'delins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -650,6 +708,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'repeat',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
@@ -661,6 +720,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'repeat',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
@@ -672,6 +732,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'repeat',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                     'WINVALIDREPEATLENGTH' => 'A repeat sequence of coding DNA should always have a length of (a multiple of) 3.',
@@ -682,6 +743,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'repeat',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
@@ -691,6 +753,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'repeat',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
@@ -702,6 +765,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'mosaic',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -709,6 +773,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'chimeric',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -718,6 +783,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '=',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EMISSINGPOSITIONS' => 'When using "=", please provide the position(s) that are unchanged.',
@@ -727,6 +793,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => '=',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -734,6 +801,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => '=',
+                'range' => false,
                 'warnings' => array(
                     'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
                 ),
@@ -747,6 +815,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => NULL,
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -756,6 +825,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => NULL,
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -767,6 +837,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'subst',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -774,6 +845,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -781,6 +853,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 5,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -793,6 +866,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 1,
                 'position_end_intron' => -1,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -803,6 +877,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WUNBALANCEDPARENTHESES' => 'The variant description contains unbalanced parentheses.'
                 ),
@@ -814,6 +889,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -824,6 +900,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -834,6 +911,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -845,6 +923,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -855,6 +934,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -866,6 +946,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions ?_? to ?.',
                 ),
@@ -878,6 +959,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?) to ?.',
                 ),
@@ -893,6 +975,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -904,6 +987,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -915,6 +999,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -926,6 +1011,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (5_?)_? to (5_?).',
                 ),
@@ -939,6 +1025,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_10 to ?_10.',
                 ),
@@ -952,6 +1039,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_(10_?) to ?_(10_?).',
                 ),
@@ -965,6 +1053,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_(?_10) to (?_10).',
                 ),
@@ -978,6 +1067,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -989,6 +1079,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1000,6 +1091,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1011,6 +1103,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions ?_(?_10) to (?_10).',
                 ),
@@ -1024,6 +1117,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions 5_(?_?) to 5_?.',
                 ),
@@ -1037,6 +1131,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (5_?)_(?_?) to (5_?).',
                 ),
@@ -1050,6 +1145,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_5)_(?_?) to (?_5)_?.',
                 ),
@@ -1063,6 +1159,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1074,6 +1171,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 5,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (5_?)_(?_10) to (5_10).',
                 ),
@@ -1087,6 +1185,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 4294967295,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WTOOMUCHUNKNOWN' => 'This variant description contains redundant question marks. Please rewrite the positions (?_?)_(?_?) to ?.',
                 ),
@@ -1102,6 +1201,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 200,
                 'position_end' => 400,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1112,6 +1212,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 200,
                 'position_end' => 200,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1122,6 +1223,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 100,
                 'position_end' => 400,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1132,6 +1234,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 200,
                 'position_end' => 500,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1144,6 +1247,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' => 'This variant description contains an invalid position: "0". Please verify your description and try again.'
@@ -1155,6 +1259,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EPOSITIONFORMAT' => 'This variant description contains an invalid position: "0". Please verify your description and try again.'
@@ -1166,6 +1271,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 1,
                 'position_end_intron' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'Variant positions should not be prefixed by a 0. Please rewrite "-010" to "-10". Please rewrite "+01" to "+1".'
                 ),
@@ -1175,6 +1281,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONLIMIT' => 'Position is beyond the possible limits of its type: start.'
                 ),
@@ -1186,6 +1293,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'This variant description contains two positions that are the same. Please verify your description and try again.'
                 ),
@@ -1195,6 +1303,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'This variant description contains two positions that are the same. Please verify your description and try again.'
                 ),
@@ -1207,6 +1316,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
                 ),
@@ -1218,6 +1328,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
                 ),
@@ -1229,6 +1340,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
                 ),
@@ -1243,6 +1355,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'The positions are not given in the correct order. Please verify your description and try again.'
                 ),
@@ -1257,6 +1370,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => -10,
                 'position_end_intron' => -5,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONFORMAT' => 'The intronic positions are not given in the correct order. Please verify your description and try again.'
                 ),
@@ -1268,6 +1382,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONLIMIT' => 'Positions are beyond the possible limits of their type: start, end.',
                 ),
@@ -1279,6 +1394,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 2147483647,
                 'position_end_intron' => -2147483648,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WPOSITIONLIMIT' => 'Positions are beyond the possible limits of their type: start, start in intron, end, end in intron.',
                 ),
@@ -1290,6 +1406,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
@@ -1299,6 +1416,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
@@ -1308,6 +1426,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1315,6 +1434,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1322,6 +1442,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
@@ -1331,6 +1452,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
                 ),
@@ -1340,6 +1462,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "ins" contains unbalanced square brackets.',
                 ),
@@ -1349,6 +1472,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1358,6 +1482,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
@@ -1367,6 +1492,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range longer than the given length of the variant.' .
@@ -1378,6 +1504,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXGIVEN' => 'Nothing should follow "del".'
                 ),
@@ -1387,6 +1514,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range equally long as the given length of the variant. Please remove the variant length and parentheses if the positions are certain, or adjust the positions or variant length.',
@@ -1400,6 +1528,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 10,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXINVALIDLENGTH' =>
                         'The positions indicate a range shorter than the given length of the variant.' .
@@ -1411,6 +1540,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'ESUFFIXMISSING' => 'The length must be provided for variants which took place within an uncertain range.',
@@ -1423,6 +1553,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1433,6 +1564,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "50" to "N[50]".',
                 ),
@@ -1445,6 +1577,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                 ),
@@ -1457,6 +1590,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1467,6 +1601,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(100)" to "N[100]".',
                     'WSUFFIXINVALIDLENGTH' =>
@@ -1481,6 +1616,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30_30)" to "N[30]".',
                 ),
@@ -1493,6 +1629,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30_50)" to "N[(30_50)]".',
                 ),
@@ -1505,6 +1642,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
@@ -1515,6 +1653,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(50_30)" to "N[(30_50)]".',
                 ),
@@ -1527,6 +1666,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "N[30_50]" to "N[(30_50)]".',
                 ),
@@ -1539,6 +1679,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 200,
                 'position_end' => 400,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. ' .
                         'If you didn\'t mean to specify a variant length, please remove the part after "del".',
@@ -1552,6 +1693,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 200,
                 'position_end' => 400,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "300" to "N[300]".',
                 ),
@@ -1564,6 +1706,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 200,
                 'position_end' => 400,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(300)" to "N[300]".',
                 ),
@@ -1576,6 +1719,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'inv',
+                'range' => false,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' =>
@@ -1590,6 +1734,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'inv',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' =>
@@ -1602,6 +1747,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'inv',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                 ),
@@ -1614,6 +1760,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'inv',
+                'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The length of the variant is not formatted following the HGVS guidelines. Please rewrite "(30)" to "N[30]".',
                     'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range smaller than the given length of the variant. Please adjust the positions or variant length.',
@@ -1630,6 +1777,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'repeat',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
@@ -1640,6 +1788,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 100,
                 'type' => 'repeat',
+                'range' => true,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                     'WSUFFIXGIVEN' => 'Nothing should follow "ACT[20]".',
@@ -1655,6 +1804,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'met',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
@@ -1664,6 +1814,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'met',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
@@ -1673,6 +1824,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'met',
+                'range' => false,
                 'warnings' => array(
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
@@ -1682,6 +1834,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EPIPEMISSING' => 'Please place a "|" between the positions and the variant type (lom).',
@@ -1691,9 +1844,10 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'met',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'This not a valid HGVS description, please verify your input after "|".',
+                    'ENOTSUPPORTED' => 'This is not a valid HGVS description, please verify your input after "|".',
                 ),
             )),
 
@@ -1702,6 +1856,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => '^',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' =>
@@ -1712,6 +1867,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => '^',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' =>
@@ -1722,6 +1878,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => ';',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' =>
@@ -1732,6 +1889,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => ';',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
@@ -1741,6 +1899,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => ';',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
@@ -1750,6 +1909,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => ';',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variant descriptions of combined variants are not yet supported. This does not necessarily mean the description is not valid HGVS. Please submit your variants separately.',
@@ -1759,6 +1919,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variant descriptions using "qter" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
@@ -1768,6 +1929,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variant descriptions using "cen" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
@@ -1777,6 +1939,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variant descriptions using "pter" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
@@ -1786,6 +1949,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
+                'range' => true,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' =>
@@ -1798,6 +1962,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 0,
                 'position_end' => 0,
                 'type' => '',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'ENOTSUPPORTED' => 'Currently, variant descriptions using "::" are not yet supported. This does not necessarily mean the description is not valid HGVS.',
@@ -1807,9 +1972,10 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'met',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'ENOTSUPPORTED' => 'This not a valid HGVS description, please verify your input after "|".',
+                    'ENOTSUPPORTED' => 'This is not a valid HGVS description, please verify your input after "|".',
                 ),
             )),
 
@@ -1820,6 +1986,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1829,6 +1996,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => -1,
                 'position_end_intron' => -1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGREFERENCE' =>
@@ -1839,6 +2007,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1(NM_123456.1)) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
@@ -1850,6 +2019,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => -1,
                 'position_end_intron' => -1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1859,6 +2029,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1866,6 +2037,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1873,6 +2045,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGREFERENCE' => 'The given reference sequence (LRG_123t1) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
@@ -1884,6 +2057,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1893,6 +2067,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1902,6 +2077,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGREFERENCE' => 'The given reference sequence (LRG_123) does not match the DNA type (c). For c. variants, please use a coding transcript reference sequence.',
@@ -1913,6 +2089,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1922,16 +2099,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start_intron' => 0,
                 'position_end_intron' => 0,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n). For n. variants, please use a non-coding transcript reference sequence.',
                 ),
             )),
-
             array('NM_123456.1:g.1del', array(
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
@@ -1941,6 +2119,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
@@ -1948,14 +2127,15 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(),
             )),
-
             array('NC_12345.1:g.1del', array(
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
@@ -1965,19 +2145,33 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence used is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
+                    'EREFERENCEFORMAT' => 'The reference sequence is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
                 ),
             )),
             array('LRG:g.1del', array(
                 'position_start' => 1,
                 'position_end' => 1,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(),
                 'errors' => array(
                     'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
                 ),
+            )),
+            array('NM_123456.1(NC_123456.1):c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequences have been swapped. Please rewrite "NM_123456.1(NC_123456.1)" to "NC_123456.1(NM_123456.1)".',
+                ),
+                'errors' => array(),
             )),
 
             // Other errors or problems.
@@ -1985,8 +2179,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'dup',
+                'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123DUP', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'dup',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
                 ),
                 'errors' => array(),
             )),
@@ -1994,8 +2199,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 130,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagatt" to "delGAGAGATT".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagatt" to "delGAGAGATT".',
                 ),
                 'errors' => array(),
             )),
@@ -2003,8 +2209,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 130,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delgagagauu" to "delGAGAGATT".',
                 ),
                 'errors' => array(),
@@ -2013,8 +2220,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 130,
                 'type' => 'del',
+                'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please rewrite "deln[8]" to "delN[8]".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "deln[8]" to "delN[8]".',
                 ),
                 'errors' => array(),
             )),
@@ -2022,6 +2230,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'delins',
+                'range' => false,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => // Adding a WWRONGCASE here is difficult; the code handling insertions is too complex and we'd need to then fix lovd_fixHGVS() again also.
                         'The part after "delins" does not follow HGVS guidelines.', // Idem for the suggestion how to fix it. It's too complex right now and lovd_fixHGVS() easily handles it anyway.
@@ -2032,8 +2241,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'delins',
+                'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WWRONGTYPE' =>
                         'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainst" to "A>T".',
                 ),
@@ -2043,8 +2253,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'delins',
+                'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WWRONGTYPE' =>
                         'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainsu" to "A>T".',
                 ),
@@ -2054,6 +2265,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 124,
                 'type' => 'ins',
+                'range' => true,
                 'warnings' => array(
                     'WWHITESPACE' => 'This variant description contains one or more whitespace characters (spaces, tabs, etc). Please remove these.',
                 ),
@@ -2063,6 +2275,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_start' => 123,
                 'position_end' => 123,
                 'type' => 'del',
+                'range' => false,
                 'warnings' => array(
                     'WWHITESPACE' => 'This variant description contains one or more whitespace characters (spaces, tabs, etc). Please remove these.',
                 ),
