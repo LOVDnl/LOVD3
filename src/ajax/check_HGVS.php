@@ -192,7 +192,8 @@ foreach ($aVariants as $sVariant => $aVariant) {
             $aVariant['VV']['EFAIL'] = 'Please first correct the variant description to run VariantValidator.';
         } elseif (!$aVariant['has_refseq']) {
             $aVariant['VV']['EREFSEQMISSING'] = 'Please provide a reference sequence to run VariantValidator.';
-        } elseif (substr($sVariant, 0, 2) == 'NG') {
+        } elseif (substr($sVariant, 0, 2) == 'NG'
+            || preg_match('/^LRG_[0-9]+:/', $sVariant)) {
             $aVariant['VV']['WNOTSUPPORTED'] = 'This reference sequence type is not currently supported by VariantValidator.';
 
         } else {
