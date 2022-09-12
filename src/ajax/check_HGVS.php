@@ -203,6 +203,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
             if ($aVV === false) {
                 $aVariant['VV']['EINTERNAL'] = 'An internal error within VariantValidator occurred when trying to validate your variant.';
             } elseif (!empty($aVV['data']['DNA'])) {
+                // We got a variant back, so VV at least understood the variant.
                 // Our VV library removed the refseq, put it back.
                 $aVV['data']['DNA'] = lovd_getVariantRefSeq($sVariant) . ':' . $aVV['data']['DNA'];
                 if ($sVariant != $aVV['data']['DNA']) {
@@ -217,18 +218,22 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
                 if (!$aVV['errors'] && !$aVV['warnings'] && !$aVariant['VV']) {
                     $aVariant['VV']['IOK'] = 'The variant description passed the validation by VariantValidator.';
-                } else {
-                    $aVariant['VV'] = array_merge(
-                        $aVariant['VV'],
-                        array_map(
-                            function ($sValue)
-                            {
-                                return 'VariantValidator: ' . htmlspecialchars($sValue);
-                            },
-                            array_merge($aVV['errors'], $aVV['warnings'])
-                        )
-                    );
                 }
+            }
+
+            if ($aVV['errors'] || $aVV['warnings']) {
+                // Warnings or errors have occurred.
+                $aVariant['is_hgvs'] = false;
+                $aVariant['VV'] = array_merge(
+                    $aVariant['VV'],
+                    array_map(
+                        function ($sValue)
+                        {
+                            return 'VariantValidator: ' . htmlspecialchars($sValue);
+                        },
+                        array_merge($aVV['errors'], $aVV['warnings'])
+                    )
+                );
             }
         }
 
