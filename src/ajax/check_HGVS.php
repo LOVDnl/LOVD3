@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-09-06
+ * Modified    : 2022-09-12
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -221,7 +221,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
                 }
             }
 
-            if ($aVV['errors'] || $aVV['warnings']) {
+            if ($aVV && ($aVV['errors'] || $aVV['warnings'])) {
                 // Warnings or errors have occurred.
                 $aVariant['is_hgvs'] = false;
                 $aVariant['VV'] = array_merge(
