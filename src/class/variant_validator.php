@@ -978,7 +978,6 @@ class LOVD_VV
                 if (strpos($sWarning, 'automapped to') !== false) {
                     // Toss this error.
                     unset($aJSON['validation_warnings'][$nKey]);
-                    break;
                 }
             }
         }
