@@ -86,6 +86,7 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
                     $this->driver->scrollToElement(
                         $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))
                     );
+                    sleep(1);
                     $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))->click();
                     // I was first using $this->waitUntil(WebDriverExpectedCondition::not(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath(...))));
                     //  but that simply timed out. It never detected the loss of the element!
@@ -111,6 +112,7 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
             $this->driver->scrollToElement(
                 $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div[1]/div[2]/i'))
             );
+            sleep(1);
             $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div[1]/div[2]/i'))->click();
             $this->assertFalse(
                 $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul'))->isDisplayed());
