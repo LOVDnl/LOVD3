@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-12-03
- * Modified    : 2022-09-09
+ * Modified    : 2022-09-13
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -79,6 +79,9 @@ if (ACTION || (defined('PATH_COUNT') && PATH_COUNT > 2)) {
                 <button class="nav-link" id="mutiple-variants" data-bs-toggle="tab" data-bs-target="#multiple" type="button" role="tab" aria-controls="multiple" aria-selected="false">
                     Check a list of variants
                 </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="https://api.lovd.nl/" target="_blank">API</a>
             </li>
         </ul>
 
