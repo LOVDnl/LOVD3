@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2022-09-06
- * Modified    : 2022-09-09
+ * Modified    : 2022-09-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -82,8 +82,11 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
             if ($this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))) {
                 // Because VV might fix things after fixHGVS() has fixed it, let's loop.
                 while ($this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))) {
-                    // Scroll into view first, because we keep getting exceptions otherwise.
-                    $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))->getLocationOnScreenOnceScrolledIntoView();
+                    // Scroll to the top of the screen first, because we keep getting exceptions otherwise.
+                    $this->driver->scrollToElement(
+                        $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))
+                    );
+                    sleep(1);
                     $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul//a'))->click();
                     // I was first using $this->waitUntil(WebDriverExpectedCondition::not(WebDriverExpectedCondition::presenceOfElementLocated(WebDriverBy::xpath(...))));
                     //  but that simply timed out. It never detected the loss of the element!
@@ -106,7 +109,10 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
             // Close card. Scroll into view first, because we keep getting Exceptions otherwise.
             $this->assertTrue($this->isElementPresent(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div[1]/div[2]/i')));
-            $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div[1]/div[2]/i'))->getLocationOnScreenOnceScrolledIntoView();
+            $this->driver->scrollToElement(
+                $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div[1]/div[2]/i'))
+            );
+            sleep(1);
             $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/div[1]/div[2]/i'))->click();
             $this->assertFalse(
                 $this->driver->findElement(WebDriverBy::xpath($sXPathCards . '[' . $nKey . ']/ul'))->isDisplayed());
@@ -260,6 +266,7 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Switch interfaces.
         $this->clickButton('Check a list of variants');
+        sleep(1);
 
         // Enter variants and submit.
         $this->enterValue('multipleVariants', '

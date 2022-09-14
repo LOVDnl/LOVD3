@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-09-06
+ * Modified    : 2022-09-12
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -192,6 +192,9 @@ foreach ($aVariants as $sVariant => $aVariant) {
             $aVariant['VV']['EFAIL'] = 'Please first correct the variant description to run VariantValidator.';
         } elseif (!$aVariant['has_refseq']) {
             $aVariant['VV']['EREFSEQMISSING'] = 'Please provide a reference sequence to run VariantValidator.';
+        } elseif (substr($sVariant, 0, 2) == 'NG'
+            || preg_match('/^LRG_[0-9]+:/', $sVariant)) {
+            $aVariant['VV']['WNOTSUPPORTED'] = 'This reference sequence type is not currently supported by VariantValidator.';
 
         } else {
             // Call VariantValidator. Use the outcome of lovd_getVariantInfo()
@@ -203,6 +206,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
             if ($aVV === false) {
                 $aVariant['VV']['EINTERNAL'] = 'An internal error within VariantValidator occurred when trying to validate your variant.';
             } elseif (!empty($aVV['data']['DNA'])) {
+                // We got a variant back, so VV at least understood the variant.
                 // Our VV library removed the refseq, put it back.
                 $aVV['data']['DNA'] = lovd_getVariantRefSeq($sVariant) . ':' . $aVV['data']['DNA'];
                 if ($sVariant != $aVV['data']['DNA']) {
@@ -217,18 +221,22 @@ foreach ($aVariants as $sVariant => $aVariant) {
 
                 if (!$aVV['errors'] && !$aVV['warnings'] && !$aVariant['VV']) {
                     $aVariant['VV']['IOK'] = 'The variant description passed the validation by VariantValidator.';
-                } else {
-                    $aVariant['VV'] = array_merge(
-                        $aVariant['VV'],
-                        array_map(
-                            function ($sValue)
-                            {
-                                return 'VariantValidator: ' . htmlspecialchars($sValue);
-                            },
-                            array_merge($aVV['errors'], $aVV['warnings'])
-                        )
-                    );
                 }
+            }
+
+            if ($aVV && ($aVV['errors'] || $aVV['warnings'])) {
+                // Warnings or errors have occurred.
+                $aVariant['is_hgvs'] = false;
+                $aVariant['VV'] = array_merge(
+                    $aVariant['VV'],
+                    array_map(
+                        function ($sValue)
+                        {
+                            return 'VariantValidator: ' . htmlspecialchars($sValue);
+                        },
+                        array_merge($aVV['errors'], $aVV['warnings'])
+                    )
+                );
             }
         }
 

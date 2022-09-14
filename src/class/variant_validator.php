@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-09-09
+ * Modified    : 2022-09-13
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -907,7 +907,7 @@ class LOVD_VV
         //  NM, we end up with only one NM here.
         $aJSON = current($aJSON);
 
-        // Add a warning in case we submitted a intronic variant while not
+        // Add a warning in case we submitted an intronic variant while not
         //  using an NC reference sequence.
         if (preg_match('/^N[MR]_.+[0-9]+[+-][0-9]+/', $sVariant)) {
             $aData['warnings']['WINTRONICWITHOUTNC'] = 'Without using a genomic reference sequence, intronic bases can not be verified.' .
@@ -917,7 +917,21 @@ class LOVD_VV
         }
 
         // Copy the (corrected) DNA value.
-        $aData['data']['DNA'] = $aJSON['hgvs_transcript_variant'];
+        // Handle LRGt submissions.
+        if (substr($sVariant, 0, 3) == 'LRG') {
+            $aData['data']['DNA'] = $aJSON['hgvs_lrg_transcript_variant'];
+            // Also, in this case, we're not interested if new transcripts exist.
+            $aJSON['validation_warnings'] = array_filter(
+                $aJSON['validation_warnings'],
+                function ($sValue)
+                {
+                    return !preg_match('/^(Reference sequence .+ can be updated to|A more recent version of the selected reference sequence .+ is available)/', $sValue);
+                }
+            );
+
+        } else {
+            $aData['data']['DNA'] = $aJSON['hgvs_transcript_variant'];
+        }
         // If description is given but different, then apparently there's been some kind of correction.
         if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
             // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
@@ -949,19 +963,21 @@ class LOVD_VV
                 // Not running as an LOVD object, just complain here.
                 $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
             }
+        }
 
-            // Although the LOVD endpoint doesn't do this, the VV endpoint
-            //  sometimes throws warnings when variants are corrected.
-            // If we threw a warning, we can remove the VV warning.
-            if ($aData['warnings'] && $aJSON['validation_warnings']) {
-                // Selectively search for the validation warning to remove,
-                //  in case there are multiple warnings.
-                foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
-                    if (strpos($sWarning, 'automapped to') !== false) {
-                        // Toss this error.
-                        unset($aJSON['validation_warnings'][$nKey]);
-                        break;
-                    }
+        // Although the LOVD endpoint doesn't do this, the VV endpoint
+        //  sometimes throws warnings when variants are corrected or mapped
+        //  between systems (LRGt to NM, for instance).
+        // If we threw a warning or with these inter-system mappings,
+        //  we can remove the VV warning.
+        if (($aData['warnings'] || substr($sVariant, 0, 3) == 'LRG')
+            && $aJSON['validation_warnings']) {
+            // Selectively search for the validation warning to remove,
+            //  in case there are multiple warnings.
+            foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
+                if (strpos($sWarning, 'automapped to') !== false) {
+                    // Toss this error.
+                    unset($aJSON['validation_warnings'][$nKey]);
                 }
             }
         }
