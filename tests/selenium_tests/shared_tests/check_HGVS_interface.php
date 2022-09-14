@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2022-09-06
- * Modified    : 2022-09-13
+ * Modified    : 2022-09-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -266,6 +266,7 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Switch interfaces.
         $this->clickButton('Check a list of variants');
+        sleep(1);
 
         // Enter variants and submit.
         $this->enterValue('multipleVariants', '
