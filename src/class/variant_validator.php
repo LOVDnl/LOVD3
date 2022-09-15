@@ -341,6 +341,7 @@ class LOVD_VV
             $aOptions = array();
         }
 
+        $aVariantInfo = false;
         // Don't send variants that are too big; VV can't currently handle them.
         if (function_exists('lovd_getVariantInfo')) {
             $aVariantInfo = lovd_getVariantInfo($sVariant);
@@ -546,17 +547,16 @@ class LOVD_VV
         // If description is given but different, then apparently there's been some kind of correction.
         if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
             // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
-            if (function_exists('lovd_getVariantInfo')) {
+            if ($aVariantInfo) {
                 // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                $aVariantOri = lovd_getVariantInfo($sVariant);
-                $aVariantCorrected = lovd_getVariantInfo($aData['data']['DNA']);
+                $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
 
-                if (array_diff_key($aVariantOri, array('warnings' => array()))
-                    == array_diff_key($aVariantCorrected, array('warnings' => array()))) {
+                if (array_diff_key($aVariantInfo, array('warnings' => array()))
+                    == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
                     // Positions and type are the same, small corrections like delG to del.
                     // We let these pass silently.
-                } elseif ($aVariantOri['type'] != $aVariantCorrected['type']
-                    || $aVariantOri['range'] != $aVariantCorrected['range']) {
+                } elseif ($aVariantInfo['type'] != $aVariantInfoCorrected['type']
+                    || $aVariantInfo['range'] != $aVariantInfoCorrected['range']) {
                     // An insertion actually being a duplication.
                     // A deletion-insertion which is actually something else.
                     // A g.1_1del that should be g.1del.
@@ -566,7 +566,7 @@ class LOVD_VV
                     // 3' forwarding of deletions, insertions, duplications
                     //  and deletion-insertion events.
                     $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                        (!$aVariantOri['range']? ' has' : 's have') .
+                        (!$aVariantInfo['range']? ' has' : 's have') .
                         ' been corrected.';
                 }
 
