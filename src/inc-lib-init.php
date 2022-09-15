@@ -49,7 +49,9 @@ $_LIBRARIES = array(
             '/[NX]M_/'                    => array('c'),
             '/[NX]R_/'                    => array('n'),
             '/^(ENST|LRG_[0-9]+t[0-9]+)/' => array('c', 'n'),
-            '/^(N[CGTW]_[0-9]+\.[0-9]+$|ENSG|LRG_[0-9]+$)/' => array('g', 'm'),
+            '/^ENSG/'                     => array('g', 'm'),
+            '/^NC_(001807\.|012920\.).$/' => array('m'),
+            '/^(N[CGTW]_[0-9]+\.[0-9]+$|LRG_[0-9]+$)/' => array('g'),
         ),
     ),
 );
@@ -1259,7 +1261,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     case 'g':
                     case 'm':
                         $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a genomic reference sequence.';
+                            ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'g'? 'genomic' : 'mitochondrial') . ' reference sequence.';
                         break;
                 }
 
