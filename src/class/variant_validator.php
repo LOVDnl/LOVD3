@@ -343,14 +343,26 @@ class LOVD_VV
 
         // Don't send variants that are too big; VV can't currently handle them.
         if (function_exists('lovd_getVariantInfo')) {
-            $aPositions = lovd_getVariantInfo($sVariant);
+            $aVariantInfo = lovd_getVariantInfo($sVariant);
+            // VV doesn't support uncertain positions.
+            if (isset($aVariantInfo['messages']['IUNCERTAINPOSITIONS'])) {
+                return array_merge_recursive(
+                    $this->aResponse,
+                    array(
+                        'errors' => array(
+                            'EUNCERTAINPOSITIONS' => 'VariantValidator does not currently support variant descriptions with uncertain positions.',
+                        )
+                    )
+                );
+            }
+
             // These sizes are approximate and slightly on the safe side;
             //  simple measurements have shown a maximum duplication size of
             //  250KB, and a max deletion of 900KB, requiring a full minute.
             // See: https://github.com/openvar/variantValidator/issues/151
-            if ($aPositions
-                && (($aPositions['type'] == 'dup' && ($aPositions['position_end'] - $aPositions['position_start']) > 200000)
-                    || (substr($aPositions['type'], 0, 3) == 'del' && ($aPositions['position_end'] - $aPositions['position_start']) > 800000))) {
+            if ($aVariantInfo
+                && (($aVariantInfo['type'] == 'dup' && ($aVariantInfo['position_end'] - $aVariantInfo['position_start']) > 200000)
+                    || (substr($aVariantInfo['type'], 0, 3) == 'del' && ($aVariantInfo['position_end'] - $aVariantInfo['position_start']) > 800000))) {
                 // Variant too big, return error.
                 $aReturn = $this->aResponse;
                 $aReturn['errors']['ESIZETOOLARGE'] = 'This variant is currently too big to process. It will likely time out after a minute of waiting, so we won\'t send it to VariantValidator.';
