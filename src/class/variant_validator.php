@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-09-13
+ * Modified    : 2022-09-15
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -459,6 +459,9 @@ class LOVD_VV
                         } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
                             // ESYNTAX error.
                             $aData['errors']['ESYNTAX'] = $sError;
+                        } elseif (substr($sError, 0, 21) == 'Fuzzy/unknown variant') {
+                            // EUNCERTAINPOSITIONS error.
+                            $aData['errors']['EUNCERTAINPOSITIONS'] = 'VariantValidator does not currently support variant descriptions with uncertain positions.';
                         } elseif (strpos($sError, $sVariant . ' updated to ') !== false) {
                             // Recently, VV published an update that generates an error even when the variant
                             //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
