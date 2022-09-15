@@ -788,7 +788,7 @@ class LOVD_VV
             list(,, $sRefSeqNM) = $aRegs;
             $sVariantShort = substr(strstr($sVariant, ':'), 1);
             $bKeepNC = false;
-            if (function_exists('lovd_getVariantInfo') && isset($_DB)) {
+            if ($aVariantInfo && isset($_DB)) {
                 // Check for intronic and positions outside of the mRNA.
 
                 // Fetch transcript positions from the database.
@@ -796,12 +796,12 @@ class LOVD_VV
                     SELECT position_c_mrna_start, position_c_mrna_end
                     FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?',
                     array($sRefSeqNM))->fetchAssoc();
-                $aVariant = lovd_getVariantInfo($sVariantShort, $sRefSeqNM);
+                $aVariantInfo = lovd_getVariantInfo($sVariantShort, $sRefSeqNM);
 
-                $bKeepNC = (!empty($aVariant['position_start_intron'])
-                    || !empty($aVariant['position_end_intron'])
-                    || $aVariant['position_start'] < $aTranscript['position_c_mrna_start']
-                    || $aVariant['position_end'] > $aTranscript['position_c_mrna_end']);
+                $bKeepNC = (!empty($aVariantInfo['position_start_intron'])
+                    || !empty($aVariantInfo['position_end_intron'])
+                    || $aVariantInfo['position_start'] < $aTranscript['position_c_mrna_start']
+                    || $aVariantInfo['position_end'] > $aTranscript['position_c_mrna_end']);
 
             } else {
                 // Just a quick simple check; keeping the NC for all intronic
@@ -968,17 +968,16 @@ class LOVD_VV
         // If description is given but different, then apparently there's been some kind of correction.
         if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
             // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
-            if (function_exists('lovd_getVariantInfo')) {
+            if ($aVariantInfo) {
                 // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                $aVariantOri = lovd_getVariantInfo($sVariant);
-                $aVariantCorrected = lovd_getVariantInfo($aData['data']['DNA']);
+                $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
 
-                if (array_diff_key($aVariantOri, array('warnings' => array()))
-                    == array_diff_key($aVariantCorrected, array('warnings' => array()))) {
+                if (array_diff_key($aVariantInfo, array('warnings' => array()))
+                    == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
                     // Positions and type are the same, small corrections like delG to del.
                     // We let these pass silently.
-                } elseif ($aVariantOri['type'] != $aVariantCorrected['type']
-                    || $aVariantOri['range'] != $aVariantCorrected['range']) {
+                } elseif ($aVariantInfo['type'] != $aVariantInfoCorrected['type']
+                    || $aVariantInfo['range'] != $aVariantInfoCorrected['range']) {
                     // An insertion actually being a duplication.
                     // A deletion-insertion which is actually something else.
                     // A c.1_1del that should be c.1del.
@@ -988,7 +987,7 @@ class LOVD_VV
                     // 3' forwarding of deletions, insertions, duplications
                     //  and deletion-insertion events.
                     $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                        (!$aVariantOri['range']? ' has' : 's have') .
+                        (!$aVariantInfo['range']? ' has' : 's have') .
                         ' been corrected.';
                 }
 
