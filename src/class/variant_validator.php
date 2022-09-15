@@ -342,7 +342,7 @@ class LOVD_VV
         }
 
         $aVariantInfo = false;
-        // Don't send variants that are too big; VV can't currently handle them.
+        // Perform some extra checks, if we can.
         if (function_exists('lovd_getVariantInfo')) {
             $aVariantInfo = lovd_getVariantInfo($sVariant);
             // VV doesn't support uncertain positions.
@@ -357,6 +357,7 @@ class LOVD_VV
                 );
             }
 
+            // Don't send variants that are too big; VV can't currently handle them.
             // These sizes are approximate and slightly on the safe side;
             //  simple measurements have shown a maximum duplication size of
             //  250KB, and a max deletion of 900KB, requiring a full minute.
@@ -716,6 +717,23 @@ class LOVD_VV
 
         if (empty($aOptions) || !is_array($aOptions)) {
             $aOptions = array();
+        }
+
+        $aVariantInfo = false;
+        // Perform some extra checks, if we can.
+        if (function_exists('lovd_getVariantInfo')) {
+            $aVariantInfo = lovd_getVariantInfo($sVariant);
+            // VV doesn't support uncertain positions.
+            if (isset($aVariantInfo['messages']['IUNCERTAINPOSITIONS'])) {
+                return array_merge_recursive(
+                    $this->aResponse,
+                    array(
+                        'errors' => array(
+                            'EUNCERTAINPOSITIONS' => 'VariantValidator does not currently support variant descriptions with uncertain positions.',
+                        )
+                    )
+                );
+            }
         }
 
         // Append defaults for any remaining options.
