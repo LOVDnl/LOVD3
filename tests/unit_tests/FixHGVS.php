@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-08-26
+ * Modified    : 2022-09-16
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -75,9 +75,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // FIXABLE VARIANTS.
             // Missing prefixes that will be added.
-            array('123dup', 'g.123dup'),
-            array('(123dup)', 'g.(123dup)'),
-            array('.123dup', 'g.123dup'),
+            array('123dup', 'c.123dup'),
+            array('123456dup', 'g.123456dup'),
+            array('(123dup)', 'c.(123dup)'),
+            array('.123dup', 'c.123dup'),
             array('123-5dup', 'c.123-5dup'),
 
             // Wrong prefix, the size of the positions indicates it's a range,
