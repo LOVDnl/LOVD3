@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-08-05
+ * Modified    : 2022-09-16
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2010,7 +2010,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1(NM_123456.1)) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
+                    'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1(NM_123456.1)) does not match the DNA type (g). For variants on NC_123456.1(NM_123456.1), please use the c. prefix. For g. variants, please use a genomic reference sequence.',
                 ),
             )),
             array('NC_123456.1(NM_123456.1):c.1-1del', array(
@@ -2048,7 +2048,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (LRG_123t1) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
+                    'EWRONGREFERENCE' => 'The given reference sequence (LRG_123t1) does not match the DNA type (g). For variants on LRG_123t1, please use the c. or n. prefix. For g. variants, please use a genomic reference sequence.',
                 ),
             )),
             array('LRG_123t1:c.1del', array(
@@ -2080,8 +2080,50 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (LRG_123) does not match the DNA type (c). For c. variants, please use a coding transcript reference sequence.',
+                    'EWRONGREFERENCE' => 'The given reference sequence (LRG_123) does not match the DNA type (c). For variants on LRG_123, please use the g. prefix. For c. variants, please use a coding transcript reference sequence.',
                 ),
+            )),
+            array('NC_123456.1:c.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1) does not match the DNA type (c). For variants on NC_123456.1, please use the g. prefix. For c. variants, please use a coding transcript reference sequence.',
+                ),
+            )),
+            array('NC_012920.1:c.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NC_012920.1) does not match the DNA type (c). For variants on NC_012920.1, please use the m. prefix. For c. variants, please use a coding transcript reference sequence.',
+                ),
+            )),
+            array('NC_123456.1:m.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EWRONGREFERENCE' => 'The given reference sequence (NC_123456.1) does not match the DNA type (m). For variants on NC_123456.1, please use the g. prefix. For m. variants, please use a mitochondrial reference sequence.',
+                ),
+            )),
+            array('NC_012920.1:m.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(),
             )),
             array('NR_123456.1:n.1del', array(
                 'position_start' => 1,
@@ -2102,7 +2144,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n). For n. variants, please use a non-coding transcript reference sequence.',
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (n). For variants on NM_123456.1, please use the c. prefix. For n. variants, please use a non-coding transcript reference sequence.',
                 ),
             )),
             array('NM_123456.1:g.1del', array(
@@ -2112,7 +2154,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (g). For g. variants, please use a genomic reference sequence.',
+                    'EWRONGREFERENCE' => 'The given reference sequence (NM_123456.1) does not match the DNA type (g). For variants on NM_123456.1, please use the c. prefix. For g. variants, please use a genomic reference sequence.',
                 ),
             )),
             array('NC_123456.1:g.1del', array(
