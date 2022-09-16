@@ -89,7 +89,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
             array('c.–123del', 'c.-123del'),
-            array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
             array('c.A123C', 'c.123A>C'),
@@ -123,6 +122,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:g.100_200]'),
             array('g.123A>GC', 'g.123delinsGC'),
             array('g.123A>AA', 'g.123dup'),
+            array('g.123AA>G', 'g.123_124delinsG'),
             array('g.123AA>AC', 'g.124A>C'),
             array('g.123AA>GA', 'g.123A>G'),
             array('g.123AA>TT', 'g.123_124inv'),
@@ -183,7 +183,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
             array('c.1_2ins[N]', 'c.1_2insN'),
-            array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
             array('c.1_2ins(50_20)', 'c.1_2insN[(20_50)]'),
