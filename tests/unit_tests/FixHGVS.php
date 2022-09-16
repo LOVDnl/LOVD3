@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-08-26
+ * Modified    : 2022-09-16
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -75,9 +75,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // FIXABLE VARIANTS.
             // Missing prefixes that will be added.
-            array('123dup', 'g.123dup'),
-            array('(123dup)', 'g.(123dup)'),
-            array('.123dup', 'g.123dup'),
+            array('123dup', 'c.123dup'),
+            array('123456dup', 'g.123456dup'),
+            array('(123dup)', 'c.(123dup)'),
+            array('.123dup', 'c.123dup'),
             array('123-5dup', 'c.123-5dup'),
 
             // Wrong prefix, the size of the positions indicates it's a range,
@@ -87,7 +88,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Whitespace, other typos, and copy/paste errors.
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
-            array('c.–123del', 'c.-123del'),
             array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
@@ -122,6 +122,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:g.100_200]'),
             array('g.123A>GC', 'g.123delinsGC'),
             array('g.123A>AA', 'g.123dup'),
+            array('g.123AA>G', 'g.123_124delinsG'),
             array('g.123AA>AC', 'g.124A>C'),
             array('g.123AA>GA', 'g.123A>G'),
             array('g.123AA>TT', 'g.123_124inv'),
@@ -182,7 +183,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
             array('c.1_2ins[N]', 'c.1_2insN'),
-            array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
             array('c.1_2ins(50_20)', 'c.1_2insN[(20_50)]'),

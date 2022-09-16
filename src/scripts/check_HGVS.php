@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-12-03
- * Modified    : 2022-09-13
+ * Modified    : 2022-09-15
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -430,7 +430,12 @@ NC_000015.9:g.40699840C>T" rows="5"></textarea>
                             {
                                 // Replace the variant in the input.
                                 $("#" + sMethod).val(
-                                    $("#" + sMethod).val().replace(new RegExp('(^|\n)' + sOriVariant + '($|\n)'), '$1' + sNewVariant + '$2')
+                                    $("#" + sMethod).val().replace(
+                                        // Note that the variant should be escaped before use within a regex.
+                                        // JS doesn't have a standard function for it. Borrowing something from:
+                                        //  https://stackoverflow.com/a/3561711.
+                                        new RegExp('(^|\n)' + sOriVariant.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '($|\n)'),
+                                        '$1' + sNewVariant + '$2')
                                 );
                                 // Show that we're working here. Leaving bootstap a bit for pure CSS to overlap the borders of the card as well.
                                 // Just pure Bootstrap (classes start-0 top-0 end-0 bottom-0) will not overlap the border of the card, which is a bit ugly.

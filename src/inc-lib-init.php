@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-08-26
+ * Modified    : 2022-09-15
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -49,7 +49,9 @@ $_LIBRARIES = array(
             '/[NX]M_/'                    => array('c'),
             '/[NX]R_/'                    => array('n'),
             '/^(ENST|LRG_[0-9]+t[0-9]+)/' => array('c', 'n'),
-            '/^(N[CGTW]_[0-9]+\.[0-9]+$|ENSG|LRG_[0-9]+$)/' => array('g', 'm'),
+            '/^ENSG/'                     => array('g', 'm'),
+            '/^NC_(001807\.|012920\.).$/' => array('m'),
+            '/^(N[CGTW]_[0-9]+\.[0-9]+$|LRG_[0-9]+$)/' => array('g'),
         ),
     ),
 );
@@ -1241,13 +1243,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
 
-            if (!in_array($sVariant[0], lovd_getVariantPrefixesByRefSeq($sReferenceSequence))) {
+            $aPrefixesByRefSeq = lovd_getVariantPrefixesByRefSeq($sReferenceSequence);
+            if (!in_array($sVariant[0], $aPrefixesByRefSeq)) {
                 // Check whether the DNA type of the variant matches the DNA type of the reference sequence.
                 if ($bCheckHGVS) {
                     return false;
                 }
                 $aResponse['errors']['EWRONGREFERENCE'] =
-                    'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').';
+                    'The given reference sequence (' . $sReferenceSequence . ') does not match the DNA type (' . $sVariant[0] . ').' .
+                    ' For variants on ' . $sReferenceSequence . ', please use the ' . implode('. or ', $aPrefixesByRefSeq) . '. prefix.';
                 switch ($sVariant[0]) {
                     case 'c':
                     case 'n':
@@ -1257,7 +1261,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     case 'g':
                     case 'm':
                         $aResponse['errors']['EWRONGREFERENCE'] .=
-                            ' For ' . $sVariant[0] . '. variants, please use a genomic reference sequence.';
+                            ' For ' . $sVariant[0] . '. variants, please use a ' . ($sVariant[0] == 'g'? 'genomic' : 'mitochondrial') . ' reference sequence.';
                         break;
                 }
 

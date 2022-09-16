@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-09-02
+ * Modified    : 2022-09-16
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -99,8 +99,13 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 } elseif (preg_match('/^NC_(001807|012920)/', $sReference)) {
                     $sType = 'm';
                 } else {
-                        $sType = 'g';
+                    $sType = 'g';
                 }
+            } elseif (preg_match('/([0-9]+)/', $sVariant, $aRegs)
+                && $aRegs[1] < 1000) {
+                // The first number in the variant description is lower than 1000.
+                // Most likely to be a coding variant.
+                $sType = 'c';
             } else {
                 // Fine, we default to 'g'.
                 $sType = 'g';
