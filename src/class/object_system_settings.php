@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2022-01-14
- * For LOVD    : 3.0-28
+ * Modified    : 2022-10-20
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -188,7 +188,7 @@ class LOVD_SystemSetting extends LOVD_Object
 
         // FIXME; Like above, not the best solution, but gets the job done for now.
         if (empty($aData['mutalyzer_soap_url'])) {
-            $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
+            $_POST['mutalyzer_soap_url'] = 'https://v2.mutalyzer.nl/services';
         }
 
         // SSL check.
@@ -351,7 +351,7 @@ class LOVD_SystemSetting extends LOVD_Object
         $_POST['refseq_build'] = 'hg38';
         $_POST['api_feed_history'] = 3;
         $_POST['logo_uri'] = 'gfx/LOVD' . (LOVD_plus? '_plus' : '3') . '_logo145x50.jpg';
-        $_POST['mutalyzer_soap_url'] = 'https://mutalyzer.nl/services';
+        $_POST['mutalyzer_soap_url'] = 'https://v2.mutalyzer.nl/services';
         $_POST['send_stats'] = (int) (!LOVD_plus);
         $_POST['include_in_listing'] = (int) (!LOVD_plus);
         $_POST['allow_submitter_registration'] = (int) (!LOVD_plus);
