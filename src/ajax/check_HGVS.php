@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-09-12
+ * Modified    : 2022-10-20
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -140,10 +140,14 @@ foreach ($aVariants as $sVariant => $aVariant) {
         if (!$aVariant['variant_info']) {
             $aVariant['variant_info'] = array(
                 'errors' => array(
-                    'EFAIL' => 'Failed to recognize a variant description in your input.'
+                    'EFAIL' => 'Failed to recognize a DNA variant description in your input.'
                 ),
                 'warnings' => array(),
             );
+            // Catch r. and p. submissions.
+            if (preg_match('/(^|:)[rp]\./', $sVariant)) {
+                $aVariant['variant_info']['errors']['EFAIL'] .= ' Please note that this service is for DNA variant descriptions only.';
+            }
         }
 
         // We normally don't show non-HGVS compliant suggestions. Exception;
