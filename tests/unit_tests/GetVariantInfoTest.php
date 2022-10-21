@@ -2208,7 +2208,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
+                    'EREFERENCEFORMAT' => 'The reference sequence ID is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
                 ),
             )),
             array('LRG:g.1del', array(
@@ -2229,7 +2229,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => false,
                 'warnings' => array(
-                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequences have been swapped. Please rewrite "NM_123456.1(NC_123456.1)" to "NC_123456.1(NM_123456.1)".',
+                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequence IDs have been swapped. Please rewrite "NM_123456.1(NC_123456.1)" to "NC_123456.1(NM_123456.1)".',
+                ),
+                'errors' => array(),
+            )),
+            array('NM123456.1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "NM123456" to "NM_123456".',
                 ),
                 'errors' => array(),
             )),

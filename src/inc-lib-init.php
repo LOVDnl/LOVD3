@@ -1287,18 +1287,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if (lovd_isValidRefSeq(preg_replace('/([0-9]{6})([()]|$)/', '$1.1$2', $sReferenceSequence))) {
                 // OK, adding a .1 helped. So, version is missing.
                 $aResponse['errors']['EREFERENCEFORMAT'] =
-                    'The reference sequence is missing the required version number.' .
+                    'The reference sequence ID is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
 
             } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\((N[CGTW]_[0-9]{6}\.[0-9]+)\)$/', $sReferenceSequence, $aRegs)) {
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
-                    'The genomic and transcript reference sequences have been swapped.' .
+                    'The genomic and transcript reference sequence IDs have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
 
             } elseif (preg_match('/^([NX][CGMRTW])([0-9]+)/', $sReferenceSequence, $aRegs)) {
                 // The user forgot the underscore.
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
-                    'NCBI reference sequences require an underscore between the prefix and the numeric ID.' .
+                    'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
 
             } else {
