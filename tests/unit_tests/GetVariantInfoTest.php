@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-09-16
+ * Modified    : 2022-10-21
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,7 +55,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_getVariantInfo() with data from
         // dataProviderGetVariantInfo(), but only as an HGVS check.
-        if (empty($aOutput['errors'])
+        if ($aOutput
+            && empty($aOutput['errors'])
             && (empty($aOutput['warnings'])
                 || empty(array_diff(
                         array_keys($aOutput['warnings']),
@@ -1852,6 +1853,23 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Descriptions that are currently unsupported.
+            array('c.(100)A>G', false),
+            array('c.(100_101)A>G', array(
+                'position_start' => 100,
+                'position_end' => 101,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' =>
+                        'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.123^124A>C', array(
                 'position_start' => 123,
                 'position_end' => 123,
