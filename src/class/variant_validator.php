@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-10-20
+ * Modified    : 2022-10-21
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1040,6 +1040,7 @@ class LOVD_VV
                     // Don't accept VV's change of the description.
                     // VV starts moving coordinates around like it's an algebra equation. We don't like that.
                     $aData['data']['DNA'] = '';
+                    $aJSON['primary_assembly_loci'] = array();
                     unset($aData['warnings']['WCORRECTED']);
                     unset($aData['warnings']['WROLLFORWARD']);
 
