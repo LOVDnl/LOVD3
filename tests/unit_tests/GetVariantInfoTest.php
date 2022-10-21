@@ -2245,6 +2245,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('NM-123456.1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "NM-123456" to "NM_123456".',
+                ),
+                'errors' => array(),
+            )),
 
             // Other errors or problems.
             array('G.123dup', array(

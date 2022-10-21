@@ -36,7 +36,7 @@
 $_LIBRARIES = array(
     'regex_patterns' => array(
         'refseq' => array(
-            'basic' => '/^[A-Z_.t0-9()]+$/',
+            'basic' => '/^[A-Z_.t0-9()-]+$/',
             'strict'  =>
                 '/^([NX][CGMRTW]_[0-9]{6}\.[0-9]+' .
                 '|[NX][MR]_[0-9]{9}\.[0-9]+' .
@@ -1295,8 +1295,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The genomic and transcript reference sequence IDs have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
 
-            } elseif (preg_match('/^([NX][CGMRTW])([0-9]+)/', $sReferenceSequence, $aRegs)) {
-                // The user forgot the underscore.
+            } elseif (preg_match('/([NX][CGMRTW])-?([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user forgot the underscore or used a hyphen.
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
