@@ -945,7 +945,7 @@ class LOVD_VV
         //  using an NC reference sequence.
         if (preg_match('/^N[MR]_.+[0-9]+[+-][0-9]+/', $sVariant)) {
             $aData['warnings']['WINTRONICWITHOUTNC'] = 'Without using a genomic reference sequence, intronic bases can not be verified.' .
-                (!isset($aJSON['genome_context_intronic_sequence']) || !isset($aJSON['submitted_variant'])? ''
+                (empty($aJSON['genome_context_intronic_sequence']) || empty($aJSON['submitted_variant'])? ''
                     : ' Please consider passing the variant as ' .
                     strstr($aJSON['genome_context_intronic_sequence'], ':', true) . strstr($aJSON['submitted_variant'], ':') . '.');
         }
