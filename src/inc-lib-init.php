@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-09-15
+ * Modified    : 2022-10-21
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2038,10 +2038,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  is formatted as it should.
     if (!$aVariant['suffix']
         && (in_array($aVariant['type'], array('ins', 'delins'))
-            || isset($aResponse['messages']['IPOSITIONRANGE']))) {
+            || isset($aResponse['messages']['IPOSITIONRANGE']))
+        && $aResponse['type'] != 'subst') {
         // Variants of type ins and delins need a suffix showing what has been
         //  inserted and variants which took place within a range need a suffix
         //  showing the length of the variant.
+        // This is not required for substitutions with an IPOSITIONRANGE,
+        //  as their length is always 1.
         if ($bCheckHGVS) {
             return false;
         }
