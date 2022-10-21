@@ -1998,6 +1998,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
             }
         }
+        if (isset($aResponse['messages']['IPOSITIONRANGE'])) {
+            // VV won't support this... although we'll allow c.(100_101)A>G.
+            $aResponse['warnings']['WNOTSUPPORTED'] =
+                'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+        }
 
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
         foreach(explode('[', $aVariant['type']) as $sRepeat) {
