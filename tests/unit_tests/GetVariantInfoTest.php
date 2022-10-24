@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-10-21
+ * Modified    : 2022-10-24
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2196,10 +2196,10 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'range' => false,
-                'warnings' => array(),
-                'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs require at least six digits. Please rewrite "NC_12345.1" to "NC_012345.1".',
                 ),
+                'errors' => array(),
             )),
             array('NC_123456:g.1del', array(
                 'position_start' => 1,

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-10-21
+ * Modified    : 2022-10-24
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1300,6 +1300,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
+            } elseif (preg_match('/([NX][CGMRTW])_([0-9]{1,5})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too few digits.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI reference sequence IDs require at least six digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . str_pad($aRegs[2], 6, '0', STR_PAD_LEFT) . '.' . $aRegs[3] . '".';
 
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
