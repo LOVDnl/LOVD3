@@ -2281,6 +2281,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('LRG123t1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'LRG reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "LRG123" to "LRG_123".',
+                ),
+                'errors' => array(),
+            )),
 
             // Other errors or problems.
             array('G.123dup', array(

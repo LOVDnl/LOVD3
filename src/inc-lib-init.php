@@ -1320,6 +1320,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'NCBI transcript reference sequence IDs allow no more than nine digits.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[3] . '.' . $aRegs[4] . '".';
 
+            } elseif (preg_match('/(LRG)([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // LRGs require underscores.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
