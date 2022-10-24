@@ -2269,6 +2269,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('NM_00123456789.1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs allow no more than nine digits. Please rewrite "NM_0012345678.1" to "NM_12345678.1".',
+                ),
+                'errors' => array(),
+            )),
 
             // Other errors or problems.
             array('G.123dup', array(

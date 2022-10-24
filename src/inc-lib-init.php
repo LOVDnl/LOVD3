@@ -1314,6 +1314,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'NCBI reference sequence IDs allow no more than six or nine digits.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[3] . '.' . $aRegs[4] . '".';
 
+            } elseif (preg_match('/([NX][MR])_(0+)([0-9]{9})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too many digits.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI transcript reference sequence IDs allow no more than nine digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[3] . '.' . $aRegs[4] . '".';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
