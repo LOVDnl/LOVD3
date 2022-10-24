@@ -1307,6 +1307,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'NCBI reference sequence IDs require at least six digits.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . str_pad($aRegs[2], 6, '0', STR_PAD_LEFT) . '.' . $aRegs[3] . '".';
 
+            } elseif (preg_match('/([NX][CGMRTW])_(0+)([0-9]{6})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too many digits.
+                // (in principle, this would also match NM_[0-9]{9}, but that is correct and wouldn't get here)
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI reference sequence IDs allow no more than six or nine digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[3] . '.' . $aRegs[4] . '".';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .
