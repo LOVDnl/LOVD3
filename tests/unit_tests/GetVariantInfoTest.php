@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-10-24
+ * Modified    : 2022-10-25
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2290,6 +2290,28 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(
                     'WREFERENCEFORMAT' => 'LRG reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "LRG123" to "LRG_123".',
+                ),
+                'errors' => array(),
+            )),
+            array('LRG123t1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'LRG reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "LRG123" to "LRG_123".',
+                ),
+                'errors' => array(),
+            )),
+            array('ENSG_12345678911.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'Ensembl reference sequence IDs don\'t allow a divider between the prefix and the numeric ID. Please rewrite "ENSG_12345678911" to "ENSG12345678911".',
                 ),
                 'errors' => array(),
             )),

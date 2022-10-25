@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-10-24
+ * Modified    : 2022-10-25
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1325,6 +1325,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
                     'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
+            } elseif (preg_match('/(ENS[GT])[_-]([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // Ensembl IDs disallow underscores.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'Ensembl reference sequence IDs don\'t allow a divider between the prefix and the numeric ID.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . $aRegs[2] . '".';
 
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
