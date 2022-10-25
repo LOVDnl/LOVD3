@@ -2277,7 +2277,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => false,
                 'warnings' => array(
-                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs allow no more than nine digits. Please rewrite "NM_0012345678.1" to "NM_12345678.1".',
+                    'WREFERENCEFORMAT' => 'NCBI transcript reference sequence IDs allow no more than nine digits. Please rewrite "NM_00123456789.1" to "NM_123456789.1".',
                 ),
                 'errors' => array(),
             )),
