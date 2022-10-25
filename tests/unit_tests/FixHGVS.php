@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-10-21
+ * Modified    : 2022-10-25
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -262,8 +262,17 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
             array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
 
-            // Swapping reference sequences.
+            // Issues with reference sequences.
+            array('NC_12345.1:g.1del', 'NC_012345.1:g.1del'),
             array('NM_123456.1(NC_123456.1):c.100del', 'NC_123456.1(NM_123456.1):c.100del'),
+            array('NM123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM-123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM_00123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM_00123456789.1:c.100del', 'NM_123456789.1:c.100del'),
+            array('LRG123t1:c.100del', 'LRG_123t1:c.100del'),
+            array('LRG123t1:c.100del', 'LRG_123t1:c.100del'),
+            array('ENSG_12345678911.1:g.1del', 'ENSG12345678911.1:g.1del'),
+            array('ENSG1234567890.1:g.1del', 'ENSG01234567890.1:g.1del'),
 
             // Where we can still improve
             //  (still results in an invalid description - more work needed,
