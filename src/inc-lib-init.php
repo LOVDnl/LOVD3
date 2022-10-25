@@ -1332,6 +1332,12 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'Ensembl reference sequence IDs don\'t allow a divider between the prefix and the numeric ID.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . $aRegs[2] . '".';
 
+            } elseif (preg_match('/(ENS[GT])([0-9]{1,10})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too few digits.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'Ensembl reference sequence IDs require 11 digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . str_pad($aRegs[2], 11, '0', STR_PAD_LEFT) . '.' . $aRegs[3] . '".';
+
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
                     'The reference sequence could not be recognised.' .

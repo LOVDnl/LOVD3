@@ -2315,6 +2315,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('ENSG1234567890.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'Ensembl reference sequence IDs require 11 digits. Please rewrite "ENSG1234567890.1" to "ENSG01234567890.1".',
+                ),
+                'errors' => array(),
+            )),
 
             // Other errors or problems.
             array('G.123dup', array(
