@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-10-25
+ * Modified    : 2022-10-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2005,6 +2005,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             $aResponse['errors']['EWRONGTYPE'] =
                 'A substitution should be a change of one base to one base. Did you mean to describe an insertion?';
+
+        } elseif ($aSubstitution[0] == $aSubstitution[1]) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['warnings']['WWRONGTYPE'] =
+                'A substitution should be a change of one base to one base. Did you mean to describe an unchanged position?';
 
         } elseif ($aSubstitution[1] == '.') {
             if ($bCheckHGVS) {

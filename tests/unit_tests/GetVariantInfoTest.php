@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-10-25
+ * Modified    : 2022-10-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -196,6 +196,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(
                     'EWRONGTYPE' => 'This substitution does not seem to contain any data. Please provide bases that were replaced.',
                 ),
+            )),
+            array('g.123A>A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A substitution should be a change of one base to one base. Did you mean to describe an unchanged position?',
+                ),
+                'errors' => array(),
             )),
             array('g.123_124A>C', array(
                 'position_start' => 123,
