@@ -2011,7 +2011,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 return false;
             }
             $aResponse['warnings']['WWRONGTYPE'] =
-                'A substitution should be a change of one base to one base. Did you mean to describe an unchanged position?';
+                'A substitution should be a change of one base to one base. Did you mean to describe an unchanged ' .
+                ($aResponse['range']? 'range' : 'position') . '?';
 
         } elseif ($aSubstitution[1] == '.') {
             if ($bCheckHGVS) {

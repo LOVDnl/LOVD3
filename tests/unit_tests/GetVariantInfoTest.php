@@ -261,6 +261,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123_124AA>AA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'subst',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A substitution should be a change of one base to one base. Did you mean to describe an unchanged range?',
+                ),
+                'errors' => array(
+                    'ETOOMANYPOSITIONS' => 'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.'
+                ),
+            )),
             array('g.123_124AA>GC', array(
                 'position_start' => 123,
                 'position_end' => 124,
