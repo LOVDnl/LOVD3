@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-09-16
+ * Modified    : 2022-10-21
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -189,6 +189,14 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             // c.((1_5))insA or c.100_500del((10))
             return lovd_fixHGVS($sReference . str_replace(array('((', '))'), array('(', ')'), $sVariant), $sType);
         }
+
+    } elseif ($nOpening == 1 && preg_match('/^' . $sType . '\.\([0-9]+\)/', $sVariant)) {
+        // The variant recognition pattern is quite complex. An opening parenthesis is accepted without any problems,
+        //  but a closing parenthesis after a position is only allowed when using ranges.
+        // The closing parenthesis in variants like c.(100del) just ends up in the suffix, so is also accepted.
+        // However, variants like c.(100)del are then not matched, even though it's clear what's meant.
+        // Try without the parentheses. c.(100)del to c.100del.
+        return lovd_fixHGVS($sReference . str_replace(array('(', ')'), '', $sVariant), $sType);
     }
 
     // Add prefix in case it is missing.

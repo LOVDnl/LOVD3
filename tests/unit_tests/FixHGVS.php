@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-09-16
+ * Modified    : 2022-10-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -120,6 +120,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Variant types should be something else.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
             array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:g.100_200]'),
+            array('g.123A>A', 'g.123='),
             array('g.123A>GC', 'g.123delinsGC'),
             array('g.123A>AA', 'g.123dup'),
             array('g.123AA>G', 'g.123_124delinsG'),
@@ -166,6 +167,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.(1_2)insA', 'c.1_2insA'),
             array('c.(123+10_123+11)insA', 'c.123+10_123+11insA'),
             array('c.(1_2)inv', 'c.1_2inv'),
+            array('c.(100)A>G', 'c.100A>G'),
 
             // Superfluous suffixes.
             array('c.123delA', 'c.123del'),
@@ -261,8 +263,17 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
             array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
 
-            // Swapping reference sequences.
+            // Issues with reference sequences.
+            array('NC_12345.1:g.1del', 'NC_012345.1:g.1del'),
             array('NM_123456.1(NC_123456.1):c.100del', 'NC_123456.1(NM_123456.1):c.100del'),
+            array('NM123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM-123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM_00123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM_00123456789.1:c.100del', 'NM_123456789.1:c.100del'),
+            array('LRG123t1:c.100del', 'LRG_123t1:c.100del'),
+            array('LRG123t1:c.100del', 'LRG_123t1:c.100del'),
+            array('ENSG_12345678911.1:g.1del', 'ENSG12345678911.1:g.1del'),
+            array('ENSG1234567890.1:g.1del', 'ENSG01234567890.1:g.1del'),
 
             // Where we can still improve
             //  (still results in an invalid description - more work needed,

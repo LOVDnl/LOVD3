@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2022-09-06
- * Modified    : 2022-09-14
+ * Modified    : 2022-10-21
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -273,6 +273,7 @@ class CheckHGVSInterfaceTest extends LOVDSeleniumWebdriverBaseTestCase
 c.100delA
 c.100del
 c.100
+r.100del
 c.1ATG[2]
 g.qter_cendel
 NM_004006.3:100del
@@ -284,7 +285,7 @@ NM_004006.3:c.100del');
         $sXPathAlert = '//div[@id="multipleVariantsResponse"]/div[contains(@class, "alert")]';
         $this->waitForElement(WebDriverBy::xpath($sXPathAlert));
         $this->assertEquals(
-            '7 variants received. 1 variant validated successfully. 1 variant is not supported. 3 variants can be fixed. 2 variants failed to validate.',
+            '8 variants received. 1 variant validated successfully. 1 variant is not supported. 3 variants can be fixed. 3 variants failed to validate.',
             str_replace("\n", ' ', $this->driver->findElement(WebDriverBy::xpath($sXPathAlert))->getText())
         );
 
@@ -344,7 +345,24 @@ NM_004006.3:c.100del');
                         array(
                             'class' => 'list-group-item-danger',
                             'icon' => 'bi-exclamation-circle-fill',
-                            'value' => 'Failed to recognize a variant description in your input.',
+                            'value' => 'Failed to recognize a DNA variant description in your input.',
+                        ),
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-dash-circle-fill',
+                            'value' => 'Please first correct the variant description to run VariantValidator.',
+                        ),
+                    ),
+                ),
+                array(
+                    'class' => 'bg-danger',
+                    'icon' => 'bi-exclamation-circle-fill',
+                    'variant' => 'r.100del',
+                    'items' => array(
+                        array(
+                            'class' => 'list-group-item-danger',
+                            'icon' => 'bi-exclamation-circle-fill',
+                            'value' => 'Failed to recognize a DNA variant description in your input. Please note that this service is for DNA variant descriptions only.',
                         ),
                         array(
                             'class' => 'list-group-item-danger',
@@ -392,7 +410,7 @@ NM_004006.3:c.100del');
                         array(
                             'class' => 'list-group-item-danger',
                             'icon' => 'bi-exclamation-circle-fill',
-                            'value' => 'Failed to recognize a variant description in your input.',
+                            'value' => 'Failed to recognize a DNA variant description in your input.',
                         ),
                         array(
                             'class' => 'list-group-item-danger',
@@ -429,7 +447,7 @@ NM_004006.3:c.100del');
         // The alert should have changed now because we have variants to fix; check.
         $sXPathAlert = '//div[@id="multipleVariantsResponse"]/div[contains(@class, "alert")]';
         $this->assertEquals(
-            '7 variants received. 3 variants validated successfully. 1 variant is not supported. 3 variants failed to validate.',
+            '8 variants received. 3 variants validated successfully. 1 variant is not supported. 4 variants failed to validate.',
             str_replace("\n", ' ', $this->driver->findElement(WebDriverBy::xpath($sXPathAlert))->getText())
         );
     }

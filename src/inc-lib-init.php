@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-09-15
+ * Modified    : 2022-10-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -36,7 +36,7 @@
 $_LIBRARIES = array(
     'regex_patterns' => array(
         'refseq' => array(
-            'basic' => '/^[A-Z_.t0-9()]+$/',
+            'basic' => '/^[A-Z_.t0-9()-]+$/',
             'strict'  =>
                 '/^([NX][CGMRTW]_[0-9]{6}\.[0-9]+' .
                 '|[NX][MR]_[0-9]{9}\.[0-9]+' .
@@ -1287,19 +1287,56 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             if (lovd_isValidRefSeq(preg_replace('/([0-9]{6})([()]|$)/', '$1.1$2', $sReferenceSequence))) {
                 // OK, adding a .1 helped. So, version is missing.
                 $aResponse['errors']['EREFERENCEFORMAT'] =
-                    'The reference sequence is missing the required version number.' .
+                    'The reference sequence ID is missing the required version number.' .
                     ' NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.';
 
             } elseif (preg_match('/^([NX][MR]_[0-9]{6,9}\.[0-9]+)\((N[CGTW]_[0-9]{6}\.[0-9]+)\)$/', $sReferenceSequence, $aRegs)) {
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
-                    'The genomic and transcript reference sequences have been swapped.' .
+                    'The genomic and transcript reference sequence IDs have been swapped.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[2] . '(' . $aRegs[1] . ')".';
 
-            } elseif (preg_match('/^([NX][CGMRTW])([0-9]+)/', $sReferenceSequence, $aRegs)) {
-                // The user forgot the underscore.
+            } elseif (preg_match('/([NX][CGMRTW])-?([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user forgot the underscore or used a hyphen.
                 $aResponse['warnings']['WREFERENCEFORMAT'] =
-                    'NCBI reference sequences require an underscore between the prefix and the numeric ID.' .
+                    'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID.' .
                     ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
+            } elseif (preg_match('/([NX][CGMRTW])_([0-9]{1,5})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too few digits.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI reference sequence IDs require at least six digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . str_pad($aRegs[2], 6, '0', STR_PAD_LEFT) . '.' . $aRegs[3] . '".';
+
+            } elseif (preg_match('/([NX][CGMRTW])_(0+)([0-9]{6})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too many digits.
+                // (in principle, this would also match NM_[0-9]{9}, but that is correct and wouldn't get here)
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI reference sequence IDs allow no more than six or nine digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[3] . '.' . $aRegs[4] . '".';
+
+            } elseif (preg_match('/([NX][MR])_(0+)([0-9]{9})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too many digits.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'NCBI transcript reference sequence IDs allow no more than nine digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[3] . '.' . $aRegs[4] . '".';
+
+            } elseif (preg_match('/(LRG)([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // LRGs require underscores.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'LRG reference sequence IDs require an underscore between the prefix and the numeric ID.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . '_' . $aRegs[2] . '".';
+
+            } elseif (preg_match('/(ENS[GT])[_-]([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // Ensembl IDs disallow underscores.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'Ensembl reference sequence IDs don\'t allow a divider between the prefix and the numeric ID.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . $aRegs[2] . '".';
+
+            } elseif (preg_match('/(ENS[GT])([0-9]{1,10})\.([0-9]+)/', $sReferenceSequence, $aRegs)) {
+                // The user is using too few digits.
+                $aResponse['warnings']['WREFERENCEFORMAT'] =
+                    'Ensembl reference sequence IDs require 11 digits.' .
+                    ' Please rewrite "' . $aRegs[0] . '" to "' . $aRegs[1] . str_pad($aRegs[2], 11, '0', STR_PAD_LEFT) . '.' . $aRegs[3] . '".';
 
             } else {
                 $aResponse['errors']['EREFERENCEFORMAT'] =
@@ -1969,6 +2006,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['errors']['EWRONGTYPE'] =
                 'A substitution should be a change of one base to one base. Did you mean to describe an insertion?';
 
+        } elseif ($aSubstitution[0] == $aSubstitution[1]) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['warnings']['WWRONGTYPE'] =
+                'A substitution should be a change of one base to one base. Did you mean to describe an unchanged ' .
+                ($aResponse['range']? 'range' : 'position') . '?';
+
         } elseif ($aSubstitution[1] == '.') {
             if ($bCheckHGVS) {
                 return false;
@@ -1997,6 +2042,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 $aResponse['errors']['ETOOMANYPOSITIONS'] =
                     'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.';
             }
+        }
+        if (isset($aResponse['messages']['IPOSITIONRANGE'])) {
+            // VV won't support this... although we'll allow c.(100_101)A>G.
+            $aResponse['warnings']['WNOTSUPPORTED'] =
+                'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
         }
 
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
@@ -2038,10 +2088,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     //  is formatted as it should.
     if (!$aVariant['suffix']
         && (in_array($aVariant['type'], array('ins', 'delins'))
-            || isset($aResponse['messages']['IPOSITIONRANGE']))) {
+            || isset($aResponse['messages']['IPOSITIONRANGE']))
+        && $aResponse['type'] != 'subst') {
         // Variants of type ins and delins need a suffix showing what has been
         //  inserted and variants which took place within a range need a suffix
         //  showing the length of the variant.
+        // This is not required for substitutions with an IPOSITIONRANGE,
+        //  as their length is always 1.
         if ($bCheckHGVS) {
             return false;
         }

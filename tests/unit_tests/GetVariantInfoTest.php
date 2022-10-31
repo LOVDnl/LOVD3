@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2022-09-16
+ * Modified    : 2022-10-26
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -55,7 +55,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
     {
         // Test lovd_getVariantInfo() with data from
         // dataProviderGetVariantInfo(), but only as an HGVS check.
-        if (empty($aOutput['errors'])
+        if ($aOutput
+            && empty($aOutput['errors'])
             && (empty($aOutput['warnings'])
                 || empty(array_diff(
                         array_keys($aOutput['warnings']),
@@ -196,6 +197,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'EWRONGTYPE' => 'This substitution does not seem to contain any data. Please provide bases that were replaced.',
                 ),
             )),
+            array('g.123A>A', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A substitution should be a change of one base to one base. Did you mean to describe an unchanged position?',
+                ),
+                'errors' => array(),
+            )),
             array('g.123_124A>C', array(
                 'position_start' => 123,
                 'position_end' => 124,
@@ -249,6 +260,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                         'A substitution should be a change of one base to one base. Did you mean to describe a deletion?',
                 ),
                 'errors' => array(),
+            )),
+            array('g.123_124AA>AA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'subst',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A substitution should be a change of one base to one base. Did you mean to describe an unchanged range?',
+                ),
+                'errors' => array(
+                    'ETOOMANYPOSITIONS' => 'Too many positions are given; a substitution is used to only indicate single-base changes and therefore should have only one position.'
+                ),
             )),
             array('g.123_124AA>GC', array(
                 'position_start' => 123,
@@ -1852,6 +1875,23 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Descriptions that are currently unsupported.
+            array('c.(100)A>G', false),
+            array('c.(100_101)A>G', array(
+                'position_start' => 100,
+                'position_end' => 101,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'subst',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' =>
+                        'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.123^124A>C', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -2178,10 +2218,10 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 1,
                 'type' => 'del',
                 'range' => false,
-                'warnings' => array(),
-                'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence could not be recognised. Supported reference sequence IDs are from NCBI Refseq, Ensembl, and LRG.',
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs require at least six digits. Please rewrite "NC_12345.1" to "NC_012345.1".',
                 ),
+                'errors' => array(),
             )),
             array('NC_123456:g.1del', array(
                 'position_start' => 1,
@@ -2190,7 +2230,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(),
                 'errors' => array(
-                    'EREFERENCEFORMAT' => 'The reference sequence is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
+                    'EREFERENCEFORMAT' => 'The reference sequence ID is missing the required version number. NCBI RefSeq and Ensembl IDs require version numbers when used in variant descriptions.',
                 ),
             )),
             array('LRG:g.1del', array(
@@ -2211,7 +2251,99 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => false,
                 'warnings' => array(
-                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequences have been swapped. Please rewrite "NM_123456.1(NC_123456.1)" to "NC_123456.1(NM_123456.1)".',
+                    'WREFERENCEFORMAT' => 'The genomic and transcript reference sequence IDs have been swapped. Please rewrite "NM_123456.1(NC_123456.1)" to "NC_123456.1(NM_123456.1)".',
+                ),
+                'errors' => array(),
+            )),
+            array('NM123456.1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "NM123456" to "NM_123456".',
+                ),
+                'errors' => array(),
+            )),
+            array('NM-123456.1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "NM-123456" to "NM_123456".',
+                ),
+                'errors' => array(),
+            )),
+            array('NM_00123456.1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI reference sequence IDs allow no more than six or nine digits. Please rewrite "NM_00123456.1" to "NM_123456.1".',
+                ),
+                'errors' => array(),
+            )),
+            array('NM_00123456789.1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'NCBI transcript reference sequence IDs allow no more than nine digits. Please rewrite "NM_00123456789.1" to "NM_123456789.1".',
+                ),
+                'errors' => array(),
+            )),
+            array('LRG123t1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'LRG reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "LRG123" to "LRG_123".',
+                ),
+                'errors' => array(),
+            )),
+            array('LRG123t1:c.100del', array(
+                'position_start' => 100,
+                'position_end' => 100,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'LRG reference sequence IDs require an underscore between the prefix and the numeric ID. Please rewrite "LRG123" to "LRG_123".',
+                ),
+                'errors' => array(),
+            )),
+            array('ENSG_12345678911.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'Ensembl reference sequence IDs don\'t allow a divider between the prefix and the numeric ID. Please rewrite "ENSG_12345678911" to "ENSG12345678911".',
+                ),
+                'errors' => array(),
+            )),
+            array('ENSG1234567890.1:g.1del', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WREFERENCEFORMAT' => 'Ensembl reference sequence IDs require 11 digits. Please rewrite "ENSG1234567890.1" to "ENSG01234567890.1".',
                 ),
                 'errors' => array(),
             )),

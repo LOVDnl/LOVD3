@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-09-15
+ * Modified    : 2022-10-21
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -899,6 +899,7 @@ class LOVD_VV
                             // EINCONSISTENTLENGTH error.
                             $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
                         } elseif (strpos($sError, 'coordinates do not agree with the intron/exon boundaries') !== false) {
+                            // Not sure if we still catch it here, its flag is "gene_variant" nowadays?
                             // EINVALIDBOUNDARY error.
                             $aData['errors']['EINVALIDBOUNDARY'] = $sError;
                         } elseif (strpos($sError, ' variant position that lies outside of the reference sequence') !== false
@@ -944,7 +945,7 @@ class LOVD_VV
         //  using an NC reference sequence.
         if (preg_match('/^N[MR]_.+[0-9]+[+-][0-9]+/', $sVariant)) {
             $aData['warnings']['WINTRONICWITHOUTNC'] = 'Without using a genomic reference sequence, intronic bases can not be verified.' .
-                (!isset($aJSON['genome_context_intronic_sequence']) || !isset($aJSON['submitted_variant'])? ''
+                (empty($aJSON['genome_context_intronic_sequence']) || empty($aJSON['submitted_variant'])? ''
                     : ' Please consider passing the variant as ' .
                     strstr($aJSON['genome_context_intronic_sequence'], ':', true) . strstr($aJSON['submitted_variant'], ':') . '.');
         }
@@ -1031,6 +1032,17 @@ class LOVD_VV
                     || $sWarning == 'RefSeqGene record not available') {
                     // We don't care about this - we started with an NM anyway.
                     unset($aJSON['validation_warnings'][$nKey]);
+
+                } elseif (strpos($sWarning, 'coordinates do not agree with the intron/exon boundaries') !== false) {
+                    // EINVALIDBOUNDARY error. This used to throw a flag "warning", but no more, so catch it here.
+                    $aData['errors']['EINVALIDBOUNDARY'] = $sWarning;
+                    unset($aJSON['validation_warnings'][$nKey]);
+                    // Don't accept VV's change of the description.
+                    // VV starts moving coordinates around like it's an algebra equation. We don't like that.
+                    $aData['data']['DNA'] = '';
+                    $aJSON['primary_assembly_loci'] = array();
+                    unset($aData['warnings']['WCORRECTED']);
+                    unset($aData['warnings']['WROLLFORWARD']);
 
                 } elseif (preg_match(
                     '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
