@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2020-10-01
+ * Modified    : 2022-07-28
  * For LOVD    : 3.5-pre-02
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -53,17 +53,18 @@ function lovd_checkHGVS (e)
 {
     // Function that is being called everytime a change has been made to a DNA field,
     // either from an onKeyUp or onChange, although the onKeyUp only uses this function partially.
-    // This will run the Mutalyzer checkHGVS module (if needed) and will return the response to the user.
+    // This will run LOVD's own regex for quick recognition, or lovd_getVariantInfo() otherwise,
+    //  and will return the response to the user.
 
     var oVariantDNA = $(this);
     oVariantDNA.removeClass();
 
-    // If we're a "preliminary" trigger, actually run when a key has been pressed, we just want a quick check
-    // if the DNA field seems correct. If so, we show the mark and the buttons, just like a "real" onChange().
-    // However, when it doesn't look good, we don't request Mutalyzer (to confirm, they should know best)
-    // unless we're a "real" onChange() request.
+    // If we're a "preliminary" trigger, actually run when a key has been pressed, we just want a quick check if the
+    //  DNA field seems correct using the regex below. If so, we show the mark and the buttons, just like a "real"
+    //  onChange(). However, when it doesn't look good, we wait for confirming using an AJAX call unless we're a "real"
+    //  onChange() request.
 
-    var bHGVS; // True -> correct syntax; False -> We don't recognize it, but Mutalyzer might.
+    var bHGVS; // true -> Correct syntax; false -> The JS regex doesn't recognize it, but lovd_getVariantInfo() might.
     // First check: genomic field should start with g. or m., cDNA field should start with c. or n..
     if (oVariantDNA.attr('name') == 'VariantOnGenome/DNA' && !/^(g|m)\./.test(oVariantDNA.val().substring(0, 2))) {
         bHGVS = false;
@@ -71,8 +72,8 @@ function lovd_checkHGVS (e)
         bHGVS = false;
     } else {
         // Try to match simple stuff: deletions, duplications, insertions, inversions and substitutions.
-        var oRegExp = /^[cgmn]\.\-?\d+([-+]\d+)?([ACGT]>[ACGT]|(_\-?\d+([-+]\d+)?)?d(el|up)([ACGT])*|_\-?\d+([-+]\d+)?(inv|ins([ACGT])+))$/;
-        // "false" doesn't necessarily mean false here! Just means this check doesn't recognize it. Mutalyzer may still.
+        var oRegExp = /^[cgmn]\.\-?\d+([-+]\d+)?([ACGT]>[ACGT]|(_\-?\d+([-+]\d+)?)?d(el|up)|_\-?\d+([-+]\d+)?(inv|ins([ACGT])+))$/;
+        // "false" doesn't necessarily mean false here! Just means this check doesn't recognize it.
         bHGVS = (oRegExp.test(oVariantDNA.val()));
     }
 
@@ -90,7 +91,7 @@ function lovd_checkHGVS (e)
             var sVariantNotation = 'c:' + oVariantDNA.val(); // The actual transcript is not important, it's just the variant syntax that matters here.
         }
 
-        // Now we have to check with Mutalyzer...
+        // Now we have to check with lovd_getVariantInfo()...
         $(oVariantDNA).siblings('img:first').attr({
             src: 'gfx/lovd_loading.gif',
             alt: 'Loading...',
@@ -100,15 +101,16 @@ function lovd_checkHGVS (e)
             onmouseout: ''
         }).show();
 
-        // Make the call to Mutalyzer to see if the variant is correct HGVS.
-        $.get('ajax/check_hgvs.php', { variant: sVariantNotation },
+        // Make the call to see if the variant is correct HGVS.
+        $.get('ajax/check_HGVS.php', { variant: sVariantNotation },
             function(sData) {
                 if (sData != '<?php echo AJAX_TRUE; ?>') {
-                    // Either Mutalyzer says No, our regexp didn't find a c. or g. at the beginning or user lost $_AUTH.
+                    // Either lovd_getVariantInfo() says no, our regexp didn't find a c. or g.
+                    //  at the beginning, or user lost $_AUTH.
                     oVariantDNA.siblings('img:first').attr({
                         src: 'gfx/cross.png',
-                        alt: (sData == <?php echo AJAX_UNKNOWN_RESPONSE; ?>? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
-                        title: (sData == <?php echo AJAX_UNKNOWN_RESPONSE; ?>? 'Unexpected response from Mutalyzer. Please try again later.' : 'Not a valid HGVS syntax!'),
+                        alt: (sData == <?php echo AJAX_DATA_ERROR; ?>? 'Unexpected response when validating the HGVS nomenclature. Please try again later.' : 'Invalid HGVS syntax!'),
+                        title: (sData == <?php echo AJAX_DATA_ERROR; ?>? 'Unexpected response when validating the HGVS nomenclature. Please try again later.' : 'Invalid HGVS syntax!'),
                     }).show();
                     // Now hide the "Map variant" and "Predict" buttons.
                     if (!$.isEmptyObject(aTranscripts)) {
@@ -137,7 +139,7 @@ function lovd_checkHGVS (e)
             });
 
     } else if (bHGVS) {
-        // We didn't need Mutalyzer, and we know we've got a good-looking variant here.
+        // We didn't need confirmation, and we know we've got a good-looking variant here.
         oVariantDNA.siblings('img:first').attr({
             src: 'gfx/check.png',
             alt: 'Valid HGVS syntax!',

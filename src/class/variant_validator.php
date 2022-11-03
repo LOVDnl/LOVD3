@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-07-13
- * For LOVD    : 3.0-28
+ * Modified    : 2022-10-21
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -250,60 +250,59 @@ class LOVD_VV
         $aJSON = $this->callVV('VariantValidator/tools/gene2transcripts', array(
             'id' => $sSymbol,
         ));
-        if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON['transcripts'])) {
-            $aData = $this->aResponse;
-            foreach ($aJSON['transcripts'] as $aTranscript) {
-                // Clean name.
-                $sName = preg_replace(
-                    array(
-                        '/^Homo sapiens\s+/', // Remove species name.
-                        '/^' . preg_quote($aJSON['current_name'], '/') . '\s+/', // The current gene name.
-                        '/^\(' . preg_quote($aJSON['current_symbol'], '/') . '\),\s+/', // The current symbol.
-                        '/, mRNA$/', // mRNA suffix.
-                        '/, non-coding RNA$/', // non-coding RNA suffix, replaced to " (non-coding)".
-                    ), array('', '', '', '', ' (non-coding)'), $aTranscript['description']);
-
-                // Figure out the genomic positions, which are given to us using the NCs.
-                $aGenomicPositions = array();
-                foreach ($_SETT['human_builds'] as $sBuild => $aBuild) {
-                    if (!isset($aBuild['ncbi_sequences'])) {
-                        continue;
-                    }
-                    // See if one of the build's chromosomes match.
-                    foreach (array_intersect($aBuild['ncbi_sequences'], array_keys($aTranscript['genomic_spans'])) as $sChromosome => $sRefSeq) {
-                        if (!isset($aGenomicPositions[$sBuild])) {
-                            $aGenomicPositions[$sBuild] = array();
-                        }
-                        $aGenomicPositions[$sBuild][$sChromosome] = array(
-                            'start' => ($aTranscript['genomic_spans'][$sRefSeq]['orientation'] == 1?
-                                $aTranscript['genomic_spans'][$sRefSeq]['start_position'] :
-                                $aTranscript['genomic_spans'][$sRefSeq]['end_position']),
-                            'end' => ($aTranscript['genomic_spans'][$sRefSeq]['orientation'] == 1?
-                                $aTranscript['genomic_spans'][$sRefSeq]['end_position'] :
-                                $aTranscript['genomic_spans'][$sRefSeq]['start_position']),
-                        );
-                    }
-                }
-
-                $aData['data'][$aTranscript['reference']] = array(
-                    'name' => $sName,
-                    'id_ncbi_protein' => $aTranscript['translation'],
-                    'genomic_positions' => $aGenomicPositions,
-                    'transcript_positions' => array(
-                        'cds_start' => $aTranscript['coding_start'],
-                        'cds_length' => (!$aTranscript['coding_end']? NULL : ($aTranscript['coding_end'] - $aTranscript['coding_start'] + 1)),
-                        'length' => $aTranscript['length'],
-                    )
-                );
-            }
-
-            ksort($aData['data']);
-            return $aData;
-
-        } else {
+        if (!$aJSON || empty($aJSON['transcripts'])) {
             // Failure.
             return false;
         }
+
+        $aData = $this->aResponse;
+        foreach ($aJSON['transcripts'] as $aTranscript) {
+            // Clean name.
+            $sName = preg_replace(
+                array(
+                    '/^Homo sapiens\s+/', // Remove species name.
+                    '/^' . preg_quote($aJSON['current_name'], '/') . '\s+/', // The current gene name.
+                    '/^\(' . preg_quote($aJSON['current_symbol'], '/') . '\),\s+/', // The current symbol.
+                    '/, mRNA$/', // mRNA suffix.
+                    '/, non-coding RNA$/', // non-coding RNA suffix, replaced to " (non-coding)".
+                ), array('', '', '', '', ' (non-coding)'), $aTranscript['description']);
+
+            // Figure out the genomic positions, which are given to us using the NCs.
+            $aGenomicPositions = array();
+            foreach ($_SETT['human_builds'] as $sBuild => $aBuild) {
+                if (!isset($aBuild['ncbi_sequences'])) {
+                    continue;
+                }
+                // See if one of the build's chromosomes match.
+                foreach (array_intersect($aBuild['ncbi_sequences'], array_keys($aTranscript['genomic_spans'])) as $sChromosome => $sRefSeq) {
+                    if (!isset($aGenomicPositions[$sBuild])) {
+                        $aGenomicPositions[$sBuild] = array();
+                    }
+                    $aGenomicPositions[$sBuild][$sChromosome] = array(
+                        'start' => ($aTranscript['genomic_spans'][$sRefSeq]['orientation'] == 1?
+                            $aTranscript['genomic_spans'][$sRefSeq]['start_position'] :
+                            $aTranscript['genomic_spans'][$sRefSeq]['end_position']),
+                        'end' => ($aTranscript['genomic_spans'][$sRefSeq]['orientation'] == 1?
+                            $aTranscript['genomic_spans'][$sRefSeq]['end_position'] :
+                            $aTranscript['genomic_spans'][$sRefSeq]['start_position']),
+                    );
+                }
+            }
+
+            $aData['data'][$aTranscript['reference']] = array(
+                'name' => $sName,
+                'id_ncbi_protein' => $aTranscript['translation'],
+                'genomic_positions' => $aGenomicPositions,
+                'transcript_positions' => array(
+                    'cds_start' => $aTranscript['coding_start'],
+                    'cds_length' => (!$aTranscript['coding_end']? NULL : ($aTranscript['coding_end'] - $aTranscript['coding_start'] + 1)),
+                    'length' => $aTranscript['length'],
+                )
+            );
+        }
+
+        ksort($aData['data']);
+        return $aData;
     }
 
 
@@ -315,17 +314,17 @@ class LOVD_VV
         // Tests the VV endpoint.
 
         $aJSON = $this->callVV('hello');
-        if ($aJSON !== false && $aJSON !== NULL) {
-            if (isset($aJSON['status']) && $aJSON['status'] == 'hello_world') {
-                // All good.
-                return true;
-            } else {
-                // Something JSON, but perhaps another format?
-                return 0;
-            }
-        } else {
+        if (!$aJSON) {
             // Failure.
             return false;
+        }
+
+        if (isset($aJSON['status']) && $aJSON['status'] == 'hello_world') {
+            // All good.
+            return true;
+        } else {
+            // Something JSON, but perhaps another format?
+            return 0;
         }
     }
 
@@ -342,16 +341,30 @@ class LOVD_VV
             $aOptions = array();
         }
 
-        // Don't send variants that are too big; VV can't currently handle them.
+        $aVariantInfo = false;
+        // Perform some extra checks, if we can.
         if (function_exists('lovd_getVariantInfo')) {
-            $aPositions = lovd_getVariantInfo(substr(strstr($sVariant, ':'), 1));
+            $aVariantInfo = lovd_getVariantInfo($sVariant);
+            // VV doesn't support uncertain positions.
+            if (isset($aVariantInfo['messages']['IUNCERTAINPOSITIONS'])) {
+                return array_merge_recursive(
+                    $this->aResponse,
+                    array(
+                        'errors' => array(
+                            'EUNCERTAINPOSITIONS' => 'VariantValidator does not currently support variant descriptions with uncertain positions.',
+                        )
+                    )
+                );
+            }
+
+            // Don't send variants that are too big; VV can't currently handle them.
             // These sizes are approximate and slightly on the safe side;
             //  simple measurements have shown a maximum duplication size of
             //  250KB, and a max deletion of 900KB, requiring a full minute.
             // See: https://github.com/openvar/variantValidator/issues/151
-            if ($aPositions
-                && (($aPositions['type'] == 'dup' && ($aPositions['position_end'] - $aPositions['position_start']) > 200000)
-                    || (substr($aPositions['type'], 0, 3) == 'del' && ($aPositions['position_end'] - $aPositions['position_start']) > 800000))) {
+            if ($aVariantInfo
+                && (($aVariantInfo['type'] == 'dup' && ($aVariantInfo['position_end'] - $aVariantInfo['position_start']) > 200000)
+                    || (substr($aVariantInfo['type'], 0, 3) == 'del' && ($aVariantInfo['position_end'] - $aVariantInfo['position_start']) > 800000))) {
                 // Variant too big, return error.
                 $aReturn = $this->aResponse;
                 $aReturn['errors']['ESIZETOOLARGE'] = 'This variant is currently too big to process. It will likely time out after a minute of waiting, so we won\'t send it to VariantValidator.';
@@ -412,212 +425,7 @@ class LOVD_VV
                 'False' : ($aOptions['map_to_transcripts']? 'tx' : 'True')),
             'lift_over' => ($aOptions['lift_over']? 'primary' : 'False'),
         ));
-        if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON[$sVariant])) {
-            $aData = $this->aResponse;
-
-            // Discard the meta data.
-            $aJSON = $aJSON[$sVariant];
-
-            // We'll copy the errors, but I've never seen them filled in, even with REF errors.
-            $aData['errors'] = $aJSON['errors'];
-            // Check the flag value.
-            if ($aJSON['flag']) {
-                switch ($aJSON['flag']) {
-                    case 'genomic_variant_warning':
-                        if ($aJSON[$sVariant]['genomic_variant_error']) {
-                            // Clean off variant description.
-                            $sError = str_replace($sVariant . ': ', '', $aJSON[$sVariant]['genomic_variant_error']);
-                            // VV has declared their error messages are stable.
-                            // This means we can parse them and rely on them not to change.
-                            // Add error code if possible, so we won't have to parse the error message again somewhere.
-                            if ($sError == 'Length implied by coordinates must equal sequence deletion length') {
-                                // EINCONSISTENTLENGTH error.
-                                $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
-                            } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false
-                                || preg_match('/^Failed to fetch .+ out of range/', $sError)) {
-                                // ERANGE error.
-                                $aData['errors']['ERANGE'] = $sError;
-                            } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
-                                // EREF error.
-                                $aData['errors']['EREF'] = $sError;
-                            } elseif (strpos($sError, 'is not associated with genome build') !== false) {
-                                // EREFSEQ error.
-                                $aData['errors']['EREFSEQ'] = $sError;
-                            } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
-                                // ESYNTAX error.
-                                $aData['errors']['ESYNTAX'] = $sError;
-                            } elseif (strpos($sError, $sVariant . ' updated to ') !== false) {
-                                // Recently, VV published an update that generates an error even when the variant
-                                //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
-                                //  elsewhere, so hide that here.
-                                $aJSON[$sVariant]['genomic_variant_error'] = '';
-                                break;
-                            } else {
-                                // Unrecognized error.
-                                $aData['errors'][] = $sError;
-                            }
-                            // When we have errors, we don't need 'data' filled in. Just return what I have.
-                            return $aData;
-                        }
-                        break;
-                    case 'porcessing_error': // Typo, still present in test instance 2020-06-02.
-                        $aJSON['flag'] = 'processing_error';
-                    case 'processing_error':
-                        // This happens, for instance, when we ask to select a
-                        //  transcript that this variant actually doesn't map on.
-                        // Also, sometimes VV (well, UTA) gives us a transcript
-                        //  voluntarily, but VV can't map our variant with it.
-                        $aFailingTranscripts = array();
-                        foreach ($aJSON[$sVariant]['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
-                            if (!empty($aTranscript['transcript_variant_error'])) {
-                                $aFailingTranscripts[] = $sTranscript;
-                            }
-                        }
-
-                        // If not all our transcripts failed, just remove the ones that did.
-                        if (count($aFailingTranscripts) < count($aJSON[$sVariant]['hgvs_t_and_p'])) {
-                            foreach ($aFailingTranscripts as $sTranscript) {
-                                unset($aJSON[$sVariant]['hgvs_t_and_p'][$sTranscript]);
-                            }
-                            // Continue.
-                            break;
-                        }
-
-                        // If we have selected transcripts, they all failed.
-                        // If that is the case, retry without selecting any.
-                        if (is_array($aOptions['select_transcripts'])
-                            && count($aOptions['select_transcripts'])) {
-                            unset($aOptions['select_transcripts']);
-                            return $this->verifyGenomic($sVariant, $aOptions);
-                        }
-                        // No break; if we don't catch the error above here,
-                        //  we want the error below.
-                    default:
-                        // Unhandled flag. "processing_error" can still be
-                        //  thrown, if all transcripts fail.
-                        // FIXME: I've seen "submission_warning" when submitting
-                        //  NC_000011.9:g.2018812_2024740|lom; it got split in
-                        //  two (see #206) and "lom" threw a submission_warning.
-                        // FIXME: NC_000003.11:g.169482398_169482471del   fails.
-                        // FIXME: NC_000007.13:g.50468071G>A throws one, and has
-                        //  10 failing transcripts. I guess sometimes you can't
-                        //  go around this.
-                        if ($aJSON['flag'] == 'processing_error') {
-                            $aData['warnings']['WFLAG'] = 'VV Flag not handled: ' . $aJSON['flag'] . '. This happens when UTA passes transcripts that VV cannot map to.';
-                        } else {
-                            $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
-                        }
-                        break;
-                }
-            }
-            // Discard the errors array and the flag value.
-            $aJSON = $aJSON[$sVariant];
-
-            // Copy the (corrected) DNA value.
-            $aData['data']['DNA'] = $aJSON['g_hgvs'];
-            // If description is given but different, then apparently there's been some kind of correction.
-            if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
-                // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
-                if (function_exists('lovd_getVariantInfo')) {
-                    // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                    $sDNAOri = substr($sVariant, strlen($sVariantNC) + 1);
-                    $aVariantOri = lovd_getVariantInfo($sDNAOri);
-                    $sDNACorrected = substr($aData['data']['DNA'], strlen($sVariantNC) + 1);
-                    $aVariantCorrected = lovd_getVariantInfo($sDNACorrected);
-                    // Check for g.1_1del to g.1del.
-                    $bRangeChanged = (substr_count($sDNAOri, '_') > substr_count($sDNACorrected, '_'));
-
-                    if (array_diff_key($aVariantOri, array('warnings' => array()))
-                        == array_diff_key($aVariantCorrected, array('warnings' => array())) && !$bRangeChanged) {
-                        // Positions and type are the same, small corrections like delG to del.
-                        // We let these pass silently.
-                    } elseif ($aVariantOri['type'] != $aVariantCorrected['type'] || $bRangeChanged) {
-                        // An insertion actually being a duplication.
-                        // A deletion-insertion which is actually something else.
-                        // A g.1_1del that should be g.1del.
-                        $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-                    } else {
-                        // Positions are different, but type is the same.
-                        // 3' forwarding of deletions, insertions, duplications
-                        //  and deletion-insertion events.
-                        $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                            (!substr_count($sDNAOri, '_')? ' has' : 's have') .
-                            ' been corrected.';
-                    }
-
-                } else {
-                    // Not running as an LOVD object, just complain here.
-                    $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-                }
-            }
-
-            // Any errors given?
-            if ($aJSON['genomic_variant_error']) {
-                // Not a previously seen error, handled through the flag value.
-                // We'll assume a warning.
-                // FIXME: Value may need cleaning!
-                // FIXME: Does this ever happen? Or is this only filled in when we also have a flag?
-                $aData['warnings'][] = $aJSON['genomic_variant_error'];
-            }
-
-            // Mappings?
-            $aData['data']['genomic_mappings'] = array();
-            $aData['data']['transcript_mappings'] = array();
-            if ($aJSON['hgvs_t_and_p']) {
-                foreach ($aJSON['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
-                    if ($sTranscript != 'intergenic' && empty($aTranscript['transcript_variant_error'])) {
-                        // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
-                        $aMapping = array(
-                            'DNA' => '',
-                            'RNA' => (!$aOptions['predict_protein']? '' : 'r.(?)'),
-                            'protein' => '',
-                        );
-                        if ($aTranscript['gap_statement'] || $aTranscript['gapped_alignment_warning']) {
-                            // This message might be repeated for multiple transcripts when there are gapped alignments,
-                            //  and perhaps repeated also for multiple genome builds (untested).
-                            // Currently, we just store one warning message.
-                            $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
-                        }
-                        if ($aTranscript['t_hgvs']) {
-                            $aMapping['DNA'] = substr(strstr($aTranscript['t_hgvs'], ':'), 1);
-                        }
-                        if ($aTranscript['p_hgvs_tlc']) {
-                            $aMapping['protein'] = substr(strstr($aTranscript['p_hgvs_tlc'], ':'), 1);
-                        }
-
-                        if ($aOptions['predict_protein']) {
-                            // Try to improve VV's predictions.
-                            $this->getRNAProteinPrediction($aMapping, $sTranscript);
-                        }
-                        $aData['data']['transcript_mappings'][$sTranscript] = $aMapping;
-                    }
-
-                    // Genomic mappings, when requested, are given per transcript (or otherwise as "intergenic").
-                    if (empty($aTranscript['primary_assembly_loci'])) {
-                        $aTranscript['primary_assembly_loci'] = array();
-                    }
-
-                    foreach ($aTranscript['primary_assembly_loci'] as $sBuild => $aMappings) {
-                        // We support only the builds we have...
-                        if (!isset($_SETT['human_builds'][$sBuild])) {
-                            continue;
-                        }
-
-                        // There can be more than one mapping per build in theory...
-                        foreach ($aMappings as $sRefSeq => $aMapping) {
-                            $aData['data']['genomic_mappings'][$sBuild][] = $aMapping['hgvs_genomic_description'];
-                        }
-                    }
-
-                    // Clean up duplicates from multiple transcripts.
-                    foreach ($aData['data']['genomic_mappings'] as $sBuild => $aMappings) {
-                        $aData['data']['genomic_mappings'][$sBuild] = array_unique($aMappings);
-                    }
-                }
-            }
-            return $aData;
-
-        } else {
+        if (!$aJSON || empty($aJSON[$sVariant])) {
             // Failure. This happens when VV fails hard or if we can't find our
             //  input back in the output. This happened with #206; |lom variants
             //  are split into two variants; the location and "lom".
@@ -631,6 +439,209 @@ class LOVD_VV
 
             return false;
         }
+
+        $aData = $this->aResponse;
+
+        // Discard the meta data.
+        $aJSON = $aJSON[$sVariant];
+
+        // We'll copy the errors, but I've never seen them filled in, even with REF errors.
+        $aData['errors'] = $aJSON['errors'];
+        // Check the flag value.
+        if ($aJSON['flag']) {
+            switch ($aJSON['flag']) {
+                case 'genomic_variant_warning':
+                    if ($aJSON[$sVariant]['genomic_variant_error']) {
+                        // Clean off variant description.
+                        $sError = str_replace($sVariant . ': ', '', $aJSON[$sVariant]['genomic_variant_error']);
+                        // VV has declared their error messages are stable.
+                        // This means we can parse them and rely on them not to change.
+                        // Add error code if possible, so we won't have to parse the error message again somewhere.
+                        if ($sError == 'Length implied by coordinates must equal sequence deletion length') {
+                            // EINCONSISTENTLENGTH error.
+                            $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
+                        } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false
+                            || preg_match('/^Failed to fetch .+ out of range/', $sError)) {
+                            // ERANGE error.
+                            $aData['errors']['ERANGE'] = $sError;
+                        } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
+                            // EREF error.
+                            $aData['errors']['EREF'] = $sError;
+                        } elseif (strpos($sError, 'is not associated with genome build') !== false) {
+                            // EREFSEQ error.
+                            $aData['errors']['EREFSEQ'] = $sError;
+                        } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
+                            // ESYNTAX error.
+                            $aData['errors']['ESYNTAX'] = $sError;
+                        } elseif (substr($sError, 0, 21) == 'Fuzzy/unknown variant') {
+                            // EUNCERTAINPOSITIONS error.
+                            $aData['errors']['EUNCERTAINPOSITIONS'] = 'VariantValidator does not currently support variant descriptions with uncertain positions.';
+                        } elseif (strpos($sError, $sVariant . ' updated to ') !== false) {
+                            // Recently, VV published an update that generates an error even when the variant
+                            //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
+                            //  elsewhere, so hide that here.
+                            $aJSON[$sVariant]['genomic_variant_error'] = '';
+                            break;
+                        } else {
+                            // Unrecognized error.
+                            $aData['errors'][] = $sError;
+                        }
+                        // When we have errors, we don't need 'data' filled in. Just return what I have.
+                        return $aData;
+                    }
+                    break;
+                case 'porcessing_error': // Typo, still present in test instance 2020-06-02.
+                    $aJSON['flag'] = 'processing_error';
+                case 'processing_error':
+                    // This happens, for instance, when we ask to select a
+                    //  transcript that this variant actually doesn't map on.
+                    // Also, sometimes VV (well, UTA) gives us a transcript
+                    //  voluntarily, but VV can't map our variant with it.
+                    $aFailingTranscripts = array();
+                    foreach ($aJSON[$sVariant]['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
+                        if (!empty($aTranscript['transcript_variant_error'])) {
+                            $aFailingTranscripts[] = $sTranscript;
+                        }
+                    }
+
+                    // If not all our transcripts failed, just remove the ones that did.
+                    if (count($aFailingTranscripts) < count($aJSON[$sVariant]['hgvs_t_and_p'])) {
+                        foreach ($aFailingTranscripts as $sTranscript) {
+                            unset($aJSON[$sVariant]['hgvs_t_and_p'][$sTranscript]);
+                        }
+                        // Continue.
+                        break;
+                    }
+
+                    // If we have selected transcripts, they all failed.
+                    // If that is the case, retry without selecting any.
+                    if (is_array($aOptions['select_transcripts'])
+                        && count($aOptions['select_transcripts'])) {
+                        unset($aOptions['select_transcripts']);
+                        return $this->verifyGenomic($sVariant, $aOptions);
+                    }
+                    // No break; if we don't catch the error above here,
+                    //  we want the error below.
+                default:
+                    // Unhandled flag. "processing_error" can still be
+                    //  thrown, if all transcripts fail.
+                    // FIXME: I've seen "submission_warning" when submitting
+                    //  NC_000011.9:g.2018812_2024740|lom; it got split in
+                    //  two (see #206) and "lom" threw a submission_warning.
+                    // FIXME: NC_000003.11:g.169482398_169482471del   fails.
+                    // FIXME: NC_000007.13:g.50468071G>A throws one, and has
+                    //  10 failing transcripts. I guess sometimes you can't
+                    //  go around this.
+                    if ($aJSON['flag'] == 'processing_error') {
+                        $aData['warnings']['WFLAG'] = 'VV Flag not handled: ' . $aJSON['flag'] . '. This happens when UTA passes transcripts that VV cannot map to.';
+                    } else {
+                        $aData['errors']['EFLAG'] = 'VV Flag not recognized: ' . $aJSON['flag'] . '. This indicates a feature is missing in LOVD.';
+                    }
+                    break;
+            }
+        }
+        // Discard the errors array and the flag value.
+        $aJSON = $aJSON[$sVariant];
+
+        // Copy the (corrected) DNA value.
+        $aData['data']['DNA'] = $aJSON['g_hgvs'];
+        // If description is given but different, then apparently there's been some kind of correction.
+        if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
+            // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
+            if ($aVariantInfo) {
+                // Use LOVD's lovd_getVariantInfo() to parse positions and type.
+                $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
+
+                if (array_diff_key($aVariantInfo, array('warnings' => array()))
+                    == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
+                    // Positions and type are the same, small corrections like delG to del.
+                    // We let these pass silently.
+                } elseif ($aVariantInfo['type'] != $aVariantInfoCorrected['type']
+                    || $aVariantInfo['range'] != $aVariantInfoCorrected['range']) {
+                    // An insertion actually being a duplication.
+                    // A deletion-insertion which is actually something else.
+                    // A g.1_1del that should be g.1del.
+                    $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+                } else {
+                    // Positions are different, but type is the same.
+                    // 3' forwarding of deletions, insertions, duplications
+                    //  and deletion-insertion events.
+                    $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
+                        (!$aVariantInfo['range']? ' has' : 's have') .
+                        ' been corrected.';
+                }
+
+            } else {
+                // Not running as an LOVD object, just complain here.
+                $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+            }
+        }
+
+        // Any errors given?
+        if ($aJSON['genomic_variant_error']) {
+            // Not a previously seen error, handled through the flag value.
+            // We'll assume a warning.
+            // FIXME: Value may need cleaning!
+            // FIXME: Does this ever happen? Or is this only filled in when we also have a flag?
+            $aData['warnings'][] = $aJSON['genomic_variant_error'];
+        }
+
+        // Mappings?
+        $aData['data']['genomic_mappings'] = array();
+        $aData['data']['transcript_mappings'] = array();
+        if ($aJSON['hgvs_t_and_p']) {
+            foreach ($aJSON['hgvs_t_and_p'] as $sTranscript => $aTranscript) {
+                if ($sTranscript != 'intergenic' && empty($aTranscript['transcript_variant_error'])) {
+                    // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
+                    $aMapping = array(
+                        'DNA' => '',
+                        'RNA' => (!$aOptions['predict_protein']? '' : 'r.(?)'),
+                        'protein' => '',
+                    );
+                    if ($aTranscript['gap_statement'] || $aTranscript['gapped_alignment_warning']) {
+                        // This message might be repeated for multiple transcripts when there are gapped alignments,
+                        //  and perhaps repeated also for multiple genome builds (untested).
+                        // Currently, we just store one warning message.
+                        $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
+                    }
+                    if ($aTranscript['t_hgvs']) {
+                        $aMapping['DNA'] = substr(strstr($aTranscript['t_hgvs'], ':'), 1);
+                    }
+                    if ($aTranscript['p_hgvs_tlc']) {
+                        $aMapping['protein'] = substr(strstr($aTranscript['p_hgvs_tlc'], ':'), 1);
+                    }
+
+                    if ($aOptions['predict_protein']) {
+                        // Try to improve VV's predictions.
+                        $this->getRNAProteinPrediction($aMapping, $sTranscript);
+                    }
+                    $aData['data']['transcript_mappings'][$sTranscript] = $aMapping;
+                }
+
+                // Genomic mappings, when requested, are given per transcript (or otherwise as "intergenic").
+                if (empty($aTranscript['primary_assembly_loci'])) {
+                    $aTranscript['primary_assembly_loci'] = array();
+                }
+
+                foreach ($aTranscript['primary_assembly_loci'] as $sBuild => $aMappings) {
+                    // We support only the builds we have...
+                    if (!isset($_SETT['human_builds'][$sBuild])) {
+                        continue;
+                    }
+
+                    // There can be more than one mapping per build in theory...
+                    foreach ($aMappings as $sRefSeq => $aMapping) {
+                        $aData['data']['genomic_mappings'][$sBuild][] = $aMapping['hgvs_genomic_description'];
+                    }
+                }
+
+                // Clean up duplicates from multiple transcripts.
+                foreach ($aData['data']['genomic_mappings'] as $sBuild => $aMappings) {
+                    $aData['data']['genomic_mappings'][$sBuild] = array_unique($aMappings);
+                }
+            }
+        }
+        return $aData;
     }
 
 
@@ -708,6 +719,23 @@ class LOVD_VV
             $aOptions = array();
         }
 
+        $aVariantInfo = false;
+        // Perform some extra checks, if we can.
+        if (function_exists('lovd_getVariantInfo')) {
+            $aVariantInfo = lovd_getVariantInfo($sVariant);
+            // VV doesn't support uncertain positions.
+            if (isset($aVariantInfo['messages']['IUNCERTAINPOSITIONS'])) {
+                return array_merge_recursive(
+                    $this->aResponse,
+                    array(
+                        'errors' => array(
+                            'EUNCERTAINPOSITIONS' => 'VariantValidator does not currently support variant descriptions with uncertain positions.',
+                        )
+                    )
+                );
+            }
+        }
+
         // Append defaults for any remaining options.
         // VV doesn't have as many options as the LOVD endpoint, and honestly,
         //  selecting transcripts is only useful when we're using NC's as input.
@@ -757,10 +785,10 @@ class LOVD_VV
         // When the sequence in the NC and the NM mismatch, we'll get an error,
         //  so dump the NC unless necessary (variants outside of the NM sequence).
         if (preg_match('/^(NC_0000[0-9]{2}\.[0-9]{1,2})\(([NX][MR]_[0-9]+\.[0-9]+)\):/', $sVariant, $aRegs)) {
-            list(, $sRefSeqNC, $sRefSeqNM) = $aRegs;
+            list(,, $sRefSeqNM) = $aRegs;
             $sVariantShort = substr(strstr($sVariant, ':'), 1);
             $bKeepNC = false;
-            if (function_exists('lovd_getVariantInfo') && isset($_DB)) {
+            if ($aVariantInfo && isset($_DB)) {
                 // Check for intronic and positions outside of the mRNA.
 
                 // Fetch transcript positions from the database.
@@ -768,12 +796,12 @@ class LOVD_VV
                     SELECT position_c_mrna_start, position_c_mrna_end
                     FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?',
                     array($sRefSeqNM))->fetchAssoc();
-                $aVariant = lovd_getVariantInfo($sVariantShort, $sRefSeqNM);
+                $aVariantInfo = lovd_getVariantInfo($sVariantShort, $sRefSeqNM);
 
-                $bKeepNC = (!empty($aVariant['position_start_intron'])
-                    || !empty($aVariant['position_end_intron'])
-                    || $aVariant['position_start'] < $aTranscript['position_c_mrna_start']
-                    || $aVariant['position_end'] > $aTranscript['position_c_mrna_end']);
+                $bKeepNC = (!empty($aVariantInfo['position_start_intron'])
+                    || !empty($aVariantInfo['position_end_intron'])
+                    || $aVariantInfo['position_start'] < $aTranscript['position_c_mrna_start']
+                    || $aVariantInfo['position_end'] > $aTranscript['position_c_mrna_end']);
 
             } else {
                 // Just a quick simple check; keeping the NC for all intronic
@@ -801,243 +829,284 @@ class LOVD_VV
                 $aOptions['select_transcripts'] :
                 implode('|', $aOptions['select_transcripts'])),
         ));
-        if ($aJSON !== false && $aJSON !== NULL && !empty($aJSON['flag'])) {
-            $aData = $this->aResponse;
-
-            // Discard the meta data.
-            unset($aJSON['metadata']);
-
-            // Check the flag value. In contrast to the LOVD endpoint, the VV flag is always filled in.
-            switch ($aJSON['flag']) {
-                case 'error':
-                    // VV failed completely. Nothing to do here...
-                    return false;
-                case 'gene_variant':
-                    // All good. We can still have validation errors, but at least it's not a big warning.
-                    break;
-                case 'intergenic':
-                    // This can only happen when passing NC-based variants.
-                    // N[MR]-based variants that are outside of the transcript's
-                    //  bounds are returning a warning flag.
-                    // We choose not to support this. We could, but returning
-                    //  False here will teach us to use verifyGenomic() instead.
-                    return false;
-                case 'warning':
-                    // Something's wrong. Parse given warning and quit.
-                    if ($aJSON['validation_warning_1']['validation_warnings']) {
-                        foreach ($aJSON['validation_warning_1']['validation_warnings'] as $sError) {
-                            // Clean off variant description.
-                            // If we'd allow NCs here, we'd have valiations
-                            //  warnings of *all* affected transcripts, repeated
-                            //  for *all* transcripts. Just a huge array of
-                            //  repeated errors. We'd have to make sure the
-                            //  errors here would be about the transcript we're
-                            //  analyzing now, but since we don't support NCs,
-                            //  we don't need to worry about that now.
-                            $sError = str_replace(
-                                array(
-                                    $sVariant . ': ',
-                                    str_replace(array(strstr($sVariant, '(', true), '(', ')'), '', $sVariant) . ': '), '', $sError);
-
-                            // VV has declared their error messages are stable.
-                            // This means we can parse them and rely on them not to change.
-                            // Add error code if possible, so we won't have to parse the error message again somewhere.
-                            if (strpos($sError, 'Invalid genome build has been specified') !== false) {
-                                // EBUILD error.
-                                $aData['errors']['EBUILD'] = $sError;
-                            } elseif ($sError == 'Length implied by coordinates must equal sequence deletion length') {
-                                // EINCONSISTENTLENGTH error.
-                                $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
-                            } elseif (strpos($sError, 'coordinates do not agree with the intron/exon boundaries') !== false) {
-                                // EINVALIDBOUNDARY error.
-                                $aData['errors']['EINVALIDBOUNDARY'] = $sError;
-                            } elseif (strpos($sError, ' variant position that lies outside of the reference sequence') !== false
-                                || strpos($sError, 'Variant coordinate is out of the bound of CDS region') !== false
-                                || strpos($sError, 'The given coordinate is outside the bounds of the reference sequence') !== false) {
-                                // ERANGE error. VV throws a range of different messages, depending on using NC-notation or not,
-                                //  sending variants 5' or 3' of the transcript, or sending a CDS position that should be in the 3' UTR.
-                                // VV doesn't auto-correct CDS positions outside of CDS, we will need to subtract the CDS length ourselves.
-                                $aData['errors']['ERANGE'] = $sError;
-                            } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
-                                // EREF error.
-                                $aData['errors']['EREF'] = $sError;
-                            } elseif (strpos($sError, 'No transcript definition for') !== false) {
-                                // EREFSEQ error.
-                                $aData['errors']['EREFSEQ'] = $sError;
-                            } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
-                                // ESYNTAX error.
-                                $aData['errors']['ESYNTAX'] = $sError;
-                            } elseif ($sError == 'Uncertain positions are not currently supported') {
-                                // EUNCERTAIN error.
-                                $aData['errors']['EUNCERTAIN'] = $sError;
-                                // FIXME: Asked already for having this in the LOVD endpoint as well - see #92.
-                                //  Currently throws an ESYNTAX there.
-                            } else {
-                                // Unrecognized error.
-                                $aData['errors'][] = $sError;
-                            }
-                        }
-                        // When we have errors, we don't need 'data' filled in. Just return what I have.
-                        return $aData;
-                    }
-                    break;
-                // Handled all possible flags, no default needed.
-            }
-            // Discard the flag value.
-            unset($aJSON['flag']);
-            // If we'd allow NCs for this function, we'd be ending up with a
-            //  possible array of NM mappings. However, since we sent only one
-            //  NM, we end up with only one NM here.
-            $aJSON = current($aJSON);
-
-            // Add a warning in case we submitted a intronic variant while not
-            //  using an NC reference sequence.
-            if (preg_match('/^N[MR]_.+[0-9]+[+-][0-9]+/', $sVariant)) {
-                $aData['warnings']['WINTRONICWITHOUTNC'] = 'Without using a genomic reference sequence, intronic bases can not be verified.' .
-                    (!isset($aJSON['genome_context_intronic_sequence']) || !isset($aJSON['submitted_variant'])? ''
-                        : ' Please consider passing the variant as ' .
-                        strstr($aJSON['genome_context_intronic_sequence'], ':', true) . strstr($aJSON['submitted_variant'], ':') . '.');
-            }
-
-            // Copy the (corrected) DNA value.
-            $aData['data']['DNA'] = $aJSON['hgvs_transcript_variant'];
-            // If description is given but different, then apparently there's been some kind of correction.
-            if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
-                // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
-                if (function_exists('lovd_getVariantInfo')) {
-                    // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                    $sDNAOri = substr(strstr($sVariant, ':'), 1);
-                    $aVariantOri = lovd_getVariantInfo($sDNAOri);
-                    $sDNACorrected = substr(strstr($aData['data']['DNA'], ':'), 1);
-                    $aVariantCorrected = lovd_getVariantInfo($sDNACorrected);
-                    // Check for c.1_1del to c.1del.
-                    $bRangeChanged = (substr_count($sDNAOri, '_') > substr_count($sDNACorrected, '_'));
-
-                    if (array_diff_key($aVariantOri, array('warnings' => array()))
-                        == array_diff_key($aVariantCorrected, array('warnings' => array())) && !$bRangeChanged) {
-                        // Positions and type are the same, small corrections like delG to del.
-                        // We let these pass silently.
-                    } elseif ($aVariantOri['type'] != $aVariantCorrected['type'] || $bRangeChanged) {
-                        // An insertion actually being a duplication.
-                        // A deletion-insertion which is actually something else.
-                        // A g.1_1del that should be g.1del.
-                        $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-                    } else {
-                        // Positions are different, but type is the same.
-                        // 3' forwarding of deletions, insertions, duplications
-                        //  and deletion-insertion events.
-                        $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                            (!substr_count($sDNAOri, '_')? ' has' : 's have') .
-                            ' been corrected.';
-                    }
-
-                } else {
-                    // Not running as an LOVD object, just complain here.
-                    $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-                }
-
-                // Although the LOVD endpoint doesn't do this, the VV endpoint
-                //  sometimes throws warnings when variants are corrected.
-                // If we threw a warning, we can remove the VV warning.
-                if ($aData['warnings'] && $aJSON['validation_warnings']) {
-                    // Selectively search for the validation warning to remove,
-                    //  in case there are multiple warnings.
-                    foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
-                        if (strpos($sWarning, 'automapped to') !== false) {
-                            // Toss this error.
-                            unset($aJSON['validation_warnings'][$nKey]);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // Any errors given?
-            if ($aJSON['validation_warnings']) {
-                // Not a previously seen error, handled through the flag value.
-                // We'll assume a warning.
-
-                // This can be a whole list, so loop through it.
-                foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
-                    // VV throws two warnings for del100 variants, because of the '100'.
-                    if ($sWarning == 'Trailing digits are not permitted in HGVS variant descriptions'
-                        || strpos($sWarning, 'Refer to http://varnomen.hgvs.org/') !== false) {
-                        // We silently skip these warnings.
-                        unset($aJSON['validation_warnings'][$nKey]);
-
-                    } elseif (strpos($sWarning, ' is pending therefore changes may be made to the LRG reference sequence') !== false
-                        || $sWarning == 'RefSeqGene record not available') {
-                        // We don't care about this - we started with an NM anyway.
-                        unset($aJSON['validation_warnings'][$nKey]);
-
-                    } elseif (preg_match(
-                        '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
-                        $sWarning, $aRegs)) {
-                        // This is not that important, but we won't completely discard it, either.
-                        $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
-                        unset($aJSON['validation_warnings'][$nKey]);
-
-                    } elseif (strpos($sWarning, 'Caution should be used when reporting the displayed variant descriptions') !== false
-                        || strpos($sWarning, 'The displayed variants may be artefacts of aligning') !== false) {
-                        // Both these warnings are thrown at the same time when there are mismatches between the
-                        //  genomic reference sequence (in general, the genome build) and the transcript.
-                        // We could discard one and handle the other, but in this case, we're a bit more flexible.
-                        // This message might be repeated when there are gapped alignments with multiple genome builds
-                        //  (untested), but currently, we just store one warning message.
-                        $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
-                        unset($aJSON['validation_warnings'][$nKey]);
-                    }
-                }
-
-                // Anything left, gets added to our list.
-                $aData['warnings'] += array_values($aJSON['validation_warnings']);
-            }
-
-            if ($aData['data']['DNA']) {
-                // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
-                $aMapping = array(
-                    'DNA' => substr(strstr($aData['data']['DNA'], ':'), 1),
-                    'RNA' => 'r.(?)',
-                    'protein' => '',
-                );
-                if ($aJSON['hgvs_predicted_protein_consequence']['tlr']) {
-                    $aMapping['protein'] = substr(strstr($aJSON['hgvs_predicted_protein_consequence']['tlr'], ':'), 1);
-                }
-
-                // Try to improve VV's predictions.
-                $sTranscript = strstr($sVariant, ':', true);
-                $this->getRNAProteinPrediction($aMapping, $sTranscript);
-                $aData['data'] = $aMapping;
-            }
-
-            // FIXME: PAR region genes, like SHOX, provide X mappings in
-            //  primary_assembly_loci and Y mappings in alt_genomic_loci.
-            //  Parse them both and add them to the mappings? See VV's #178.
-            // Mappings?
-            $aData['data']['genomic_mappings'] = array();
-
-            // Since we're in fact using GRCh37 instead of hg19, but our internal codes say hg19...
-            // (this won't really affect us unless we'll have MT DNA working, but still...)
-            if (isset($aJSON['primary_assembly_loci']['grch37'])) {
-                $aJSON['primary_assembly_loci']['hg19'] = $aJSON['primary_assembly_loci']['grch37'];
-            }
-
-            foreach ($aJSON['primary_assembly_loci'] as $sBuild => $aMapping) {
-                // We support only the builds we have...
-                if (!isset($_SETT['human_builds'][$sBuild])) {
-                    continue;
-                }
-
-                // verifyGenomic() makes an array here because multiple values can be expected.
-                // We never will have multiple values, so just simplify the output and store a string.
-                $aData['data']['genomic_mappings'][$sBuild] = $aMapping['hgvs_genomic_description'];
-            }
-            return $aData;
-
-        } else {
+        if (!$aJSON || empty($aJSON['flag'])) {
             // Failure.
             return false;
         }
+
+        // See https://github.com/openvar/variantValidator/issues/421.
+        // Sometimes VV returns incomplete output that seems to be based on somebody else's input.
+        // But even then, a warning is thrown, so we can detect this easily.
+        // We could loop and keep calling VV until we get back what we expect, but this might lead to an endless loop.
+        // So, for now, simply repeat the call *once* if we find this problem.
+        if ($aJSON['flag'] == 'warning'
+            && array_keys(array_diff_key($aJSON, array('metadata' => 1, 'flag' => 1))) == array('validation_warning_1')
+            && $aJSON['validation_warning_1']['submitted_variant'] != $sVariant) {
+            // We got an empty warning with somebody else's input. We can't use this at all. Repeat or return false.
+            if (empty($aOptions['repeated_call'])) {
+                // This adds some overhead (re-processing of input and a recursive function call),
+                //  but it's the simplest method.
+                return $this->verifyVariant($sVariant, array_merge($aOptions, array('repeated_call' => 1)));
+            } else {
+                return false;
+            }
+        }
+
+        $aData = $this->aResponse;
+
+        // Discard the meta data.
+        unset($aJSON['metadata']);
+
+        // Check the flag value. In contrast to the LOVD endpoint, the VV flag is always filled in.
+        switch ($aJSON['flag']) {
+            case 'error':
+                // VV failed completely. Nothing to do here...
+                return false;
+            case 'gene_variant':
+                // All good. We can still have validation errors, but at least it's not a big warning.
+                break;
+            case 'intergenic':
+                // This can only happen when passing NC-based variants.
+                // N[MR]-based variants that are outside of the transcript's
+                //  bounds are returning a warning flag.
+                // We choose not to support this. We could, but returning
+                //  False here will teach us to use verifyGenomic() instead.
+                return false;
+            case 'warning':
+                // Something's wrong. Parse given warning and quit.
+                if ($aJSON['validation_warning_1']['validation_warnings']) {
+                    foreach ($aJSON['validation_warning_1']['validation_warnings'] as $sError) {
+                        // Clean off variant description.
+                        // If we'd allow NCs here, we'd have valiations
+                        //  warnings of *all* affected transcripts, repeated
+                        //  for *all* transcripts. Just a huge array of
+                        //  repeated errors. We'd have to make sure the
+                        //  errors here would be about the transcript we're
+                        //  analyzing now, but since we don't support NCs,
+                        //  we don't need to worry about that now.
+                        $sError = str_replace(
+                            array(
+                                $sVariant . ': ',
+                                str_replace(array(strstr($sVariant, '(', true), '(', ')'), '', $sVariant) . ': '), '', $sError);
+
+                        // VV has declared their error messages are stable.
+                        // This means we can parse them and rely on them not to change.
+                        // Add error code if possible, so we won't have to parse the error message again somewhere.
+                        if (strpos($sError, 'Invalid genome build has been specified') !== false) {
+                            // EBUILD error.
+                            $aData['errors']['EBUILD'] = $sError;
+                        } elseif ($sError == 'Length implied by coordinates must equal sequence deletion length') {
+                            // EINCONSISTENTLENGTH error.
+                            $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
+                        } elseif (strpos($sError, 'coordinates do not agree with the intron/exon boundaries') !== false) {
+                            // Not sure if we still catch it here, its flag is "gene_variant" nowadays?
+                            // EINVALIDBOUNDARY error.
+                            $aData['errors']['EINVALIDBOUNDARY'] = $sError;
+                        } elseif (strpos($sError, ' variant position that lies outside of the reference sequence') !== false
+                            || strpos($sError, 'Variant coordinate is out of the bound of CDS region') !== false
+                            || strpos($sError, 'The given coordinate is outside the bounds of the reference sequence') !== false) {
+                            // ERANGE error. VV throws a range of different messages, depending on using NC-notation or not,
+                            //  sending variants 5' or 3' of the transcript, or sending a CDS position that should be in the 3' UTR.
+                            // VV doesn't auto-correct CDS positions outside of CDS, we will need to subtract the CDS length ourselves.
+                            $aData['errors']['ERANGE'] = $sError;
+                        } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
+                            // EREF error.
+                            $aData['errors']['EREF'] = $sError;
+                        } elseif (strpos($sError, 'No transcript definition for') !== false) {
+                            // EREFSEQ error.
+                            $aData['errors']['EREFSEQ'] = $sError;
+                        } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
+                            // ESYNTAX error.
+                            $aData['errors']['ESYNTAX'] = $sError;
+                        } elseif ($sError == 'Uncertain positions are not currently supported') {
+                            // EUNCERTAIN error.
+                            $aData['errors']['EUNCERTAIN'] = $sError;
+                            // FIXME: Asked already for having this in the LOVD endpoint as well - see #92.
+                            //  Currently throws an ESYNTAX there.
+                        } else {
+                            // Unrecognized error.
+                            $aData['errors'][] = $sError;
+                        }
+                    }
+                    // When we have errors, we don't need 'data' filled in. Just return what I have.
+                    return $aData;
+                }
+                break;
+            // Handled all possible flags, no default needed.
+        }
+        // Discard the flag value.
+        unset($aJSON['flag']);
+        // If we'd allow NCs for this function, we'd be ending up with a
+        //  possible array of NM mappings. However, since we sent only one
+        //  NM, we end up with only one NM here.
+        $aJSON = current($aJSON);
+
+        // Add a warning in case we submitted an intronic variant while not
+        //  using an NC reference sequence.
+        if (preg_match('/^N[MR]_.+[0-9]+[+-][0-9]+/', $sVariant)) {
+            $aData['warnings']['WINTRONICWITHOUTNC'] = 'Without using a genomic reference sequence, intronic bases can not be verified.' .
+                (empty($aJSON['genome_context_intronic_sequence']) || empty($aJSON['submitted_variant'])? ''
+                    : ' Please consider passing the variant as ' .
+                    strstr($aJSON['genome_context_intronic_sequence'], ':', true) . strstr($aJSON['submitted_variant'], ':') . '.');
+        }
+
+        // Copy the (corrected) DNA value.
+        // Handle LRGt submissions.
+        if (substr($sVariant, 0, 3) == 'LRG') {
+            $aData['data']['DNA'] = $aJSON['hgvs_lrg_transcript_variant'];
+            // Also, in this case, we're not interested if new transcripts exist.
+            $aJSON['validation_warnings'] = array_filter(
+                $aJSON['validation_warnings'],
+                function ($sValue)
+                {
+                    return !preg_match('/^(Reference sequence .+ can be updated to|A more recent version of the selected reference sequence .+ is available)/', $sValue);
+                }
+            );
+
+        } else {
+            $aData['data']['DNA'] = $aJSON['hgvs_transcript_variant'];
+        }
+        // If description is given but different, then apparently there's been some kind of correction.
+        if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
+            // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
+            if ($aVariantInfo) {
+                // Use LOVD's lovd_getVariantInfo() to parse positions and type.
+                $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
+
+                if (array_diff_key($aVariantInfo, array('warnings' => array()))
+                    == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
+                    // Positions and type are the same, small corrections like delG to del.
+                    // We let these pass silently.
+                } elseif ($aVariantInfo['type'] != $aVariantInfoCorrected['type']
+                    || $aVariantInfo['range'] != $aVariantInfoCorrected['range']) {
+                    // An insertion actually being a duplication.
+                    // A deletion-insertion which is actually something else.
+                    // A c.1_1del that should be c.1del.
+                    $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+                } else {
+                    // Positions are different, but type is the same.
+                    // 3' forwarding of deletions, insertions, duplications
+                    //  and deletion-insertion events.
+                    $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
+                        (!$aVariantInfo['range']? ' has' : 's have') .
+                        ' been corrected.';
+                }
+
+            } else {
+                // Not running as an LOVD object, just complain here.
+                $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+            }
+        }
+
+        // Although the LOVD endpoint doesn't do this, the VV endpoint
+        //  sometimes throws warnings when variants are corrected or mapped
+        //  between systems (LRGt to NM, for instance).
+        // If we threw a warning or with these inter-system mappings,
+        //  we can remove the VV warning.
+        if (($aData['warnings'] || substr($sVariant, 0, 3) == 'LRG')
+            && $aJSON['validation_warnings']) {
+            // Selectively search for the validation warning to remove,
+            //  in case there are multiple warnings.
+            foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
+                if (strpos($sWarning, 'automapped to') !== false) {
+                    // Toss this error.
+                    unset($aJSON['validation_warnings'][$nKey]);
+                }
+            }
+        }
+
+        // Any errors given?
+        if ($aJSON['validation_warnings']) {
+            // Not a previously seen error, handled through the flag value.
+            // We'll assume a warning.
+
+            // This can be a whole list, so loop through it.
+            foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
+                // VV throws two warnings for del100 variants, because of the '100'.
+                if ($sWarning == 'Trailing digits are not permitted in HGVS variant descriptions'
+                    || strpos($sWarning, 'Refer to http://varnomen.hgvs.org/') !== false) {
+                    // We silently skip these warnings.
+                    unset($aJSON['validation_warnings'][$nKey]);
+
+                } elseif (strpos($sWarning, ' is pending therefore changes may be made to the LRG reference sequence') !== false
+                    || $sWarning == 'RefSeqGene record not available') {
+                    // We don't care about this - we started with an NM anyway.
+                    unset($aJSON['validation_warnings'][$nKey]);
+
+                } elseif (strpos($sWarning, 'coordinates do not agree with the intron/exon boundaries') !== false) {
+                    // EINVALIDBOUNDARY error. This used to throw a flag "warning", but no more, so catch it here.
+                    $aData['errors']['EINVALIDBOUNDARY'] = $sWarning;
+                    unset($aJSON['validation_warnings'][$nKey]);
+                    // Don't accept VV's change of the description.
+                    // VV starts moving coordinates around like it's an algebra equation. We don't like that.
+                    $aData['data']['DNA'] = '';
+                    $aJSON['primary_assembly_loci'] = array();
+                    unset($aData['warnings']['WCORRECTED']);
+                    unset($aData['warnings']['WROLLFORWARD']);
+
+                } elseif (preg_match(
+                    '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
+                    $sWarning, $aRegs)) {
+                    // This is not that important, but we won't completely discard it, either.
+                    $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+                    unset($aJSON['validation_warnings'][$nKey]);
+
+                } elseif (strpos($sWarning, 'Caution should be used when reporting the displayed variant descriptions') !== false
+                    || strpos($sWarning, 'The displayed variants may be artefacts of aligning') !== false) {
+                    // Both these warnings are thrown at the same time when there are mismatches between the
+                    //  genomic reference sequence (in general, the genome build) and the transcript.
+                    // We could discard one and handle the other, but in this case, we're a bit more flexible.
+                    // This message might be repeated when there are gapped alignments with multiple genome builds
+                    //  (untested), but currently, we just store one warning message.
+                    $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
+                    unset($aJSON['validation_warnings'][$nKey]);
+                }
+            }
+
+            // Anything left, gets added to our list.
+            $aData['warnings'] += array_values($aJSON['validation_warnings']);
+        }
+
+        if ($aData['data']['DNA']) {
+            // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
+            $aMapping = array(
+                'DNA' => substr(strstr($aData['data']['DNA'], ':'), 1),
+                'RNA' => 'r.(?)',
+                'protein' => '',
+            );
+            if ($aJSON['hgvs_predicted_protein_consequence']['tlr']) {
+                $aMapping['protein'] = substr(strstr($aJSON['hgvs_predicted_protein_consequence']['tlr'], ':'), 1);
+            }
+
+            // Try to improve VV's predictions.
+            $sTranscript = strstr($sVariant, ':', true);
+            $this->getRNAProteinPrediction($aMapping, $sTranscript);
+            $aData['data'] = $aMapping;
+        }
+
+        // FIXME: PAR region genes, like SHOX, provide X mappings in
+        //  primary_assembly_loci and Y mappings in alt_genomic_loci.
+        //  Parse them both and add them to the mappings? See VV's #178.
+        // Mappings?
+        $aData['data']['genomic_mappings'] = array();
+
+        // Since we're in fact using GRCh37 instead of hg19, but our internal codes say hg19...
+        // (this won't really affect us unless we'll have MT DNA working, but still...)
+        if (isset($aJSON['primary_assembly_loci']['grch37'])) {
+            $aJSON['primary_assembly_loci']['hg19'] = $aJSON['primary_assembly_loci']['grch37'];
+        }
+
+        foreach ($aJSON['primary_assembly_loci'] as $sBuild => $aMapping) {
+            // We support only the builds we have...
+            if (!isset($_SETT['human_builds'][$sBuild])) {
+                continue;
+            }
+
+            // verifyGenomic() makes an array here because multiple values can be expected.
+            // We never will have multiple values, so just simplify the output and store a string.
+            $aData['data']['genomic_mappings'][$sBuild] = $aMapping['hgvs_genomic_description'];
+        }
+        return $aData;
     }
 }
 ?>

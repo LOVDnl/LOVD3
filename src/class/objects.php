@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-05-26
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-26
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -1776,7 +1776,7 @@ class LOVD_Object
         $aFRColValues['db'] = array();
 
         // Place preview column just behind column where F&R is performed on.
-        $this->aColumnsViewList = lovd_arrayInsertAfter($sFRViewListCol, $this->aColumnsViewList,
+        lovd_arrayInsertAfter($sFRViewListCol, $this->aColumnsViewList,
             $sPreviewFieldname, $aFRColValues);
 
         // Copy any custom column info from the original field to the preview

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-07-15
- * For LOVD    : 3.0-28
+ * Modified    : 2022-10-26
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -75,9 +75,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
 
             // FIXABLE VARIANTS.
             // Missing prefixes that will be added.
-            array('123dup', 'g.123dup'),
-            array('(123dup)', 'g.(123dup)'),
-            array('.123dup', 'g.123dup'),
+            array('123dup', 'c.123dup'),
+            array('123456dup', 'g.123456dup'),
+            array('(123dup)', 'c.(123dup)'),
+            array('.123dup', 'c.123dup'),
             array('123-5dup', 'c.123-5dup'),
 
             // Wrong prefix, the size of the positions indicates it's a range,
@@ -87,7 +88,6 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Whitespace, other typos, and copy/paste errors.
             array('g. 123_124insA', 'g.123_124insA'),
             array(' g.123del', 'g.123del'),
-            array('c.–123del', 'c.-123del'),
             array('c.–123del', 'c.-123del'),
             array('c.123—5del', 'c.123-5del'),
             array('c,123del', 'c.123del'),
@@ -103,6 +103,8 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Lowercase nucleotides and other case issues.
             array('C.123C>a', 'c.123C>A'),
             array('C.123a>u', 'c.123A>T'),
+            array('G.123dup', 'g.123dup'),
+            array('g.123DUP', 'g.123dup'),
             array('g.123insactg', 'g.123insACTG'),
             array('g.123delinsgagagauu', 'g.123delinsGAGAGATT'),
             array('g.123_130delgagagatt', 'g.123_130del'),
@@ -118,8 +120,10 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Variant types should be something else.
             array('g.100_200con400_500', 'g.100_200delins400_500'),
             array('g.123conNC_000001.10:100_200', 'g.123delins[NC_000001.10:g.100_200]'),
+            array('g.123A>A', 'g.123='),
             array('g.123A>GC', 'g.123delinsGC'),
             array('g.123A>AA', 'g.123dup'),
+            array('g.123AA>G', 'g.123_124delinsG'),
             array('g.123AA>AC', 'g.124A>C'),
             array('g.123AA>GA', 'g.123A>G'),
             array('g.123AA>TT', 'g.123_124inv'),
@@ -163,6 +167,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.(1_2)insA', 'c.1_2insA'),
             array('c.(123+10_123+11)insA', 'c.123+10_123+11insA'),
             array('c.(1_2)inv', 'c.1_2inv'),
+            array('c.(100)A>G', 'c.100A>G'),
 
             // Superfluous suffixes.
             array('c.123delA', 'c.123del'),
@@ -180,13 +185,13 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Wrongly formatted suffixes.
             array('c.1_2ins[A]', 'c.1_2insA'),
             array('c.1_2ins[N]', 'c.1_2insN'),
-            array('c.1_2ins(A)', 'c.1_2insA'),
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
             array('c.1_2ins(50_20)', 'c.1_2insN[(20_50)]'),
             array('g.1_2insN[5_10]', 'g.1_2insN[(5_10)]'),
             array('g.1_2insN[(10_5)]', 'g.1_2insN[(5_10)]'),
             array('g.1_2insN[(10_10)]', 'g.1_2insN[10]'),
+            array('g.1_2insNC123456.1:g.1_10', 'g.1_2ins[NC_123456.1:g.1_10]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);400_500]',
                   'c.1_2ins[NC_000001.10:g.100_(200_300);400_500]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);(400_500)]',
@@ -198,6 +203,7 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('g.(100_200)del50', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(50_50)', 'g.(100_200)delN[50]'),
             array('g.(100_200)del(60_50)', 'g.(100_200)delN[(50_60)]'),
+            array('g.1_5delins20_10', 'g.1_5delins10_20'),
 
             // Question marks.
             // Note, that some of these variants do *not* need fixing and
@@ -256,6 +262,18 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             // Variants with reference sequences, testing various fixes.
             array('NC_123456.10:(123delA)', 'NC_123456.10:g.(123del)'),
             array('NC_123456.10:g.123_234conaaa', 'NC_123456.10:g.123_234delinsAAA'),
+
+            // Issues with reference sequences.
+            array('NC_12345.1:g.1del', 'NC_012345.1:g.1del'),
+            array('NM_123456.1(NC_123456.1):c.100del', 'NC_123456.1(NM_123456.1):c.100del'),
+            array('NM123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM-123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM_00123456.1:c.100del', 'NM_123456.1:c.100del'),
+            array('NM_00123456789.1:c.100del', 'NM_123456789.1:c.100del'),
+            array('LRG123t1:c.100del', 'LRG_123t1:c.100del'),
+            array('LRG123t1:c.100del', 'LRG_123t1:c.100del'),
+            array('ENSG_12345678911.1:g.1del', 'ENSG12345678911.1:g.1del'),
+            array('ENSG1234567890.1:g.1del', 'ENSG01234567890.1:g.1del'),
 
             // Where we can still improve
             //  (still results in an invalid description - more work needed,

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-07-15
- * For LOVD    : 3.0-28
+ * Modified    : 2022-08-29
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -874,11 +874,17 @@ if (!defined('NOT_INSTALLED')) {
     }
 
     // Define $_PE ($_PATH_ELEMENTS) and CURRENT_PATH.
-    // FIXME: Running lovd_cleanDirName() on the entire URI causes it to run also on the arguments.
-    //  If there are arguments with ../ in there, this will take effect and arguments or even the path itself is eaten.
-    $sPath = preg_replace('/^' . preg_quote(lovd_getInstallURL(false), '/') . '/', '', lovd_cleanDirName(html_entity_decode(rawurldecode($_SERVER['REQUEST_URI']), ENT_HTML5))); // 'login' or 'genes?create' or 'users/00001?edit'
+    // Take the part of REQUEST_URI before the '?' before rawurldecode()ing the string and running lovd_cleanDirName(),
+    //  to make sure URL encoded question marks and arguments with '../' don't break the URL parsing.
+    $sPath = preg_replace(
+        '/^' . preg_quote(lovd_getInstallURL(false), '/') . '/',
+        '',
+        lovd_cleanDirName(
+            html_entity_decode(
+                rawurldecode(
+                    strstr($_SERVER['REQUEST_URI'] . '?', '?', true)
+                ), ENT_HTML5))); // 'login' or 'genes?create' or 'users/00001?edit'
     $sPath = strip_tags($sPath); // XSS tag removal on entire string (and no longer on individual parts).
-    $sPath = strstr($sPath . '?', '?', true); // Cut off the Query string, that will be handled later.
     foreach (array("'", '"', '`', '+') as $sChar) {
         // All these kind of quotes that we'll never have unless somebody is messing with us.
         if (strpos($sPath, $sChar) !== false) {
@@ -985,6 +991,10 @@ if (!defined('NOT_INSTALLED')) {
             } else {
                 // Replace with what we have in the database, so we won't run into issues on other pages when CurrDB is used for navigation to other tabs.
                 $_SESSION['currdb'] = $_SETT['currdb']['id'];
+                if (!empty($_PE[1]) && strtoupper($_PE[1]) == strtoupper($_SESSION['currdb'])) {
+                    // Also update the URL, just in case.
+                    $_PE[1] = $_SESSION['currdb'];
+                }
             }
         } else {
             $_SESSION['currdb'] = false;

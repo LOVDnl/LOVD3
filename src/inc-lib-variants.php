@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-01-22
- * Modified    : 2022-07-15
- * For LOVD    : 3.0-28
+ * Modified    : 2022-10-21
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -27,7 +27,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with LOVD. If not, see <http://www.gnu.org/licenses/>.
+ * along with LOVD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *************/
 
@@ -48,9 +48,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // $sType stores the DNA type (c, g, m, or n) to allow for this function to
     //  fully validate the variant and, optionally, its reference sequence.
 
-    // Check for a reference sequence. We won't check it here, so we won't be
-    //  very strict.
-    if (preg_match('/^(ENS[GT]|LRG_([0-9]+t)?|[NX][CGMRTW]_)[0-9]+(\.[0-9]+)?/i', $sVariant, $aRegs)) {
+    // Check for a reference sequence. We need something relaxed to allow for
+    //  broken refseqs, but something strict because we don't check for a colon
+    //  so don't want to eat off the actual variant. Also, we can't use
+    //  lovd_variantHasRefSeq here, as that requires a colon and just returns a
+    //  boolean. Since we accept not having a boolean, we need the $aRegs.
+    if (preg_match('/^[A-Z]{2,}[_.t0-9]*/i', $sVariant, $aRegs)) {
         // Something that looks like a reference sequence is prefixing the
         //  variant. Cut it off and store it separately. We'll return it, but
         //  this way we can actually check the variant itself.
@@ -96,8 +99,13 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                 } elseif (preg_match('/^NC_(001807|012920)/', $sReference)) {
                     $sType = 'm';
                 } else {
-                        $sType = 'g';
+                    $sType = 'g';
                 }
+            } elseif (preg_match('/([0-9]+)/', $sVariant, $aRegs)
+                && $aRegs[1] < 1000) {
+                // The first number in the variant description is lower than 1000.
+                // Most likely to be a coding variant.
+                $sType = 'c';
             } else {
                 // Fine, we default to 'g'.
                 $sType = 'g';
@@ -181,6 +189,14 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             // c.((1_5))insA or c.100_500del((10))
             return lovd_fixHGVS($sReference . str_replace(array('((', '))'), array('(', ')'), $sVariant), $sType);
         }
+
+    } elseif ($nOpening == 1 && preg_match('/^' . $sType . '\.\([0-9]+\)/', $sVariant)) {
+        // The variant recognition pattern is quite complex. An opening parenthesis is accepted without any problems,
+        //  but a closing parenthesis after a position is only allowed when using ranges.
+        // The closing parenthesis in variants like c.(100del) just ends up in the suffix, so is also accepted.
+        // However, variants like c.(100)del are then not matched, even though it's clear what's meant.
+        // Try without the parentheses. c.(100)del to c.100del.
+        return lovd_fixHGVS($sReference . str_replace(array('(', ')'), '', $sVariant), $sType);
     }
 
     // Add prefix in case it is missing.
@@ -213,7 +229,7 @@ function lovd_fixHGVS ($sVariant, $sType = '')
     // The basic steps have all been taken. From this point forward, we
     //  can use the warning and error messages of lovd_getVariantInfo() to check
     //  and fix the variant.
-    $aVariant = lovd_getVariantInfo($sVariant, false);
+    $aVariant = lovd_getVariantInfo($sReference . $sVariant, false);
     if ($aVariant === false) {
         return $sReference . $sVariant; // Not HGVS.
 
@@ -261,6 +277,12 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         return $sReference . $sVariant; // Not HGVS.
     }
 
+    // Make fixes to the reference sequences as indicated by lovd_getVariantInfo().
+    if (isset($aVariant['warnings']['WREFERENCEFORMAT'])
+        && preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WREFERENCEFORMAT'], $aRegs)) {
+        return lovd_fixHGVS(str_replace($aRegs[1], $aRegs[2], $sReference . $sVariant), $sType);
+    }
+
     // Fix case problems.
     if (isset($aVariant['warnings']['WWRONGCASE'])) {
         // Check prefix. I'd rather do it here.
@@ -272,10 +294,18 @@ function lovd_fixHGVS ($sVariant, $sType = '')
             return lovd_fixHGVS($sReference . $sVariant[0] .
                 str_replace('U', 'T', strtoupper(substr($sVariant, 1))), $sType);
 
+        } elseif (ctype_lower($aVariant['type'])
+            && strpos($sVariant, $aVariant['type']) === false
+            && stripos($sVariant, $aVariant['type']) !== false) {
+            // Case problem in the variant type itself; i.e., g.123DEL.
+            return lovd_fixHGVS($sReference . str_ireplace($aVariant['type'], $aVariant['type'], $sVariant), $sType);
+
         } elseif (($aVariant['type'] == 'del' || $aVariant['type'] == 'delins')
             && preg_match('/^(.+)del([ACGTUN\[0-9\]]+)?(?:ins([ACGTUN\[0-9\]]+))?$/i', $sVariant, $aRegs)
-            && ($aRegs[2] != strtoupper($aRegs[2])
-                || (isset($aRegs[3]) && $aRegs[3] != strtoupper($aRegs[3])))) {
+            && (
+                (isset($aRegs[2]) && $aRegs[2] != strtoupper($aRegs[2]))
+                ||
+                (isset($aRegs[3]) && $aRegs[3] != strtoupper($aRegs[3])))) {
             // Deletions and deletion-insertion events.
             // Note: A "delins" can also look like "delAinsG".
             return lovd_fixHGVS($sReference . $aRegs[1] . 'del' .
@@ -425,13 +455,18 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         //  variants, and the suffix can't be isolated properly.
         if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WSUFFIXFORMAT'], $aRegs)) {
             list(, $sOldSuffix, $sNewSuffix) = $aRegs;
-            return lovd_fixHGVS($sReference . str_replace($sOldSuffix, $sNewSuffix, $sVariant), $sType);
+            // To prevent a disaster when g.100del1 gets replaced to g.N[1]00delN[1], replace only the last occurrence.
+            // I'm not 100% percent sure if $sVariant always ends with $sOldSuffix, so just be a bit more intelligent.
+            $nPosition = strrpos($sVariant, $sOldSuffix);
+            return lovd_fixHGVS($sReference . substr_replace($sVariant, $sNewSuffix, $nPosition, strlen($sOldSuffix)), $sType);
         }
 
         list($sBeforeSuffix, $sSuffix) = explode($aVariant['type'], $sVariant, 2);
         if (in_array($aVariant['type'], array('ins', 'delins'))) {
             // Extra format checks which only apply to ins or delins types.
 
+            // FIXME: It would make more sense including this in lovd_getVariantInfo().
+            //  That function should anyway detect the error, and can then simply let us know what the fix should be like.
             // Suffix could contain a closing parenthesis that opens in the beginning of the variant.
             // Don't let it mess up our parsing. Parentheses must be balanced in the entire variant (we checked).
             $bClosingParenthesis = false;
@@ -463,6 +498,33 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                     // Remove redundant parentheses, e.g. ins(A) or insN[(20)].
                     $aParts[$i] = str_replace(array('(', ')'), '', $sPart);
 
+                } elseif (preg_match('/^([-*]?[0-9]+)_([-*]?[0-9]+)$/', $sPart, $aRegs)) {
+                    // The positions of the inserted sequence might have been
+                    //  given as 'ins20_10' instead of 'ins10_20'.
+                    list(, $sFirst, $sLast) = $aRegs;
+                    if ($sFirst == $sLast) {
+                        // Just one single position.
+                        $aParts[$i] = $sFirst;
+                    } elseif ($sFirst[0] == '*') {
+                        // First position is 3' UTR. If the last is, too, then
+                        //  we'll need to compare. Otherwise, first goes last.
+                        $sFirst = substr($sFirst, 1);
+                        if ($sLast[0] == '*') {
+                            // Both positions are in the UTR.
+                            $sLast = substr($sLast, 1);
+                            if ($sFirst > $sLast) {
+                                $aParts[$i] = "*${sLast}_*${sFirst}";
+                            }
+                        } else {
+                            $aParts[$i] = "${sLast}_*${sFirst}";
+                        }
+                    } elseif ($sLast[0] != '*') {
+                        // Fully numeric positions. Change only if in wrong order.
+                        if ($sFirst > $sLast) {
+                            $aParts[$i] = "${sLast}_${sFirst}";
+                        }
+                    }
+
                 } elseif (preg_match('/^\([0-9]+(?:_[0-9]+)?\)$/', $sPart, $aRegs)) {
                     // The length of a variant was formatted as 'ins(length)'
                     //  instead of 'insN[length]' or 'ins(min_max)' instead
@@ -471,7 +533,8 @@ function lovd_fixHGVS ($sVariant, $sType = '')
                         array('/\(([0-9]+)\)/', '/\(([0-9]+_[0-9]+)\)/'),
                         array('N[${1}]', 'N[(${1})]'), $sPart);
 
-                } elseif (preg_match('/^[NX][CGMRTW]_[0-9]+/i', $sPart)) {
+                } elseif (preg_match('/^[A-Z_.t0-9()]+/i', $sPart)) {
+                    // This is similar to lovd_variantHasRefSeq(), but then without the requirement for a colon.
                     // This is a full position with refseq. Often, mistakes are
                     //  made in this suffix. So check it.
                     // Append '=' to convert the position into something we can
@@ -535,10 +598,14 @@ function lovd_fixHGVS ($sVariant, $sType = '')
         // Currently, these instructions are only given for positions that start with a 0, which should be removed.
         if (preg_match('/Please rewrite "([^"]+)" to "([^"]+)"\.$/', $aVariant['warnings']['WPOSITIONFORMAT'], $aRegs)) {
             list(, $sOldPosition, $sNewPosition) = $aRegs;
-            // FIXME: This may be too simplistic. The pattern may be too small, causing unwanted changes.
             // These warnings may be stacked. Using this pattern, we'll just grab the last one.
             // So it may take a few iterations before everything is fixed.
-            return lovd_fixHGVS($sReference . str_replace($sOldPosition, $sNewPosition, $sVariant), $sType);
+            // FIXME: This is a place for a possible infinite recursion. When the preg_replace() below fails because
+            //  the pattern doesn't match, we'll recurse infinitely. Fixed two instances already, but in case I
+            //  overlooked yet another situation, better re-code using a preg_match and a str_replace() using $aRegs.
+            return lovd_fixHGVS($sReference . preg_replace(
+                '/(' . (ctype_digit($sOldPosition[0])? '[^0-9]' : '.') . ')' . preg_quote($sOldPosition) . '([^0-9])/',
+                '${1}' . $sNewPosition . '$2', $sVariant), $sType);
         }
 
         $aPositions = array();
@@ -658,6 +725,103 @@ function lovd_fixHGVS ($sVariant, $sType = '')
 
     // We're out of things that we can do.
     return $sReference . $sVariant; // Not HGVS.
+}
+
+
+
+
+
+function lovd_fixHGVSGetConfidence ($sVariant, $sFixedVariant = null, $aVariantInfo = null, $aFixedVariantInfo = null)
+{
+    // This function calculates the confidence that we have in the validity of the corrected output of lovd_fixHGVS().
+    // Returns "high", "medium", or "low".
+
+    // First, get all arguments ready.
+    if (!$sVariant) {
+        return false;
+    }
+    if ($sFixedVariant === null) {
+        $sFixedVariant = lovd_fixHGVS($sVariant);
+    }
+    if ($sVariant == $sFixedVariant) {
+        return false;
+    }
+    if ($aVariantInfo === null) {
+        $aVariantInfo = lovd_getVariantInfo($sVariant, false);
+    }
+    if ($aFixedVariantInfo === null) {
+        $aFixedVariantInfo = lovd_getVariantInfo($sFixedVariant, false);
+    }
+    if (!$aFixedVariantInfo
+        || !empty($aFixedVariantInfo['errors']) || !empty($aFixedVariantInfo['warnings'])) {
+        return false;
+    }
+
+    // So, we suggest some changes, and the result is HGVS-compliant.
+    // We choose not to show non-HGVS compliant suggestions here.
+    // We anyway pass on the errors and warnings to the user,
+    //  so they can always try to fix things and try again.
+
+    // Now, let's add a confidence score.
+    // High, for corrections that we're very sure about.
+    // Medium, for corrections that are a bit more complex.
+    // Low, for everything else.
+    // We'll probably tinker a lot with these values.
+
+    // If the original variant wasn't recognized at all, add a "medium" confidence.
+    if (!$aVariantInfo) {
+        return 'medium';
+    }
+
+    // Remove stuff that we feel confident about.
+    $aErrors = array_diff_key(
+        $aVariantInfo['errors'],
+        array_fill_keys(array('ENOTSUPPORTED', 'EPIPEMISSING'), 1)
+    );
+    if (isset($aErrors['ETOOMANYPOSITIONS']) && isset($aVariantInfo['warnings']['WWRONGTYPE'])) {
+        // ETOOMANYPOSITIONS can be thrown for substitutions
+        //  that should be deletions, insertions, or deletion-insertions.
+        unset($aErrors['ETOOMANYPOSITIONS']);
+    }
+    $aWarnings = array_diff_key(
+        $aVariantInfo['warnings'],
+        array_fill_keys(array('WREFERENCEFORMAT', 'WWHITESPACE', 'WWRONGCASE', 'WWRONGTYPE'), 1)
+    );
+    // But, compensate for WWRONGCASE that should also have had a WSUFFIXGIVEN.
+    // Currently, in this case sometimes only WWRONGCASE is given, while lovd_fixHGVS()
+    //  also removes the suffix. This should result in a medium confidence.
+    if (!$aWarnings && array_keys($aVariantInfo['warnings']) == array('WWRONGCASE')) {
+        // Determine if we should have seen a WSUFFIXGIVEN as well.
+        $sSuffix = substr(stristr($sVariant, $aVariantInfo['type']), strlen($aVariantInfo['type']));
+        $sFixedSuffix = substr(stristr($sFixedVariant, $aVariantInfo['type']), strlen($aVariantInfo['type']));
+        if ($sSuffix && !$sFixedSuffix && !preg_match('/^N\[[0-9]+\]$/i', $sSuffix)) {
+            // There was a suffix, now it's gone. And this suffix wasn't in the N[n] format.
+            // Switch to a medium confidence.
+            $aWarnings['WSUFFIXGIVEN'] = 1;
+        }
+    }
+
+    if (empty($aErrors) && empty($aWarnings)) {
+        // OK, we're very confident that we were right about these corrections!
+        return 'high';
+    }
+
+    // Remove stuff that we feel less confident about.
+    $aErrors = array_diff_key(
+        $aErrors,
+        array_fill_keys(array('EFALSEINTRONIC', 'EFALSEUTR', 'EPOSITIONFORMAT'), 1)
+    );
+    $aWarnings = array_diff_key(
+        $aWarnings,
+        array_fill_keys(array('WBASESGIVEN', 'WPOSITIONFORMAT', 'WSUFFIXFORMAT', 'WSUFFIXGIVEN', 'WTOOMUCHUNKNOWN'), 1)
+    );
+    if (empty($aErrors) && empty($aWarnings)) {
+        // OK, we're very confident that we were right about these corrections!
+        return 'medium';
+    } else {
+        // Well, at least we seem to have generated something HGVS-like, but it's quite vague.
+        return 'low';
+    }
 }
 
 

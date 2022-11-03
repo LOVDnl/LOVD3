@@ -6,6 +6,7 @@ doc/tex/*.out
 doc/tex/*.pdf
 doc/tex/*.toc
 src/_sett
+src/2Do.txt
 src/refseq
 src/config.ini.php
 tests/test_results/error_screenshots
