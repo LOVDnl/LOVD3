@@ -557,7 +557,7 @@ class LOVD_Object
                     // For numerical columns, maxlength works differently!
                     if (in_array($sMySQLType, array('FLOAT', 'FLOAT_UNSIGNED'))) {
                         // Floats don't have a real min/max value. We'll check
-                        //  if they contain value values further below.
+                        //  if they contain valid values further below.
 
                     } elseif (in_array($sMySQLType, array('DECIMAL', 'DECIMAL_UNSIGNED', 'INT', 'INT_UNSIGNED'))) {
                         // Although the data type wizard makes sure that a

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-08-29
+ * Modified    : 2022-11-03
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -848,7 +848,7 @@ if (!defined('NOT_INSTALLED')) {
     if ($_AUTH && $_CONF['lovd_read_only'] && $_AUTH['level'] < LEVEL_MANAGER) {
         // We won't let the user know, because this usually only happens when a
         //  new message has appeared that sets the installation to read-only.
-        // So let's hope the new message on the screen attracks attention and
+        // So let's hope the new message on the screen attracts attention and
         //  that it speaks for itself.
         // (In principle, it can also happen when an existing message is edited
         //   to lock the installation.)
