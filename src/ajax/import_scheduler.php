@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-16
- * Modified    : 2020-02-24
+ * Modified    : 2021-11-23
  * For LOVD    : 3.0-24
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -347,7 +347,7 @@ if (ACTION == 'new_screening' && POST) {
 
     // Compare data from meta data file with database, to check for data mismatches.
     foreach ($aParsed['Individuals'] as $sKey => $sVal) {
-        if ($sKey != 'id' && $sVal != $zIndividual[$sKey]) {
+        if ($sKey != 'id' && $sVal && $sVal != $zIndividual[$sKey]) {
             die('alert("Error: Data mismatch between meta data file and database contents at Individual field ' .
                 $sKey . ' (' . $zIndividual[$sKey] . ' => ' . $sVal . '). I will not try and edit this file.\n");');
         }

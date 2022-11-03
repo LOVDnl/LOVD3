@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-08-26
+ * Modified    : 2022-11-03
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -571,7 +571,12 @@ class LOVD_Object
                         list($nMin, $nMax) = lovd_getColumnMinMax(constant($this->sTable), $sNameClean);
                         if ($sFieldvalue < $nMin) {
                             lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no lower than ' . $nMin . '.');
-                        } elseif ($sFieldvalue > $nMax) {
+                        } elseif ($sFieldvalue > $nMax
+                            && !in_array($sNameClean, array('id', 'individualid', 'screeningid'))) {
+                            // Uhm, yeah, but remember that when we're importing new data, we're OK with IDs that are too
+                            //  high, because the import will change them. We don't necessarily need to check if we're
+                            //  currently importing, we can just see the field names.
+                            // (this mostly applies to LOVD+, but is also true for LOVD)
                             lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no higher than ' . $nMax . '.');
                         }
 
@@ -2301,7 +2306,7 @@ class LOVD_Object
                 print("\n" .
                       '        <TR>' . "\n" .
                       '          <TH valign="top">' . str_replace(' ', '&nbsp;', $sHeader) . '</TH>' . "\n" .
-                      '          <TD>' . ($zData[$sField] === ''? '-' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
+                      '          <TD>' . (!isset($zData[$sField]) || $zData[$sField] === ''? '-' : str_replace(array("\r\n", "\r", "\n"), '<BR>', $zData[$sField])) . '</TD></TR>');
             }
         }
         print('</TABLE>' . "\n\n");
@@ -2419,10 +2424,12 @@ class LOVD_Object
         }
 
         $sSQLOrderBy = $this->aColumnsViewList[$aOrder[0]]['db'][0] . ' ' . $aOrder[1];
-        if (preg_match('/AS\s+`?' . preg_quote($aOrder[0], '/') . '`?\b/i', $this->aSQLViewList['SELECT'])) {
+        if (preg_match('/^\w\./', $this->aColumnsViewList[$aOrder[0]]['db'][0]) // Only for normal columns.
+            && preg_match('/AS\s+`?' . preg_quote($aOrder[0], '/') . '`?\b/i', $this->aSQLViewList['SELECT'])) {
             // Current field name is present as an alias in SELECT clause, use
             // this instead in the ORDER BY clause. (needed for aggregated
             // fields)
+            // But we should *only* do this when the db field was just a given column ("table.column").
             $sSQLOrderBy = '`' . trim($aOrder[0], '`') . '` ' . $aOrder[1];
         }
 
@@ -3154,7 +3161,7 @@ FROptions
 
                 if (substr($this->sObject, -7) == 'Variant') {
                     $sUnit = 'variants' . (substr($this->sObject, 0, 10) == 'Transcript'? ' on transcripts' : '');
-                } elseif ($this->sObject == 'Custom_ViewList' || $this->sObject == 'Custom_ViewListMOD') {
+                } elseif ($this->sObject == 'Custom_ViewList' || $this->sObject == 'Custom_ViewListPLUS') {
                     $sUnit = 'entries';
                 } elseif ($this->sObject == 'Shared_Column') {
                     $sUnit = 'active columns';
@@ -3257,7 +3264,7 @@ FROptions
                         $aCSSClasses[] = 'mvs';
                     }
 
-                    print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . (!empty($aCSSClasses)? ' class="' . join(' ', $aCSSClasses) . '"' : '') . '>' . ($zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
+                    print("\n" . '          <TD' . (!empty($aCol['view'][2])? ' ' . $aCol['view'][2] : '') . (!empty($aCSSClasses)? ' class="' . join(' ', $aCSSClasses) . '"' : '') . '>' . (!isset($zData[$sField]) || $zData[$sField] === ''? '-' : $zData[$sField]) . '</TD>');
                 }
                 print('</TR>');
 
