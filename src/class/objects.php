@@ -532,7 +532,6 @@ class LOVD_Object
         // No longer do this through $aForm, because when importing,
         //  we do have data to check but no $aForm entry linked to it.
         foreach ($aData as $sFieldname => $sFieldvalue) {
-
             if (!is_string($sFieldvalue) || isset($aErroredFields[$sFieldname])) {
                 // Do not process non-string values at the moment (currently there are no checks for them),
                 //  and fields for which an (more specific) error has already been reported earlier.
