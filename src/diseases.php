@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2022-07-01
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-03
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -261,7 +261,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                  if ($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\') < 15) {
                                      $(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\', eval($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\')) + 1);
                                  }
-                                 if (opener.document.location.href.match(/\/(individuals\/' . (empty($_POST['genes'])? '' : '|genes\/(' . implode('|', $_POST['genes']) . ')\?') . ')/)) {
+                                 if (opener.window.location.href.match(/\/(individuals\/' . (empty($_POST['genes'])? '' : '|genes\/(' . implode('|', $_POST['genes']) . ')\?') . ')/)) {
                                      $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').prop(\'selected\', 1);
                                  }
                                  setTimeout(\'self.close();\', 1000);</SCRIPT>' . "\n\n");

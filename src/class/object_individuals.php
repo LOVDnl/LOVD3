@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2022-05-24
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-03
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -495,7 +495,7 @@ class LOVD_Individual extends LOVD_Custom
 
             // Tool to set/change the license.
             // Provide this link only here, because here we can reload the Individual VE.
-            if (lovd_isAuthorized('individual', $zData['id'])) {
+            if (lovd_isAuthorized('individual', $zData['id']) && isset($zData['license_'])) {
                 $zData['license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/individual/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
             }
         }

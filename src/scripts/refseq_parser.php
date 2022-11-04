@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2022-05-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-04
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -280,7 +280,7 @@ if ($_GET['step'] == 1) {
                 // Extract the ORIGIN part of the GenBank file to an array
                 $aSequence = array_slice($aGenBank, $nSeqOffset, (count($aGenBank) - 2 - $nSeqOffset));
                 // write the sequence to a string
-                $sSequence = implode($aSequence, '');
+                $sSequence = implode($aSequence);
                 // Get rid of any form of whitespace
                 $sSequence = preg_replace('/\s+/', '', $sSequence);
                 // Get rid of numbers

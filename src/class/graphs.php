@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2019-08-06
- * For LOVD    : 3.0-22
+ * Modified    : 2022-11-04
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -978,7 +978,7 @@ if ($_CURRDB->colExists('Variant/RNA')) {
 
     // 2009-06-24; 2.0-19; print non-observed variants
     if (!empty($aAbsentVariants)) {
-        print('Variants not observed: ' . implode($aAbsentVariants, ', ') . '<BR><BR>');
+        print('Variants not observed: ' . implode(', ', $aAbsentVariants) . '<BR><BR>');
     }
 
 }
