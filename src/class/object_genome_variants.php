@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -307,7 +307,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
             return parent::getForm();
         }
 
-        $aSelectAllele = $_DB->query('SELECT id, name FROM ' . TABLE_ALLELES . ' ORDER BY display_order')->fetchAllCombine();
+        $aSelectAllele = $_DB->q('SELECT id, name FROM ' . TABLE_ALLELES . ' ORDER BY display_order')->fetchAllCombine();
 
         if (!empty($_GET['geneid'])) {
             $aFormChromosome = array('Chromosome', '', 'print', $_POST['chromosome']);
@@ -320,7 +320,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
         }
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $aSelectOwner = $_DB->query('SELECT id, CONCAT(name, " (#", id, ")") as name_id FROM ' . TABLE_USERS .
+            $aSelectOwner = $_DB->q('SELECT id, CONCAT(name, " (#", id, ")") as name_id FROM ' . TABLE_USERS .
                 ' ORDER BY name')->fetchAllCombine();
             $aFormOwner = array('Owner of this data', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aSelectStatus = $_SETT['data_status'];
@@ -508,7 +508,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
                     $sQ .= ' AND statusid >= ?';
                     $aArgs[] = STATUS_MARKED;
                 }
-                $n = $_DB->query($sQ, $aArgs)->fetchColumn();
+                $n = $_DB->q($sQ, $aArgs)->fetchColumn();
                 if ($n > 1 && (!LOVD_plus || !lovd_verifyInstance('mgha', false))) {
                     list($sPrefix,) = explode('_', $zData['VariantOnGenome/DBID'], 2);
                     $sLink = '<A href="' . (substr($sPrefix, 0, 3) == 'chr'? 'variants' : 'view/' . $sPrefix) . '?search_VariantOnGenome%2FDBID=%3D%22' . $zData['VariantOnGenome/DBID'] . '%22">See all ' . $n . ' reported entries</A>';

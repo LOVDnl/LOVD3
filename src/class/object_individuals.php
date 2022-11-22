@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2022-05-24
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -228,7 +228,7 @@ class LOVD_Individual extends LOVD_Custom
         // Simplest is to check for ourselves, so we don't need to initiate any object.
         // FIXME: Should this be replaced by a CustomVL, with Ind joined to Phenotypes to create this?
         // FIXME: This Ind VL has more than that Ind VL, though.
-        if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?', array('Phenotype/Additional'))->fetchColumn()) {
+        if ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?', array('Phenotype/Additional'))->fetchColumn()) {
             // Column is active, include in SELECT, JOIN and the column list.
             $this->aSQLViewList['SELECT'] .= ', GROUP_CONCAT(DISTINCT p.`Phenotype/Additional` ORDER BY p.`Phenotype/Additional` SEPARATOR ", ") AS phenotypes_';
 
@@ -280,7 +280,7 @@ class LOVD_Individual extends LOVD_Custom
             if (isset($aData[$sParentalField]) && ctype_digit($aData[$sParentalField]) && !$bImport) {
                 // FIXME: Also check gender!!! Check if field is available, download value (or '' if not available), then check possible conflicts.
                 // Partially, the code is already written below.
-                $nParentID = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData[$sParentalField]))->fetchColumn();
+                $nParentID = $_DB->q('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData[$sParentalField]))->fetchColumn();
                 if (empty($nParentID)) {
                     // FIXME: Once we have this on the form, replace with form description.
                     lovd_errorAdd($sParentalField, 'No individual found with this \'' . $sParentalField . '\'.');
@@ -296,7 +296,7 @@ class LOVD_Individual extends LOVD_Custom
 
         // Changes in these checks should also be implemented in import.php in section "Individuals"
         if (isset($aData['panelid']) && ctype_digit($aData['panelid']) && !$bImport) {
-            $nPanel = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData['panelid']))->fetchColumn();
+            $nPanel = $_DB->q('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($aData['panelid']))->fetchColumn();
             if (empty($nPanel)) {
                 lovd_errorAdd('panelid', 'No Panel found with this \'Panel ID\'.');
             } elseif ($nPanel == 1) {
@@ -325,12 +325,12 @@ class LOVD_Individual extends LOVD_Custom
         // Can't enforce this in the table, because it's a custom column, so I'll just do it like this.
         if (LOVD_plus && !empty($aData['Individual/Lab_ID'])) {
             if ($zData && isset($zData['id'])) {
-                $r = $_DB->query('SELECT id, created_date
+                $r = $_DB->q('SELECT id, created_date
                                   FROM ' . TABLE_INDIVIDUALS . '
                                   WHERE `Individual/Lab_ID` = ? AND id != ?',
                         array($aData['Individual/Lab_ID'], $zData['id']))->fetchRow();
             } else {
-                $r = $_DB->query('SELECT id, created_date
+                $r = $_DB->q('SELECT id, created_date
                                   FROM ' . TABLE_INDIVIDUALS . '
                                   WHERE `Individual/Lab_ID` = ?',
                         array($aData['Individual/Lab_ID']))->fetchRow();
@@ -362,7 +362,7 @@ class LOVD_Individual extends LOVD_Custom
         global $_AUTH, $_DB, $_SETT;
 
         // Get list of diseases.
-        $aDiseasesForm = $_DB->query('SELECT id, IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")) FROM ' . TABLE_DISEASES . ' ORDER BY (id > 0), (symbol != "" AND symbol != "-") DESC, symbol, name')->fetchAllCombine();
+        $aDiseasesForm = $_DB->q('SELECT id, IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")) FROM ' . TABLE_DISEASES . ' ORDER BY (id > 0), (symbol != "" AND symbol != "-") DESC, symbol, name')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
         foreach ($aDiseasesForm as $nID => $sDisease) {
             $aDiseasesForm[$nID] = lovd_shortenString($sDisease, 75);
@@ -374,7 +374,7 @@ class LOVD_Individual extends LOVD_Custom
         }
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $aSelectOwner = $_DB->query('SELECT id, CONCAT(name, " (#", id, ")") as name_id FROM ' . TABLE_USERS .
+            $aSelectOwner = $_DB->q('SELECT id, CONCAT(name, " (#", id, ")") as name_id FROM ' . TABLE_USERS .
                 ' ORDER BY name')->fetchAllCombine();
             $aFormOwner = array('Owner of this data', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aSelectStatus = $_SETT['data_status'];

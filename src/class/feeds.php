@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-09
- * Modified    : 2022-05-26
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -109,10 +109,10 @@ class Feed
             // Let the date of last update depend on the type of feed.
             if (preg_match('/\/variants\/(.+)$/', $sFeedURL, $aRegs)) {
                 // Variants of a specific gene.
-                $sDateUpdated = $_DB->query('SELECT MAX(updated_date) FROM ' . TABLE_GENES . ' WHERE id = ?', array($aRegs[1]))->fetchColumn();
+                $sDateUpdated = $_DB->q('SELECT MAX(updated_date) FROM ' . TABLE_GENES . ' WHERE id = ?', array($aRegs[1]))->fetchColumn();
             } else {
                 // Find date of last update for all genes.
-                $sDateUpdated = $_DB->query('SELECT MAX(updated_date) FROM ' . TABLE_GENES)->fetchColumn();
+                $sDateUpdated = $_DB->q('SELECT MAX(updated_date) FROM ' . TABLE_GENES)->fetchColumn();
             }
             $this->sAtomFeed = str_replace('{{ FEED_DATE_UPDATED }}', $this->formatDate($sDateUpdated), $this->sAtomFeed);
 

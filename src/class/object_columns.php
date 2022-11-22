@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2020-10-23
- * For LOVD    : 3.0-26
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -214,7 +214,7 @@ class LOVD_Column extends LOVD_Object
         if (lovd_getProjectFile() != '/import.php') {
             // ColID must not exist in the database.
             if (!empty($aData['category']) && !empty($aData['colid'])) {
-                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
+                if ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_COLS . ' WHERE id = ?', array($aData['category'] . '/' . $aData['colid']))->fetchColumn()) {
                     lovd_errorAdd('colid', 'There is already a ' . $aData['category'] . ' column with this column ID. Please verify that you\'re not trying to create a column that already exists!');
                 }
             }
@@ -262,7 +262,7 @@ class LOVD_Column extends LOVD_Object
         global $_PE, $_DB;
 
         // Get links list, to connect column to link.
-        $aLinks = $_DB->query('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name')->fetchAllCombine();
+        $aLinks = $_DB->q('SELECT id, name FROM ' . TABLE_LINKS . ' ORDER BY name')->fetchAllCombine();
         $nLinkSize = count($aLinks);
         $nLinkSize = ($nLinkSize < 10? $nLinkSize : 10);
 

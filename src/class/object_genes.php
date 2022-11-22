@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-06-28
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -237,7 +237,7 @@ class LOVD_Gene extends LOVD_Object
             // Unfortunately, we can't limit this for the genes VL on the gene panel page,
             //  because we also want it to work on the AJAX viewlist, so we can't use lovd_getProjectFile(),
             //  but neither can we use the sViewListID, because we're in the constructor.
-            $_DB->query('SET group_concat_max_len = 10240'); // Make sure you can deal with long transcript lists.
+            $_DB->q('SET group_concat_max_len = 10240'); // Make sure you can deal with long transcript lists.
             $this->aSQLViewList['SELECT'] .= ', IFNULL(CONCAT("<OPTION value=&quot;&quot;>-- select --</OPTION>", GROUP_CONCAT(CONCAT("<OPTION value=&quot;", t.id, "&quot;>", t.id_ncbi, "</OPTION>") ORDER BY t.id_ncbi SEPARATOR "")), "<OPTION value=&quot;&quot;>-- no transcripts available --</OPTION>") AS transcripts_HTML';
         }
 
@@ -267,9 +267,9 @@ class LOVD_Gene extends LOVD_Object
         parent::checkFields($aData, $zData, $aOptions);
 
         if (ACTION == 'create') {
-            if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->fetchColumn()) {
+            if ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($zData['id']))->fetchColumn()) {
                 lovd_errorAdd('', 'Unable to add gene. This gene symbol already exists in the database!');
-            } elseif ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($zData['id_hgnc']))->fetchColumn()) {
+            } elseif ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($zData['id_hgnc']))->fetchColumn()) {
                 lovd_errorAdd('', 'Unable to add gene. A gene with this HGNC ID already exists in the database!');
             }
         }
@@ -349,7 +349,7 @@ class LOVD_Gene extends LOVD_Object
         global $_DB, $zData, $_SETT;
 
         // Get list of diseases.
-        $aDiseasesForm = $_DB->query('SELECT id, IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")) FROM ' . TABLE_DISEASES . ' WHERE id > 0 ORDER BY (symbol != "" AND symbol != "-") DESC, symbol, name')->fetchAllCombine();
+        $aDiseasesForm = $_DB->q('SELECT id, IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")) FROM ' . TABLE_DISEASES . ' WHERE id > 0 ORDER BY (symbol != "" AND symbol != "-") DESC, symbol, name')->fetchAllCombine();
         $nDiseases = count($aDiseasesForm);
         if (!$nDiseases) {
             $aDiseasesForm = array('' => 'No disease entries available');
@@ -400,7 +400,7 @@ class LOVD_Gene extends LOVD_Object
                                     );
 
         // Custom links for the Reference field.
-        $aCustomLinks = $_DB->query('
+        $aCustomLinks = $_DB->q('
                     SELECT name, pattern_text, description
                     FROM ' . TABLE_LINKS . ' WHERE name IN (?, ?)',
             array('PubMed', 'DOI'))->fetchAllAssoc();
@@ -564,7 +564,7 @@ class LOVD_Gene extends LOVD_Object
             }
 
             if (isset($zData['reference'])) {
-                $aCustomLinks = $_DB->query('
+                $aCustomLinks = $_DB->q('
                     SELECT pattern_text, replace_text
                     FROM ' . TABLE_LINKS . ' WHERE name IN (?, ?)',
                     array('PubMed', 'DOI'))->fetchAllAssoc();
@@ -646,7 +646,7 @@ class LOVD_Gene extends LOVD_Object
 
             // The individual count can only be found by adding up all distinct individual's panel_size.
             // 2013-10-11; 3.0-08; This query was first done using GROUP_CONCAT incorporated in the ViewEntry query. However, since the results were sometimes too long for MySQL, resulting in incorrect numbers and notices, this query is better represented as a separate query.
-            $zData['count_individuals'] = (int) $_DB->query('SELECT SUM(panel_size) FROM (SELECT DISTINCT i.id, i.panel_size FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.panelid IS NULL AND vog.statusid >= ' . STATUS_MARKED . ' AND t.geneid = ?)i', array($zData['id']))->fetchColumn();
+            $zData['count_individuals'] = (int) $_DB->q('SELECT SUM(panel_size) FROM (SELECT DISTINCT i.id, i.panel_size FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (s2v.variantid = vog.id) INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vog.id = vot.id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE i.panelid IS NULL AND vog.statusid >= ' . STATUS_MARKED . ' AND t.geneid = ?)i', array($zData['id']))->fetchColumn();
             $zData['count_individuals_'] = 0;
             if ($zData['count_individuals']) {
                 $zData['count_individuals_'] = '<A href="individuals/' . $zData['id'] . '">' . $zData['count_individuals'] . '</A>';

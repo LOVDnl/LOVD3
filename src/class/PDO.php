@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2019-08-01
- * For LOVD    : 3.0-22
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -153,7 +153,7 @@ class LOVD_PDO extends PDO
 
 
 
-    function query ($sSQL, $aSQL = '', $bHalt = true, $bTrim = false)
+    function q ($sSQL, $aSQL = '', $bHalt = true, $bTrim = false)
     {
         // Wrapper around PDO::query() or PDO::prepare()->execute(), if arguments are passed.
         // THIS WRAPPER DOES NOT SUPPORT ANY OF THE MODES!

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2022-06-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -653,7 +653,7 @@ function lovd_mapVariants ()
 <DIV id="stickyheader" style="position : fixed; z-index : 10; width : 100%">
 <?php
 // Check for announcements. Ignore errors, in case the table doesn't exist yet.
-$qAnnouncements = @$_DB->query('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
+$qAnnouncements = @$_DB->q('SELECT id, type, announcement FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW()', array(), false);
 if ($qAnnouncements) {
     $zAnnouncements = $qAnnouncements->fetchAllAssoc();
 } else {
@@ -725,7 +725,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         // Add curator info to header.
         if ($sCurrSymbol && $sCurrGene) {
             $sCurators = '';
-            $aCurators = $_DB->query('
+            $aCurators = $_DB->q('
                 SELECT u.name, u.email
                 FROM ' . TABLE_USERS . ' AS u LEFT JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid)
                 WHERE u2g.geneid = ? AND u2g.allow_edit = 1 AND u2g.show_order != 0

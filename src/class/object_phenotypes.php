@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -183,13 +183,13 @@ class LOVD_Phenotype extends LOVD_Custom
         }
 
         if (!empty($_POST['diseaseid'])) {
-            $sDisease = $_DB->query('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($_POST['diseaseid']))->fetchColumn();
+            $sDisease = $_DB->q('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($_POST['diseaseid']))->fetchColumn();
         } else {
             $sDisease = 'all diseases';
         }
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
-            $aSelectOwner = $_DB->query('SELECT id, CONCAT(name, " (#", id, ")") as name_id FROM ' . TABLE_USERS .
+            $aSelectOwner = $_DB->q('SELECT id, CONCAT(name, " (#", id, ")") as name_id FROM ' . TABLE_USERS .
                 ' ORDER BY name')->fetchAllCombine();
             $aFormOwner = array('Owner of this data', '', 'select', 'owned_by', 1, $aSelectOwner, false, false, false);
             $aSelectStatus = $_SETT['data_status'];

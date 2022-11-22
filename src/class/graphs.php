@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2019-08-06
- * For LOVD    : 3.0-22
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -130,10 +130,10 @@ class LOVD_Graphs
 
         // Retricting to a certain set of genes, or full database ($Data == '*', although we actually don't check the value of $Data).
         if (!is_array($Data)) {
-            $qData = $_DB->query('SELECT g.id, COUNT(g2d.diseaseid) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) GROUP BY g.id');
+            $qData = $_DB->q('SELECT g.id, COUNT(g2d.diseaseid) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) GROUP BY g.id');
         } elseif (count($Data)) {
             // Using list of gene IDs.
-            $qData = $_DB->query('SELECT g.id, COUNT(g2d.diseaseid) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) WHERE geneid IN (?' . str_repeat(',?', count($Data)-1) . ') GROUP BY g.id', array($Data));
+            $qData = $_DB->q('SELECT g.id, COUNT(g2d.diseaseid) FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) WHERE geneid IN (?' . str_repeat(',?', count($Data)-1) . ') GROUP BY g.id', array($Data));
         }
 
         // Fetch and group data.
@@ -229,14 +229,14 @@ class LOVD_Graphs
 
         // Retricting to a certain set of genes, or full database ($Data == '*', although we actually don't check the value of $Data).
         if (!is_array($Data)) {
-            $qData = $_DB->query('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
+            $qData = $_DB->q('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
                 (!$bNonPublic? TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) ' : TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ') .
                 'INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)' .
                 ($bNonPublic? '' : ' WHERE statusid >= ' . STATUS_MARKED) .
                 ' GROUP BY t.geneid');
         } elseif (count($Data)) {
             // Using list of gene IDs.
-            $qData = $_DB->query('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
+            $qData = $_DB->q('SELECT t.geneid, COUNT(DISTINCT vot.id) FROM ' .
                 ($bNonPublic? '' : TABLE_VARIANTS . ' AS vog INNER JOIN ') .
                 TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid IN (?' . str_repeat(',?', count($Data)-1) . ')' .
                 ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) .
@@ -354,15 +354,15 @@ class LOVD_Graphs
             //   I guess this should be called "exonic", also removing both UTR regions, but I will leave this for some other time, if ever.
             if ($bUnique) {
                 if ($Data == '*') {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                    $qPositions = $_DB->q('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
                 } else {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qPositions = $_DB->q('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, 1 FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
                 }
             } else {
                 if ($Data == '*') {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                    $qPositions = $_DB->q('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
                 } else {
-                    $qPositions = $_DB->query('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qPositions = $_DB->q('SELECT position_c_cds_end, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
                 }
             }
         } else {
@@ -483,9 +483,9 @@ class LOVD_Graphs
             // Restricting to a certain gene, or full database ($Data == '*').
             if ($bUnique) {
                 if ($Data == '*') {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
+                    $qData = $_DB->q('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`');
                 } else {
-                    $qData = $_DB->query('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
+                    $qData = $_DB->q('SELECT type, COUNT(DISTINCT type) FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY `VariantOnGenome/DBID`', array($Data));
                 }
                 $aData = array();
                 while (list($sType, $nCount) = $qData->fetchRow()) {
@@ -500,9 +500,9 @@ class LOVD_Graphs
                 }
             } else {
                 if ($Data == '*') {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type')->fetchAllCombine();
+                    $aData = $_DB->q('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type')->fetchAllCombine();
                 } else {
-                    $aData = $_DB->query('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.id IN (SELECT DISTINCT vot.id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?)' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type', array($Data))->fetchAllCombine();
+                    $aData = $_DB->q('SELECT type, COUNT(*) FROM ' . TABLE_VARIANTS . ' AS vog WHERE vog.id IN (SELECT DISTINCT vot.id FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?)' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vog.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY type', array($Data))->fetchAllCombine();
                 }
             }
         } else {
@@ -597,15 +597,15 @@ class LOVD_Graphs
             if ($bUnique) {
                 // FIXME: This is not really correct. When grouping on VOT/Protein, we might in theory be grouping variants over multiple transcripts that are not one variant on DNA level, but just happen to have the same description on protein level. Vice versa, we're counting one variant twice if it has different descriptions on different transcripts.
                 if ($Data == '*') {
-                    $qProteinDescriptions = $_DB->query('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'));
+                    $qProteinDescriptions = $_DB->q('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'));
                 } else {
-                    $qProteinDescriptions = $_DB->query('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'), array($Data));
+                    $qProteinDescriptions = $_DB->q('SELECT DISTINCT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')'), array($Data));
                 }
             } else {
                 if ($Data == '*') {
-                    $qProteinDescriptions = $_DB->query('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein');
+                    $qProteinDescriptions = $_DB->q('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) WHERE 1=1' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein');
                 } else {
-                    $qProteinDescriptions = $_DB->query('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein', array($Data));
+                    $qProteinDescriptions = $_DB->q('SELECT IFNULL(REPLACE(`VariantOnTranscript/Protein`, " ", ""), "") AS protein, COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_VARIANTS . ' AS vog USING (id) INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?' . ($bNonPublic? '' : ' AND statusid >= ' . STATUS_MARKED) . (!$bPathogenicOnly? '' : ' AND (LEFT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ' OR RIGHT(vot.effectid, 1) >= ' . $nPathogenicThreshold . ')') . ' GROUP BY protein', array($Data));
                 }
             }
         } else {

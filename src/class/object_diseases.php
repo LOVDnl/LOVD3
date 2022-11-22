@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-28
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -278,7 +278,7 @@ class LOVD_Disease extends LOVD_Object
         }
         // Two diseases with the same OMIM ID are not allowed.
         if (!empty($aData['id_omim']) && ($bCreate || $aData['id_omim'] != $zData['id_omim'])) {
-            $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
+            $bExists = $_DB->q('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?', array($aData['id_omim']))->fetchColumn();
             if ($bExists) {
                 // IMPORTANT: when you change this message, also change the array_search argument in import.php in the Disease section.
                 lovd_errorAdd('id_omim', 'Another disease already exists with this OMIM ID!');
@@ -286,7 +286,7 @@ class LOVD_Disease extends LOVD_Object
         }
         // We don't like two diseases with the exact same name, either.
         if (!empty($aData['name']) && ($bCreate || $aData['name'] != $zData['name'])) {
-            $bExists = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aData['name']))->fetchColumn();
+            $bExists = $_DB->q('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aData['name']))->fetchColumn();
             if ($bExists && ($bCreate || $zData['id'] != $bExists)) {
                 // IMPORTANT: when you change this message, also change the array_search argument in import.php in the Disease section.
                 lovd_errorAdd('name', 'Another disease already exists with the same name!');
@@ -344,9 +344,9 @@ class LOVD_Disease extends LOVD_Object
                 // 2016-09-08; 3.0-17; Don't forget to run array_values() since a missing key results in a query error... :|
                 $aGenes = array_values(array_unique(array_merge($aGenes, $zData['genes'])));
             }
-            $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') ORDER BY id', $aGenes)->fetchAllCombine();
+            $aGenesForm = $_DB->q('SELECT id, name FROM ' . TABLE_GENES . ' WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ') ORDER BY id', $aGenes)->fetchAllCombine();
         } else {
-            $aGenesForm = $_DB->query('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllCombine();
+            $aGenesForm = $_DB->q('SELECT id, name FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllCombine();
         }
         $nData = count($aGenesForm);
         foreach ($aGenesForm as $sID => $sGene) {

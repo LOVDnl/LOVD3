@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -276,7 +276,7 @@ class LOVD_Transcript extends LOVD_Object
         );
 
         $sAliasSymbol = $sSymbol;
-        $aTranscripts['added'] = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id_ncbi', array($sSymbol))->fetchAllColumn();
+        $aTranscripts['added'] = $_DB->q('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id_ncbi', array($sSymbol))->fetchAllColumn();
         if (isset($_SETT['mito_genes_aliases'][$sSymbol])) {
             // For mitochondrial genes, an alias must be used to get the transcripts and info.
             // List of aliases are hard-coded in inc-init.php.
@@ -359,7 +359,7 @@ class LOVD_Transcript extends LOVD_Object
     {
         global $_DB;
 
-        $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . '
+        $q = $_DB->q('UPDATE ' . TABLE_VARIANTS . '
                          SET mapping_flags = mapping_flags & ~' . MAPPING_DONE . '
                          WHERE chromosome = ? AND (
                            (position_g_start BETWEEN ? AND ?) OR

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2022-08-26
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -190,7 +190,7 @@ class LOVD_API_Submissions
         $sSQL = 'SELECT SUBSTRING_INDEX(ac.colid, "/", 1) AS category, ac.colid
                  FROM ' . TABLE_ACTIVE_COLS . ' AS ac
                  WHERE ac.colid = ?';
-        if ($zColumn = $_DB->query($sSQL, array($sColID))->fetchAssoc()) {
+        if ($zColumn = $_DB->q($sSQL, array($sColID))->fetchAssoc()) {
             // Translate the category to that used in the file.
             // FIXME: Why is there no function for this?
             $sCategory = str_replace('Genomes', 'Genome', str_replace('On', 's_On_', $zColumn['category'] . 's'));
@@ -234,7 +234,7 @@ class LOVD_API_Submissions
                  FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid)
                  WHERE (c.id LIKE "VariantOnTranscript/%" OR c.id LIKE "Phenotype/%") AND sc.mandatory = 1
                  GROUP BY c.id';
-        foreach ($_DB->query($sSQL)->fetchAllAssoc() as $zColumn) {
+        foreach ($_DB->q($sSQL)->fetchAllAssoc() as $zColumn) {
             // Translate the category to that used in the file.
             // FIXME: Why is there no function for this?
             $sCategory = str_replace('Genomes', 'Genome', str_replace('On', 's_On_', $zColumn['category'] . 's'));
@@ -394,7 +394,7 @@ class LOVD_API_Submissions
                 if ($aPhenotypes['hpo'] && !count($aPhenotypes['omim'])) {
                     if (!$nDiseaseIDUnclassified) {
                         // We didn't look for it yet. Find it, and if it's not there, create it.
-                        $nDiseaseIDUnclassified = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ? AND name LIKE ?', array('?', '%unclassified%'))->fetchColumn();
+                        $nDiseaseIDUnclassified = $_DB->q('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ? AND name LIKE ?', array('?', '%unclassified%'))->fetchColumn();
                         if ($nDiseaseIDUnclassified === false) {
                             // Have the "unclassified" disease created, then.
                             $nDiseaseIDUnclassified = count($aData['Diseases']) + 1;
@@ -413,7 +413,7 @@ class LOVD_API_Submissions
                     // We can just put it in the file and have LOVD match it, but
                     //  LOVD will always issue a warning, and I want to prevent that.
                     if (!isset($aDiseases[$nAccession])) {
-                        $nDiseaseID = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ? OR (id_omim IS NULL AND name = ?)', array($nAccession, $sTerm))->fetchColumn();
+                        $nDiseaseID = $_DB->q('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ? OR (id_omim IS NULL AND name = ?)', array($nAccession, $sTerm))->fetchColumn();
                         if (!$nDiseaseID) {
                             // Disease is not yet in the database. Have it created.
                             $nDiseaseID = count($aData['Diseases']) + 1;
@@ -512,7 +512,7 @@ class LOVD_API_Submissions
                         $aVOG['VariantOnGenome/ClinicalClassification/Method'] = '';
 
                         if (!isset($aClassificationMethods)) {
-                            $sClassificationMethods = $_DB->query('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?',
+                            $sClassificationMethods = $_DB->q('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?',
                                 array('VariantOnGenome/ClinicalClassification/Method'))->fetchColumn();
                             $aClassificationMethods = explode("\r\n", $sClassificationMethods);
                             // Isolate only the option values.
@@ -757,7 +757,7 @@ class LOVD_API_Submissions
 
                         // Find the RefSeq. It should have already been checked.
                         if (!isset($aTranscripts[$aVariantLevel2['ref_seq']['@accession']])) {
-                            $aTranscripts[$aVariantLevel2['ref_seq']['@accession']] = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($aVariantLevel2['ref_seq']['@accession']))->fetchColumn();
+                            $aTranscripts[$aVariantLevel2['ref_seq']['@accession']] = $_DB->q('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($aVariantLevel2['ref_seq']['@accession']))->fetchColumn();
                         }
                         $aVOT['transcriptid'] = $aTranscripts[$aVariantLevel2['ref_seq']['@accession']];
 
@@ -1032,7 +1032,7 @@ class LOVD_API_Submissions
             return false;
         }
         // Check the authentication.
-        $this->zAuth = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ? AND auth_token = ? AND (auth_token_expires > NOW() OR auth_token_expires IS NULL)',
+        $this->zAuth = $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ? AND auth_token = ? AND (auth_token_expires > NOW() OR auth_token_expires IS NULL)',
             array($aAuth['id'], $aAuth['auth_token']))->fetchAssoc();
         if (!$this->zAuth) {
             $this->API->aResponse['errors'][] = 'VarioML error: Authentication denied. ' .
@@ -1079,7 +1079,7 @@ class LOVD_API_Submissions
         }
 
         // Fetch and store variant detection techniques.
-        $sScreeningTechniques = $_DB->query('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?', array('Screening/Technique'))->fetchColumn();
+        $sScreeningTechniques = $_DB->q('SELECT select_options FROM ' . TABLE_COLS . ' WHERE id = ?', array('Screening/Technique'))->fetchColumn();
         $aScreeningTechniques = explode("\r\n", $sScreeningTechniques);
         // Isolate only the option values.
         $aScreeningTechniques = preg_replace('/\s*(=.*)?$/', '', $aScreeningTechniques);
@@ -1397,7 +1397,7 @@ class LOVD_API_Submissions
                                         } else {
                                             // Store the gene, and check if it exists.
                                             $aGenes[$iVariantLevel2] = $aVariantLevel2['gene']['@accession'];
-                                            $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?',
+                                            $sGene = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ? OR id_hgnc = ?',
                                                 array($aVariantLevel2['gene']['@accession'], $aVariantLevel2['gene']['@accession']))->fetchColumn();
                                             if ($sGene) {
                                                 // Gene exists.
@@ -1425,7 +1425,7 @@ class LOVD_API_Submissions
                                                 $aTranscripts[$iVariantLevel2] = $aVariantLevel2['ref_seq']['@accession'];
                                                 // We'll search flexibly, so get the transcript ID without the version.
                                                 $sTranscriptNoVersion = substr($aVariantLevel2['ref_seq']['@accession'], 0, strpos($aVariantLevel2['ref_seq']['@accession'] . '.', '.') + 1);
-                                                list($sTranscriptAvailable, $sTranscriptGene) = $_DB->query('SELECT id_ncbi, geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
+                                                list($sTranscriptAvailable, $sTranscriptGene) = $_DB->q('SELECT id_ncbi, geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC LIMIT 1',
                                                     array($sTranscriptNoVersion . '%', $aVariantLevel2['ref_seq']['@accession']))->fetchRow();
                                                 if ($sTranscriptAvailable) {
                                                     $aTranscriptsExisting[$iVariantLevel2] = $sTranscriptAvailable;
@@ -1463,7 +1463,7 @@ class LOVD_API_Submissions
                                         'Please request the admin to create them: ' . $_SETT['admin']['address_formatted'] . '.';
                                 } else {
                                     // Genes do exist. Mention which transcripts can then be used.
-                                    $sTranscriptsAvailable = implode(', ', $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', count($aGenesExisting) - 1) . ') ORDER BY id_ncbi', array($aGenesExisting))->fetchAllColumn());
+                                    $sTranscriptsAvailable = implode(', ', $_DB->q('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' . str_repeat(', ?', count($aGenesExisting) - 1) . ') ORDER BY id_ncbi', array($aGenesExisting))->fetchAllColumn());
                                     $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': None of the given transcripts for this variant are configured in this LOVD. ' .
                                         'Options for the given genes: ' . $sTranscriptsAvailable . '.';
                                 }
@@ -1679,7 +1679,7 @@ class LOVD_API_Submissions
         $bScheduled = false;
         if (!empty($this->aAPISettings['auto-schedule_submissions'])) {
             // Yep, schedule it!
-            $bScheduled = $_DB->query('
+            $bScheduled = $_DB->q('
                 INSERT IGNORE INTO ' . TABLE_SCHEDULED_IMPORTS . '
                   (filename, scheduled_by, scheduled_date) VALUES
                   (?, 0, NOW())', array($sFileName))->rowCount();
