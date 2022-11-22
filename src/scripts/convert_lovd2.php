@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-10-04
- * Modified    : 2021-11-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2014-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -500,7 +500,7 @@ function lovd_getDiseaseID ($sDiseaseName)
     $bNewDisease = false;
     // First try to match on the OMIM ID that is sometimes stored.
     if (preg_match('/^\{OMIMphen(\d+)\}$/', trim($sDiseaseName), $aRegs)) {
-        $nDiseaseID = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?',
+        $nDiseaseID = $_DB->q('SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?',
             array($aRegs[1]))->fetchColumn();
         if ($nDiseaseID) {
             $aKnownDiseases[$sDiseaseName] = $nDiseaseID;
@@ -509,7 +509,7 @@ function lovd_getDiseaseID ($sDiseaseName)
             $bNewDisease = true;
         }
     } elseif (!isset($aKnownDiseases[$sDiseaseName])) {
-        $qDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
+        $qDiseases = $_DB->q('SELECT id FROM ' . TABLE_DISEASES . ' WHERE name = ? OR symbol = ?',
             array($sDiseaseName, $sDiseaseName));
         $zDiseases = $qDiseases->fetchAllAssoc();
         if (!$zDiseases) {
@@ -577,7 +577,7 @@ function lovd_getHeaders ($aData, $aFieldLinks, $aSections, $aCustomColLinks)
                 ($aTable = lovd_getTableInfoByCategory($aImportSection['customcol_prefix']))
                 !== false) {
                 $aSections[$sSection]['db_fields'] =
-                    $_DB->query('DESCRIBE ' . $aTable['table_sql'])->fetchAllColumn();
+                    $_DB->q('DESCRIBE ' . $aTable['table_sql'])->fetchAllColumn();
             } else {
                 $aSections[$sSection]['db_fields'] = array();
             }
@@ -1431,7 +1431,7 @@ function main ($aFieldLinks, $aSections, $aCustomColLinks)
         return;
     } else {
         if (!empty($_POST['transcriptid'])) {
-            $qTranscript = $_DB->query('SELECT t.*, chromosome FROM ' . TABLE_TRANSCRIPTS .
+            $qTranscript = $_DB->q('SELECT t.*, chromosome FROM ' . TABLE_TRANSCRIPTS .
                 ' AS t LEFT JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid)  WHERE t.id = ?',
                 array($_POST['transcriptid']));
             $zTranscript = $qTranscript->fetchAssoc();
