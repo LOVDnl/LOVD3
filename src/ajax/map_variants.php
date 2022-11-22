@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2021-01-06
- * For LOVD    : 3.0-26
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -72,7 +72,7 @@ function lovd_updateVariantsOnExit ()
     chdir(WORKING_DIRECTORY);
 
     if (!empty($aVariantUpdates)) {
-        $_DB->query('UPDATE '. TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_IN_PROGRESS . ' WHERE id IN(?' . str_repeat(', ?', count($aVariantUpdates) - 1) . ')', array_keys($aVariantUpdates));
+        $_DB->q('UPDATE '. TABLE_VARIANTS . ' SET mapping_flags = mapping_flags & ~' . MAPPING_IN_PROGRESS . ' WHERE id IN(?' . str_repeat(', ?', count($aVariantUpdates) - 1) . ')', array_keys($aVariantUpdates));
     }
 }
 register_shutdown_function('lovd_updateVariantsOnExit');
@@ -177,7 +177,7 @@ if (!isset($_SESSION['mapping']['total_todo'])) {
     $_SESSION['mapping']['total_todo'] = 0;
 }
 // 0.5 sec for 1M variants. Add index to mapping_flags and/or position_g_start to speed up?
-$_SESSION['mapping']['todo'] = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL AND position_g_start != 0')->fetchColumn();
+$_SESSION['mapping']['todo'] = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE mapping_flags & ' . MAPPING_ALLOW . ' AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . ' AND position_g_start IS NOT NULL AND position_g_start != 0')->fetchColumn();
 if ($_SESSION['mapping']['todo'] > $_SESSION['mapping']['total_todo']) {
     // We didn't have a total set yet, or more variants were added in the process that now need to be mapped as well.
     $_SESSION['mapping']['total_todo'] = $_SESSION['mapping']['todo'];
@@ -201,7 +201,7 @@ $nVariants = 0;
 // Check if all transcripts have their positions and the mutalyzer ID correctly set; if not, fix before we start to do any type of mapping.
 // 0.12 sec for 22K transcripts.
 // FIXME: Would be better to pick a random gene to do this on, instead of a random transcript, and continuously repeat the call for each gene if there is more than one transcript.
-$zTranscripts = $_DB->query('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.refseq_UD != "" AND (t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL) ORDER BY RAND() LIMIT 10')->fetchAllAssoc();
+$zTranscripts = $_DB->q('SELECT t.*, g.refseq_UD FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.refseq_UD != "" AND (t.position_g_mrna_end = 0 OR t.id_mutalyzer IS NULL) ORDER BY RAND() LIMIT 10')->fetchAllAssoc();
 if ($zTranscripts) {
     foreach ($zTranscripts as $aTranscript) {
         $aOutput = lovd_callMutalyzer('getTranscriptsAndInfo', array('genomicReference' => $aTranscript['refseq_UD'], 'geneName' => $aTranscript['geneid']));
@@ -216,7 +216,7 @@ if ($zTranscripts) {
                     if (empty($aTranscriptValues['chromTransEnd'])) {
                         $aTranscriptValues['chromTransEnd'] = (empty($aTranscriptValues['gTransEnd'])? 1 : $aTranscriptValues['gTransEnd']);
                     }
-                    $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = ?, position_c_mrna_start = ?, position_c_mrna_end = ?, position_c_cds_end = ?, position_g_mrna_start = ?, position_g_mrna_end = ?' .
+                    $_DB->q('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = ?, position_c_mrna_start = ?, position_c_mrna_end = ?, position_c_cds_end = ?, position_g_mrna_start = ?, position_g_mrna_end = ?' .
                     // Check if the exact version is the same, otherwise mark the transcript as expired.
                     ($aTranscriptValues['id'] == $aTranscript['id_ncbi'] || strpos($aTranscript['id_ncbi'], 'expired') !== false? '' : ', name = CONCAT(name, " (expired, new version available)")') .
                     ' WHERE id = ?', array(str_replace($aTranscript['geneid'] . '_v', '', $aTranscriptValues['name']), $aTranscriptValues['cTransStart'], $aTranscriptValues['sortableTransEnd'], $aTranscriptValues['cCDSStop'], $aTranscriptValues['chromTransStart'], $aTranscriptValues['chromTransEnd'], $aTranscript['id']));
@@ -224,7 +224,7 @@ if ($zTranscripts) {
                 }
             }
             // If we get here, the transcript got removed.
-            $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1' .
+            $_DB->q('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1' .
             // Mark the transcript as removed, if not done already.
             (strpos($aTranscript['id_ncbi'], 'removed') !== false? '' : ', name = CONCAT(name, " (removed from reference sequence)")') .
             ' WHERE id = ?', array($aTranscript['id']));
@@ -234,7 +234,7 @@ if ($zTranscripts) {
 //        } elseif ($aOutput === '') {
             // UD file does not contain any transcripts? Reload UD?
             // FIXME; Temporary fix.
-            $_DB->query('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1 WHERE id = ?', array($aTranscript['id']));
+            $_DB->q('UPDATE ' . TABLE_TRANSCRIPTS . ' SET id_mutalyzer = 0, position_g_mrna_start = 1, position_g_mrna_end = 1 WHERE id = ?', array($aTranscript['id']));
             continue;
         }
     }
@@ -249,7 +249,7 @@ if ($zTranscripts) {
 // Single variant mapping.
 if (!empty($_GET['variantid'])) {
     // Hook this one variant into $aVariants, which is normally used for a set of variants.
-    $aVariants = $_DB->query('SELECT id, chromosome, position_g_start, position_g_end, effectid, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
+    $aVariants = $_DB->q('SELECT id, chromosome, position_g_start, position_g_end, effectid, statusid, mapping_flags, created_by, `VariantOnGenome/DNA`, `VariantOnGenome/DBID` ' .
                              'FROM ' . TABLE_VARIANTS . ' WHERE id = ?', array($_GET['variantid']))->fetchAllAssoc();
 
     if (count($aVariants)) {
@@ -258,13 +258,13 @@ if (!empty($_GET['variantid'])) {
 
             if (!$aVariants[0]['position_g_start'] || !$aVariants[0]['position_g_end']) {
                 // This variant is not going to be mappable until it's got valid positions!
-                $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags | ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aVariants[0]['id']));
+                $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags | ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aVariants[0]['id']));
                 $aVariants = array();
 
             } else {
                 // Flag the variant as MAPPING_IN_PROGRESS, clear the MAPPING_DONE, MAPPING_ERROR and MAPPING_NOT_RECOGNIZED flags too.
                 $aVariantUpdates[$aVariants[0]['id']] = true;
-                $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = (mapping_flags | ' . MAPPING_IN_PROGRESS . ') & ~' . (MAPPING_NOT_RECOGNIZED | MAPPING_ERROR | MAPPING_DONE) . ' WHERE id = ?', array($aVariants[0]['id']));
+                $q = $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = (mapping_flags | ' . MAPPING_IN_PROGRESS . ') & ~' . (MAPPING_NOT_RECOGNIZED | MAPPING_ERROR | MAPPING_DONE) . ' WHERE id = ?', array($aVariants[0]['id']));
                 if (!$q->rowCount()) {
                     // There seems to be a race condition. Forget the variant we had selected, we do NOT want to do anything with it!
                     $aVariantUpdates = $aVariants = array();
@@ -291,7 +291,7 @@ if (!empty($_GET['variantid'])) {
     }
     // Order by RAND() takes >1s with 1M variants, so no random pick when more than 10K variants.
     // Nonetheless, with 2M variants, this Q shows up in the slow log thousands of times.
-    $aVariants = $_DB->query('SELECT vog.id, vog.chromosome, vog.position_g_start, vog.position_g_end, vog.effectid, vog.statusid, vog.mapping_flags, vog.created_by, vog.`VariantOnGenome/DNA`, vog.`VariantOnGenome/DBID` ' .
+    $aVariants = $_DB->q('SELECT vog.id, vog.chromosome, vog.position_g_start, vog.position_g_end, vog.effectid, vog.statusid, vog.mapping_flags, vog.created_by, vog.`VariantOnGenome/DNA`, vog.`VariantOnGenome/DBID` ' .
                              'FROM ' . TABLE_VARIANTS . ' AS vog, (' .
                                  'SELECT chromosome, position_g_start ' .
                                  'FROM ' . TABLE_VARIANTS . ' ' .
@@ -314,7 +314,7 @@ if (!empty($_GET['variantid'])) {
             $aVariantUpdates[$aVariant['id']] = true;
         }
         $_DB->beginTransaction();
-        $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags | ' . MAPPING_IN_PROGRESS . ' WHERE id IN(' . substr($sIDs, 0, -2) . ')');
+        $q = $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = mapping_flags | ' . MAPPING_IN_PROGRESS . ' WHERE id IN(' . substr($sIDs, 0, -2) . ')');
         if ($q->rowCount() != count($aVariants)) {
             // We've selected a different number of variants than we're setting the flag for. This is NOT GOOD! Could be a race condition. Abort at once.
             $_DB->rollBack();
@@ -341,7 +341,7 @@ if (!empty($aVariants)) {
     // We'll need a list of transcripts in the database on this chromosome.
     $aTranscriptsInLOVD = array();
     // FIXME: Restrict range somewhat based on variant's range? Query takes 0.03s with 22K transcripts, but we have $nStart and $nEnd available.
-    $qTranscriptsInLOVD = $_DB->query('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
+    $qTranscriptsInLOVD = $_DB->q('SELECT t.id, geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_GENES . ' AS g ON (g.id = t.geneid) WHERE chromosome = ?', array($sChromosome));
     while ($aTranscriptInLOVD = $qTranscriptsInLOVD->fetchAssoc()) {
         $aTranscriptsInLOVD[$aTranscriptInLOVD['geneid']][$aTranscriptInLOVD['id']] = array('id' => $aTranscriptInLOVD['id'], 'id_ncbi' => $aTranscriptInLOVD['id_ncbi']);
     }
@@ -356,7 +356,7 @@ if (!empty($aVariants)) {
         define('MAPPING_NO_RESTART', true);
         if (!empty($_GET['variantid'])) {
             // We were trying to map a specific variant. Set the MAPPING_ERROR flag so the user understands we tried it.
-            $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = ' . ($aVariants[0]['mapping_flags'] | MAPPING_ERROR) . ' WHERE id = ?', array($aVariants[0]['id']));
+            $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = ' . ($aVariants[0]['mapping_flags'] | MAPPING_ERROR) . ' WHERE id = ?', array($aVariants[0]['id']));
             $aVariantUpdates = array();
         }
 
@@ -397,7 +397,7 @@ if (!empty($aVariants)) {
 
         // Find out on which transcripts this variant has been mapped already.
         $aVariant['alreadyMappedTranscripts'] = array();
-        $zVariantInfo = $_DB->query('SELECT t.id, id_ncbi, geneid, `VariantOnTranscript/DNA` AS dna FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllAssoc();
+        $zVariantInfo = $_DB->q('SELECT t.id, id_ncbi, geneid, `VariantOnTranscript/DNA` AS dna FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid AND vot.id = ' . $aVariant['id'] . ')')->fetchAllAssoc();
         foreach ($zVariantInfo as $a) {
             $aVariant['alreadyMappedTranscripts'][] = $a['id_ncbi'];
             // Fake the POST variables that DBID needs to make a better prediction.
@@ -426,7 +426,7 @@ if (!empty($aVariants)) {
                         // (NOTE: don't merge these if's because that breaks the elseif below!)
 
                         // FIXME: When mapping multiple variants in one gene, this query is repeated for each variants. Store UD?
-                        $sRefseqUD = $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($aTranscript['gene']))->fetchColumn();
+                        $sRefseqUD = $_DB->q('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($aTranscript['gene']))->fetchColumn();
                         $aVariantOnTranscriptSQL = lovd_mapVariantToTranscripts($aVariant, $aTranscriptsInLOVD[$aTranscript['gene']]);
                         if (!empty($aVariantOnTranscriptSQL)) {
                             foreach ($aVariantOnTranscriptSQL as $sTranscriptNM => $aSQL) {
@@ -440,7 +440,7 @@ if (!empty($aVariants)) {
 
                                 $aSQL[1][8] = (empty($aPrediction['predict']['RNA'])? '' : $aPrediction['predict']['RNA']);
                                 $aSQL[1][9] = (empty($aPrediction['predict']['protein'])? '' : $aPrediction['predict']['protein']);
-                                if ($_DB->query($aSQL[0], $aSQL[1], false)) {
+                                if ($_DB->q($aSQL[0], $aSQL[1], false)) {
                                     // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                                     $aVariant['aTranscripts'][$aSQL[1][1]] = array($sTranscriptNM, $aTranscript['gene']);
                                     $aVariant[$aSQL[1][1] . '_VariantOnTranscript/DNA'] = $aSQL[1][7];
@@ -593,7 +593,7 @@ if (!empty($aVariants)) {
                     $aVariantOnTranscriptSQL = $aVariantOnTranscriptSQL[$aFieldsTranscript['id_ncbi']];
 
                     // But first check if the gene was already there without transcripts.
-                    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn()) {
+                    if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn()) {
                         $aFields = array('id' => $sSymbol,
                                          'name' => $sGeneName,
                                          'chromosome' => $sChromosome,
@@ -625,29 +625,29 @@ if (!empty($aVariants)) {
                                          'created_date' => date('Y-m-d H:i:s'),
                                          'updated_by' => 0,
                                          'updated_date' => date('Y-m-d H:i:s'));
-                        $_DB->query('INSERT INTO ' . TABLE_GENES . ' (' . implode(', ', array_keys($aFields)) . ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')', array_values($aFields));
+                        $_DB->q('INSERT INTO ' . TABLE_GENES . ' (' . implode(', ', array_keys($aFields)) . ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')', array_values($aFields));
 
                         // Only assign newly inserted genes to managers. If the creator of the variant is not a manager, make the database admin the curator for this gene.
                         if (empty($aManagerList)) {
                             // Building the list of managers only once.
-                            $aManagerList = $_DB->query('SELECT id FROM ' . TABLE_USERS . ' WHERE level >= ' . LEVEL_MANAGER . ' ORDER BY level DESC')->fetchAllColumn();
+                            $aManagerList = $_DB->q('SELECT id FROM ' . TABLE_USERS . ' WHERE level >= ' . LEVEL_MANAGER . ' ORDER BY level DESC')->fetchAllColumn();
                         }
                         $nCurator = (array_search($aVariant['created_by'], $aManagerList) !== false? $aVariant['created_by'] : $aManagerList[0]);
-                        $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($nCurator, $sSymbol, 1, 1));
+                        $_DB->q('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($nCurator, $sSymbol, 1, 1));
 
                         // Also activate default custom columns for this gene.
                         lovd_addAllDefaultCustomColumns('gene', $sSymbol, 0);
                     }
 
                     // Now insert the transcript.
-                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' (' . implode(', ', array_keys($aFieldsTranscript)) . ') VALUES (?' . str_repeat(', ?', count($aFieldsTranscript) - 1) . ')', array_values($aFieldsTranscript));
+                    $q = $_DB->q('INSERT IGNORE INTO ' . TABLE_TRANSCRIPTS . ' (' . implode(', ', array_keys($aFieldsTranscript)) . ') VALUES (?' . str_repeat(', ?', count($aFieldsTranscript) - 1) . ')', array_values($aFieldsTranscript));
 
                     if ($q->rowCount()) {
                         // Get the ID of the newly inserted transcript.
                         $nID = $_DB->lastInsertId();
                     } else {
                         // This transcript was just added by a concurrent call to the mapping script. Get its ID and map on.
-                        $nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($aFieldsTranscript['id_ncbi']))->fetchColumn();
+                        $nID = $_DB->q('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($aFieldsTranscript['id_ncbi']))->fetchColumn();
                     }
 
                     // Get the p. description too.
@@ -659,7 +659,7 @@ if (!empty($aVariants)) {
 
                     // Map the variant to the newly inserted transcript.
                     $aVariantOnTranscriptSQL[1][1] = $nID;
-                    if ($_DB->query($aVariantOnTranscriptSQL[0], $aVariantOnTranscriptSQL[1], false)) {
+                    if ($_DB->q($aVariantOnTranscriptSQL[0], $aVariantOnTranscriptSQL[1], false)) {
                         // If the insert succeeded, save some data in the variant array for lovd_fetchDBID().
                         $aVariant['aTranscripts'][$nID] = array($aFieldsTranscript['id_ncbi'], $sSymbol);
                         $aVariant[$nID . '_VariantOnTranscript/DNA'] = $aVariantOnTranscriptSQL[1][7];
@@ -697,9 +697,9 @@ if (!empty($aVariants)) {
 
         // Update the variant.
         if (!empty($sDBID)) {
-            $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET ' . $sUpdateSQL . ', `VariantOnGenome/DBID` = ? WHERE id = ?', array($sDBID, $aVariant['id']));
+            $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET ' . $sUpdateSQL . ', `VariantOnGenome/DBID` = ? WHERE id = ?', array($sDBID, $aVariant['id']));
         } else {
-            $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET ' . $sUpdateSQL . ' WHERE id = ?', array($aVariant['id']));
+            $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET ' . $sUpdateSQL . ' WHERE id = ?', array($aVariant['id']));
         }
         unset($aVariantUpdates[$aVariant['id']]);
     }

@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-01
- * Modified    : 2012-05-07
- * For LOVD    : 3.0-beta-05
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2012 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -49,7 +49,7 @@ if (!empty($_GET['id'])) {
     foreach ($aIDs as $key => $sID) {
         $aDel = explode(',', $sID);
         if (count($aDel) == 3) {
-            $q = $_DB->query('DELETE FROM ' . TABLE_LOGS . ' WHERE name = ? AND date = ? AND mtime = ?', $aDel, false);
+            $q = $_DB->q('DELETE FROM ' . TABLE_LOGS . ' WHERE name = ? AND date = ? AND mtime = ?', $aDel, false);
             if ($q && $q->rowCount()) {
                 $nDeleted ++;
                 if ($_GET['id'] == 'selected') {

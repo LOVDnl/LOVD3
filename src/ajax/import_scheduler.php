@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-11-16
- * Modified    : 2020-02-24
- * For LOVD    : 3.0-24
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -45,7 +45,7 @@ if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
 
 // Check info currently in the scheduler.
 $sFile = $_PE[2];
-$zFile = $_DB->query('SELECT * FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ?', array($sFile))->fetchAssoc();
+$zFile = $_DB->q('SELECT * FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ?', array($sFile))->fetchAssoc();
 
 if (!$zFile) {
     // FIXME: Should we log this?
@@ -142,7 +142,7 @@ if (ACTION == 'unschedule' && POST) {
     }
 
     // Delete!
-    if (!$_DB->query('DELETE FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ?', array($sFile), false)) {
+    if (!$_DB->q('DELETE FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ?', array($sFile), false)) {
         die('alert("Failed to unschedule file.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the file has been successfully unscheduled!
@@ -197,7 +197,7 @@ if (ACTION == 'set_priority' && POST) {
     }
 
     // Update!
-    if (!$_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET priority = ? WHERE filename = ?', array($_POST['priority'], $sFile), false)) {
+    if (!$_DB->q('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET priority = ? WHERE filename = ?', array($_POST['priority'], $sFile), false)) {
         die('alert("Failed to set priority.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been created and stored successfully!
@@ -248,7 +248,7 @@ if (ACTION == 'reschedule' && POST) {
     }
 
     // Update!
-    if (!$_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET in_progress = 0, scheduled_by = ?, scheduled_date = NOW(), process_errors = NULL, processed_by = NULL, processed_date = NULL WHERE filename = ?', array($_AUTH['id'], $sFile), false)) {
+    if (!$_DB->q('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET in_progress = 0, scheduled_by = ?, scheduled_date = NOW(), process_errors = NULL, processed_by = NULL, processed_date = NULL WHERE filename = ?', array($_AUTH['id'], $sFile), false)) {
         die('alert("Failed to reschedule file.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the file has been successfully rescheduled!
@@ -334,7 +334,7 @@ if (ACTION == 'new_screening' && POST) {
     }
 
     // Find original Individual.
-    $zIndividual = $_DB->query('
+    $zIndividual = $_DB->q('
         SELECT i.*, GROUP_CONCAT(i2d.diseaseid SEPARATOR ";") AS _diseases
         FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
         WHERE `Individual/Lab_ID` = ?
@@ -421,7 +421,7 @@ if (ACTION == 'new_screening' && POST) {
     lovd_writeLog('Event', 'ImportReschedule', 'Successfully edited ' . $sFile . ' to be imported as a new Screening');
 
     // Also, reschedule the file.
-    if (!$_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET in_progress = 0, scheduled_by = ?, scheduled_date = NOW(), process_errors = NULL, processed_by = NULL, processed_date = NULL WHERE filename = ?', array($_AUTH['id'], $sFile), false)) {
+    if (!$_DB->q('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET in_progress = 0, scheduled_by = ?, scheduled_date = NOW(), process_errors = NULL, processed_by = NULL, processed_date = NULL WHERE filename = ?', array($_AUTH['id'], $sFile), false)) {
         die('alert("Successfully edited the file to be imported as a new Screening, but failed to reschedule.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the file has been successfully rescheduled!

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-07-28
- * Modified    : 2022-05-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -220,7 +220,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
         $aGenes = array();
         switch ($sObjectType) {
             case 'screenings':
-                $nMaxStatus = $_DB->query('
+                $nMaxStatus = $_DB->q('
                     SELECT MAX(i.statusid)
                     FROM ' . TABLE_SCREENINGS . ' AS s
                       INNER JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id)
@@ -228,7 +228,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                 break;
 
             default:
-                $nMaxStatus = $_DB->query('
+                $nMaxStatus = $_DB->q('
                     SELECT MAX(statusid)
                     FROM ' . constant('TABLE_' . strtoupper($sObjectType)) . '
                     WHERE id IN (?' . str_repeat(', ?', count($aObjects) - 1) . ')', $aObjects)->fetchColumn();
@@ -251,7 +251,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
 
             switch ($sObjectType) {
                 case 'individuals':
-                    $zData = $_DB->query('
+                    $zData = $_DB->q('
                         SELECT i.*, GROUP_CONCAT(i2d.diseaseid ORDER BY i2d.diseaseid SEPARATOR ";") AS diseaseids
                         FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                         WHERE i.id = ?', array($nObjectID))->fetchAssoc();
@@ -260,7 +260,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                         $aGenes = array_unique(
                             array_merge(
                                 $aGenes,
-                                $_DB->query('
+                                $_DB->q('
                                     SELECT DISTINCT t.geneid
                                     FROM ' . TABLE_TRANSCRIPTS . ' AS t
                                       LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
@@ -272,7 +272,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                     break;
 
                 case 'screenings':
-                    $zData = $_DB->query('
+                    $zData = $_DB->q('
                         SELECT s.*
                         FROM ' . TABLE_SCREENINGS . ' AS s
                         WHERE s.id = ?', array($nObjectID))->fetchAssoc();
@@ -281,7 +281,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                         $aGenes = array_unique(
                             array_merge(
                                 $aGenes,
-                                $_DB->query('
+                                $_DB->q('
                                     SELECT DISTINCT t.geneid
                                     FROM ' . TABLE_TRANSCRIPTS . ' AS t
                                       LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
@@ -385,20 +385,20 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                             $aValues[] = $aMergedData[$sColumn];
                         }
                         $aValues[] = $nMergedID;
-                        $_DB->query('UPDATE ' . constant('TABLE_' . strtoupper($sObjectType)) . ' SET ' . $sColumns . ' WHERE id = ?', $aValues);
+                        $_DB->q('UPDATE ' . constant('TABLE_' . strtoupper($sObjectType)) . ' SET ' . $sColumns . ' WHERE id = ?', $aValues);
                     }
 
                 } else {
                     switch ($sObjectType) {
                         case 'individuals':
                             // Move over phenotype entries, screenings, parent links, and panel ID references.
-                            $_DB->query('UPDATE ' . TABLE_PHENOTYPES . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
-                            $_DB->query('UPDATE ' . TABLE_SCREENINGS . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
-                            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET fatherid = ? WHERE fatherid = ?', array($nMergedID, $nObjectID));
-                            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET motherid = ? WHERE motherid = ?', array($nMergedID, $nObjectID));
-                            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET panelid = ? WHERE panelid = ?', array($nMergedID, $nObjectID));
+                            $_DB->q('UPDATE ' . TABLE_PHENOTYPES . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
+                            $_DB->q('UPDATE ' . TABLE_SCREENINGS . ' SET individualid = ? WHERE individualid = ?', array($nMergedID, $nObjectID));
+                            $_DB->q('UPDATE ' . TABLE_INDIVIDUALS . ' SET fatherid = ? WHERE fatherid = ?', array($nMergedID, $nObjectID));
+                            $_DB->q('UPDATE ' . TABLE_INDIVIDUALS . ' SET motherid = ? WHERE motherid = ?', array($nMergedID, $nObjectID));
+                            $_DB->q('UPDATE ' . TABLE_INDIVIDUALS . ' SET panelid = ? WHERE panelid = ?', array($nMergedID, $nObjectID));
                             // This also deletes the IND2DIS entries.
-                            $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nObjectID));
+                            $_DB->q('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nObjectID));
                             lovd_writeLog('Event', LOG_EVENT, 'Merged ' . rtrim($sObjectType, 's') . ' entry #' . $nObjectID . ' into entry #' . $nMergedID);
                             break;
 
@@ -407,17 +407,17 @@ if (ACTION == 'process' && !empty($_GET['workid']) && POST) {
                             // To prevent duplicate key errors, remove the links that $nMergedID already has.
                             // This query won't let you make a delete when you also use the same table
                             //  as a SELECT, so we have to add an additional layer to confuse MySQL.
-                            $_DB->query('DELETE FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ? AND geneid IN (
+                            $_DB->q('DELETE FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ? AND geneid IN (
                                 SELECT geneid FROM (
                                     SELECT geneid FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?)A)', array($nObjectID, $nMergedID));
-                            $_DB->query('UPDATE ' . TABLE_SCR2GENE . ' SET screeningid = ? WHERE screeningid = ?', array($nMergedID, $nObjectID));
+                            $_DB->q('UPDATE ' . TABLE_SCR2GENE . ' SET screeningid = ? WHERE screeningid = ?', array($nMergedID, $nObjectID));
                             // This query won't let you make a delete when you also use the same table
                             //  as a SELECT, so we have to add an additional layer to confuse MySQL.
-                            $_DB->query('DELETE FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (
+                            $_DB->q('DELETE FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (
                                 SELECT variantid FROM (
                                     SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?)A)', array($nObjectID, $nMergedID));
-                            $_DB->query('UPDATE ' . TABLE_SCR2VAR . ' SET screeningid = ? WHERE screeningid = ?', array($nMergedID, $nObjectID));
-                            $_DB->query('DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nObjectID));
+                            $_DB->q('UPDATE ' . TABLE_SCR2VAR . ' SET screeningid = ? WHERE screeningid = ?', array($nMergedID, $nObjectID));
+                            $_DB->q('DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nObjectID));
                             lovd_writeLog('Event', LOG_EVENT, 'Merged ' . rtrim($sObjectType, 's') . ' entry #' . $nObjectID . ' into entry #' . $nMergedID);
                             break;
 

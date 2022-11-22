@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-04
- * Modified    : 2022-05-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -128,7 +128,7 @@ if (ACTION == 'bySubmission' && GET && !empty($_GET['id'])) {
     // URL: /ajax/curate_set.php?bySubmission&id=00000001
     // Fetch object types and object IDs of this submission, and call the curation process.
 
-    $zData = $_DB->query('
+    $zData = $_DB->q('
         SELECT i.id AS individuals, GROUP_CONCAT(DISTINCT p.id SEPARATOR ";") AS phenotypes, GROUP_CONCAT(DISTINCT s2v.variantid SEPARATOR ";") AS variants
         FROM ' . TABLE_INDIVIDUALS . ' AS i
           LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid)
@@ -251,7 +251,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                     // We didn't receive a disease ID, so we'll need to fetch it.
                     // Each phenotype entry can have a different disease ID.
                     if (!isset($aJob['diseaseids'])) {
-                        $aJob['diseaseids'] = $_DB->query('SELECT id, diseaseid FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($aObjects)-1) . ')', $aObjects)->fetchAllCombine();
+                        $aJob['diseaseids'] = $_DB->q('SELECT id, diseaseid FROM ' . TABLE_PHENOTYPES . ' WHERE id IN (?' . str_repeat(', ?', count($aObjects)-1) . ')', $aObjects)->fetchAllCombine();
                         // Get first disease ID and store that for creation of the object.
                         $nDiseaseID = current($aJob['diseaseids']);
                     }
@@ -301,7 +301,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                 case 'individuals':
                 case 'phenotypes':
                     if ($sObjectType == 'individuals') {
-                        $aGenes = $_DB->query('
+                        $aGenes = $_DB->q('
                             SELECT DISTINCT t.geneid
                             FROM ' . TABLE_TRANSCRIPTS . ' AS t
                               LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
@@ -310,7 +310,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
                               LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id)
                             WHERE s.individualid = ? AND vog.statusid >= ?', array($nObjectID, STATUS_MARKED))->fetchAllColumn();
                     } elseif ($sObjectType == 'phenotypes') {
-                        $aGenes = $_DB->query('
+                        $aGenes = $_DB->q('
                             SELECT DISTINCT t.geneid
                             FROM ' . TABLE_TRANSCRIPTS . ' AS t
                               LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
@@ -347,7 +347,7 @@ if (ACTION == 'process' && !empty($_GET['workid']) && GET) {
 
                     // FIXME: The following ~20 lines are just repeated from other code. It would be good to have a method for this in the VOG object.
                     // Load gene-related data.
-                    $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ?', array($nObjectID))->fetchAllColumn();
+                    $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ?', array($nObjectID))->fetchAllColumn();
 
                     if ($aGenes) {
                         foreach ($aGenes as $sGene) {

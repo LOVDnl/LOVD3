@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2021-08-11
- * For LOVD    : 3.0-27
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -54,13 +54,13 @@ if (ACTION != 'view' && (!$_AUTH || !lovd_isAuthorized($_PE[2], $_PE[3]))) {
 $nID = lovd_getCurrentID();
 $sObject = $_PE[2];
 if ($sObject == 'individual') {
-    $rObject = $_DB->query('
+    $rObject = $_DB->q('
         SELECT CONCAT("individual #", i.id), IFNULL(NULLIF(i.license, ""), uc.default_license), uc.name
         FROM ' . TABLE_INDIVIDUALS . ' AS i
           INNER JOIN ' . TABLE_USERS . ' AS uc ON (i.created_by = uc.id)
         WHERE i.id = ?', array($nID))->fetchRow();
 } elseif ($sObject == 'user') {
-    $rObject = $_DB->query('SELECT username, default_license, name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchRow();
+    $rObject = $_DB->q('SELECT username, default_license, name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchRow();
     if ((int) $nID === 0) {
         $rObject[0] = 'LOVD (license applied to data without a specific creator)';
     }
@@ -207,7 +207,7 @@ if ($sObject == 'individual') {
     unset($aFields['overwrite']);
 } else {
     // Determine whether there are submissions manually set at all.
-    $n = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE created_by = ? AND NULLIF(license, "") IS NOT NULL',
+    $n = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE created_by = ? AND NULLIF(license, "") IS NOT NULL',
         array($nID))->fetchColumn();
     if (!$n) {
         unset($aFields['overwrite']);
@@ -363,20 +363,20 @@ if (ACTION == 'edit' && POST) {
 
     // Update!
     if ($sObject == 'individual') {
-        if (!$_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET license = ? WHERE id = ?',
+        if (!$_DB->q('UPDATE ' . TABLE_INDIVIDUALS . ' SET license = ? WHERE id = ?',
             array($sLicense, $nID), false)) {
             die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
         }
         // If we get here, the changes have been saved successfully!
         lovd_writeLog('Event', 'IndividualLicenseEdit', 'Successfully set license to ' . $sLicenseText . ' for individual #' . $nID);
     } elseif ($sObject == 'user') {
-        if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET default_license = ? WHERE id = ?',
+        if (!$_DB->q('UPDATE ' . TABLE_USERS . ' SET default_license = ? WHERE id = ?',
             array($sLicense, $nID), false)) {
             die('alert("Failed to save settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
         }
         // Reset manually set licenses, if requested.
         if (!empty($_POST['overwrite'])) {
-            $_DB->query('UPDATE ' . TABLE_INDIVIDUALS . ' SET license = NULL WHERE created_by = ?',
+            $_DB->q('UPDATE ' . TABLE_INDIVIDUALS . ' SET license = NULL WHERE created_by = ?',
                 array($nID), false);
         }
         // If we get here, the changes have been saved successfully!

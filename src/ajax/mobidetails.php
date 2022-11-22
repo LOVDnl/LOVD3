@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-10-01
- * Modified    : 2020-10-20
- * For LOVD    : 3.0-25
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -48,7 +48,7 @@ $nID = sprintf('%0' . $_SETT['objectid_length']['variants'] . 'd', $_PE[2]);
 // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
 $bIsAuthorized = (lovd_isAuthorized('variant', $nID, false) !== false);
 list($sVOG, $nHGNCID) =
-    $_DB->query('
+    $_DB->q('
         SELECT CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, ":", vog.`VariantOnGenome/DNA`) AS VOG_DNA,
             g.id_hgnc AS HGNC
         FROM ' . TABLE_VARIANTS . ' AS vog

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-17
- * Modified    : 2021-02-25
- * For LOVD    : 3.0-27
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -49,7 +49,7 @@ if (!$_AUTH || !lovd_isAuthorized('user', $_PE[2])) {
 
 // Let's download the user's data.
 $nID = lovd_getCurrentID();
-$zUser = $_DB->query('SELECT id, username, auth_token, auth_token_expires FROM ' . TABLE_USERS . ' WHERE id > 0 AND id = ?', array($nID))->fetchAssoc();
+$zUser = $_DB->q('SELECT id, username, auth_token, auth_token_expires FROM ' . TABLE_USERS . ' WHERE id > 0 AND id = ?', array($nID))->fetchAssoc();
 if (!$zUser) {
     // FIXME: Should we log this?
     die('alert("Data not found.");');
@@ -150,7 +150,7 @@ if (ACTION == 'create' && POST) {
     $sToken = md5($zUser['username'] . microtime(true) . bin2hex(openssl_random_pseudo_bytes(10)));
 
     // Update!
-    if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET auth_token = ?, auth_token_expires = ? WHERE id = ?', array($sToken, $sAuthTokenExpires, $nID), false)) {
+    if (!$_DB->q('UPDATE ' . TABLE_USERS . ' SET auth_token = ?, auth_token_expires = ? WHERE id = ?', array($sToken, $sAuthTokenExpires, $nID), false)) {
         die('alert("Failed to create new token.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been created and stored successfully!
@@ -202,7 +202,7 @@ if (ACTION == 'revoke' && POST) {
     }
 
     // Update!
-    if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET auth_token = NULL, auth_token_expires = NULL WHERE id = ?', array($nID), false)) {
+    if (!$_DB->q('UPDATE ' . TABLE_USERS . ' SET auth_token = NULL, auth_token_expires = NULL WHERE id = ?', array($nID), false)) {
         die('alert("Failed to revoke token.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }
     // If we get here, the token has been revoked successfully!

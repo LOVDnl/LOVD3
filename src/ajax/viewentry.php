@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-09
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -98,7 +98,7 @@ if (!file_exists($sFile)) {
 if (in_array($sObject, array('Phenotype', 'Transcript_Variant', 'Custom_ViewList', 'ScreeningPLUS'))) {
     // Exception for VOT viewEntry, we need to isolate the gene from the ID to correctly pass this to the data object.
     if ($sObject == 'Transcript_Variant') {
-        $sObjectID = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscriptID))->fetchColumn();
+        $sObjectID = $_DB->q('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscriptID))->fetchColumn();
     }
 }
 require $sFile;
