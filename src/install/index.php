@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2021-02-03
- * For LOVD    : 3.0-26
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -166,11 +166,11 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
     $sMySQL = '<IMG src="gfx/mark_' . (int) $bMySQL . '.png" alt="" width="11" height="11">&nbsp;MySQL : ' . $sMySQLVers . ' (' . $aRequired['MySQL'] . ' required)';
 
     // Check for InnoDB support.
-    $sInnoDB = $_DB->query('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
+    $sInnoDB = $_DB->q('SHOW VARIABLES LIKE "have\_innodb"')->fetchColumn(1);
     $bInnoDB = ($sInnoDB == 'YES');
     if (!$bInnoDB) {
         // Might be MySQL 5.6 or higher, where this variable is unavailable.
-        $aEngines = $_DB->query('SHOW ENGINES')->fetchAllCombine(0, 1);
+        $aEngines = $_DB->q('SHOW ENGINES')->fetchAllCombine(0, 1);
         $bInnoDB = (isset($aEngines['InnoDB']) && in_array($aEngines['InnoDB'], array('YES', 'DEFAULT')));
     }
     $sInnoDB = '&nbsp;&nbsp;<IMG src="gfx/mark_' . (int) $bInnoDB . '.png" alt="" width="11" height="11">&nbsp;MySQL InnoDB support ' . ($bInnoDB? 'en' : 'dis') . 'abled (required)';
@@ -239,7 +239,7 @@ if ($_GET['step'] == 0 && defined('NOT_INSTALLED')) {
 
 if ($_GET['step'] == 1 && defined('NOT_INSTALLED')) {
     // Step 1: Administrator account details.
-    if ($_DB->query('SHOW TABLES LIKE "' . TABLE_USERS . '"')->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS)->fetchColumn()) {
+    if ($_DB->q('SHOW TABLES LIKE "' . TABLE_USERS . '"')->fetchColumn() && $_DB->q('SELECT COUNT(*) FROM ' . TABLE_USERS)->fetchColumn()) {
         // We already have a database user!
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] + 2));
         exit;
@@ -320,7 +320,7 @@ if ($_GET['step'] == 1 && defined('NOT_INSTALLED')) {
 
 if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Step 2: Install database tables.
-    if ($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && !$_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
+    if ($_DB->q('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && !$_DB->q('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn()) {
         // Installed, but not configured yet.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] + 1));
         exit;
@@ -367,7 +367,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
     // Do any of these tables exist yet?
     $aTablesMatched = array();
     $aTablesFound = array();
-    $q = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+    $q = $_DB->q('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
     while ($sTable = $q->fetchColumn()) {
         $aTablesMatched[] = $sTable;
         if (in_array($sTable, $_TABLES)) {
@@ -381,7 +381,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
         // FIXME: This check needs to be done in the beginning. Redirect loop can occur, if TABLE_USERS exists, but other tables miss.
         if ($nTablesFound == $nTables) {
             // Maybe an existing LOVD install... Weird, because then we shouldn't have gotten here... Right?
-            $sVersion = $_DB->query('SELECT version FROM ' . TABLE_STATUS, false, false)->fetchColumn();
+            $sVersion = $_DB->q('SELECT version FROM ' . TABLE_STATUS, false, false)->fetchColumn();
             if ($sVersion) {
                 print('      There seems to be an existing LOVD installation (' . $sVersion . ').<BR>' . "\n" .
                       '      <B>Installation of LOVD can not continue using the current database or table prefix.</B><BR>' . "\n" .
@@ -567,7 +567,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
         $_BAR->setMessage($sMessage);
 
         foreach ($aSQL as $sSQL) {
-            $q = $_DB->query($sSQL, false, false, true); // This means that there is no SQL injection check here. But hey - these are our own queries.
+            $q = $_DB->q($sSQL, false, false, true); // This means that there is no SQL injection check here. But hey - these are our own queries.
             if (!$q) {
                 // Error when running query. We will use the Div for the form now.
                 $sMessage = 'Error during install while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', '[' . implode('] [', $_DB->errorInfo()) . ']') . '</DIV><BR>' .
@@ -577,7 +577,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
                 $_BAR->setMessageVisibility('done', true);
                 // LOVD 2.0's lovd_rollback() has been replaced by a two-line piece of code...
                 $aTable = array_reverse($_TABLES);
-                $_DB->query('DROP TABLE IF EXISTS ' . implode(', ', $aTable), false, false);
+                $_DB->q('DROP TABLE IF EXISTS ' . implode(', ', $aTable), false, false);
                 print('</BODY>' . "\n" .
                       '</HTML>' . "\n");
                 exit;
@@ -606,7 +606,7 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
           '</HTML>' . "\n");
 
     // Log user in.
-    $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ?', array($_POST['username'], $_POST['password']))->fetchAssoc();
+    $_SESSION['auth'] = $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ?', array($_POST['username'], $_POST['password']))->fetchAssoc();
     exit;
 } elseif ($_GET['step'] == 2) { $_GET['step'] ++; }
 
@@ -614,9 +614,9 @@ if ($_GET['step'] == 2 && defined('NOT_INSTALLED')) {
 
 
 
-if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
+if ($_GET['step'] == 3 && !($_DB->q('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && $_DB->q('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
     // Step 3: Configuring general LOVD system settings.
-    if (!$_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn()) {
+    if (!$_DB->q('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn()) {
         // Didn't finish previous step correctly.
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
         exit;
@@ -723,7 +723,7 @@ if ($_GET['step'] == 3 && !($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"
 
 if ($_GET['step'] == 4) {
     // Step 5: Done.
-    if (!($_DB->query('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
+    if (!($_DB->q('SHOW TABLES LIKE "' . TABLE_CONFIG . '"')->fetchColumn() && $_DB->q('SELECT COUNT(*) FROM ' . TABLE_CONFIG)->fetchColumn())) {
         // Didn't finish previous step correctly.
         //header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 2));
         header('Location: ' . PROTOCOL . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'] . '?step=' . ($_GET['step'] - 1));
