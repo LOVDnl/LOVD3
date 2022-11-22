@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2022-06-17
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -221,7 +221,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                 } elseif (!lovd_checkORCIDChecksum($_POST['orcid'])) {
                     // Checksum not valid!
                     lovd_errorAdd('orcid', 'The given ORCID ID is not valid.');
-                } elseif ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE orcid_id = ?', array($_POST['orcid']))->fetchColumn()) {
+                } elseif ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE orcid_id = ?', array($_POST['orcid']))->fetchColumn()) {
                     // ID is not unique!
                     lovd_errorAdd('orcid', 'There is already an account registered with this ORCID ID.' . (!$_CONF['allow_unlock_accounts']? '' : ' Did you <A href="reset_password">forget your password</A>?'));
                 } else {
@@ -312,7 +312,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
                         // FIXME: Do we need to loop through the addresses?
                         $sCountryCode = ($sCountryCode?: $aORCID['person']['addresses']['address'][0]['country']['value']);
                         if ($sCountryCode) {
-                            $sCountry = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($sCountryCode))->fetchColumn();
+                            $sCountry = $_DB->q('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($sCountryCode))->fetchColumn();
                         } else {
                             $sCountry = '';
                         }
@@ -487,10 +487,10 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
             $nID = $_DATA->insertEntry($_POST, $aFields);
             if (ACTION == 'register') {
                 // Store that user has been created by themself.
-                $_DB->query('UPDATE ' . TABLE_USERS . ' SET created_by = id WHERE id = ?', array($nID));
+                $_DB->q('UPDATE ' . TABLE_USERS . ' SET created_by = id WHERE id = ?', array($nID));
 
                 // Load authorization.
-                $_SESSION['auth'] = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+                $_SESSION['auth'] = $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
                 $_AUTH =& $_SESSION['auth'];
                 // To prevent notices in the header for instance...
                 $_AUTH['curates']      = array();
@@ -540,7 +540,7 @@ if (PATH_COUNT == 1 && in_array(ACTION, array('create', 'register'))) {
 
                 // Array containing the submitter fields.
                 $_POST['id'] = $nID;
-                $_POST['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($_POST['countryid']))->fetchColumn();
+                $_POST['country_'] = $_DB->q('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($_POST['countryid']))->fetchColumn();
                 $aMailFields =
                     array(
                         '_POST',
@@ -906,7 +906,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     // Deleting a user makes the current user curator of the deleted user's genes if there is no curator left for them.
     // Find curated genes and see if they're alone.
-    $aCuratedGenes = $_DB->query('SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE geneid NOT IN (SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE userid != ? AND allow_edit = 1)', array($nID))->fetchAllColumn();
+    $aCuratedGenes = $_DB->q('SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE geneid NOT IN (SELECT DISTINCT geneid FROM ' . TABLE_CURATES . ' WHERE userid != ? AND allow_edit = 1)', array($nID))->fetchAllColumn();
 
     // Define this here, since it's repeated.
     // Array which will make up the form table.
@@ -945,7 +945,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
                     // First, make the current user curator for the genes about to be abandoned by this user.
                     $_DB->beginTransaction();
                     if ($aCuratedGenes) {
-                        $_DB->query('UPDATE ' . TABLE_CURATES . ' SET userid = ? WHERE userid = ? AND geneid IN (?' . str_repeat(', ?', count($aCuratedGenes) - 1) . ')', array_merge(array($_AUTH['id'], $nID), $aCuratedGenes));
+                        $_DB->q('UPDATE ' . TABLE_CURATES . ' SET userid = ? WHERE userid = ? AND geneid IN (?' . str_repeat(', ?', count($aCuratedGenes) - 1) . ')', array_merge(array($_AUTH['id'], $nID), $aCuratedGenes));
                     }
 
                     // Query text.
@@ -979,12 +979,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             $_T->printTitle();
 
             // FIXME; extend this later.
-            $nLogs = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID))->fetchColumn();
-            $nCurates = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($nID))->fetchColumn();
-            $nIndividuals = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
-            $nScreenings = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
-            $nVars = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
-            $nGenes = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE created_by = ? OR edited_by = ?', array($nID, $nID))->fetchColumn();
+            $nLogs = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_LOGS . ' WHERE userid = ?', array($nID))->fetchColumn();
+            $nCurates = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($nID))->fetchColumn();
+            $nIndividuals = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
+            $nScreenings = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
+            $nVars = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE owned_by = ? OR created_by = ? OR edited_by = ?', array($nID, $nID, $nID))->fetchColumn();
+            $nGenes = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_GENES . ' WHERE created_by = ? OR edited_by = ?', array($nID, $nID))->fetchColumn();
 
             lovd_showInfoTable('<B>The user you are about to delete has the following references to data in this installation:</B><BR>' .
                                $nLogs . ' log entr' . ($nLogs == 1? 'y' : 'ies') . ' will be deleted,<BR>' .
@@ -1058,7 +1058,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'boot') {
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = $_DB->query('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    $zData = $_DB->q('SELECT name, username, phpsessid, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         lovd_showInfoTable('No such ID!', 'stop');
@@ -1095,7 +1095,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     // Require manager clearance.
     lovd_requireAUTH(LEVEL_MANAGER);
 
-    $zData = $_DB->query('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    $zData = $_DB->q('SELECT username, name, (login_attempts >= 3) AS locked, level FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData || $zData['level'] >= $_AUTH['level']) {
         // Wrong ID, apparently.
         lovd_showInfoTable('No such ID!', 'stop');
@@ -1110,7 +1110,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('lock', 'u
     }
 
     // The actual query.
-    $_DB->query('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID));
+    $_DB->q('UPDATE ' . TABLE_USERS . ' SET login_attempts = ' . ($zData['locked']? 0 : 3) . ' WHERE id = ?', array($nID));
 
     // Write to log...
     lovd_writeLog('Event', LOG_EVENT, ucfirst(ACTION) . 'ed user ' . $nID . ' - ' . $zData['username'] . ' (' . $zData['name'] . ') - with level ' . $_SETT['user_levels'][$zData['level']]);
@@ -1134,7 +1134,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'submissions') {
     $_T->printHeader();
     $_T->printTitle();
 
-    $zData = $_DB->query('SELECT id, saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    $zData = $_DB->q('SELECT id, saved_work FROM ' . TABLE_USERS . ' WHERE id = ?', array($nID))->fetchAssoc();
     if (!$zData) {
         // Wrong ID, apparently.
         lovd_showInfoTable('No such ID!', 'stop');
@@ -1238,7 +1238,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'share_access') {
     $bAllowGrantEdit = true;
     $sUserListID = 'user_share_access_' . $nID;
 
-    $zData = $_DB->query('
+    $zData = $_DB->q('
         SELECT name, level, institute, email
         FROM ' . TABLE_USERS . '
         WHERE id = ?', array($nID))->fetchAssoc();

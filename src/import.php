@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2022-05-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -105,7 +105,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
 
     // Fetch all info from the database, for annotation and error reporting.
     // This will group by filename.
-    $zScheduledFiles = $_DB->query('SELECT sf.*, u.name AS scheduled_by_name
+    $zScheduledFiles = $_DB->q('SELECT sf.*, u.name AS scheduled_by_name
                                     FROM ' . TABLE_SCHEDULED_IMPORTS . ' AS sf LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (sf.scheduled_by = u.id)
                                     ORDER BY (sf.processed_date IS NOT NULL) DESC, sf.priority DESC, sf.processed_date, sf.scheduled_date, sf.filename')
                            ->fetchAllGroupAssoc();
@@ -234,7 +234,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
         foreach ($_POST['files_to_schedule'] as $sFile) {
             if (isset($aFiles[0][$sFile])) {
                 // Process this file, it's present indeed and not yet imported.
-                if ($_DB->query('INSERT IGNORE INTO ' . TABLE_SCHEDULED_IMPORTS . ' (filename, scheduled_by, scheduled_date) VALUES (?, ?, NOW())', array($sFile, $_AUTH['id']))->rowCount()) {
+                if ($_DB->q('INSERT IGNORE INTO ' . TABLE_SCHEDULED_IMPORTS . ' (filename, scheduled_by, scheduled_date) VALUES (?, ?, NOW())', array($sFile, $_AUTH['id']))->rowCount()) {
                     // Scheduled successfully, didn't exist yet.
                     $nScheduled ++;
                     lovd_writeLog('Event', LOG_EVENT, 'Scheduled ' . $sFile . ' for import');
@@ -252,7 +252,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
 
                     // Also, to display statistics, load the file's info.
                     // This includes the filename field, that we usually don't have, but whatever.
-                    $zScheduledFiles[$sFile] = $_DB->query('SELECT sf.*, u.name AS scheduled_by_name
+                    $zScheduledFiles[$sFile] = $_DB->q('SELECT sf.*, u.name AS scheduled_by_name
                                                             FROM ' . TABLE_SCHEDULED_IMPORTS . ' AS sf LEFT OUTER JOIN ' . TABLE_USERS . ' AS u ON (sf.scheduled_by = u.id)
                                                             WHERE sf.filename = ?', array($sFile))->fetchAssoc();
                 }
@@ -319,7 +319,7 @@ if (ACTION == 'schedule' && PATH_COUNT == 1) {
                 $sFileModified = str_replace('_', ' ', $sFileModified);
                 $sFileDisplayName = 'API submission (' . $nUserID . ': ';
                 if (!isset($aUsers[$nUserID])) {
-                    $aUsers[$nUserID] = $_DB->query('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchColumn();
+                    $aUsers[$nUserID] = $_DB->q('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchColumn();
                 }
                 $sFileDisplayName .= (!isset($aUsers[$nUserID])? 'User unknown' : $aUsers[$nUserID]) . ')';
             } else {
@@ -461,7 +461,7 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
     }
 
     // If we have nothing to do, let's stop.
-    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 0')->fetchColumn()) {
+    if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 0')->fetchColumn()) {
         // Nothing to do. When using HTML output, tell the user.
         if (FORMAT == 'text/html') {
             $_T->printHeader(false);
@@ -476,7 +476,7 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
     // We'll ignore the possibility of a file being manually uploaded. We just check the schedule.
     // We'll check for active uploads started later than an hour ago, with no errors filled in.
     $sMaxDate = date('Y-m-d H:i:s', time() - (60*60));
-    if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 1 AND processed_date >= ? AND process_errors IS NULL', array($sMaxDate))->fetchColumn()) {
+    if ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 1 AND processed_date >= ? AND process_errors IS NULL', array($sMaxDate))->fetchColumn()) {
         die('Error: Last file is still being imported...' . "\n");
     }
 
@@ -484,12 +484,12 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
     // Should be the first, of course. But I'll check anyway, to nicely handle the error message.
     $_DB->beginTransaction();
     $sFile = '';
-    for ($i = 0; $sFile = $_DB->query('SELECT filename FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 0 ORDER BY priority DESC, scheduled_date, filename LIMIT ' . $i . ', 1 FOR UPDATE')->fetchColumn(); $i++) {
+    for ($i = 0; $sFile = $_DB->q('SELECT filename FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE in_progress = 0 ORDER BY priority DESC, scheduled_date, filename LIMIT ' . $i . ', 1 FOR UPDATE')->fetchColumn(); $i++) {
         if (!is_readable($_INI['paths']['data_files'] . '/' . $sFile)) {
             print('Warning: ' . $sFile . ' not found...' . "\n");
         } else {
             // Select this file. Since filename is primary key, we don't need more stuff in the WHERE.
-            if (!$_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET in_progress = 1, processed_by = 0, processed_date = NOW() WHERE filename = ?', array($sFile))->rowCount()) {
+            if (!$_DB->q('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET in_progress = 1, processed_by = 0, processed_date = NOW() WHERE filename = ?', array($sFile))->rowCount()) {
                 die('Error: Can not obtain processing lock on file ' . $sFile . '.' . "\n");
             }
             // We selected our file. Stop going through the list.
@@ -505,7 +505,7 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
 
     // Load necessary authorisation, only if we have none (automatic run by script).
     if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER) {
-        $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchAssoc();
+        $_AUTH = $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchAssoc();
         $_AUTH['curates']      = array();
         $_AUTH['collaborates'] = array();
         $_AUTH['level'] = LEVEL_MANAGER; // To pass the authorization check downstream.
@@ -515,7 +515,7 @@ if (ACTION == 'autoupload_scheduled_file' && PATH_COUNT == 1) {
     $zUser = array();
     if (preg_match('/^LOVD_API_submission_(\d+)_/', $sFile, $aRegs)) {
         list(, $nUserID) = $aRegs;
-        $zUser = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchAssoc();
+        $zUser = $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = ?', array($nUserID))->fetchAssoc();
     }
 
     // Fake the POSTing of a file.
@@ -812,7 +812,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                                                                                             'created_by' => array('message' => 'Created by field is set by LOVD.', 'error_type' => 'soft'),
                                                                                                             'created_date' => array('message' => 'Created date field is set by LOVD.', 'error_type' => 'soft')), 'data' => array(), 'ids' => array(), 'nColumns' => 0, 'object' => null, 'required_columns' => array(), 'settings' => array()));
         $aParsed['Genes_To_Diseases'] = $aParsed['Individuals_To_Diseases'] = $aParsed['Screenings_To_Genes'] = $aParsed['Screenings_To_Variants'] = array('allowed_columns' => array(), 'data' => array()); // Just the data, nothing else!
-        $aUsers = $_DB->query('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
+        $aUsers = $_DB->q('SELECT id FROM ' . TABLE_USERS)->fetchAllColumn();
         $aImportFlags = array('max_errors' => 50);
         $sFileVersion = $sFileType = $sCurrentSection = '';
         $bParseColumns = false;
@@ -887,10 +887,10 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
         $_BAR[0]->setMessageVisibility('done', true);
         if (LOVD_plus) {
             // Diagnostics: Find default gene we'll use for all VOTs, since the gene is always the same anyway.
-            $sDefaultGene = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
+            $sDefaultGene = $_DB->q('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
         }
         // We need to check Genders of referenced mothers and fathers, so we need to know if the column is active.
-        $bGenderColumnActive = (bool) $_DB->query('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?',
+        $bGenderColumnActive = (bool) $_DB->q('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?',
             array('Individual/Gender'))->fetchColumn();
 
 
@@ -1142,7 +1142,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                             // Imports into LOVD+ are always new data, and therefore certain IDs are simply not needed.
                             // The following sections don't need their IDs fetched, as all data is always present in the files.
                             if (!in_array($sCurrentSection, array('Phenotypes', 'Screenings', 'Variants_On_Genome', 'Variants_On_Transcripts'))) {
-                                $aSection['ids'] = $_DB->query('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ', 1 FROM ' . $sTableName)->fetchAllCombine();
+                                $aSection['ids'] = $_DB->q('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ', 1 FROM ' . $sTableName)->fetchAllCombine();
                             }
                         } else {
                             // Normal data table, no data links.
@@ -1151,7 +1151,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                 // Note: Making this a reference (=& instead of =) slows down the parsing of a VOT line 3x. Don't understand why.
                                 $aSection['ids'] = $aParsed['Variants_On_Genome']['ids'];
                             } else {
-                                $aSection['ids'] = $_DB->query('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ', 1 FROM ' . $sTableName)->fetchAllCombine();
+                                $aSection['ids'] = $_DB->q('SELECT ' . (in_array($sCurrentSection, array('Columns', 'Genes'))? 'id' : 'CAST(id AS UNSIGNED)') . ', 1 FROM ' . $sTableName)->fetchAllCombine();
                             }
                         }
                     }
@@ -1332,7 +1332,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     $sGene = $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']]['geneid'];
                     $bGeneInDB = isset($aParsed['Genes']['ids'][$sGene]);
                 } else {
-                    $sGene = $_DB->query('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($aLine['transcriptid']))->fetchColumn();
+                    $sGene = $_DB->q('SELECT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($aLine['transcriptid']))->fetchColumn();
                     $bGeneInDB = true;
                     // Store for the next VOT.
                     $aParsed['Transcripts']['data'][(int) $aLine['transcriptid']] = array('id' => $aLine['transcriptid'], 'geneid' => $sGene, 'todo' => '');
@@ -1394,7 +1394,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     case 'Columns':
                     case 'Genes':
                         if (isset($aSection['ids'][$aLine['id']])) {
-                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
+                            $zData = $_DB->q('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
                         }
                         break;
                     case 'Transcripts':
@@ -1404,12 +1404,12 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     case 'Screenings':
                     case 'Variants_On_Genome':
                         if (isset($aSection['ids'][(int) $aLine['id']])) {
-                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
+                            $zData = $_DB->q('SELECT * FROM ' . $sTableName . ' WHERE id = ?', array($aLine['id']))->fetchAssoc();
                         }
                         break;
                     case 'Variants_On_Transcripts':
                         if (isset($aSection['ids'][(int) $aLine['id']])) {
-                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE id = ? AND transcriptid = ?', array($aLine['id'], $aLine['transcriptid']))->fetchAssoc();
+                            $zData = $_DB->q('SELECT * FROM ' . $sTableName . ' WHERE id = ? AND transcriptid = ?', array($aLine['id'], $aLine['transcriptid']))->fetchAssoc();
                         }
                         break;
                     case 'Genes_To_Diseases':
@@ -1419,7 +1419,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                         list($sCol1, $sCol2) = array_keys($aLine);
                         list($nID1, $nID2) = array_values($aLine);
                         if (isset($nID1) && isset($nID2)) {
-                            $zData = $_DB->query('SELECT * FROM ' . $sTableName . ' WHERE ' . $sCol1 . ' = ? AND ' . $sCol2 . ' = ?', array($nID1, $nID2))->fetchAssoc();
+                            $zData = $_DB->q('SELECT * FROM ' . $sTableName . ' WHERE ' . $sCol1 . ' = ? AND ' . $sCol2 . ' = ?', array($nID1, $nID2))->fetchAssoc();
                         }
                         if (!$zData && !in_array($sCurrentSection, $aSectionsAlreadyWarnedFor)) {
                             $_BAR[0]->appendMessage('Warning: It is currently not possible to do an update on section ' . $sCurrentSection . ' via an import.<BR>', 'done');
@@ -1675,7 +1675,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
 //                        $_BAR[0]->appendMessage('Warning: transcript "' . htmlspecialchars($aLine['id'] . '" (' . $aLine['geneid'] . ', ' . $aLine['name']) . ') does not exist in the database. Currently, it is not possible to import transcripts into LOVD using this file format.<BR>', 'done');
                         // FIXME: If we'll allow the creation of transcripts, and we have an object, we can use $zData here.
                         // Transcript has been found in the database, check if NM and gene are the same. The rest we will ignore.
-                        $nTranscriptid = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? AND id_ncbi = ?', array($aLine['geneid'], $aLine['id_ncbi']))->fetchColumn();
+                        $nTranscriptid = $_DB->q('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? AND id_ncbi = ?', array($aLine['geneid'], $aLine['id_ncbi']))->fetchColumn();
                         if ($nTranscriptid) {
                             $aLine['newID'] = $nTranscriptid;
                             $aLine['todo'] = 'map';
@@ -1712,7 +1712,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                         }
                     } else {
                         // Create: Attempt to map the disease in the file to a disease in the database.
-                        $rDiseaseIdOmim = $_DB->query('SELECT id, id_omim FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aLine['name']))->fetchRow();
+                        $rDiseaseIdOmim = $_DB->q('SELECT id, id_omim FROM ' . TABLE_DISEASES . ' WHERE name = ?', array($aLine['name']))->fetchRow();
                         if ($rDiseaseIdOmim && !$rDiseaseIdOmim[1] && $aLine['id_omim']) {
                             lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): Import file contains OMIM ID for disease ' . $aLine['name'] . ', while OMIM ID is missing in database.');
                         }
@@ -1799,7 +1799,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                 $aSQL[] = $aLine['diseaseid'];
                             }
                             // Gene & Disease are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
-                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', $aSQL)->fetchColumn();
+                            $bInDB = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid = ?', $aSQL)->fetchColumn();
                             if (!$bInDB) {
                                 $aLine['todo'] = 'insert';
                             }
@@ -1839,7 +1839,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                         if ($bPanelInFile) {
                             $nPanelSize = $aParsed['Individuals']['data'][(int) $aLine['panelid']]['panel_size'];
                         } elseif ($bPanelInDB) {
-                            $nPanelSize = $_DB->query('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
+                            $nPanelSize = $_DB->q('SELECT panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
                                 array($aLine['panelid']))->fetchColumn();
                         }
 
@@ -1872,7 +1872,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                             if ($bParentInFile) {
                                 $zParentData = $aParsed['Individuals']['data'][(int) $aLine[$sParentalField]];
                             } elseif ($bParentInDB) {
-                                $zParentData = $_DB->query('SELECT ' . ($bGenderColumnActive? '' : '"" AS ') .
+                                $zParentData = $_DB->q('SELECT ' . ($bGenderColumnActive? '' : '"" AS ') .
                                     '`Individual/Gender`, panel_size FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
                                     array($aLine[$sParentalField]))->fetchAssoc();
                             }
@@ -1944,7 +1944,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                             $aLine['todo'] = 'insert';
                         } else {
                             // Individual & Disease are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
-                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid = ?', array($aLine['individualid'], $aLine['diseaseid']))->fetchColumn();
+                            $bInDB = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid = ?', array($aLine['individualid'], $aLine['diseaseid']))->fetchColumn();
                             if (!$bInDB) {
                                 $aLine['todo'] = 'insert';
                             }
@@ -2056,7 +2056,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                             $aLine['todo'] = 'insert';
                         } else {
                             // Gene & Screening are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
-                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCR2GENE . ' WHERE geneid = ? AND screeningid = ?', array($aLine['geneid'], $aLine['screeningid']))->fetchColumn();
+                            $bInDB = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_SCR2GENE . ' WHERE geneid = ? AND screeningid = ?', array($aLine['geneid'], $aLine['screeningid']))->fetchColumn();
                             if (!$bInDB) {
                                 $aLine['todo'] = 'insert';
                             }
@@ -2168,7 +2168,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                             $aLine['todo'] = 'insert';
                         } else {
                             // Variant & Transcript are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
-                            $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($aLine['variantid'], $aLine['transcriptid']))->fetchColumn();
+                            $bInDB = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($aLine['variantid'], $aLine['transcriptid']))->fetchColumn();
                             if (!$bInDB) {
                                 $aLine['todo'] = 'insert';
                             }
@@ -2214,7 +2214,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                         $aLine['todo'] = 'insert';
                     } else {
                         // Screening & Variant are already in the DB, check if we can't find this combo in the DB, it needs to be inserted. Otherwise, we'll ignore it.
-                        $bInDB = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid = ?', array($aLine['screeningid'], $aLine['variantid']))->fetchColumn();
+                        $bInDB = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid = ?', array($aLine['screeningid'], $aLine['variantid']))->fetchColumn();
                         if (!$bInDB) {
                             $aLine['todo'] = 'insert';
                         }
@@ -2391,7 +2391,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                          GROUP BY t.geneid
                          ORDER BY t.geneid';
             }
-            $aGenesToNotify = $_DB->query($sSQL, array_merge(array(STATUS_MARKED), $aIDs))->fetchAllCombine();
+            $aGenesToNotify = $_DB->q($sSQL, array_merge(array(STATUS_MARKED), $aIDs))->fetchAllCombine();
             $aFailedGenes = array(); // Which emails were *NOT* successfully sent?
 
             // Loop through all genes we have ($sGene might be empty),
@@ -2399,7 +2399,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
             $aManagers = array();
             $sManagers = '';
             if (isset($aGenesToNotify[''])) {
-                $aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
+                $aManagers = $_DB->q('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ' . LEVEL_MANAGER)->fetchAllRow();
                 foreach ($aManagers as $aUser) {
                     $sManagers .= (!$sManagers? '' : ', ') . $aUser[0];
                 }
@@ -2419,13 +2419,13 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                     'email' => 'Email address',
                     'telephone' => 'Telephone',
                 );
-            $zUser['country_'] = $_DB->query('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($zUser['countryid']))->fetchColumn();
+            $zUser['country_'] = $_DB->q('SELECT name FROM ' . TABLE_COUNTRIES . ' WHERE id = ?', array($zUser['countryid']))->fetchColumn();
 
             foreach ($aGenesToNotify as $sGene => $sLinks) {
                 $aLinks = explode(';', $sLinks);
                 if ($sGene) {
                     // Select all curators that need to be mailed.
-                    $aTo = $_DB->query('SELECT u.name, u.email
+                    $aTo = $_DB->q('SELECT u.name, u.email
                                         FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id)
                                         WHERE c.geneid = ? AND allow_edit = 1 ORDER BY u.level DESC, u.name', array($sGene))->fetchAllRow();
                     $sTo = '';
@@ -2643,7 +2643,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                                 $aSQL[] = $aData[$sField];
                             }
                             $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
-                            $_DB->query($sSQL, $aSQL, true, true);
+                            $_DB->q($sSQL, $aSQL, true, true);
                             $nDone ++;
                             break;
 
@@ -2784,7 +2784,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                     if (isset($aSection['updatedIDs'])) {
                         switch ($sSection) {
                             case 'Phenotypes':
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                $aTempGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                                           'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -2796,7 +2796,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                                                           ' AND p.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Individuals':
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                $aTempGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                                           'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -2808,7 +2808,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                             case 'Screenings':
                             case 'Screenings_To_Variants':
                                 // FIXME: A change in screening should actually go up to individual (checking its status), and then down to genes.
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                $aTempGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                                           'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -2817,14 +2817,14 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                                 break;
                             case 'Variants_On_Genome':
                             case 'Variants_On_Transcripts':
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                $aTempGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                                           'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                                           'WHERE vog.statusid >= ' . STATUS_MARKED .
                                                           ' AND vog.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             case 'Transcripts':
-                                $aTempGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                                $aTempGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                                           'WHERE t.id IN (?' . str_repeat(', ?', count($aSection['updatedIDs']) - 1) . ')', $aSection['updatedIDs'])->fetchAllColumn();
                                 break;
                             default:
@@ -2909,7 +2909,7 @@ if (!lovd_isCurator($_SESSION['currdb'])) {
                             // Only delete from schedule when we moved file(s) successfully, otherwise it'll be unclear that it's been processed already.
                             if ($nFilesMoved == count($aFilesToMove)) {
                                 // Remove the file from the schedule.
-                                $_DB->query('DELETE FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ? AND in_progress = 1', array($sFile));
+                                $_DB->q('DELETE FROM ' . TABLE_SCHEDULED_IMPORTS . ' WHERE filename = ? AND in_progress = 1', array($sFile));
                             }
                         }
                     }
@@ -2961,7 +2961,7 @@ if (ACTION == 'autoupload_scheduled_file') {
             $sErrors .= (!$sErrors? '' : "\n") . html_entity_decode(strip_tags($sMessage));
         }
     }
-    $_DB->query('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET process_errors = ? WHERE filename = ?', array($sErrors, $sFile));
+    $_DB->q('UPDATE ' . TABLE_SCHEDULED_IMPORTS . ' SET process_errors = ? WHERE filename = ?', array($sErrors, $sFile));
 
     if (FORMAT == 'text/html') {
         // HTML output for manually run auto imports.
@@ -2986,10 +2986,10 @@ print('      Using this form you can import files in LOVD\'s tab-delimited forma
 
 if ($_AUTH['level'] == LEVEL_CURATOR) {
     $sManagers = '';
-    $zManagers = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = ? ORDER BY u.name ASC', array(LEVEL_MANAGER))->fetchAllAssoc();
+    $zManagers = $_DB->q('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = ? ORDER BY u.name ASC', array(LEVEL_MANAGER))->fetchAllAssoc();
     if (!$zManagers) {
         // No managers found, then get the database admin.
-        $zManagers = $_DB->query('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = ? ORDER BY u.name ASC', array(LEVEL_ADMIN))->fetchAllAssoc();
+        $zManagers = $_DB->q('SELECT u.name, u.email FROM ' . TABLE_USERS . ' AS u WHERE u.level = ? ORDER BY u.name ASC', array(LEVEL_ADMIN))->fetchAllAssoc();
     }
     $nManagers = count($zManagers);
     foreach ($zManagers as $i => $z) {

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2022-05-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -183,7 +183,7 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
                 continue; // Column not in category we're working in (hack attempt, however quite innocent)
             }
             $nOrder ++; // Since 0 is the first key in the array.
-            $_DB->query('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID));
+            $_DB->q('UPDATE ' . TABLE_COLS . ' SET col_order = ? WHERE id = ?', array($nOrder, $sID));
         }
 
         // If we get here, it all succeeded.
@@ -212,7 +212,7 @@ if (PATH_COUNT == 2 && ACTION == 'order') {
     $_T->printTitle();
 
     // Retrieve column IDs in current order.
-    $aColumns = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'))->fetchAllColumn();
+    $aColumns = $_DB->q('SELECT id FROM ' . TABLE_COLS . ' WHERE id LIKE ? ORDER BY col_order ASC', array($sCategory . '/%'))->fetchAllColumn();
 
     lovd_showInfoTable('Below is a sorting list of all available columns (active & inactive). By clicking & dragging the arrow next to the column up and down you can rearrange the columns. Re-ordering them will affect listings, detailed views and data entry forms in the same way.' .
                        (!$aTableInfo['shared']? '' :
@@ -732,7 +732,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             // Store custom link connections.
             $aLinks = array();
             if ($_POST['active_links']) {
-                $qLinks = $_DB->query('SELECT id, name FROM ' . TABLE_LINKS . ' WHERE id IN (?' . str_repeat(', ?', count($_POST['active_links']) - 1) . ')', $_POST['active_links']);
+                $qLinks = $_DB->q('SELECT id, name FROM ' . TABLE_LINKS . ' WHERE id IN (?' . str_repeat(', ?', count($_POST['active_links']) - 1) . ')', $_POST['active_links']);
                 while ($rLink = $qLinks->fetchRow()) {
                     $aLinks[$rLink[0]] = $rLink[1];
                 }
@@ -740,7 +740,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             $bFailedLinks = false;
             foreach ($aLinks AS $nID => $sName) {
-                $q = $_DB->query('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID), false);
+                $q = $_DB->q('INSERT INTO ' . TABLE_COLS2LINKS . ' VALUES (?, ?)', array($_POST['id'], $nID), false);
                 if (!$q) {
                     $bFailedLinks = true;
                     lovd_writeLog('Error', 'LinkAdd', 'Custom link ' . $nID . ' (' . $sName . ') could not be added to ' . $_POST['colid'] . "\n" . $_DB->formatError());
@@ -860,7 +860,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
     // If type has changed... take action!
     // Check size of table where this column needs to be added to and determine necessary time.
     $tAlterMax = 5; // If it takes more than 5 seconds, complain.
-    $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aColumnInfo['table_sql'] . '"')->fetchAssoc();
+    $zStatus = $_DB->q('SHOW TABLE STATUS LIKE "' . $aColumnInfo['table_sql'] . '"')->fetchAssoc();
     $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
     $nSizeIndexes = $zStatus['Index_length'];
     // Calculating time it could take to rebuild the table. This is just an estimate and it depends
@@ -907,7 +907,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
             if ($zData['mysql_type'] != $_POST['mysql_type']) {
                 // Now, start with ALTER TABLE if necessary, since that will take the longest time and ends a transaction anyway.
                 // If it fails directly after this, one can always just redo the edit. LOVD will detect properly that it still needs to be edited in TABLE_COLS.
-                $aColumns = $_DB->query('DESCRIBE ' . $aColumnInfo['table_sql'])->fetchAllColumn();
+                $aColumns = $_DB->q('DESCRIBE ' . $aColumnInfo['table_sql'])->fetchAllColumn();
                 if (in_array($sColumnID, $aColumns)) {
                     // Column active for this table.
                     // This variables have been checked using regexps, so can be considered safe.
@@ -955,7 +955,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                 }
             }
             if ($aToRemove) {
-                $q = $_DB->query('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($sColumnID), $aToRemove));
+                $q = $_DB->q('DELETE FROM ' . TABLE_COLS2LINKS . ' WHERE colid = ? AND linkid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($sColumnID), $aToRemove));
                 if (!$q) {
                     // Silent error.
                     // FIXME; deze log entries zijn precies andersom dan bij create (wat wordt aan wat toegevoegd/verwijderd). Dat moeten we standaardiseren, maar wellicht even overleggen over LOVD-breed.
@@ -1014,7 +1014,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                     $aArgs[] = $_POST['edited_date'];
                     $aArgs[] = $sColumnID;
 
-                    $q = $_DB->query($sSQL, $aArgs);
+                    $q = $_DB->q($sSQL, $aArgs);
                     if ($q->rowCount()) {
                         // Write to log...
                         lovd_writeLog('Event', LOG_EVENT, 'Column ' . $sColumnID . ' reset to new defaults for all ' . $aColumnInfo['unit'] . 's');
@@ -1038,7 +1038,7 @@ if (PATH_COUNT > 2 && ACTION == 'edit') {
                 $nEmptyValues = 0;
                 if ($zData['mandatory'] == '1') {
                     $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
-                    $nEmptyValues = $_DB->query($sQ)->fetchColumn();
+                    $nEmptyValues = $_DB->q($sQ)->fetchColumn();
                 }
 
                 // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.
@@ -1228,10 +1228,10 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
     if ($aTableInfo['shared']) {
         // Get count for targets, then verify that number of targets the column is already added to is smaller.
         // FIXME; If, for curator level users, we'd made a JOIN here, we could see beforehand that there will be no targets left, instead of having to check it some 50 lines below here.
-        $nCount = $_DB->query('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
-        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, count(sc.colid) AS targets FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
+        $nCount = $_DB->q('SELECT COUNT(id) FROM ' . constant(strtoupper('table_' . $aTableInfo['unit'] . 's')))->fetchColumn();
+        $zData = $_DB->q('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid, count(sc.colid) AS targets FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (c.id = sc.colid) WHERE c.id = ? GROUP BY sc.colid HAVING count(sc.' . $aTableInfo['unit'] . 'id) < ?', array($sColumnID, $nCount))->fetchAssoc();
     } else {
-        $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND ac.colid IS NULL', array($sColumnID))->fetchAssoc();
+        $zData = $_DB->q('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND ac.colid IS NULL', array($sColumnID))->fetchAssoc();
     }
 
     if (!$zData) {
@@ -1260,7 +1260,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
             $sSQL .= ' ORDER BY g.id';
-            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+            $aPossibleTargets = array_map('lovd_shortenString', $_DB->q($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         } elseif ($sCategory == 'Phenotype') {
             // Retrieve list of diseases which do NOT have this column yet.
@@ -1276,7 +1276,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $aPossibleTargets = array_map(
                 function ($sInput) {
                     return lovd_shortenString($sInput, 75);
-                }, $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+                }, $_DB->q($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         }
 
@@ -1310,7 +1310,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
         // We're not going to run an ALTER TABLE!
         $tAlter = 0;
     } else {
-        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+        $zStatus = $_DB->q('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
         $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
         $nSizeIndexes = $zStatus['Index_length'];
         // Calculating time it could take to rebuild the table. This is just an estimate and it depends
@@ -1344,9 +1344,9 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
 
             $zData['active_checked'] = in_array(
                 $sColumnID,
-                $_DB->query('DESCRIBE ' . $aTableInfo['table_sql'])->fetchAllColumn());
+                $_DB->q('DESCRIBE ' . $aTableInfo['table_sql'])->fetchAllColumn());
             $zData['active'] = (bool)
-                $_DB->query('SELECT COUNT(*) FROM  ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?',
+                $_DB->q('SELECT COUNT(*) FROM  ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?',
                 array($sColumnID))->fetchColumn();
 
             if (!$zData['active_checked']) {
@@ -1419,7 +1419,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $_DB->beginTransaction();
             if (!$zData['active']) {
                 $sSQL = 'INSERT INTO ' . TABLE_ACTIVE_COLS . ' VALUES (?, ?, NOW())';
-                $_DB->query($sSQL, array($zData['id'], $_AUTH['id']));
+                $_DB->q($sSQL, array($zData['id'], $_AUTH['id']));
             }
 
             // Write to log...
@@ -1455,7 +1455,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
                     }
                     $sSQL .= ') VALUES (?' . str_repeat(', ?', count($aFields) - 1) . ')';
 
-                    $_DB->query($sSQL, $aSQL);
+                    $_DB->q($sSQL, $aSQL);
                     // FIXME; individual messages?
                     $_BAR->setProgress(90 + round(($i/$nTargets)*10));
                     $i ++;
@@ -1481,7 +1481,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
             $nEmptyValues = 0;
             if ($zData['mandatory'] == '1') {
                 $sQ = 'SELECT COUNT(*) FROM ' . TABLE_PATIENTS;
-                $nEmptyValues = @$_DB->query($sQ)->fetchColumn();
+                $nEmptyValues = @$_DB->q($sQ)->fetchColumn();
             }
 
             // 2010-07-27; 2.0-28; Only forward the user when there is no problem adding the column.
@@ -1602,7 +1602,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         lovd_requireAUTH(LEVEL_MANAGER);
     }
 
-    $zData = $_DB->query('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND c.hgvs = 0', array($sColumnID))->fetchAssoc();
+    $zData = $_DB->q('SELECT c.*, SUBSTRING(c.id, LOCATE("/", c.id)+1) AS colid FROM ' . TABLE_COLS . ' AS c INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ? AND c.hgvs = 0', array($sColumnID))->fetchAssoc();
     if (!$zData) {
         $_T->printHeader();
         $_T->printTitle();
@@ -1625,7 +1625,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                 $aSQL = array_merge($aSQL, $_AUTH['curates']);
             }
             $sSQL .= ' ORDER BY g.id';
-            $aPossibleTargets = array_map('lovd_shortenString', $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+            $aPossibleTargets = array_map('lovd_shortenString', $_DB->q($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
 
         } elseif ($sCategory == 'Phenotype') {
@@ -1642,7 +1642,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $aPossibleTargets = array_map(
                 function ($sInput) {
                     return lovd_shortenString($sInput, 75);
-                }, $_DB->query($sSQL, $aSQL)->fetchAllCombine());
+                }, $_DB->q($sSQL, $aSQL)->fetchAllCombine());
             $nPossibleTargets = count($aPossibleTargets);
         }
 
@@ -1678,7 +1678,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         // We're not going to run an ALTER TABLE!
         $tAlter = 0;
     } else {
-        $zStatus = $_DB->query('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
+        $zStatus = $_DB->q('SHOW TABLE STATUS LIKE "' . $aTableInfo['table_sql'] . '"')->fetchAssoc();
         $nSizeData = ($zStatus['Data_length'] + $zStatus['Index_length']);
         $nSizeIndexes = $zStatus['Index_length'];
         // Calculating time it could take to rebuild the table. This is just an estimate and it depends
@@ -1729,14 +1729,14 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             if (!$aTableInfo['shared']) {
                 // Query text; remove column registration first.
                 $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
-                $_DB->query($sQ, array($zData['id']));
+                $_DB->q($sQ, array($zData['id']));
                 $_BAR->setProgress(20);
                 $_BAR->setMessage('Removing column...');
                 // The whole transaction stuff is useless here; alter table will commit and there's just one query before that.
 
                 // Alter data table.
                 $sQ = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' DROP COLUMN `' . $zData['id'] . '`';
-                $_DB->query($sQ);
+                $_DB->q($sQ);
                 $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')';
 
             } else {
@@ -1745,23 +1745,23 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
                 $_DB->beginTransaction();
                 $sQ = 'DELETE FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sObject . ' IN (?' . str_repeat(', ?', count($aTargets) - 1) . ') AND colid = ?';
                 $aQ = array_merge($aTargets, array($zData['id']));
-                $_DB->query($sQ, $aQ);
+                $_DB->q($sQ, $aQ);
                 $_DB->commit();
                 $_BAR->setProgress(10);
                 $_BAR->setMessage('Inactivating column...');
 
                 // Check if the column is inactive in all diseases/genes. If so, DROP column from phenotypes/variants_on_transcripts table and delete from ACTIVE_COLS.
-                $nTargets = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id']))->fetchColumn();
+                $nTargets = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id']))->fetchColumn();
                 if (!$nTargets) {
                     // Deactivate the column.
                     $sQ = 'DELETE FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?';
-                    $q = $_DB->query($sQ, array($zData['id']));
+                    $q = $_DB->q($sQ, array($zData['id']));
                     $_BAR->setProgress(80);
                     $_BAR->setMessage('Removing column...');
 
                     // Alter data table.
                     $sQ = 'ALTER TABLE ' . $aTableInfo['table_sql'] . ' DROP COLUMN `' . $zData['id'] . '`';
-                    $_DB->query($sQ);
+                    $_DB->q($sQ);
                     $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ')';
                 } else {
                     $sMessage = 'Removed column ' . $zData['colid'] . ' (' . $zData['head_column'] . ') from ' . strtoupper(substr($sObject, 0, -2)) . '(s) ' . implode(', ', $aTargets);
@@ -1822,9 +1822,9 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
     if ($aTableInfo['shared']) {
         // If the target is received through $_GET do not show the selection list unless there is a problem with the target.
         if (!empty($_POST['target']) && !is_array($_POST['target']) && !in_array('target', $_ERROR['fields'])) {
-            $sTarget = $_DB->query('SELECT name FROM ' . ($sCategory == 'VariantOnTranscript'? TABLE_GENES : TABLE_DISEASES) . ' WHERE id = ?', array($_POST['target']))->fetchColumn();
+            $sTarget = $_DB->q('SELECT name FROM ' . ($sCategory == 'VariantOnTranscript'? TABLE_GENES : TABLE_DISEASES) . ' WHERE id = ?', array($_POST['target']))->fetchColumn();
             // General query for phenotype data and VOT columns, but for VOT we need to put a join to table_transcripts...
-            $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ($sCategory != 'VariantOnTranscript'? '' : ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)') . ' WHERE ' . $aTableInfo['unit'] . 'id = ? AND `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"', array($_POST['target']))->fetchColumn();
+            $nEntriesWithData = $_DB->q('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ($sCategory != 'VariantOnTranscript'? '' : ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)') . ' WHERE ' . $aTableInfo['unit'] . 'id = ? AND `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"', array($_POST['target']))->fetchColumn();
             $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['id'] . ' column from ' . $aTableInfo['unit'] . ' ' . $_POST['target'] . '<BR>(' . $sTarget . ')</B><BR><BR>');
             print('      <INPUT type="hidden" name="target" value="' . htmlspecialchars($_POST['target']) . '">' . "\n");
         } else {
@@ -1835,7 +1835,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
             $aForm[] = 'skip';
         }
     } else {
-        $nEntriesWithData = $_DB->query('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"')->fetchColumn();
+        $nEntriesWithData = $_DB->q('SELECT COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' WHERE `' . $zData['id'] . '` IS NOT NULL AND `' . $zData['id'] . '` != "" AND `' . $zData['id'] . '` != "-"')->fetchColumn();
         $aForm[] = array('', '', 'print', '<B>Removing the ' . $zData['colid'] . ' column from the ' . $aTableInfo['table_name'] . ' data table, and removing all values</B>');
     }
 
@@ -1864,11 +1864,11 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         // 2013-06-24; 3.0-06; BUT make sure you only select genes and diseases that still have this column, otherwise you get really weird results (1+1=5?).
         //   When selecting all from the options list, LOVD will take the sum of the values, which may not match the sum of the individually selected entries.
         if ($sCategory == 'VariantOnTranscript') {
-            $aEntriesWithData = $_DB->query('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (data.transcriptid = t.id) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (t.geneid = sc.geneid) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
+            $aEntriesWithData = $_DB->q('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (data.transcriptid = t.id) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (t.geneid = sc.geneid) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
         } else {
-            $aEntriesWithData = $_DB->query('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING (' . $aTableInfo['unit'] . 'id) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
+            $aEntriesWithData = $_DB->q('SELECT sc.' . $aTableInfo['unit'] . 'id, COUNT(*) FROM ' . $aTableInfo['table_sql'] . ' AS data INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING (' . $aTableInfo['unit'] . 'id) WHERE sc.colid = ? AND data.`' . $zData['id'] . '` IS NOT NULL AND data.`' . $zData['id'] . '` != "" AND data.`' . $zData['id'] . '` != "-" GROUP BY sc.' . $aTableInfo['unit'] . 'id', array($zData['id']))->fetchAllCombine();
         }
-        $nParentObjects = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id']))->fetchColumn();
+        $nParentObjects = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_SHARED_COLS . ' WHERE colid = ?', array($zData['id']))->fetchColumn();
         print('      <SCRIPT type="text/javascript">' . "\n" .
               '        nParentObjects = ' . $nParentObjects . "\n" .
               '        nAllEntriesWithData = ' . array_sum(array_values($aEntriesWithData)) . "\n" .
@@ -1932,7 +1932,7 @@ if (PATH_COUNT > 2 && ACTION == 'delete') {
     $sColumnID = lovd_getCurrentID();
     $sCategory = $_PE[1];
 
-    $zData = $_DB->query('SELECT c.id, c.hgvs, c.head_column, ac.colid, c.created_by FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
+    $zData = $_DB->q('SELECT c.id, c.hgvs, c.head_column, ac.colid, c.created_by FROM ' . TABLE_COLS . ' AS c LEFT OUTER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c.id = ac.colid) WHERE c.id = ?', array($sColumnID))->fetchAssoc();
 
     $sMessage = '';
     if (!$zData) {

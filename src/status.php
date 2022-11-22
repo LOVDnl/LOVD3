@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-03
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -61,7 +61,7 @@ lovd_includeJS('lib/flot/jquery.flot.pie.min.js');
 print('      <!--[if lte IE 8]><SCRIPT type="text/javascript" src="lib/flot/excanvas.min.js"></SCRIPT><![endif]-->' . "\n\n");
 
 // Statistics about genes:
-$nGenes = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_GENES)->fetchColumn();
+$nGenes = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_GENES)->fetchColumn();
 // Genes, how many variants found? || Genes, how many diseases linked?
 print('      <H5>Genes (' . $nGenes . ')</H5>' . "\n" .
       '      <TABLE border="0" cellpadding="2" cellspacing="0" width="900" style="height : 300px; border-bottom : 3px double #CCC;">' . "\n" .
@@ -114,7 +114,7 @@ $_G->variantsTypeDNA('variantsTypeDNA_unique', '*', $bSeeNonPublicVariants, true
 $nTotalCurators = 0;
 $nTotalCollaborators = 0;
 $sSQL = 'SELECT g.id, g.name, g.updated_date, COUNT(u2g.userid) AS collaborators, SUM(u2g.allow_edit) AS curators FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (g.id = u2g.geneid) GROUP BY g.id ORDER BY g.id ASC';
-$zGenes = $_DB->query($sSQL)->fetchAllAssoc();
+$zGenes = $_DB->q($sSQL)->fetchAllAssoc();
 $nGenes = count($zGenes);
 foreach ($zGenes as $aGene) {
     $nCollaborators = ($aGene['collaborators'] - $aGene['curators']);

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-07-11
- * Modified    : 2022-05-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -79,9 +79,9 @@ if (!(PATH_COUNT <= 2 && $_SESSION['currdb'] && lovd_isAuthorized('gene', $_SESS
 
     // Print LOVD2-style type of selection list with genes this person is curator of (if LEVEL_CURATOR). If only one gene exists, select that gene inmediately.
     if ($_AUTH['level'] == LEVEL_CURATOR) {
-        $qGenes = $_DB->query('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_GENES . ' AS g ON (c.geneid = g.id) WHERE c.userid = ? AND c.allow_edit = 1 ORDER BY g.id', array($_AUTH['id']));
+        $qGenes = $_DB->q('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_GENES . ' AS g ON (c.geneid = g.id) WHERE c.userid = ? AND c.allow_edit = 1 ORDER BY g.id', array($_AUTH['id']));
     } else {
-        $qGenes = $_DB->query('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_GENES . ' AS g ORDER BY g.id', array());
+        $qGenes = $_DB->q('SELECT g.id, CONCAT(g.id, " (", g.name, ")") AS name FROM ' . TABLE_GENES . ' AS g ORDER BY g.id', array());
     }
     $aGenes = $qGenes->fetchAllRow();
     $nGenes = count($aGenes);
@@ -132,7 +132,7 @@ $_T->printTitle();
 
 // Some info & statistics.
 $aVarStatuses = array_combine(array_keys($_SETT['data_status']), array_fill(0, count($_SETT['data_status']), 0));
-$aVarCounts = $_DB->query('SELECT vog.statusid, COUNT(DISTINCT vog.id) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ? GROUP BY vog.statusid ORDER BY statusid', array($_SESSION['currdb']))->fetchAllCombine()
+$aVarCounts = $_DB->q('SELECT vog.statusid, COUNT(DISTINCT vog.id) FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vot.id = vog.id) WHERE t.geneid = ? GROUP BY vog.statusid ORDER BY statusid', array($_SESSION['currdb']))->fetchAllCombine()
     + $aVarStatuses;
 ksort($aVarCounts);
 // In progress would just confuse users, so remove if it's not present.
@@ -178,7 +178,7 @@ print('</TD></TR></TABLE><BR>' . "\n\n");
 
 // Do some basic checks to try and trigger curator's actions.
 // It is important to have at least one transcript.
-$nTranscript = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ?', array($_SESSION['currdb']))->fetchColumn();
+$nTranscript = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ?', array($_SESSION['currdb']))->fetchColumn();
 if (!$nTranscript) {
     lovd_showInfoTable('<SPAN class="S11">You currently do not have a transcript configured for the ' . $_SESSION['currdb'] . ' gene database. Without a transcript added, you can only store genomic variants, and thus you will not have any gene-specific variant overviews.<BR>Please <A href="transcripts?create&amp;target=' . $_SESSION['currdb'] . '">add a transcript to your gene</A>.</SPAN>', 'warning');
 }
@@ -186,7 +186,7 @@ if (!$nTranscript) {
 
 
 // Curators do not have access to the Users tab. But if needed, they should be able to contact the manager, when available.
-$aManagers = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? ORDER BY name', array(LEVEL_MANAGER))->fetchAllAssoc();
+$aManagers = $_DB->q('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? ORDER BY name', array(LEVEL_MANAGER))->fetchAllAssoc();
 if (!$aManagers) {
     $aManagers = array($_SETT['admin']);
 }

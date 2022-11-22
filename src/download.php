@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -145,7 +145,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
         if ($_AUTH && $_AUTH['level'] >= LEVEL_CURATOR) {
             $sFilter = 'gene';
         } else {
-            $bAllowDownload = $_DB->query('SELECT allow_download FROM ' . TABLE_GENES . ' WHERE id = ?', array($ID))->fetchColumn();
+            $bAllowDownload = $_DB->q('SELECT allow_download FROM ' . TABLE_GENES . ' WHERE id = ?', array($ID))->fetchColumn();
             if ($bAllowDownload) {
                 $sFilter = 'gene_public';
             } else {
@@ -434,7 +434,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                     'Screening' => 'Screenings');
                 $qHiddenCols = 'SELECT id, SUBSTRING_INDEX(id, "/", 1) AS category FROM ' .
                                TABLE_COLS . ' WHERE public_view = ?';
-                $aHiddenCols = $_DB->query($qHiddenCols, array('0'))->fetchAllAssoc();
+                $aHiddenCols = $_DB->q($qHiddenCols, array('0'))->fetchAllAssoc();
                 foreach($aHiddenCols as $aHiddenCol) {
                     $sObject = $aObjectTranslations[$aHiddenCol['category']];
                     $aObjects[$sObject]['hide_columns'][] = $aHiddenCol['id'];
@@ -592,7 +592,7 @@ foreach ($aObjectsToBeFiltered as $sObject) {
     //  I could also fetch the IDs in VOT from my own VOGs, then get all
     //   transcript IDs from all VOT IDs, then get all gene IDs.
     if ($aSettings['prefetch'] || count($aSettings['filter_other'])) {
-        $aObjects[$sObject]['data'] = $_DB->query($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
+        $aObjects[$sObject]['data'] = $_DB->q($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
 
         // Check if we, now that we have the data fetched, need to apply other filters,
         foreach ($aSettings['filter_other'] as $sObjectToFilter => $aFiltersToRun) {
@@ -674,7 +674,7 @@ foreach (
             array($aObjects[$sObject]['filters']['id']) : array_values($aObjects[$sObject]['filters']['id']));
         sort($aIDs); // Makes the reporting prettier.
         $sObjectColumn = strtolower(preg_replace('/s$/', 'id', $sObject));
-        $aInactiveColumns = $_DB->query('
+        $aInactiveColumns = $_DB->q('
             SELECT DISTINCT colid 
             FROM ' . TABLE_SHARED_COLS . '
             WHERE colid NOT IN (
@@ -706,7 +706,7 @@ foreach ($aObjects as $sObject => $aSettings) {
     // So saving two queries, and it's easier code, at the cost of additional memory usage.
     // FIXME: Perhaps, if we have a 'hide_columns' setting, modify the query to not select these? May save a lot of memory.
     if (empty($aSettings['data'])) {
-        $aSettings['data'] = $_DB->query($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
+        $aSettings['data'] = $_DB->q($aObjects[$sObject]['query'], $aObjects[$sObject]['args'])->fetchAllAssoc();
     }
 
     // Print comments.
@@ -738,7 +738,7 @@ foreach ($aObjects as $sObject => $aSettings) {
     if ($sObject == 'Variants_On_Transcripts') {
         // Since we joined to the VOG table to enable filtering, we've got all those columns, too.
         // Just for VOT, do a describe to find out which columns are VOT.
-        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
+        $aColumns = $_DB->q('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
     } else {
         $aColumns = array_keys($aSettings['data'][0]);
     }

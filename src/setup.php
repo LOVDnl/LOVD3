@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-02-11
- * Modified    : 2022-05-26
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -49,14 +49,14 @@ lovd_requireAUTH(LEVEL_MANAGER);
 
 
 // Some info & statistics.
-$nUsers       = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn();
-$nLogs        = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_LOGS)->fetchColumn();
-$nIndividuals = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
+$nUsers       = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn();
+$nLogs        = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_LOGS)->fetchColumn();
+$nIndividuals = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
 $nGenes       = count(lovd_getGeneList());
 $aTotalVars   = array();
 $nTotalVars   = 0;
 if (!LOVD_plus) {
-    $q = $_DB->query('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
+    $q = $_DB->q('SELECT COUNT(*), statusid FROM ' . TABLE_VARIANTS . ' GROUP BY statusid ORDER BY statusid');
     while ($r = $q->fetchRow()) {
         $aTotalVars[$r[1]] = $r[0];
         $nTotalVars += $r[0];
@@ -106,9 +106,9 @@ if (!LOVD_plus && $_STAT['update_level']) { // Not for LOVD+, unless we build a 
 }
 
 // Check if we have a system-default license, and if we need one at all anyway.
-if ($_DB->query('SELECT default_license FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchColumn() == '') {
+if ($_DB->q('SELECT default_license FROM ' . TABLE_USERS . ' WHERE id = 0')->fetchColumn() == '') {
     // There's no default license. Do we need one?
-    if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE created_by = 0')->fetchColumn() > 0) {
+    if ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE created_by = 0')->fetchColumn() > 0) {
         lovd_showInfoTable(
             'Some of the data in this LOVD instance isn\'t created by a specific user, but there is no default data license selected for these entries. Please help promote data sharing by selecting a default license for this data.',
             'warning',
@@ -153,7 +153,7 @@ $aItems =
                       ),
 /*
 // Modules.
-$nModules = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_MODULES)->fetchColumn();
+$nModules = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_MODULES)->fetchColumn();
 print('            <TABLE border="0" cellpadding="2" cellspacing="0" class="setup" width="100%">' . "\n" .
       '              <TR>' . "\n" .
       '                <TD colspan="2"><B>Modules</B></TD></TR>' . "\n" .

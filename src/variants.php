@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-05-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -148,7 +148,7 @@ if (!ACTION && (empty($_PE[1])
         // Optimize for speed; show a list of chromosomes with variant counts
         //  instead of the Variant VL for the whole genome.
         print('Please select a chromosome to view the variant listing.<BR><BR>' . "\n");
-        $aChromosomes = $_DB->query('
+        $aChromosomes = $_DB->q('
             SELECT c.name, COUNT(vog.id)
             FROM ' . TABLE_CHROMOSOMES . ' AS c
               LEFT OUTER JOIN ' . TABLE_VARIANTS . ' AS vog ON (c.name = vog.chromosome)' .
@@ -260,7 +260,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
         $bUnique = true;
     }
 
-    $qGene = $_DB->query('
+    $qGene = $_DB->q('
         SELECT g.id, COUNT(t.id)
         FROM ' . TABLE_GENES . ' AS g
           LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON g.id = t.geneid
@@ -278,7 +278,7 @@ if (!ACTION && !empty($_PE[1]) && !ctype_digit($_PE[1])) {
 
         // Overview is given per transcript. If there is only one, it will be mentioned.
         // If there are more, you will be able to select which one you'd like to see.
-        $aTranscriptsWithVariants = $_DB->query(
+        $aTranscriptsWithVariants = $_DB->q(
             'SELECT t.id, t.id_ncbi
              FROM ' . TABLE_TRANSCRIPTS . ' AS t
                INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
@@ -439,7 +439,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     $bAuthorized = ($_AUTH && $_AUTH['level'] >= LEVEL_OWNER);
     // However, for LOVD+, depending on the status of the screening, we might not have the rights to edit the variant.
     if (LOVD_plus && $bAuthorized) {
-        $zScreenings = $_DB->query('SELECT s.* FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s2v.variantid = ? GROUP BY s.id', array($nID))->fetchAllAssoc();
+        $zScreenings = $_DB->q('SELECT s.* FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s2v.variantid = ? GROUP BY s.id', array($nID))->fetchAllAssoc();
         if ($zScreenings &&
             !($_AUTH['level'] >= LEVEL_OWNER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_CLOSED) &&
             !($_AUTH['level'] >= LEVEL_MANAGER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_WAIT_CONFIRMATION) &&
@@ -623,7 +623,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
     if (isset($_GET['target'])) {
         // On purpose not checking for numeric target. If it's not numeric, we'll automatically get to the error message below.
         $_GET['target'] = sprintf('%010d', $_GET['target']);
-        $z = $_DB->query('SELECT id, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
+        $z = $_DB->q('SELECT id, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
         $sMessage = '';
         if (!$z) {
             $sMessage = 'The screening ID given is not valid, please go to the desired screening entry and click on the "Add variant" button.';
@@ -641,7 +641,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
             exit;
         } else {
             $_POST['screeningid'] = $_GET['target'];
-            $_GET['search_id_'] = $_DB->query('SELECT GROUP_CONCAT(DISTINCT "=\"", geneid, "\"" SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn();
+            $_GET['search_id_'] = $_DB->q('SELECT GROUP_CONCAT(DISTINCT "=\"", geneid, "\"" SEPARATOR "|") FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ?', array($_POST['screeningid']))->fetchColumn();
         }
 
         if (isset($_POST['screeningid']) && isset($_AUTH['saved_work']['submissions']['screening'][$_POST['screeningid']])) {
@@ -684,9 +684,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         require ROOT_PATH . 'inc-lib-form.php';
 
         if ($_GET['target']) {
-            $nIndividual = $_DB->query('SELECT individualid FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target']))->fetchColumn();
-            $nVariants = $_DB->query('SELECT COUNT(DISTINCT s2v.variantid) FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($nIndividual))->fetchColumn();
-            $nCurrentVariants = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($_GET['target']))->fetchColumn();
+            $nIndividual = $_DB->q('SELECT individualid FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($_GET['target']))->fetchColumn();
+            $nVariants = $_DB->q('SELECT COUNT(DISTINCT s2v.variantid) FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($nIndividual))->fetchColumn();
+            $nCurrentVariants = $_DB->q('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($_GET['target']))->fetchColumn();
 
             $aOptionsList = array('width' => 600);
             if (!$nVariants) {
@@ -751,7 +751,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
     if ($_GET['reference'] == 'Transcript') {
         // On purpose not checking for format of $_GET['geneid']. If it's not right, we'll automatically get to the error message below.
-        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_GET['geneid']))->fetchColumn();
+        $sGene = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_GET['geneid']))->fetchColumn();
         if (!$sGene) {
             define('PAGE_TITLE', lovd_getCurrentPageTitle());
             $_T->printHeader();
@@ -779,7 +779,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         // This is done so that fetchDBID can have this information and can give a better prediction.
         // buildForm() also uses it to check some things.
         $_POST['aTranscripts'] = $_DATA['Transcript'][$sGene]->aTranscripts;
-        $_POST['chromosome'] = $_DB->query('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn();
+        $_POST['chromosome'] = $_DB->q('SELECT chromosome FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn();
     }
     require ROOT_PATH . 'inc-lib-form.php';
 
@@ -869,7 +869,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             if (isset($_POST['screeningid'])) {
                 // Add variant to screening.
-                $q = $_DB->query('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID), false);
+                $q = $_DB->q('INSERT INTO ' . TABLE_SCR2VAR . ' VALUES (?, ?)', array($_POST['screeningid'], $nID), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Variant entry could not be added to screening #' . $_POST['screeningid']);
@@ -970,7 +970,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     print('        var aUDrefseqs = {' . "\n");
 
     if (isset($sGene)) {
-        echo '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
+        echo '            \'' . $sGene . '\' : \'' . $_DB->q('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
     }
 
     print("\n" .
@@ -1295,9 +1295,9 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
 
     // If dbSNP custom links are active, find out which columns in TABLE_VARIANTS accept them.
-    $aDbSNPColumns = $_DB->query('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l USING (colid) INNER JOIN ' . TABLE_LINKS . ' AS l ON (c2l.linkid = l.id) WHERE l.name = "DbSNP" AND ac.colid LIKE "VariantOnGenome/%" AND ac.colid NOT IN ("VariantOnGenome/DBID", "VariantOnGenome/DNA")')->fetchAllColumn();
+    $aDbSNPColumns = $_DB->q('SELECT ac.colid FROM ' . TABLE_ACTIVE_COLS . ' AS ac INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l USING (colid) INNER JOIN ' . TABLE_LINKS . ' AS l ON (c2l.linkid = l.id) WHERE l.name = "DbSNP" AND ac.colid LIKE "VariantOnGenome/%" AND ac.colid NOT IN ("VariantOnGenome/DBID", "VariantOnGenome/DNA")')->fetchAllColumn();
     // FIXME: dbSNP will be included twice this way.
-    if ($sDbSNPColumn = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = "VariantOnGenome/dbSNP"')->fetchColumn()) {
+    if ($sDbSNPColumn = $_DB->q('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = "VariantOnGenome/dbSNP"')->fetchColumn()) {
         // The dbSNP special column is active, allow to insert dbSNP links in there.
         array_unshift($aDbSNPColumns, $sDbSNPColumn);
     }
@@ -1547,7 +1547,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                 );
 
                 // Check which VOG columns are available.
-                $aVOGColumnsAvailable = $_DB->query('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid LIKE "VariantOnGenome%"')->fetchAllColumn();
+                $aVOGColumnsAvailable = $_DB->q('SELECT colid FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid LIKE "VariantOnGenome%"')->fetchAllColumn();
 
                 // Define the list of VariantOnTranscript columns once and for all.
                 $aVOTCols = array('VariantOnTranscript/Distance_to_splice_site',
@@ -1556,7 +1556,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                   'VariantOnTranscript/Position');
 
                 // We also need to get a list of standard VariantOnTranscript columns.
-                $aColsStandard = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE standard = 1 AND id IN("' . implode('", "', $aVOTCols) . '")')->fetchAllColumn();
+                $aColsStandard = $_DB->q('SELECT id FROM ' . TABLE_COLS . ' WHERE standard = 1 AND id IN("' . implode('", "', $aVOTCols) . '")')->fetchAllColumn();
 
                 $aGenesChecked = array();       // Contains arrays with [refseq_UD], [name], [strand] and [columns] for each gene we'll encounter
                 $aAccessionToSymbol = array();  // Contains the gene symbol for each SeattleSeq transcript accession
@@ -1764,7 +1764,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                         } elseif ($sAccession != 'none') {
                             // We still need to get a gene symbol for this accession.
                             // First try to get the gene symbol from the database (ignoring version number).
-                            list($sSymbol, $sAccessionInDB) = $_DB->query('SELECT geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array(substr($sAccession, 0, strpos($sAccession . '.', '.')+1) . '%'))->fetchRow();
+                            list($sSymbol, $sAccessionInDB) = $_DB->q('SELECT geneid, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ?', array(substr($sAccession, 0, strpos($sAccession . '.', '.')+1) . '%'))->fetchRow();
                             if ($sSymbol) {
                                 // We've got it in the database already.
                                 $aAccessionMapping[$sAccession] = $sAccessionInDB;
@@ -1789,10 +1789,10 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                             // We haven't seen this gene before in this upload.
 
                             // First try to get this gene from the database.
-                            if ($aGene = $_DB->query('SELECT g.refseq_UD, g.name, IF(IFNULL(t.position_g_mrna_start, 0) = IFNULL(t.position_g_mrna_end, 0), NULL, IF(t.position_g_mrna_start < t.position_g_mrna_end, "+", "-")) AS strand
+                            if ($aGene = $_DB->q('SELECT g.refseq_UD, g.name, IF(IFNULL(t.position_g_mrna_start, 0) = IFNULL(t.position_g_mrna_end, 0), NULL, IF(t.position_g_mrna_start < t.position_g_mrna_end, "+", "-")) AS strand
                                                       FROM ' . TABLE_GENES . ' AS g LEFT JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE g.id = ? ORDER BY t.id ASC LIMIT 1', array($sSymbol))->fetchAssoc()) {
                                 // We've got it in the database. Check its columns.
-                                $aGene['columns'] = $_DB->query('SELECT colid FROM ' . TABLE_SHARED_COLS . ' WHERE geneid = ? AND colid IN("' . implode('", "', $aVOTCols) . '")', array($sSymbol))->fetchAllColumn();
+                                $aGene['columns'] = $_DB->q('SELECT colid FROM ' . TABLE_SHARED_COLS . ' WHERE geneid = ? AND colid IN("' . implode('", "', $aVOTCols) . '")', array($sSymbol))->fetchAllColumn();
                                 $aGenesChecked[$sSymbol] = $aGene;
 
                             } elseif (strpos($_POST['autocreate'], 'g') !== false) {
@@ -1957,7 +1957,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                                 // We'll try to get it from the database first. If we don't have it, we'll try Mutalyzer.
                                 // We might have matched a different version before, now find the version we have, preferring the version given by SeattleSeq, otherwise the one added last.
-                                if ($sAccessionDB = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC', array($sAccessionClean . '.%', $sAccession))->fetchColumn()) {
+                                if ($sAccessionDB = $_DB->q('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi LIKE ? ORDER BY (id_ncbi = ?) DESC, id DESC', array($sAccessionClean . '.%', $sAccession))->fetchColumn()) {
                                     // We have this transcript in the database already.
                                     $sAccession = $aAccessionMapping[$sAccession] = $sAccessionDB;
 
@@ -2176,7 +2176,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                         $aFieldsVOG['VariantOnGenome/DBID'] = lovd_fetchDBID(array_merge($aFieldsVOG, $aTranscriptDataForDBID[$i]));
 
                         // Now finally insert the VariantOnGenome!
-                        $_DB->query('INSERT INTO ' . TABLE_VARIANTS . ' (`' . implode('`, `', array_keys($aFieldsVOG)) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsVOG) - 1) . ')', array_values($aFieldsVOG));
+                        $_DB->q('INSERT INTO ' . TABLE_VARIANTS . ' (`' . implode('`, `', array_keys($aFieldsVOG)) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsVOG) - 1) . ')', array_values($aFieldsVOG));
                         $nVariantID = $_DB->lastInsertId();
                         $aUploadData['num_variants'] ++;
 
@@ -2190,7 +2190,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                             foreach ($aFieldsVariantOnTranscript[$i] as $sAccession => $aFieldsVOT) {
 
-                                if (($nTranscriptID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sAccession))->fetchColumn()) === false) {
+                                if (($nTranscriptID = $_DB->q('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sAccession))->fetchColumn()) === false) {
                                     // We don't have the transcript in the database, se we need to insert it first.
 
                                     foreach ($aFieldsTranscript as $sSymbol => &$aFieldsTranscriptsOfGene) {
@@ -2199,8 +2199,8 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
 
                                             if (!empty($aFieldsGene[$sSymbol])) {
                                                 // We need to insert its gene first too.
-                                                $_DB->query('INSERT INTO ' . TABLE_GENES . ' (`' . implode('`, `', array_keys($aFieldsGene[$sSymbol])) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsGene[$sSymbol]) - 1) . ')', array_values($aFieldsGene[$sSymbol]));
-                                                $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $sSymbol, 1, 1));
+                                                $_DB->q('INSERT INTO ' . TABLE_GENES . ' (`' . implode('`, `', array_keys($aFieldsGene[$sSymbol])) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsGene[$sSymbol]) - 1) . ')', array_values($aFieldsGene[$sSymbol]));
+                                                $_DB->q('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $sSymbol, 1, 1));
                                                 lovd_addAllDefaultCustomColumns('gene', $sSymbol, 0);
                                                 $aUploadData['num_genes'] ++;
 
@@ -2209,7 +2209,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                             }
 
                                             // Now we're ready to insert the transcript
-                                            $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . ' (`' . implode('`, `', array_keys($aFieldsTranscriptsOfGene[$sAccession])) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsTranscriptsOfGene[$sAccession]) - 1) . ')', array_values($aFieldsTranscriptsOfGene[$sAccession]));
+                                            $_DB->q('INSERT INTO ' . TABLE_TRANSCRIPTS . ' (`' . implode('`, `', array_keys($aFieldsTranscriptsOfGene[$sAccession])) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsTranscriptsOfGene[$sAccession]) - 1) . ')', array_values($aFieldsTranscriptsOfGene[$sAccession]));
                                             $nTranscriptID = $_DB->lastInsertId();
                                             $aUploadData['num_transcripts'] ++;
                                             unset($aFieldsTranscriptsOfGene[$sAccession]);
@@ -2221,7 +2221,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                 // Ready to insert the VariantOnTranscript.
                                 $aFieldsVOT['id'] = $nVariantID;
                                 $aFieldsVOT['transcriptid'] = $nTranscriptID;
-                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (`' . implode('`, `', array_keys($aFieldsVOT)) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsVOT) - 1) . ')', array_values($aFieldsVOT));
+                                $_DB->q('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (`' . implode('`, `', array_keys($aFieldsVOT)) . '`) VALUES (?' . str_repeat(', ?', count($aFieldsVOT) - 1) . ')', array_values($aFieldsVOT));
                                 $aUploadData['num_variants_on_transcripts'] ++;
                             }
                         }
@@ -2355,7 +2355,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
     lovd_errorPrint();
 
     // Prepare the upload form.
-    $aSelectOwner = $_DB->query('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name')->fetchAllCombine();
+    $aSelectOwner = $_DB->q('SELECT id, name FROM ' . TABLE_USERS . ' ORDER BY name')->fetchAllCombine();
     $aSelectStatus = $_SETT['data_status'];
     unset($aSelectStatus[STATUS_PENDING], $aSelectStatus[STATUS_IN_PROGRESS]);
 
@@ -2441,7 +2441,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         lovd_requireAUTH(LEVEL_OWNER);
     }
 
-    $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ?', array($nID))->fetchAllColumn();
+    $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id = ?', array($nID))->fetchAllColumn();
     $bGene = (!empty($aGenes));
 
     require ROOT_PATH . 'class/object_genome_variants.php';
@@ -2474,7 +2474,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 foreach ($aSubmit['uploads'] as $aUploadInfo) {
                     $aUploadDates[] = $aUploadInfo['upload_date'];
                 }
-                $bSubmit = $_DB->query('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn();
+                $bSubmit = $_DB->q('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn();
             }
         }
 
@@ -2489,7 +2489,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                     foreach ($aSubmit['uploads'] as $aUploadInfo) {
                         $aUploadDates[] = $aUploadInfo['upload_date'];
                     }
-                    $bSubmit = $_DB->query('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn();
+                    $bSubmit = $_DB->q('SELECT TRUE FROM ' . TABLE_VARIANTS . ' WHERE id = ? AND created_date IN (?' . str_repeat(', ?', count($aUploadDates) - 1) . ')', array_merge(array($nID), $aUploadDates))->fetchColumn();
                     if ($bSubmit) {
                         break;
                     }
@@ -2580,7 +2580,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if (!$bSubmit && !(GET && ACTION == 'publish')) {
                 // Put $zData with the old values in $_SESSION for mailing.
-                $zData['allele_'] = $_DB->query('SELECT name FROM ' . TABLE_ALLELES . ' WHERE id = ?', array($zData['allele']))->fetchColumn();
+                $zData['allele_'] = $_DB->q('SELECT name FROM ' . TABLE_ALLELES . ' WHERE id = ?', array($zData['allele']))->fetchColumn();
                 if (!empty($_POST['aTranscripts'])) {
                     $zData['aTranscripts'] = array_keys($_POST['aTranscripts']);
                 }
@@ -2722,7 +2722,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
     if ($bGene) {
         $i=0;
         foreach($aGenes as $sGene) {
-            echo ($i? ',' . "\n" : '') . '            \'' . $sGene . '\' : \'' . $_DB->query('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
+            echo ($i? ',' . "\n" : '') . '            \'' . $sGene . '\' : \'' . $_DB->q('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
             $i++;
         }
     }
@@ -2803,7 +2803,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         if (!lovd_error()) {
             // We will need to update the timestamps of any gene affected by this deletion, if the variant's status is Marked or higher.
             if ($zData['statusid'] >= STATUS_MARKED) {
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ?', array($nID))->fetchAllColumn();
+                $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ?', array($nID))->fetchAllColumn();
             }
 
             // This also deletes the entries in TABLE_VARIANTS_ON_TRANSCRIPTS && TABLE_SCR2VAR.
@@ -2886,7 +2886,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'search_global') {
     if ($zData['position_g_end'] != $zData['position_g_start']) {
         $sSearchPosition .= '_' . $zData['position_g_end'];
     }
-    $sSignature = $_DB->query('SELECT signature FROM ' . TABLE_STATUS)->fetchColumn();
+    $sSignature = $_DB->q('SELECT signature FROM ' . TABLE_STATUS)->fetchColumn();
     $aData = lovd_php_file($_SETT['upstream_URL'] . 'search.php?position=' . $sSearchPosition . '&build=' . $_CONF['refseq_build'] . '&ignore_signature=' . md5($sSignature));
     if (empty($aData)) {
         // No data found.
@@ -2943,7 +2943,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
 
     if (LOVD_plus) {
         // However, depending on the status of the screening, we might not have the rights to edit the variant.
-        $zScreenings = $_DB->query('SELECT s.* FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s2v.variantid = ? GROUP BY s.id', array($nID))->fetchAllAssoc();
+        $zScreenings = $_DB->q('SELECT s.* FROM ' . TABLE_SCREENINGS . ' AS s INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s2v.variantid = ? GROUP BY s.id', array($nID))->fetchAllAssoc();
         if ($zScreenings &&
             !($_AUTH['level'] >= LEVEL_OWNER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_CLOSED) &&
             !($_AUTH['level'] >= LEVEL_MANAGER && $zScreenings[0]['analysis_statusid'] < ANALYSIS_STATUS_WAIT_CONFIRMATION)) {
@@ -2959,14 +2959,14 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
     $_DATA = new LOVD_GenomeVariant();
     $zData = $_DATA->loadEntry($nID);
     // Load all transcript ID's that are currently present in the database connected to this variant.
-    $aCurrentTranscripts = $_DB->query('SELECT t.id, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid', array($nID))->fetchAllCombine();
+    $aCurrentTranscripts = $_DB->q('SELECT t.id, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid', array($nID))->fetchAllCombine();
     if (ACTION == 'delete_non-preferred_transcripts') {
         if (!LOVD_plus) {
             // Only available for LOVD+!
             exit;
         }
         // Additionally, fetch which transcripts are *not* preferred transcripts.
-        $aTranscriptsToRemove = $_DB->query('SELECT t.id, t.id_ncbi FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_GP2GENE . ' AS gp2g ON (t.id = gp2g.transcriptid) WHERE vot.id = ?  AND gp2g.transcriptid IS NULL', array($nID))->fetchAllCombine();
+        $aTranscriptsToRemove = $_DB->q('SELECT t.id, t.id_ncbi FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_GP2GENE . ' AS gp2g ON (t.id = gp2g.transcriptid) WHERE vot.id = ?  AND gp2g.transcriptid IS NULL', array($nID))->fetchAllCombine();
 
         // But, remove transcripts only if we'll have at least one left!
         if (count($aCurrentTranscripts) == count($aTranscriptsToRemove)) {
@@ -3000,7 +3000,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
             $_POST['transcripts'] = array();
         } else {
             // Verify all given IDs; they need to exist in the database, and they need to be on the same chromosome.
-            $aTranscripts = $_DB->query('SELECT t.id, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllCombine();
+            $aTranscripts = $_DB->q('SELECT t.id, t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllCombine();
             foreach ($_POST['transcripts'] as $nTranscript) {
                 if (!isset($aTranscripts[$nTranscript])) {
                     // The user tried to fake a $_POST by inserting an ID that did not come from our code.
@@ -3031,7 +3031,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
                     // If the transcript is not already present in the database connected to this variant, we will add it now.
                     $aNewTranscripts[] = $nTranscript;
                     // Gather all necessary info from this transcript.
-                    $zTranscript = $_DB->query('SELECT id, geneid, name, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscript))->fetchAssoc();
+                    $zTranscript = $_DB->q('SELECT id, geneid, name, id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?', array($nTranscript))->fetchAssoc();
                     // Call the numberConversion module of mutalyzer to get the VariantOnTranscript/DNA value for this variant on this transcript.
                     // Check if we already have the converted positions for this gene, if so, we won't have to call mutalyzer again for this information.
                     if (!array_key_exists($zTranscript['geneid'], $aVariantDescriptions)) {
@@ -3070,7 +3070,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
                                     );
                                 }
                                 // Insert all the gathered information about the variant description into the database.
-                                $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], $zData['effectid'], $aMatches[1]));
+                                $_DB->q('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, position_c_start, position_c_start_intron, position_c_end, position_c_end_intron, effectid, `VariantOnTranscript/DNA`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', array($nID, $nTranscript, $aMapping['position_c_start'], $aMapping['position_c_start_intron'], $aMapping['position_c_end'], $aMapping['position_c_end_intron'], $zData['effectid'], $aMatches[1]));
                                 $bAdded = true;
                                 $aGenesUpdated[] = $aTranscripts[$nTranscript];
                                 // Speed improvement: remove this value from the output from mutalyzer, so we will not check this one again with the next transcript that we will add.
@@ -3082,7 +3082,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
                     if (!$bAdded) {
                         // Requested transcript was not added to the database! Usually because mutalyzer does not understand the variant.
                         // Insert simpler version of mapping: no mapping fields, no DNA field predicted.
-                        $_DB->query('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid) VALUES (?, ?, ?)', array($nID, $nTranscript, $_SETT['var_effect_default']));
+                        $_DB->q('INSERT INTO ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' (id, transcriptid, effectid) VALUES (?, ?, ?)', array($nID, $nTranscript, $_SETT['var_effect_default']));
                     }
                 }
             }
@@ -3097,7 +3097,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
 
             if (!empty($aToRemove)) {
                 // Remove transcript mapping from variant...
-                $_DB->query('DELETE FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+                $_DB->q('DELETE FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
             }
 
             if ($zData['statusid'] >= STATUS_MARKED) {
@@ -3143,12 +3143,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
         // Form has already been sent. We're here because of errors. Use $_POST.
         // Retrieve data for selected transcripts.
         if (!empty($_POST['transcripts'])) {
-            $aVOT = $_DB->query('SELECT t.id, t.geneid, t.name, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllAssoc();
+            $aVOT = $_DB->q('SELECT t.id, t.geneid, t.name, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_GENES . ' AS g ON (t.geneid = g.id) WHERE g.chromosome = ? AND t.id IN (?' . str_repeat(', ?', count($_POST['transcripts']) - 1) . ')', array_merge(array($zData['chromosome']), $_POST['transcripts']))->fetchAllAssoc();
         } else {
             $aVOT = array();
         }
     } else {
-        $aVOT = $_DB->query('SELECT t.id, t.geneid, t.name, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, id_ncbi', array($nID))->fetchAllAssoc();
+        $aVOT = $_DB->q('SELECT t.id, t.geneid, t.name, t.id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, id_ncbi', array($nID))->fetchAllAssoc();
     }
 
     if (!(LOVD_plus && ACTION == 'delete_non-preferred_transcripts')) {
