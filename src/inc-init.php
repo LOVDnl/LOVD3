@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-08-29
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -717,13 +717,13 @@ if (function_exists('mb_internal_encoding')) {
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
 // Read system-wide configuration from the database.
-if ($_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
+if ($_CONF = $_DB->q('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
     // Must be two-step, since $_CONF can be false and therefore does not have ->fetchAssoc().
     $_CONF = $_CONF->fetchAssoc();
     if ($_CONF) {
         // See if the database is read-only at the moment, due to an announcement with the configuration.
         // Ignore errors, in case the table doesn't exist yet.
-        $qAnnouncements = @$_DB->query('SELECT COUNT(*) FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW() AND lovd_read_only = 1', array(), false);
+        $qAnnouncements = @$_DB->q('SELECT COUNT(*) FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW() AND lovd_read_only = 1', array(), false);
         $_CONF['lovd_read_only'] = ($qAnnouncements && $qAnnouncements->fetchColumn());
     }
 }
@@ -739,7 +739,7 @@ if (!$_CONF) {
 }
 
 // Read LOVD status from the database.
-if ($_STAT = $_DB->query('SELECT * FROM ' . TABLE_STATUS, false, false)) {
+if ($_STAT = $_DB->q('SELECT * FROM ' . TABLE_STATUS, false, false)) {
     // Must be two-step, since $_STAT can be false and therefore does not have ->fetchAssoc().
     $_STAT = $_STAT->fetchAssoc();
 }
@@ -765,7 +765,7 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
     $aTables = array();
     // We can't put TABLE_PREFIX in an argument, since SHOW ... can't be prepared by PDO in some PHP versions.
     // Generated errors on 5.1.6, works fine on 5.3.3.
-    $q = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+    $q = $_DB->q('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
     while ($sCol = $q->fetchColumn()) {
         if (in_array($sCol, $_TABLES)) {
             $aTables[] = $sCol;
@@ -942,7 +942,7 @@ if (!defined('NOT_INSTALLED')) {
             );
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->q('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
             // Add a cleaned email address, because perhaps the admin has multiple addresses.
             $_SETT['admin']['address_formatted'] = $_SETT['admin']['name'] . ' <' . str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>';
         }
@@ -984,7 +984,7 @@ if (!defined('NOT_INSTALLED')) {
     if (!in_array(lovd_getProjectFile(), array('/check_update.php'))) {
         // Load gene data.
         if (!LOVD_plus && !empty($_SESSION['currdb'])) {
-            $_SETT['currdb'] = @$_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
+            $_SETT['currdb'] = @$_DB->q('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
             if (!$_SETT['currdb']) {
                 $_SESSION['currdb'] = false;
             } else {
