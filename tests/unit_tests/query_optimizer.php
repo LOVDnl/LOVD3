@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-02-10
- * Modified    : 2020-09-10
- * For LOVD    : 3.0-25
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -152,17 +152,17 @@ foreach ($aSQL as $sSQLInput => $sSQLExpectedOutput) {
     do {
         $nTries ++; // Starts at 1.
         $t = microtime(true);
-        $_DB->query(preg_replace('/^SELECT /', 'SELECT SQL_NO_CACHE ', $sSQLInput));
-        $nFoundInput = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+        $_DB->q(preg_replace('/^SELECT /', 'SELECT SQL_NO_CACHE ', $sSQLInput));
+        $nFoundInput = $_DB->q('SELECT FOUND_ROWS()')->fetchColumn();
         $tSQLInput = microtime(true) - $t;
 
         $t = microtime(true);
         if (strpos($sSQLOutput, 'SQL_CALC_FOUND_ROWS') !== false) {
             // We still had to use SQL_CALC_FOUND_ROWS()...
-            $_DB->query(preg_replace('/^SELECT /', 'SELECT SQL_NO_CACHE ', $sSQLOutput));
-            $nFoundOutput = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+            $_DB->q(preg_replace('/^SELECT /', 'SELECT SQL_NO_CACHE ', $sSQLOutput));
+            $nFoundOutput = $_DB->q('SELECT FOUND_ROWS()')->fetchColumn();
         } else {
-            $nFoundOutput = $_DB->query(preg_replace('/^SELECT /', 'SELECT SQL_NO_CACHE ', $sSQLOutput))->fetchColumn();
+            $nFoundOutput = $_DB->q(preg_replace('/^SELECT /', 'SELECT SQL_NO_CACHE ', $sSQLOutput))->fetchColumn();
         }
         $tSQLOutput = microtime(true) - $t;
     } while ($tSQLOutput > $tSQLInput || $nTries >= 5);

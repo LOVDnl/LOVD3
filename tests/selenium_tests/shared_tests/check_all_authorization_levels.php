@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-22
- * Modified    : 2020-05-26
- * For LOVD    : 3.0-24
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -80,7 +80,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         // 6 - Submitter (colleague).
 
         // Assertions for DATABASE ADMINISTRATOR.
-        $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 1')->fetchAssoc();
+        $_AUTH = $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 1')->fetchAssoc();
         $this->assertNotFalse($_AUTH);
         $this->assertEquals(LEVEL_ADMIN, $_AUTH['level']);
         $this->assertEquals(1, lovd_isAuthorized('user', 'does_not_exist'), false);
@@ -141,7 +141,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
         // 6 - Submitter (colleague).
 
         // Assertions for MANAGER.
-        $_AUTH = $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 2')->fetchAssoc();
+        $_AUTH = $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 2')->fetchAssoc();
         $this->assertNotFalse($_AUTH);
         $this->assertEquals(LEVEL_MANAGER, $_AUTH['level']);
         $this->assertEquals(1, lovd_isAuthorized('user', 'does_not_exist'), false);
@@ -203,7 +203,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Assertions for CURATOR.
         $_SESSION = array(
-            'auth' => $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 3')->fetchAssoc(),
+            'auth' => $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 3')->fetchAssoc(),
         );
 
         // Let LOVD load the curator, collaborator, and colleagues access.
@@ -285,7 +285,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Assertions for COLLABORATOR.
         $_SESSION = array(
-            'auth' => $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 4')->fetchAssoc(),
+            'auth' => $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 4')->fetchAssoc(),
         );
 
         // Let LOVD load the curator, collaborator, and colleagues access.
@@ -367,7 +367,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Assertions for OWNER.
         $_SESSION = array(
-            'auth' => $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 5')->fetchAssoc(),
+            'auth' => $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 5')->fetchAssoc(),
         );
 
         // Let LOVD load the curator, collaborator, and colleagues access.
@@ -464,7 +464,7 @@ class CheckAuthorizationsTest extends LOVDSeleniumWebdriverBaseTestCase
 
         // Assertions for COLLEAGUE.
         $_SESSION = array(
-            'auth' => $_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 6')->fetchAssoc(),
+            'auth' => $_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE id = 6')->fetchAssoc(),
         );
 
         // Let LOVD load the curator, collaborator, and colleagues access.
