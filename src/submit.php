@@ -395,7 +395,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'screening' && ctype_digit($_PE[2]) && !ACTION
         $aOptionsList['options'][3]['onclick'] = 'javascript:alert(\'You cannot finish your submission, because no variants were added to this screening!\')';
         $aOptionsList['options'][3]['option_text'] = '<B>I want to finish this submission</B>';
     } elseif ($sSubmitType == 'individual') {
-        $aOptionsList['options'][3]['onclick'] = 'javascript:if(window.confirm(\'Are you sure you are done with submitting the variants found with this screening?\')){document.location.href=\'submit/individual/' . $zData['individualid'] . '\';}';
+        $aOptionsList['options'][3]['onclick'] = 'javascript:if(window.confirm(\'Are you sure you are done with submitting the variants found with this screening?\')){window.location.href=\'submit/individual/' . $zData['individualid'] . '\';}';
         $aOptionsList['options'][3]['type'] = 'l';
         $aOptionsList['options'][3]['option_text'] = '<B>Back to the individual</B>';
         if ($zData['variants_found'] && $zData['variants']) {

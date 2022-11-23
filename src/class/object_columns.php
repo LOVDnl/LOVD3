@@ -202,7 +202,7 @@ class LOVD_Column extends LOVD_Object
 
         // Category; not chosen on this form, but we want to make sure it's correct anyways.
         if (!empty($aData['category']) && !in_array($aData['category'], array('Individual', 'Phenotype', 'Screening', 'VariantOnGenome', 'VariantOnTranscript'))) {
-            lovd_errorAdd('category', 'The category is not correct. Please choose one of the following: Individual, Phenotype, Screening, VariantOnGenome or VariantOnTranscript.');
+            lovd_errorAdd('category', 'The category is not correct. Please choose one of the following: Individual, Phenotype, Screening, VariantOnGenome, or VariantOnTranscript.');
         }
 
         // ColID format.

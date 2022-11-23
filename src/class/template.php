@@ -614,9 +614,9 @@ function lovd_mapVariants ()
         var sURL = '<?php if (!empty($_SESSION['currdb'])) { echo addslashes($sGeneSwitchURL); } ?>';
         // FIXME; It is very very difficult to keep the hash, it should be selective since otherwise you might be loading the EXACT SAME VL, BUT ON A DIFFERENT PAGE (viewing variants belonging to gene X, on a page that says you're looking at gene Y).
         if (geneSwitcher['switchType'] === 'autocomplete') {
-            document.location.href = sURL.replace('{{GENE}}', $('#select_gene_autocomplete').val());
+            window.location.href = sURL.replace('{{GENE}}', $('#select_gene_autocomplete').val());
         } else {
-            document.location.href = sURL.replace('{{GENE}}', $('#select_gene_dropdown').val());
+            window.location.href = sURL.replace('{{GENE}}', $('#select_gene_dropdown').val());
         }
     }
 <?php
@@ -629,7 +629,7 @@ function lovd_mapVariants ()
     $.get("ajax/donate.php");
 ');
 
-            } elseif ($_AUTH && !isset($_AUTH['default_license']) && substr(lovd_getProjectFile(), 0, 9) != '/install/') {
+            } elseif (!LOVD_plus && $_AUTH && !isset($_AUTH['default_license']) && substr(lovd_getProjectFile(), 0, 9) != '/install/') {
                 // Determine whether or not to show the dialog to remind the user to choose a license.
                 $nTimeToShow = strtotime('+1 day', $_COOKIE['lovd_settings']['default_license_dialog_last_seen']);
                 if ($nTimeToShow <= time()) {

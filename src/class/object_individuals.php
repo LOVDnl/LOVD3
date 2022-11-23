@@ -495,7 +495,7 @@ class LOVD_Individual extends LOVD_Custom
 
             // Tool to set/change the license.
             // Provide this link only here, because here we can reload the Individual VE.
-            if (lovd_isAuthorized('individual', $zData['id'])) {
+            if (lovd_isAuthorized('individual', $zData['id']) && isset($zData['license_'])) {
                 $zData['license_'] .= '<SPAN style="float:right;">(<A href="#" onclick="$.get(\'ajax/licenses.php/individual/' . $zData['id'] . '?edit\').fail(function(){alert(\'Error viewing license information, please try again later.\');}); return false;">Change</A>)</SPAN>';
             }
         }

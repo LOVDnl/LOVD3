@@ -978,7 +978,7 @@ if ($_CURRDB->colExists('Variant/RNA')) {
 
     // 2009-06-24; 2.0-19; print non-observed variants
     if (!empty($aAbsentVariants)) {
-        print('Variants not observed: ' . implode($aAbsentVariants, ', ') . '<BR><BR>');
+        print('Variants not observed: ' . implode(', ', $aAbsentVariants) . '<BR><BR>');
     }
 
 }

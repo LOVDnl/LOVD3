@@ -280,7 +280,7 @@ if ($_GET['step'] == 1) {
                 // Extract the ORIGIN part of the GenBank file to an array
                 $aSequence = array_slice($aGenBank, $nSeqOffset, (count($aGenBank) - 2 - $nSeqOffset));
                 // write the sequence to a string
-                $sSequence = implode($aSequence, '');
+                $sSequence = implode($aSequence);
                 // Get rid of any form of whitespace
                 $sSequence = preg_replace('/\s+/', '', $sSequence);
                 // Get rid of numbers

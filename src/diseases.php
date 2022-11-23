@@ -261,7 +261,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                                  if ($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\') < 15) {
                                      $(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\', eval($(opener.document.forms[0][\'active_diseases[]\']).attr(\'size\')) + 1);
                                  }
-                                 if (opener.document.location.href.match(/\/(individuals\/' . (empty($_POST['genes'])? '' : '|genes\/(' . implode('|', $_POST['genes']) . ')\?') . ')/)) {
+                                 if (opener.window.location.href.match(/\/(individuals\/' . (empty($_POST['genes'])? '' : '|genes\/(' . implode('|', $_POST['genes']) . ')\?') . ')/)) {
                                      $(opener.document.forms[0][\'active_diseases[]\']).children(\'option:last\').prop(\'selected\', 1);
                                  }
                                  setTimeout(\'self.close();\', 1000);</SCRIPT>' . "\n\n");

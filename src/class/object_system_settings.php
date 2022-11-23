@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2022-10-20
+ * Modified    : 2022-11-03
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -199,6 +199,8 @@ class LOVD_SystemSetting extends LOVD_Object
         // Prevent notices.
         if (LOVD_plus) {
             $_POST['logo_uri'] = 'LOVD_plus_logo145x50';
+            $_POST['donate_dialog_allow'] = 0;
+            $_POST['donate_dialog_months_hidden'] = 0;
             $_POST['send_stats'] = 0;
             $_POST['include_in_listing'] = 0;
             $_POST['allow_submitter_registration'] = 0;

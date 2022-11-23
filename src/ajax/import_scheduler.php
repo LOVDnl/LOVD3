@@ -347,7 +347,7 @@ if (ACTION == 'new_screening' && POST) {
 
     // Compare data from meta data file with database, to check for data mismatches.
     foreach ($aParsed['Individuals'] as $sKey => $sVal) {
-        if ($sKey != 'id' && $sVal != $zIndividual[$sKey]) {
+        if ($sKey != 'id' && $sVal && $sVal != $zIndividual[$sKey]) {
             die('alert("Error: Data mismatch between meta data file and database contents at Individual field ' .
                 $sKey . ' (' . $zIndividual[$sKey] . ' => ' . $sVal . '). I will not try and edit this file.\n");');
         }
