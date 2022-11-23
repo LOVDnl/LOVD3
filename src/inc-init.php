@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-11-22
+ * Modified    : 2022-11-23
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -696,10 +696,30 @@ if (!class_exists('PDO')) {
 // Initiate Database Connection.
 require ROOT_PATH . 'class/PDO.php';
 if ($_INI['database']['driver'] == 'mysql') {
-    $_DB = new LOVD_PDO($_INI['database']['driver'], 'host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+    // This method for setting the charset works also before 5.3.6, when "charset" was introduced in the DSN.
+    // Fix #4; Implement fix for PHP 5.3.0 on Windows, where PDO::MYSQL_ATTR_INIT_COMMAND by accident is not available.
+    // https://bugs.php.net/bug.php?id=47224                  (other constants were also lost, but we don't use them)
+    // Can't define a class' constant, so I'll have to use this one. This can be removed (and MYSQL_ATTR_INIT_COMMAND
+    // below restored to PDO::MYSQL_ATTR_INIT_COMMAND) once we're sure they're no other 5.3.0 users left.
+    if (!defined('MYSQL_ATTR_INIT_COMMAND')) {
+        // Still needs check though, in case two PDO connections are opened.
+        define('MYSQL_ATTR_INIT_COMMAND', 1002);
+    }
+    $aOptions = array(
+        // ONLY_FULL_GROUP_BY is causing issues; even if we try to play nice,
+        //  the totally unnecessary MIN() and MAX() calls slow down queries a lot. See #386.
+        MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8, SQL_MODE = REPLACE(REPLACE(@@SQL_MODE, "NO_ZERO_DATE", ""), "ONLY_FULL_GROUP_BY", "")',
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
+    );
+    $_DB = new LOVD_PDO(
+        $_INI['database']['driver'] . ':host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'],
+        $_INI['database']['username'],
+        $_INI['database']['password'],
+        $aOptions
+    );
 } elseif ($_INI['database']['driver'] == 'sqlite') {
     // SQLite.
-    $_DB = new LOVD_PDO($_INI['database']['driver'], $_INI['database']['database']);
+    $_DB = new LOVD_PDO($_INI['database']['driver'] . ':' . $_INI['database']['database']);
 } else {
     // Can't happen.
     exit;
