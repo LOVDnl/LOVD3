@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2022-11-22
+ * Modified    : 2022-11-23
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -127,7 +127,7 @@ class LOVD_PDO extends PDO
 
 
 
-    function prepare ($sSQL, $bHalt = true, $aOptions = array())
+    function prepare ($sSQL, $aOptions = array(), $bHalt = true)
     {
         // Wrapper around PDO::prepare().
 
@@ -161,7 +161,7 @@ class LOVD_PDO extends PDO
 
         if ($aSQL === (array) $aSQL) { // Believe it or not, faster than is_array().
             // We'll do an prepare() and execute(), not a query()!
-            $q = $this->prepare($sSQL, $bHalt); // Error handling by our own PDO class.
+            $q = $this->prepare($sSQL, array(), $bHalt); // Error handling by our own PDO class.
             if ($q) {
                 $b = $q->execute($aSQL, $bHalt, $bTrim); // Error handling by our own PDOStatement class.
                 if (!$b) {
