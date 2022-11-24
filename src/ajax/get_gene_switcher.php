@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-11-27
- * Modified    : 2016-02-02
- * For LOVD    : 3.0-15
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2015 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Msc. Daan Asscheman <D.Asscheman@LUMC.nl>
  *
  *
@@ -33,7 +33,7 @@ require ROOT_PATH . 'inc-init.php';
 session_write_close();
 $nMaxDropDown = 10;
 
-$qGenes = $_DB->query('SELECT id AS value, CONCAT(id, " (", name, ")") AS label FROM ' . TABLE_GENES . ' ORDER BY id');
+$qGenes = $_DB->q('SELECT id AS value, CONCAT(id, " (", name, ")") AS label FROM ' . TABLE_GENES . ' ORDER BY id');
 $zGenes = $qGenes->fetchAllAssoc();
 
 if (empty($zGenes)) {

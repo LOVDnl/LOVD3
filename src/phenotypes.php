@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-23
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -158,7 +158,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
     lovd_requireAUTH($_SETT['user_level_settings']['submit_new_data']);
 
     $_GET['target'] = sprintf('%0' . $_SETT['objectid_length']['individuals'] . 'd', $_GET['target']);
-    $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
+    $z = $_DB->q('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
     if (!$z) {
         define('PAGE_TITLE', lovd_getCurrentPageTitle());
         $_T->printHeader();
@@ -179,7 +179,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
         if (ctype_digit($_GET['diseaseid'])) {
             $_POST['diseaseid'] = sprintf('%0' . $_SETT['objectid_length']['diseases'] . 'd', $_GET['diseaseid']);
             // Check if there are phenotype columns enabled for this disease & check if the $_POST['diseaseid'] is actually linked to this individual.
-            if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid']))->fetchColumn()) {
+            if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ? AND i2d.diseaseid = ?', array($_POST['individualid'], $_POST['diseaseid']))->fetchColumn()) {
                 lovd_errorAdd('diseaseid', htmlspecialchars($_POST['diseaseid']) . ' is not a valid disease id or no phenotype columns have been enabled for this disease.');
             }
         } else {
@@ -198,7 +198,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
     if (empty($_POST['diseaseid']) || lovd_error()) {
         // FIXME; Once we're sure there are no longer individuals with Healthy and something else, we can remove (d.id > 0) from the ORDER BY.
         $sSQL = 'SELECT d.id, CONCAT(d.symbol, " (", d.name, ")") FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (d.id = i2d.diseaseid) INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc ON (d.id = sc.diseaseid) WHERE i2d.individualid = ? GROUP BY d.id ORDER BY (d.id > 0), d.symbol, d.name';
-        $aSelectDiseases = $_DB->query($sSQL, array($_POST['individualid']))->fetchAllCombine();
+        $aSelectDiseases = $_DB->q($sSQL, array($_POST['individualid']))->fetchAllCombine();
         if (!count($aSelectDiseases)) {
             // Wrong individual ID, individual without diseases, or diseases without phenotype columns.
             $_T->printHeader();
@@ -259,7 +259,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && !empty($_GET['target']) && ctype_di
 
             // Get genes which are modified only when phenotype, individual and variant are marked or public.
             if ($_POST['statusid'] >= STATUS_MARKED) {
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                       'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                       'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                       'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -410,7 +410,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if (!$bSubmit && !(GET && ACTION == 'publish')) {
                 // Put $zData with the old values in $_SESSION for mailing.
-                $zData['diseaseid_'] = $_DB->query('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($zData['diseaseid']))->fetchColumn();
+                $zData['diseaseid_'] = $_DB->q('SELECT name FROM ' . TABLE_DISEASES . ' WHERE id = ?', array($zData['diseaseid']))->fetchColumn();
                 $_SESSION['work']['edits']['phenotype'][$nID] = $zData;
             }
 
@@ -419,7 +419,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             // Get genes which are modified only when phenotype, individual and variant are marked or public.
             if ($zData['statusid'] >= STATUS_MARKED || (isset($_POST['statusid']) && $_POST['statusid'] >= STATUS_MARKED)) {
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                       'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                       'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                       'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -543,7 +543,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             // Get genes which are modified before we delete the entry.
             // Only when phenotype, individual and variant are marked or public.
             if ($zData['statusid'] >= STATUS_MARKED) {
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                       'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                       'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                       'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .

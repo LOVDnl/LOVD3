@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-01-28
- * Modified    : 2017-07-24
- * For LOVD    : 3.0-20
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2017 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -85,7 +85,7 @@ class LOVD_VariantPositionAnalyses {
                     {
                         // We'll just simply swap the fields. That may not result in correct values, but this will be
                         //  checked later. For now, this simple change may do the trick.
-                        return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($zRow['position_g_end'], $zRow['position_g_start'], $zRow['id']))->rowCount());
+                        return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($zRow['position_g_end'], $zRow['position_g_start'], $zRow['id']))->rowCount());
                     },
                 ),
             'vog_positions_in_error' => // The positions that do not match the variant's description (analysis needed).
@@ -101,7 +101,7 @@ class LOVD_VariantPositionAnalyses {
                             // The function recognized the variant.
                             if ($aPositions['position_start'] != $zRow['position_g_start'] || $aPositions['position_end'] != $zRow['position_g_end']) {
                                 // Positions given by function do not match what is in the database. Fix!
-                                return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                                return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ? WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
                             }
                         } else {
                             // Variant not recognized, but positions are stored. We're going to assume they are OK.
@@ -120,7 +120,7 @@ class LOVD_VariantPositionAnalyses {
                         $aPositions = lovd_getVariantInfo($zRow['DNA']);
                         if ($aPositions) {
                             // The function recognized the variant.
-                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ?, mapping_flags = mapping_flags &~ ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                            return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ?, mapping_flags = mapping_flags &~ ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
                         } else {
                             // Variants not recognized by LOVD, will be handled by the next analysis.
                         }
@@ -151,7 +151,7 @@ class LOVD_VariantPositionAnalyses {
                         $aPositions = lovd_getVariantInfo($zRow['DNA']);
                         if ($aPositions) {
                             // The function recognized the variant.
-                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ?, mapping_flags = mapping_flags &~ ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
+                            return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET position_g_start = ?, position_g_end = ?, mapping_flags = mapping_flags &~ ' . MAPPING_NOT_RECOGNIZED . ' WHERE id = ?', array($aPositions['position_start'], $aPositions['position_end'], $zRow['id']))->rowCount());
                         }
                         return array(1, 0);
                     },
@@ -168,7 +168,7 @@ class LOVD_VariantPositionAnalyses {
                     {
                         // We'll just simply swap the fields. That may not result in correct values, but this will be
                         //  checked later. For now, this simple change may do the trick.
-                        return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($zRow['position_c_end'], $zRow['position_c_end_intron'], $zRow['position_c_start'], $zRow['position_c_start_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
+                        return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($zRow['position_c_end'], $zRow['position_c_end_intron'], $zRow['position_c_start'], $zRow['position_c_start_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
                     },
                 ),
             'vot_positions_in_error' => // The positions that do not match the variant's description (analysis needed).
@@ -187,7 +187,7 @@ class LOVD_VariantPositionAnalyses {
                                 $aPositions['position_end'] != $zRow['position_c_end'] ||
                                 $aPositions['position_end_intron'] != $zRow['position_c_end_intron']) {
                                 // Positions given by function do not match what is in the database. Fix!
-                                return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
+                                return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
                             }
                         } else {
                             // Variant not recognized, but positions are stored. We're going to assume they are OK.
@@ -206,7 +206,7 @@ class LOVD_VariantPositionAnalyses {
                         $aPositions = lovd_getVariantInfo($zRow['DNA'], $zRow['transcriptid']);
                         if ($aPositions) {
                             // The function recognized the variant.
-                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
+                            return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
                         } else {
                             // Variants not recognized by LOVD, will be handled by the next analysis.
                         }
@@ -237,7 +237,7 @@ class LOVD_VariantPositionAnalyses {
                         $aPositions = lovd_getVariantInfo($zRow['DNA'], $zRow['transcriptid']);
                         if ($aPositions) {
                             // The function recognized the variant.
-                            return array(1, $_DB->query('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
+                            return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
                         }
                         return array(1, 0);
                     },
@@ -249,7 +249,7 @@ class LOVD_VariantPositionAnalyses {
         $this->oBAR->setProgress(0);
         foreach ($this->aAnalyses as $sAnalysis => $aAnalysis) {
             if (isset($aAnalysis['sql_count'])) {
-                $this->aAnalyses[$sAnalysis]['count'] = $_DB->query($aAnalysis['sql_count'])->fetchColumn();
+                $this->aAnalyses[$sAnalysis]['count'] = $_DB->q($aAnalysis['sql_count'])->fetchColumn();
             }
         }
         $this->oBAR->setMessage('<BR>');
@@ -294,12 +294,12 @@ class LOVD_VariantPositionAnalyses {
                 } else {
                     // A special query was constructed to count the number of entries we need to look at.
                     // If we would be doing a fetchAll(), then we wouldn't need this.
-                    $nData = $_DB->query($aAnalysis['sql_fetch_count'])->fetchColumn();
+                    $nData = $_DB->q($aAnalysis['sql_fetch_count'])->fetchColumn();
                 }
                 // We're optimizing for memory usage here, not speed. So we'll fetch the results line by line,
                 //  and have the fix function called for every line. This does slow things down, and requires
                 //  a separate count query, but I prefer that this script can handle any size of database.
-                $qData = $_DB->query($aAnalysis['sql_fetch']);
+                $qData = $_DB->q($aAnalysis['sql_fetch']);
                 if (!isset($this->aAnalyses[$sAnalysis]['count'])) {
                     $this->aAnalyses[$sAnalysis]['count'] = 0;
                 }

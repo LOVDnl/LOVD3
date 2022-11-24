@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-11-03
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -226,7 +226,7 @@ class LOVD_Object
         $aArgs[] = $_AUTH['id'];
         $aArgs[] = date('Y-m-d H:i:s');
 
-        $q = $_DB->query($sUpdateSQL, $aArgs);
+        $q = $_DB->q($sUpdateSQL, $aArgs);
         $bSuccess = (bool) $q;
         if ($bSuccess) {
             // Create a log entry, too.
@@ -314,7 +314,7 @@ class LOVD_Object
                 ' AND tab.transcriptid = subq.transcriptid) WHERE ' .
                 $sFRSearchCondition;
         }
-        $oResult = $_DB->query($oQuery, $aArgs);
+        $oResult = $_DB->q($oQuery, $aArgs);
         require_once ROOT_PATH . 'inc-lib-form.php';
 
         // Determine LOVD object to which F&R column belongs.
@@ -656,7 +656,7 @@ class LOVD_Object
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::deleteEntry()');
         }
-        $q = $_DB->query($sSQL, array_values($aIDs));
+        $q = $_DB->q($sSQL, array_values($aIDs));
 
         // Setup and run the revision table SQL.
         if ($bRev) {
@@ -664,7 +664,7 @@ class LOVD_Object
             // Update the existing revision record.
             // We could just check for a valid_to of 9999-12-31, but this
             //  is more flexible if we choose a different format.
-            $qRevisionUpdate = $_DB->query(
+            $qRevisionUpdate = $_DB->q(
                 'UPDATE ' . constant($this->sTable . '_REV') . '
                  SET valid_to = NOW(), deleted = 1, deleted_by = ?, reason = CONCAT(reason, "\r\n", ?)
                  WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? AND valid_to >= NOW()
@@ -744,7 +744,7 @@ class LOVD_Object
                 $aIDs = array($sIDColumn => $ID);
             }
 
-            $bEntryExists = (bool) $_DB->query('
+            $bEntryExists = (bool) $_DB->q('
                 SELECT 1
                 FROM ' . constant($this->sTable) . '
                 WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? LIMIT 1',
@@ -754,7 +754,7 @@ class LOVD_Object
             if (isset($this->bEntryExists)) {
                 return $this->bEntryExists;
             }
-            $bEntryExists = (bool) $_DB->query('
+            $bEntryExists = (bool) $_DB->q('
                 SELECT 1
                 FROM ' . constant($this->sTable) . ' LIMIT 1')->fetchColumn();
             $this->bEntryExists = $bEntryExists;
@@ -1358,7 +1358,7 @@ class LOVD_Object
         // Run the query, fetch the result and return.
         // We'll return false when we failed.
         $nCount = false;
-        $qCount = $_DB->query($sSQLOut, $aArgs, false);
+        $qCount = $_DB->q($sSQLOut, $aArgs, false);
         if ($qCount !== false) {
             $nCount = $qCount->fetchColumn();
         }
@@ -1373,11 +1373,11 @@ class LOVD_Object
             if ($_INI['database']['driver'] == 'mysql') {
                 $this->aSQLViewList['SELECT'] = 'SQL_CALC_FOUND_ROWS ' . $this->aSQLViewList['SELECT'];
                 $this->aSQLViewList['LIMIT'] = '0';
-                $_DB->query($this->buildSQL($this->aSQLViewList), $aArgs);
-                $nCount = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+                $_DB->q($this->buildSQL($this->aSQLViewList), $aArgs);
+                $nCount = $_DB->q('SELECT FOUND_ROWS()')->fetchColumn();
             } else {
                 // Super inefficient, only for low-volume (sqlite) databases!
-                $nCount = count($_DB->query($this->buildSQL($this->aSQLViewList), $aArgs)->fetchAllColumn());
+                $nCount = count($_DB->q($this->buildSQL($this->aSQLViewList), $aArgs)->fetchAllColumn());
             }
         }
 
@@ -1447,7 +1447,7 @@ class LOVD_Object
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::insertEntry()');
         }
-        $q = $_DB->query($sSQL, $aSQL, $bHalt, true);
+        $q = $_DB->q($sSQL, $aSQL, $bHalt, true);
         if (!$bHalt && $q === false) {
             return false;
         }
@@ -1478,7 +1478,7 @@ class LOVD_Object
             // Use the reason, if provided in the $aData array.
             $aSQL[] = 'Record created' . (empty($aData['reason'])? '' : ': ' . $aData['reason']);
             $sRevSQL .= ') VALUES (?' . str_repeat(', ?', count($aSQL) - 1) . ')';
-            $qRevisionInsert = $_DB->query($sRevSQL, $aSQL, true, true);
+            $qRevisionInsert = $_DB->q($sRevSQL, $aSQL, true, true);
 
             // If any of the queries fail, then rollback and return false. Otherwise, commit.
             if (!$q || !$qRevisionInsert) {
@@ -1512,7 +1512,7 @@ class LOVD_Object
 
         if ($this->sSQLPreLoadEntry !== '') {
             // $sSQLPreLoadEntry is defined, execute it.
-            $_DB->query($this->sSQLPreLoadEntry);
+            $_DB->q($this->sSQLPreLoadEntry);
         }
 
         // Prepare ID variable, to always be in the array('id' => 1) format.
@@ -1529,7 +1529,7 @@ class LOVD_Object
         } else {
             $sSQL = 'SELECT * FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?';
         }
-        $q = $_DB->query($sSQL, array_values($aIDs), false);
+        $q = $_DB->q($sSQL, array_values($aIDs), false);
         if ($q) {
             $zData = $q->fetchAssoc();
         }
@@ -2107,7 +2107,7 @@ class LOVD_Object
             }
             // Read in the existing record from the revision table to be used to compare against the changes.
             // TODO What if we do not find any records in the revision table? Currently it will crasy with an error.
-            $aDataOld = $_DB->query('SELECT * FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?',
+            $aDataOld = $_DB->q('SELECT * FROM ' . constant($this->sTable) . ' WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ?',
                 array_values($aIDs))->fetchAssoc();
         }
 
@@ -2154,7 +2154,7 @@ class LOVD_Object
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::updateEntry()');
         }
-        $q = $_DB->query($sSQL, array_values($aSQL), true, true);
+        $q = $_DB->q($sSQL, array_values($aSQL), true, true);
 
         // Setup and run the revision table SQL.
         if ($bRev) {
@@ -2178,7 +2178,7 @@ class LOVD_Object
             // Update the existing revision record.
             // We could just check for a valid_to of 9999-12-31, but this
             //  is more flexible if we choose a different format.
-            $qRevisionUpdate = $_DB->query('
+            $qRevisionUpdate = $_DB->q('
                 UPDATE ' . constant($this->sTable . '_REV') . '
                 SET valid_to = ?
                 WHERE ' . implode(' = ? AND ', array_keys($aIDs)) . ' = ? AND valid_to >= NOW()
@@ -2187,7 +2187,7 @@ class LOVD_Object
 
             // Create the SQL for inserting a new revision record.
             $sRevSQL = 'INSERT INTO ' . constant($this->sTable . '_REV') . ' (`' . implode('`, `', array_keys($aSQLTotal)) . '`) VALUES (?' . str_repeat(', ?', count($aSQLTotal) - 1) . ')';
-            $qRevisionInsert = $_DB->query($sRevSQL, array_values($aSQLTotal), true, true);
+            $qRevisionInsert = $_DB->q($sRevSQL, array_values($aSQLTotal), true, true);
 
             // If any of the queries fail, then rollback and return false. Otherwise, commit.
             if (!$q || !$qRevisionInsert || !$qRevisionUpdate) {
@@ -2234,7 +2234,7 @@ class LOVD_Object
         }
 
         if ($this->sSQLPreViewEntry !== '') {
-            $_DB->query($this->sSQLPreViewEntry);
+            $_DB->q($this->sSQLPreViewEntry);
         }
 
         // Because a ViewEntry query often contains many tables, find out the table's alias, if used.
@@ -2273,7 +2273,7 @@ class LOVD_Object
                ' GROUP BY ' . $this->aSQLViewEntry['GROUP_BY']);
 
         // Run the actual query.
-        $zData = $_DB->query($sSQL, array_values($aIDs))->fetchAssoc();
+        $zData = $_DB->q($sSQL, array_values($aIDs))->fetchAssoc();
         // If the user has no rights based on the statusid column, we don't have a $zData.
         if (!$zData) {
             // Don't give away information about the ID: just pretend the entry does not exist.
@@ -2619,7 +2619,7 @@ class LOVD_Object
                             'GROUP_BY' => $this->aSQLViewList['GROUP_BY'],
                             'HAVING' => $this->aSQLViewList['HAVING'],
                         ));
-                        $q = $_DB->query($sSQL, $aArgs);
+                        $q = $_DB->q($sSQL, $aArgs);
                         while ($zData = $q->fetchAssoc()) {
                             $zData = $this->generateRowID($zData);
                             // We only need the row_id here for knowing which ones we need to check.
@@ -2687,12 +2687,12 @@ class LOVD_Object
 
             // Run the viewList query.
             // FIXME; what if using AJAX? Probably we should generate a number here, if this query fails, telling the system to try once more. If that fails also, the JS should throw a general error, maybe.
-            $q = $_DB->query($sSQL, $aArgs);
+            $q = $_DB->q($sSQL, $aArgs);
 
             // Now, get the total number of hits as if no LIMIT was used (when we have used the proper SELECT syntax). Note that $nTotal gets overwritten here.
             if ($bSQLCALCFOUNDROWS) {
                 // FIXME: 't' needs to be recalculated as well!
-                $nTotal = $_DB->query('SELECT FOUND_ROWS()')->fetchColumn();
+                $nTotal = $_DB->q('SELECT FOUND_ROWS()')->fetchColumn();
                 $aSessionViewList['counts'][$sFilterMD5]['n'] = $nTotal;
                 $aSessionViewList['counts'][$sFilterMD5]['d'] = time();
                 $bTrueCount = true;

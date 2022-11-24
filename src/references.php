@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2015-03-11
- * Modified    : 2022-06-16
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -91,11 +91,11 @@ if (PATH_COUNT >= 2 && (substr($sReference, 0, 4) == 'DOI:' || substr($sReferenc
         'VariantOnGenome' => array('allele_'),
         'Individual' => array('panelid', 'diseaseids'),
     );
-    $aColNames = $_DB->query('SELECT colid FROM ' . TABLE_COLS2LINKS . ' AS c2l LEFT JOIN ' . TABLE_LINKS . ' AS l ON (l.id = c2l.linkid) WHERE name = ?', array($sType))->fetchAllColumn();
+    $aColNames = $_DB->q('SELECT colid FROM ' . TABLE_COLS2LINKS . ' AS c2l LEFT JOIN ' . TABLE_LINKS . ' AS l ON (l.id = c2l.linkid) WHERE name = ?', array($sType))->fetchAllColumn();
     foreach ($aColNames as $sColName) {
         $sCategory = substr($sColName, 0, strpos($sColName . '/', '/'));
         $aTable = lovd_getTableInfoByCategory($sCategory);
-        $aData = $_DB->query('SELECT id FROM ' . $aTable['table_sql'] . ' WHERE `' . $sColName . '` LIKE ? LIMIT 1', array($sSearchPattern))->fetchAllColumn();
+        $aData = $_DB->q('SELECT id FROM ' . $aTable['table_sql'] . ' WHERE `' . $sColName . '` LIKE ? LIMIT 1', array($sSearchPattern))->fetchAllColumn();
         if (!empty($aData)) {
             if ($bImage){
                 header('Content-type: image/png');

@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-05-25
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -248,7 +248,7 @@ class LOVD_User extends LOVD_Object
         if (in_array(ACTION, array('create', 'register'))) {
             // Does the username exist already?
             if ($aData['username']) {
-                if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE username = ?', array($aData['username']))->fetchColumn()) {
+                if ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE username = ?', array($aData['username']))->fetchColumn()) {
                     lovd_errorAdd('username', 'There is already a user with this username. Please choose another one.');
                 }
             }
@@ -341,7 +341,7 @@ class LOVD_User extends LOVD_Object
 
         } else {
             // "Normal" user form; create user, edit user.
-            $aCountryList = $_DB->query('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name')->fetchAllCombine();
+            $aCountryList = $_DB->q('SELECT id, name FROM ' . TABLE_COUNTRIES . ' ORDER BY name')->fetchAllCombine();
 
             if ($_AUTH) {
                 // Remove user levels that are higher than or equal to the current user's level IF you are logged in.
@@ -522,7 +522,7 @@ class LOVD_User extends LOVD_Object
                 foreach (array('owned_by', 'created_by') as $sField) {
                     $aStats = array(0, '');
                     foreach (array('individuals', 'screenings', 'variants', 'phenotypes') as $sDataType) {
-                        $nCount = $_DB->query('SELECT COUNT(*) FROM ' .
+                        $nCount = $_DB->q('SELECT COUNT(*) FROM ' .
                             constant('TABLE_' . strtoupper($sDataType)) . ' WHERE ' . $sField .
                             ' = ?', array($zData['id']))->fetchColumn();
                         $sTitle = $nCount . ' ' . ($nCount == 1? substr($sDataType, 0, -1) :

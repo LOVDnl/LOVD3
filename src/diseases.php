@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-07-27
- * Modified    : 2022-11-03
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -93,7 +93,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     //  starts with a digit of at least 1 but no higher than 6, check first if
     //  we know this integer as an OMIM ID.
     if (strlen($_PE[1]) == 6 && $_PE[1][0] && (int) $_PE[1][0] < 7) {
-        $nDisease = $_DB->query(
+        $nDisease = $_DB->q(
             'SELECT id FROM ' . TABLE_DISEASES . ' WHERE id_omim = ?',
             array($_PE[1]))->fetchColumn();
         if ($nDisease) {
@@ -169,7 +169,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     // Try to find a disease by its abbreviation and forward.
     // When we have multiple hits, refer to listView.
 
-    $aDiseases = $_DB->query('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($_PE[1]))->fetchAllColumn();
+    $aDiseases = $_DB->q('SELECT id FROM ' . TABLE_DISEASES . ' WHERE symbol = ?', array($_PE[1]))->fetchAllColumn();
     $n = count($aDiseases);
     if (!$n) {
         define('PAGE_TITLE', lovd_getCurrentPageTitle());
@@ -236,7 +236,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 foreach ($_POST['genes'] as $sGene) {
                     // Add gene to disease.
                     // FIXME; Nu dat PDO beschikbaar is, doe dit in een prepared statement met multiple executes.
-                    $q = $_DB->query('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID), false);
+                    $q = $_DB->q('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sGene, $nID), false);
                     if (!$q) {
                         // Silent error.
                         lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nID . ' - ' . $_POST['symbol'] . ' - could not be added to gene ' . $sGene);
@@ -368,7 +368,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
                 }
             }
             if ($aToRemove) {
-                $q = $_DB->query('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove), false);
+                $q = $_DB->q('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
                     // FIXME; deze log entries zijn precies andersom dan bij create (wat wordt aan wat toegevoegd/verwijderd). Dat moeten we standaardiseren, maar wellicht even overleggen over LOVD-breed.
@@ -542,7 +542,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
         'not be deleted, but remain in the database.', 'warning');
 
     if ($bValidPassword) {
-        $nCount = $_DB->query('SELECT count(DISTINCT p.id)
+        $nCount = $_DB->q('SELECT count(DISTINCT p.id)
                                FROM ' . TABLE_DISEASES . ' AS d
                                 LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (d.id = p.diseaseid)
                                WHERE d.id = ?', array($nID))->fetchColumn();
@@ -773,7 +773,7 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION ==
         $_DB->beginTransaction();
         foreach ($_POST['columns'] as $nOrder => $sColID) {
             $nOrder ++; // Since 0 is the first key in the array.
-            $_DB->query('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sUnit . 'id = ? AND colid = ?', array($nOrder, $nID, $sCategory . '/' . $sColID));
+            $_DB->q('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sUnit . 'id = ? AND colid = ?', array($nOrder, $nID, $sCategory . '/' . $sColID));
         }
         $_DB->commit();
 
@@ -800,7 +800,7 @@ if (PATH_COUNT == 3 && ctype_digit($_PE[1]) && $_PE[2] == 'columns' && ACTION ==
     $_T->printTitle();
 
     // Retrieve column IDs in current order.
-    $aColumns = $_DB->query('SELECT SUBSTRING(colid, LOCATE("/", colid)+1) FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sUnit . 'id = ? ORDER BY col_order ASC', array($nID))->fetchAllColumn();
+    $aColumns = $_DB->q('SELECT SUBSTRING(colid, LOCATE("/", colid)+1) FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sUnit . 'id = ? ORDER BY col_order ASC', array($nID))->fetchAllColumn();
 
     if (!count($aColumns)) {
         lovd_showInfoTable('No columns found!', 'stop');

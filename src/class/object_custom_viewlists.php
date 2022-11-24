@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-15
- * Modified    : 2022-02-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -113,8 +113,8 @@ class LOVD_CustomViewList extends LOVD_Object
         }
 
         // Increase the max GROUP_CONCAT() length, so that lists of many many genes still have all genes mentioned here (22.000 genes take 193.940 bytes here).
-        $_DB->query('SET group_concat_max_len = 200000');
-        $q = $_DB->query($sSQL, $aSQL);
+        $_DB->q('SET group_concat_max_len = 200000');
+        $q = $_DB->q($sSQL, $aSQL);
         while ($z = $q->fetchAssoc()) {
             $z['custom_links'] = array();
             $z['form_type'] = explode('|', $z['form_type']);
@@ -158,7 +158,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_GENES . ' AS g';
-                        $this->bEntryExists = (bool) $_DB->query('
+                        $this->bEntryExists = (bool) $_DB->q('
                             SELECT 1 FROM ' . TABLE_GENES . ' LIMIT 1')->fetchColumn();
                     }
                     break;
@@ -173,7 +173,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_TRANSCRIPTS . ' AS t';
-                        $this->bEntryExists = (bool) $_DB->query('
+                        $this->bEntryExists = (bool) $_DB->q('
                             SELECT 1 FROM ' . TABLE_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
                     } else {
                         $aSQL['FROM'] .= ' INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (';
@@ -197,7 +197,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     if ($nKeyT !== false && $nKeyT < $nKey && $this->nOtherID) {
                         // Earlier, Transcript was used, join to that.
                         // First, retrieve information of variant.
-                        list($nPosStart, $nPosEnd) = $_DB->query('SELECT position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE id = ?', array($this->nOtherID))->fetchRow();
+                        list($nPosStart, $nPosEnd) = $_DB->q('SELECT position_g_start, position_g_end FROM ' . TABLE_VARIANTS . ' WHERE id = ?', array($this->nOtherID))->fetchRow();
                         // Specific modifications for this overview; distance between variant and transcript in question.
                         if ($nPosStart && $nPosEnd) {
                             // 2014-08-11; 3.0-12; Transcripts on the reverse strand did not display the correctly calculated distance.
@@ -230,7 +230,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS . ' AS vog';
-                        $this->bEntryExists = (bool) $_DB->query('
+                        $this->bEntryExists = (bool) $_DB->q('
                             SELECT 1 FROM ' . TABLE_VARIANTS . ' LIMIT 1')->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vog.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                         $aSQL['ORDER_BY'] = 'vog.chromosome ASC, vog.position_g_start';
@@ -298,7 +298,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
-                        $this->bEntryExists = (bool) $_DB->query('
+                        $this->bEntryExists = (bool) $_DB->q('
                             SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
                         $aSQL['GROUP_BY'] = 'vot.id'; // Necessary for GROUP_CONCAT(), such as in Screening.
                     } elseif ($nKeyVOG !== false && $nKeyVOG < $nKey) {
@@ -363,7 +363,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     }
                     $aSQL['FROM'] = TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot';
 
-                    $this->bEntryExists = (bool) $_DB->query('
+                    $this->bEntryExists = (bool) $_DB->q('
                         SELECT 1 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' LIMIT 1')->fetchColumn();
 
                     $aSQL['GROUP_BY'] = '`position_c_start`, `position_c_start_intron`, `position_c_end`, `position_c_end_intron`, vot_clean_dna_change'; // Necessary for GROUP_CONCAT(), such as in Screening.
@@ -387,7 +387,7 @@ class LOVD_CustomViewList extends LOVD_Object
                         // First data table in query.
                         $aSQL['SELECT'] .= (!$aSQL['SELECT']? '' : ', ') . 's.id AS sid';
                         $aSQL['FROM'] = TABLE_SCREENINGS . ' AS s';
-                        $this->bEntryExists = (bool) $_DB->query('
+                        $this->bEntryExists = (bool) $_DB->q('
                             SELECT 1 FROM ' . TABLE_SCREENINGS . ' LIMIT 1')->fetchColumn();
                         $aSQL['ORDER_BY'] = 's.id';
                     } else {
@@ -455,7 +455,7 @@ class LOVD_CustomViewList extends LOVD_Object
                     if (!$aSQL['FROM']) {
                         // First data table in query.
                         $aSQL['FROM'] = TABLE_INDIVIDUALS . ' AS i';
-                        $this->bEntryExists = (bool) $_DB->query('
+                        $this->bEntryExists = (bool) $_DB->q('
                             SELECT 1 FROM ' . TABLE_INDIVIDUALS . ' LIMIT 1')->fetchColumn();
                         $aSQL['ORDER_BY'] = 'i.id';
                         // If no manager, hide lines with hidden individuals (not specific to a gene)!
@@ -837,7 +837,7 @@ class LOVD_CustomViewList extends LOVD_Object
 
 
         // Gather the custom link information. It's just easier to load all custom links, instead of writing code that checks for the appropriate objects.
-        $aLinks = $_DB->query('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) GROUP BY l.id')->fetchAllAssoc();
+        $aLinks = $_DB->q('SELECT l.*, GROUP_CONCAT(c2l.colid SEPARATOR ";") AS colids FROM ' . TABLE_LINKS . ' AS l INNER JOIN ' . TABLE_COLS2LINKS . ' AS c2l ON (l.id = c2l.linkid) GROUP BY l.id')->fetchAllAssoc();
         foreach ($aLinks as $aLink) {
             $aLink['regexp_pattern'] = '/' . str_replace(array('{', '}'), array('\{', '\}'), preg_replace('/\[\d\]/', '([^:]*)', $aLink['pattern_text'])) . '/';
             $aLink['replace_text'] = preg_replace('/\[(\d)\]/', '\$$1', $aLink['replace_text']);

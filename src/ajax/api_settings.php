@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-09-22
- * Modified    : 2021-02-25
- * For LOVD    : 3.0-27
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -47,7 +47,7 @@ if (!$_AUTH || $_AUTH['level'] < LEVEL_MANAGER || !lovd_isAuthorized('user', $_P
 
 // Let's download the user's data.
 $nID = lovd_getCurrentID();
-$zUser = $_DB->query('SELECT id, username, api_settings FROM ' . TABLE_USERS . ' WHERE id > 0 AND id = ?', array($nID))->fetchAssoc();
+$zUser = $_DB->q('SELECT id, username, api_settings FROM ' . TABLE_USERS . ' WHERE id > 0 AND id = ?', array($nID))->fetchAssoc();
 $zUser['api_settings'] = @json_decode($zUser['api_settings'], true);
 if (!$zUser) {
     // FIXME: Should we log this?
@@ -155,7 +155,7 @@ if (ACTION == 'edit' && POST) {
     }
 
     // Update!
-    if (!$_DB->query('UPDATE ' . TABLE_USERS . ' SET api_settings = ? WHERE id = ?',
+    if (!$_DB->q('UPDATE ' . TABLE_USERS . ' SET api_settings = ? WHERE id = ?',
         array($sSettings, $nID), false)) {
         die('alert("Failed to edit settings.\n' . htmlspecialchars($_DB->formatError()) . '");');
     }

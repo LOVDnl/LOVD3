@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2022-10-20
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -832,7 +832,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-07')) {
         // DROP VariantOnTranscript/DBID if it exists.
-        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
+        $aColumns = $_DB->q('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
         if (in_array('VariantOnTranscript/DBID', $aColumns)) {
             $aUpdates['3.0-alpha-07'][] = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' DROP COLUMN `VariantOnTranscript/DBID`';
         }
@@ -840,7 +840,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-alpha-07b')) {
         // DROP Individual/Times_Reported if it exists and copy its data to panel_size.
-        $aColumns = $_DB->query('DESCRIBE ' . TABLE_INDIVIDUALS)->fetchAllColumn();
+        $aColumns = $_DB->q('DESCRIBE ' . TABLE_INDIVIDUALS)->fetchAllColumn();
         if (in_array('Individual/Times_Reported', $aColumns)) {
             $aUpdates['3.0-alpha-07b'][] = 'UPDATE ' . TABLE_INDIVIDUALS . ' SET panel_size = `Individual/Times_Reported`';
             $aUpdates['3.0-alpha-07b'][] = 'ALTER TABLE ' . TABLE_INDIVIDUALS . ' DROP COLUMN `Individual/Times_Reported`';
@@ -869,11 +869,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-beta-03b')) {
         // CHANGE DNA_published to Published_as in TABLE_VARIANTS & TABLE_VARIANTS_ON_TRANSCRIPTS if exists.
-        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS)->fetchAllColumn();
+        $aColumns = $_DB->q('DESCRIBE ' . TABLE_VARIANTS)->fetchAllColumn();
         if (in_array('VariantOnGenome/DNA_published', $aColumns)) {
             $aUpdates['3.0-beta-03b'][] = 'ALTER TABLE ' . TABLE_VARIANTS . ' CHANGE `VariantOnGenome/DNA_Published` `VariantOnGenome/Published_as` VARCHAR(100)';
         }
-        $aColumns = $_DB->query('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
+        $aColumns = $_DB->q('DESCRIBE ' . TABLE_VARIANTS_ON_TRANSCRIPTS)->fetchAllColumn();
         if (in_array('VariantOnTranscript/DNA_published', $aColumns)) {
             $aUpdates['3.0-beta-03b'][] = 'ALTER TABLE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' CHANGE `VariantOnTranscript/DNA_Published` `VariantOnTranscript/Published_as` VARCHAR(100)';
         }
@@ -887,7 +887,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
 
     if ($sCalcVersionDB < lovd_calculateVersion('3.0-beta-05')) {
         // Make Phenotype/Inheritance long enough to actually fit the values in its selection list.
-        $aColumns = $_DB->query('DESCRIBE ' . TABLE_PHENOTYPES)->fetchAllColumn();
+        $aColumns = $_DB->q('DESCRIBE ' . TABLE_PHENOTYPES)->fetchAllColumn();
         if (in_array('Phenotype/Inheritance', $aColumns)) {
             $aUpdates['3.0-beta-05'][] = 'ALTER TABLE ' . TABLE_PHENOTYPES . ' MODIFY `Phenotype/Inheritance` VARCHAR(50)';
         }
@@ -1003,7 +1003,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
             foreach ($aSQL as $i => $sSQL) {
                 $i ++;
                 if (!$nSQLFailed) {
-                    $q = $_DB->query($sSQL, false, false); // This means that there is no SQL injection check here. But hey - these are our own queries.
+                    $q = $_DB->q($sSQL, false, false); // This means that there is no SQL injection check here. But hey - these are our own queries.
                     if (!$q) {
                         $nSQLFailed ++;
                         // Error when running query.
@@ -1058,7 +1058,7 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
         }
 
         // Remove update lock.
-        $_DB->query('UPDATE ' . TABLE_STATUS . ' SET lock_update = 0');
+        $_DB->q('UPDATE ' . TABLE_STATUS . ' SET lock_update = 0');
     }
 
     // Now that this is over, let the user proceed to whereever they were going!

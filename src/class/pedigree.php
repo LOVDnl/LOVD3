@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-12-22
- * Modified    : 2013-03-29
- * For LOVD    : 3.0-04
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2019 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -69,7 +69,7 @@ class Pedigree
         }
 
         // Make sure the individual actually exists.
-        if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nID))->fetchColumn()) {
+        if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($nID))->fetchColumn()) {
             lovd_displayError('ObjectError', 'Pedigree::__construct() called with non-existing Individual ID ' . $nID . '.');
         }
 
@@ -81,7 +81,7 @@ class Pedigree
         do {
             // I don't think I can do a prepared statement, because the IN () range can change over time.
             $sFROM = 'AS parent FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($aParentIDs)-1) . ') HAVING parent IS NOT NULL';
-            $q = $_DB->query('SELECT DISTINCT `fatherid` ' . $sFROM . ' UNION ' .
+            $q = $_DB->q('SELECT DISTINCT `fatherid` ' . $sFROM . ' UNION ' .
                              'SELECT DISTINCT `motherid` ' . $sFROM, array_merge($aParentIDs, $aParentIDs));
             $aIDs = $q->fetchAllColumn();
             if ($aIDs) {
@@ -119,7 +119,7 @@ class Pedigree
             // Try and find a spouse.
             $nID = $aIDs[0];
             // Unfortunately, we don't know the gender yet!
-            $aSpouseIDs = array_unique($_DB->query('SELECT DISTINCT `fatherid` FROM ' . TABLE_INDIVIDUALS . ' WHERE `motherid` = ? UNION
+            $aSpouseIDs = array_unique($_DB->q('SELECT DISTINCT `fatherid` FROM ' . TABLE_INDIVIDUALS . ' WHERE `motherid` = ? UNION
                                                     SELECT DISTINCT `motherid` FROM ' . TABLE_INDIVIDUALS . ' WHERE `fatherid` = ?', array($nID, $nID))->fetchAllColumn());
             // Because this is a fake column, I need to str_pad the IDs.
             foreach ($aSpouseIDs as $key => $val) {
@@ -134,7 +134,7 @@ class Pedigree
         }
 
         // Get information about the individual(s) itself.
-        $q = $_DB->query('SELECT i.id, i.`Individual/Name` AS name, i.`Individual/Gender` AS gender, i.`fatherid` AS father, i.`motherid` AS mother, GROUP_CONCAT(i2d.diseaseid SEPARATOR ";") AS _diseases FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i.id IN (?' . str_repeat(', ?', count($aIDs)-1) . ') GROUP BY i.id', $aIDs);
+        $q = $_DB->q('SELECT i.id, i.`Individual/Name` AS name, i.`Individual/Gender` AS gender, i.`fatherid` AS father, i.`motherid` AS mother, GROUP_CONCAT(i2d.diseaseid SEPARATOR ";") AS _diseases FROM ' . TABLE_INDIVIDUALS . ' AS i LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid) WHERE i.id IN (?' . str_repeat(', ?', count($aIDs)-1) . ') GROUP BY i.id', $aIDs);
         while ($z = $q->fetchAssoc()) {
             $this->individuals[$z['id']] =
                  array(
@@ -157,7 +157,7 @@ class Pedigree
             $sSQLChildren .= ($nKey? ' AND' : '') . ' `' . ($this->individuals[$nID]['gender'] == 'm'? 'father' : 'mother') . 'id` = ?';
         }
         $sSQLChildren .= ' ORDER BY (`Individual/Date_of_birth` IS NOT NULL) DESC, `Individual/Date_of_birth`, id';
-        $aChildren = $_DB->query($sSQLChildren, $aIDs)->fetchAllColumn();
+        $aChildren = $_DB->q($sSQLChildren, $aIDs)->fetchAllColumn();
         $aChildrenTree = array();
         if ($aChildren) {
             foreach ($aChildren as $nChildID) {

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-13
- * Modified    : 2020-09-17
- * For LOVD    : 3.0-25
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *
@@ -99,7 +99,7 @@ if (!empty($_POST)) {
 
                 foreach ($aTables as $sTable) {
                     $sSQL = 'DROP TABLE IF EXISTS ' . $sTable;
-                    $q = $_DB->query($sSQL, array(), false);
+                    $q = $_DB->q($sSQL, array(), false);
                     if (!$q) {
                         // Error when running query. We will use the Div for the form now.
                         $sMessage = 'Error during uninstallation while running query.<BR>I ran:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $sSQL) . '</DIV><BR>I got:<DIV class="err">' . str_replace(array("\r\n", "\r", "\n"), '<BR>', $_DB->formatError()) . '</DIV><BR><BR>' .
@@ -107,7 +107,7 @@ if (!empty($_POST)) {
                                     'Please <A href="' . $_SETT['upstream_URL'] . 'bugs/" target="_blank">file a bug</A> and include the above messages to help us solve the problem.';
                         $_BAR->setMessage($sMessage, 'done');
                         $_BAR->setMessageVisibility('done', true);
-                        $_DB->query('DROP TABLE IF EXISTS ' . implode(', ', $aTables), array(), false); // Try again to remove everything.
+                        $_DB->q('DROP TABLE IF EXISTS ' . implode(', ', $aTables), array(), false); // Try again to remove everything.
                         print('</BODY>' . "\n" .
                               '</HTML>' . "\n");
                         exit;
@@ -143,7 +143,7 @@ if (!empty($_POST)) {
             // Does any of these tables exist yet?
             print('Checking LOVD installation...' . "\n");
             $aTables = array();
-            $qTables = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+            $qTables = $_DB->q('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
             while ($sTable = $qTables->fetchColumn()) {
                 if (in_array($sTable, $_TABLES)) {
                     $aTables[] = $sTable;
@@ -156,10 +156,10 @@ if (!empty($_POST)) {
             // General statistics...
             print("\n");
             // 2012-02-01; 3.0-beta-02; Exclude "LOVD" system user.
-            $nUsers = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn();
-            $nIndividuals = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
-            $nScreenings = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS)->fetchColumn();
-            $nVars = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS)->fetchColumn();
+            $nUsers = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn();
+            $nIndividuals = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS)->fetchColumn();
+            $nScreenings = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_SCREENINGS)->fetchColumn();
+            $nVars = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS)->fetchColumn();
             $nGenes = count(lovd_getGeneList());
             print('  Found ' . $nUsers . ' user' . ($nUsers == 1? '' : 's') . '.' . "\n" .
                   '  Found ' . $nIndividuals . ' individual' . ($nIndividuals == 1? '' : 's') . '.' . "\n" .

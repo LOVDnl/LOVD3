@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2022-06-03
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -49,7 +49,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     // View all entries.
 
     if (!empty($_PE[1])) {
-        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
+        $sGene = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
         if ($sGene) {
             lovd_isAuthorized('gene', $sGene); // To show non public entries.
             $_GET['search_genes_searched'] = '="' . $sGene . '"';
@@ -107,10 +107,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // This is non-standard, we normally rely on viewEntry() to sort that out.
     // But this individual may have been merged, after sending the submission
     //  confirmation email. Check the logs if that is the case, and forward.
-    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
+    if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?',
             array($nID))->fetchColumn()) {
         // Entry doesn't exist. Can we find a merge log entry?
-        $nNewID = $_DB->query('
+        $nNewID = $_DB->q('
             SELECT RIGHT(log, ' . $_SETT['objectid_length'][$_PE[0]] . ')
             FROM ' . TABLE_LOGS . '
             WHERE name = ? AND event = ? AND log LIKE ?',
@@ -153,7 +153,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             $aNavigation['javascript:$.get(\'ajax/curate_set.php?bySubmission&id=' . $nID . '\').fail(function(){alert(\'Request failed. Please try again.\');});'] = array('check.png', 'Publish (curate) entire submission', 1);
         }
         // You can only add phenotype information to this individual, when there are phenotype columns enabled.
-        if ($_DB->query('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID))->fetchColumn()) {
+        if ($_DB->q('SELECT COUNT(*) FROM ' . TABLE_IND2DIS . ' AS i2d INNER JOIN ' . TABLE_SHARED_COLS . ' AS sc USING(diseaseid) WHERE i2d.individualid = ?', array($nID))->fetchColumn()) {
             $aNavigation['phenotypes?create&amp;target=' . $nID] = array('menu_plus.png', 'Add phenotype information to individual', 1);
         }
         $aNavigation['screenings?create&amp;target=' . $nID]     = array('menu_plus.png', 'Add screening to individual', 1);
@@ -173,7 +173,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         $_T->printTitle('Phenotypes', 'H4');
         // Repeat searching for diseases, since this individual might have a
         //  phenotype entry for a disease they don't have.
-        $zData['diseases'] = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($zData['phenotypes'])-1) . ')', $zData['phenotypes'])->fetchAllRow();
+        $zData['diseases'] = $_DB->q('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($zData['phenotypes'])-1) . ')', $zData['phenotypes'])->fetchAllRow();
         require ROOT_PATH . 'class/object_phenotypes.php';
         foreach($zData['diseases'] as $aDisease) {
             list($nDiseaseID, $sSymbol, $sName) = $aDisease;
@@ -278,7 +278,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 foreach ($_POST['active_diseases'] as $nDisease) {
                     // Add disease to gene.
                     if ($nDisease) {
-                        $q = $_DB->query('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease), false);
+                        $q = $_DB->q('INSERT INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease), false);
                         if (!$q) {
                             // Silent error.
                             lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nDisease . ' - could not be added to individual ' . $nID);
@@ -414,7 +414,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             // Get genes which are modified only when individual and variant status is marked or public.
             if ($zData['statusid'] >= STATUS_MARKED || (isset($_POST['statusid']) && $_POST['statusid'] >= STATUS_MARKED)) {
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                       'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                       'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                       'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -439,7 +439,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 }
             }
             if ($aToRemove) {
-                $q = $_DB->query('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove), false);
+                $q = $_DB->q('DELETE FROM ' . TABLE_IND2DIS . ' WHERE individualid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from individual ' . $nID);
@@ -454,7 +454,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             foreach ($_POST['active_diseases'] as $nDisease) {
                 if (!in_array($nDisease, $zData['active_diseases'])) {
                     // Add disease to gene.
-                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease), false);
+                    $q = $_DB->q('INSERT IGNORE INTO ' . TABLE_IND2DIS . ' VALUES (?, ?)', array($nID, $nDisease), false);
                     if (!$q) {
                         $aFailed[] = $nDisease;
                     } else {
@@ -560,7 +560,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    $aVariantsRemovable = $_DB->query('
+    $aVariantsRemovable = $_DB->q('
         SELECT s2v.variantid, MAX(s2.individualid)
         FROM lovd_v3_screenings AS s
           INNER JOIN lovd_v3_screenings2variants AS s2v ON (s.id = s2v.screeningid)
@@ -591,7 +591,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
             // Search for effected genes before the deletion, else we can't find the link.
             // Get genes which are modified only when individual and variant status is marked or public.
             if ($zData['statusid'] >= STATUS_MARKED) {
-                $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+                $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                     'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                     'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                     'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -601,7 +601,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
             if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
                 // This also deletes the entries in TABLE_SCR2VAR.
-                $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
+                $_DB->q('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
             }
 
             // This also deletes the entries in TABLE_PHENOTYPES && TABLE_SCREENINGS && TABLE_SCR2VAR && TABLE_SCR2GENE.
@@ -643,7 +643,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
-    $nVariants = $_DB->query('SELECT COUNT(DISTINCT s2v.variantid) FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s.individualid = ? GROUP BY s.individualid', array($nID))->fetchColumn();
+    $nVariants = $_DB->q('SELECT COUNT(DISTINCT s2v.variantid) FROM ' . TABLE_SCREENINGS . ' AS s LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) WHERE s.individualid = ? GROUP BY s.individualid', array($nID))->fetchColumn();
     $aOptions = array('remove' => 'Yes, remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' attached to only this individual', 'keep' => 'No, keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
 
     // Array which will make up the form table.

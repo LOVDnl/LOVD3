@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-23
- * Modified    : 2021-11-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -39,7 +39,7 @@ if (!defined('ROOT_PATH')) {
 $_AUTH = false;
 
 if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
-    $_SESSION['auth'] = @$_DB->query('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ? AND login_attempts < 3', array($_SESSION['auth']['username'], $_SESSION['auth']['password']), false)->fetchAssoc();
+    $_SESSION['auth'] = @$_DB->q('SELECT * FROM ' . TABLE_USERS . ' WHERE username = ? AND password = ? AND login_attempts < 3', array($_SESSION['auth']['username'], $_SESSION['auth']['password']), false)->fetchAssoc();
     if (is_array($_SESSION['auth'])) {
         $_AUTH = & $_SESSION['auth'];
 
@@ -47,7 +47,7 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         $_AUTH['curates']      = array();
         $_AUTH['collaborates'] = array();
         if ($_AUTH['level'] < LEVEL_MANAGER) {
-            $q = $_DB->query('SELECT geneid, allow_edit FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($_AUTH['id']));
+            $q = $_DB->q('SELECT geneid, allow_edit FROM ' . TABLE_CURATES . ' WHERE userid = ?', array($_AUTH['id']));
             while ($r = $q->fetchRow()) {
                 if ($r[1]) {
                     $_AUTH['curates'][] = $r[0];
@@ -62,7 +62,7 @@ if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
         $_AUTH['saved_work'] = (!empty($_AUTH['saved_work'])? ($_AUTH['saved_work'][0] == 'a'? unserialize($_AUTH['saved_work']) : json_decode($_AUTH['saved_work'])) : array());
 
         // Get an array of IDs of users that share their permissions with current user.
-        $q = $_DB->query('SELECT userid_from, allow_edit FROM ' . TABLE_COLLEAGUES .
+        $q = $_DB->q('SELECT userid_from, allow_edit FROM ' . TABLE_COLLEAGUES .
                         ' WHERE userid_to = ?', array($_AUTH['id']), false);
         if ($q === false) {
             // Query to TABLE_COLLEAGUES failed (note: this table was introduced in 3.0-14e).

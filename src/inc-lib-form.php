@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2021-11-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -76,7 +76,7 @@ function lovd_checkDBID ($aData)
     $nIDtoIgnore = (!empty($aData['id'])? $aData['id'] : 0);
 
     // Check if the DBID entered is already in use by a variant entry excluding the current one.
-    $nHasDBID = $_DB->query('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
+    $nHasDBID = $_DB->q('SELECT COUNT(id) FROM ' . TABLE_VARIANTS . ' WHERE `VariantOnGenome/DBID` = ? AND id != ?', array($aData['VariantOnGenome/DBID'], $nIDtoIgnore))->fetchColumn();
     if ($nHasDBID && (!empty($sGenomeVariant) || !empty($aTranscriptVariants))) {
         // This is the standard query that will be used to determine if the DBID given is correct.
         $sSQL = 'SELECT COUNT(*) ' .
@@ -105,7 +105,7 @@ function lovd_checkDBID ($aData)
             $aArgs[] = sprintf('%010d', $nIDtoIgnore);
         }
         $sSQL .= $sWhere;
-        $nOptions = $_DB->query($sSQL, $aArgs)->fetchColumn();
+        $nOptions = $_DB->q($sSQL, $aArgs)->fetchColumn();
 
         if (!$nOptions) {
             return false;
@@ -447,7 +447,7 @@ function lovd_fetchDBID ($aData)
             $sSQL .= $sWhere;
         }
 
-        $aDBIDOptions = $_DB->query($sSQL, $aArgs)->fetchAllColumn();
+        $aDBIDOptions = $_DB->q($sSQL, $aArgs)->fetchAllColumn();
 
         // Set the default for the DBID.
         $sDBID = 'chr' . $aData['chromosome'] . '_999999';
@@ -500,7 +500,7 @@ function lovd_fetchDBID ($aData)
                     $sSQL .= ' AND `VariantOnGenome/DBID` >= ?';
                     $aArgs[] = $aDBIDsSeen[$aData['chromosome']];
                 }
-                $nDBIDnewNumber = $_DB->query($sSQL, $aArgs)->fetchColumn();
+                $nDBIDnewNumber = $_DB->q($sSQL, $aArgs)->fetchColumn();
                 // Update the cache!
                 $aDBIDsSeen[$aData['chromosome']] = $sSymbol . '_' . sprintf('%06d', ($nDBIDnewNumber - 1));
             } else {
@@ -515,7 +515,7 @@ function lovd_fetchDBID ($aData)
                 //  risk of missing variants is very small (they have to be on
                 //  a different chromosome).
                 $sSymbol = $aGenes[0];
-                $nDBIDnewNumber = $_DB->query('
+                $nDBIDnewNumber = $_DB->q('
                     SELECT IFNULL(RIGHT(MAX(`VariantOnGenome/DBID`), 6), 0) + 1
                     FROM ' . TABLE_VARIANTS . '
                     WHERE chromosome = ? AND `VariantOnGenome/DBID` REGEXP ?',
@@ -839,7 +839,7 @@ function lovd_setUpdatedDate ($aGenes, $bAuth = true)
     }
 
     // Just update the database and we'll see what happens.
-    $q = $_DB->query('
+    $q = $_DB->q('
         UPDATE ' . TABLE_GENES . '
         SET updated_by = ?, updated_date = NOW()
         WHERE id IN (?' . str_repeat(', ?', count($aGenes) - 1) . ')',

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-11-03
+ * Modified    : 2022-11-23
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -696,10 +696,30 @@ if (!class_exists('PDO')) {
 // Initiate Database Connection.
 require ROOT_PATH . 'class/PDO.php';
 if ($_INI['database']['driver'] == 'mysql') {
-    $_DB = new LOVD_PDO($_INI['database']['driver'], 'host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'], $_INI['database']['username'], $_INI['database']['password']);
+    // This method for setting the charset works also before 5.3.6, when "charset" was introduced in the DSN.
+    // Fix #4; Implement fix for PHP 5.3.0 on Windows, where PDO::MYSQL_ATTR_INIT_COMMAND by accident is not available.
+    // https://bugs.php.net/bug.php?id=47224                  (other constants were also lost, but we don't use them)
+    // Can't define a class' constant, so I'll have to use this one. This can be removed (and MYSQL_ATTR_INIT_COMMAND
+    // below restored to PDO::MYSQL_ATTR_INIT_COMMAND) once we're sure they're no other 5.3.0 users left.
+    if (!defined('MYSQL_ATTR_INIT_COMMAND')) {
+        // Still needs check though, in case two PDO connections are opened.
+        define('MYSQL_ATTR_INIT_COMMAND', 1002);
+    }
+    $aOptions = array(
+        // ONLY_FULL_GROUP_BY is causing issues; even if we try to play nice,
+        //  the totally unnecessary MIN() and MAX() calls slow down queries a lot. See #386.
+        MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8, SQL_MODE = REPLACE(REPLACE(@@SQL_MODE, "NO_ZERO_DATE", ""), "ONLY_FULL_GROUP_BY", "")',
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => TRUE,
+    );
+    $_DB = new LOVD_PDO(
+        $_INI['database']['driver'] . ':host=' . $_INI['database']['hostname'] . ';dbname=' . $_INI['database']['database'],
+        $_INI['database']['username'],
+        $_INI['database']['password'],
+        $aOptions
+    );
 } elseif ($_INI['database']['driver'] == 'sqlite') {
     // SQLite.
-    $_DB = new LOVD_PDO($_INI['database']['driver'], $_INI['database']['database']);
+    $_DB = new LOVD_PDO($_INI['database']['driver'] . ':' . $_INI['database']['database']);
 } else {
     // Can't happen.
     exit;
@@ -717,13 +737,13 @@ if (function_exists('mb_internal_encoding')) {
 @ini_set('session.cookie_httponly', 1); // Available from 5.2.0.
 
 // Read system-wide configuration from the database.
-if ($_CONF = $_DB->query('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
+if ($_CONF = $_DB->q('SELECT * FROM ' . TABLE_CONFIG, false, false)) {
     // Must be two-step, since $_CONF can be false and therefore does not have ->fetchAssoc().
     $_CONF = $_CONF->fetchAssoc();
     if ($_CONF) {
         // See if the database is read-only at the moment, due to an announcement with the configuration.
         // Ignore errors, in case the table doesn't exist yet.
-        $qAnnouncements = @$_DB->query('SELECT COUNT(*) FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW() AND lovd_read_only = 1', array(), false);
+        $qAnnouncements = @$_DB->q('SELECT COUNT(*) FROM ' . TABLE_ANNOUNCEMENTS . ' WHERE start_date <= NOW() AND end_date >= NOW() AND lovd_read_only = 1', array(), false);
         $_CONF['lovd_read_only'] = ($qAnnouncements && $qAnnouncements->fetchColumn());
     }
 }
@@ -739,7 +759,7 @@ if (!$_CONF) {
 }
 
 // Read LOVD status from the database.
-if ($_STAT = $_DB->query('SELECT * FROM ' . TABLE_STATUS, false, false)) {
+if ($_STAT = $_DB->q('SELECT * FROM ' . TABLE_STATUS, false, false)) {
     // Must be two-step, since $_STAT can be false and therefore does not have ->fetchAssoc().
     $_STAT = $_STAT->fetchAssoc();
 }
@@ -765,7 +785,7 @@ if (defined('MISSING_CONF') || defined('MISSING_STAT') || !preg_match('/^([1-9]\
     $aTables = array();
     // We can't put TABLE_PREFIX in an argument, since SHOW ... can't be prepared by PDO in some PHP versions.
     // Generated errors on 5.1.6, works fine on 5.3.3.
-    $q = $_DB->query('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
+    $q = $_DB->q('SHOW TABLES LIKE "' . TABLEPREFIX . '\_%"');
     while ($sCol = $q->fetchColumn()) {
         if (in_array($sCol, $_TABLES)) {
             $aTables[] = $sCol;
@@ -942,7 +962,7 @@ if (!defined('NOT_INSTALLED')) {
             );
         } else {
             $_SETT['admin'] = array('name' => '', 'email' => ''); // We must define the keys first, or the order of the keys will not be correct.
-            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->query('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
+            list($_SETT['admin']['name'], $_SETT['admin']['email']) = $_DB->q('SELECT name, email FROM ' . TABLE_USERS . ' WHERE level = ? AND id > 0 ORDER BY id ASC', array(LEVEL_ADMIN))->fetchRow();
             // Add a cleaned email address, because perhaps the admin has multiple addresses.
             $_SETT['admin']['address_formatted'] = $_SETT['admin']['name'] . ' <' . str_replace(array("\r\n", "\r", "\n"), '>, <', trim($_SETT['admin']['email'])) . '>';
         }
@@ -984,7 +1004,7 @@ if (!defined('NOT_INSTALLED')) {
     if (!in_array(lovd_getProjectFile(), array('/check_update.php'))) {
         // Load gene data.
         if (!LOVD_plus && !empty($_SESSION['currdb'])) {
-            $_SETT['currdb'] = @$_DB->query('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
+            $_SETT['currdb'] = @$_DB->q('SELECT * FROM ' . TABLE_GENES . ' WHERE id = ?', array($_SESSION['currdb']))->fetchAssoc();
             if (!$_SETT['currdb']) {
                 $_SESSION['currdb'] = false;
             } else {

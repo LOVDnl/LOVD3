@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-04-19
- * Modified    : 2020-03-30
- * For LOVD    : 3.0-24
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -136,7 +136,7 @@ class LOVD_Link extends LOVD_Object
                 $sSQL .= ' AND id != ?';
                 $aSQL[] = $zData['id'];
             }
-            if ($_DB->query($sSQL, $aSQL)->fetchColumn()) {
+            if ($_DB->q($sSQL, $aSQL)->fetchColumn()) {
                 lovd_errorAdd('name', 'There is already a custom link with this link name. Please choose another one.');
             }
         }
@@ -145,7 +145,7 @@ class LOVD_Link extends LOVD_Object
             $_POST['active_columns'] = array();
         } elseif (!empty($aData['active_columns'])) {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
-            $aColumns = $_DB->query('SELECT id FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'')->fetchAllColumn();
+            $aColumns = $_DB->q('SELECT id FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'')->fetchAllColumn();
             foreach($aData['active_columns'] as $sCol) {
                 if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
                     // Columns without slashes are the category headers, that could be selected.
@@ -164,7 +164,7 @@ class LOVD_Link extends LOVD_Object
                 $sSQL .= ' AND id != ?';
                 $aSQL[] = $zData['id'];
             }
-            if ($_DB->query($sSQL, $aSQL)->fetchColumn()) {
+            if ($_DB->q($sSQL, $aSQL)->fetchColumn()) {
                 lovd_errorAdd('pattern_text', 'There is already a custom link with this pattern. Please choose another one.');
 
             } else {
@@ -243,7 +243,7 @@ class LOVD_Link extends LOVD_Object
         // Get column list, to connect link to column.
         $aData = array();
         $sLastCategory = '';
-        $zData = $_DB->query('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\' ORDER BY id')->fetchAllCombine();
+        $zData = $_DB->q('SELECT id, CONCAT(id, " (", head_column, ")") FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\' ORDER BY id')->fetchAllCombine();
         $nData = count($zData);
         $nFieldSize = ($nData < 20? $nData : 20);
 

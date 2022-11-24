@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2020-11-24
- * For LOVD    : 3.0-26
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -213,7 +213,7 @@ class LOVD_SharedColumn extends LOVD_Object
         global $_DB;
 
         if ($sID) {
-            $bEntryExists = $_DB->query('
+            $bEntryExists = $_DB->q('
                 SELECT 1
                 FROM ' . constant($this->sTable) . '
                 WHERE ' . $this->aTableInfo['unit'] . 'id = ? AND colid = ? LIMIT 1',
@@ -223,7 +223,7 @@ class LOVD_SharedColumn extends LOVD_Object
             if (isset($this->bEntryExists)) {
                 return $this->bEntryExists;
             }
-            $bEntryExists = $_DB->query('
+            $bEntryExists = $_DB->q('
                 SELECT 1
                 FROM ' . constant($this->sTable) . '
                 WHERE ' . $this->aTableInfo['unit'] . 'id = ? LIMIT 1',
@@ -359,7 +359,7 @@ class LOVD_SharedColumn extends LOVD_Object
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::updateEntry()');
         }
-        $q = $_DB->query($sSQL, $aSQL, true, true);
+        $q = $_DB->q($sSQL, $aSQL, true, true);
 
         return $q->rowCount();
     }

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-04-21
- * Modified    : 2020-09-11
- * For LOVD    : 3.0-25
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2014-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : M. Kroon <m.kroon@lumc.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
@@ -104,7 +104,7 @@ function lovd_mailNewColleagues ($sUserID, $sUserFullname, $sUserInstitute, $sUs
     $sPlaceholders = '(?' . str_repeat(',?', count($aNewColleagues)-1) . ')';
     $sColleagueQuery = 'SELECT id, name, institute, email FROM ' . TABLE_USERS . ' WHERE id IN ' .
         $sPlaceholders;
-    $zColleagues = $_DB->query($sColleagueQuery, $aNewColleagues)->fetchAllAssoc();
+    $zColleagues = $_DB->q($sColleagueQuery, $aNewColleagues)->fetchAllAssoc();
 
     $sApplicationURL = lovd_getInstallURL();
     $sGranterFullname = $_AUTH['name'];
@@ -172,7 +172,7 @@ function lovd_colleagueTableHTML ($sUserID, $sUserListID, $aColleagues = null, $
                    FROM ' . TABLE_COLLEAGUES . ' AS c
                     LEFT JOIN ' . TABLE_USERS . ' AS u ON (u.id = c.userid_to)
                    WHERE c.userid_from = ?';
-        $aColleagues = $_DB->query($sQuery, array($sUserID))->fetchAllAssoc();
+        $aColleagues = $_DB->q($sQuery, array($sUserID))->fetchAllAssoc();
     }
 
     $sEditStyleAttribute = ($bAllowGrantEdit? '' : 'display: none;');
@@ -298,13 +298,13 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
     }
 
     $sOldColleaguesQuery = 'SELECT userid_to FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?';
-    $aOldColleagueIDs = $_DB->query($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
+    $aOldColleagueIDs = $_DB->q($sOldColleaguesQuery, array($sUserID))->fetchAllColumn();
     $aColleagueIDs = array(); // Array with new colleague IDs, to see who's new and who's removed.
 
     $_DB->beginTransaction();
 
     // Delete all current colleague records with given user in 'from' field.
-    $_DB->query('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?', array($sUserID));
+    $_DB->q('DELETE FROM ' . TABLE_COLLEAGUES . ' WHERE userid_from = ?', array($sUserID));
 
     if (count($aColleagues)) {
         // Build parts for multi-row insert query.
@@ -317,7 +317,7 @@ function lovd_setColleagues ($sUserID, $sUserFullname, $sUserInsititute, $sUserE
             array_push($aData, $sUserID, $aColleague['id'], (int) $aColleague['allow_edit']);
         }
 
-        $_DB->query('INSERT INTO ' . TABLE_COLLEAGUES .
+        $_DB->q('INSERT INTO ' . TABLE_COLLEAGUES .
                     ' (userid_from, userid_to, allow_edit) VALUES ' . $sPlaceholders, $aData);
     }
     $_DB->commit();

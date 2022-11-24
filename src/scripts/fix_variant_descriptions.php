@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-04-09
- * Modified    : 2022-07-27
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -103,7 +103,7 @@ class LOVD_VVAnalyses {
 
         // Check the arguments we have received.
         // Query takes 0.9 seconds on shared - acceptable.
-        $this->aChromosomes = $_DB->query('
+        $this->aChromosomes = $_DB->q('
             SELECT c.name, COUNT(*)
             FROM ' . TABLE_CHROMOSOMES . ' AS c
                 INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (c.name = vog.chromosome)
@@ -157,7 +157,7 @@ class LOVD_VVAnalyses {
 
         // Check for custom columns we need; hg38 annotation (GV shared has a
         //  custom column for that) and VOG/Remarks.
-        list($this->bDNA38, $this->bRemarks) = $_DB->query('
+        list($this->bDNA38, $this->bRemarks) = $_DB->q('
             SELECT COUNT(*)
             FROM ' . TABLE_ACTIVE_COLS . '
             WHERE colid = ?
@@ -168,7 +168,7 @@ class LOVD_VVAnalyses {
             array('VariantOnGenome/DNA/hg38', 'VariantOnGenome/Remarks'))->fetchAllColumn();
 
         // Get proper progress count - how much is behind us already for this chromosome?
-        $this->nProgressCount = $_DB->query('
+        $this->nProgressCount = $_DB->q('
                 SELECT COUNT(*)
                 FROM ' . TABLE_VARIANTS . '
                 WHERE chromosome = ? AND position_g_start < ? AND statusid > ?',
@@ -270,7 +270,7 @@ class LOVD_VVAnalyses {
         // As long as I make sure the loop will quit, I should be fine.
         while (true) {
             // Count how much there is left to do.
-            $nLeft = $_DB->query('
+            $nLeft = $_DB->q('
                 SELECT COUNT(*)
                 FROM ' . TABLE_VARIANTS . '
                 WHERE chromosome = ? AND position_g_start >= ? AND statusid > ?',
@@ -294,7 +294,7 @@ class LOVD_VVAnalyses {
             }
 
             // Get next position to work on.
-            $nNextPosition = $_DB->query('
+            $nNextPosition = $_DB->q('
                 SELECT position_g_start
                 FROM ' . TABLE_VARIANTS . '
                 WHERE chromosome = ? AND position_g_start >= ? AND statusid > ?
@@ -306,7 +306,7 @@ class LOVD_VVAnalyses {
             }
 
             // Fetch data for this position.
-            $aVariants = $_DB->query('
+            $aVariants = $_DB->q('
                 SELECT vog.id, vog.statusid, vog.`VariantOnGenome/DNA` AS DNA, ' .
                     (!$this->bDNA38? '' : 'vog.`VariantOnGenome/DNA/hg38` AS DNA38, ') .
                     (!$this->bRemarks? '' : 'vog.`VariantOnGenome/Remarks` AS remarks, ') .
@@ -843,7 +843,7 @@ class LOVD_VVAnalyses {
                         if (!isset($aVVVot['errors']['ERANGE'])) {
                             // This transcript should be reported.
                             // Check if we have reported it before.
-                            if (!$_DB->query('
+                            if (!$_DB->q('
                                 SELECT COUNT(*)
                                 FROM ' . TABLE_LOGS . '
                                 WHERE name = ? AND event = ? AND log LIKE ?',
@@ -1186,7 +1186,7 @@ class LOVD_VVAnalyses {
 
                     if ($aVariant['statusid'] >= STATUS_MARKED) {
                         // Get gene, and have it marked as updated.
-                        $aGenes = $_DB->query('
+                        $aGenes = $_DB->q('
                                 SELECT DISTINCT t.geneid
                                 FROM ' . TABLE_TRANSCRIPTS . ' AS t
                                     INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)

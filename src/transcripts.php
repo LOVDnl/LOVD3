@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-06-07
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -51,7 +51,7 @@ if (!ACTION && (empty($_PE[1]) || preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]))
     if (empty($_PE[1])) {
         $sGene = '';
     } else {
-        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
+        $sGene = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
         $_GET['search_geneid'] = '="' . $sGene . '"';
         lovd_isAuthorized('gene', $sGene);
     }
@@ -138,7 +138,7 @@ if (PATH_COUNT == 2 && !ctype_digit($_PE[1]) && !ACTION) {
     // When we have multiple hits, refer to listView.
 
     $sID = $_PE[1];
-    if ($nID = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchColumn()) {
+    if ($nID = $_DB->q('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?', array($sID))->fetchColumn()) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $nID);
     } else {
         define('PAGE_TITLE', 'Transcript ' . $sID);
@@ -206,7 +206,7 @@ if (ACTION == 'create') {
 
 
     // Gene given, check validity.
-    $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
+    $sGene = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
     define('PAGE_TITLE', 'Add transcript entry to ' . (!$sGene? 'a' : ' the ' . $sGene) . ' gene');
     $sPath = CURRENT_PATH . '?' . ACTION;
     $sPathBase = $_PE[0] . '?' . ACTION;
@@ -240,7 +240,7 @@ if (ACTION == 'create') {
             unset($_SESSION['work'][$sPathBase][min(array_keys($_SESSION['work'][$sPathBase]))]);
         }
 
-        $zGene = $_DB->query('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchAssoc();
+        $zGene = $_DB->q('SELECT id, name, chromosome, refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchAssoc();
 
         $_T->printHeader();
         $_T->printTitle();
@@ -394,7 +394,7 @@ if (ACTION == 'create') {
                         $sTranscriptName = $zData['transcriptNames'][$sTranscript];
 
                         $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
-                        $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, remarks, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
+                        $q = $_DB->q('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, remarks, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
                                          'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
                                          array($zData['gene']['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
                         if (!$q) {

@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-10-21
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -792,7 +792,7 @@ class LOVD_VV
                 // Check for intronic and positions outside of the mRNA.
 
                 // Fetch transcript positions from the database.
-                $aTranscript = $_DB->query('
+                $aTranscript = $_DB->q('
                     SELECT position_c_mrna_start, position_c_mrna_end
                     FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?',
                     array($sRefSeqNM))->fetchAssoc();

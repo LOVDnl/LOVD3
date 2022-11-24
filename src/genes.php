@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-06-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -67,7 +67,7 @@ function lovd_prepareCuratorLogMessage($sGeneID, $aCurators, $aAllowEdit, $aShow
     }
 
     // Get all curators (past and new) from database.
-    $qUser = $_DB->query('SELECT u.id, u.name, u2g.allow_edit, u2g.show_order FROM ' .
+    $qUser = $_DB->q('SELECT u.id, u.name, u2g.allow_edit, u2g.show_order FROM ' .
         TABLE_USERS . ' AS u LEFT OUTER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid ' .
         'AND u2g.geneid = ?) WHERE ' . $sSQLUserWhereCondition . ' u2g.geneid IS NOT NULL',
         array_merge(array($sGeneID), $aCurators));
@@ -166,7 +166,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     // URL: /genes/2928
     // Try to find a gene by its HGNC ID and forward.
 
-    if ($sID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($_PE[1]))->fetchColumn()) {
+    if ($sID = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?', array($_PE[1]))->fetchColumn()) {
         header('Location: ' . lovd_getInstallURL() . $_PE[0] . '/' . $sID);
     } else {
         define('PAGE_TITLE', 'Gene with HGNC ID #' . $_PE[1]);
@@ -302,7 +302,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
                 // When numeric, we search the id_hgnc field. When not, we search the id (gene symbol) field.
-                $zGene = $_DB->query(
+                $zGene = $_DB->q(
                     'SELECT id, id_hgnc FROM ' . TABLE_GENES . ' WHERE id' . (!ctype_digit($_POST['hgnc_id'])? '' : '_hgnc') . ' = ?',
                     array($_POST['hgnc_id']))->fetchAssoc();
 
@@ -319,7 +319,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
                         if (!ctype_digit($_POST['hgnc_id'])) {
                             // Check again if we have this gene already, perhaps under a different name.
-                            $zGene = $_DB->query(
+                            $zGene = $_DB->q(
                                 'SELECT id, id_hgnc FROM ' . TABLE_GENES . ' WHERE id_hgnc = ?',
                                 array($aGeneInfo['hgnc_id']))->fetchAssoc();
                         }
@@ -571,7 +571,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
                 // Make current user curator of this gene.
                 if (!LOVD_plus) {
-                    $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
+                    $_DB->q('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?)', array($_AUTH['id'], $_POST['id'], 1, 1));
                 }
 
                 // Add diseases.
@@ -580,7 +580,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     foreach ($_POST['active_diseases'] as $nDisease) {
                         // Add disease to gene.
                         if ($nDisease) {
-                            $q = $_DB->query('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $nDisease), false);
+                            $q = $_DB->q('INSERT INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($_POST['id'], $nDisease), false);
                             if (!$q) {
                                 // Silent error.
                                 lovd_writeLog('Error', LOG_EVENT, 'Disease information entry ' . $nDisease . ' - could not be added to gene ' . $_POST['id']);
@@ -639,7 +639,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                             $sTranscriptName = $zData['transcriptNames'][$sTranscript];
                             $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
                             // Add transcript to gene.
-                            $q = $_DB->query('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, remarks, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
+                            $q = $_DB->q('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, remarks, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
                                              'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
                                              array($_POST['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
                             if (!$q) {
@@ -672,7 +672,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
                 // Thank the user...
                 // If there is only one user, don't forward to the Add curators page.
-                if (!LOVD_plus && $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
+                if (!LOVD_plus && $_DB->q('SELECT COUNT(*) FROM ' . TABLE_USERS . ' WHERE id > 0')->fetchColumn() > 1) {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id'] . '?authorize');
                 } else {
                     header('Refresh: 3; url=' . lovd_getInstallURL() . CURRENT_PATH . '/' . $_POST['id']);
@@ -839,7 +839,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
             }
 
             if ($aToRemove) {
-                $q = $_DB->query('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove), false);
+                $q = $_DB->q('DELETE FROM ' . TABLE_GEN2DIS . ' WHERE geneid = ? AND diseaseid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Disease information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from gene ' . $sID);
@@ -854,7 +854,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
             foreach ($_POST['active_diseases'] as $nDisease) {
                 if ($nDisease && !in_array($nDisease, $zData['active_diseases'])) {
                     // Add disease to gene.
-                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease), false);
+                    $q = $_DB->q('INSERT IGNORE INTO ' . TABLE_GEN2DIS . ' VALUES (?, ?)', array($sID, $nDisease), false);
                     if (!$q) {
                         $aFailed[] = $nDisease;
                     } else {
@@ -942,7 +942,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     lovd_requireAUTH(LEVEL_CURATOR);
 
     // If there are no variants, why continue?
-    $nVariants = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?', array($sID))->fetchColumn();
+    $nVariants = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE t.geneid = ?', array($sID))->fetchColumn();
     if (!$nVariants) {
         lovd_showInfoTable('There are already no variants in this gene database!', 'stop');
         $_T->printFooter();
@@ -976,24 +976,24 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
             $_DB->beginTransaction();
             // Determine which transcripts need their data deleted...
             // We must have transcripts and variants, otherwise we cannot get to this point.
-            $aTranscripts = $_DB->query('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ?', array($sID))->fetchAllColumn();
+            $aTranscripts = $_DB->q('SELECT id FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ?', array($sID))->fetchAllColumn();
             // Then determine which VOGs need to be deleted, because they will point to nothing else...
-            $aVOGs = $_DB->query('SELECT DISTINCT vog.id FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot1 ON (vog.id = vot1.id AND vot1.transcriptid IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot2 ON (vog.id = vot2.id AND vot2.transcriptid NOT IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')) WHERE vot2.transcriptid IS NULL', array_merge($aTranscripts, $aTranscripts), true)->fetchAllColumn();
+            $aVOGs = $_DB->q('SELECT DISTINCT vog.id FROM ' . TABLE_VARIANTS . ' AS vog INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot1 ON (vog.id = vot1.id AND vot1.transcriptid IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot2 ON (vog.id = vot2.id AND vot2.transcriptid NOT IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')) WHERE vot2.transcriptid IS NULL', array_merge($aTranscripts, $aTranscripts), true)->fetchAllColumn();
             $_BAR->setProgress(10);
             $_BAR->setMessage('Deleting variants...');
 
             // Delete the VOTs!
-            $q = $_DB->query('DELETE FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE transcriptid IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')', $aTranscripts);
+            $q = $_DB->q('DELETE FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE transcriptid IN (?' . str_repeat(', ?', count($aTranscripts) - 1) . ')', $aTranscripts);
             $aDone['Variants_On_Transcripts'] = $q->rowCount();
             $nDone ++;
             unset($aTranscripts); // Save some memory.
             $_BAR->setProgress(25);
 
             // Determine which screenings need to go, based on the VOGs...
-            $aScreenings = $_DB->query('SELECT DISTINCT s2v1.screeningid FROM ' . TABLE_SCR2VAR . ' AS s2v1 LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v2 ON (s2v1.screeningid = s2v2.screeningid AND s2v2.variantid NOT IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ')) WHERE s2v1.variantid IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ') AND s2v2.variantid IS NULL', array_merge($aVOGs, $aVOGs), true)->fetchAllColumn();
+            $aScreenings = $_DB->q('SELECT DISTINCT s2v1.screeningid FROM ' . TABLE_SCR2VAR . ' AS s2v1 LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v2 ON (s2v1.screeningid = s2v2.screeningid AND s2v2.variantid NOT IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ')) WHERE s2v1.variantid IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ') AND s2v2.variantid IS NULL', array_merge($aVOGs, $aVOGs), true)->fetchAllColumn();
 
             // Delete the VOGs!
-            $q = $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ')', $aVOGs);
+            $q = $_DB->q('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVOGs) - 1) . ')', $aVOGs);
             $aDone['Variants_On_Genome'] = $q->rowCount();
             $nDone ++;
             unset($aVOGs); // Save some memory.
@@ -1004,10 +1004,10 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                 $_BAR->setMessage('Deleting screenings...');
 
                 // Determine which individuals need to go, based on the Screenings...
-                $aIndividuals = $_DB->query('SELECT DISTINCT s1.individualid FROM ' . TABLE_SCREENINGS . ' AS s1 LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s2 ON (s1.individualid = s2.individualid AND s2.id NOT IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ')) WHERE s1.id IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ') AND s2.id IS NULL', array_merge($aScreenings, $aScreenings), true)->fetchAllColumn();
+                $aIndividuals = $_DB->q('SELECT DISTINCT s1.individualid FROM ' . TABLE_SCREENINGS . ' AS s1 LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s2 ON (s1.individualid = s2.individualid AND s2.id NOT IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ')) WHERE s1.id IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ') AND s2.id IS NULL', array_merge($aScreenings, $aScreenings), true)->fetchAllColumn();
 
                 // Delete the Screenings! (NOTE: I could now just drop the individuals and everything will cascade, but I want the statistics...)
-                $q = $_DB->query('DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ')', $aScreenings);
+                $q = $_DB->q('DELETE FROM ' . TABLE_SCREENINGS . ' WHERE id IN (?' . str_repeat(', ?', count($aScreenings) - 1) . ')', $aScreenings);
                 $aDone['Screenings'] = $q->rowCount();
                 $nDone ++;
                 unset($aScreenings); // Save some memory.
@@ -1016,14 +1016,14 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
 
                 if ($aIndividuals) {
                     // Delete the Phenotypes! (NOTE: Again, just because I want the statistics...)
-                    $q = $_DB->query('DELETE FROM ' . TABLE_PHENOTYPES . ' WHERE individualid IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
+                    $q = $_DB->q('DELETE FROM ' . TABLE_PHENOTYPES . ' WHERE individualid IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
                     $aDone['Phenotypes'] = $q->rowCount();
                     $nDone ++;
                     $_BAR->setProgress(80);
                     $_BAR->setMessage('Deleting individuals...');
 
                     // And finally, delete the Individuals!
-                    $q = $_DB->query('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
+                    $q = $_DB->q('DELETE FROM ' . TABLE_INDIVIDUALS . ' WHERE id IN (?' . str_repeat(', ?', count($aIndividuals) - 1) . ')', $aIndividuals);
                     $aDone['Individuals'] = $q->rowCount();
                     $nDone ++;
                     unset($aIndividuals); // Save some memory.
@@ -1158,7 +1158,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                         <B>If you also wish to remove all information on individuals with variants in ' . $zData['id'] . ', first <A href="' . $_PE[0] . '/' . $sID . '?empty">empty</A> the gene database.</B>', 'warning');
 
     if ($bValidPassword) {
-        $zCounts = $_DB->query('SELECT count(DISTINCT t.id) AS tcount, count(DISTINCT vot.id) AS votcount
+        $zCounts = $_DB->q('SELECT count(DISTINCT t.id) AS tcount, count(DISTINCT vot.id) AS votcount
                                 FROM ' . TABLE_TRANSCRIPTS . ' AS t
                                  LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
                                 WHERE t.geneid = ?', array($sID))->fetchAssoc();
@@ -1391,7 +1391,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
         $_DB->beginTransaction();
         foreach ($_POST['columns'] as $nOrder => $sColID) {
             $nOrder ++; // Since 0 is the first key in the array.
-            $_DB->query('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sUnit . 'id = ? AND colid = ?', array($nOrder, $sID, $sCategory . '/' . $sColID));
+            $_DB->q('UPDATE ' . TABLE_SHARED_COLS . ' SET col_order = ? WHERE ' . $sUnit . 'id = ? AND colid = ?', array($nOrder, $sID, $sCategory . '/' . $sColID));
         }
         $_DB->commit();
 
@@ -1418,7 +1418,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && $_PE[2] 
     $_T->printTitle();
 
     // Retrieve column IDs in current order.
-    $aColumns = $_DB->query('SELECT SUBSTRING(colid, LOCATE("/", colid)+1) FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sUnit . 'id = ? ORDER BY col_order ASC', array($sID))->fetchAllColumn();
+    $aColumns = $_DB->q('SELECT SUBSTRING(colid, LOCATE("/", colid)+1) FROM ' . TABLE_SHARED_COLS . ' WHERE ' . $sUnit . 'id = ? ORDER BY col_order ASC', array($sID))->fetchAllColumn();
 
     if (!count($aColumns)) {
         lovd_showInfoTable('No active columns found!', 'stop');
@@ -1478,7 +1478,7 @@ if (PATH_COUNT == 3 && preg_match('/^[a-z][a-z0-9#@-]*$/i', rawurldecode($_PE[1]
     $bSeeNonPublicVariants = ($_AUTH && $_AUTH['level'] >= $_SETT['user_level_settings']['see_nonpublic_data']);
 
     // Check if there are variants at all.
-    $nVariants = $_DB->query('
+    $nVariants = $_DB->q('
         SELECT COUNT(*)
         FROM ' . TABLE_VARIANTS . ' AS vog
           INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
@@ -1594,7 +1594,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
 
     // 2015-07-22; 3.0-14; Drop usage of CURRENT_PATH in favor of fixed $sID which may have a gene symbol with incorrect case.
     // Now fix possible issues with capitalization. inc-init.php does this for $_SESSION['currdb'], but we're using $sID.
-    $sVerifiedID = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sID))->fetchColumn();
+    $sVerifiedID = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sID))->fetchColumn();
     if (!$sVerifiedID) {
         $_T->printHeader();
         $_T->printTitle();
@@ -1697,18 +1697,18 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
                 //   I'm being lazy, I'm not implementing the check here now. However, it *is* a bug and should be fixed later.
                 if (ACTION == 'authorize') {
                     // FIXME; Is using REPLACE not a lot easier?
-                    $_DB->query('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)));
+                    $_DB->q('INSERT INTO ' . TABLE_CURATES . ' VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE allow_edit = VALUES(allow_edit), show_order = VALUES(show_order)', array($nUserID, $sID, (int) in_array($nUserID, $_POST['allow_edit']), (in_array($nUserID, $_POST['shown'])? $nOrder : 0)));
                     // FIXME; Without detailed user info we can't include elaborate logging. Would we want that anyway?
                     //   We could rapport things here more specifically because MySQL can tell us if there has been an update (2) or an insert (1) or nothing changed (0).
                 } else {
                     // Just sort and update visibility!
-                    $_DB->query('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE geneid = ? AND userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $sID, $nUserID));
+                    $_DB->q('UPDATE ' . TABLE_CURATES . ' SET show_order = ? WHERE geneid = ? AND userid = ?', array((in_array($nUserID, $_POST['shown'])? $nOrder : 0), $sID, $nUserID));
                 }
             }
 
             if (ACTION == 'authorize') {
                 // Now everybody should be updated. Remove whoever should no longer be in there.
-                $_DB->query('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])));
+                $_DB->q('DELETE FROM c USING ' . TABLE_CURATES . ' AS c, ' . TABLE_USERS . ' AS u WHERE c.userid = u.id AND c.geneid = ? AND c.userid NOT IN (?' . str_repeat(', ?', count($_POST['curators']) - 1) . ') AND (u.level < ? OR u.id = ?)', array_merge(array($sID), $_POST['curators'], array($_AUTH['level'], $_AUTH['id'])));
             }
 
             // If we get here, it all succeeded.
@@ -1743,7 +1743,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
     if (!empty($_POST['curators'])) {
         // Form has already been sent. We're here because of errors. Use $_POST.
         // Retrieve data for selected curators and collaborators.
-        $qCurators = $_DB->query('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
+        $qCurators = $_DB->q('SELECT u.id, u.name, level FROM ' . TABLE_USERS . ' AS u WHERE u.id IN (?' . str_repeat(', ?', count($_POST['curators'])-1) . ')', $_POST['curators']);
         $zCurators = array();
         while ($z = $qCurators->fetchAssoc()) {
             // FIXME; Do we need to change all IDs to integers because of possibly loosing the prepended zero's? Cross-browser check to verify?
@@ -1764,7 +1764,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
 
         // Retrieve current curators and collaborators, order by current order.
         // Special ORDER BY statement makes sure show_order value of 0 is sent to the bottom of the list.
-        $qCurators = $_DB->query('
+        $qCurators = $_DB->q('
             SELECT u.id, u.name, c.allow_edit, (c.show_order != 0) AS shown, u.level
             FROM ' . TABLE_CURATES . ' AS c INNER JOIN ' . TABLE_USERS . ' AS u ON (c.userid = u.id)
             WHERE c.geneid = ? ' . (ACTION == 'authorize'? '' : 'AND c.allow_edit = 1 ') . '

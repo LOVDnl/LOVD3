@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-03-18
- * Modified    : 2022-06-06
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -49,7 +49,7 @@ if ((PATH_COUNT == 1 || (!empty($_PE[1]) && !ctype_digit($_PE[1]))) && !ACTION) 
     // View all entries.
 
     if (!empty($_PE[1])) {
-        $sGene = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
+        $sGene = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($_PE[1]))->fetchColumn();
         if ($sGene) {
             // We need the authorization call if we would show the screenings with VARIANTS in gene X, not before!
 //            lovd_isAuthorized('gene', $sGene); // To show non public entries.
@@ -167,7 +167,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
 
     $_GET['target'] = sprintf('%0' . $_SETT['objectid_length']['individuals'] . 'd', $_GET['target']);
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
-    $z = $_DB->query('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
+    $z = $_DB->q('SELECT id FROM ' . TABLE_INDIVIDUALS . ' WHERE id = ?', array($_GET['target']))->fetchAssoc();
     if (!$z) {
         $_T->printHeader();
         $_T->printTitle();
@@ -213,8 +213,8 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
                 foreach ($_POST['genes'] as $sGene) {
                     // Add disease to gene.
                     if (in_array($sGene, lovd_getGeneList())) {
-                        $q = $_DB->query('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene), false);
-                        // FIXME; I think this is not possible without a query error, that by default halts the system. Maybe you want to set $_DB->query()'s third argument to false?
+                        $q = $_DB->q('INSERT INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene), false);
+                        // FIXME; I think this is not possible without a query error, that by default halts the system. Maybe you want to set $_DB->q()'s third argument to false?
                         if (!$q->rowCount()) {
                             // Silent error.
                             // FIXME; maybe better to group the error messages, just like when editing?
@@ -227,7 +227,7 @@ if (PATH_COUNT == 1 && ACTION == 'create' && isset($_GET['target']) && ctype_dig
             }
 
             // Get genes which are modified only when linked individual is marked or public.
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                   'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                   'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                   'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -356,7 +356,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             if (!$bSubmit) {
                 // Put $zData with the old values in $_SESSION for mailing.
                 if ($zData['variants_found']) {
-                    $zData['variants_found_'] = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
+                    $zData['variants_found_'] = $_DB->q('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
                     if (!$zData['variants_found_']) {
                         $zData['variants_found_'] = 0;
                     }
@@ -385,7 +385,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             }
 
             if ($aToRemove) {
-                $q = $_DB->query('DELETE FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove), false);
+                $q = $_DB->q('DELETE FROM ' . TABLE_SCR2GENE . ' WHERE screeningid = ? AND geneid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($zData['id']), $aToRemove), false);
                 if (!$q) {
                     // Silent error.
                     lovd_writeLog('Error', LOG_EVENT, 'Gene information entr' . (count($aToRemove) == 1? 'y' : 'ies') . ' ' . implode(', ', $aToRemove) . ' could not be removed from screening ' . $nID);
@@ -400,7 +400,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             foreach ($_POST['genes'] as $sGene) {
                 if (!in_array($sGene, $zData['genes']) && in_array($sGene, lovd_getGeneList())) {
                     // Add gene to screening.
-                    $q = $_DB->query('INSERT IGNORE INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene), false);
+                    $q = $_DB->q('INSERT IGNORE INTO ' . TABLE_SCR2GENE . ' VALUES (?, ?)', array($nID, $sGene), false);
                     if (!$q) {
                         $aFailed[] = $sGene;
                     } else {
@@ -410,7 +410,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'edit') {
             }
 
             // Get genes which are modified only when linked variant is marked or public.
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                   'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                   'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                   'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -506,9 +506,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantConfirm');
 
-    $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
-    $aVariantsIndividual = $_DB->query('SELECT DISTINCT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($z['individualid']))->fetchAllColumn();
-    $aVariantsScreening = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
+    $z = $_DB->q('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    $aVariantsIndividual = $_DB->q('SELECT DISTINCT s2v.variantid FROM ' . TABLE_SCR2VAR . ' AS s2v INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid = ?', array($z['individualid']))->fetchAllColumn();
+    $aVariantsScreening = $_DB->q('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
 
     $sMessage = '';
     if (!$z) {
@@ -586,7 +586,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
             lovd_writeLog('Event', LOG_EVENT, 'Updated the list of variants confirmed with screening #' . $nID);
 
             // Get genes which are modified only when linked variant is marked or public.
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                   'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                   'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                   'WHERE vog.statusid >= ? AND vog.id IN (?' . str_repeat(', ?', count($aNewVariants) - 1) . ')', array_merge(array(STATUS_MARKED), $aNewVariants))->fetchAllColumn();
@@ -638,7 +638,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'confirmVariants') {
     lovd_showInfoTable('The variant entries below are all variants found in this individual, not yet confirmed by/added to this screening.', 'information');
 
     $_GET['page_size'] = 10;
-    $_GET['search_screeningids'] = $_DB->query('
+    $_GET['search_screeningids'] = $_DB->q('
         SELECT GROUP_CONCAT(id SEPARATOR "|")
         FROM ' . TABLE_SCREENINGS . '
         WHERE individualid = ? AND id != ?
@@ -680,10 +680,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
     define('PAGE_TITLE', lovd_getCurrentPageTitle());
     define('LOG_EVENT', 'VariantRemove');
 
-    $z = $_DB->query('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
-    $aVariants = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
+    $z = $_DB->q('SELECT id, individualid, variants_found FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($nID))->fetchAssoc();
+    $aVariants = $_DB->q('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchAllColumn();
     if ($aVariants) {
-        $aValidVariants = $_DB->query('SELECT variantid, COUNT(screeningid) AS nCount FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($aVariants) - 1) . ') GROUP BY variantid HAVING nCount > 1', $aVariants)->fetchAllColumn();
+        $aValidVariants = $_DB->q('SELECT variantid, COUNT(screeningid) AS nCount FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($aVariants) - 1) . ') GROUP BY variantid HAVING nCount > 1', $aVariants)->fetchAllColumn();
         $aInvalidVariants = array_diff($aVariants, $aValidVariants);
     }
 
@@ -749,7 +749,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
             $aToRemove = $_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']['checked'];
             if (!empty($aToRemove)) {
                 // Remove variants from screening...
-                $_DB->query('DELETE FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
+                $_DB->q('DELETE FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array($nID), $aToRemove));
             }
 
             // If we get here, it all succeeded.
@@ -757,7 +757,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'removeVariants') {
             unset($_SESSION['viewlists']['Screenings_' . $nID . '_removeVariants']);
 
             // Get genes which are modified only when linked variant is marked or public.
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                   'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                   'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                   'WHERE vog.statusid >= ? AND vog.id IN (?' . str_repeat(', ?', count($aToRemove) - 1) . ')', array_merge(array(STATUS_MARKED), $aToRemove))->fetchAllColumn();
@@ -849,10 +849,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     $zData = $_DATA->loadEntry($nID);
     require ROOT_PATH . 'inc-lib-form.php';
 
-    $a = $_DB->query('SELECT variantid, screeningid FROM ' . TABLE_SCR2VAR . ' GROUP BY variantid HAVING COUNT(screeningid) = 1 AND screeningid = ?', array($nID))->fetchAllColumn();
+    $a = $_DB->q('SELECT variantid, screeningid FROM ' . TABLE_SCR2VAR . ' GROUP BY variantid HAVING COUNT(screeningid) = 1 AND screeningid = ?', array($nID))->fetchAllColumn();
     $aVariantsRemovable = array();
     if (!empty($a)) {
-        $aVariantsRemovable = $_DB->query('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($a) - 1) . ')', array_merge(array($nID), $a))->fetchAllColumn();
+        $aVariantsRemovable = $_DB->q('SELECT variantid FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ? AND variantid IN (?' . str_repeat(', ?', count($a) - 1) . ')', array_merge(array($nID), $a))->fetchAllColumn();
     }
     $nVariantsRemovable = count($aVariantsRemovable);
 
@@ -875,7 +875,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
             // Search for effected genes before the deletion on SCR2VAR, else we can't find the link.
             // Get genes which are modified only when linked variant is marked or public.
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t ' .
                                   'INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) ' .
                                   'INNER JOIN ' . TABLE_VARIANTS . ' AS vog ON (vog.id = vot.id) ' .
                                   'INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s2v.variantid = vog.id) ' .
@@ -885,7 +885,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
             if (isset($_POST['remove_variants']) && $_POST['remove_variants'] == 'remove') {
                 // This also deletes the entries in TABLE_SCR2VAR.
-                $_DB->query('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
+                $_DB->q('DELETE FROM ' . TABLE_VARIANTS . ' WHERE id IN (?' . str_repeat(', ?', count($aVariantsRemovable) - 1) . ')', $aVariantsRemovable);
             }
 
             // This also deletes the entries in TABLE_SCR2GENE and TABLE_SCR2VAR.
@@ -927,7 +927,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
     // Table.
     print('      <FORM action="' . CURRENT_PATH . '?' . ACTION . '" method="post">' . "\n");
 
-    $nVariants = $_DB->query('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
+    $nVariants = $_DB->q('SELECT COUNT(variantid) FROM ' . TABLE_SCR2VAR . ' WHERE screeningid = ?', array($nID))->fetchColumn();
     $aOptions = array('remove' => 'Yes, remove ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' attached to only this screening', 'keep' => 'No, keep ' . ($nVariantsRemovable == 1? 'this variant' : 'these variants') . ' as separate entries');
 
     // Array which will make up the form table.

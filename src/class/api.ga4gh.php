@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2021-11-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -383,7 +383,7 @@ class LOVD_API_GA4GH
         static $aGenes = array();
 
         if (!isset($aGenes[$sSymbol])) {
-            $aGenes[$sSymbol] = $_DB->query('
+            $aGenes[$sSymbol] = $_DB->q('
                 SELECT id_hgnc, id_omim FROM ' . TABLE_GENES . ' WHERE id = ?',
                 array($sSymbol))->fetchAssoc();
         }
@@ -788,7 +788,7 @@ class LOVD_API_GA4GH
         // Select columns only if they're *globally* set to public.
         // Note that this means, for VOT and Phenotype columns, the gene- and
         //  disease-specific settings are ignored.
-        $aCols = $_DB->query('
+        $aCols = $_DB->q('
             SELECT colid
             FROM ' . TABLE_ACTIVE_COLS . ' AS ac
               INNER JOIN ' . TABLE_COLS . ' AS c ON (ac.colid = c.id)
@@ -838,7 +838,7 @@ class LOVD_API_GA4GH
         $aLicensesSummaryData = array_keys(array_diff($aLicenses, array(1)));
 
         // We'll need lots of space for GROUP_CONCAT().
-        $_DB->query('SET group_concat_max_len = 1000000');
+        $_DB->q('SET group_concat_max_len = 1000000');
 
         // Fetch data. We do this in two steps; first the basic variant
         //  information and after that the full submission data.
@@ -930,7 +930,7 @@ class LOVD_API_GA4GH
         $sQ .= '
                ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`
                LIMIT ' . $nLimit;
-        $zData = $_DB->query($sQ, $aQ)->fetchAllAssoc();
+        $zData = $_DB->q($sQ, $aQ)->fetchAllAssoc();
         $n = count($zData);
 
 
@@ -1261,7 +1261,7 @@ class LOVD_API_GA4GH
             }
 
             if ($aSubmissions) {
-                $aSubmissions = $_DB->query('
+                $aSubmissions = $_DB->q('
                     SELECT i.id, i.panel_size' .
                     (!$bIndGender? '' : ',
                       i.`Individual/Gender` AS gender') . ',

@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-05-12
- * Modified    : 2021-11-10
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -172,14 +172,14 @@ class LOVD_TranscriptVariant extends LOVD_Custom
 
         if (!empty($this->nID)) {
             // Known variant ID, load all transcripts for existing variant.
-            $aTranscripts = $_DB->query('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' .
+            $aTranscripts = $_DB->q('SELECT t.id, t.id_ncbi, t.geneid, t.id_mutalyzer FROM ' .
                 TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS .
                 ' AS vot ON (t.id = vot.transcriptid) WHERE vot.id = ? ORDER BY t.geneid, ' .
                 't.id_ncbi', array($this->nID))->fetchAllRow();
         } else {
             // Unknown variant, but then we must have a gene symbol ($sObjectID).
             // Get list of transcript(s) available for this gene for getForm(), checkFields(), etc...
-            $aTranscripts = $_DB->query('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' .
+            $aTranscripts = $_DB->q('SELECT id, id_ncbi, geneid, id_mutalyzer FROM ' .
                 TABLE_TRANSCRIPTS . ' WHERE geneid IN (?' .
                 str_repeat(', ?', substr_count($sObjectID, ',')) . ') ' .
                 (!$bLoadAllTranscripts? 'LIMIT 1' : 'ORDER BY id_ncbi'),
@@ -363,7 +363,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
             lovd_displayError('LOVD-Lib', 'Objects::(' . $this->sObject . ')::loadEntry() - Method didn\'t receive ID');
         }
 
-        $q = $_DB->query($this->sSQLLoadEntry, array_merge(
+        $q = $_DB->q($this->sSQLLoadEntry, array_merge(
             array($nID),
             (!$this->sObjectID? array() : array($this->sObjectID))), false);
         if ($q) {
@@ -494,7 +494,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         if (!defined('LOG_EVENT')) {
             define('LOG_EVENT', $this->sObject . '::updateEntry()');
         }
-        $q = $_DB->query($sSQL, $aSQL, true, true);
+        $q = $_DB->q($sSQL, $aSQL, true, true);
 
         return $q->rowCount();
     }
@@ -568,7 +568,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
                 define('LOG_EVENT', $this->sObject . '::updateEntry()');
             }
 
-            $q = $_DB->query($sSQL, $aSQL, true, true);
+            $q = $_DB->q($sSQL, $aSQL, true, true);
             $nAffected += $q->rowCount();
         }
         return $nAffected;
@@ -587,7 +587,7 @@ class LOVD_TranscriptVariant extends LOVD_Custom
         // Before passing this on to parent::viewEntry(), perform a standard count() check on the transcript ID,
         // to make sure that we won't get a query error when the combination of VariantID/TranscriptID does not yield
         // any results. Easiest is then to fake a wrong $nID such that parent::viewEntry() will complain.
-        if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($nID, $nTranscriptID))->fetchColumn()) {
+        if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE id = ? AND transcriptid = ?', array($nID, $nTranscriptID))->fetchColumn()) {
             $nID = -1;
         }
         parent::viewEntry($nID);

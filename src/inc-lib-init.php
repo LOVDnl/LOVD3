@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-10-26
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -579,7 +579,7 @@ function lovd_getColumnData ($sTable)
             return false;
         }
 
-        $q = $_DB->query('SHOW COLUMNS FROM ' . $sTable, false, false); // Safe, since $sTable is already checked with $_TABLES.
+        $q = $_DB->q('SHOW COLUMNS FROM ' . $sTable, false, false); // Safe, since $sTable is already checked with $_TABLES.
         if (!$q) {
             // Can happen when table does not exist yet (i.e. during install).
             return false;
@@ -969,17 +969,17 @@ function lovd_getCurrentPageTitle ()
     // Add details, if available.
     switch ($sObject) {
         case 'announcements':
-            $sPreview = lovd_shortenString($_DB->query('SELECT REPLACE(announcement, "\r\n", " ") FROM ' . TABLE_ANNOUNCEMENTS . '
+            $sPreview = lovd_shortenString($_DB->q('SELECT REPLACE(announcement, "\r\n", " ") FROM ' . TABLE_ANNOUNCEMENTS . '
                 WHERE id = ?', array($ID))->fetchColumn(), 50);
             $sTitle .= ' ("' . $sPreview . '")';
             break;
         case 'columns':
-            $sHeader = $_DB->query('SELECT head_column FROM ' . TABLE_COLS . '
+            $sHeader = $_DB->q('SELECT head_column FROM ' . TABLE_COLS . '
                 WHERE id = ?', array($ID))->fetchColumn();
             $sTitle .= ' (' . $sHeader . ')';
             break;
         case 'diseases':
-            list($sName, $nOMIM) = $_DB->query('
+            list($sName, $nOMIM) = $_DB->q('
                 SELECT IF(CASE symbol WHEN "-" THEN "" ELSE symbol END = "", name, CONCAT(symbol, " (", name, ")")), id_omim
                 FROM ' . TABLE_DISEASES . '
                 WHERE id = ?', array($ID))->fetchRow();
@@ -989,13 +989,13 @@ function lovd_getCurrentPageTitle ()
             }
             break;
         case 'links':
-            $sName = $_DB->query('SELECT name FROM ' . TABLE_LINKS . '
+            $sName = $_DB->q('SELECT name FROM ' . TABLE_LINKS . '
                 WHERE id = ?', array($ID))->fetchColumn();
             $sTitle .= ' (' . $sName . ')';
             break;
         case 'transcripts':
             list($sNCBI, $sGene) =
-                $_DB->query('
+                $_DB->q('
                     SELECT id_ncbi, geneid
                     FROM ' . TABLE_TRANSCRIPTS . '
                     WHERE id = ?', array($ID))->fetchRow();
@@ -1010,7 +1010,7 @@ function lovd_getCurrentPageTitle ()
             $bIsAuthorized = (lovd_isAuthorized('user', $ID, false) !== false);
             if ($bIsAuthorized) {
                 list($sName, $sCity, $sCountry) =
-                    $_DB->query('
+                    $_DB->q('
                     SELECT u.name, u.city, c.name
                     FROM ' . TABLE_USERS . ' AS u
                       LEFT OUTER JOIN ' . TABLE_COUNTRIES . ' AS c ON (u.countryid = c.id)
@@ -1028,7 +1028,7 @@ function lovd_getCurrentPageTitle ()
             // lovd_isAuthorized() can produce false, 0 or 1. Accept 0 or 1.
             $bIsAuthorized = (lovd_isAuthorized('variant', $ID, false) !== false);
             list($sVOG, $sVOT) =
-                $_DB->query('
+                $_DB->q('
                     SELECT CONCAT(c.`' . $_CONF['refseq_build'] . '_id_ncbi`, ":", vog.`VariantOnGenome/DNA`) AS VOG_DNA,
                         CONCAT(t.geneid, "(", t.id_ncbi, "):", vot.`VariantOnTranscript/DNA`) AS VOT_DNA
                     FROM ' . TABLE_VARIANTS . ' AS vog
@@ -1060,7 +1060,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
 
     static $aSources = array();
     if (!count($aSources)) {
-        $aSources = $_DB->query('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine();
+        $aSources = $_DB->q('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine();
     }
 
     if (array_key_exists($sSource, $aSources)) {
@@ -1137,7 +1137,7 @@ function lovd_getGeneList ()
 
     static $aGenes = array();
     if (!count($aGenes)) {
-        $aGenes = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllColumn();
+        $aGenes = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' ORDER BY id')->fetchAllColumn();
     }
 
     return $aGenes;
@@ -1216,7 +1216,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 // We should check if it matches the transcript in the DNA field.
                 $sField = (substr($sReferenceSequence, 0, 3) == 'ENS'? 'id_ensembl' : 'id_ncbi');
                 if (is_numeric($sTranscriptID)) {
-                    $sRefSeqID = $_DB->query('SELECT `' . $sField . '` FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
+                    $sRefSeqID = $_DB->q('SELECT `' . $sField . '` FROM ' . TABLE_TRANSCRIPTS . ' WHERE id = ?',
                         array($sTranscriptID))->fetchColumn();
                 } else {
                     $sRefSeqID = $sTranscriptID;
@@ -1631,7 +1631,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         $aTranscriptOffsets[$sTranscriptID] = 1000000;
 
     } elseif ($sTranscriptID && !isset($aTranscriptOffsets[$sTranscriptID])) {
-        $aTranscriptOffsets[$sTranscriptID] = $_DB->query('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
+        $aTranscriptOffsets[$sTranscriptID] = $_DB->q('SELECT position_c_cds_end FROM ' . TABLE_TRANSCRIPTS . ' WHERE (id = ? OR id_ncbi = ?)',
             array($sTranscriptID, $sTranscriptID))->fetchColumn();
         if (!$aTranscriptOffsets[$sTranscriptID]) {
             // The transcript is not configured correctly. We will treat this transcript as unknown.
@@ -2816,7 +2816,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
                 // Lower than managers never get access to hidden data of other users.
                 return false;
             } else {
-                $nLevelData = $_DB->query('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($Data))->fetchColumn();
+                $nLevelData = $_DB->q('SELECT level FROM ' . TABLE_USERS . ' WHERE id = ?', array($Data))->fetchColumn();
                 return (int) ($_AUTH['level'] > $nLevelData);
             }
         }
@@ -2854,7 +2854,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             // Not supported on this data type.
             return false;
         } else {
-            $nCreatorID = $_DB->query('SELECT created_by FROM ' . TABLE_ANALYSES_RUN . ' WHERE id = ?', array($Data))->fetchColumn();
+            $nCreatorID = $_DB->q('SELECT created_by FROM ' . TABLE_ANALYSES_RUN . ' WHERE id = ?', array($Data))->fetchColumn();
             if ($_AUTH['level'] >= LEVEL_ANALYZER && $nCreatorID == $_AUTH['id']) {
                 // At least Analyzer (Managers don't get to this point).
                 if ($bSetUserLevel) {
@@ -2871,7 +2871,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
             // Not supported on this data type.
             return false;
         } else {
-            $z = $_DB->query('SELECT analysis_statusid, analysis_by FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($Data))->fetchAssoc();
+            $z = $_DB->q('SELECT analysis_statusid, analysis_by FROM ' . TABLE_SCREENINGS . ' WHERE id = ?', array($Data))->fetchAssoc();
             if ($_AUTH['level'] >= LEVEL_ANALYZER) {
                 // At least Analyzer (Managers don't get to this point).
                 if ($z['analysis_by'] == $_AUTH['id'] ||
@@ -2894,22 +2894,22 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     switch ($sType) {
         // Queries for every data type.
         case 'transcript':
-            $aGenes = $_DB->query('SELECT DISTINCT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            $aGenes = $_DB->q('SELECT DISTINCT geneid FROM ' . TABLE_TRANSCRIPTS . ' WHERE id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             return lovd_isAuthorized('gene', $aGenes, $bSetUserLevel);
         case 'disease':
-            $aGenes = $_DB->query('SELECT DISTINCT geneid FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            $aGenes = $_DB->q('SELECT DISTINCT geneid FROM ' . TABLE_GEN2DIS . ' WHERE diseaseid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             return lovd_isAuthorized('gene', $aGenes, $bSetUserLevel);
         case 'variant':
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id) WHERE vot.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             break;
         case 'individual':
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) WHERE s.individualid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             break;
         case 'phenotype':
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (s.individualid = p.individualid) WHERE p.id IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             break;
         case 'screening':
-            $aGenes = $_DB->query('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
+            $aGenes = $_DB->q('SELECT DISTINCT t.geneid FROM ' . TABLE_TRANSCRIPTS . ' AS t LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (vot.transcriptid = t.id) LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (vot.id = s2v.variantid) WHERE s2v.screeningid IN (?' . str_repeat(', ?', count($Data)-1) . ')', $Data)->fetchAllColumn();
             break;
         default:
             return false;
@@ -2925,7 +2925,7 @@ function lovd_isAuthorized ($sType, $Data, $bSetUserLevel = true)
     if (LOVD_plus && $sType == 'variant') {
         // LOVD+ allows LEVEL_OWNER authorization based on ownership of the screening analysis.
         // We dump in multiple variants, but we should really only get one Screening back.
-        $aScreeningIDs = $_DB->query('SELECT DISTINCT screeningid FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($Data) - 1) . ')', $Data)->fetchAllColumn();
+        $aScreeningIDs = $_DB->q('SELECT DISTINCT screeningid FROM ' . TABLE_SCR2VAR . ' WHERE variantid IN (?' . str_repeat(', ?', count($Data) - 1) . ')', $Data)->fetchAllColumn();
         $bOwner = lovd_isAuthorized('screening_analysis', $aScreeningIDs[0], false);
     } else {
         $bOwner = lovd_isOwner($sType, $Data);
@@ -2992,7 +2992,7 @@ function lovd_isColleagueOfOwner ($sType, $Data, $bMustHaveEditPermission = true
 
     $sQ = 'SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sType) . 'S') . ' WHERE id IN ' .
         $sDataPlaceholders . ' AND (owned_by IN ' . $sColleaguePlaceholders . ')';
-    $q = $_DB->query($sQ, array_merge($Data, $aOwnerIDs));
+    $q = $_DB->q($sQ, array_merge($Data, $aOwnerIDs));
 
     return ($q !== false && intval($q->fetchColumn()) == count($Data));
 }
@@ -3032,7 +3032,7 @@ function lovd_isOwner ($sType, $Data)
 
     $sQ = 'SELECT COUNT(*) FROM ' . constant('TABLE_' . strtoupper($sType) . 'S') . ' WHERE id IN ' .
              $sDataPlaceholders . ' AND (owned_by = ? OR created_by = ?)';
-    $q = $_DB->query($sQ, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
+    $q = $_DB->q($sQ, array_merge($Data, array($_AUTH['id'], $_AUTH['id'])));
 
     return ($q !== false && intval($q->fetchColumn()) == count($Data));
 }
@@ -3551,7 +3551,7 @@ function lovd_saveWork ()
 
     if ($_AUTH && isset($_AUTH['saved_work'])) {
         // FIXME; Later when we add a decent json_encode library, we will switch to that.
-        $_DB->query('UPDATE ' . TABLE_USERS . ' SET saved_work = ? WHERE id = ?', array(serialize($_AUTH['saved_work']), $_AUTH['id']));
+        $_DB->q('UPDATE ' . TABLE_USERS . ' SET saved_work = ? WHERE id = ?', array(serialize($_AUTH['saved_work']), $_AUTH['id']));
         return true;
     } else {
         return false;
@@ -3905,7 +3905,7 @@ function lovd_writeLog ($sLog, $sEvent, $sMessage, $nAuthID = 0)
     $sTime = substr($aTime[0], 2, -2);
 
     // Insert new line in logs table.
-    $q = $_DB->query('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
+    $q = $_DB->q('INSERT INTO ' . TABLE_LOGS . ' VALUES (?, NOW(), ?, ?, ?, ?)',
         array($sLog, $sTime, ($nAuthID?: ($_AUTH? $_AUTH['id'] : NULL)), $sEvent, $sMessage), false);
     return (bool) $q;
 }

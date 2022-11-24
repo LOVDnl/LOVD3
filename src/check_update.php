@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2022-06-27
- * For LOVD    : 3.0-28
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -76,7 +76,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
     if ($_CONF['send_stats']) {
         // Collect stats...
         // Number of submitters.
-        $nSubs = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_USERS . ' AS u WHERE u.id > 0 AND u.id NOT IN (SELECT c.userid FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id AND allow_edit = 1)')->fetchColumn();
+        $nSubs = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_USERS . ' AS u WHERE u.id > 0 AND u.id NOT IN (SELECT c.userid FROM ' . TABLE_CURATES . ' AS c WHERE c.userid = u.id AND allow_edit = 1)')->fetchColumn();
         $sPOSTVars .= '&submitter_count=' . $nSubs;
 
         // Number of genes.
@@ -86,11 +86,11 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $sPOSTVars .= '&gene_count=' . $nGenes;
 
         // Individual count.
-        $nIndividuals = $_DB->query('SELECT SUM(panel_size) FROM ' . TABLE_INDIVIDUALS . ' WHERE statusid >= ' . STATUS_MARKED . ' AND panelid IS NULL')->fetchColumn();
+        $nIndividuals = $_DB->q('SELECT SUM(panel_size) FROM ' . TABLE_INDIVIDUALS . ' WHERE statusid >= ' . STATUS_MARKED . ' AND panelid IS NULL')->fetchColumn();
         $sPOSTVars .= '&patient_count=' . $nIndividuals;
 
         // Number of unique variants.
-        $nUniqueVariants = $_DB->query('SELECT COUNT(DISTINCT `VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' WHERE statusid >= ' . STATUS_MARKED)->fetchColumn();
+        $nUniqueVariants = $_DB->q('SELECT COUNT(DISTINCT `VariantOnGenome/DBID`) FROM ' . TABLE_VARIANTS . ' WHERE statusid >= ' . STATUS_MARKED)->fetchColumn();
         $sPOSTVars .= '&uniquevariant_count=' . $nUniqueVariants;
 
         // Number of variants.
@@ -99,12 +99,12 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         // The subselect options do all the calculations in MySQL, and are therefore hopefully faster and more efficient.
         // WITH UNION                         SELECT COUNT(DISTINCT v.id) FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL UNION ALL
         //                                    SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id;
-        //$nVariants = array_sum($_DB->query('SELECT COUNT(DISTINCT v.id) FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL UNION ALL
+        //$nVariants = array_sum($_DB->q('SELECT COUNT(DISTINCT v.id) FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL UNION ALL
         //                                    SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id')->fetchAllColumn());
         // USING SUBSELECTS                   SELECT variants_without_individuals + SUM(variants_on_individuals) FROM (SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) AS variants_on_individuals FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub1, (SELECT COUNT(DISTINCT v.id) AS variants_without_individuals FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL) AS sub2;
-        //$nVariants = array_sum($_DB->query('SELECT variants_without_individuals + SUM(variants_on_individuals) FROM (SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) AS variants_on_individuals FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub1, (SELECT COUNT(DISTINCT v.id) AS variants_without_individuals FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL) AS sub2')->fetchAllColumn());
+        //$nVariants = array_sum($_DB->q('SELECT variants_without_individuals + SUM(variants_on_individuals) FROM (SELECT (IF(i.statusid < 7, 1, i.panel_size) * COUNT(DISTINCT v.id)) AS variants_on_individuals FROM ' . TABLE_INDIVIDUALS . ' AS i INNER JOIN ' . TABLE_SCREENINGS . ' AS s ON (i.id = s.individualid) INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid) INNER JOIN ' . TABLE_VARIANTS . ' AS v ON (s2v.variantid = v.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub1, (SELECT COUNT(DISTINCT v.id) AS variants_without_individuals FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) WHERE v.statusid >= ' . STATUS_MARKED . ' AND s2v.screeningid IS NULL) AS sub2')->fetchAllColumn());
         // EVEN SHORTER                     SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < 7, 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= 7 GROUP BY i.id) AS sub
-        $nVariants = array_sum($_DB->query('SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < ' . STATUS_MARKED . ', 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= ' . STATUS_MARKED . ' GROUP BY i.id) AS sub')->fetchAllColumn());
+        $nVariants = array_sum($_DB->q('SELECT SUM(v) FROM (SELECT (IFNULL(IF(i.statusid < ' . STATUS_MARKED . ', 1, i.panel_size), 1) * COUNT(DISTINCT v.id)) AS v FROM ' . TABLE_VARIANTS . ' AS v LEFT JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (v.id = s2v.variantid) LEFT JOIN ' . TABLE_SCREENINGS . ' AS s ON (s2v.screeningid = s.id) LEFT JOIN ' . TABLE_INDIVIDUALS . ' AS i ON (s.individualid = i.id) WHERE v.statusid >= ' . STATUS_MARKED . ' GROUP BY i.id) AS sub')->fetchAllColumn());
         $sPOSTVars .= '&variant_count=' . $nVariants;
     }
 
@@ -121,7 +121,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         $aData = array('genes' => array(), 'users' => array(), 'diseases' => array());
 
         // First, get the gene info (we store name, diseases, date last updated and curator ids).
-        $q = $_DB->query('
+        $q = $_DB->q('
             SELECT g.id, g.name, g.updated_date,
                    GROUP_CONCAT(DISTINCT u2g.userid ORDER BY u2g.show_order) AS users, GROUP_CONCAT(DISTINCT d.id ORDER BY d.name) AS diseases
             FROM ' . TABLE_GENES . ' AS g
@@ -139,13 +139,13 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         }
 
         // Then, get the actual curator data (name, email, institute).
-        $q = $_DB->query('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' AS u INNER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.allow_edit = 1 AND u2g.show_order != 0 ORDER BY u.id', array(), false);
+        $q = $_DB->q('SELECT id, name, email, institute FROM ' . TABLE_USERS . ' AS u INNER JOIN ' . TABLE_CURATES . ' AS u2g ON (u.id = u2g.userid) WHERE u2g.allow_edit = 1 AND u2g.show_order != 0 ORDER BY u.id', array(), false);
         while ($z = $q->fetchAssoc()) {
             $aData['users'][$z['id']] = array('name' => $z['name'], 'email' => $z['email'], 'institute' => $z['institute']);
         }
 
         // Finally, get the actual disease data (ID, symbol, name).
-        $q = $_DB->query('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ORDER BY d.id', array(), false);
+        $q = $_DB->q('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' AS d INNER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (d.id = g2d.diseaseid) ORDER BY d.id', array(), false);
         while ($z = $q->fetchAssoc()) {
             $aData['diseases'][$z['id']] = array('symbol' => $z['symbol'], 'name' => $z['name']);
         }
@@ -161,7 +161,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
     $sNow = date('Y-m-d H:i:s');
     if (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*' . $_SETT['system']['version'] . '(\nReleased\s*:\s*[0-9]{4}\-[0-9]{2}\-[0-9]{2})?$/', $sUpdates)) {
         // No update available.
-        $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = 0, update_description = "", update_released_date = NULL', array($sNow, $_SETT['system']['version']));
+        $_DB->q('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = 0, update_description = "", update_released_date = NULL', array($sNow, $_SETT['system']['version']));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = $_SETT['system']['version'];
         $_STAT['update_released_date'] = '';
@@ -175,14 +175,14 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
         if (strpos($_SETT['system']['version'], $sLOVDVersionReported) === 0
             && preg_match('/^[a-z]$/', substr($_SETT['system']['version'], strlen($sLOVDVersionReported)))) {
             // We just have a letter better than what's online. Big deal.
-            $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = 0, update_description = "", update_released_date = NULL', array($sNow, $aUpdates[1]));
+            $_DB->q('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = 0, update_description = "", update_released_date = NULL', array($sNow, $aUpdates[1]));
             $_STAT['update_checked_date'] = $sNow;
             $_STAT['update_version'] = $aUpdates[1];
             $_STAT['update_released_date'] = $aUpdates[5];
         } else {
             // OK, now it's still weird. We have a higher version than what's online?
             lovd_writeLog('Error', 'CheckUpdate', 'Version conflict while parsing upstream server output: current version (' . $_SETT['system']['version'] . ') > ' . $aUpdates[1]);
-            $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
+            $_DB->q('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
             $_STAT['update_checked_date'] = $sNow;
             $_STAT['update_version'] = 'Error';
             $_STAT['update_released_date'] = '';
@@ -193,7 +193,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
 
     } elseif (preg_match('/^Package\s*:\s*LOVD\nVersion\s*:\s*([1-9]\.[0-9](\.[0-9])?\-([0-9a-z-]{2,11}))(\nReleased\s*:\s*([0-9]{4}\-[0-9]{2}\-[0-9]{2}))?\nPriority\s*:\s*([0-9])\nDescription\s*:\s*(.+)$/s', $sUpdates, $aUpdates) && is_array($aUpdates)) {
         // Now update the database - new version detected.
-        $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = ?, update_description = ?, update_released_date = ?', array($sNow, $aUpdates[1], $aUpdates[6], $aUpdates[7], $aUpdates[5]));
+        $_DB->q('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = ?, update_level = ?, update_description = ?, update_released_date = ?', array($sNow, $aUpdates[1], $aUpdates[6], $aUpdates[7], $aUpdates[5]));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = $aUpdates[1];
         $_STAT['update_released_date'] = $aUpdates[5];
@@ -203,7 +203,7 @@ if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
     } else {
         // Error during update check.
         lovd_writeLog('Error', 'CheckUpdate', 'Could not parse upstream server output:' . "\n" . $sUpdates);
-        $_DB->query('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
+        $_DB->q('UPDATE ' . TABLE_STATUS . ' SET update_checked_date = ?, update_version = "Error", update_level = 0, update_description = "", update_released_date = NULL', array($sNow));
         $_STAT['update_checked_date'] = $sNow;
         $_STAT['update_version'] = 'Error';
         $_STAT['update_released_date'] = '';

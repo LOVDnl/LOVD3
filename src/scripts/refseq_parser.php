@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-29
- * Modified    : 2022-11-04
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -97,7 +97,7 @@ if ($_GET['step'] == 1) {
         } else {
             // Get the UD number from the genes table.
             $_POST['transcript_id'] = $_POST['symbol'];
-            list($_POST['symbol'], $sFileID, $_POST['protein_id']) = $_DB->query('SELECT g.id, ' . ($_POST['file'] == 'NC'? 'g.refseq_UD' : 'IF(LEFT(g.refseq_genomic, 2) != "NG", g.refseq_UD, g.refseq_genomic)') . ' AS refseq, t.id_protein_ncbi FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE t.id_ncbi = ?', array($_POST['symbol']))->fetchRow();
+            list($_POST['symbol'], $sFileID, $_POST['protein_id']) = $_DB->q('SELECT g.id, ' . ($_POST['file'] == 'NC'? 'g.refseq_UD' : 'IF(LEFT(g.refseq_genomic, 2) != "NG", g.refseq_UD, g.refseq_genomic)') . ' AS refseq, t.id_protein_ncbi FROM ' . TABLE_GENES . ' AS g INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) WHERE t.id_ncbi = ?', array($_POST['symbol']))->fetchRow();
 
             if (empty($sFileID) || empty($_POST['transcript_id']) || empty($_POST['protein_id'])) {
                 lovd_errorAdd('symbol', 'This gene or transcript does not seem to be configured correctly, we currently can\'t generate a human-readable reference sequence file using this gene.');
@@ -404,7 +404,7 @@ if ($_GET['step'] == 1) {
         // Do we have a gene selected?
         if ($_SESSION['currdb'] || !empty($_GET['symbol'])) {
             // Select first transcript added to this gene.
-            $sNCBI = $_DB->query('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id ASC LIMIT 1', array((!empty($_GET['symbol'])? $_GET['symbol'] : $_SESSION['currdb'])))->fetchColumn();
+            $sNCBI = $_DB->q('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id ASC LIMIT 1', array((!empty($_GET['symbol'])? $_GET['symbol'] : $_SESSION['currdb'])))->fetchColumn();
             // FIXME; Replace "symbol" with something more useful.
             $_POST['symbol'] = $sNCBI;
         }
@@ -427,7 +427,7 @@ if ($_GET['step'] == 1) {
         $aArgs[] = $_GET['symbol'];
     }
     $sQ .= ' ORDER BY g.id, t.id_ncbi';
-    $aGenes = $_DB->query($sQ, $aArgs)->fetchAllCombine();
+    $aGenes = $_DB->q($sQ, $aArgs)->fetchAllCombine();
 
     // Print the form for step 1: import a GenBank file
     $_T->printTitle('Step 1 - Import annotated Genbank sequence to extract genomic sequence');
@@ -509,7 +509,7 @@ if ($_GET['step'] == 2) {
             $where = 'intron';        // Start with the upstream sequence
             $aExonEnds = array();     // Array with exon ending positions.
 
-            $_POST['gene'] = $_DB->query('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
+            $_POST['gene'] = $_DB->q('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
 
             for ($i = 0; $i < strlen($sSeq); $i ++) {
                 $s = $sSeq[$i];
@@ -1179,7 +1179,7 @@ if ($_GET['step'] == 2) {
 //            $sQ .= TABLE_GENES . ' AS g ORDER BY g.id';
 //        }
 //        $qGenes = mysql_query($sQ);
-//        $aGenes = $_DB->query($sQ)->fetchAllCombine();
+//        $aGenes = $_DB->q($sQ)->fetchAllCombine();
 //        $aForm[] = array('Select gene database',  '','select', 'symbol', 1, $aGenes, false, false, false);
 //    }
     $aForm[] = array('Input sequence', '', 'textarea', 'sequence', '60', '8');
@@ -1264,7 +1264,7 @@ if ($_GET['step'] == 3) {
             $nNuclPostTranslStart = 0;   // Number of nucleotides after the translation starts
             $started = false;   // Did we find the translation sign yet?
 
-            $_POST['gene'] = $_DB->query('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
+            $_POST['gene'] = $_DB->q('SELECT name FROM ' . TABLE_GENES . ' WHERE id = ?', array($_POST['symbol']))->fetchColumn();
 
             for ($i = 0; $i < strlen($sSeq); $i ++) {
                 $s = $sSeq[$i];
@@ -2007,7 +2007,7 @@ if ($_GET['step'] == 3) {
                 } else {
                     $sURL = lovd_getInstallURL() . 'refseq/' . $_POST['symbol'] . '_codingDNA.html';
                 }
-                $_DB->query('UPDATE ' . TABLE_GENES . ' SET refseq = ?, refseq_url = ? WHERE id = ? AND refseq = "" AND refseq_url= ""', array(($_POST['link'] && $bStep2? 'g' : 'c'), $sURL, $_POST['symbol']));
+                $_DB->q('UPDATE ' . TABLE_GENES . ' SET refseq = ?, refseq_url = ? WHERE id = ? AND refseq = "" AND refseq_url= ""', array(($_POST['link'] && $bStep2? 'g' : 'c'), $sURL, $_POST['symbol']));
 
             } else {
                 // This really shouldn't happen, as we have checked this already...

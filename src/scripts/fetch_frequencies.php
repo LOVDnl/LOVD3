@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2013-08-11
- * Modified    : 2020-11-05
- * For LOVD    : 3.0-26
+ * Modified    : 2022-11-22
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -44,7 +44,7 @@ $sURL = 'https://gnomad.lovd.nl/api/rest/get_frequencies?format=application/json
 
 // Fetch frequencies from whole genome installation of LOVD, and import into this LOVD.
 // This query may take some time in very large databases, so we'll try not to run it too often.
-$nToFetch = $_DB->query('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE average_frequency IS NULL AND chromosome IS NOT NULL AND position_g_start IS NOT NULL AND position_g_end IS NOT NULL')->fetchColumn();
+$nToFetch = $_DB->q('SELECT COUNT(*) FROM ' . TABLE_VARIANTS . ' WHERE average_frequency IS NULL AND chromosome IS NOT NULL AND position_g_start IS NOT NULL AND position_g_end IS NOT NULL')->fetchColumn();
 if (!$nToFetch) {
     print('All done.');
     $_T->printFooter();
@@ -60,7 +60,7 @@ $_T->printFooter(false);
 $sVariants = ' ';
 $nDone = 0;
 while ($nDone < $nToFetch && $sVariants) {
-    $aVariants = $_DB->query('SELECT chromosome, position_g_start, position_g_end, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE average_frequency IS NULL AND chromosome IS NOT NULL AND position_g_start IS NOT NULL AND position_g_end IS NOT NULL LIMIT ' . $nLimit)->fetchAllAssoc();
+    $aVariants = $_DB->q('SELECT chromosome, position_g_start, position_g_end, `VariantOnGenome/DNA` AS DNA FROM ' . TABLE_VARIANTS . ' WHERE average_frequency IS NULL AND chromosome IS NOT NULL AND position_g_start IS NOT NULL AND position_g_end IS NOT NULL LIMIT ' . $nLimit)->fetchAllAssoc();
     if ($aVariants === array()) {
         // No results.
         $oPB->setProgress(100);
@@ -110,7 +110,7 @@ while ($nDone < $nToFetch && $sVariants) {
                 $nFrequency = 0;
             }
             // By passing False as the third argument, this query will not halt if failed.
-            $q = $_DB->query('UPDATE ' . TABLE_VARIANTS . ' SET average_frequency = ? WHERE chromosome = ? AND position_g_start = ? AND position_g_end = ? AND `VariantOnGenome/DNA` = ?', array($nFrequency, $aVariant['chromosome'], $aVariant['position_g_start'], $aVariant['position_g_end'], $aVariant['DNA']), false);
+            $q = $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET average_frequency = ? WHERE chromosome = ? AND position_g_start = ? AND position_g_end = ? AND `VariantOnGenome/DNA` = ?', array($nFrequency, $aVariant['chromosome'], $aVariant['position_g_start'], $aVariant['position_g_end'], $aVariant['DNA']), false);
             if (!$q) {
                 $oPB->setMessage('Error, failed to update entry ' . implode(';', $aVariant) . '<BR>' . $_DB->formatError());
                 die('    </BODY>' . "\n" . '</HTML>');

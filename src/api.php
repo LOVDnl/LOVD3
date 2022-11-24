@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2022-08-29
+ * Modified    : 2022-11-22
  * For LOVD    : 3.0-29
  *
  * Supported URIs:
@@ -104,7 +104,7 @@ list($sDataType, $sSymbol, $nID) = array(
 
 // Check if gene exists.
 if ($sSymbol) {
-    $sSymbol = $_DB->query('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn();
+    $sSymbol = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn();
     if (!$sSymbol) {
         header('HTTP/1.0 404 Not Found');
         die('This gene does not exist.');
@@ -147,7 +147,7 @@ if ($sDataType == 'variants') {
     // LOVD3 has multiple transcripts maybe, so we just grab the one holding
     // the most variants.
     list($sChromosome, $nRefSeqID, $sRefSeq, $nPositionMRNAStart, $nPositionMRNAEnd, $nPositionCDSEnd, $bSense) =
-        $_DB->query('SELECT g.chromosome, t.id, t.id_ncbi, t.position_c_mrna_start, t.position_c_mrna_end, t.position_c_cds_end, (t.position_g_mrna_start < t.position_g_mrna_end) AS sense
+        $_DB->q('SELECT g.chromosome, t.id, t.id_ncbi, t.position_c_mrna_start, t.position_c_mrna_end, t.position_c_cds_end, (t.position_g_mrna_start < t.position_g_mrna_end) AS sense
                      FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (g.id = t.geneid) LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
                      WHERE g.id = ? GROUP BY t.id ORDER BY COUNT(vot.id) DESC, t.id ASC LIMIT 1',
             array($sSymbol))->fetchRow();
@@ -167,7 +167,7 @@ if ($sDataType == 'variants') {
             $aPMIDCols = array();
             $bJoinWithPatient = false;
             if ($nPMID) {
-                $aCols = $_DB->query('SELECT DISTINCT ac.colid FROM ' . TABLE_COLS2LINKS . ' AS c2l INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c2l.colid = ac.colid) WHERE c2l.linkid = 1')->fetchAllColumn();
+                $aCols = $_DB->q('SELECT DISTINCT ac.colid FROM ' . TABLE_COLS2LINKS . ' AS c2l INNER JOIN ' . TABLE_ACTIVE_COLS . ' AS ac ON (c2l.colid = ac.colid) WHERE c2l.linkid = 1')->fetchAllColumn();
                 foreach ($aCols as $sCol) {
                     if (strpos($sCol, 'Individual/') === 0) {
                         $bJoinWithPatient = true;
@@ -183,12 +183,12 @@ if ($sDataType == 'variants') {
             //  genes table, refuses to work for the variants, even though they have much less results.
             //  ORDER BY (SELECT COUNT(*) FROM lovd_v3_variants_on_transcripts WHERE transcriptid = vot.transcriptid) DESC
             //  So, no other option then to prefetch the transcript counts.
-            $aTranscripts = $_DB->query('
+            $aTranscripts = $_DB->q('
                 SELECT t.id
                 FROM ' . TABLE_TRANSCRIPTS . ' AS t
                   INNER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot ON (t.id = vot.transcriptid)
                 WHERE t.geneid = ? GROUP BY t.id ORDER BY COUNT(*) DESC, t.id ASC', array($sSymbol))->fetchAllColumn();
-            $aData = $_DB->query('
+            $aData = $_DB->q('
                 SELECT LEAST(vog.position_g_start, vog.position_g_end), GREATEST(vog.position_g_start, vog.position_g_end), vog.type,
                   SUBSTRING_INDEX(GROUP_CONCAT(DISTINCT vot.`VariantOnTranscript/DNA` ORDER BY ' . implode(', ', array_map(function ($nID) { return '(vot.transcriptid = ' . $nID . ') DESC'; }, $aTranscripts)) . ' SEPARATOR ";;"), ";;", 1) AS `VariantOnTranscript/DNA`
                 FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
@@ -462,7 +462,7 @@ if ($sDataType == 'variants') {
     // This is built so that the GnomAD LOVD can provide frequencies to other LOVDs.
 
     // This requires the presence of the VariantOnGenome/Frequency column.
-    if (!$_DB->query('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?', array('VariantOnGenome/Frequency'))->fetchColumn()) {
+    if (!$_DB->q('SELECT COUNT(*) FROM ' . TABLE_ACTIVE_COLS . ' WHERE colid = ?', array('VariantOnGenome/Frequency'))->fetchColumn()) {
         // Column not active, we can't do this.
         header('HTTP/1.0 503 Service Unavailable');
         die(json_encode(array('errors' => array('The VariantOnGenome/Frequency column is not active for this LOVD installation.'))) . "\n");
@@ -509,13 +509,13 @@ if ($sDataType == 'variants') {
     $sSQL .= ' ORDER BY result ASC, (frequency IS NULL) DESC, (frequency = "") DESC';
 
     if ($sSQL && $aArgs) {
-        $aResults = $_DB->query($sSQL, $aArgs)->fetchAllCombine();
+        $aResults = $_DB->q($sSQL, $aArgs)->fetchAllCombine();
     } else {
         $aResults = array();
     }
     die(json_encode($aResults) . "\n");
 }
-$aData = $_DB->query($sQ)->fetchAllAssoc();
+$aData = $_DB->q($sQ)->fetchAllAssoc();
 $n = count($aData);
 
 if ($n) {
