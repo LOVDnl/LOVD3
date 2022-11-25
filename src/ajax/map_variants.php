@@ -48,7 +48,7 @@ ignore_user_abort(true);
 
 // Process only a limited number of variants at once.
 $nRange = 100000;
-$nMaxVariants = 25;
+$nMaxVariants = 5; // Changed from 25 to 5 since time-consuming lift overs will be added.
 
 
 // Log errors only once every 5 minutes.
@@ -193,6 +193,228 @@ session_write_close();
 
 $sChromosome = null;
 $nVariants = 0;
+
+
+
+
+
+
+// Performing lift-overs so variants are described as relative to as many GBs as possible.
+$aActiveGBs = $_DB->query('
+        SELECT id,
+            CONCAT("VariantOnGenome/DNA", if(column_suffix = "", "", "/"), column_suffix) as "DNA",
+            CONCAT("position_g_start", if(column_suffix = "", "", "_"), column_suffix) as "position_start",
+            CONCAT("position_g_end", if(column_suffix = "", "", "_"), column_suffix) as "position_end"
+        FROM ' . TABLE_GENOME_BUILDS . '
+        ORDER BY RAND()'
+)->fetchAllGroupAssoc();
+
+if (count($aActiveGBs) > 1) {
+    // Lift overs can only be performed if more than one GB is active.
+    require ROOT_PATH . 'class/variant_validator.php';
+    $_VV = new LOVD_VV();
+
+    // In this variable, we will store the amount of variants that were successfully
+    //  filled in after lift over.
+    $nVariantDescriptionsFilled = 0;
+
+    // We process one GB at a time. We want to pick one at random, and since the
+    //  query that retrieves all genome builds randomised the order, we can simply
+    //  take the first.
+    $sBuild = key($aActiveGBs);
+
+    $aChr = $_DB->query(
+        'SELECT DISTINCT chromosome FROM ' . TABLE_VARIANTS .
+        ' WHERE (`' . $aActiveGBs[$sBuild]['DNA'] . '` = "" OR `' . $aActiveGBs[$sBuild]['DNA'] . '` IS NULL)' . // DNA field is empty
+        '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) // Mapping is possible and necessary
+    )->fetchAllColumn();
+
+    if (!empty($aChr)) {
+        // There is more than one chromosome with missing variant description for this build.
+
+        // We pick a random chromosome to minimize the chances of multiple active users
+        //  activating lift overs on the same chromosome.
+        $sChr = $aChr[array_rand($aChr)];
+
+        $aVariantIDs = $_DB->query(
+            'SELECT id FROM ' . TABLE_VARIANTS .
+            ' WHERE chromosome = ?' . // Only taking our picked chromosome
+            '    AND (`' . $aActiveGBs[$sBuild]['DNA'] . '` = "" OR `' . $aActiveGBs[$sBuild]['DNA'] . '` IS NULL)' . // DNA field is empty
+            '    AND NOT mapping_flags & ' . (MAPPING_NOT_RECOGNIZED | MAPPING_DONE) . // Mapping is possible and necessary
+            ' ORDER BY RAND()' . // We want to order randomly to make sure all variants get a chance.
+            ' LIMIT ' . (int) $nMaxVariants,
+            array($sChr)
+        )->fetchAllColumn();
+        $aVariantUpdates = array_fill_keys($aVariantIDs, true);
+
+        // These variant are now in progress, which we will indicate by mapping flags.
+        $_DB->query(
+            'UPDATE ' . TABLE_VARIANTS .
+            ' SET mapping_flags = mapping_flags | ' . MAPPING_IN_PROGRESS .
+            ' WHERE id IN (' . str_repeat('?, ', count($aVariantIDs)-1) . '?)',
+            $aVariantIDs
+        );
+
+        // We will loop through all variants that are missing DNA descriptions.
+        foreach ($aVariantIDs as $nVariantID) {
+
+            // This variable will be set to true after unsuccessful mapping if
+            //  a lift over should be tried again later.
+            $bMappingTryAgain = false;
+
+            // We will save all genomic descriptions from this variant.
+            $aGenomicDescriptions = array_combine(
+                array_keys($aActiveGBs),
+                array_map(
+                    function($sGBID) use ($_SETT, $aActiveGBs, $nVariantID, $_DB, $sChr) {
+                        // This function returns the FULL genomic description (so including
+                        //  reference sequence) found for each GB of the current variant.
+                        $sVariantDescription = $_DB->query(
+                            "SELECT `{$aActiveGBs[$sGBID]['DNA']}` FROM " . TABLE_VARIANTS .
+                            ' WHERE id = ?', array($nVariantID)
+                        )->fetchColumn();
+                        return (
+                            !$sVariantDescription?
+                                '' :
+                                $_SETT['human_builds'][$sGBID]['ncbi_sequences'][$sChr] . ':' . $sVariantDescription
+                        );
+                    },
+                    array_keys($aActiveGBs)
+                )
+            );
+
+            // Now we will loop through all alternative builds to try lift overs
+            //  from all possible references.
+            foreach ($aGenomicDescriptions as $sSourceBuild => $sSourceVariant) {
+                if ($sSourceBuild == $sBuild
+                    || $sSourceVariant == '') {
+                    // We need to lift over TO $sBuild, so not FROM $sBuild.
+                    // Also, we cannot lift over from empty descriptions.
+                    continue;
+                }
+
+                $aVariant = lovd_getVariantInfo($sSourceVariant);
+                if ($aVariant == false || !empty($aVariant['errors'])
+                    || !empty(array_diff(array_keys($aVariant['warnings']), array('WTRANSCRIPTFOUND')))
+                    || isset($aVariant['messages']) || !empty($aVariant['messages'])) {
+                    // This variant is either not HGVS-compliant, not supported by our
+                    //  LOVD HGVS-check or it is not supported by VariantValidator.
+                    // Either way, we cannot perform lift overs for this one.
+                    continue;
+                }
+
+                if (!isset($_SETT['human_builds'][$sSourceBuild])) {
+                    // TODO: In the future, add "|| if !$_SETT['human_builds'][$sSourceBuild]['supported_by_VV']"
+                    // This reference sequence is not supported by VariantValidator,
+                    //  so mapping is also out of the question.
+                    continue;
+                }
+
+                // Performing the lift over.
+                $aVVResponse = ($_VV->verifyGenomicAndLiftOver($sSourceVariant, array()));
+
+                if ($aVVResponse == false) {
+                    // Something went wrong... Possibly a network error?
+                    // These types of errors are not caused by the variant description
+                    //  itself. It might very well be a temporary problem. Therefore,
+                    //  we will add a try-again note to clarify that this variant might
+                    //  be fixable in the future.
+                    $bMappingTryAgain = true;
+                    continue;
+                }
+
+                // Great! Now we can add the received descriptions to all empty genomic fields.
+                foreach ($aGenomicDescriptions as $sToFillBuild => $sToFillVariant) {
+                    if ($sToFillVariant) {
+                        // The original description of this build was not empty!
+                        // We will not change this value. VariantValidator might have
+                        //  changed/improved the variant, but because this process is
+                        //  automatic, we cannot ask the user for confirmation. And
+                        //  because there is currently no way to save the original
+                        //  description, we will not override it. Therefore, we simply
+                        //  skip this description.
+                        continue;
+                    }
+
+                    // The description is currently empty. Let's see if we have the info
+                    //  to fill it!
+                    if (!isset($aVVResponse['data']['genomic_mappings'][$sToFillBuild])
+                        || empty($aVVResponse['data']['genomic_mappings'][$sToFillBuild])) {
+                        // Data is missing; the variant cannot be filled in the field of
+                        //  this build.
+                        continue;
+                    }
+
+
+                    // We seem to have found suitable data! Let's prepare to send it in!
+                    if (is_string($aVVResponse['data']['genomic_mappings'][$sToFillBuild])) {
+                        // VariantValidator's response is a string. We don't need to make any
+                        //  edits.
+                        $sNewVariant = $aVVResponse['data']['genomic_mappings'][$sToFillBuild];
+
+                    } elseif (count($aVVResponse['data']['genomic_mappings'][$sToFillBuild]) == 1) {
+                        // The variant is formatted as an array, since multiple variants were
+                        //  possible. However, only one variant was found. We can simply take
+                        //  the first element.
+                        $sNewVariant = $aVVResponse['data']['genomic_mappings'][$sToFillBuild][0];
+
+                    } else {
+                        // Multiple possible variants were found. We will concatenate the
+                        //  variants similarly to the example below:
+                        // NC_1233456.1:g.1del + NC_123456.1:g.2_3del + NC_123456.1:g.4del =
+                        //  NC_123456.1:g.1del^2_3del^4del.
+                        $sNewVariant =
+                            strstr($aVVResponse['data']['genomic_mappings'][$sToFillBuild][0], ':', true) .
+                            implode('^',
+                                array_map(function ($sFullVariant) {
+                                    return substr(strstr($sFullVariant, ':'), 1);
+                                }, $aVVResponse['data']['genomic_mappings'][$sToFillBuild])
+                            );
+                    }
+
+                    // Retrieving the positions.
+                    $aNewVariant = lovd_getVariantInfo($sNewVariant);
+
+                    // All set! We can now add the new description and
+                    //  update its positions and mapping flags.
+                    $_DB->query(
+                        'UPDATE ' . TABLE_VARIANTS .
+                        ' SET `' . $aActiveGBs[$sToFillBuild]['DNA'] . '` = ?' .
+                        ', ' . $aActiveGBs[$sToFillBuild]['position_start'] . ' = ?' .
+                        ', ' . $aActiveGBs[$sToFillBuild]['position_end'] . ' = ?' .
+                        ' WHERE id = ?',
+                        array(
+                            substr(strstr($sNewVariant, ':'), 1), // Trimmed the refseq.
+                            (!isset($aNewVariant['position_start']) ? 0 : $aNewVariant['position_start']),
+                            (!isset($aNewVariant['position_end']) ? 0 : $aNewVariant['position_end']),
+                            $nVariantID
+                        )
+                    );
+                    $nVariantDescriptionsFilled ++;
+                }
+
+                // This variant is done. We can continue to the next and no
+                //  longer need to try another GB.
+                continue 2;
+            }
+
+            // We could not map this variant. Let's update the mapping flags.
+            // We will add a MAPPING_ERROR if something went wrong that is not likely
+            //  to be caused by the variant description itself, so might bring more
+            //  luck in future tries. We add MAPPING_NOT_RECOGNIZED to variants that
+            //  contained problems that are variant specific and are not likely to
+            //  work in future tries.
+            $_DB->query(
+                'UPDATE ' . TABLE_VARIANTS .
+                ' SET mapping_flags = mapping_flags | ' .
+                ($bMappingTryAgain? MAPPING_ERROR : MAPPING_NOT_RECOGNIZED) .
+                ' WHERE id = ?', array($nVariantID)
+            );
+        }
+    }
+
+    exit(AJAX_TRUE . "\t" . 99 . "\t" . $nVariantDescriptionsFilled . ' empty descriptions were filled by successful lift overs.');
+}
 
 
 
