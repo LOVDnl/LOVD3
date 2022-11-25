@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-11-22
+ * Modified    : 2022-11-25
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -273,7 +273,7 @@ function lovd_errorFindField ($sField)
     // Returns index of whether or not a certain form field has an error.
     global $_ERROR;
 
-    return @array_search($sField, $_ERROR['fields']);
+    return (!empty($_ERROR['fields']) && array_search($sField, $_ERROR['fields']));
 }
 
 
