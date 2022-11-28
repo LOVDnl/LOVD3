@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-10-20
+ * Modified    : 2022-11-28
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -150,7 +150,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
             }
         }
 
-        // We normally don't show non-HGVS compliant suggestions. Exception;
+        // We normally don't show non-HGVS compliant suggestions. Exception 1;
         // Treat the result as HGVS compliant (i.e., accept suggestion and show)
         //  when all we had was a WTOOMUCHUNKNOWN and now we get a ESUFFIXMISSING.
         // The issue is that WTOOMUCHUNKNOWN suggests a fix, so it's stupid to then not show it.
@@ -160,6 +160,15 @@ foreach ($aVariants as $sVariant => $aVariant) {
             && array_keys($aVariant['fixed_variant_variant_info']['errors'] + $aVariant['fixed_variant_variant_info']['warnings']) == array('ESUFFIXMISSING')) {
             $aVariant['variant_info']['errors'] += array_map('htmlspecialchars', $aVariant['fixed_variant_variant_info']['errors']); // For the output.
             unset($aVariant['fixed_variant_variant_info']['errors']['ESUFFIXMISSING']);
+        }
+
+        // Exception 2; Treat the result as HGVS compliant (i.e., accept
+        //  suggestion and show) when all we have now is a EWRONGREFERENCE and
+        //  that was anyway already part of what we had.
+        if ($aVariant['variant_info'] && $aVariant['fixed_variant_variant_info']
+            && array_keys($aVariant['fixed_variant_variant_info']['errors'] + $aVariant['fixed_variant_variant_info']['warnings']) == array('EWRONGREFERENCE')
+            && isset($aVariant['variant_info']['errors']['EWRONGREFERENCE'])) {
+            unset($aVariant['fixed_variant_variant_info']['errors']['EWRONGREFERENCE']);
         }
 
         // Then check if the fix is HGVS-compliant.
