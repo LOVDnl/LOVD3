@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2022-11-23
+ * Modified    : 2022-11-28
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -64,6 +64,9 @@ class LOVD_PDO extends PDO
 
 
 
+    // Suppress Deprecated notices in PHP8.1, warning us that our method is missing a return type.
+    // This suppression works for PHP <= 8; PHP9 will force us to define return types and therefore, drop PHP5 support.
+    #[\ReturnTypeWillChange]
     function exec ($sSQL, $bHalt = true)
     {
         // Wrapper around PDO::exec().
@@ -110,6 +113,9 @@ class LOVD_PDO extends PDO
 
 
 
+    // Suppress Deprecated notices in PHP8.1, warning us that our method is missing a return type.
+    // This suppression works for PHP <= 8; PHP9 will force us to define return types and therefore, drop PHP5 support.
+    #[\ReturnTypeWillChange]
     function prepare ($sSQL, $aOptions = array(), $bHalt = true)
     {
         // Wrapper around PDO::prepare().
@@ -197,6 +203,9 @@ class LOVD_PDOStatement extends PDOStatement
     // This class provides a wrapper around PDOStatement such that database errors are handled automatically by LOVD and LOVD can use fetch*() features more easily.
     // FIXME; apparently we don't need to call parent::__construct()? I can't get that to work, and this wrapper seems to work without it anyway...
 
+    // Suppress Deprecated notices in PHP8.1, warning us that our method is missing a return type.
+    // This suppression works for PHP <= 8; PHP9 will force us to define return types and therefore, drop PHP5 support.
+    #[\ReturnTypeWillChange]
     function execute ($aSQL = array(), $bHalt = true, $bTrim = false) // Needs first argument as optional because the original function has it as optional.
     {
         // Wrapper around PDOStatement::execute().
