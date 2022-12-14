@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -239,7 +239,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
     /*require ROOT_PATH . 'class/object_screenings.php';
     $_GET['page_size'] = 10;
     $_DATA['screening'] = new LOVD_Screening();
-    $_DATA['screening']->setRowLink($sScreeningsViewListID, 'submit/screening/' . $_DATA['screening']->sRowID);
+    $_DATA['screening']->setRowLink($sScreeningsViewListID, $_PE[0] . '/screening/' . $_DATA['screening']->sRowID);
     $_GET['search_individualid'] = $nID;
     $_GET['search_screeningid'] = (isset($aSubmit['screenings'])? implode('|', $aSubmit['screenings']) : 0);
     print('      <DIV id="container_screenings"><BR>' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
