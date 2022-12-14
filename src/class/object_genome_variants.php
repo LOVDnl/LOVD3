@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -521,28 +521,28 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 }
             }
 
-            if ($zData['mapping_flags'] & MAPPING_ALLOW) {
+            if ((int) $zData['mapping_flags'] & MAPPING_ALLOW) {
                 $sMappingLinkText  = '';
                 $sMappingLinkTitle = '';
-                if ($zData['mapping_flags'] & MAPPING_NOT_RECOGNIZED) {
+                if ((int) $zData['mapping_flags'] & MAPPING_NOT_RECOGNIZED) {
                     $zData['mapping_flags_'] = 'Variant not recognized';
-                    if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
+                    if ((int) $zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
                         $zData['mapping_flags_'] .= ' (would have created genes as needed)';
                     }
                     $sMappingLinkText = 'Retry';
-                } elseif ($zData['mapping_flags'] & MAPPING_DONE) {
+                } elseif ((int) $zData['mapping_flags'] & MAPPING_DONE) {
                     $zData['mapping_flags_'] = 'Done';
-                    if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
+                    if ((int) $zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
                         $zData['mapping_flags_'] .= ' (created genes as needed)';
                     }
                     $sMappingLinkText  = 'Map again';
                     $sMappingLinkTitle = 'If new transcripts have been added to LOVD, this will try to map this variant to them.';
                 } else {
                     $zData['mapping_flags_'] = 'Scheduled';
-                    if ($zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
+                    if ((int) $zData['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) {
                         $zData['mapping_flags_'] .= ', creating genes as needed';
                     }
-                    if ($zData['mapping_flags'] & MAPPING_ERROR) {
+                    if ((int) $zData['mapping_flags'] & MAPPING_ERROR) {
                         $zData['mapping_flags_'] .= ' (encountered a problem on the last attempt)';
                     }
                     $sMappingLinkText = 'Map now';

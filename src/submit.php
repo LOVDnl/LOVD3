@@ -975,7 +975,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                 $a['owned_by_'] = 'Data owner';
                 ${$sVariableNameUpload}['owned_by_'] = $_DB->q('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($zUploadDetails['owned_by']))->fetchColumn();
             }
-            ${$sVariableNameUpload}['mapping_flags_'] = (($zUploadDetails['mapping_flags'] & MAPPING_ALLOW)? 'On' . (($zUploadDetails['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES)? ', creating genes as needed' : '') : 'Off');
+            ${$sVariableNameUpload}['mapping_flags_'] = (((int) $zUploadDetails['mapping_flags'] & MAPPING_ALLOW)? 'On' . (((int) $zUploadDetails['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES)? ', creating genes as needed' : '') : 'Off');
 
             // Include 'Data status' as the very last field.
             $a['statusid_'] = 'Data status';

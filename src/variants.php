@@ -2567,7 +2567,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 }
 
                 // Remove the MAPPING_NOT_RECOGNIZED and MAPPING_DONE flags if the VariantOnGenome/DNA field changes.
-                $_POST['mapping_flags'] = $zData['mapping_flags'] & ~(MAPPING_NOT_RECOGNIZED | MAPPING_DONE);
+                $_POST['mapping_flags'] = (int) $zData['mapping_flags'] & ~(MAPPING_NOT_RECOGNIZED | MAPPING_DONE);
                 if (!$_POST['position_g_start']) {
                     // We couldn't get a position, mapping will fail.
                     $_POST['mapping_flags'] |= MAPPING_NOT_RECOGNIZED;
