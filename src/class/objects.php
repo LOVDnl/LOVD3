@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -888,7 +888,7 @@ class LOVD_Object
                     if ($this->sRowID !== '') {
                         $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
                         foreach ($zData as $key => $val) {
-                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_id']);
+                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val ?: ''), $zData['row_id']);
                         }
                     } else {
                         $zData['row_id'] = $zData['id'];
@@ -2522,16 +2522,16 @@ class LOVD_Object
         $bFRPreview =          (!empty($_GET['FRPreviewClicked_' . $sViewListID]));
         // Selected field name for replace.
         $sFRViewListCol =      (isset($_GET['FRFieldname_' . $sViewListID])?
-                                $_GET['FRFieldname_' . $sViewListID] : null);
+                                $_GET['FRFieldname_' . $sViewListID] : '');
         // Display name of selected field.
         $sFRFieldDisplayname = (isset($_GET['FRFieldDisplayname_' . $sViewListID])?
-                                $_GET['FRFieldDisplayname_' . $sViewListID] : null);
+                                $_GET['FRFieldDisplayname_' . $sViewListID] : '');
         // Search query for find & replace.
         $sFRSearchValue =      (isset($_GET['FRSearch_' . $sViewListID])?
-                                $_GET['FRSearch_' . $sViewListID] : null);
+                                $_GET['FRSearch_' . $sViewListID] : '');
         // Replace value for find & replace.
         $sFRReplaceValue =     (isset($_GET['FRReplace_' . $sViewListID])?
-                                $_GET['FRReplace_' . $sViewListID] : null);
+                                $_GET['FRReplace_' . $sViewListID] : '');
         // Type of matching.
         $sFRMatchType =        (isset($_GET['FRMatchType_' . $sViewListID])?
                                 $_GET['FRMatchType_' . $sViewListID] : null);
@@ -3206,8 +3206,8 @@ FROptions
                     foreach ($zData as $key => $val) {
                         // Also allow data from $zData to be put into the row link & row id.
                         // FIXME; This is a temporary ugly solution, so we need to fix this later!!!!
-                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
-                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val ?: ''))), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val ?: ''))), $zData['row_link']);
                         // But don't break C>G notation, variants can't be searched using row links otherwise.
                         $zData['row_link'] = str_replace('%26gt%3B', '%3E', $zData['row_link']);
                     }

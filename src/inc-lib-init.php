@@ -3450,7 +3450,7 @@ function lovd_php_htmlspecialchars ($Var)
     if (is_array($Var)) {
         return array_map('lovd_php_htmlspecialchars', $Var);
     } else {
-        return htmlspecialchars($Var);
+        return htmlspecialchars($Var ?: '');
     }
 }
 
