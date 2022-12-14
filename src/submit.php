@@ -253,7 +253,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
     print('      </DIV>' . "\n" .
           '      <DIV id="container_phenotypes"><BR>' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
     lovd_showInfoTable('Please select a phenotype you would like to edit', 'information');
-    foreach($zData['diseases'] as $nDisease) {
+    foreach ($zData['diseases'] as $nDisease) {
         $_GET['search_diseaseid'] = $nDisease;
         $_DATA['phenotype'][$nDisease] = new LOVD_Phenotype($nDisease);
         $_DATA['phenotype'][$nDisease]->setSortDefault('phenotypeid');

@@ -1585,7 +1585,7 @@ class LOVD_Object
         $zData = lovd_php_htmlspecialchars($zData);
 
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'last_login', 'start_date', 'end_date', 'valid_from', 'valid_to');
-        foreach($aDateColumns as $sDateColumn) {
+        foreach ($aDateColumns as $sDateColumn) {
             // Replace empty date values with "N/A".
             $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A');
             if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $zData[$sDateColumn . ($sView == 'list'? '' : '_')])) {
@@ -1647,7 +1647,7 @@ class LOVD_Object
         } else {
             // Add links to users from *_by fields.
             $aUserColumns = array('owned_by', 'created_by', 'edited_by', 'updated_by', 'deleted_by', 'analysis_by', 'analysis_approved_by');
-            foreach($aUserColumns as $sUserColumn) {
+            foreach ($aUserColumns as $sUserColumn) {
                 if (empty($zData[$sUserColumn]) || !isset($this->aColumnsViewEntry[$sUserColumn . '_'])) {
                     $zData[$sUserColumn . '_'] = 'N/A';
                 } elseif ($_AUTH && $zData[$sUserColumn] != '00000') {
@@ -1672,7 +1672,7 @@ class LOVD_Object
             }
             // We are going to overwrite the 'owned_by_' field.
             $sOwnedBy = '';
-            foreach($zData['owner'] as $aLinkData) {
+            foreach ($zData['owner'] as $aLinkData) {
                 if (count($aLinkData) >= 6) {
                     list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
                     if (intval($nID) === 0) {
@@ -2054,13 +2054,13 @@ class LOVD_Object
         // Unset columns not allowed to be visible for the current user level.
         global $_AUTH;
 
-        foreach($this->aColumnsViewEntry as $sCol => $Col) {
+        foreach ($this->aColumnsViewEntry as $sCol => $Col) {
             if (is_array($Col) && (!$_AUTH || $_AUTH['level'] < $Col[1])) {
                 unset($this->aColumnsViewEntry[$sCol]);
             }
         }
 
-        foreach($this->aColumnsViewList as $sCol => $aCol) {
+        foreach ($this->aColumnsViewList as $sCol => $aCol) {
             if (isset($aCol['auth']) && (!$_AUTH || $_AUTH['level'] < $aCol['auth'])) {
                 unset($this->aColumnsViewList[$sCol]);
             }

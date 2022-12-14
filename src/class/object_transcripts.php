@@ -291,7 +291,7 @@ class LOVD_Transcript extends LOVD_Object
         }
 
         $nTranscripts = count($aTranscripts['info']);
-        foreach($aTranscripts['info'] as $aTranscript) {
+        foreach ($aTranscripts['info'] as $aTranscript) {
             $nProgress += ((100 - $nProgress)/$nTranscripts);
             $_BAR->setMessage('Collecting ' . $aTranscript['id'] . ' info...');
 

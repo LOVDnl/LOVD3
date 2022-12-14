@@ -55,7 +55,7 @@ function lovd_AJAX_processViewListHash ()
 
     if (window.location.hash != prevHash && prevHash != 'no_rehash') {
         // In case multiple viewList's exist, we choose the first one. In practice, hashing is turned off on pages with multiple viewLists.
-        $("form").each(function(){
+        $("form").each(function() {
             if ($(this).attr('id') && $(this).attr('id').substring(0, 13) == 'viewlistForm_') {
                 oForm = this;
                 sViewListID = $(this).attr('id').substring(13);
@@ -184,7 +184,7 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
 
         // Build GET query.
         var sGET = '';
-        $(oForm).find('input').each(function(){
+        $(oForm).find('input').each(function() {
             if (!this.disabled && this.value) {
                 sVal = this.value;
                 if (this.name == 'page_size')
@@ -221,7 +221,7 @@ function lovd_AJAX_viewListDownload (sViewListID, bAll)
     // Build URL.
     var sURL = 'ajax/viewlist.php?download' + (bAll? '' : 'Selected') + '&format=text/plain';
     oForm = document.forms['viewlistForm_' + sViewListID];
-    $(oForm).find('input').each(function(){
+    $(oForm).find('input').each(function() {
         // We actually don't need everything, but it's too difficult to manually add viewListID, object, order and skip.
         if (!this.disabled && this.value && this.name.substring(0,6) != 'check_') {
             sURL +=  '&' + this.name + '=' + encodeURIComponent(this.value);
@@ -267,7 +267,7 @@ function lovd_AJAX_viewListSubmit (sViewListID, callBack)
 {
     oForm = document.forms['viewlistForm_' + sViewListID];
     // Used to have a simple loop through oForm, but Google Chrome does not like that.
-    $(oForm).find('input').each(function(){
+    $(oForm).find('input').each(function() {
         if (this.name && this.name.substring(0, 7) == 'search_' && !this.value) {
             this.disabled = true;
         }
@@ -304,7 +304,7 @@ if (!isset($_GET['nohistory'])) {
                         if (prevHash != 'no_rehash') {
                             // The following adds the page to the history in Firefox, such that the user *can* push the back button.
                             // I chose not to use sGET (created somewhere below) here, because it contains 'viewlistid' and 'object' which I don't want to use now and I guess it would be possible that it won't be set.
-                            $(oForm).find('input[type!="button"]').each(function(){
+                            $(oForm).find('input[type!="button"]').each(function() {
                                 if (!this.disabled && this.value && this.name != 'viewlistid' &&
                                     this.name != 'object' && this.name.substring(0,6) != 'check_' &&
                                     this.name.substring(0,2) != 'FR') {
@@ -344,7 +344,7 @@ if (!isset($_GET['nohistory'])) {
 
         // Put values into a GET param string for all input fields, except fields named check_*
         // and non-checked radio buttons and checkboxes.
-        $(oForm).find('input').each(function(){
+        $(oForm).find('input').each(function() {
             if (!this.disabled && this.value && this.name.substring(0,6) != 'check_' &&
                 (this.type != 'radio' || this.checked) &&
                 (this.type != 'checkbox' || this.checked) &&

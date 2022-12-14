@@ -2050,7 +2050,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         }
 
     } elseif ($aResponse['type'] == 'repeat' && $aVariant['prefix'] == 'c') {
-        foreach(explode('[', $aVariant['type']) as $sRepeat) {
+        foreach (explode('[', $aVariant['type']) as $sRepeat) {
             if (ctype_alpha($sRepeat) && strlen($sRepeat) % 3) {
                 // Repeat variants on coding DNA should always have
                 //  a length of a multiple of three bases.
@@ -2605,7 +2605,7 @@ function lovd_getVariantPrefixesByRefSeq ($s)
     global $_LIBRARIES;
 
     // Get matching DNA type prefixes.
-    foreach($_LIBRARIES['regex_patterns']['refseq_to_DNA_type'] as $sPattern => $aDNATypes) {
+    foreach ($_LIBRARIES['regex_patterns']['refseq_to_DNA_type'] as $sPattern => $aDNATypes) {
         if (preg_match($sPattern, $s)) {
             return $aDNATypes;
         }

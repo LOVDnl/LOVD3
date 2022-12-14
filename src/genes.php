@@ -594,7 +594,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Add transcripts.
                 $aSuccessTranscripts = array();
                 if (!empty($_POST['active_transcripts'])) {
-                    foreach($_POST['active_transcripts'] as $sTranscript) {
+                    foreach ($_POST['active_transcripts'] as $sTranscript) {
                         // 2014-06-11; 3.0-11; Add check on $sTranscript to make sure a selected "No transcripts found" doesn't cause a lot of errors here.
                         if (!$sTranscript) {
                             continue;
@@ -1650,7 +1650,7 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && in_array
             } else {
                 // Of the selected persons, at least one should be shown AND able to edit!
                 $bCurator = false;
-                foreach($_POST['curators'] as $nUserID) {
+                foreach ($_POST['curators'] as $nUserID) {
                     if (in_array($nUserID, $_POST['allow_edit']) && in_array($nUserID, $_POST['shown'])) {
                         $bCurator = true;
                         break;

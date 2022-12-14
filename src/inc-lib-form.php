@@ -319,7 +319,7 @@ function lovd_formatMail ($aBody)
     }
     $sBody = $aBody[0];
     unset($aBody[0]);
-    foreach($aBody as $sTopic => $aContent) {
+    foreach ($aBody as $sTopic => $aContent) {
         $sBody .= str_repeat('-', 70) . "\n" .
                   '  ' . strtoupper(str_replace('_', ' ', $sTopic))  . "\n" .
                   str_repeat('-', 70) . "\n";
@@ -451,7 +451,7 @@ function lovd_fetchDBID ($aData)
 
         // Set the default for the DBID.
         $sDBID = 'chr' . $aData['chromosome'] . '_999999';
-        foreach($aDBIDOptions as $sDBIDoption) {
+        foreach ($aDBIDOptions as $sDBIDoption) {
             // Loop through all the options returned from the database and decide which option to take.
             preg_match('/^((.+)_(\d{6}))$/', $sDBID, $aMatches);
             //              2 = chr## or gene

@@ -553,7 +553,7 @@ class LOVD_Gene extends LOVD_Object
             // Associated with diseases...
             $zData['diseases_'] = '';
             $zData['disease_omim_'] = '';
-            foreach($zData['diseases'] as $aDisease) {
+            foreach ($zData['diseases'] as $aDisease) {
                 list($nID, $nOMIMID, $sSymbol, $sName) = $aDisease;
                 // Link to disease entry in LOVD.
                 $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';

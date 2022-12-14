@@ -175,7 +175,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         //  phenotype entry for a disease they don't have.
         $zData['diseases'] = $_DB->q('SELECT id, symbol, name FROM ' . TABLE_DISEASES . ' WHERE id IN (?' . str_repeat(', ?', count($zData['phenotypes'])-1) . ')', $zData['phenotypes'])->fetchAllRow();
         require ROOT_PATH . 'class/object_phenotypes.php';
-        foreach($zData['diseases'] as $aDisease) {
+        foreach ($zData['diseases'] as $aDisease) {
             list($nDiseaseID, $sSymbol, $sName) = $aDisease;
             if (in_array($nDiseaseID, $zData['phenotypes'])) {
                 $_GET['search_diseaseid'] = $nDiseaseID;

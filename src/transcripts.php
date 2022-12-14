@@ -349,7 +349,7 @@ if (ACTION == 'create') {
             // FIXME; shouldn't this check be done before looping through active_transcripts above? This setup allows submission of the form when selecting "No transcripts available".
             if (!empty($_POST['active_transcripts']) && $_POST['active_transcripts'][0] != '') {
                 $aSuccessTranscripts = array();
-                foreach($_POST['active_transcripts'] as $sTranscript) {
+                foreach ($_POST['active_transcripts'] as $sTranscript) {
                     if (!$sTranscript) {
                         continue;
                     }

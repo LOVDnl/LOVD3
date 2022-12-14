@@ -648,7 +648,7 @@ if ((empty($_PE[1]) || $_PE[1] == 'upload') && ACTION == 'create') {
             $bSubmit = true;
             $aSubmit = &$_AUTH['saved_work']['submissions']['screening'][$_POST['screeningid']];
         } elseif (isset($_POST['screeningid']) && isset($_AUTH['saved_work']['submissions']['individual'])) {
-            foreach($_AUTH['saved_work']['submissions']['individual'] as $nIndividualID => &$aSubmit) {
+            foreach ($_AUTH['saved_work']['submissions']['individual'] as $nIndividualID => &$aSubmit) {
                 if (isset($aSubmit['screenings']) && in_array($_POST['screeningid'], $aSubmit['screenings'])) {
                     $bSubmit = true;
                     break;
@@ -833,7 +833,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
             if (isset($sGene)) {
                 $_POST['id'] = $nID;
-                foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                     if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
                         // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
                         // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
@@ -979,7 +979,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
     if (isset($sGene)) {
         $i = 0;
-        foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
+        foreach ($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
             list($sTranscriptNM, $sGeneSymbol, $sMutalyzerID) = $aTranscript;
             echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\', \'' . $sMutalyzerID . '\']';
             $i++;
@@ -1319,7 +1319,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
             lovd_errorAdd('', 'There was an unknown problem with receiving the file properly, possibly because of the current server settings. If the problem persists, contact the database administrator.');
         }
 
-        if(!lovd_error()) {
+        if (!lovd_error()) {
             // No problems found. Start processing the file.
 
             // Initiate progress bar.
@@ -2592,7 +2592,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             $_DATA['Genome']->updateEntry($nID, $_POST, $aFieldsGenome);
 
             if ($bGene) {
-                foreach($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                     if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
                         // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
                         // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
@@ -2670,7 +2670,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         }
         if ($bGene) {
             foreach ($aGenes as $sGene) {
-                foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
+                foreach ($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
                     $_POST[$nTranscriptID . '_effect_reported'] = $zData[$nTranscriptID . '_effectid'][0];
                     $_POST[$nTranscriptID . '_effect_concluded'] = $zData[$nTranscriptID . '_effectid'][1];
                 }
@@ -2721,7 +2721,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
           '        var aUDrefseqs = {' . "\n");
     if ($bGene) {
         $i=0;
-        foreach($aGenes as $sGene) {
+        foreach ($aGenes as $sGene) {
             echo ($i? ',' . "\n" : '') . '            \'' . $sGene . '\' : \'' . $_DB->q('SELECT refseq_UD FROM ' . TABLE_GENES . ' WHERE id = ?', array($sGene))->fetchColumn() . '\'';
             $i++;
         }
@@ -2730,7 +2730,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
           '        var aTranscripts = {' . "\n");
     $i = 0;
     if ($bGene) {
-        foreach($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
+        foreach ($_DATA['Transcript'][$sGene]->aTranscripts as $nTranscriptID => $aTranscript) {
             list($sTranscriptNM, $sGeneSymbol, $sMutalyzerID) = $aTranscript;
             echo ($i? ',' . "\n" : '') . '            \'' . $nTranscriptID . '\' : [\'' . $sTranscriptNM . '\', \'' . $sGeneSymbol . '\', \'' . $sMutalyzerID . '\']';
             $i++;
@@ -3046,7 +3046,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('delete_no
                     $bAdded = false;
                     if (count($aVariantDescriptions[$zTranscript['geneid']])) {
                         // Loop through the mutalyzer output for this gene, see if we can find this transcript.
-                        foreach($aVariantDescriptions[$zTranscript['geneid']] as $key => $sVariant) {
+                        foreach ($aVariantDescriptions[$zTranscript['geneid']] as $key => $sVariant) {
                             // Check if our transcript is in the variant description for each value returned by mutalyzer.
                             if (!empty($sVariant) && preg_match('/^' . preg_quote($zTranscript['id_ncbi']) . ':([cn]\..+)$/', $sVariant, $aMatches)) {
                                 // Call the mappingInfo module of mutalyzer to get the start & stop positions of this variant on the transcript.
