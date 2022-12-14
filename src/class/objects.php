@@ -1597,6 +1597,8 @@ class LOVD_Object
         if ($sView == 'list') {
             // By default, we put anchors in the id_ and DNA fields, if present.
             if ($zData['row_link']) {
+                // We just used htmlspecialchars() on zData, which includes the rowlink. Undo that.
+                $zData['row_link'] = htmlspecialchars_decode($zData['row_link']);
                 if (substr($zData['row_link'], 0, 11) == 'javascript:') {
                     $zData['row_link'] = htmlspecialchars(rawurldecode($zData['row_link']));
                 }
