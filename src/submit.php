@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-21
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -239,7 +239,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
     /*require ROOT_PATH . 'class/object_screenings.php';
     $_GET['page_size'] = 10;
     $_DATA['screening'] = new LOVD_Screening();
-    $_DATA['screening']->setRowLink($sScreeningsViewListID, 'submit/screening/' . $_DATA['screening']->sRowID);
+    $_DATA['screening']->setRowLink($sScreeningsViewListID, $_PE[0] . '/screening/' . $_DATA['screening']->sRowID);
     $_GET['search_individualid'] = $nID;
     $_GET['search_screeningid'] = (isset($aSubmit['screenings'])? implode('|', $aSubmit['screenings']) : 0);
     print('      <DIV id="container_screenings"><BR>' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
@@ -253,7 +253,7 @@ if (PATH_COUNT == 3 && $_PE[1] == 'individual' && ctype_digit($_PE[2]) && !ACTIO
     print('      </DIV>' . "\n" .
           '      <DIV id="container_phenotypes"><BR>' . "\n"); // Extra div is to prevent "No entries in the database yet!" error to show up if there are no genes in the database yet.
     lovd_showInfoTable('Please select a phenotype you would like to edit', 'information');
-    foreach($zData['diseases'] as $nDisease) {
+    foreach ($zData['diseases'] as $nDisease) {
         $_GET['search_diseaseid'] = $nDisease;
         $_DATA['phenotype'][$nDisease] = new LOVD_Phenotype($nDisease);
         $_DATA['phenotype'][$nDisease]->setSortDefault('phenotypeid');
@@ -975,7 +975,7 @@ if (PATH_COUNT == 4 && $_PE[1] == 'finish' && in_array($_PE[2], array('individua
                 $a['owned_by_'] = 'Data owner';
                 ${$sVariableNameUpload}['owned_by_'] = $_DB->q('SELECT name FROM ' . TABLE_USERS . ' WHERE id = ?', array($zUploadDetails['owned_by']))->fetchColumn();
             }
-            ${$sVariableNameUpload}['mapping_flags_'] = (($zUploadDetails['mapping_flags'] & MAPPING_ALLOW)? 'On' . (($zUploadDetails['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES)? ', creating genes as needed' : '') : 'Off');
+            ${$sVariableNameUpload}['mapping_flags_'] = (((int) $zUploadDetails['mapping_flags'] & MAPPING_ALLOW)? 'On' . (((int) $zUploadDetails['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES)? ', creating genes as needed' : '') : 'Off');
 
             // Include 'Data status' as the very last field.
             $a['statusid_'] = 'Data status';

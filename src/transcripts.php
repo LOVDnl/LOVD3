@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -118,7 +118,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
     require ROOT_PATH . 'class/object_transcript_variants.php';
     $_DATA = new LOVD_TranscriptVariant($zData['geneid']);
     $_DATA->sSortDefault = 'VariantOnTranscript/DNA';
-    $_DATA->setRowLink('VOT_for_T_VE', 'javascript:window.location.href=\'' . lovd_getInstallURL() . 'variants/{{ID}}#{{transcriptid}}\'; return false');
+    $_DATA->setRowLink('VOT_for_T_VE', 'variants/{{ID}}#{{transcriptid}}');
     $aVLOptions = array(
         'cols_to_skip' => array('geneid', 'transcriptid', 'id_ncbi'),
     );
@@ -192,7 +192,7 @@ if (ACTION == 'create') {
             $_GET['search_id_'] = '="' . $_SESSION['currdb'] . '"';
         }
         $_DATA = new LOVD_Gene();
-        $_DATA->setRowLink($sViewListID, $_PE[0] . '/' . $_DATA->sRowID . '?create');
+        $_DATA->setRowLink($sViewListID, CURRENT_PATH . '/' . $_DATA->sRowID . '?create');
         lovd_showInfoTable('Please select the gene to which you wish to add a new transcript. <B>Click on the gene to proceed.</B>', 'information', 600);
         $aVLOptions = array(
             'cols_to_skip' => array('variants', 'uniq_variants', 'updated_date_', 'diseases_'),
@@ -349,7 +349,7 @@ if (ACTION == 'create') {
             // FIXME; shouldn't this check be done before looping through active_transcripts above? This setup allows submission of the form when selecting "No transcripts available".
             if (!empty($_POST['active_transcripts']) && $_POST['active_transcripts'][0] != '') {
                 $aSuccessTranscripts = array();
-                foreach($_POST['active_transcripts'] as $sTranscript) {
+                foreach ($_POST['active_transcripts'] as $sTranscript) {
                     if (!$sTranscript) {
                         continue;
                     }

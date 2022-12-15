@@ -146,7 +146,7 @@ class LOVD_Link extends LOVD_Object
         } elseif (!empty($aData['active_columns'])) {
             // Check if columns are text columns, since others cannot even hold the custom link's pattern text.
             $aColumns = $_DB->q('SELECT id FROM ' . TABLE_COLS . ' WHERE mysql_type LIKE \'VARCHAR%\' OR mysql_type LIKE \'TEXT%\'')->fetchAllColumn();
-            foreach($aData['active_columns'] as $sCol) {
+            foreach ($aData['active_columns'] as $sCol) {
                 if (substr_count($sCol, '/') && !in_array($sCol, $aColumns)) {
                     // Columns without slashes are the category headers, that could be selected.
                     lovd_errorAdd('active_columns', 'Please select a valid custom column from the \'Active for columns\' selection box.');

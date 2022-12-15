@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -888,7 +888,7 @@ class LOVD_Object
                     if ($this->sRowID !== '') {
                         $zData['row_id'] = str_replace('{{ID}}', rawurlencode($zData['id']), $this->sRowID);
                         foreach ($zData as $key => $val) {
-                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val), $zData['row_id']);
+                            $zData['row_id'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode($val ?: ''), $zData['row_id']);
                         }
                     } else {
                         $zData['row_id'] = $zData['id'];
@@ -1585,7 +1585,7 @@ class LOVD_Object
         $zData = lovd_php_htmlspecialchars($zData);
 
         $aDateColumns = array('created_date', 'edited_date', 'updated_date', 'last_login', 'start_date', 'end_date', 'valid_from', 'valid_to');
-        foreach($aDateColumns as $sDateColumn) {
+        foreach ($aDateColumns as $sDateColumn) {
             // Replace empty date values with "N/A".
             $zData[$sDateColumn . ($sView == 'list'? '' : '_')] = (!empty($zData[$sDateColumn])? $zData[$sDateColumn] : 'N/A');
             if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $zData[$sDateColumn . ($sView == 'list'? '' : '_')])) {
@@ -1597,6 +1597,8 @@ class LOVD_Object
         if ($sView == 'list') {
             // By default, we put anchors in the id_ and DNA fields, if present.
             if ($zData['row_link']) {
+                // We just used htmlspecialchars() on zData, which includes the rowlink. Undo that.
+                $zData['row_link'] = htmlspecialchars_decode($zData['row_link']);
                 if (substr($zData['row_link'], 0, 11) == 'javascript:') {
                     $zData['row_link'] = htmlspecialchars(rawurldecode($zData['row_link']));
                 }
@@ -1647,7 +1649,7 @@ class LOVD_Object
         } else {
             // Add links to users from *_by fields.
             $aUserColumns = array('owned_by', 'created_by', 'edited_by', 'updated_by', 'deleted_by', 'analysis_by', 'analysis_approved_by');
-            foreach($aUserColumns as $sUserColumn) {
+            foreach ($aUserColumns as $sUserColumn) {
                 if (empty($zData[$sUserColumn]) || !isset($this->aColumnsViewEntry[$sUserColumn . '_'])) {
                     $zData[$sUserColumn . '_'] = 'N/A';
                 } elseif ($_AUTH && $zData[$sUserColumn] != '00000') {
@@ -1672,7 +1674,7 @@ class LOVD_Object
             }
             // We are going to overwrite the 'owned_by_' field.
             $sOwnedBy = '';
-            foreach($zData['owner'] as $aLinkData) {
+            foreach ($zData['owner'] as $aLinkData) {
                 if (count($aLinkData) >= 6) {
                     list($nID, $sName, $sEmail, $sInstitute, $sDepartment, $sCountryID) = $aLinkData;
                     if (intval($nID) === 0) {
@@ -2054,13 +2056,13 @@ class LOVD_Object
         // Unset columns not allowed to be visible for the current user level.
         global $_AUTH;
 
-        foreach($this->aColumnsViewEntry as $sCol => $Col) {
+        foreach ($this->aColumnsViewEntry as $sCol => $Col) {
             if (is_array($Col) && (!$_AUTH || $_AUTH['level'] < $Col[1])) {
                 unset($this->aColumnsViewEntry[$sCol]);
             }
         }
 
-        foreach($this->aColumnsViewList as $sCol => $aCol) {
+        foreach ($this->aColumnsViewList as $sCol => $aCol) {
             if (isset($aCol['auth']) && (!$_AUTH || $_AUTH['level'] < $aCol['auth'])) {
                 unset($this->aColumnsViewList[$sCol]);
             }
@@ -2522,16 +2524,16 @@ class LOVD_Object
         $bFRPreview =          (!empty($_GET['FRPreviewClicked_' . $sViewListID]));
         // Selected field name for replace.
         $sFRViewListCol =      (isset($_GET['FRFieldname_' . $sViewListID])?
-                                $_GET['FRFieldname_' . $sViewListID] : null);
+                                $_GET['FRFieldname_' . $sViewListID] : '');
         // Display name of selected field.
         $sFRFieldDisplayname = (isset($_GET['FRFieldDisplayname_' . $sViewListID])?
-                                $_GET['FRFieldDisplayname_' . $sViewListID] : null);
+                                $_GET['FRFieldDisplayname_' . $sViewListID] : '');
         // Search query for find & replace.
         $sFRSearchValue =      (isset($_GET['FRSearch_' . $sViewListID])?
-                                $_GET['FRSearch_' . $sViewListID] : null);
+                                $_GET['FRSearch_' . $sViewListID] : '');
         // Replace value for find & replace.
         $sFRReplaceValue =     (isset($_GET['FRReplace_' . $sViewListID])?
-                                $_GET['FRReplace_' . $sViewListID] : null);
+                                $_GET['FRReplace_' . $sViewListID] : '');
         // Type of matching.
         $sFRMatchType =        (isset($_GET['FRMatchType_' . $sViewListID])?
                                 $_GET['FRMatchType_' . $sViewListID] : null);
@@ -3206,8 +3208,8 @@ FROptions
                     foreach ($zData as $key => $val) {
                         // Also allow data from $zData to be put into the row link & row id.
                         // FIXME; This is a temporary ugly solution, so we need to fix this later!!!!
-                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
-                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val))), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val ?: ''))), $zData['row_link']);
+                        $zData['row_link'] = preg_replace('/\{\{zData_' . preg_quote($key, '/') . '\}\}/', rawurlencode(htmlspecialchars(addslashes($val ?: ''))), $zData['row_link']);
                         // But don't break C>G notation, variants can't be searched using row links otherwise.
                         $zData['row_link'] = str_replace('%26gt%3B', '%3E', $zData['row_link']);
                     }

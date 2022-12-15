@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -553,7 +553,7 @@ class LOVD_Gene extends LOVD_Object
             // Associated with diseases...
             $zData['diseases_'] = '';
             $zData['disease_omim_'] = '';
-            foreach($zData['diseases'] as $aDisease) {
+            foreach ($zData['diseases'] as $aDisease) {
                 list($nID, $nOMIMID, $sSymbol, $sName) = $aDisease;
                 // Link to disease entry in LOVD.
                 $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '">' . $sSymbol . '</A>';
@@ -749,7 +749,7 @@ class LOVD_Gene extends LOVD_Object
             $sYear = substr($zData['created_date'], 0, 4);
             $sYear = ((int) $sYear && $sYear < date('Y')? $sYear . '-' . date('Y') : date('Y'));
             $aDisclaimer = array(0 => 'No', 1 => 'Standard LOVD disclaimer', 2 => 'Own disclaimer');
-            $zData['disclaimer_']      = $aDisclaimer[$zData['disclaimer']];
+            $zData['disclaimer_']      = $aDisclaimer[(int) $zData['disclaimer']];
             $zData['disclaimer_text_'] = (!$zData['disclaimer']? '' : ($zData['disclaimer'] == 2? html_entity_decode($zData['disclaimer_text']) :
                 'The contents of this LOVD database are the intellectual property of the respective submitter(s) and curator(s) of the individual records. Individual data entries may indicate which data license applies to that specific record. When no license is listed, no permissions are granted. Any unauthorized use, copying, storage, or distribution of this material without written permission from the curator(s) will lead to copyright infringement with possible ensuing litigation. Copyright &copy; ' . $sYear . '. All Rights Reserved. For further details, refer to Directive 96/9/EC of the European Parliament and the Council of March 11 (1996) on the legal protection of databases.<BR><BR>We have used all reasonable efforts to ensure that the information displayed on these pages and contained in the databases is of high quality. We make no warranty, express or implied, as to its accuracy or that the information is fit for a particular purpose, and will not be held responsible for any consequences arising from any inaccuracies or omissions. Individuals, organizations, and companies that use this database do so on the understanding that no liability whatsoever, either direct or indirect, shall rest upon the data submitter(s), curator(s), or any of their employees or agents for the effects of any product, process, or method that may be produced or adopted by any part, notwithstanding that the formulation of such product, process or method may be based upon information here provided.'));
 

@@ -1297,7 +1297,7 @@ if (PATH_COUNT > 2 && ACTION == 'add') {
         if (!is_array($aTargets)) {
             $aTargets = array($aTargets);
         }
-        foreach($aTargets as $sTarget) {
+        foreach ($aTargets as $sTarget) {
             if (!isset($aPossibleTargets[$sTarget])) {
                 lovd_errorAdd('target', 'Please a select valid ' . $aTableInfo['unit'] . ' from the list!');
                 break;
@@ -1665,7 +1665,7 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         if (!is_array($aTargets)) {
             $aTargets = array($aTargets);
         }
-        foreach($aTargets as $sTarget) {
+        foreach ($aTargets as $sTarget) {
             if (!isset($aPossibleTargets[$sTarget])) {
                 lovd_errorAdd('target', 'Please a select valid ' . $aTableInfo['unit'] . ' from the list!');
                 break;

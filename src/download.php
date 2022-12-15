@@ -435,7 +435,7 @@ if (($_PE[1] == 'all' && (empty($_PE[2]) || in_array($_PE[2], array('gene', 'min
                 $qHiddenCols = 'SELECT id, SUBSTRING_INDEX(id, "/", 1) AS category FROM ' .
                                TABLE_COLS . ' WHERE public_view = ?';
                 $aHiddenCols = $_DB->q($qHiddenCols, array('0'))->fetchAllAssoc();
-                foreach($aHiddenCols as $aHiddenCol) {
+                foreach ($aHiddenCols as $aHiddenCol) {
                     $sObject = $aObjectTranslations[$aHiddenCol['category']];
                     $aObjects[$sObject]['hide_columns'][] = $aHiddenCol['id'];
                 }

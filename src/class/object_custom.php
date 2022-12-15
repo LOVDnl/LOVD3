@@ -193,7 +193,7 @@ class LOVD_Custom extends LOVD_Object
         global $_AUTH;
 
         $aFields = array();
-        foreach($this->aColumns as $sCol => $aCol) {
+        foreach ($this->aColumns as $sCol => $aCol) {
             if (!$aCol['public_add'] && $_AUTH['level'] < LEVEL_CURATOR) {
                 continue;
             }

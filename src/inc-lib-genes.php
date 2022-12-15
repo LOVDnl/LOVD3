@@ -43,7 +43,7 @@ function lovd_getLRGbyGeneSymbol ($sGeneSymbol)
 {
     // Get LRG reference sequence
     preg_match('/(LRG_\d+)\s+' . $sGeneSymbol . '/', implode(' ', lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt')), $aMatches);
-    if(!empty($aMatches)) {
+    if (!empty($aMatches)) {
         return $aMatches[1];
     }
     return false;

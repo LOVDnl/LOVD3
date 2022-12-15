@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-08-17
- * Modified    : 2022-11-28
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -262,7 +262,7 @@ class LOVD_PDOStatement extends PDOStatement
     {
         // Wrapper around PDOStatement::fetchAll(PDO::FETCH_COLUMN).
         // THIS WRAPPER ONLY SUPPORTS THE col number PDOStatement::fetchAll() ARGUMENT!
-        if (!ctype_digit($nCol)) {
+        if (!is_int($nCol) && !ctype_digit($nCol)) {
             $nCol = 0;
         }
         return $this->fetchAll(PDO::FETCH_COLUMN, $nCol);
@@ -276,10 +276,10 @@ class LOVD_PDOStatement extends PDOStatement
     {
         // Wrapper around PDOStatement::fetchAll() that creates an array with one field's
         //  results as the keys and the other field's results as values.
-        if (!ctype_digit($nCol1) && !is_int($nCol1)) {
+        if (!is_int($nCol1) && !ctype_digit($nCol1)) {
             $nCol1 = 0;
         }
-        if (!ctype_digit($nCol2) && !is_int($nCol2)) {
+        if (!is_int($nCol2) && !ctype_digit($nCol2)) {
             $nCol2 = 1;
         }
         // Optimization when using the first column as a key, we can rely on PDO's features.

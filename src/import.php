@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -33,7 +33,7 @@
 define('ROOT_PATH', './');
 define('TAB_SELECTED', 'setup');
 require ROOT_PATH . 'inc-init.php';
-ini_set('auto_detect_line_endings', true); // So we can work with Mac files also...
+@ini_set('auto_detect_line_endings', true); // So we can work with Mac files. Deprecated in PHP8.1; removed in PHP9.
 set_time_limit(0); // Disable time limit, parsing may take a long time.
 session_write_close(); // Also don't care about the session (in fact, it locks the whole LOVD while this page is running).
 if (LOVD_plus) {

@@ -478,7 +478,7 @@ class LOVD_Individual extends LOVD_Custom
             }
             // Associated with diseases...
             $zData['diseases_'] = '';
-            foreach($zData['diseases'] as $aDisease) {
+            foreach ($zData['diseases'] as $aDisease) {
                 list($nID, $sSymbol, $sName) = $aDisease;
                 $zData['diseases_'] .= (!$zData['diseases_']? '' : ', ') . '<A href="diseases/' . $nID . '" title="' . $sName . '">' . $sSymbol . '</A>';
             }

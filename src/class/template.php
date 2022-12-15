@@ -871,7 +871,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         }
         print('
 <SCRIPT type="text/javascript">
-  $(function(){
+  $(function() {
     var aMenuOptions = {
         widthOverflowOffset: 0,
         heightOverflowOffset: 1,' .
@@ -884,8 +884,7 @@ foreach ($zAnnouncements as $zAnnouncement) {
         autoHide: true,
         delay: 100,
         onSelect: function(e, context){
-            if($(this).hasClass("disabled"))
-            {
+            if ($(this).hasClass("disabled")) {
                 return false;
             } else {
                 window.location = $(this).find("a").attr("href");

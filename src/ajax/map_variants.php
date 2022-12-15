@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -253,7 +253,7 @@ if (!empty($_GET['variantid'])) {
                              'FROM ' . TABLE_VARIANTS . ' WHERE id = ?', array($_GET['variantid']))->fetchAllAssoc();
 
     if (count($aVariants)) {
-        if (($aVariants[0]['mapping_flags'] & MAPPING_ALLOW) && !($aVariants[0]['mapping_flags'] & MAPPING_IN_PROGRESS)) {
+        if (((int) $aVariants[0]['mapping_flags'] & MAPPING_ALLOW) && !((int) $aVariants[0]['mapping_flags'] & MAPPING_IN_PROGRESS)) {
             // We've found the variant, and we are actually allowed to map it! Let's go.
 
             if (!$aVariants[0]['position_g_start'] || !$aVariants[0]['position_g_end']) {
@@ -270,6 +270,7 @@ if (!empty($_GET['variantid'])) {
                     $aVariantUpdates = $aVariants = array();
                 } else {
                     // The MAPPING_NOT_RECOGNIZED, MAPPING_ERROR and MAPPING_DONE flags will be set accordingly in the end. We must unset them here, however, otherwise whatever is set now stays set afterwards.
+                    // Note that this will fail if mapping_flags is currently an empty string, but we know it's not.
                     $aVariants[0]['mapping_flags'] &= ~(MAPPING_NOT_RECOGNIZED | MAPPING_ERROR | MAPPING_DONE);
                 }
             }
@@ -356,7 +357,7 @@ if (!empty($aVariants)) {
         define('MAPPING_NO_RESTART', true);
         if (!empty($_GET['variantid'])) {
             // We were trying to map a specific variant. Set the MAPPING_ERROR flag so the user understands we tried it.
-            $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = ' . ($aVariants[0]['mapping_flags'] | MAPPING_ERROR) . ' WHERE id = ?', array($aVariants[0]['id']));
+            $_DB->q('UPDATE ' . TABLE_VARIANTS . ' SET mapping_flags = ' . ((int) $aVariants[0]['mapping_flags'] | MAPPING_ERROR) . ' WHERE id = ?', array($aVariants[0]['id']));
             $aVariantUpdates = array();
         }
 
@@ -460,7 +461,7 @@ if (!empty($aVariants)) {
         }
 
         $aGenesWeCanMapTo = array_unique($aGenesWeCanMapTo);
-        if (($aVariant['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) && count($aGenesWeCanMapTo)) {
+        if (((int) $aVariant['mapping_flags'] & MAPPING_ALLOW_CREATE_GENES) && count($aGenesWeCanMapTo)) {
             // We may add extra genes to map this variant to. $aGenes contains genes we can map to.
 
             // Try the genes one by one.
@@ -686,13 +687,13 @@ if (!empty($aVariants)) {
         // Now see if the above script actually mapped it and define the update query.
         if (!empty($aVariant['aTranscripts'])) {
             // It did.
-            $sUpdateSQL = 'mapping_flags = ' . ($aVariant['mapping_flags'] | MAPPING_DONE) . ', edited_by = 0, edited_date = NOW()';
+            $sUpdateSQL = 'mapping_flags = ' . ((int) $aVariant['mapping_flags'] | MAPPING_DONE) . ', edited_by = 0, edited_date = NOW()';
         } elseif (empty($aVariant['alreadyMappedTranscripts']) && !empty($aVariant['errorDetected'])) {
             // This variant cannot be mapped, probably because it's malformed.
-            $sUpdateSQL = 'mapping_flags = ' . ($aVariant['mapping_flags'] | MAPPING_NOT_RECOGNIZED);
+            $sUpdateSQL = 'mapping_flags = ' . ((int) $aVariant['mapping_flags'] | MAPPING_NOT_RECOGNIZED);
         } else {
             // This variant can't be mapped to anything (other than what it is mapped to already) right now.
-            $sUpdateSQL = 'mapping_flags = ' . ($aVariant['mapping_flags'] | MAPPING_DONE);
+            $sUpdateSQL = 'mapping_flags = ' . ((int) $aVariant['mapping_flags'] | MAPPING_DONE);
         }
 
         // Update the variant.
