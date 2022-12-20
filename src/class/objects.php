@@ -2414,7 +2414,7 @@ class LOVD_Object
 
         // SORT: Current settings, also implementing XSS check.
         if (!empty($_GET['order']) && $_GET['order'] === strip_tags($_GET['order'])) {
-            $aOrder = explode(',', $_GET['order']);
+            $aOrder = array_pad(explode(',', $_GET['order']), 2, '');
         } else {
             $aOrder = array('', '');
         }
