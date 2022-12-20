@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-12-14
+ * Modified    : 2022-12-20
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1982,7 +1982,10 @@ class LOVD_Object
 
         // Handle multivalue filter request. I.e., show only records that have more than one
         // value for certain aggregated columns.
-        if (!empty($aRequest['MVSCols']) && $aRequestMVSCols = explode(';', $aRequest['MVSCols'])) {
+        if (!empty($aRequest['MVSCols'])) {
+            // But at least add some basic checks. Drop all strings that aren't a column.
+            // These values are user-provided, so should be considered tainted.
+            $aRequestMVSCols = array_intersect(explode(';', $aRequest['MVSCols']), array_keys($this->aColumnsViewList));
             foreach ($aRequestMVSCols as $sMVSCol) {
                 list($sField,, $sTableRef) = $this->getFieldInfo($sMVSCol);
 
