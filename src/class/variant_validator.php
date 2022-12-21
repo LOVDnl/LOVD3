@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-11-22
+ * Modified    : 2022-12-21
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
@@ -898,8 +898,8 @@ class LOVD_VV
                         } elseif ($sError == 'Length implied by coordinates must equal sequence deletion length') {
                             // EINCONSISTENTLENGTH error.
                             $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
-                        } elseif (strpos($sError, 'coordinates do not agree with the intron/exon boundaries') !== false) {
-                            // Not sure if we still catch it here, its flag is "gene_variant" nowadays?
+                        } elseif (strpos($sError, 'ExonBoundaryError:') !== false) {
+                            // We don't catch this here anymore, but keep it in case VV will use flag=warning again.
                             // EINVALIDBOUNDARY error.
                             $aData['errors']['EINVALIDBOUNDARY'] = $sError;
                         } elseif (strpos($sError, ' variant position that lies outside of the reference sequence') !== false
@@ -1033,7 +1033,7 @@ class LOVD_VV
                     // We don't care about this - we started with an NM anyway.
                     unset($aJSON['validation_warnings'][$nKey]);
 
-                } elseif (strpos($sWarning, 'coordinates do not agree with the intron/exon boundaries') !== false) {
+                } elseif (strpos($sWarning, 'ExonBoundaryError:') !== false) {
                     // EINVALIDBOUNDARY error. This used to throw a flag "warning", but no more, so catch it here.
                     $aData['errors']['EINVALIDBOUNDARY'] = $sWarning;
                     unset($aJSON['validation_warnings'][$nKey]);
