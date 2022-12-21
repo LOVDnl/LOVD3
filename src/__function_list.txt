@@ -198,12 +198,15 @@
 5.4.0 JSON_PRETTY_PRINT is available (now I'm using it if available)
 5.4.0 Short array notation is available; array() => [].
 5.4.0 Array dereferencing; $sWord = explode(' ', $sSentence)[5]; now solved using list() or current().
+5.5.0 foreach (... as list(...)) <- Using this already.
 5.6.0 Argument unpacking; array_merge(...$a) == array_merge($a[0], $a[1], $a[2]); now solved using call_user_func_array().
 7.0.0 Null coalescing operator available, e.g., ($a['missing_key'] ?? 'default_value');
 7.1.0 Negative string array access, e.g., $s[-1] instead of substr($s, -1).
 7.4.0 Return value declaration for functions.
+8.0.0 Nullsafe methods and properties e.g. $class?->property or $class?->method() that doesn't completely break if $class is null.
+8.0.0 str_contains(), str_starts_with(), str_ends_with() as alternatives to strpos(), regexes and substr() checks.
 =====-========
-5.3.0 REQUIRED (2021-06-22: we still have a few PHP/5.3 users, although they haven't updated their LOVDs for years, mostly 3.0-21 and lower)
+5.3.0 REQUIRED (2022-12-21: we still have a few PHP/5.3 users, 3.0-21 (went offline in early 2022) and lower (3.0-18 and 3.0-13))
 
 
 
