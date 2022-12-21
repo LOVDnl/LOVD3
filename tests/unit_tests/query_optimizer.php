@@ -138,11 +138,11 @@ foreach ($aSQL as $sSQLInput => $sSQLExpectedOutput) {
 
     // Check if the input query indeed still has SQL_CALC_FOUND_ROWS, otherwise
     //  we can't test.
-    assert("strpos('$sSQLInput', 'SQL_CALC_FOUND_ROWS') !== false");
+    assert(strpos($sSQLInput, 'SQL_CALC_FOUND_ROWS') !== false);
 
     // Check if outcome is as expected.
     $sSQLOutput = $o->getRowCountForViewList(lovd_splitSQL($sSQLInput), array(), true);
-    assert("'$sSQLOutput' == '$sSQLExpectedOutput'");
+    assert($sSQLOutput == $sSQLExpectedOutput);
 
     // If we're here, the output was as expected. Now run both queries, and time
     //  them. Because timing may vary, we'll run it a maximum of 5 times if it's
@@ -171,8 +171,8 @@ foreach ($aSQL as $sSQLInput => $sSQLExpectedOutput) {
         $i, strlen($sSQLOutput), strlen($sSQLInput), ($tSQLOutput/$tSQLInput)*100, $tSQLOutput, $tSQLInput, ($tSQLOutput-$tSQLInput), $nTries, $nFoundOutput);
 
     // Run the assertions on query time and results.
-    assert("$tSQLOutput < $tSQLInput");
-    assert("$nFoundInput == $nFoundOutput");
+    assert($tSQLOutput < $tSQLInput);
+    assert($nFoundInput == $nFoundOutput);
     flush();
 }
 die('Complete, all successful.');
