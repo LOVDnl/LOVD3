@@ -4,11 +4,11 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-02-10
- * Modified    : 2016-02-10
- * For LOVD    : 3.0-15
+ * Modified    : 2022-12-21
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2016 Leiden University Medical Center; http://www.LUMC.nl/
- * Programmer  : Ing. Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
+ * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
  * This file is part of LOVD.
@@ -28,17 +28,23 @@
  *
  *************/
 
-assert_options(ASSERT_ACTIVE, 1);
-assert_options(ASSERT_WARNING, 0);
-assert_options(ASSERT_BAIL, 1);
-assert_options(ASSERT_QUIET_EVAL, 0);
-assert_options(ASSERT_CALLBACK, 'lovd_assertFailed');
+// In PHP8, you need to use ini_set instead of assert_options().
+if (ini_get('zend.assertions') == '0') {
+    ini_set('zend.assertions', 1);
+}
+if (ini_get('zend.assertions') != '1') {
+    die("Assertions are turned off; please enable them, so we can test.\n");
+}
+ini_set('assert.warning', 0);
+ini_set('assert.bail', 1);
+ini_set('assert.callback', 'lovd_assertFailed');
 
-function lovd_assertFailed ($sFile, $nLine, $sCode)
+function lovd_assertFailed ($sFile, $nLine, $sCode, $sDescription = '')
 {
     print('Assertion Failed!' . "\n" .
-//          '  File: ' . $sFile . "\n" .
+          '  File: ' . $sFile . "\n" .
           '  Line: ' . $nLine . "\n" .
-          '  Code: ' . $sCode . "\n\n");
+          '  Code: ' . $sCode . "\n" .
+          '  Description: ' . $sDescription . "\n\n");
 }
 ?>
