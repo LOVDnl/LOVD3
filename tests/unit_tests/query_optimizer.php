@@ -142,7 +142,7 @@ foreach ($aSQL as $sSQLInput => $sSQLExpectedOutput) {
 
     // Check if outcome is as expected.
     $sSQLOutput = $o->getRowCountForViewList(lovd_splitSQL($sSQLInput), array(), true);
-    assert($sSQLOutput == $sSQLExpectedOutput);
+    assert($sSQLOutput == $sSQLExpectedOutput, 'Actual output was: ' . $sSQLOutput);
 
     // If we're here, the output was as expected. Now run both queries, and time
     //  them. Because timing may vary, we'll run it a maximum of 5 times if it's
@@ -171,8 +171,8 @@ foreach ($aSQL as $sSQLInput => $sSQLExpectedOutput) {
         $i, strlen($sSQLOutput), strlen($sSQLInput), ($tSQLOutput/$tSQLInput)*100, $tSQLOutput, $tSQLInput, ($tSQLOutput-$tSQLInput), $nTries, $nFoundOutput);
 
     // Run the assertions on query time and results.
-    assert($tSQLOutput < $tSQLInput);
-    assert($nFoundInput == $nFoundOutput);
+    assert($tSQLOutput < $tSQLInput, 'Resulting query is slower.');
+    assert($nFoundInput == $nFoundOutput, 'Resulting query has a different number of results.');
     flush();
 }
 die('Complete, all successful.');
