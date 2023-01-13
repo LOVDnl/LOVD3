@@ -416,13 +416,16 @@ class LOVD_API_GA4GH
 
         if (!isset($aGenes[$sSymbol])) {
             $aGenes[$sSymbol] = $_DB->q('
-                SELECT id_hgnc, id_omim FROM ' . TABLE_GENES . ' WHERE id = ?',
+                SELECT g.id_hgnc, g.id_omim,
+                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
+                FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE g.id = ?',
                 array($sSymbol))->fetchAssoc();
         }
 
         $aGene = array(
             'source' => 'HGNC',
             'accession' => $aGenes[$sSymbol]['id_hgnc'],
+            'phenotypes' => array(),
             'db_xrefs' => array(
                 array(
                     'source' => 'HGNC.symbol',
@@ -430,6 +433,13 @@ class LOVD_API_GA4GH
                 ),
             )
         );
+        if (!empty($aGenes[$sSymbol]['diseases'])) {
+            foreach (explode(';;', $aGenes[$sSymbol]['diseases']) as $sDisease) {
+                $aGene['phenotypes'][] = $this->convertDiseaseToVML($sDisease);
+            }
+        } else {
+            unset($aGene['phenotypes']);
+        }
         if (!empty($aGenes[$sSymbol]['id_omim'])) {
             $aGene['db_xrefs'][] = array(
                 'source' => 'MIM',
