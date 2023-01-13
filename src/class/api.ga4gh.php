@@ -337,6 +337,38 @@ class LOVD_API_GA4GH
 
 
 
+    private function convertDiseaseToVML ($sDisease)
+    {
+        // Converts disease string into VarioML phenotype data.
+
+        list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
+        $aReturn = array(
+            'term' => $sName,
+        );
+        if ($nOMIMID) {
+            $aReturn['source'] = 'MIM';
+            $aReturn['accession'] = $nOMIMID;
+        }
+        if ($sInheritance) {
+            // Inheritance can contain multiple values, but
+            //  VarioML allows for only one. Combined values
+            //  will therefore just be stored as a term.
+            if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
+                $aReturn['inheritance_pattern'] = $this->aValueMappings['inheritance'][$sInheritance];
+            } else {
+                $aReturn['inheritance_pattern'] = array(
+                    'term' => $sInheritance,
+                );
+            }
+        }
+
+        return $aReturn;
+    }
+
+
+
+
+
     private function convertEffectsToVML ($sEffects)
     {
         // Converts variant effects into VarioML pathogenicities.
@@ -1361,27 +1393,7 @@ class LOVD_API_GA4GH
                 $aIndividual['phenotypes'] = array();
                 if ($aSubmission['diseases']) {
                     foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
-                        list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
-                        $aPhenotype = array(
-                            'term' => $sName,
-                        );
-                        if ($nOMIMID) {
-                            $aPhenotype['source'] = 'MIM';
-                            $aPhenotype['accession'] = $nOMIMID;
-                        }
-                        if ($sInheritance) {
-                            // Inheritance can contain multiple values, but
-                            //  VarioML allows for only one. Combined values
-                            //  will therefore just be stored as a term.
-                            if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
-                                $aPhenotype['inheritance_pattern'] = $this->aValueMappings['inheritance'][$sInheritance];
-                            } else {
-                                $aPhenotype['inheritance_pattern'] = array(
-                                    'term' => $sInheritance,
-                                );
-                            }
-                        }
-                        $aIndividual['phenotypes'][] = $aPhenotype;
+                        $aIndividual['phenotypes'][] = $this->convertDiseaseToVML($sDisease);
                     }
                 }
                 if ($aSubmission['phenotypes']) {
