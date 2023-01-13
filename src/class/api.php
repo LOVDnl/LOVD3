@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2022-08-26
+ * Modified    : 2023-01-13
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -330,7 +330,7 @@ class LOVD_API
             $bPrettyPrint = (PHP_VERSION_ID >= 50400
                 && memory_get_usage() < 10000000
                 && (empty($this->aResponse['data']) || count($this->aResponse['data']) <= 10));
-            $sResponse = json_encode($this->aResponse, ($bPrettyPrint? JSON_PRETTY_PRINT : NULL));
+            $sResponse = json_encode($this->aResponse, ($bPrettyPrint? JSON_PRETTY_PRINT : 0));
         }
 
         return $sResponse;

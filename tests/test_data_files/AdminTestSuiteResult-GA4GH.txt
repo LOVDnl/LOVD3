@@ -9,6 +9,13 @@
                 {
                     "source": "HGNC",
                     "accession": "6186",
+                    "phenotypes": [
+                        {
+                            "term": "isovaleric acidemia (IVA)",
+                            "source": "MIM",
+                            "accession": "243500",
+                        }
+                    ],
                     "db_xrefs": [
                         {
                             "source": "HGNC.symbol",
