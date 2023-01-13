@@ -443,7 +443,7 @@ class LOVD_API_GA4GH
         if (!empty($aGenes[$sSymbol]['id_omim'])) {
             $aGene['db_xrefs'][] = array(
                 'source' => 'MIM',
-                'accession' => $aGenes[$sSymbol]['id_omim'],
+                'accession' => (string) $aGenes[$sSymbol]['id_omim'],
             );
         }
         return $aGene;
