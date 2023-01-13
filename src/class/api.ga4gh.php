@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2022-11-22
+ * Modified    : 2023-01-13
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -1855,7 +1855,7 @@ class LOVD_API_GA4GH
             }
 
             // The aggregate pathogenicities aren't stored well yet.
-            $aReturn['pathogenicities'] = call_user_func_array('array_merge', $aReturn['effectids']);
+            $aReturn['pathogenicities'] = call_user_func_array('array_merge', array_values($aReturn['effectids']));
             if (!empty($aReturn['classifications'])) {
                 $aReturn['pathogenicities'] = array_merge(
                     $aReturn['pathogenicities'],
