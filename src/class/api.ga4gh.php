@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2022-11-22
+ * Modified    : 2023-01-13
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -337,6 +337,38 @@ class LOVD_API_GA4GH
 
 
 
+    private function convertDiseaseToVML ($sDisease)
+    {
+        // Converts disease string into VarioML phenotype data.
+
+        list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
+        $aReturn = array(
+            'term' => $sName,
+        );
+        if ($nOMIMID) {
+            $aReturn['source'] = 'MIM';
+            $aReturn['accession'] = $nOMIMID;
+        }
+        if ($sInheritance) {
+            // Inheritance can contain multiple values, but
+            //  VarioML allows for only one. Combined values
+            //  will therefore just be stored as a term.
+            if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
+                $aReturn['inheritance_pattern'] = $this->aValueMappings['inheritance'][$sInheritance];
+            } else {
+                $aReturn['inheritance_pattern'] = array(
+                    'term' => $sInheritance,
+                );
+            }
+        }
+
+        return $aReturn;
+    }
+
+
+
+
+
     private function convertEffectsToVML ($sEffects)
     {
         // Converts variant effects into VarioML pathogenicities.
@@ -384,13 +416,16 @@ class LOVD_API_GA4GH
 
         if (!isset($aGenes[$sSymbol])) {
             $aGenes[$sSymbol] = $_DB->q('
-                SELECT id_hgnc, id_omim FROM ' . TABLE_GENES . ' WHERE id = ?',
+                SELECT g.id_hgnc, g.id_omim,
+                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
+                FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE g.id = ?',
                 array($sSymbol))->fetchAssoc();
         }
 
         $aGene = array(
             'source' => 'HGNC',
             'accession' => $aGenes[$sSymbol]['id_hgnc'],
+            'phenotypes' => array(),
             'db_xrefs' => array(
                 array(
                     'source' => 'HGNC.symbol',
@@ -398,10 +433,17 @@ class LOVD_API_GA4GH
                 ),
             )
         );
+        if (!empty($aGenes[$sSymbol]['diseases'])) {
+            foreach (explode(';;', $aGenes[$sSymbol]['diseases']) as $sDisease) {
+                $aGene['phenotypes'][] = $this->convertDiseaseToVML($sDisease);
+            }
+        } else {
+            unset($aGene['phenotypes']);
+        }
         if (!empty($aGenes[$sSymbol]['id_omim'])) {
             $aGene['db_xrefs'][] = array(
                 'source' => 'MIM',
-                'accession' => $aGenes[$sSymbol]['id_omim'],
+                'accession' => (string) $aGenes[$sSymbol]['id_omim'],
             );
         }
         return $aGene;
@@ -1361,27 +1403,7 @@ class LOVD_API_GA4GH
                 $aIndividual['phenotypes'] = array();
                 if ($aSubmission['diseases']) {
                     foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
-                        list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
-                        $aPhenotype = array(
-                            'term' => $sName,
-                        );
-                        if ($nOMIMID) {
-                            $aPhenotype['source'] = 'MIM';
-                            $aPhenotype['accession'] = $nOMIMID;
-                        }
-                        if ($sInheritance) {
-                            // Inheritance can contain multiple values, but
-                            //  VarioML allows for only one. Combined values
-                            //  will therefore just be stored as a term.
-                            if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
-                                $aPhenotype['inheritance_pattern'] = $this->aValueMappings['inheritance'][$sInheritance];
-                            } else {
-                                $aPhenotype['inheritance_pattern'] = array(
-                                    'term' => $sInheritance,
-                                );
-                            }
-                        }
-                        $aIndividual['phenotypes'][] = $aPhenotype;
+                        $aIndividual['phenotypes'][] = $this->convertDiseaseToVML($sDisease);
                     }
                 }
                 if ($aSubmission['phenotypes']) {
@@ -1855,7 +1877,7 @@ class LOVD_API_GA4GH
             }
 
             // The aggregate pathogenicities aren't stored well yet.
-            $aReturn['pathogenicities'] = call_user_func_array('array_merge', $aReturn['effectids']);
+            $aReturn['pathogenicities'] = call_user_func_array('array_merge', array_values($aReturn['effectids']));
             if (!empty($aReturn['classifications'])) {
                 $aReturn['pathogenicities'] = array_merge(
                     $aReturn['pathogenicities'],
@@ -1863,18 +1885,6 @@ class LOVD_API_GA4GH
                 );
             }
             unset($aReturn['effectids'], $aReturn['classifications']);
-
-            // Clean "individuals", "panels" and "variants" when empty.
-            // VarioML wants them gone when empty.
-            foreach (array('individuals', 'panels', 'variants') as $sIndex) {
-                if (!count($aReturn['panel'][$sIndex])) {
-                    unset($aReturn['panel'][$sIndex]);
-                }
-            }
-            if (!count($aReturn['panel'])) {
-                // Nothing licensed to show.
-                unset($aReturn['panel']);
-            }
 
             return $aReturn;
         }, $zData);
