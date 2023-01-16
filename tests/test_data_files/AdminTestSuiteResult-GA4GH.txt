@@ -13,7 +13,7 @@
                         {
                             "term": "isovaleric acidemia (IVA)",
                             "source": "MIM",
-                            "accession": "243500",
+                            "accession": "243500"
                         }
                     ],
                     "db_xrefs": [
