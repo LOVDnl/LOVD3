@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-14
- * Modified    : 2022-11-22
+ * Modified    : 2023-01-27
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.NL>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -820,6 +820,11 @@ if ($sCalcVersionFiles != $sCalcVersionDB) {
                  array(
                      'ALTER TABLE ' . TABLE_CONFIG . ' MODIFY COLUMN mutalyzer_soap_url VARCHAR(100) NOT NULL DEFAULT "https://v2.mutalyzer.nl/services"',
                      'UPDATE ' . TABLE_CONFIG . ' SET mutalyzer_soap_url = "https://v2.mutalyzer.nl/services" WHERE mutalyzer_soap_url = "https://mutalyzer.nl/services"',
+                 ),
+                 '3.0-28c' => array(), // Placeholder for an LOVD+ version.
+                 '3.0-28d' =>
+                 array(
+                     'UPDATE ' . TABLE_LINKS . ' SET replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/snp/[1]\" target=\"_blank\">dbSNP</A>" WHERE name = "DbSNP" AND replace_text = "<A href=\"https://www.ncbi.nlm.nih.gov/SNP/snp_ref.cgi?rs=[1]\" target=\"_blank\">dbSNP</A>"',
                  ),
              );
 
