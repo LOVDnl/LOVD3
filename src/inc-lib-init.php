@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2022-12-14
+ * Modified    : 2023-01-27
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -1056,11 +1056,14 @@ function lovd_getCurrentPageTitle ()
 function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
 {
     // Retrieves URL for external source and returns it, including the ID.
-    global $_DB;
+    global $_DB, $_SETT;
 
     static $aSources = array();
     if (!count($aSources)) {
-        $aSources = $_DB->q('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine();
+        $aSources = array_merge(
+            $_SETT['external_sources'],
+            $_DB->q('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine(),
+        );
     }
 
     if (array_key_exists($sSource, $aSources)) {
@@ -1070,7 +1073,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
         }
         if ($nID !== false) {
             // ID provided; include it in the URL.
-            $s = str_replace('{{ ID }}', $nID, $s);
+            $s = str_replace(array('{{ID}}', '{{ ID }}'), $nID, $s);
         }
         return $s;
     }
