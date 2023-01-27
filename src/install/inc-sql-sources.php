@@ -30,6 +30,7 @@
  *************/
 
 // List of external biological sources.
+// FIXME: This is difficult to maintain. Better define all these in $_SETT['external_sources'], like already done for dbSNP.
 $aSourceSQL =
          array(
                 'INSERT INTO ' . TABLE_SOURCES . ' VALUES ("entrez",       "https://www.ncbi.nlm.nih.gov/gene?cmd=Retrieve&dopt=full_report&list_uids={{ ID }}")',
