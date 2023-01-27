@@ -1062,7 +1062,7 @@ function lovd_getExternalSource ($sSource, $nID = false, $bHTML = false)
     if (!count($aSources)) {
         $aSources = array_merge(
             $_SETT['external_sources'],
-            $_DB->q('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine(),
+            $_DB->q('SELECT id, url FROM ' . TABLE_SOURCES)->fetchAllCombine()
         );
     }
 
