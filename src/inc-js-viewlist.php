@@ -354,7 +354,7 @@ if (!isset($_GET['nohistory'])) {
         });
         // Gather changed checkbox IDs and send, too.
         if (check_list[sViewListID] && check_list[sViewListID].length) {
-            if ($.isArray(check_list[sViewListID])) {
+            if (Array.isArray(check_list[sViewListID])) {
                 var sIDlist = check_list[sViewListID].join(';');
             } else {
                 var sIDlist = check_list[sViewListID];

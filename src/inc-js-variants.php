@@ -352,8 +352,8 @@ function lovd_getProteinChange (oElement)
                         src: 'gfx/cross.png',
                         onclick: '',
                         style: '',
-                        alt: 'Error on mutalyzer request!\nError code: ' + (!$.isArray(aData)? aData : aData['mutalyzer_error']),
-                        title: 'Error on mutalyzer request!\nError code: ' + (!$.isArray(aData)? aData : aData['mutalyzer_error'])
+                        alt: 'Error on mutalyzer request!\nError code: ' + (!Array.isArray(aData)? aData : aData['mutalyzer_error']),
+                        title: 'Error on mutalyzer request!\nError code: ' + (!Array.isArray(aData)? aData : aData['mutalyzer_error'])
                     }).show();
                 }
 
