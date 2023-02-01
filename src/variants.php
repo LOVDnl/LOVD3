@@ -2757,7 +2757,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
           '            var oDNA = $(\'input[name="\' + i + \'_VariantOnTranscript/DNA"]\');' . "\n" .
           '            var oProtein = $(\'input[name="\' + i + \'_VariantOnTranscript/Protein"]\');' . "\n" .
           '            if ($(oDNA).val() && !$(oProtein).val()) {' . "\n" .
-          '              $(oProtein).siblings(\'button:eq(0)\').show();' . "\n" .
+          '              $(oProtein).siblings(\'button\').first().show();' . "\n" .
           '            }' . "\n" .
           '          }' . "\n" .
           '        });' . "\n" .

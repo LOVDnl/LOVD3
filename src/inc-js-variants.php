@@ -109,8 +109,8 @@ function lovd_checkHGVS (e)
                     }).show();
                     // Now hide the "Map variant" and "Predict" buttons.
                     if (!$.isEmptyObject(aTranscripts)) {
-                        oVariantDNA.siblings('button:eq(0)').hide();
-                        oProtein.siblings('button:eq(0)').hide();
+                        oVariantDNA.siblings('button').first().hide();
+                        oProtein.siblings('button').first().hide();
                     }
 
                 } else {
@@ -121,12 +121,12 @@ function lovd_checkHGVS (e)
                     }).show();
                     // Check if the variant description is a c.? or a g.?. If it is, then do not let the user map the variant.
                     if (oVariantDNA.val().substring(1,3) == '.?') {
-                        oVariantDNA.siblings('button:eq(0)').hide();
-                        oProtein.siblings('button:eq(0)').hide();
+                        oVariantDNA.siblings('button').first().hide();
+                        oProtein.siblings('button').first().hide();
                     } else if (!$.isEmptyObject(aTranscripts)) {
                         // Only enable the mapping buttons when there are transcripts added to this variant.
-                        oVariantDNA.siblings('button:eq(0)').show();
-                        oProtein.siblings('button:eq(0)').show();
+                        oVariantDNA.siblings('button').first().show();
+                        oProtein.siblings('button').first().show();
                         // Hide possible 'view prediction button'
                         $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
                     }
@@ -142,8 +142,8 @@ function lovd_checkHGVS (e)
         }).show();
         if (!$.isEmptyObject(aTranscripts)) {
             // Only enable the mapping buttons when there are transcripts added to this variant.
-            oVariantDNA.siblings('button:eq(0)').show();
-            oProtein.siblings('button:eq(0)').show();
+            oVariantDNA.siblings('button').first().show();
+            oProtein.siblings('button').first().show();
             // Hide possible 'view prediction button'
             $('#' + jq_escape(oProtein.attr('name')) + '_view_prediction').remove();
         }
@@ -152,8 +152,8 @@ function lovd_checkHGVS (e)
         // No HGVS syntax, but no "real" onChange trigger yet, either.
         oVariantDNA.siblings('img').first().hide();
         if (!$.isEmptyObject(aTranscripts)) {
-            oVariantDNA.siblings('button:eq(0)').hide();
-            oProtein.siblings('button:eq(0)').hide();
+            oVariantDNA.siblings('button').first().hide();
+            oProtein.siblings('button').first().hide();
         }
     }
     return false;
@@ -247,7 +247,7 @@ function lovd_convertPosition (oElement)
                                     }).show();
                                     // Hide the "Map variant" button, so that the button cannot be pressed again. It has finished anyway and there
                                     // is no use to run this function again when the DNA field hasn't changed.
-                                    oInput.siblings('button:eq(0)').hide();
+                                    oInput.siblings('button').first().hide();
                                     // Grab the corresponding protein description field if it exists.
                                     var oProtein = $(oInput).parent().parent().siblings().find('input[name="' + $(oInput).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>) + '_VariantOnTranscript/Protein"]');
                                     if (!oInput[0].disabled) {
@@ -261,7 +261,7 @@ function lovd_convertPosition (oElement)
                             }
                         }
                         // Hide the "Map variant" button.
-                        $(oThisDNA).siblings('button:eq(0)').hide();
+                        $(oThisDNA).siblings('button').first().hide();
 
                     } else {
                         // This function was called from a transcript variant, so fill in the return value from mutalyzer in the genomic DNA field.
@@ -275,7 +275,7 @@ function lovd_convertPosition (oElement)
                                 title: 'Valid HGVS syntax!'
                             }).show();
                             // Call this function again, but with the new genomic information. This way, the variant will be mapped from the genome to all transcripts.
-                            lovd_convertPosition(oInput.siblings('button:eq(0)'));
+                            lovd_convertPosition(oInput.siblings('button').first());
                         }
                     }
                     if (aVariant != null) {
@@ -295,7 +295,7 @@ function lovd_convertPosition (oElement)
                             onmouseover : 'lovd_showToolTip(\'Could not map variant using this transcript! Probably Mutalyzer does not have this transcript in its mapping database yet.\');',
                             onmouseout: 'lovd_hideToolTip();'
                         }).show();
-                        $(oThisDNA).siblings('button:eq(0)').hide(); // Hide the mapping button.
+                        $(oThisDNA).siblings('button').first().hide(); // Hide the mapping button.
                     }
 
                 } else {
@@ -305,7 +305,7 @@ function lovd_convertPosition (oElement)
                         alt: 'Error during mapping!',
                         title: 'Error during mapping!'
                     }).show();
-                    $(oThisDNA).siblings('button:eq(0)').hide();
+                    $(oThisDNA).siblings('button').first().hide();
                 }
         });
     }
@@ -367,7 +367,7 @@ function lovd_getProteinChange (oElement)
                     alt: 'Unable to predict protein change for non-coding transcripts!',
                     title: 'Unable to predict protein change for non-coding transcripts!'
                 }).show();
-                oThisProtein.siblings('button:eq(0)').hide();
+                oThisProtein.siblings('button').first().hide();
 
             } else {
                 // Decide what to do with the analyzed Mutalyzer output.
@@ -399,7 +399,7 @@ function lovd_getProteinChange (oElement)
                             alt: 'Encountered an error during protein prediction!',
                             title: 'Encountered an error during protein prediction!'
                         }).show();
-                        $(oThisProtein).siblings('button:eq(0)').hide();
+                        $(oThisProtein).siblings('button').first().hide();
                     }
 
                 } else {
@@ -454,7 +454,7 @@ function lovd_getProteinChange (oElement)
                     lovd_highlightInput(oThisRNA);
                     lovd_highlightInput(oThisProtein);
 
-                    $(oThisProtein).siblings('button:eq(0)').hide();
+                    $(oThisProtein).siblings('button').first().hide();
                 }
             }
 

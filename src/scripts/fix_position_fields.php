@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-01-28
- * Modified    : 2022-11-22
+ * Modified    : 2023-02-01
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -398,9 +398,9 @@ class LOVD_VariantPositionAnalyses {
         $sTotalVariants = substr($sAnalysis, 0, 3) . '_total_variants';
         print('
       <SCRIPT type="text/javascript">
-        $("#analyses_stats #tr_' . $sAnalysis . ' td:eq(1)").html("' . $this->aAnalyses[$sAnalysis]['count'] . '");
-        $("#analyses_stats #tr_' . $sAnalysis . ' td:eq(2)").html("' . $this->aAnalyses[$sAnalysis]['fixed'] . '");
-        $("#analyses_stats #tr_' . $sTotalVariants . ' td:eq(2)").html("' . $this->aAnalyses[$sTotalVariants]['fixed'] . '");
+        $("#analyses_stats #tr_' . $sAnalysis . ' td").eq(1).html("' . $this->aAnalyses[$sAnalysis]['count'] . '");
+        $("#analyses_stats #tr_' . $sAnalysis . ' td").eq(2).html("' . $this->aAnalyses[$sAnalysis]['fixed'] . '");
+        $("#analyses_stats #tr_' . $sTotalVariants . ' td").eq(2).html("' . $this->aAnalyses[$sTotalVariants]['fixed'] . '");
       </SCRIPT>');
     }
 }
