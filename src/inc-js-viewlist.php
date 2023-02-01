@@ -161,7 +161,7 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
                         $(newRow).removeAttr('style');
                         var attributes = new RegExp(/<TR( ([a-z]+)="(.+?)")/i);
                         var values = new RegExp(/>(.+)<\/TD/);
-                        var aResponse = jQuery.trim(sResponse).split(/\n/);
+                        var aResponse = sResponse.trim().split(/\n/);
                         // Overwrite all attributes of newRow with the attributes given row retrieved with Ajax.
                         while (attributes.test(aResponse[0])) {
                             aAttributes = attributes.exec(aResponse[0]);
