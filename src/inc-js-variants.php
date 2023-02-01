@@ -523,7 +523,7 @@ $(function ()
     if (oTranscriptVariants[0] != undefined) {
         // Add the buttons and images at the end of the transcripts DNA fields.
         oTranscriptVariants.parent().append('&nbsp;&nbsp;<IMG style="display:none;" align="top" width="16" height="16">&nbsp;<BUTTON class="mapVariant" type="button" onclick="lovd_convertPosition(this); return false;" style="display:none;">Map to genome</BUTTON>');
-        var nTranscriptVariants = oTranscriptVariants.size();
+        var nTranscriptVariants = oTranscriptVariants.length;
         for (i=0; i < nTranscriptVariants; i++) {
             // Add an artificial attribute "id_ncbi" to the transcripts DNA input field. This is needed to link the response from Mutalyzer to this field, if needed.
             $(oTranscriptVariants[i]).attr('id_ncbi', aTranscripts[$(oTranscriptVariants[i]).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>)][0]);

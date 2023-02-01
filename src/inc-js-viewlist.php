@@ -412,7 +412,7 @@ function lovd_stretchInputs (id)
     // column's size may be stretched because of the data contents.
 
     var aColumns = $("#viewlistTable_"+id+" th");
-    var nColumns = aColumns.size();
+    var nColumns = aColumns.length;
     for (var i = 0; i < nColumns; i ++) {
         if (aColumns.eq(i).width()) {
             // But only if the column actually has a width (= 0 if table is hidden for now)

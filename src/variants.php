@@ -956,7 +956,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         $( '.ignore' ).click(function () {
             var oBeginTranscript = $(this).parent().parent().next();
             var oNextElement = oBeginTranscript.next();
-            while (oNextElement.children().size() > 1) {
+            while (oNextElement.children().length > 1) {
                 // More than one TD, so it is an input field.
                 if ($(this).prop('checked')) {
                     oNextElement.children().last().children().first().prop('disabled', true).siblings('button').first().hide();
