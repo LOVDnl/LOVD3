@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-12-14
+ * Modified    : 2023-02-01
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -402,7 +402,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         function lovd_mapOnRequest ()
         {
             // Show the loading image.
-            $('#mapOnRequest').children("img:first").attr({
+            $('#mapOnRequest').children("img").first().attr({
                 src: '<?php echo ROOT_PATH; ?>gfx/lovd_loading.gif',
                 width: '12px',
                 height: '12px',
@@ -419,7 +419,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             ).fail(function ()
                 {
                     // Show the error image.
-                    $('#mapOnRequest').children("img:first").attr({
+                    $('#mapOnRequest').children("img").first().attr({
                         src: '<?php echo ROOT_PATH; ?>gfx/cross.png',
                         alt: 'Error',
                         title: 'An error occurred, please try again'
@@ -950,7 +950,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
       <SCRIPT type="text/javascript">
 
         $( '.transcript' ).each(function () {
-            $(this).parent().parent().find(">:first-child").html('<INPUT class="ignore" name="ignore_' + $(this).attr('transcriptid') + '" type="checkbox"> <B>Ignore this transcript</B>');
+            $(this).parent().parent().children().first().html('<INPUT class="ignore" name="ignore_' + $(this).attr('transcriptid') + '" type="checkbox"> <B>Ignore this transcript</B>');
         });
 
         $( '.ignore' ).click(function () {
@@ -959,9 +959,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             while (oNextElement.children().size() > 1) {
                 // More than one TD, so it is an input field.
                 if ($(this).prop('checked')) {
-                    oNextElement.find(">:last-child").find(">:first-child").prop('disabled', true).siblings('button:first').hide();
+                    oNextElement.children().last().children().first().prop('disabled', true).siblings('button').first().hide();
                 } else {
-                    oNextElement.find(">:last-child").find(">:first-child").prop('disabled', false);
+                    oNextElement.children().last().children().first().prop('disabled', false);
                 }
                 oNextElement = oNextElement.next();
             }

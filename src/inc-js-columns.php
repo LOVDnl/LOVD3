@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2013-03-26
- * Modified    : 2020-06-03
- * For LOVD    : 3.0-24
+ * Modified    : 2023-02-01
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -33,7 +33,7 @@ header('Expires: ' . date('r', time()+(180*60)));
 ?>
 function lovd_setWidth ()
 {
-    var line = $(this).parent().parent().next().children(':last').children(':first');
+    var line = $(this).parent().parent().next().children().last().children().first();
     // No minimum defined here, since sometimes you just want to remove what is there and type a new number.
     // This maximum is also defined in object_columns.php and object_shared_columns.php.
     if ($(this).val() > 500) {

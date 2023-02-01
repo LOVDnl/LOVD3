@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-11-08
- * Modified    : 2022-07-28
+ * Modified    : 2023-02-01
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -76,7 +76,7 @@ function lovd_checkHGVS (e)
     var oProtein = $(oVariantDNA).parent().parent().siblings().find('input[name="' + $(oVariantDNA).attr('name').substring(0, <?php echo $_SETT['objectid_length']['transcripts']; ?>) + '_VariantOnTranscript/Protein"]');
 
     // Add a transparent placeholder for the indicator at the protein field, so that the form will not shift when it is added.
-    oProtein.siblings('img:first').removeClass().attr('src', 'gfx/trans.png');
+    oProtein.siblings('img').first().removeClass().attr('src', 'gfx/trans.png');
 
     if (e.type == 'change' && !bHGVS && oVariantDNA.val()) {
         // This is a "real" onChange call(), we couldn't match the variant, but we do have something filled in. Check with Mutalyzer!
@@ -87,7 +87,7 @@ function lovd_checkHGVS (e)
         }
 
         // Now we have to check with lovd_getVariantInfo()...
-        $(oVariantDNA).siblings('img:first').attr({
+        $(oVariantDNA).siblings('img').first().attr({
             src: 'gfx/lovd_loading.gif',
             alt: 'Loading...',
             title: 'Loading...',
@@ -102,7 +102,7 @@ function lovd_checkHGVS (e)
                 if (sData != '<?php echo AJAX_TRUE; ?>') {
                     // Either lovd_getVariantInfo() says no, our regexp didn't find a c. or g.
                     //  at the beginning, or user lost $_AUTH.
-                    oVariantDNA.siblings('img:first').attr({
+                    oVariantDNA.siblings('img').first().attr({
                         src: 'gfx/cross.png',
                         alt: (sData == <?php echo AJAX_DATA_ERROR; ?>? 'Unexpected response when validating the HGVS nomenclature. Please try again later.' : 'Invalid HGVS syntax!'),
                         title: (sData == <?php echo AJAX_DATA_ERROR; ?>? 'Unexpected response when validating the HGVS nomenclature. Please try again later.' : 'Invalid HGVS syntax!'),
@@ -114,7 +114,7 @@ function lovd_checkHGVS (e)
                     }
 
                 } else {
-                    oVariantDNA.siblings('img:first').attr({
+                    oVariantDNA.siblings('img').first().attr({
                         src: 'gfx/check.png',
                         alt: 'Valid HGVS syntax!',
                         title: 'Valid HGVS syntax!'
@@ -135,7 +135,7 @@ function lovd_checkHGVS (e)
 
     } else if (bHGVS) {
         // We didn't need confirmation, and we know we've got a good-looking variant here.
-        oVariantDNA.siblings('img:first').attr({
+        oVariantDNA.siblings('img').first().attr({
             src: 'gfx/check.png',
             alt: 'Valid HGVS syntax!',
             title: 'Valid HGVS syntax!'
@@ -150,7 +150,7 @@ function lovd_checkHGVS (e)
 
     } else {
         // No HGVS syntax, but no "real" onChange trigger yet, either.
-        oVariantDNA.siblings('img:first').hide();
+        oVariantDNA.siblings('img').first().hide();
         if (!$.isEmptyObject(aTranscripts)) {
             oVariantDNA.siblings('button:eq(0)').hide();
             oProtein.siblings('button:eq(0)').hide();
@@ -180,9 +180,9 @@ function lovd_convertPosition (oElement)
 {
     // Function that can map a variant to other transcripts or the genome.
 
-    var oThisDNA = $(oElement).siblings('input:first');
+    var oThisDNA = $(oElement).siblings('input').first();
     var oAllDNA = $('input[name$="_VariantOnTranscript/DNA"]');
-    $(oAllDNA).removeClass().siblings('img:first').attr({
+    $(oAllDNA).removeClass().siblings('img').first().attr({
         src: 'gfx/trans.png',
         alt: '',
         title: '',
@@ -191,12 +191,12 @@ function lovd_convertPosition (oElement)
         onmouseout: ''
     }).show();
     var oAllProteins = $('input[name$="_VariantOnTranscript/Protein"]');
-    $(oAllProteins).siblings('img:first').attr({
+    $(oAllProteins).siblings('img').first().attr({
         src: 'gfx/trans.png',
         alt: '',
         title: ''
     }).show();
-    $(oThisDNA).siblings('img:first').attr({
+    $(oThisDNA).siblings('img').first().attr({
         src: 'gfx/lovd_loading.gif',
         alt: 'Loading...',
         title: 'Loading...',
@@ -240,7 +240,7 @@ function lovd_convertPosition (oElement)
                                 if (oInput[0] != undefined) {
                                     // If the transcript returned by mutalyzer is present in the form, fill in the respons from mutalyzer.
                                     oInput.val(aVariant[2]);
-                                    oInput.siblings('img:first').attr({
+                                    oInput.siblings('img').first().attr({
                                         src: 'gfx/check.png',
                                         alt: 'Valid HGVS syntax!',
                                         title: 'Valid HGVS syntax!'
@@ -269,7 +269,7 @@ function lovd_convertPosition (oElement)
                         if (aVariant != null) {
                             var oInput = $('#variantForm input[name="VariantOnGenome/DNA"]');
                             oInput.val(aVariant[1]);
-                            oInput.siblings('img:first').attr({
+                            oInput.siblings('img').first().attr({
                                 src: 'gfx/check.png',
                                 alt: 'Valid HGVS syntax!',
                                 title: 'Valid HGVS syntax!'
@@ -279,7 +279,7 @@ function lovd_convertPosition (oElement)
                         }
                     }
                     if (aVariant != null) {
-                        $(oThisDNA).siblings('img:first').attr({
+                        $(oThisDNA).siblings('img').first().attr({
                             src: 'gfx/check.png',
                             alt: 'Valid HGVS syntax!',
                             title: 'Valid HGVS syntax!'
@@ -287,7 +287,7 @@ function lovd_convertPosition (oElement)
                     } else {
                         // Call was successful, but we were unable to get any variant back from Mutalyzer. Probably NM not in mapping DB.
                         $(oThisDNA).attr('class', 'warn');
-                        $(oThisDNA).siblings('img:first').attr({
+                        $(oThisDNA).siblings('img').first().attr({
                             src: 'gfx/lovd_form_information.png',
                             alt: '',
                             title : '',
@@ -300,7 +300,7 @@ function lovd_convertPosition (oElement)
 
                 } else {
                     // Either Mutalyzer says No, our regexp didn't match with the full variant notation or user lost $_AUTH.
-                    $(oThisDNA).siblings('img:first').attr({
+                    $(oThisDNA).siblings('img').first().attr({
                         src: 'gfx/cross.png',
                         alt: 'Error during mapping!',
                         title: 'Error during mapping!'
@@ -320,10 +320,10 @@ function lovd_getProteinChange (oElement)
 {
     // Function that can predict a protein description of a variant based on a transcript DNA field.
 
-    var oThisProtein = $(oElement).parent().find('input:first');
+    var oThisProtein = $(oElement).parent().find('input').first();
     $(oThisProtein).val('');
     $(oThisProtein).removeClass();
-    $(oThisProtein).siblings('img:first').attr({
+    $(oThisProtein).siblings('img').first().attr({
         src: 'gfx/lovd_loading.gif',
         alt: 'Loading...',
         title: 'Loading...'
@@ -348,7 +348,7 @@ function lovd_getProteinChange (oElement)
                     alert('Invalid input, or input missing.');
                 }
                 if (!oThisProtein.prop('disabled')) {
-                    $(oThisProtein).siblings('img:first').attr({
+                    $(oThisProtein).siblings('img').first().attr({
                         src: 'gfx/cross.png',
                         onclick: '',
                         style: '',
@@ -360,7 +360,7 @@ function lovd_getProteinChange (oElement)
             } else if (aData === '' && oThisDNA.val().lastIndexOf('n.', 0) === 0) {
                 // No data, but no errors either! No wonder... it's an n. variant!
                 // No prediction on protein level possible!
-                oThisProtein.siblings('img:first').attr({
+                oThisProtein.siblings('img').first().attr({
                     src: 'gfx/cross.png',
                     onclick: '',
                     style: '',
@@ -384,7 +384,7 @@ function lovd_getProteinChange (oElement)
                     }
                     if (!oThisProtein.prop('disabled')) {
                         $(oThisDNA).attr('class', 'err');
-                        $(oThisDNA).siblings('img:first').attr({
+                        $(oThisDNA).siblings('img').first().attr({
                             src: 'gfx/lovd_form_warning.png',
                             alt: '',
                             title : '',
@@ -392,7 +392,7 @@ function lovd_getProteinChange (oElement)
                             onmouseover : 'lovd_showToolTip(\'' + escape(sErrorMessages) + '\');',
                             onmouseout: 'lovd_hideToolTip();'
                         }).show();
-                        $(oThisProtein).siblings('img:first').attr({
+                        $(oThisProtein).siblings('img').first().attr({
                             src: 'gfx/cross.png',
                             onclick: '',
                             style: '',
@@ -416,7 +416,7 @@ function lovd_getProteinChange (oElement)
                         }
                         if (!oThisProtein.prop('disabled')) {
                             $(oThisDNA).attr('class', 'warn');
-                            $(oThisDNA).siblings('img:first').attr({
+                            $(oThisDNA).siblings('img').first().attr({
                                 src: 'gfx/lovd_form_information.png',
                                 alt: '',
                                 title : '',
@@ -428,7 +428,7 @@ function lovd_getProteinChange (oElement)
                             // Add warning colors to RNA and protein input fields.
                             $(oThisRNA).attr('class', 'warn');
                             $(oThisProtein).attr('class', 'warn');
-                            $(oThisProtein).siblings('img:first').attr({
+                            $(oThisProtein).siblings('img').first().attr({
                                 src: 'gfx/check_orange.png',
                                 alt: 'Encountered a warning during protein prediction!',
                                 title: 'Encountered a warning during protein prediction!'
@@ -437,13 +437,13 @@ function lovd_getProteinChange (oElement)
 
                     } else {
                         // No warnings or errors returned by Mutalyzer.
-                        $(oThisDNA).siblings('img:first').attr({
+                        $(oThisDNA).siblings('img').first().attr({
                             src: 'gfx/check.png',
                             alt: 'HGVS compliant!',
                             title : 'HGVS compliant!'
                         }).show();
 
-                        $(oThisProtein).siblings('img:first').attr({
+                        $(oThisProtein).siblings('img').first().attr({
                             src: 'gfx/check.png',
                             alt: 'Prediction OK!',
                             title: 'Prediction OK! Click to see result on Mutalyzer.'
