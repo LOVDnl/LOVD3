@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-01-28
- * Modified    : 2023-02-01
+ * Modified    : 2023-02-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -43,6 +43,7 @@ lovd_showInfoTable('This script is designed to verify and check all variant posi
     If you only manually added variants to LOVD, and adhered to the HGVS nomenclature standards, this script will not be useful.');
 
 lovd_requireAUTH(LEVEL_MANAGER);
+define('LOG_EVENT', 'FixPositionFields');
 
 
 
@@ -187,7 +188,17 @@ class LOVD_VariantPositionAnalyses {
                                 $aPositions['position_end'] != $zRow['position_c_end'] ||
                                 $aPositions['position_end_intron'] != $zRow['position_c_end_intron']) {
                                 // Positions given by function do not match what is in the database. Fix!
-                                return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
+                                // This query can fail, mostly due to people entering genomic variants in the cDNA field.
+                                // The position fields are then too long, and MySQL refuses to store them.
+                                // To be able to debug anything at all, we need the ID of the variant that we're currently working on.
+                                // First, run the query, don't let it crash. If the query failed, then print debugging info and kill everything anyway.
+                                $sSQL = 'UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?';
+                                $q = $_DB->q($sSQL, array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']), false);
+                                if (!$q) {
+                                    lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sSQL, 'Error in PDO::query() while running query on entry #' . $zRow['id'] . ': ' . $_DB->formatError());
+                                } else {
+                                    return array(1, $q->rowCount());
+                                }
                             }
                         } else {
                             // Variant not recognized, but positions are stored. We're going to assume they are OK.
@@ -206,7 +217,17 @@ class LOVD_VariantPositionAnalyses {
                         $aPositions = lovd_getVariantInfo($zRow['DNA'], $zRow['transcriptid']);
                         if ($aPositions) {
                             // The function recognized the variant.
-                            return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
+                            // This query can fail, mostly due to people entering genomic variants in the cDNA field.
+                            // The position fields are then too long, and MySQL refuses to store them.
+                            // To be able to debug anything at all, we need the ID of the variant that we're currently working on.
+                            // First, run the query, don't let it crash. If the query failed, then print debugging info and kill everything anyway.
+                            $sSQL = 'UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?';
+                            $q = $_DB->q($sSQL, array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']), false);
+                            if (!$q) {
+                                lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sSQL, 'Error in PDO::query() while running query on entry #' . $zRow['id'] . ': ' . $_DB->formatError());
+                            } else {
+                                return array(1, $q->rowCount());
+                            }
                         } else {
                             // Variants not recognized by LOVD, will be handled by the next analysis.
                         }
