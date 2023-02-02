@@ -222,7 +222,7 @@ class LOVD_VariantPositionAnalyses {
                             // To be able to debug anything at all, we need the ID of the variant that we're currently working on.
                             // First, run the query, don't let it crash. If the query failed, then print debugging info and kill everything anyway.
                             $sSQL = 'UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?';
-                            $q = $_DB->q($sSQL, array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']), false);
+                            $q = $_DB->q($sSQL, array($aPositions['position_start'], ($aPositions['position_start_intron'] ?? NULL), $aPositions['position_end'], ($aPositions['position_end_intron'] ?? NULL), $zRow['id'], $zRow['transcriptid']), false);
                             if (!$q) {
                                 lovd_queryError((defined('LOG_EVENT')? LOG_EVENT : 'Unknown'), $sSQL, 'Error in PDO::query() while running query on entry #' . $zRow['id'] . ': ' . $_DB->formatError());
                             } else {
@@ -258,7 +258,7 @@ class LOVD_VariantPositionAnalyses {
                         $aPositions = lovd_getVariantInfo($zRow['DNA'], $zRow['transcriptid']);
                         if ($aPositions) {
                             // The function recognized the variant.
-                            return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], $aPositions['position_start_intron'], $aPositions['position_end'], $aPositions['position_end_intron'], $zRow['id'], $zRow['transcriptid']))->rowCount());
+                            return array(1, $_DB->q('UPDATE ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' SET position_c_start = ?, position_c_start_intron = ?, position_c_end = ?, position_c_end_intron = ? WHERE id = ? AND transcriptid = ?', array($aPositions['position_start'], ($aPositions['position_start_intron'] ?? NULL), $aPositions['position_end'], ($aPositions['position_end_intron'] ?? NULL), $zRow['id'], $zRow['transcriptid']))->rowCount());
                         }
                         return array(1, 0);
                     },
