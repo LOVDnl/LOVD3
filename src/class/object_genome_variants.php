@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2023-01-27
+ * Modified    : 2023-02-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -316,7 +316,7 @@ class LOVD_GenomeVariant extends LOVD_Custom
         } else {
             $aChromosomes = array_keys($_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']);
             $aSelectChromosome = array_combine($aChromosomes, $aChromosomes);
-            $aFormChromosome = array('Chromosome', '', 'select', 'chromosome', 1, $aSelectChromosome, false, false, false);
+            $aFormChromosome = array('Chromosome', '', 'select', 'chromosome', 1, $aSelectChromosome, true, false, false);
         }
 
         if ($_AUTH['level'] >= LEVEL_CURATOR) {
