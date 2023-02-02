@@ -3337,7 +3337,6 @@ function lovd_parseConfigFile($sConfigFile)
 
 
 
-
 function lovd_php_file ($sURL, $bHeaders = false, $sPOST = false, $aAdditionalHeaders = array()) {
     // LOVD's alternative to file(), not dependent on the fopen wrappers, and can do POST requests.
     global $_CONF, $_SETT;

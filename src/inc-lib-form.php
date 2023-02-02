@@ -1139,6 +1139,14 @@ function lovd_wrapText ($s, $l = 70, $sCut = ' ')
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Wraps a text to a certain length.
 
+    if (!$s) {
+        // When we receive NULL, just return an empty string.
+        return '';
+    } elseif (strlen($s) <= $l) {
+        // No work needed.
+        return $s;
+    }
+
     if (empty($sCut) || !is_string($sCut)) {
         $sCut = ' ';
     } elseif (strlen($sCut) > 1) {
