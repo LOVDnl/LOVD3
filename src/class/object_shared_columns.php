@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-05-02
- * Modified    : 2022-11-22
+ * Modified    : 2023-02-02
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -315,11 +315,11 @@ class LOVD_SharedColumn extends LOVD_Object
 
             $zData['description_legend_short'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_short']));
             $zData['description_legend_full'] = html_entity_decode(str_replace(array("\r", "\n"), ' ', $zData['description_legend_full']));
-            $zData['public_add_']      = '<IMG src="gfx/mark_' . $zData['public_add'] . '.png" alt="" width="11" height="11">';
+            $zData['public_add_']      = '<IMG src="gfx/mark_' . (int) $zData['public_add'] . '.png" alt="" width="11" height="11">';
         }
         // FIXME; for titles use tooltips?
-        $zData['mandatory_']   = '<IMG src="gfx/mark_' . $zData['mandatory'] . '.png" alt="" width="11" height="11">';
-        $zData['public_view_'] = '<IMG src="gfx/mark_' . $zData['public_view'] . '.png" alt="" width="11" height="11">';
+        $zData['mandatory_']   = '<IMG src="gfx/mark_' . (int) $zData['mandatory'] . '.png" alt="" width="11" height="11">';
+        $zData['public_view_'] = '<IMG src="gfx/mark_' . (int) $zData['public_view'] . '.png" alt="" width="11" height="11">';
 
         return $zData;
     }
