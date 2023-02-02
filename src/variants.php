@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2023-02-01
+ * Modified    : 2023-02-02
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -463,13 +463,40 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?curation_log&in_window\', \'curation_log\', 1050, 450);'] = array('menu_clock.png', 'Show curation history', 1);
             // Menu items for setting the curation status.
             foreach ($_SETT['curation_status'] as $nCurationStatusID => $sCurationStatus) {
-                $aCurationStatusMenu['javascript:$.get(\'ajax/set_curation_status.php?' . $nCurationStatusID . '&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully set curation status of this variant to \\\'' . $sCurationStatus . '\\\'.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting curation status.\');});'] = array('menu_edit.png', $sCurationStatus);
+                $aCurationStatusMenu['javascript:' .
+                    '$.get(\'ajax/set_curation_status.php?' . $nCurationStatusID . '&id=' . $nID . '\', ' .
+                        'function(sResponse){' .
+                            'if(sResponse.substring(0,1) == \'1\'){' .
+                                'alert(\'Successfully set curation status of this variant to \\\'' . $sCurationStatus . '\\\'.\');window.location.reload();' .
+                                (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') .
+                            '}else if(sResponse.substring(0,1) == \'9\'){' .
+                                'alert(\'Error: \' + sResponse.substring(2));}})' .
+                    '.fail(function(){alert(\'Error while setting curation status.\');});'] = array('menu_edit.png', $sCurationStatus);
             }
-            $aCurationStatusMenu['javascript:if(window.confirm(\'Are you sure you want to clear this variants curation status?\')){$.get(\'ajax/set_curation_status.php?clear&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully cleared the curation status of this variant.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting curation status.\');});}else{alert(\'This variants curation status has not been changed.\');}'] = array('cross.png', 'Clear curation status');
+            $aCurationStatusMenu['javascript:' .
+                'if(window.confirm(\'Are you sure you want to clear this variants curation status?\')){' .
+                    '$.get(\'ajax/set_curation_status.php?clear&id=' . $nID . '\', ' .
+                        'function(sResponse){' .
+                            'if(sResponse.substring(0,1) == \'1\'){' .
+                                'alert(\'Successfully cleared the curation status of this variant.\');window.location.reload();' .
+                                (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') .
+                            '}else if(sResponse.substring(0,1) == \'9\'){' .
+                                'alert(\'Error: \' + sResponse.substring(2));}})' .
+                    '.fail(function(){alert(\'Error while setting curation status.\');});' .
+                '}else{' .
+                    'alert(\'This variants curation status has not been changed.\');}'] = array('cross.png', 'Clear curation status');
             $aNavigation['curation_status'] = array('menu_edit.png', 'Set curation status', 1, 'sub_menu' => $aCurationStatusMenu);
             // Menu items for setting the confirmation status.
             foreach ($_SETT['confirmation_status'] as $nConfirmationStatusID => $sConfirmationStatus) {
-                $aConfirmationStatusMenu['javascript:$.get(\'ajax/set_confirmation_status.php?' . $nConfirmationStatusID . '&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully set confirmation status of this variant to \\\'' . $sConfirmationStatus . '\\\'.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting confirmation status.\');});'] = array('menu_edit.png', $sConfirmationStatus);
+                $aConfirmationStatusMenu['javascript:' .
+                    '$.get(\'ajax/set_confirmation_status.php?' . $nConfirmationStatusID . '&id=' . $nID . '\', ' .
+                        'function(sResponse){' .
+                            'if(sResponse.substring(0,1) == \'1\'){' .
+                                'alert(\'Successfully set confirmation status of this variant to \\\'' . $sConfirmationStatus . '\\\'.\');window.location.reload();' .
+                                (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') .
+                            '}else if(sResponse.substring(0,1) == \'9\'){' .
+                                'alert(\'Error: \' + sResponse.substring(2));}})' .
+                    '.fail(function(){alert(\'Error while setting confirmation status.\');});'] = array('menu_edit.png', $sConfirmationStatus);
             }
             $aNavigation['confirmation_status'] = array('menu_edit.png', 'Set confirmation status', 1, 'sub_menu' => $aConfirmationStatusMenu);
             if (lovd_verifyInstance('leiden')) {
