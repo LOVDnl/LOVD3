@@ -817,7 +817,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                 if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
                     $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
-                    if ($aResponse) {
+                    if (!empty($aResponse['position_start']) && !isset($aResponse['position_start_intron'])) {
+                        lovd_errorAdd($nTranscriptID . '_VariantOnTranscript/DNA', 'The variant description ' . htmlspecialchars($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) . ' is recognized as a genomic variant description, but it is in a transcript-based DNA field.');
+                    } elseif ($aResponse) {
                         $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
                         $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
                         $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
@@ -842,8 +844,12 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         // Prepare the position fields already, so they can be checked.
         $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
         if ($aResponse) {
-            list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
-                array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+            if (!empty($aResponse['position_start']) && isset($aResponse['position_start_intron'])) {
+                lovd_errorAdd('VariantOnGenome/DNA', 'The variant description ' . htmlspecialchars($_POST['VariantOnGenome/DNA']) . ' is recognized as a transcript-based variant description, but it is in a genomic DNA field.');
+            } else {
+                list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                    array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+            }
         } else {
             $_POST['position_g_start'] = 0;
             $_POST['position_g_end'] = 0;
@@ -2549,7 +2555,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
             foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
                 if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
                     $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
-                    if ($aResponse) {
+                    if (!empty($aResponse['position_start']) && !isset($aResponse['position_start_intron'])) {
+                        lovd_errorAdd($nTranscriptID . '_VariantOnTranscript/DNA', 'The variant description ' . htmlspecialchars($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) . ' is recognized as a genomic variant description, but it is in a transcript-based DNA field.');
+                    } elseif ($aResponse) {
                         $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
                         $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
                         $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
@@ -2576,8 +2584,12 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         // Prepare the position fields already, so they can be checked.
         $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
         if ($aResponse) {
-            list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
-                array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+            if (!empty($aResponse['position_start']) && isset($aResponse['position_start_intron'])) {
+                lovd_errorAdd('VariantOnGenome/DNA', 'The variant description ' . htmlspecialchars($_POST['VariantOnGenome/DNA']) . ' is recognized as a transcript-based variant description, but it is in a genomic DNA field.');
+            } else {
+                list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                    array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+            }
         } else {
             $_POST['position_g_start'] = 0;
             $_POST['position_g_end'] = 0;
