@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2023-01-13
+ * Modified    : 2023-02-03
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -951,7 +951,8 @@ class LOVD_API_GA4GH
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
                WHERE vog.chromosome = ?
                  AND vog.position_g_start >= ?' . (!$nPositionEnd? '' : ' AND vog.position_g_end <= ?') . '
-                 AND vog.statusid >= ?';
+                 AND vog.statusid >= ?
+                 AND vog.`VariantOnGenome/DNA` != "g.?"';
         $aQ = array(
             STATUS_MARKED,
             (string) $sChr,
