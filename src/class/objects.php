@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-12-20
+ * Modified    : 2023-02-03
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -532,9 +532,8 @@ class LOVD_Object
         // No longer do this through $aForm, because when importing,
         //  we do have data to check but no $aForm entry linked to it.
         foreach ($aData as $sFieldname => $sFieldvalue) {
-            if (!is_string($sFieldvalue) || isset($aErroredFields[$sFieldname])) {
-                // Do not process non-string values at the moment (currently there are no checks for them),
-                //  and fields for which an (more specific) error has already been reported earlier.
+            if (isset($aErroredFields[$sFieldname])) {
+                // Do not process fields for which an (more specific) error has already been reported earlier.
                 continue;
             }
 
