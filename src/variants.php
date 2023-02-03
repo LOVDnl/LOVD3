@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2023-02-02
+ * Modified    : 2023-02-03
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -814,6 +814,17 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         lovd_errorClean();
 
         if (isset($sGene)) {
+            foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
+                    $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
+                    if ($aResponse) {
+                        $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
+                        $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
+                    }
+                }
+            }
             $_DATA['Transcript'][$sGene]->checkFields($_POST);
 
             // Set missing request values for variant effect.
@@ -827,6 +838,17 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_POST['effect_concluded'] = lovd_getMaxVOTEffects('concluded', $_POST);
             }
         }
+
+        // Prepare the position fields already, so they can be checked.
+        $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+        if ($aResponse) {
+            list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+        } else {
+            $_POST['position_g_start'] = 0;
+            $_POST['position_g_end'] = 0;
+            $_POST['type'] = NULL;
+        }
         $_DATA['Genome']->checkFields($_POST);
 
         if (!lovd_error()) {
@@ -838,13 +860,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
 
-            // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-            // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-            $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
-            if ($aResponse) {
-                list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
-                    array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
-            } else {
+            if (empty($_POST['position_g_start'])) {
+                // Variant not recognized, or no DNA given.
                 $_POST['position_g_start'] = 0;
                 $_POST['position_g_end'] = 0;
                 $_POST['type'] = NULL;
@@ -861,22 +878,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             if (isset($sGene)) {
                 $_POST['id'] = $nID;
                 foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
-                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
-                        // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-                        // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-                        $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
-                        if ($aResponse) {
-                            $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
-                            $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
-                        } else {
-                            $_POST[$nTranscriptID . '_position_c_start'] = 0;
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
-                            $_POST[$nTranscriptID . '_position_c_end'] = 0;
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
-                        }
-                    }
                     if (empty($_POST[$nTranscriptID . '_position_c_start'])) {
                         // Variant not recognized, or no DNA given.
                         $_POST[$nTranscriptID . '_position_c_start'] = 0;
@@ -2545,6 +2546,17 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         lovd_errorClean();
 
         if ($bGene) {
+            foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
+                    $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
+                    if ($aResponse) {
+                        $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
+                        $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
+                    }
+                }
+            }
             foreach ($aGenes as $sGene) {
                 $_DATA['Transcript'][$sGene]->checkFields($_POST);
             }
@@ -2560,14 +2572,26 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 $_POST['effect_concluded'] = lovd_getMaxVOTEffects('concluded', $_POST);
             }
         }
+
+        // Prepare the position fields already, so they can be checked.
+        $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+        if ($aResponse) {
+            list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+        } else {
+            $_POST['position_g_start'] = 0;
+            $_POST['position_g_end'] = 0;
+            $_POST['type'] = NULL;
+        }
         $_DATA['Genome']->checkFields($_POST);
 
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'effectid'),
-                                (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
-                                $_DATA['Genome']->buildFields());
+                array('allele', 'effectid'),
+                (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
+                $_DATA['Genome']->buildFields()
+            );
 
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : $zData['effectid'][1]);
@@ -2581,13 +2605,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
-                // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-                // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-                $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
-                if ($aResponse) {
-                    list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
-                        array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
-                } else {
+                if (empty($_POST['position_g_start'])) {
+                    // Variant not recognized, or no DNA given.
                     $_POST['position_g_start'] = 0;
                     $_POST['position_g_end'] = 0;
                     $_POST['type'] = NULL;
@@ -2620,17 +2639,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if ($bGene) {
                 foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
-                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
-                        // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-                        // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-                        // Normally we'd check for a minimum length of 6 characters, but the function is fast anyway.
-                        $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
-                        if ($aResponse) {
-                            $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
-                            $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
-                        } else {
+                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'])
+                        && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA']
+                            || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
+                        if (empty($_POST[$nTranscriptID . '_position_c_start'])) {
+                            // Variant not recognized, or no DNA given.
                             $_POST[$nTranscriptID . '_position_c_start'] = 0;
                             $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
                             $_POST[$nTranscriptID . '_position_c_end'] = 0;
@@ -2645,7 +2658,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 }
                 $aFieldsTranscripts = array();
                 foreach ($aGenes as $sGene) {
-                    $aFieldsTranscripts[$sGene] = array_merge(array('effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'), $_DATA['Transcript'][$sGene]->buildFields());
+                    $aFieldsTranscripts[$sGene] = array_merge(
+                        array('effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'),
+                        $_DATA['Transcript'][$sGene]->buildFields());
                 }
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->updateAll($nID, $_POST, $aFieldsTranscripts);
 
