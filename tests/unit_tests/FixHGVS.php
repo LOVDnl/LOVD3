@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-05-07
- * Modified    : 2022-10-26
+ * Modified    : 2023-02-03
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Loes Werkman <L.Werkman@LUMC.nl>
  *
@@ -188,8 +188,11 @@ class FixHGVSTest extends PHPUnit_Framework_TestCase
             array('c.1_2ins(20)', 'c.1_2insN[20]'),
             array('c.1_2ins(20_50)', 'c.1_2insN[(20_50)]'),
             array('c.1_2ins(50_20)', 'c.1_2insN[(20_50)]'),
+            array('g.1_2insA[5_10]', 'g.1_2insA[(5_10)]'),
             array('g.1_2insN[5_10]', 'g.1_2insN[(5_10)]'),
+            array('g.1_2insA[(10_5)]', 'g.1_2insA[(5_10)]'),
             array('g.1_2insN[(10_5)]', 'g.1_2insN[(5_10)]'),
+            array('g.1_2insA[(10_10)]', 'g.1_2insA[10]'),
             array('g.1_2insN[(10_10)]', 'g.1_2insN[10]'),
             array('g.1_2insNC123456.1:g.1_10', 'g.1_2ins[NC_123456.1:g.1_10]'),
             array('c.1_2ins[NC_000001.10:100_(300_200);400_500]',

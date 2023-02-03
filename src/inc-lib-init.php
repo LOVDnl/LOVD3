@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-01-27
+ * Modified    : 2023-02-03
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2171,26 +2171,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
                     // Looping through all possible variants.
                     // Some have specific errors, so we handle these first.
-                    if (preg_match('/^[ACGTN]+\[([0-9]+|\?)_([0-9]+|\?)\]$/', $sInsertion, $aRegs)) {
+                    if (preg_match('/^([ACGTN]+)\[([0-9]+|\?)_([0-9]+|\?)\]$/', $sInsertion, $aRegs)) {
                         // c.1_2insN[10_20].
                         if ($bCheckHGVS) {
                             return false;
                         }
-                        list(, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                        list(, $sSequence, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                            ' Please rewrite "' . $sInsertion . '" to "N[' .
+                            ' Please rewrite "' . $sInsertion . '" to "' . $sSequence . '[' .
                             ($nSuffixMinLength == $nSuffixMaxLength?
                                 $nSuffixMinLength :
                                 '(' . (strpos($sInsertion, '?') !== false || $nSuffixMinLength < $nSuffixMaxLength?
                                     $nSuffixMinLength . '_' . $nSuffixMaxLength :
                                     min($nSuffixMinLength, $nSuffixMaxLength) . '_' . max($nSuffixMinLength, $nSuffixMaxLength)) . ')') . ']".';
 
-                    } elseif (preg_match('/^[ACGTN]+\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion, $aRegs)) {
+                    } elseif (preg_match('/^([ACGTN]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion, $aRegs)) {
                         // c.1_2insN[40] or ..N[(1_2)].
-                        if (isset($aRegs[3])) {
+                        if (isset($aRegs[4])) {
                             // Range was given.
-                            list(, $nSuffixLength,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                            list(, $sSequence, $nSuffixLength,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                             if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength >= $nSuffixMaxLength) {
                                 if ($bCheckHGVS) {
                                     return false;
@@ -2198,7 +2198,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                 list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                                 $aResponse['warnings']['WSUFFIXFORMAT'] =
                                     'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                                    ' Please rewrite "' . $sInsertion . '" to "N[' .
+                                    ' Please rewrite "' . $sInsertion . '" to "' . $sSequence . '[' .
                                     ($nSuffixMinLength == $nSuffixMaxLength?
                                         $nSuffixMinLength :
                                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
