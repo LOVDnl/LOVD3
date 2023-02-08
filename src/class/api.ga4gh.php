@@ -337,11 +337,11 @@ class LOVD_API_GA4GH
 
 
 
-    private function convertDiseaseToVML ($sDisease)
+    private function convertDiseaseToVML ($sDisease, $aPhenotypes = array())
     {
         // Converts disease string into VarioML phenotype data.
 
-        list($nOMIMID, $sInheritance, $sSymbol, $sName) = explode('||', $sDisease);
+        list($nID, $nOMIMID, $sInheritance, $sSymbol, $sName) = explode('||', $sDisease);
         // Include the symbol in the name, if not already there.
         if ($sSymbol && strpos($sName, '(' . $sSymbol . ')') === false) {
             $sName .= ' (' . $sSymbol . ')';
@@ -353,6 +353,20 @@ class LOVD_API_GA4GH
             $aReturn['source'] = 'MIM';
             $aReturn['accession'] = $nOMIMID;
         }
+        // If we don't have inheritance info from the disease, perhaps the phenotype entries can provide some?
+        if (!$sInheritance && $aPhenotypes) {
+            foreach ($aPhenotypes as $aPhenotype) {
+                if ($nID == $aPhenotype[0] && $aPhenotype[1]) {
+                    // This phenotype entry belongs to this disease.
+                    // Long terms to short terms.
+                    if (isset($this->aValueMappings['inheritance_long'][strtolower($aPhenotype[1])])) {
+                        $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($aPhenotype[1])];
+                        break;
+                    }
+                }
+            }
+        }
+        // Process the inheritance (from the disease or from the phenotype).
         if ($sInheritance) {
             // Inheritance can contain multiple values, but
             //  VarioML allows for only one. Combined values
@@ -421,7 +435,7 @@ class LOVD_API_GA4GH
         if (!isset($aGenes[$sSymbol])) {
             $aGenes[$sSymbol] = $_DB->q('
                 SELECT g.id_hgnc, g.id_omim,
-                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
+                       GROUP_CONCAT(DISTINCT d.id, "||", IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
                 FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE g.id = ?',
                 array($sSymbol))->fetchAssoc();
         }
@@ -1320,13 +1334,13 @@ class LOVD_API_GA4GH
                     SELECT i.id, i.panel_size' .
                     (!$bIndGender? '' : ',
                       i.`Individual/Gender` AS gender') . ',
-                      GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
+                      GROUP_CONCAT(DISTINCT d.id, "||", IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
                     (!$bIndReference? '' : ',
                       i.`Individual/Reference` AS reference') .
                     (!$bIndRemarks? '' : ',
                       i.`Individual/Remarks` AS remarks') .
                     (!$bPhenotypeAdditional? '' : ',
-                      GROUP_CONCAT(DISTINCT ' .
+                      GROUP_CONCAT(DISTINCT p.diseaseid, "||", ' .
                         (!$bPhenotypeInheritance? '' : 'p.`Phenotype/Inheritance`, ') . '"||",
                         REPLACE(IFNULL(p.`Phenotype/Additional`, ""), ";;", ";") SEPARATOR ";;") AS phenotypes') . ',
                       CONCAT(
@@ -1419,7 +1433,7 @@ class LOVD_API_GA4GH
                     $aSubmission['phenotypes'] = array_map(
                         function ($sValue)
                         {
-                            return explode('||', $sValue, 2);
+                            return explode('||', $sValue, 3);
                         },
                         explode(
                             ';;',
@@ -1431,7 +1445,8 @@ class LOVD_API_GA4GH
                 }
                 if ($aSubmission['diseases']) {
                     foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
-                        $aIndividual['phenotypes'][] = $this->convertDiseaseToVML($sDisease);
+                        // Pass on the phenotypes so inheritance information can be taken from there.
+                        $aIndividual['phenotypes'][] = $this->convertDiseaseToVML($sDisease, $aSubmission['phenotypes']);
                     }
                 }
                 foreach ($aSubmission['phenotypes'] as $aPhenotype) {
