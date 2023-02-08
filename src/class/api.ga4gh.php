@@ -85,13 +85,13 @@ class LOVD_API_GA4GH
         'inheritance_long' => array(
             'unknown' => '',
             'familial' => 'familial',
-            'familial autosomal dominant' => 'AD',
-            'familial autosomal recessive' => 'AR',
-            'familial x-linked dominant' => 'XLD',
-            'familial x-linked dominant, male sparing' => 'XL',
-            'familial x-linked recessive' => 'XLR',
-            'paternal y-linked' => 'YL',
-            'maternal mitochondrial' => 'Mi',
+            'familial, autosomal dominant' => 'AD',
+            'familial, autosomal recessive' => 'AR',
+            'familial, x-linked dominant' => 'XLD',
+            'familial, x-linked dominant, male sparing' => 'XL',
+            'familial, x-linked recessive' => 'XLR',
+            'paternal, y-linked' => 'YL',
+            'maternal, mitochondrial' => 'Mi',
             'isolated (sporadic)' => 'IC',
             'complex' => 'Mu',
         ),
@@ -1327,8 +1327,8 @@ class LOVD_API_GA4GH
                       i.`Individual/Remarks` AS remarks') .
                     (!$bPhenotypeAdditional? '' : ',
                       GROUP_CONCAT(DISTINCT ' .
-                        (!$bPhenotypeInheritance? '' : 'REPLACE(p.`Phenotype/Inheritance`, ",", ""), ') . '"||",
-                        IFNULL(p.`Phenotype/Additional`, "") SEPARATOR ";;") AS phenotypes') . ',
+                        (!$bPhenotypeInheritance? '' : 'p.`Phenotype/Inheritance`, ') . '"||",
+                        REPLACE(IFNULL(p.`Phenotype/Additional`, ""), ";;", ";") SEPARATOR ";;") AS phenotypes') . ',
                       CONCAT(
                         IFNULL(uc.orcid_id, ""), "##", uc.name, "##", uc.email
                       ) AS creator,
@@ -1414,38 +1414,91 @@ class LOVD_API_GA4GH
                 }
 
                 $aIndividual['phenotypes'] = array();
+                if (!empty($aSubmission['phenotypes'])) {
+                    // Prepare the phenotype info already; we need this to extend the info on the disease if possible.
+                    $aSubmission['phenotypes'] = array_map(
+                        function ($sValue)
+                        {
+                            return explode('||', $sValue, 2);
+                        },
+                        explode(
+                            ';;',
+                            $aSubmission['phenotypes']
+                        )
+                    );
+                } else {
+                    $aSubmission['phenotypes'] = array();
+                }
                 if ($aSubmission['diseases']) {
                     foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
                         $aIndividual['phenotypes'][] = $this->convertDiseaseToVML($sDisease);
                     }
                 }
-                if ($aSubmission['phenotypes']) {
-                    $sInheritance = '';
-                    foreach (preg_split('/[;,\r\n]+/', $aSubmission['phenotypes']) as $sPhenotype) {
-                        // Phenotype information is probably the most diverse
-                        //  and unstructured data within LOVD. Trying to make
-                        //  sense of it, returning it as structured data.
-                        $sPhenotype = trim($sPhenotype, '( )');
-                        $aPhenotype = false;
-                        if (strpos($sPhenotype, '||') !== false) {
-                            // We've received an inheritance pattern.
-                            list($sInheritance, $sPhenotype) = explode('||', $sPhenotype, 2);
-                            if ($sInheritance) {
-                                // Long terms to short terms.
-                                if (isset($this->aValueMappings['inheritance_long'][strtolower($sInheritance)])) {
-                                    $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($sInheritance)];
-                                }
-                                // Convert into HPO term or just a single term without a source.
-                                if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
-                                    $aInheritance = $this->aValueMappings['inheritance'][$sInheritance];
-                                } else {
-                                    $aInheritance = array(
-                                        'term' => $sInheritance,
-                                    );
+                foreach ($aSubmission['phenotypes'] as $aPhenotype) {
+                    // Phenotype information is probably the most diverse
+                    //  and unstructured data within LOVD. Trying to make
+                    //  sense of it, returning it as structured data.
+                    list($nDiseaseID, $sInheritance, $sPhenotype) = $aPhenotype;
+                    // Check for the inheritance info and prepare it.
+                    $aInheritance = array();
+                    if ($sInheritance) {
+                        // Long terms to short terms.
+                        if (isset($this->aValueMappings['inheritance_long'][strtolower($sInheritance)])) {
+                            $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($sInheritance)];
+                        }
+                        // Convert into HPO term or just a single term without a source.
+                        if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
+                            $aInheritance = $this->aValueMappings['inheritance'][$sInheritance];
+                        } else {
+                            $aInheritance = array(
+                                'term' => $sInheritance,
+                            );
+                        }
+                    }
+
+                    // Sometimes the phenotype info is just empty. We may have used the inheritance to enrich
+                    //  the disease information; if so, the rest of this is no use to us.
+                    if (!$sPhenotype) {
+                        // Double-check the disease info.
+                        if ($aInheritance) {
+                            foreach ($aIndividual['phenotypes'] as $aPhenotype) {
+                                // It's alright to overwrite $aPhenotype, we won't use it anymore anyway.
+                                if (isset($aPhenotype['inheritance_pattern'])
+                                    && $aPhenotype['inheritance_pattern'] == $aInheritance) {
+                                    // We have nothing else to add.
+                                    continue 2;
                                 }
                             }
+                            // If we get here, we didn't actually have this inheritance yet. OK, store it, then.
+                            $aIndividual['phenotypes'][] = array(
+                                'term' => trim($sPhenotype),
+                                'inheritance_pattern' => $aInheritance,
+                            );
                         }
-                        if (preg_match('/^(.+)?\(([?-])?HP:([0-9]+)$/i', $sPhenotype, $aRegs)) {
+                    }
+
+                    // OK, so we have values. Sometimes the phenotype field is just a long text, and sometimes it's
+                    //  a list of HPO terms. Don't break it into pieces unnecessarily. Try to understand as closely
+                    //  as possible, what the user meant.
+                    // A comma after a closing parenthesis is a real break (usually, a HPO term),
+                    //  and a comma before an old-style HPO term is a break. Enforce this.
+                    $sPhenotype = str_replace(
+                        '),',
+                        ');',
+                        preg_replace(
+                            '/,\s*(HP(O)?:)/',
+                            ';$1',
+                            $sPhenotype
+                        )
+                    );
+                    // OK, split the text in newlines and semicolons, we can safely
+                    //  assume that those are real breaks.
+                    $aPhenotypes = preg_split('/[;\r\n]+/', $sPhenotype);
+                    // Now loop the entries (or entry) and process.
+                    foreach ($aPhenotypes as $sPhenotype) {
+                        $sPhenotype = trim($sPhenotype, '( )');
+                        $aPhenotype = false;
+                        if (preg_match('/^(.+)?\(([?-])?HPO?:([0-9]+)$/i', $sPhenotype, $aRegs)) {
                             // term (HP:0000000).
                             // term (-HP:0000000).
                             // term (?HP:0000000).
