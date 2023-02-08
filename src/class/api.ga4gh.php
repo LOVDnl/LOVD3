@@ -1722,9 +1722,9 @@ class LOVD_API_GA4GH
                         //  (DNA, SEQ); (RNA, RT-PCR); but often it's not and
                         //  it's (DNA;RNA,SEQ;RT-PCR). We'll have to guess which
                         //  template belongs to which technique.
-                        $aTemplates = explode(';', $sTemplate);
+                        $aTemplates = array_map('trim', explode(';', $sTemplate));
                         $nTemplates = count($aTemplates);
-                        $aTechniques = explode(';', $sTechnique);
+                        $aTechniques = array_map('trim', explode(';', $sTechnique));
                         $nTechniques = count($aTechniques);
                         foreach ($aTemplates as $sTemplate) {
                             if ($nTechniques == 1 || $nTemplates == 1) {
