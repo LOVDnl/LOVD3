@@ -341,7 +341,11 @@ class LOVD_API_GA4GH
     {
         // Converts disease string into VarioML phenotype data.
 
-        list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
+        list($nOMIMID, $sInheritance, $sSymbol, $sName) = explode('||', $sDisease);
+        // Include the symbol in the name, if not already there.
+        if ($sSymbol && strpos($sName, '(' . $sSymbol . ')') === false) {
+            $sName .= ' (' . $sSymbol . ')';
+        }
         $aReturn = array(
             'term' => $sName,
         );
@@ -417,7 +421,7 @@ class LOVD_API_GA4GH
         if (!isset($aGenes[$sSymbol])) {
             $aGenes[$sSymbol] = $_DB->q('
                 SELECT g.id_hgnc, g.id_omim,
-                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
+                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
                 FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE g.id = ?',
                 array($sSymbol))->fetchAssoc();
         }
@@ -1316,7 +1320,7 @@ class LOVD_API_GA4GH
                     SELECT i.id, i.panel_size' .
                     (!$bIndGender? '' : ',
                       i.`Individual/Gender` AS gender') . ',
-                      GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
+                      GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
                     (!$bIndReference? '' : ',
                       i.`Individual/Reference` AS reference') .
                     (!$bIndRemarks? '' : ',
