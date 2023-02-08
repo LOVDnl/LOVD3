@@ -1522,16 +1522,20 @@ class LOVD_API_GA4GH
                             //  VarioML has no way of storing this.
                             // Unknown HPO terms (?HP:...) can't be marked with
                             //  a modifier because HPO has none.
-                            // So both of these are ignored and *not* exported.
+                            // In those cases, we only export the term.
                             if (!$aRegs[2]) {
                                 $aPhenotype = array(
                                     'term' => trim($aRegs[1]),
                                     'source' => 'HPO',
                                     'accession' => $aRegs[3],
                                 );
-                                if ($sInheritance) {
-                                    $aPhenotype['inheritance_pattern'] = $aInheritance;
-                                }
+                            } else {
+                                $aPhenotype = array(
+                                    'term' => trim($sPhenotype) . ')', // Export with the HPO term in the text.
+                                );
+                            }
+                            if ($aInheritance) {
+                                $aPhenotype['inheritance_pattern'] = $aInheritance;
                             }
                         } elseif (preg_match('/^([?-])?HP:([0-9]+) *\((.+)?$/i', $sPhenotype, $aRegs)) {
                             // HP:0000000 (term).
@@ -1542,16 +1546,21 @@ class LOVD_API_GA4GH
                                     'source' => 'HPO',
                                     'accession' => $aRegs[2],
                                 );
-                                if ($sInheritance) {
-                                    $aPhenotype['inheritance_pattern'] = $aInheritance;
-                                }
+                            } else {
+                                // Also here, just export the term if it's a negative HPO indication.
+                                $aPhenotype = array(
+                                    'term' => trim($sPhenotype) . ')', // Export with the HPO term in the text.
+                                );
+                            }
+                            if ($aInheritance) {
+                                $aPhenotype['inheritance_pattern'] = $aInheritance;
                             }
                         } else {
                             // Unrecognized. Just pass on.
                             $aPhenotype = array(
-                                'term' => trim($sPhenotype),
+                                'term' => $sPhenotype,
                             );
-                            if ($sInheritance) {
+                            if ($aInheritance) {
                                 $aPhenotype['inheritance_pattern'] = $aInheritance;
                             }
                         }
