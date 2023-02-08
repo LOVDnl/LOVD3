@@ -1422,6 +1422,7 @@ class LOVD_API_GA4GH
                         //  and unstructured data within LOVD. Trying to make
                         //  sense of it, returning it as structured data.
                         $sPhenotype = trim($sPhenotype, '( )');
+                        $aPhenotype = false;
                         if (strpos($sPhenotype, '||') !== false) {
                             // We've received an inheritance pattern.
                             list($sInheritance, $sPhenotype) = explode('||', $sPhenotype, 2);
@@ -1482,7 +1483,9 @@ class LOVD_API_GA4GH
                                 $aPhenotype['inheritance_pattern'] = $aInheritance;
                             }
                         }
-                        $aIndividual['phenotypes'][] = $aPhenotype;
+                        if ($aPhenotype) {
+                            $aIndividual['phenotypes'][] = $aPhenotype;
+                        }
                     }
                 }
                 // Unique and reset the array. We need to rebuild the keys to
