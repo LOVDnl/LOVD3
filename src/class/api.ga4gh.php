@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2023-02-03
+ * Modified    : 2023-02-08
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -939,8 +939,8 @@ class LOVD_API_GA4GH
                          ), "")
                      )
                    ) SEPARATOR ";;") AS variants,
-                 MIN(vog.created_date) AS created_date,
-                 MAX(IFNULL(vog.edited_date, vog.created_date)) AS edited_date
+                 MIN(NULLIF(vog.created_date, "0000-00-00 00:00:00")) AS created_date,
+                 MAX(NULLIF(IFNULL(vog.edited_date, vog.created_date), "0000-00-00 00:00:00")) AS edited_date
                FROM ' . TABLE_VARIANTS . ' AS vog
                  LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
                  LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
@@ -1018,12 +1018,8 @@ class LOVD_API_GA4GH
                     ),
                 ),
                 'pathogenicities' => array(),
-                'creation_date' => array(
-                    'value' => date('c', strtotime($zData['created_date'])),
-                ),
-                'modification_date' => array(
-                    'value' => date('c', strtotime($zData['edited_date'])),
-                ),
+                'creation_date' => array(),
+                'modification_date' => array(),
                 'panel' => array(
                     'individuals' => array(),
                     'panels' => array(),
@@ -1085,6 +1081,18 @@ class LOVD_API_GA4GH
             $aReturn['effectids'] = $this->convertEffectsToVML($zData['effectids']);
             if (!empty($zData['classifications'])) {
                 $aReturn['classifications'] = $this->convertClassificationToVML($zData['classifications']);
+            }
+
+            // Leave out dates when they're missing.
+            if ($zData['created_date']) {
+                $aReturn['creation_date']['value'] = date('c', strtotime($zData['created_date']));
+            } else {
+                unset($aReturn['creation_date']);
+            }
+            if ($zData['edited_date']) {
+                $aReturn['modification_date']['value'] = date('c', strtotime($zData['edited_date']));
+            } else {
+                unset($aReturn['modification_date']);
             }
 
             // Further annotate the entries.
