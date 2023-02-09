@@ -1690,7 +1690,7 @@ class LOVD_API_GA4GH
                             $aReturn['effectids'][$nID][0]['phenotypes'] = $aIndividual['phenotypes'];
                         }
                         if (isset($aReturn['effectids'][$nID][1])) {
-                            $aReturn['effectids'][$nID][0]['phenotypes'] = $aIndividual['phenotypes'];
+                            $aReturn['effectids'][$nID][1]['phenotypes'] = $aIndividual['phenotypes'];
                         }
                         if (isset($aReturn['classifications'][$nID])) {
                             $aReturn['classifications'][$nID]['phenotypes'] = $aIndividual['phenotypes'];
