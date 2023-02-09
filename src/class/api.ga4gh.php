@@ -33,6 +33,11 @@ if (!defined('ROOT_PATH')) {
     exit;
 }
 
+// Get at least 1G of memory.
+if (lovd_convertIniValueToBytes(ini_get('memory_limit')) < 1024*1024*1024) {
+    ini_set('memory_limit', '1G');
+}
+
 
 
 class LOVD_API_GA4GH
