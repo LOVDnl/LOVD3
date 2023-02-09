@@ -1710,20 +1710,43 @@ class LOVD_API_GA4GH
                         //  for chrM variants, which makes no sense. These
                         //  values are meant to indicate imprinting,
                         //  so this should be removed here.
-                        $aVariant['pathogenicities'] = array_map(function ($aPathogenicity) {
-                            if (isset($aPathogenicity['comments'])) {
-                                foreach ($aPathogenicity['comments'] as $nKey => $aComment) {
-                                    if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
-                                        // Delete this.
-                                        unset($aPathogenicity['comments'][$nKey]);
+                        $aVariant['pathogenicities'] = array_map(
+                            function ($aPathogenicity) use (&$aReturn, $nID)
+                            {
+                                // I had to put $aReturn in use(), global doesn't work.
+                                // It also needs to be passed by reference, because we're changing it.
+                                if (isset($aPathogenicity['comments'])) {
+                                    $bClean = true;
+                                    foreach ($aPathogenicity['comments'] as $nKey => $aComment) {
+                                        if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
+                                            // Delete this.
+                                            unset($aPathogenicity['comments'][$nKey]);
+                                            $bClean = false;
+                                        }
+                                    }
+                                    if (!$bClean) {
+                                        // If we had to remove something, that means we also may need to remove it from the
+                                        //  aggregated variant entry, if this is the variant we're focusing on.
+                                        if (isset($aReturn['classifications'][$nID])) {
+                                            foreach ($aReturn['classifications'][$nID]['comments'] as $nKey => $aComment) {
+                                                if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
+                                                    // Delete this.
+                                                    unset($aReturn['classifications'][$nID]['comments'][$nKey]);
+                                                }
+                                            }
+                                            if (!count($aPathogenicity['comments'])) {
+                                                unset($aPathogenicity['comments']);
+                                            }
+                                            if (!count($aReturn['classifications'][$nID]['comments'])) {
+                                                unset($aReturn['classifications'][$nID]['comments']);
+                                            }
+                                        }
                                     }
                                 }
-                                if (!count($aPathogenicity['comments'])) {
-                                    unset($aPathogenicity['comments']);
-                                }
-                            }
-                            return $aPathogenicity;
-                        }, $aVariant['pathogenicities']);
+                                return $aPathogenicity;
+                            },
+                            $aVariant['pathogenicities']
+                        );
                     }
 
                     if ($sOrigin && isset($this->aValueMappings['genetic_origin'][$sOrigin])) {
