@@ -1639,7 +1639,19 @@ class LOVD_API_GA4GH
                 // Then add variants. Note that variants can be repeated, when
                 //  more than one screening has been created and linked to the
                 //  same variant.
-                foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
+                // Large submissions use lots of memory and therefore may break the API completely.
+                // Save memory by not exploding but going through the string bit by bit.
+                while ($aSubmission['variants']) {
+                    $sVariant = strstr($aSubmission['variants'], ';;', true);
+                    if (!$sVariant) {
+                        // This is the last one.
+                        $sVariant = $aSubmission['variants'];
+                        $aSubmission['variants'] = '';
+                    } else {
+                        // Now shorten the string.
+                        $aSubmission['variants'] = substr($aSubmission['variants'], strlen($sVariant) + 2);
+                    }
+
                     list(
                         $nID,
                         $nAllele,
