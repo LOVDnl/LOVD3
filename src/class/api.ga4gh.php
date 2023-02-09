@@ -821,6 +821,7 @@ class LOVD_API_GA4GH
         $sTableName = 'variants';
         $nTimeLimit = 15; // After 15 seconds, just send what you have.
         $nLimit = 100; // Get 100 variants max in one go.
+        $nLimitVariantsInSubmission = 20; // Convert large submissions into variant-only observations at this limit.
         // Split position fields (append hyphen to prevent notice).
         list($nPositionStart, $nPositionEnd) = explode('-', $sPosition . '-');
 
@@ -1001,7 +1002,7 @@ class LOVD_API_GA4GH
         $tStart = microtime(true);
         $aData = array_map(function ($zData)
         use (
-            $tStart, $nTimeLimit,
+            $tStart, $nTimeLimit, $nLimitVariantsInSubmission,
             $aLicenses, $aLicensesSummaryData, $sBuild, $sChr,
             $bdbSNP, $bDNA38, $bClassification, $bClassificationMethod, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
@@ -1351,6 +1352,7 @@ class LOVD_API_GA4GH
                         IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                       ) AS owner,
                       IFNULL(NULLIF(i.license, ""), uc.default_license) AS license,
+                      COUNT(DISTINCT vog.id) AS variant_count,
                       GROUP_CONCAT(DISTINCT
                         CONCAT(
                           vog.id, "||",
@@ -1639,6 +1641,10 @@ class LOVD_API_GA4GH
                 // Then add variants. Note that variants can be repeated, when
                 //  more than one screening has been created and linked to the
                 //  same variant.
+                // Count the real number of variants,
+                //  not necessarily the number of entries that we'll pass through.
+                $nVariants = $aSubmission['variant_count'];
+
                 // Large submissions use lots of memory and therefore may break the API completely.
                 // Save memory by not exploding but going through the string bit by bit.
                 while ($aSubmission['variants']) {
@@ -1695,6 +1701,20 @@ class LOVD_API_GA4GH
                         )),
                         'pathogenicities' => array(),
                     );
+
+                    // Large submissions generate a lot of data and waste resources (CPU time and disk space),
+                    //  both on this end and on the client's end.
+                    // If there are too many variants, reduce this submission to variant-only.
+                    if ($nVariants > $nLimitVariantsInSubmission) {
+                        // We'll be limiting this submission.
+                        // Save resources by skipping this variant if it's not the one we're looking for.
+                        if ($aReturn['ref_seq'] != $aVariant['ref_seq']
+                            || $aReturn['name'] != $aVariant['name']) {
+                            // This is not the variant we're looking for.
+                            // Don't bother processing it.
+                            continue;
+                        }
+                    }
 
                     // Copy the phenotypes to this variant's aggregate pathogenicities.
                     if (!empty($aIndividual['phenotypes'])) {
@@ -1997,15 +2017,72 @@ class LOVD_API_GA4GH
                     $aIndividual['variants'][] = $aVariant;
                 }
 
-                // Store in output.
-                if ($aSubmission['panel_size'] > 1) {
-                    $aReturn['panel']['panels'][] = $aIndividual;
+                // Things we need to keep the borrowed code below the same, useful for later updates.
+                $sType = ($aSubmission['panel_size'] > 1? 'panels' : 'individuals');
+                $aSubmission = &$aIndividual; // Anyway, we were done with $aSubmission.
+                $aVariant = &$aReturn; // Be careful with this! I'll have to unset $aVariant later to unlink this.
+
+                // Submissions that are too large are now reduced to single-variant full submissions.
+                // Convert these to variant-only submissions, discarding the individual data completely.
+                if ($nVariants > $nLimitVariantsInSubmission) {
+                    // In theory, we should have a single variant in $aIndividual['variants'].
+                    // When the variant wasn't matched at all, $aIndividual['variants'] is empty.
+                    // When somehow multiple variants matched, we still have multiple entries.
+                    // Whatever the case, we have ruined this submission, so we won't store it for sure.
+                    // If we have data, just take the first entry, whatever.
+                    if ($aIndividual['variants']) {
+                        // Pfew, we have something.
+                        $aVariantObservation = $aIndividual['variants'][0];
+
+                        // Copy the license info. MergeVarioML never had to do that.
+                        if (isset($aIndividual['sharing_policy'])) {
+                            $aVariantObservation['sharing_policy'] = $aIndividual['sharing_policy'];
+                        }
+
+                        // The rest of the code below is a copy of the code in varcache's mergeVarioML.
+
+                        // Add a comment explaining what happened.
+                        $aVariantObservation['comments'] = $this->addComment(
+                            (empty($aVariantObservation['comments'])? array() : $aVariantObservation['comments']),
+                            'This observation was taken from ' . ($sType == 'individuals'? 'an individual' : 'a panel') .
+                            ' with ' . $nVariants . ' variants listed, which is over the allowed limit of this data file.' .
+                            ' The submission has been discarded, and only the variant has been retained.',
+                            'ITOOMANYVARIANTS'
+                        );
+
+                        // Copy the individual's phenotypes to this variant's pathogenicities.
+                        if (!empty($aSubmission['phenotypes'])) {
+                            foreach (array_keys($aVariantObservation['pathogenicities']) as $nPathogenicity) {
+                                $aVariantObservation['pathogenicities'][$nPathogenicity]['phenotypes'] = $aSubmission['phenotypes'];
+                            }
+                        }
+
+                        // Copy the source.
+                        $aVariantObservation['data_source'] = $aSubmission['data_source'];
+
+                        // Clean up a bit.
+                        unset(
+                            $aVariantObservation['copy_count'],
+                            $aVariantObservation['genetic_origin'],
+                            $aVariantObservation['variant_detection']
+                        );
+
+                        // Then move the variant data.
+                        if (!isset($aVariant['panel']['variants'])) {
+                            $aVariant['panel']['variants'] = array();
+                        }
+                        $aVariant['panel']['variants'][] = $aVariantObservation;
+                    }
+
                 } else {
-                    $aReturn['panel']['individuals'][] = $aIndividual;
+                    // Store in output.
+                    $aReturn['panel'][$sType][] = $aIndividual;
                 }
+
+                unset($aSubmission, $aVariant); // Unlink.
             }
 
-            // The aggregate pathogenicities aren't stored well yet.
+            // The aggregate pathogenicities aren't stored well yet, we've been adding data to them.
             $aReturn['pathogenicities'] = call_user_func_array('array_merge', array_values($aReturn['effectids']));
             if (!empty($aReturn['classifications'])) {
                 $aReturn['pathogenicities'] = array_merge(
