@@ -2168,7 +2168,8 @@ class LOVD_API_GA4GH
 
         // If we're at the end, make sure we let them know.
         if (!$sChr) {
-            unset($aOutput['pagination']['next_page_url']);
+            // If we'd only unset next_page_url, we'd create an array instead of an empty object.
+            unset($aOutput['pagination']);
         }
 
         $this->API->aResponse = $aOutput;
