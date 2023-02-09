@@ -970,7 +970,8 @@ class LOVD_API_GA4GH
                WHERE vog.chromosome = ?
                  AND vog.position_g_start >= ?' . (!$nPositionEnd? '' : ' AND vog.position_g_end <= ?') . '
                  AND vog.statusid >= ?
-                 AND vog.`VariantOnGenome/DNA` != "g.?"';
+                 AND vog.`VariantOnGenome/DNA` != "g.?"
+                 AND i.panelid IS NULL';
         $aQ = array(
             STATUS_MARKED,
             (string) $sChr,
