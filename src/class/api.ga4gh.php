@@ -956,7 +956,7 @@ class LOVD_API_GA4GH
                            IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                          ), "")
                      )
-                   ) SEPARATOR ";;") AS variants,
+                   ) ORDER BY vog.id SEPARATOR ";;") AS variants,
                  MIN(NULLIF(vog.created_date, "0000-00-00 00:00:00")) AS created_date,
                  MAX(NULLIF(IFNULL(vog.edited_date, vog.created_date), "0000-00-00 00:00:00")) AS edited_date
                FROM ' . TABLE_VARIANTS . ' AS vog
@@ -1383,7 +1383,7 @@ class LOVD_API_GA4GH
                                INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
                              WHERE vot.id = vog.id), "")
                         )
-                        SEPARATOR ";;") AS variants
+                        ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`, vog.id SEPARATOR ";;") AS variants
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid AND p.statusid >= ?)
