@@ -913,9 +913,9 @@ class LOVD_API_GA4GH
                  vog.position_g_start,
                  vog.position_g_end,
                  GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
-                 vog.`VariantOnGenome/DNA` AS DNA' .
+                 REPLACE(vog.`VariantOnGenome/DNA`, "||", "|") AS DNA' .
             (!$bDNA38? '' : ',
-                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
+                 GROUP_CONCAT(DISTINCT NULLIF(REPLACE(vog.`VariantOnGenome/DNA/hg38`, "||", "|"), "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", vog.effectid) ORDER BY vog.id SEPARATOR ";") AS effectids' .
             (!$bClassification? '' : ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", NULLIF(vog.`VariantOnGenome/ClinicalClassification`, ""), ":"' .
@@ -930,7 +930,7 @@ class LOVD_API_GA4GH
                    IFNULL(i.id,
                      CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||"' .
             (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       IFNULL(REPLACE(vog.`VariantOnGenome/DNA/hg38`, "||", "|"), "")') . ', "||",
                        vog.effectid, "||"' .
             (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
@@ -948,7 +948,7 @@ class LOVD_API_GA4GH
                          (SELECT
                             GROUP_CONCAT(
                               CONCAT(
-                                t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
+                                t.geneid, "##", t.id_ncbi, "##", REPLACE(vot.`VariantOnTranscript/DNA`, "||", "|"), "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
                               SEPARATOR "$$")
                          FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                            INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
@@ -988,7 +988,7 @@ class LOVD_API_GA4GH
         }
         $aQ[] = STATUS_MARKED;
         $sQ .= '
-               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`';
+               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, REPLACE(vog.`VariantOnGenome/DNA`, "||", "|")';
         // If-Modified-Since filter must be on HAVING as it must be done *after* grouping.
         if (isset($this->aFilters['modified_since'])) {
             $sQ .= '
@@ -1363,9 +1363,9 @@ class LOVD_API_GA4GH
                           vog.id, "||",
                           vog.allele, "||",
                           vog.chromosome, "||",
-                          vog.`VariantOnGenome/DNA`, "||"' .
+                          REPLACE(vog.`VariantOnGenome/DNA`, "||", "|"), "||"' .
                     (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       IFNULL(REPLACE(vog.`VariantOnGenome/DNA/hg38`, "||", "|"), "")') . ', "||",
                        vog.effectid, "||"' .
                     (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
@@ -1385,7 +1385,7 @@ class LOVD_API_GA4GH
                             (SELECT
                                GROUP_CONCAT(
                                  CONCAT(
-                                   t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
+                                   t.geneid, "##", t.id_ncbi, "##", REPLACE(vot.`VariantOnTranscript/DNA`, "||", "|"), "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
                                  SEPARATOR "$$")
                              FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                                INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
