@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2023-02-10
+ * Modified    : 2023-02-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -268,7 +268,7 @@ class LOVD_API_GA4GH
                     if ($sMethod && in_array($sMethod, array('ACMG', 'ENIGMA'))) {
                         $aReturn[$nID]['source'] = $sMethod;
                         // Unrecognized methods we'll simply not store.
-                        // VarioML has a dictionary for this field and we don't
+                        // VarioML has a dictionary for this field, and we don't
                         //  want unrecognized values in there.
                         if (isset($this->aValueMappings['classifications'][$sMethod])) {
                             // Some conversions required. Also, values not in
@@ -1464,7 +1464,7 @@ class LOVD_API_GA4GH
                     list($nDiseaseID, $sInheritance, $sPhenotype) = $aPhenotype;
                     // Check for the inheritance info and prepare it.
                     $aInheritance = array();
-                    if ($sInheritance) {
+                    if ($sInheritance && $sInheritance != "Unknown") {
                         // Long terms to short terms.
                         if (isset($this->aValueMappings['inheritance_long'][strtolower($sInheritance)])) {
                             $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($sInheritance)];
