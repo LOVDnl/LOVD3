@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-21
- * Modified    : 2021-04-22
- * For LOVD    : 3.0-27
+ * Modified    : 2023-02-14
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -88,7 +88,7 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->driver->findElement(
             WebDriverBy::xpath(
                 '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/span/a[text()="Change"]'))->click();
-        $this->waitForElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button/span[text()="Save settings"]'));
+        $this->waitForElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'));
     }
 
 
@@ -108,7 +108,7 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
         $this->assertContains('Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International',
             $this->driver->findElement(WebDriverBy::id('selected_license'))->getText());
         // Submit.
-        $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button/span[text()="Save settings"]'))->click();
+        $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Save settings"]'))->click();
         $this->waitForElement(WebDriverBy::xpath('//div[text()="Settings saved successfully!"]'));
         // Wait for it to close.
         $this->waitUntil(WebDriverExpectedCondition::invisibilityOfElementLocated(
@@ -136,7 +136,7 @@ class SetDefaultLicenseTest extends LOVDSeleniumWebdriverBaseTestCase
             WebDriverBy::xpath(
                 '//table[@class="data"]//th[contains(., "Database") and contains(., "license")]/../td/a/img'))->click();
         $this->waitForElement(WebDriverBy::xpath('//div[@id="licenses_dialog" and contains(., " is licensed under a ")]'));
-        $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button/span[text()="Close"]'))->click();
+        $this->driver->findElement(WebDriverBy::xpath('//div[@id="licenses_dialog"]/../div[last()]//button[text()="Close"]'))->click();
     }
 }
 ?>
