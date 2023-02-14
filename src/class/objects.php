@@ -546,8 +546,10 @@ class LOVD_Object
 
             // Checking free text fields for max length, data types, etc.
             if ($sMySQLType = lovd_getColumnType(constant($this->sTable), $sNameClean)) {
-                // FIXME; we're assuming here, that $sName equals the database name. Which is true in probably most/every case, but even so...
-                // FIXME; select fields might also benefit from having this check (especially for import).
+                // The rest of the checks here all assume that $sFieldvalue is not an array. Make sure it isn't.
+                if (is_array($sFieldvalue)) {
+                    $sFieldvalue = implode(';', $sFieldvalue);
+                }
 
                 // Check max length.
                 $nMaxLength = lovd_getColumnLength(constant($this->sTable), $sNameClean);
