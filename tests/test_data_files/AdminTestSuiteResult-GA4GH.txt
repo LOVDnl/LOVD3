@@ -55,7 +55,10 @@
                         {
                             "term": "isovaleric acidemia (IVA)",
                             "source": "MIM",
-                            "accession": "243500"
+                            "accession": "243500",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
                         },
                         {
                             "term": "Additional information.",
@@ -77,7 +80,29 @@
                     "term": "functionNotAffected",
                     "data_source": {
                         "name": "curator"
-                    }
+                    },
+                    "phenotypes": [
+                        {
+                            "term": "isovaleric acidemia (IVA)",
+                            "source": "MIM",
+                            "accession": "243500",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        },
+                        {
+                            "term": "Additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        },
+                        {
+                            "term": "More additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        }
+                    ]
                 }
             ],
             "creation_date": {
@@ -94,8 +119,10 @@
                             {
                                 "term": "isovaleric acidemia (IVA)",
                                 "source": "MIM",
-                                "accession": "243500"
-                            },
+                                "accession": "243500",
+                                "inheritance_pattern": {
+                                    "term": "familial"
+                                }                            },
                             {
                                 "term": "Additional information.",
                                 "inheritance_pattern": {
@@ -276,12 +303,12 @@
                                         "technique": "SEQ"
                                     },
                                     {
-                                        "template": "RNA",
-                                        "technique": "RT-PCR"
-                                    },
-                                    {
                                         "template": "Protein",
                                         "technique": "Western"
+                                    },
+                                    {
+                                        "template": "RNA",
+                                        "technique": "RT-PCR"
                                     }
                                 ]
                             }
@@ -322,7 +349,10 @@
                         {
                             "term": "isovaleric acidemia (IVA)",
                             "source": "MIM",
-                            "accession": "243500"
+                            "accession": "243500",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
                         },
                         {
                             "term": "Additional information.",
@@ -344,7 +374,29 @@
                     "term": "unknown",
                     "data_source": {
                         "name": "curator"
-                    }
+                    },
+                    "phenotypes": [
+                        {
+                            "term": "isovaleric acidemia (IVA)",
+                            "source": "MIM",
+                            "accession": "243500",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        },
+                        {
+                            "term": "Additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        },
+                        {
+                            "term": "More additional information.",
+                            "inheritance_pattern": {
+                                "term": "familial"
+                            }
+                        }
+                    ]
                 }
             ],
             "creation_date": {
@@ -361,7 +413,10 @@
                             {
                                 "term": "isovaleric acidemia (IVA)",
                                 "source": "MIM",
-                                "accession": "243500"
+                                "accession": "243500",
+                                "inheritance_pattern": {
+                                    "term": "familial"
+                                }
                             },
                             {
                                 "term": "Additional information.",
@@ -543,12 +598,12 @@
                                         "technique": "SEQ"
                                     },
                                     {
-                                        "template": "RNA",
-                                        "technique": "RT-PCR"
-                                    },
-                                    {
                                         "template": "Protein",
                                         "technique": "Western"
+                                    },
+                                    {
+                                        "template": "RNA",
+                                        "technique": "RT-PCR"
                                     }
                                 ]
                             }
