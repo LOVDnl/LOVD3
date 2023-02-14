@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2023-02-03
+ * Modified    : 2023-02-14
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -567,9 +567,9 @@ class LOVD_Object
                         //  a MEDIUMINT(8) ourselves, which needs proper checks.
                         // lovd_getColumnMinMax() does a much better job.
                         list($nMin, $nMax) = lovd_getColumnMinMax(constant($this->sTable), $sNameClean);
-                        if ($sFieldvalue < $nMin) {
+                        if ((float) $sFieldvalue < $nMin) {
                             lovd_errorAdd($sFieldname, 'The \'' . $sHeader . '\' field is limited to numbers no lower than ' . $nMin . '.');
-                        } elseif ($sFieldvalue > $nMax
+                        } elseif ((float) $sFieldvalue > $nMax
                             && !in_array($sNameClean, array('id', 'individualid', 'screeningid'))) {
                             // Uhm, yeah, but remember that when we're importing new data, we're OK with IDs that are too
                             //  high, because the import will change them. We don't necessarily need to check if we're
