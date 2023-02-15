@@ -122,7 +122,8 @@
                                 "accession": "243500",
                                 "inheritance_pattern": {
                                     "term": "familial"
-                                }                            },
+                                }
+                            },
                             {
                                 "term": "Additional information.",
                                 "inheritance_pattern": {
@@ -303,12 +304,12 @@
                                         "technique": "SEQ"
                                     },
                                     {
-                                        "template": "Protein",
-                                        "technique": "Western"
-                                    },
-                                    {
                                         "template": "RNA",
                                         "technique": "RT-PCR"
+                                    },
+                                    {
+                                        "template": "Protein",
+                                        "technique": "Western"
                                     }
                                 ]
                             }
@@ -598,12 +599,12 @@
                                         "technique": "SEQ"
                                     },
                                     {
-                                        "template": "Protein",
-                                        "technique": "Western"
-                                    },
-                                    {
                                         "template": "RNA",
                                         "technique": "RT-PCR"
+                                    },
+                                    {
+                                        "template": "Protein",
+                                        "technique": "Western"
                                     }
                                 ]
                             }

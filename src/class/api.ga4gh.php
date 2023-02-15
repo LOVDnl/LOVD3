@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2023-02-14
+ * Modified    : 2023-02-15
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1864,7 +1864,7 @@ class LOVD_API_GA4GH
                     if ($sTemplate || $sTechnique) {
                         $aVariant['variant_detection'] = array();
                         // It's obviously best if data is stored like
-                        //  (DNA, SEQ); (RNA, RT-PCR); but often it's not and
+                        //  (DNA, SEQ); (RNA, RT-PCR); but often it's not, and
                         //  it's (DNA;RNA,SEQ;RT-PCR). We'll have to guess which
                         //  template belongs to which technique.
                         $aTemplates = array_map('trim', explode(';', $sTemplate));
@@ -1937,6 +1937,10 @@ class LOVD_API_GA4GH
                                 }
                             }
                         }
+                        usort(
+                            $aVariant['variant_detection'],
+                            [$this, 'sortScreenings']
+                        );
                     }
 
                     // Up and until this part, we didn't even check yet if we've
@@ -1963,6 +1967,10 @@ class LOVD_API_GA4GH
                                             SORT_REGULAR
                                         )
                                     );
+                                usort(
+                                    $aIndividual['variants'][$nKey]['variant_detection'],
+                                    [$this, 'sortScreenings']
+                                );
                                 continue 2;
                             }
                         }
@@ -2176,6 +2184,46 @@ class LOVD_API_GA4GH
 
         $this->API->aResponse = $aOutput;
         return true;
+    }
+
+
+
+
+
+    private function sortScreenings ($aScreening1, $aScreening2)
+    {
+        // Function used in usort() on screenings (variant_detection object) to enforce a simple sorting.
+        // This makes comparing files easier and makes the output more standard, but also more logical.
+        if (!is_array($aScreening1) || !is_array($aScreening2)
+            || array_keys($aScreening1) != array('template', 'technique')
+            || array_keys($aScreening2) != array('template', 'technique')) {
+            // Didn't get proper values.
+            return 0;
+        }
+
+        if ($aScreening1 === $aScreening2) {
+            // Shouldn't happen, but OK.
+            return 0;
+        }
+
+        if ($aScreening1['template'] != $aScreening2['template']) {
+            static $aTranslations = array(
+                'DNA' => 'D',
+                'RNA' => 'R',
+                'Protein' => 'Z',
+            );
+
+            return strcmp(
+                ($aTranslations[$aScreening1['template']] ??
+                    ($aTranslations[strstr($aScreening1['template'], ';', true)] ?? $aScreening1['template'])),
+                ($aTranslations[$aScreening2['template']] ??
+                    ($aTranslations[strstr($aScreening2['template'], ';', true)] ?? $aScreening2['template']))
+            );
+
+        } else {
+            // The difference is in the technique. Just a simple string comparison, then.
+            return strcmp($aScreening1['technique'], $aScreening2['technique']);
+        }
     }
 }
 ?>
