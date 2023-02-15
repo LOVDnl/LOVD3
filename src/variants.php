@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-12-14
+ * Modified    : 2023-02-03
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -402,7 +402,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
         function lovd_mapOnRequest ()
         {
             // Show the loading image.
-            $('#mapOnRequest').children("img:first").attr({
+            $('#mapOnRequest').children("img").first().attr({
                 src: '<?php echo ROOT_PATH; ?>gfx/lovd_loading.gif',
                 width: '12px',
                 height: '12px',
@@ -419,7 +419,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             ).fail(function ()
                 {
                     // Show the error image.
-                    $('#mapOnRequest').children("img:first").attr({
+                    $('#mapOnRequest').children("img").first().attr({
                         src: '<?php echo ROOT_PATH; ?>gfx/cross.png',
                         alt: 'Error',
                         title: 'An error occurred, please try again'
@@ -463,13 +463,40 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && !ACTION) {
             $aNavigation['javascript:lovd_openWindow(\'' . lovd_getInstallURL() . CURRENT_PATH . '?curation_log&in_window\', \'curation_log\', 1050, 450);'] = array('menu_clock.png', 'Show curation history', 1);
             // Menu items for setting the curation status.
             foreach ($_SETT['curation_status'] as $nCurationStatusID => $sCurationStatus) {
-                $aCurationStatusMenu['javascript:$.get(\'ajax/set_curation_status.php?' . $nCurationStatusID . '&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully set curation status of this variant to \\\'' . $sCurationStatus . '\\\'.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting curation status.\');});'] = array('menu_edit.png', $sCurationStatus);
+                $aCurationStatusMenu['javascript:' .
+                    '$.get(\'ajax/set_curation_status.php?' . $nCurationStatusID . '&id=' . $nID . '\', ' .
+                        'function(sResponse){' .
+                            'if(sResponse.substring(0,1) == \'1\'){' .
+                                'alert(\'Successfully set curation status of this variant to \\\'' . $sCurationStatus . '\\\'.\');window.location.reload();' .
+                                (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') .
+                            '}else if(sResponse.substring(0,1) == \'9\'){' .
+                                'alert(\'Error: \' + sResponse.substring(2));}})' .
+                    '.fail(function(){alert(\'Error while setting curation status.\');});'] = array('menu_edit.png', $sCurationStatus);
             }
-            $aCurationStatusMenu['javascript:if(window.confirm(\'Are you sure you want to clear this variants curation status?\')){$.get(\'ajax/set_curation_status.php?clear&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully cleared the curation status of this variant.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting curation status.\');});}else{alert(\'This variants curation status has not been changed.\');}'] = array('cross.png', 'Clear curation status');
+            $aCurationStatusMenu['javascript:' .
+                'if(window.confirm(\'Are you sure you want to clear this variants curation status?\')){' .
+                    '$.get(\'ajax/set_curation_status.php?clear&id=' . $nID . '\', ' .
+                        'function(sResponse){' .
+                            'if(sResponse.substring(0,1) == \'1\'){' .
+                                'alert(\'Successfully cleared the curation status of this variant.\');window.location.reload();' .
+                                (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') .
+                            '}else if(sResponse.substring(0,1) == \'9\'){' .
+                                'alert(\'Error: \' + sResponse.substring(2));}})' .
+                    '.fail(function(){alert(\'Error while setting curation status.\');});' .
+                '}else{' .
+                    'alert(\'This variants curation status has not been changed.\');}'] = array('cross.png', 'Clear curation status');
             $aNavigation['curation_status'] = array('menu_edit.png', 'Set curation status', 1, 'sub_menu' => $aCurationStatusMenu);
             // Menu items for setting the confirmation status.
             foreach ($_SETT['confirmation_status'] as $nConfirmationStatusID => $sConfirmationStatus) {
-                $aConfirmationStatusMenu['javascript:$.get(\'ajax/set_confirmation_status.php?' . $nConfirmationStatusID . '&id=' . $nID . '\', function(sResponse){if(sResponse.substring(0,1) == \'1\'){alert(\'Successfully set confirmation status of this variant to \\\'' . $sConfirmationStatus . '\\\'.\');window.location.reload();' . (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') . '}else if(sResponse.substring(0,1) == \'9\'){alert(\'Error: \' + sResponse.substring(2));}}).error(function(){alert(\'Error while setting confirmation status.\');});'] = array('menu_edit.png', $sConfirmationStatus);
+                $aConfirmationStatusMenu['javascript:' .
+                    '$.get(\'ajax/set_confirmation_status.php?' . $nConfirmationStatusID . '&id=' . $nID . '\', ' .
+                        'function(sResponse){' .
+                            'if(sResponse.substring(0,1) == \'1\'){' .
+                                'alert(\'Successfully set confirmation status of this variant to \\\'' . $sConfirmationStatus . '\\\'.\');window.location.reload();' .
+                                (!isset($_GET['in_window'])? '' : 'window.opener.lovd_AJAX_viewListSubmit(\'CustomVL_AnalysisRunResults_for_I_VE\');window.opener.lovd_AJAX_viewEntryLoad();') .
+                            '}else if(sResponse.substring(0,1) == \'9\'){' .
+                                'alert(\'Error: \' + sResponse.substring(2));}})' .
+                    '.fail(function(){alert(\'Error while setting confirmation status.\');});'] = array('menu_edit.png', $sConfirmationStatus);
             }
             $aNavigation['confirmation_status'] = array('menu_edit.png', 'Set confirmation status', 1, 'sub_menu' => $aConfirmationStatusMenu);
             if (lovd_verifyInstance('leiden')) {
@@ -787,6 +814,19 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
         lovd_errorClean();
 
         if (isset($sGene)) {
+            foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
+                    $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
+                    if (!empty($aResponse['position_start']) && !isset($aResponse['position_start_intron'])) {
+                        lovd_errorAdd($nTranscriptID . '_VariantOnTranscript/DNA', 'The variant description ' . htmlspecialchars($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) . ' is recognized as a genomic variant description, but it is in a transcript-based DNA field.');
+                    } elseif ($aResponse) {
+                        $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
+                        $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
+                    }
+                }
+            }
             $_DATA['Transcript'][$sGene]->checkFields($_POST);
 
             // Set missing request values for variant effect.
@@ -800,6 +840,21 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_POST['effect_concluded'] = lovd_getMaxVOTEffects('concluded', $_POST);
             }
         }
+
+        // Prepare the position fields already, so they can be checked.
+        $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+        if ($aResponse) {
+            if (!empty($aResponse['position_start']) && isset($aResponse['position_start_intron'])) {
+                lovd_errorAdd('VariantOnGenome/DNA', 'The variant description ' . htmlspecialchars($_POST['VariantOnGenome/DNA']) . ' is recognized as a transcript-based variant description, but it is in a genomic DNA field.');
+            } else {
+                list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                    array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+            }
+        } else {
+            $_POST['position_g_start'] = 0;
+            $_POST['position_g_end'] = 0;
+            $_POST['type'] = NULL;
+        }
         $_DATA['Genome']->checkFields($_POST);
 
         if (!lovd_error()) {
@@ -811,13 +866,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : substr($_SETT['var_effect_default'], -1));
 
-            // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-            // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-            $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
-            if ($aResponse) {
-                list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
-                    array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
-            } else {
+            if (empty($_POST['position_g_start'])) {
+                // Variant not recognized, or no DNA given.
                 $_POST['position_g_start'] = 0;
                 $_POST['position_g_end'] = 0;
                 $_POST['type'] = NULL;
@@ -834,22 +884,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             if (isset($sGene)) {
                 $_POST['id'] = $nID;
                 foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
-                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
-                        // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-                        // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-                        $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
-                        if ($aResponse) {
-                            $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
-                            $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
-                        } else {
-                            $_POST[$nTranscriptID . '_position_c_start'] = 0;
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
-                            $_POST[$nTranscriptID . '_position_c_end'] = 0;
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = 0;
-                        }
-                    }
                     if (empty($_POST[$nTranscriptID . '_position_c_start'])) {
                         // Variant not recognized, or no DNA given.
                         $_POST[$nTranscriptID . '_position_c_start'] = 0;
@@ -950,18 +984,18 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
       <SCRIPT type="text/javascript">
 
         $( '.transcript' ).each(function () {
-            $(this).parent().parent().find(">:first-child").html('<INPUT class="ignore" name="ignore_' + $(this).attr('transcriptid') + '" type="checkbox"> <B>Ignore this transcript</B>');
+            $(this).parent().parent().children().first().html('<INPUT class="ignore" name="ignore_' + $(this).attr('transcriptid') + '" type="checkbox"> <B>Ignore this transcript</B>');
         });
 
         $( '.ignore' ).click(function () {
             var oBeginTranscript = $(this).parent().parent().next();
             var oNextElement = oBeginTranscript.next();
-            while (oNextElement.children().size() > 1) {
+            while (oNextElement.children().length > 1) {
                 // More than one TD, so it is an input field.
                 if ($(this).prop('checked')) {
-                    oNextElement.find(">:last-child").find(">:first-child").prop('disabled', true).siblings('button:first').hide();
+                    oNextElement.children().last().children().first().prop('disabled', true).siblings('button').first().hide();
                 } else {
-                    oNextElement.find(">:last-child").find(">:first-child").prop('disabled', false);
+                    oNextElement.children().last().children().first().prop('disabled', false);
                 }
                 oNextElement = oNextElement.next();
             }
@@ -2518,6 +2552,19 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
         lovd_errorClean();
 
         if ($bGene) {
+            foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
+                if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && strlen($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) >= 6) {
+                    $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
+                    if (!empty($aResponse['position_start']) && !isset($aResponse['position_start_intron'])) {
+                        lovd_errorAdd($nTranscriptID . '_VariantOnTranscript/DNA', 'The variant description ' . htmlspecialchars($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) . ' is recognized as a genomic variant description, but it is in a transcript-based DNA field.');
+                    } elseif ($aResponse) {
+                        $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
+                        $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
+                        $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
+                        $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
+                    }
+                }
+            }
             foreach ($aGenes as $sGene) {
                 $_DATA['Transcript'][$sGene]->checkFields($_POST);
             }
@@ -2533,14 +2580,30 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 $_POST['effect_concluded'] = lovd_getMaxVOTEffects('concluded', $_POST);
             }
         }
+
+        // Prepare the position fields already, so they can be checked.
+        $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
+        if ($aResponse) {
+            if (!empty($aResponse['position_start']) && isset($aResponse['position_start_intron'])) {
+                lovd_errorAdd('VariantOnGenome/DNA', 'The variant description ' . htmlspecialchars($_POST['VariantOnGenome/DNA']) . ' is recognized as a transcript-based variant description, but it is in a genomic DNA field.');
+            } else {
+                list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
+                    array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
+            }
+        } else {
+            $_POST['position_g_start'] = 0;
+            $_POST['position_g_end'] = 0;
+            $_POST['type'] = NULL;
+        }
         $_DATA['Genome']->checkFields($_POST);
 
         if (!lovd_error()) {
             // Prepare the fields to be used for both genomic and transcript variant information.
             $aFieldsGenome = array_merge(
-                                array('allele', 'effectid'),
-                                (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
-                                $_DATA['Genome']->buildFields());
+                array('allele', 'effectid'),
+                (!$bSubmit || !empty($zData['edited_by'])? array('edited_by', 'edited_date') : array()),
+                $_DATA['Genome']->buildFields()
+            );
 
             // Prepare values.
             $_POST['effectid'] = $_POST['effect_reported'] . ($_AUTH['level'] >= $_SETT['user_level_settings']['set_concluded_effect']? $_POST['effect_concluded'] : $zData['effectid'][1]);
@@ -2554,13 +2617,8 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if ($_POST['VariantOnGenome/DNA'] != $zData['VariantOnGenome/DNA'] || $zData['position_g_start'] == NULL) {
                 $aFieldsGenome = array_merge($aFieldsGenome, array('position_g_start', 'position_g_end', 'type', 'mapping_flags'));
-                // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-                // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-                $aResponse = lovd_getVariantInfo($_POST['VariantOnGenome/DNA']);
-                if ($aResponse) {
-                    list($_POST['position_g_start'], $_POST['position_g_end'], $_POST['type']) =
-                        array($aResponse['position_start'], $aResponse['position_end'], $aResponse['type']);
-                } else {
+                if (empty($_POST['position_g_start'])) {
+                    // Variant not recognized, or no DNA given.
                     $_POST['position_g_start'] = 0;
                     $_POST['position_g_end'] = 0;
                     $_POST['type'] = NULL;
@@ -2593,17 +2651,11 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
 
             if ($bGene) {
                 foreach ($_POST['aTranscripts'] as $nTranscriptID => $aTranscript) {
-                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA']) && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA'] || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
-                        // 2017-09-22; 3.0-20; Replacing the old API call to Mutalyzer with our new lovd_getVariantInfo() function.
-                        // Don't bother with a fallback, this thing is more solid than Mutalyzer's service.
-                        // Normally we'd check for a minimum length of 6 characters, but the function is fast anyway.
-                        $aResponse = lovd_getVariantInfo($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'], $aTranscript[0]);
-                        if ($aResponse) {
-                            $_POST[$nTranscriptID . '_position_c_start'] = $aResponse['position_start'];
-                            $_POST[$nTranscriptID . '_position_c_start_intron'] = $aResponse['position_start_intron'];
-                            $_POST[$nTranscriptID . '_position_c_end'] = $aResponse['position_end'];
-                            $_POST[$nTranscriptID . '_position_c_end_intron'] = $aResponse['position_end_intron'];
-                        } else {
+                    if (!empty($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'])
+                        && ($_POST[$nTranscriptID . '_VariantOnTranscript/DNA'] != $zData[$nTranscriptID . '_VariantOnTranscript/DNA']
+                            || $zData[$nTranscriptID . '_position_c_start'] === NULL)) {
+                        if (empty($_POST[$nTranscriptID . '_position_c_start'])) {
+                            // Variant not recognized, or no DNA given.
                             $_POST[$nTranscriptID . '_position_c_start'] = 0;
                             $_POST[$nTranscriptID . '_position_c_start_intron'] = 0;
                             $_POST[$nTranscriptID . '_position_c_end'] = 0;
@@ -2618,7 +2670,9 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
                 }
                 $aFieldsTranscripts = array();
                 foreach ($aGenes as $sGene) {
-                    $aFieldsTranscripts[$sGene] = array_merge(array('effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'), $_DATA['Transcript'][$sGene]->buildFields());
+                    $aFieldsTranscripts[$sGene] = array_merge(
+                        array('effectid', 'position_c_start', 'position_c_start_intron', 'position_c_end', 'position_c_end_intron'),
+                        $_DATA['Transcript'][$sGene]->buildFields());
                 }
                 $aTranscriptID = $_DATA['Transcript'][$sGene]->updateAll($nID, $_POST, $aFieldsTranscripts);
 
@@ -2757,7 +2811,7 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && in_array(ACTION, array('edit', 'p
           '            var oDNA = $(\'input[name="\' + i + \'_VariantOnTranscript/DNA"]\');' . "\n" .
           '            var oProtein = $(\'input[name="\' + i + \'_VariantOnTranscript/Protein"]\');' . "\n" .
           '            if ($(oDNA).val() && !$(oProtein).val()) {' . "\n" .
-          '              $(oProtein).siblings(\'button:eq(0)\').show();' . "\n" .
+          '              $(oProtein).siblings(\'button\').first().show();' . "\n" .
           '            }' . "\n" .
           '          }' . "\n" .
           '        });' . "\n" .

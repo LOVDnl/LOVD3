@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-29
- * Modified    : 2020-10-12
- * For LOVD    : 3.0-25
+ * Modified    : 2023-02-01
+ * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2020 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -156,12 +156,12 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
                         // Successfully retrieved stuff.
                         var sResponse = objHTTP.responseText;
                         // Clone last TR and fill in the new response data and returns the row.
-                        var newRow = $('#viewlistTable_' + sViewListID + ' tr:last').clone();
+                        var newRow = $('#viewlistTable_' + sViewListID + ' tr').last().clone();
                         // For some reason .clone() adds a style attribute to the row. Let's remove it.
                         $(newRow).removeAttr('style');
                         var attributes = new RegExp(/<TR( ([a-z]+)="(.+?)")/i);
                         var values = new RegExp(/>(.+)<\/TD/);
-                        var aResponse = jQuery.trim(sResponse).split(/\n/);
+                        var aResponse = sResponse.trim().split(/\n/);
                         // Overwrite all attributes of newRow with the attributes given row retrieved with Ajax.
                         while (attributes.test(aResponse[0])) {
                             aAttributes = attributes.exec(aResponse[0]);
@@ -175,7 +175,7 @@ function lovd_AJAX_viewListAddNextRow (sViewListID)
                             var aValue = values.exec(aResponse[i]);
                             $(newRow).children().get(i).innerHTML = aValue[1];
                         }
-                        newRow.insertAfter($('#viewlistTable_' + sViewListID + ' tr:last'));
+                        newRow.insertAfter($('#viewlistTable_' + sViewListID + ' tr').last());
                         return true;
                     }
                 }
@@ -354,7 +354,7 @@ if (!isset($_GET['nohistory'])) {
         });
         // Gather changed checkbox IDs and send, too.
         if (check_list[sViewListID] && check_list[sViewListID].length) {
-            if ($.isArray(check_list[sViewListID])) {
+            if (Array.isArray(check_list[sViewListID])) {
                 var sIDlist = check_list[sViewListID].join(';');
             } else {
                 var sIDlist = check_list[sViewListID];
@@ -412,7 +412,7 @@ function lovd_stretchInputs (id)
     // column's size may be stretched because of the data contents.
 
     var aColumns = $("#viewlistTable_"+id+" th");
-    var nColumns = aColumns.size();
+    var nColumns = aColumns.length;
     for (var i = 0; i < nColumns; i ++) {
         if (aColumns.eq(i).width()) {
             // But only if the column actually has a width (= 0 if table is hidden for now)

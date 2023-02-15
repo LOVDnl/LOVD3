@@ -20,7 +20,6 @@
 4.0.5 array_search
 4.0.0 array_shift
 4.0.0 array_slice
-4.0.0 array_splice
 4.0.4 array_sum
 4.0.1 array_unique
 4.0.0 array_unshift
@@ -200,8 +199,9 @@
 5.4.0 Array dereferencing; $sWord = explode(' ', $sSentence)[5]; now solved using list() or current().
 5.5.0 foreach (... as list(...)) <- Using this already.
 5.6.0 Argument unpacking; array_merge(...$a) == array_merge($a[0], $a[1], $a[2]); now solved using call_user_func_array().
-7.0.0 Null coalescing operator available, e.g., ($a['missing_key'] ?? 'default_value');
+7.0.0 Null coalescing operator available, e.g., ($a['missing_key'] ?? 'default_value'); <- Already in use in ajax/licenses.php and scripts/fix_position_fields.php.
 7.1.0 Negative string array access, e.g., $s[-1] instead of substr($s, -1).
+7.3.0 setcookie() accepts an array for options, allowing us to set 'SameSite=Lax'. Otherwise, we'd need to directly send a header. That's complicated, so I'm not even trying now.
 7.4.0 Return value declaration for functions.
 8.0.0 Nullsafe methods and properties e.g. $class?->property or $class?->method() that doesn't completely break if $class is null.
 8.0.0 str_contains(), str_starts_with(), str_ends_with() as alternatives to strpos(), regexes and substr() checks.

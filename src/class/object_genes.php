@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-12-14
+ * Modified    : 2023-02-02
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -582,7 +582,7 @@ class LOVD_Gene extends LOVD_Object
                 unset($this->aColumnsViewEntry['download_']);
             }
 
-            $zData['allow_download_']   = '<IMG src="gfx/mark_' . $zData['allow_download'] . '.png" alt="" width="11" height="11">';
+            $zData['allow_download_']   = '<IMG src="gfx/mark_' . (int) $zData['allow_download'] . '.png" alt="" width="11" height="11">';
 
             // Human readable RefSeq link.
             if ($zData['refseq_url']) {

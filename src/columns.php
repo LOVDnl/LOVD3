@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2022-11-22
+ * Modified    : 2023-02-01
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -1885,12 +1885,12 @@ if (PATH_COUNT > 2 && ACTION == 'remove') {
         print('};' . "\n\n" .
               '        $("#oRemoveColumn select[name=\'target[]\']").change(
                             function() {
-                                if ($(this).children(":selected").size() == nParentObjects) {
+                                if ($(this).children(":selected").length == nParentObjects) {
                                     $("#oEntriesWithData #permanent").html("permanently");
                                 } else {
                                     $("#oEntriesWithData #permanent").html("");
                                 }
-                                if ($(this).children(":selected").size() >= aEntriesWithData.length) {
+                                if ($(this).children(":selected").length >= aEntriesWithData.length) {
                                     nEntriesWithData = nAllEntriesWithData;
                                 } else {
                                     nEntriesWithData = 0;

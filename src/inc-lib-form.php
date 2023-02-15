@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2022-11-25
+ * Modified    : 2023-02-03
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -172,9 +172,11 @@ function lovd_checkXSS ($aInput = '')
 
     $bSuccess = true;
     foreach ($aInput as $key => $val) {
-        if (is_array($val)) {
+        if (empty($val)) {
+            $bSuccess = ($bSuccess && true);
+        } elseif (is_array($val)) {
             $bSuccess = $bSuccess && lovd_checkXSS($val);
-        } elseif (!empty($val) && strpos($key, '/') !== false && preg_match('/<.*>/s', $val)) {
+        } elseif (strpos($key, '/') !== false && preg_match('/<.*>/s', $val)) {
             // Disallowed tag found. This check is for custom columns, that often contain < characters.
             $bSuccess = false;
             lovd_errorAdd($key, 'Disallowed tag found in form field' . (is_numeric($key)? '.' : ' "' . htmlspecialchars($key) . '".') . ' XSS attack?');
@@ -371,6 +373,10 @@ function lovd_fetchDBID ($aData)
     // NOTE: We're assuming that the DBID field actually exists. Using this
     // function implies you've checked for it's presence.
     global $_DB, $_CONF;
+
+    if (empty($aData['chromosome'])) {
+        return false;
+    }
 
     // Array to remember which IDs we saw. This is to speed up the generation of
     //  DBIDs for new variants. The search in the database for the max ID in use
@@ -1134,6 +1140,14 @@ function lovd_wrapText ($s, $l = 70, $sCut = ' ')
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Wraps a text to a certain length.
+
+    if (!$s) {
+        // When we receive NULL, just return an empty string.
+        return '';
+    } elseif (strlen($s) <= $l) {
+        // No work needed.
+        return $s;
+    }
 
     if (empty($sCut) || !is_string($sCut)) {
         $sCut = ' ';

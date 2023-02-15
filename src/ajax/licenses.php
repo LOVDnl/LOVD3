@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-02-25
- * Modified    : 2022-11-22
+ * Modified    : 2023-02-02
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -72,7 +72,7 @@ if (!$rObject) {
 list($sObjectID, $sLicense, $sCreatorName) = $rObject;
 
 // The license contains both the license for the world as well as the license for LOVD.
-$aLicenses = explode(';', $sLicense);
+$aLicenses = explode(';', ($sLicense ?? ''));
 if (count($aLicenses) == 1) {
     // This only happens in dev, this situation was never released.
     array_push($aLicenses, null);

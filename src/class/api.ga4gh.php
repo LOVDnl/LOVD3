@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2023-01-13
+ * Modified    : 2023-02-15
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -31,6 +31,11 @@
 // Don't allow direct access.
 if (!defined('ROOT_PATH')) {
     exit;
+}
+
+// Get at least 1G of memory.
+if (lovd_convertIniValueToBytes(ini_get('memory_limit')) < 1024*1024*1024) {
+    ini_set('memory_limit', '1G');
 }
 
 
@@ -85,13 +90,13 @@ class LOVD_API_GA4GH
         'inheritance_long' => array(
             'unknown' => '',
             'familial' => 'familial',
-            'familial autosomal dominant' => 'AD',
-            'familial autosomal recessive' => 'AR',
-            'familial x-linked dominant' => 'XLD',
-            'familial x-linked dominant, male sparing' => 'XL',
-            'familial x-linked recessive' => 'XLR',
-            'paternal y-linked' => 'YL',
-            'maternal mitochondrial' => 'Mi',
+            'familial, autosomal dominant' => 'AD',
+            'familial, autosomal recessive' => 'AR',
+            'familial, x-linked dominant' => 'XLD',
+            'familial, x-linked dominant, male sparing' => 'XL',
+            'familial, x-linked recessive' => 'XLR',
+            'paternal, y-linked' => 'YL',
+            'maternal, mitochondrial' => 'Mi',
             'isolated (sporadic)' => 'IC',
             'complex' => 'Mu',
         ),
@@ -263,7 +268,7 @@ class LOVD_API_GA4GH
                     if ($sMethod && in_array($sMethod, array('ACMG', 'ENIGMA'))) {
                         $aReturn[$nID]['source'] = $sMethod;
                         // Unrecognized methods we'll simply not store.
-                        // VarioML has a dictionary for this field and we don't
+                        // VarioML has a dictionary for this field, and we don't
                         //  want unrecognized values in there.
                         if (isset($this->aValueMappings['classifications'][$sMethod])) {
                             // Some conversions required. Also, values not in
@@ -337,11 +342,15 @@ class LOVD_API_GA4GH
 
 
 
-    private function convertDiseaseToVML ($sDisease)
+    private function convertDiseaseToVML ($sDisease, $aPhenotypes = array())
     {
         // Converts disease string into VarioML phenotype data.
 
-        list($nOMIMID, $sInheritance, $sName) = explode('||', $sDisease);
+        list($nID, $nOMIMID, $sInheritance, $sSymbol, $sName) = explode('||', $sDisease);
+        // Include the symbol in the name, if not already there.
+        if ($sSymbol && strpos($sName, '(' . $sSymbol . ')') === false) {
+            $sName .= ' (' . $sSymbol . ')';
+        }
         $aReturn = array(
             'term' => $sName,
         );
@@ -349,6 +358,20 @@ class LOVD_API_GA4GH
             $aReturn['source'] = 'MIM';
             $aReturn['accession'] = $nOMIMID;
         }
+        // If we don't have inheritance info from the disease, perhaps the phenotype entries can provide some?
+        if (!$sInheritance && $aPhenotypes) {
+            foreach ($aPhenotypes as $aPhenotype) {
+                if ($nID == $aPhenotype[0] && $aPhenotype[1]) {
+                    // This phenotype entry belongs to this disease.
+                    // Long terms to short terms.
+                    if (isset($this->aValueMappings['inheritance_long'][strtolower($aPhenotype[1])])) {
+                        $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($aPhenotype[1])];
+                        break;
+                    }
+                }
+            }
+        }
+        // Process the inheritance (from the disease or from the phenotype).
         if ($sInheritance) {
             // Inheritance can contain multiple values, but
             //  VarioML allows for only one. Combined values
@@ -417,7 +440,7 @@ class LOVD_API_GA4GH
         if (!isset($aGenes[$sSymbol])) {
             $aGenes[$sSymbol] = $_DB->q('
                 SELECT g.id_hgnc, g.id_omim,
-                       GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
+                       GROUP_CONCAT(DISTINCT d.id, "||", IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases
                 FROM ' . TABLE_GENES . ' AS g LEFT OUTER JOIN ' . TABLE_GEN2DIS . ' AS g2d ON (g.id = g2d.geneid) LEFT OUTER JOIN ' . TABLE_DISEASES . ' AS d ON (g2d.diseaseid = d.id) WHERE g.id = ?',
                 array($sSymbol))->fetchAssoc();
         }
@@ -803,6 +826,7 @@ class LOVD_API_GA4GH
         $sTableName = 'variants';
         $nTimeLimit = 15; // After 15 seconds, just send what you have.
         $nLimit = 100; // Get 100 variants max in one go.
+        $nLimitVariantsInSubmission = 20; // Convert large submissions into variant-only observations at this limit.
         // Split position fields (append hyphen to prevent notice).
         list($nPositionStart, $nPositionEnd) = explode('-', $sPosition . '-');
 
@@ -889,9 +913,9 @@ class LOVD_API_GA4GH
                  vog.position_g_start,
                  vog.position_g_end,
                  GROUP_CONCAT(vog.id SEPARATOR ";") AS ids,
-                 vog.`VariantOnGenome/DNA` AS DNA' .
+                 REPLACE(vog.`VariantOnGenome/DNA`, "||", "|") AS DNA' .
             (!$bDNA38? '' : ',
-                 GROUP_CONCAT(DISTINCT NULLIF(vog.`VariantOnGenome/DNA/hg38`, "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
+                 GROUP_CONCAT(DISTINCT NULLIF(REPLACE(vog.`VariantOnGenome/DNA/hg38`, "||", "|"), "") ORDER BY vog.`VariantOnGenome/DNA/hg38` SEPARATOR ";") AS DNA38') . ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", vog.effectid) ORDER BY vog.id SEPARATOR ";") AS effectids' .
             (!$bClassification? '' : ',
                  GROUP_CONCAT(DISTINCT CONCAT(vog.id, ":", NULLIF(vog.`VariantOnGenome/ClinicalClassification`, ""), ":"' .
@@ -906,7 +930,7 @@ class LOVD_API_GA4GH
                    IFNULL(i.id,
                      CONCAT(vog.id, "||", IFNULL(uc.default_license, ""), "||"' .
             (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       IFNULL(REPLACE(vog.`VariantOnGenome/DNA/hg38`, "||", "|"), "")') . ', "||",
                        vog.effectid, "||"' .
             (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
@@ -924,7 +948,7 @@ class LOVD_API_GA4GH
                          (SELECT
                             GROUP_CONCAT(
                               CONCAT(
-                                t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
+                                t.geneid, "##", t.id_ncbi, "##", REPLACE(vot.`VariantOnTranscript/DNA`, "||", "|"), "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
                               SEPARATOR "$$")
                          FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                            INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
@@ -938,9 +962,9 @@ class LOVD_API_GA4GH
                            IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                          ), "")
                      )
-                   ) SEPARATOR ";;") AS variants,
-                 MIN(vog.created_date) AS created_date,
-                 MAX(IFNULL(vog.edited_date, vog.created_date)) AS edited_date
+                   ) ORDER BY vog.id SEPARATOR ";;") AS variants,
+                 MIN(NULLIF(vog.created_date, "0000-00-00 00:00:00")) AS created_date,
+                 MAX(NULLIF(IFNULL(vog.edited_date, vog.created_date), "0000-00-00 00:00:00")) AS edited_date
                FROM ' . TABLE_VARIANTS . ' AS vog
                  LEFT OUTER JOIN ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot USING (id)
                  LEFT OUTER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
@@ -951,7 +975,9 @@ class LOVD_API_GA4GH
                  LEFT OUTER JOIN ' . TABLE_USERS . ' AS uo ON (vog.owned_by = uo.id)
                WHERE vog.chromosome = ?
                  AND vog.position_g_start >= ?' . (!$nPositionEnd? '' : ' AND vog.position_g_end <= ?') . '
-                 AND vog.statusid >= ?';
+                 AND vog.statusid >= ?
+                 AND vog.`VariantOnGenome/DNA` != "g.?"
+                 AND i.panelid IS NULL';
         $aQ = array(
             STATUS_MARKED,
             (string) $sChr,
@@ -962,7 +988,7 @@ class LOVD_API_GA4GH
         }
         $aQ[] = STATUS_MARKED;
         $sQ .= '
-               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`';
+               GROUP BY vog.chromosome, vog.position_g_start, vog.position_g_end, REPLACE(vog.`VariantOnGenome/DNA`, "||", "|")';
         // If-Modified-Since filter must be on HAVING as it must be done *after* grouping.
         if (isset($this->aFilters['modified_since'])) {
             $sQ .= '
@@ -981,7 +1007,7 @@ class LOVD_API_GA4GH
         $tStart = microtime(true);
         $aData = array_map(function ($zData)
         use (
-            $tStart, $nTimeLimit,
+            $tStart, $nTimeLimit, $nLimitVariantsInSubmission,
             $aLicenses, $aLicensesSummaryData, $sBuild, $sChr,
             $bdbSNP, $bDNA38, $bClassification, $bClassificationMethod, $bGeneticOrigin,
             $bIndGender, $bIndReference, $bIndRemarks,
@@ -1017,12 +1043,8 @@ class LOVD_API_GA4GH
                     ),
                 ),
                 'pathogenicities' => array(),
-                'creation_date' => array(
-                    'value' => date('c', strtotime($zData['created_date'])),
-                ),
-                'modification_date' => array(
-                    'value' => date('c', strtotime($zData['edited_date'])),
-                ),
+                'creation_date' => array(),
+                'modification_date' => array(),
                 'panel' => array(
                     'individuals' => array(),
                     'panels' => array(),
@@ -1084,6 +1106,18 @@ class LOVD_API_GA4GH
             $aReturn['effectids'] = $this->convertEffectsToVML($zData['effectids']);
             if (!empty($zData['classifications'])) {
                 $aReturn['classifications'] = $this->convertClassificationToVML($zData['classifications']);
+            }
+
+            // Leave out dates when they're missing.
+            if ($zData['created_date']) {
+                $aReturn['creation_date']['value'] = date('c', strtotime($zData['created_date']));
+            } else {
+                unset($aReturn['creation_date']);
+            }
+            if ($zData['edited_date']) {
+                $aReturn['modification_date']['value'] = date('c', strtotime($zData['edited_date']));
+            } else {
+                unset($aReturn['modification_date']);
             }
 
             // Further annotate the entries.
@@ -1307,15 +1341,15 @@ class LOVD_API_GA4GH
                     SELECT i.id, i.panel_size' .
                     (!$bIndGender? '' : ',
                       i.`Individual/Gender` AS gender') . ',
-                      GROUP_CONCAT(DISTINCT IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", IF(CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END = "", d.name, CONCAT(d.name, " (", d.symbol, ")")) ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
+                      GROUP_CONCAT(DISTINCT d.id, "||", IFNULL(d.id_omim, ""), "||", IFNULL(d.inheritance, ""), "||", CASE d.symbol WHEN "-" THEN "" ELSE d.symbol END, "||", d.name ORDER BY d.id_omim, d.name SEPARATOR ";;") AS diseases' .
                     (!$bIndReference? '' : ',
                       i.`Individual/Reference` AS reference') .
                     (!$bIndRemarks? '' : ',
                       i.`Individual/Remarks` AS remarks') .
                     (!$bPhenotypeAdditional? '' : ',
-                      GROUP_CONCAT(DISTINCT ' .
-                        (!$bPhenotypeInheritance? '' : 'REPLACE(p.`Phenotype/Inheritance`, ",", ""), ') . '"||",
-                        IFNULL(p.`Phenotype/Additional`, "") SEPARATOR ";;") AS phenotypes') . ',
+                      GROUP_CONCAT(DISTINCT p.diseaseid, "||", ' .
+                        (!$bPhenotypeInheritance? '' : 'p.`Phenotype/Inheritance`, ') . '"||",
+                        REPLACE(IFNULL(p.`Phenotype/Additional`, ""), ";;", ";") SEPARATOR ";;") AS phenotypes') . ',
                       CONCAT(
                         IFNULL(uc.orcid_id, ""), "##", uc.name, "##", uc.email
                       ) AS creator,
@@ -1323,14 +1357,15 @@ class LOVD_API_GA4GH
                         IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                       ) AS owner,
                       IFNULL(NULLIF(i.license, ""), uc.default_license) AS license,
+                      COUNT(DISTINCT vog.id) AS variant_count,
                       GROUP_CONCAT(DISTINCT
                         CONCAT(
                           vog.id, "||",
                           vog.allele, "||",
                           vog.chromosome, "||",
-                          vog.`VariantOnGenome/DNA`, "||"' .
+                          REPLACE(vog.`VariantOnGenome/DNA`, "||", "|"), "||"' .
                     (!$bDNA38? '' : ',
-                       IFNULL(vog.`VariantOnGenome/DNA/hg38`, "")') . ', "||",
+                       IFNULL(REPLACE(vog.`VariantOnGenome/DNA/hg38`, "||", "|"), "")') . ', "||",
                        vog.effectid, "||"' .
                     (!$bClassification? '' : ',
                        IFNULL(vog.`VariantOnGenome/ClinicalClassification`, "")') . ', "||"' .
@@ -1350,13 +1385,13 @@ class LOVD_API_GA4GH
                             (SELECT
                                GROUP_CONCAT(
                                  CONCAT(
-                                   t.geneid, "##", t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
+                                   t.geneid, "##", t.id_ncbi, "##", REPLACE(vot.`VariantOnTranscript/DNA`, "||", "|"), "##", vot.`VariantOnTranscript/RNA`, "##", t.id_protein_ncbi, "##", vot.`VariantOnTranscript/Protein`)
                                  SEPARATOR "$$")
                              FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' AS vot
                                INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
                              WHERE vot.id = vog.id), "")
                         )
-                        SEPARATOR ";;") AS variants
+                        ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`, vog.id SEPARATOR ";;") AS variants
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid AND p.statusid >= ?)
@@ -1401,37 +1436,92 @@ class LOVD_API_GA4GH
                 }
 
                 $aIndividual['phenotypes'] = array();
+                if (!empty($aSubmission['phenotypes'])) {
+                    // Prepare the phenotype info already; we need this to extend the info on the disease if possible.
+                    $aSubmission['phenotypes'] = array_map(
+                        function ($sValue)
+                        {
+                            return explode('||', $sValue, 3);
+                        },
+                        explode(
+                            ';;',
+                            $aSubmission['phenotypes']
+                        )
+                    );
+                } else {
+                    $aSubmission['phenotypes'] = array();
+                }
                 if ($aSubmission['diseases']) {
                     foreach (explode(';;', $aSubmission['diseases']) as $sDisease) {
-                        $aIndividual['phenotypes'][] = $this->convertDiseaseToVML($sDisease);
+                        // Pass on the phenotypes so inheritance information can be taken from there.
+                        $aIndividual['phenotypes'][] = $this->convertDiseaseToVML($sDisease, $aSubmission['phenotypes']);
                     }
                 }
-                if ($aSubmission['phenotypes']) {
-                    $sInheritance = '';
-                    foreach (preg_split('/[;,\r\n]+/', $aSubmission['phenotypes']) as $sPhenotype) {
-                        // Phenotype information is probably the most diverse
-                        //  and unstructured data within LOVD. Trying to make
-                        //  sense of it, returning it as structured data.
-                        $sPhenotype = trim($sPhenotype, '( )');
-                        if (strpos($sPhenotype, '||') !== false) {
-                            // We've received an inheritance pattern.
-                            list($sInheritance, $sPhenotype) = explode('||', $sPhenotype, 2);
-                            if ($sInheritance) {
-                                // Long terms to short terms.
-                                if (isset($this->aValueMappings['inheritance_long'][strtolower($sInheritance)])) {
-                                    $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($sInheritance)];
-                                }
-                                // Convert into HPO term or just a single term without a source.
-                                if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
-                                    $aInheritance = $this->aValueMappings['inheritance'][$sInheritance];
-                                } else {
-                                    $aInheritance = array(
-                                        'term' => $sInheritance,
-                                    );
+                foreach ($aSubmission['phenotypes'] as $aPhenotype) {
+                    // Phenotype information is probably the most diverse
+                    //  and unstructured data within LOVD. Trying to make
+                    //  sense of it, returning it as structured data.
+                    list($nDiseaseID, $sInheritance, $sPhenotype) = $aPhenotype;
+                    // Check for the inheritance info and prepare it.
+                    $aInheritance = array();
+                    if ($sInheritance && $sInheritance != "Unknown") {
+                        // Long terms to short terms.
+                        if (isset($this->aValueMappings['inheritance_long'][strtolower($sInheritance)])) {
+                            $sInheritance = $this->aValueMappings['inheritance_long'][strtolower($sInheritance)];
+                        }
+                        // Convert into HPO term or just a single term without a source.
+                        if (isset($this->aValueMappings['inheritance'][$sInheritance])) {
+                            $aInheritance = $this->aValueMappings['inheritance'][$sInheritance];
+                        } else {
+                            $aInheritance = array(
+                                'term' => $sInheritance,
+                            );
+                        }
+                    }
+
+                    // Sometimes the phenotype info is just empty. We may have used the inheritance to enrich
+                    //  the disease information; if so, the rest of this is no use to us.
+                    if (!$sPhenotype) {
+                        // Double-check the disease info.
+                        if ($aInheritance) {
+                            foreach ($aIndividual['phenotypes'] as $aPhenotype) {
+                                // It's alright to overwrite $aPhenotype, we won't use it anymore anyway.
+                                if (isset($aPhenotype['inheritance_pattern'])
+                                    && $aPhenotype['inheritance_pattern'] == $aInheritance) {
+                                    // We have nothing else to add.
+                                    continue 2;
                                 }
                             }
+                            // If we get here, we didn't actually have this inheritance yet. OK, store it, then.
+                            $aIndividual['phenotypes'][] = array(
+                                'term' => trim($sPhenotype),
+                                'inheritance_pattern' => $aInheritance,
+                            );
                         }
-                        if (preg_match('/^(.+)?\(([?-])?HP:([0-9]+)$/i', $sPhenotype, $aRegs)) {
+                    }
+
+                    // OK, so we have values. Sometimes the phenotype field is just a long text, and sometimes it's
+                    //  a list of HPO terms. Don't break it into pieces unnecessarily. Try to understand as closely
+                    //  as possible, what the user meant.
+                    // A comma after a closing parenthesis is a real break (usually, a HPO term),
+                    //  and a comma before an old-style HPO term is a break. Enforce this.
+                    $sPhenotype = str_replace(
+                        '),',
+                        ');',
+                        preg_replace(
+                            '/,\s*(HP(O)?:)/',
+                            ';$1',
+                            $sPhenotype
+                        )
+                    );
+                    // OK, split the text in newlines and semicolons, we can safely
+                    //  assume that those are real breaks.
+                    $aPhenotypes = preg_split('/[;\r\n]+/', $sPhenotype);
+                    // Now loop the entries (or entry) and process.
+                    foreach ($aPhenotypes as $sPhenotype) {
+                        $sPhenotype = trim($sPhenotype, '( )');
+                        $aPhenotype = false;
+                        if (preg_match('/^(.+)?\(([?-])?HPO?:([0-9]+)$/i', $sPhenotype, $aRegs)) {
                             // term (HP:0000000).
                             // term (-HP:0000000).
                             // term (?HP:0000000).
@@ -1440,16 +1530,20 @@ class LOVD_API_GA4GH
                             //  VarioML has no way of storing this.
                             // Unknown HPO terms (?HP:...) can't be marked with
                             //  a modifier because HPO has none.
-                            // So both of these are ignored and *not* exported.
+                            // In those cases, we only export the term.
                             if (!$aRegs[2]) {
                                 $aPhenotype = array(
                                     'term' => trim($aRegs[1]),
                                     'source' => 'HPO',
                                     'accession' => $aRegs[3],
                                 );
-                                if ($sInheritance) {
-                                    $aPhenotype['inheritance_pattern'] = $aInheritance;
-                                }
+                            } else {
+                                $aPhenotype = array(
+                                    'term' => trim($sPhenotype) . ')', // Export with the HPO term in the text.
+                                );
+                            }
+                            if ($aInheritance) {
+                                $aPhenotype['inheritance_pattern'] = $aInheritance;
                             }
                         } elseif (preg_match('/^([?-])?HP:([0-9]+) *\((.+)?$/i', $sPhenotype, $aRegs)) {
                             // HP:0000000 (term).
@@ -1460,20 +1554,27 @@ class LOVD_API_GA4GH
                                     'source' => 'HPO',
                                     'accession' => $aRegs[2],
                                 );
-                                if ($sInheritance) {
-                                    $aPhenotype['inheritance_pattern'] = $aInheritance;
-                                }
+                            } else {
+                                // Also here, just export the term if it's a negative HPO indication.
+                                $aPhenotype = array(
+                                    'term' => trim($sPhenotype) . ')', // Export with the HPO term in the text.
+                                );
+                            }
+                            if ($aInheritance) {
+                                $aPhenotype['inheritance_pattern'] = $aInheritance;
                             }
                         } else {
                             // Unrecognized. Just pass on.
                             $aPhenotype = array(
-                                'term' => trim($sPhenotype),
+                                'term' => $sPhenotype,
                             );
-                            if ($sInheritance) {
+                            if ($aInheritance) {
                                 $aPhenotype['inheritance_pattern'] = $aInheritance;
                             }
                         }
-                        $aIndividual['phenotypes'][] = $aPhenotype;
+                        if ($aPhenotype) {
+                            $aIndividual['phenotypes'][] = $aPhenotype;
+                        }
                     }
                 }
                 // Unique and reset the array. We need to rebuild the keys to
@@ -1484,11 +1585,11 @@ class LOVD_API_GA4GH
                         SORT_REGULAR)
                 );
 
-                if ($aSubmission['remarks']) {
+                if (!empty($aSubmission['remarks'])) {
                     $aIndividual['comments'] = $this->addComment(array(), $aSubmission['remarks']);
                 }
 
-                if ($aSubmission['reference']) {
+                if (!empty($aSubmission['reference'])) {
                     $aRefs = $this->convertReferenceToVML($aSubmission['reference'], array('doi', 'pubmed'));
                     if ($aRefs) {
                         if (!isset($aIndividual['db_xrefs'])) {
@@ -1545,7 +1646,23 @@ class LOVD_API_GA4GH
                 // Then add variants. Note that variants can be repeated, when
                 //  more than one screening has been created and linked to the
                 //  same variant.
-                foreach (explode(';;', $aSubmission['variants']) as $sVariant) {
+                // Count the real number of variants,
+                //  not necessarily the number of entries that we'll pass through.
+                $nVariants = $aSubmission['variant_count'];
+
+                // Large submissions use lots of memory and therefore may break the API completely.
+                // Save memory by not exploding but going through the string bit by bit.
+                while ($aSubmission['variants']) {
+                    $sVariant = strstr($aSubmission['variants'], ';;', true);
+                    if (!$sVariant) {
+                        // This is the last one.
+                        $sVariant = $aSubmission['variants'];
+                        $aSubmission['variants'] = '';
+                    } else {
+                        // Now shorten the string.
+                        $aSubmission['variants'] = substr($aSubmission['variants'], strlen($sVariant) + 2);
+                    }
+
                     list(
                         $nID,
                         $nAllele,
@@ -1590,13 +1707,27 @@ class LOVD_API_GA4GH
                         'pathogenicities' => array(),
                     );
 
+                    // Large submissions generate a lot of data and waste resources (CPU time and disk space),
+                    //  both on this end and on the client's end.
+                    // If there are too many variants, reduce this submission to variant-only.
+                    if ($nVariants > $nLimitVariantsInSubmission) {
+                        // We'll be limiting this submission.
+                        // Save resources by skipping this variant if it's not the one we're looking for.
+                        if ($aReturn['ref_seq'] != $aVariant['ref_seq']
+                            || $aReturn['name'] != $aVariant['name']) {
+                            // This is not the variant we're looking for.
+                            // Don't bother processing it.
+                            continue;
+                        }
+                    }
+
                     // Copy the phenotypes to this variant's aggregate pathogenicities.
                     if (!empty($aIndividual['phenotypes'])) {
                         if (isset($aReturn['effectids'][$nID][0])) {
                             $aReturn['effectids'][$nID][0]['phenotypes'] = $aIndividual['phenotypes'];
                         }
                         if (isset($aReturn['effectids'][$nID][1])) {
-                            $aReturn['effectids'][$nID][0]['phenotypes'] = $aIndividual['phenotypes'];
+                            $aReturn['effectids'][$nID][1]['phenotypes'] = $aIndividual['phenotypes'];
                         }
                         if (isset($aReturn['classifications'][$nID])) {
                             $aReturn['classifications'][$nID]['phenotypes'] = $aIndividual['phenotypes'];
@@ -1616,20 +1747,43 @@ class LOVD_API_GA4GH
                         //  for chrM variants, which makes no sense. These
                         //  values are meant to indicate imprinting,
                         //  so this should be removed here.
-                        $aVariant['pathogenicities'] = array_map(function ($aPathogenicity) {
-                            if (isset($aPathogenicity['comments'])) {
-                                foreach ($aPathogenicity['comments'] as $nKey => $aComment) {
-                                    if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
-                                        // Delete this.
-                                        unset($aPathogenicity['comments'][$nKey]);
+                        $aVariant['pathogenicities'] = array_map(
+                            function ($aPathogenicity) use (&$aReturn, $nID)
+                            {
+                                // I had to put $aReturn in use(), global doesn't work.
+                                // It also needs to be passed by reference, because we're changing it.
+                                if (isset($aPathogenicity['comments'])) {
+                                    $bClean = true;
+                                    foreach ($aPathogenicity['comments'] as $nKey => $aComment) {
+                                        if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
+                                            // Delete this.
+                                            unset($aPathogenicity['comments'][$nKey]);
+                                            $bClean = false;
+                                        }
+                                    }
+                                    if (!$bClean) {
+                                        // If we had to remove something, that means we also may need to remove it from the
+                                        //  aggregated variant entry, if this is the variant we're focusing on.
+                                        if (isset($aReturn['classifications'][$nID])) {
+                                            foreach ($aReturn['classifications'][$nID]['comments'] as $nKey => $aComment) {
+                                                if (isset($aComment['term']) && $aComment['term'] == 'IIMPRINTING') {
+                                                    // Delete this.
+                                                    unset($aReturn['classifications'][$nID]['comments'][$nKey]);
+                                                }
+                                            }
+                                            if (!count($aPathogenicity['comments'])) {
+                                                unset($aPathogenicity['comments']);
+                                            }
+                                            if (!count($aReturn['classifications'][$nID]['comments'])) {
+                                                unset($aReturn['classifications'][$nID]['comments']);
+                                            }
+                                        }
                                     }
                                 }
-                                if (!count($aPathogenicity['comments'])) {
-                                    unset($aPathogenicity['comments']);
-                                }
-                            }
-                            return $aPathogenicity;
-                        }, $aVariant['pathogenicities']);
+                                return $aPathogenicity;
+                            },
+                            $aVariant['pathogenicities']
+                        );
                     }
 
                     if ($sOrigin && isset($this->aValueMappings['genetic_origin'][$sOrigin])) {
@@ -1710,12 +1864,12 @@ class LOVD_API_GA4GH
                     if ($sTemplate || $sTechnique) {
                         $aVariant['variant_detection'] = array();
                         // It's obviously best if data is stored like
-                        //  (DNA, SEQ); (RNA, RT-PCR); but often it's not and
+                        //  (DNA, SEQ); (RNA, RT-PCR); but often it's not, and
                         //  it's (DNA;RNA,SEQ;RT-PCR). We'll have to guess which
                         //  template belongs to which technique.
-                        $aTemplates = explode(';', $sTemplate);
+                        $aTemplates = array_map('trim', explode(';', $sTemplate));
                         $nTemplates = count($aTemplates);
-                        $aTechniques = explode(';', $sTechnique);
+                        $aTechniques = array_map('trim', explode(';', $sTechnique));
                         $nTechniques = count($aTechniques);
                         foreach ($aTemplates as $sTemplate) {
                             if ($nTechniques == 1 || $nTemplates == 1) {
@@ -1783,6 +1937,10 @@ class LOVD_API_GA4GH
                                 }
                             }
                         }
+                        usort(
+                            $aVariant['variant_detection'],
+                            [$this, 'sortScreenings']
+                        );
                     }
 
                     // Up and until this part, we didn't even check yet if we've
@@ -1800,13 +1958,19 @@ class LOVD_API_GA4GH
                                 //  but it indicates multiple screenings exist
                                 //  in LOVD and varcache can merge it if needed.
                                 $aIndividual['variants'][$nKey]['variant_detection'] =
-                                    array_unique(
-                                        array_merge(
-                                            $aIndividual['variants'][$nKey]['variant_detection'],
-                                            $aVariant['variant_detection']
-                                        ),
-                                        SORT_REGULAR
+                                    array_values(
+                                        array_unique(
+                                            array_merge(
+                                                $aIndividual['variants'][$nKey]['variant_detection'],
+                                                $aVariant['variant_detection']
+                                            ),
+                                            SORT_REGULAR
+                                        )
                                     );
+                                usort(
+                                    $aIndividual['variants'][$nKey]['variant_detection'],
+                                    [$this, 'sortScreenings']
+                                );
                                 continue 2;
                             }
                         }
@@ -1868,15 +2032,72 @@ class LOVD_API_GA4GH
                     $aIndividual['variants'][] = $aVariant;
                 }
 
-                // Store in output.
-                if ($aSubmission['panel_size'] > 1) {
-                    $aReturn['panel']['panels'][] = $aIndividual;
+                // Things we need to keep the borrowed code below the same, useful for later updates.
+                $sType = ($aSubmission['panel_size'] > 1? 'panels' : 'individuals');
+                $aSubmission = &$aIndividual; // Anyway, we were done with $aSubmission.
+                $aVariant = &$aReturn; // Be careful with this! I'll have to unset $aVariant later to unlink this.
+
+                // Submissions that are too large are now reduced to single-variant full submissions.
+                // Convert these to variant-only submissions, discarding the individual data completely.
+                if ($nVariants > $nLimitVariantsInSubmission) {
+                    // In theory, we should have a single variant in $aIndividual['variants'].
+                    // When the variant wasn't matched at all, $aIndividual['variants'] is empty.
+                    // When somehow multiple variants matched, we still have multiple entries.
+                    // Whatever the case, we have ruined this submission, so we won't store it for sure.
+                    // If we have data, just take the first entry, whatever.
+                    if ($aIndividual['variants']) {
+                        // Pfew, we have something.
+                        $aVariantObservation = $aIndividual['variants'][0];
+
+                        // Copy the license info. MergeVarioML never had to do that.
+                        if (isset($aIndividual['sharing_policy'])) {
+                            $aVariantObservation['sharing_policy'] = $aIndividual['sharing_policy'];
+                        }
+
+                        // The rest of the code below is a copy of the code in varcache's mergeVarioML.
+
+                        // Add a comment explaining what happened.
+                        $aVariantObservation['comments'] = $this->addComment(
+                            (empty($aVariantObservation['comments'])? array() : $aVariantObservation['comments']),
+                            'This observation was taken from ' . ($sType == 'individuals'? 'an individual' : 'a panel') .
+                            ' with ' . $nVariants . ' variants listed, which is over the allowed limit of this data file.' .
+                            ' The submission has been discarded, and only the variant has been retained.',
+                            'ITOOMANYVARIANTS'
+                        );
+
+                        // Copy the individual's phenotypes to this variant's pathogenicities.
+                        if (!empty($aSubmission['phenotypes'])) {
+                            foreach (array_keys($aVariantObservation['pathogenicities']) as $nPathogenicity) {
+                                $aVariantObservation['pathogenicities'][$nPathogenicity]['phenotypes'] = $aSubmission['phenotypes'];
+                            }
+                        }
+
+                        // Copy the source.
+                        $aVariantObservation['data_source'] = $aSubmission['data_source'];
+
+                        // Clean up a bit.
+                        unset(
+                            $aVariantObservation['copy_count'],
+                            $aVariantObservation['genetic_origin'],
+                            $aVariantObservation['variant_detection']
+                        );
+
+                        // Then move the variant data.
+                        if (!isset($aVariant['panel']['variants'])) {
+                            $aVariant['panel']['variants'] = array();
+                        }
+                        $aVariant['panel']['variants'][] = $aVariantObservation;
+                    }
+
                 } else {
-                    $aReturn['panel']['individuals'][] = $aIndividual;
+                    // Store in output.
+                    $aReturn['panel'][$sType][] = $aIndividual;
                 }
+
+                unset($aSubmission, $aVariant); // Unlink.
             }
 
-            // The aggregate pathogenicities aren't stored well yet.
+            // The aggregate pathogenicities aren't stored well yet, we've been adding data to them.
             $aReturn['pathogenicities'] = call_user_func_array('array_merge', array_values($aReturn['effectids']));
             if (!empty($aReturn['classifications'])) {
                 $aReturn['pathogenicities'] = array_merge(
@@ -1957,11 +2178,52 @@ class LOVD_API_GA4GH
 
         // If we're at the end, make sure we let them know.
         if (!$sChr) {
-            unset($aOutput['pagination']['next_page_url']);
+            // If we'd only unset next_page_url, we'd create an array instead of an empty object.
+            unset($aOutput['pagination']);
         }
 
         $this->API->aResponse = $aOutput;
         return true;
+    }
+
+
+
+
+
+    private function sortScreenings ($aScreening1, $aScreening2)
+    {
+        // Function used in usort() on screenings (variant_detection object) to enforce a simple sorting.
+        // This makes comparing files easier and makes the output more standard, but also more logical.
+        if (!is_array($aScreening1) || !is_array($aScreening2)
+            || array_keys($aScreening1) != array('template', 'technique')
+            || array_keys($aScreening2) != array('template', 'technique')) {
+            // Didn't get proper values.
+            return 0;
+        }
+
+        if ($aScreening1 === $aScreening2) {
+            // Shouldn't happen, but OK.
+            return 0;
+        }
+
+        if ($aScreening1['template'] != $aScreening2['template']) {
+            static $aTranslations = array(
+                'DNA' => 'D',
+                'RNA' => 'R',
+                'Protein' => 'Z',
+            );
+
+            return strcmp(
+                ($aTranslations[$aScreening1['template']] ??
+                    ($aTranslations[strstr($aScreening1['template'], ';', true)] ?? $aScreening1['template'])),
+                ($aTranslations[$aScreening2['template']] ??
+                    ($aTranslations[strstr($aScreening2['template'], ';', true)] ?? $aScreening2['template']))
+            );
+
+        } else {
+            // The difference is in the technique. Just a simple string comparison, then.
+            return strcmp($aScreening1['technique'], $aScreening2['technique']);
+        }
     }
 }
 ?>

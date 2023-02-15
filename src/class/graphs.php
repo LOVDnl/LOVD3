@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-11
- * Modified    : 2022-11-22
+ * Modified    : 2023-02-01
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               David Baux <david.baux@inserm.fr>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -430,7 +430,7 @@ class LOVD_Graphs
               '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
 
               // Add the total number to the header above the graph.
-              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+              '        $("#' . $sDIV . '").parent().children().first().append(" (' . $nTotal . ')");' . "\n\n" .
 
               // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
               $this->getHoverFunction($sDIV, $nTotal) .
@@ -540,7 +540,7 @@ class LOVD_Graphs
               '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
 
         // Add the total number to the header above the graph.
-              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+              '        $("#' . $sDIV . '").parent().children().first().append(" (' . $nTotal . ')");' . "\n\n" .
 
         // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
               $this->getHoverFunction($sDIV, $nTotal) .
@@ -689,7 +689,7 @@ class LOVD_Graphs
               '        $("#' . $sDIV . '").bind("plothover", ' . $sDIV . '_hover);' . "\n\n" .
 
               // Add the total number to the header above the graph.
-              '        $("#' . $sDIV . '").parent().children(":first").append(" (' . $nTotal . ')");' . "\n\n" .
+              '        $("#' . $sDIV . '").parent().children().first().append(" (' . $nTotal . ')");' . "\n\n" .
 
               // Pretty annoying having to define this function for every pie chart on the page, but as long as we don't hack into the FLOT library itself to change the arguments to this function, there is no other way.
               $this->getHoverFunction($sDIV, $nTotal) .
