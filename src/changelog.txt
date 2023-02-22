@@ -5,6 +5,62 @@
  *************/
 
 /***************************
+ * 3.0 Build 29 (tag:3.0-29)
+ * 2023-02-22
+ *********/
+ * Greatly improved the variant information and validation functions,
+   lovd_getVariantInfo() and lovd_fixHGVS().
+ * Applied some fixes after syncing the API code with the LOVD3 code; Fixed URL
+   parsing issues with URL encoded '?' and arguments with '../'; Fixed
+   lovd_arrayInsertAfter(), which contained an error; Moved the submission API's
+   jsonDecode() method to the LOVD_API object; Fixed variants with an incorrect
+   order in their inserted sequence.
+ * Added an visual HGVS syntax checker tool using lovd_getVariantInfo() and
+   lovd_fixHGVS(). This is an online form that takes a variant and finds out
+   whether it seems to be described following the HGVS nomenclature. The form
+   accepts either a single variant input, or a batch variant input, where a list
+   of variants can be pasted into the input form. In both cases, it checks the
+   variants' syntax and suggests a correction when possible. It also allows to
+   validate variants using the VariantValidator service. When generating a sug-
+   gested fix ourselves, we express our level of confidence that this correction
+   is indeed as intended, in the text of the suggestion.
+   The interface shows all results below the input, allows a quick method to
+   accept corrections of either lovd_fixHGVS() or the VariantValidator service,
+   and allows downloading the results to a text file so that the user can store
+   the result of the analysis.
+ * Several fixes in and improvements to the VariantValidator library.
+   Closes #575: "Batch syntax / variant checker on LOVD.nl".
+ * Fixed issue with the LOVD2-style API not fully working.
+ * Fixed issue with incorrectly cased URLs.
+ * Mutalyzer changed its URL, therefore breaking all interactions with its ser-
+   vices. Updated the URL to v2.mutalyzer.nl which still runs the old software.
+ * Fixed some notices and warnings in the code.
+ * Changed the last references to document.location to window.location.
+ * Some small textual fixes and updates.
+ * Fixed errors in coding styles and old implode() syntax.
+ * Fixed several issues running on PHP8.1.
+   Closes #618: "LOVD is not compatible with PHP 8.1".
+ * Updated the dbSNP URLs since they changed their URLs.
+ * Fixed several javascript-related issues; Upgraded jQuery to v3.6.3 and
+   jQueryUI to v1.13.2; Removed deprecated :first and :last selectors; Removed
+   deprecated :eq() selector; Removed deprecated .size(); Removed deprecated
+   $.isArray(); Removed deprecated jQuery.trim(); Removed deprecated
+   jQuery.get().error().
+ * Had real numeric values handled in checkFields(). Numeric strings were al-
+   ready handled, but real numbers were not. This also means their length wasn't
+   checked. Made sure we check the variant's positions to prevent a query error.
+   Closes #526: "Query error: 'Out of range value for column "position_c_start"
+   at row 1'".
+ * Also made sure select fields are now properly checked; their values also have
+   lengths.
+ * Added several improvements and fixes to the GA4GH Data Connect API.
+ * Added several fixes to the position fixing script.
+ * When submitting a new genomic variant, the default chromosome is no longer
+   set to "1". Force the user to make a choice, as they would sometimes forget
+   to change the value.
+
+
+/***************************
  * 3.0 Build 28 (tag:3.0-28)
  * 2022-07-18
  *********/
