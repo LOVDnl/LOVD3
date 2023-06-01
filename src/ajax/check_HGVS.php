@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2022-11-28
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-01
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               L. Werkman <L.Werkman@LUMC.nl>
  *
@@ -165,9 +165,11 @@ foreach ($aVariants as $sVariant => $aVariant) {
         // Exception 2; Treat the result as HGVS compliant (i.e., accept
         //  suggestion and show) when all we have now is a EWRONGREFERENCE and
         //  that was anyway already part of what we had.
+        // Obviously, this only applies when the fixed variant is different from what we had.
         if ($aVariant['variant_info'] && $aVariant['fixed_variant_variant_info']
             && array_keys($aVariant['fixed_variant_variant_info']['errors'] + $aVariant['fixed_variant_variant_info']['warnings']) == array('EWRONGREFERENCE')
-            && isset($aVariant['variant_info']['errors']['EWRONGREFERENCE'])) {
+            && isset($aVariant['variant_info']['errors']['EWRONGREFERENCE'])
+            && $sVariant != $aVariant['fixed_variant']) {
             unset($aVariant['fixed_variant_variant_info']['errors']['EWRONGREFERENCE']);
         }
 
@@ -185,6 +187,7 @@ foreach ($aVariants as $sVariant => $aVariant) {
         );
 
         // And add the confidence for us.
+        // This already checks if $sFixedVariant is different, and error-free. If not, it will return false.
         $aVariant['fixed_variant_confidence'] = lovd_fixHGVSGetConfidence(
             $sVariant,
             $aVariant['fixed_variant'],

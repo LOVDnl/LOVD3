@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-02-03
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-01
+ * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -224,6 +224,8 @@ function lovd_cleanDirName ($s)
     $s = preg_replace('/\/\.\//', '/', $s);
     // Clean up the pwd; remove '/dir/../'
     $s = preg_replace('/\/[^\/]+\/\.\.\//', '/', $s);
+    // Hackers may try to give us links that start with a parent dir. That would cause an infinite loop.
+    $s = preg_replace('/^\/\.\.\//', '/', $s);
 
     if (preg_match('/\/(\.)?\.\//', $s)) {
         // Still not clean... Pff...
