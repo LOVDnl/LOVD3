@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2022-12-21
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-02
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -61,6 +61,58 @@ class LOVD_VV
             $this->sURL = rtrim($sURL, '/') . '/';
         }
         // __construct() should return void.
+    }
+
+
+
+
+
+    private function addFault (&$aData, $sVariant, $sFault)
+    {
+        if (!$aData || !is_array($aData) || !isset($aData['warnings']) || !isset($aData['errors'])) {
+            return false;
+        }
+
+        // The fault will be parsed and checked. We don't always agree with VV about what is a warning and what is an
+        //  error. This code handles this well by parsing all messages and deciding for ourselves whether this is a
+        //  fatal error or an innocent warning.
+
+        // Clean off variant description.
+        $sFault = str_replace($sVariant . ': ', '', $sFault);
+
+        // VV has declared their error messages are stable.
+        // This means we can parse them and rely on them not to change.
+        // Add error code if possible, so we won't have to parse the error message again somewhere.
+        if ($sFault == 'Length implied by coordinates must equal sequence deletion length') {
+            // EINCONSISTENTLENGTH error.
+            $aData['errors']['EINCONSISTENTLENGTH'] = $sFault;
+        } elseif (strpos($sFault, 'is outside the boundaries of reference sequence') !== false
+            || preg_match('/^Failed to fetch .+ out of range/', $sFault)) {
+            // ERANGE error.
+            $aData['errors']['ERANGE'] = $sFault;
+        } elseif (strpos($sFault, 'does not agree with reference sequence') !== false) {
+            // EREF error.
+            $aData['errors']['EREF'] = $sFault;
+        } elseif (strpos($sFault, 'is not associated with genome build') !== false) {
+            // EREFSEQ error.
+            $aData['errors']['EREFSEQ'] = $sFault;
+        } elseif (substr($sFault, 0, 5) == 'char ' || $sFault == 'insertion length must be 1') {
+            // ESYNTAX error.
+            $aData['errors']['ESYNTAX'] = $sFault;
+        } elseif (substr($sFault, 0, 21) == 'Fuzzy/unknown variant') {
+            // EUNCERTAINPOSITIONS error.
+            $aData['errors']['EUNCERTAINPOSITIONS'] = 'VariantValidator does not currently support variant descriptions with uncertain positions.';
+        } elseif (strpos($sFault, $sVariant . ' updated to ') !== false) {
+            // Recently, VV published an update that generates an error even when the variant
+            //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
+            //  elsewhere, so ignore them here.
+            return true;
+        } else {
+            // Unrecognized error.
+            $aData['errors'][] = $sFault;
+        }
+
+        return true;
     }
 
 
@@ -452,42 +504,15 @@ class LOVD_VV
             switch ($aJSON['flag']) {
                 case 'genomic_variant_warning':
                     if ($aJSON[$sVariant]['genomic_variant_error']) {
-                        // Clean off variant description.
-                        $sError = str_replace($sVariant . ': ', '', $aJSON[$sVariant]['genomic_variant_error']);
-                        // VV has declared their error messages are stable.
-                        // This means we can parse them and rely on them not to change.
-                        // Add error code if possible, so we won't have to parse the error message again somewhere.
-                        if ($sError == 'Length implied by coordinates must equal sequence deletion length') {
-                            // EINCONSISTENTLENGTH error.
-                            $aData['errors']['EINCONSISTENTLENGTH'] = $sError;
-                        } elseif (strpos($sError, 'is outside the boundaries of reference sequence') !== false
-                            || preg_match('/^Failed to fetch .+ out of range/', $sError)) {
-                            // ERANGE error.
-                            $aData['errors']['ERANGE'] = $sError;
-                        } elseif (strpos($sError, 'does not agree with reference sequence') !== false) {
-                            // EREF error.
-                            $aData['errors']['EREF'] = $sError;
-                        } elseif (strpos($sError, 'is not associated with genome build') !== false) {
-                            // EREFSEQ error.
-                            $aData['errors']['EREFSEQ'] = $sError;
-                        } elseif (substr($sError, 0, 5) == 'char ' || $sError == 'insertion length must be 1') {
-                            // ESYNTAX error.
-                            $aData['errors']['ESYNTAX'] = $sError;
-                        } elseif (substr($sError, 0, 21) == 'Fuzzy/unknown variant') {
-                            // EUNCERTAINPOSITIONS error.
-                            $aData['errors']['EUNCERTAINPOSITIONS'] = 'VariantValidator does not currently support variant descriptions with uncertain positions.';
-                        } elseif (strpos($sError, $sVariant . ' updated to ') !== false) {
-                            // Recently, VV published an update that generates an error even when the variant
-                            //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
-                            //  elsewhere, so hide that here.
-                            $aJSON[$sVariant]['genomic_variant_error'] = '';
-                            break;
-                        } else {
-                            // Unrecognized error.
-                            $aData['errors'][] = $sError;
-                        }
+                        $this->addFault($aData, $sVariant, $aJSON[$sVariant]['genomic_variant_error']);
+
                         // When we have errors, we don't need 'data' filled in. Just return what I have.
-                        return $aData;
+                        if ($aData['errors']) {
+                            return $aData;
+                        } else {
+                            // Warnings were a false alarm (warnings or even less).
+                            $aJSON[$sVariant]['genomic_variant_error'] = '';
+                        }
                     }
                     break;
                 case 'porcessing_error': // Typo, still present in test instance 2020-06-02.
