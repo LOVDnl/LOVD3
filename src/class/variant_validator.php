@@ -96,7 +96,9 @@ class LOVD_VV
         } elseif (strpos($sFault, 'is not associated with genome build') !== false) {
             // EREFSEQ error.
             $aData['errors']['EREFSEQ'] = $sFault;
-        } elseif (substr($sFault, 0, 5) == 'char ' || $sFault == 'insertion length must be 1') {
+        } elseif (substr($sFault, 0, 5) == 'char '
+            || $sFault == 'insertion length must be 1'
+            || strpos($sFault, ' must be provided ') !== false) {
             // ESYNTAX error.
             $aData['errors']['ESYNTAX'] = $sFault;
         } elseif (substr($sFault, 0, 21) == 'Fuzzy/unknown variant') {
