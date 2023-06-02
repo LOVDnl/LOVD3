@@ -67,7 +67,7 @@ class LOVD_VV
 
 
 
-    private function addFault (&$aData, $sVariant, $sFault)
+    private function addFault (&$aData, $sFault, $sVariant, $aVariantInfo = false)
     {
         if (!$aData || !is_array($aData) || !isset($aData['warnings']) || !isset($aData['errors'])) {
             return false;
@@ -140,6 +140,13 @@ class LOVD_VV
             //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
             //  elsewhere, so ignore them here.
             return true;
+        } elseif ($sFault == 'Removing redundant reference bases from variant description') {
+            // WSUFFIXGIVEN warning. If we can get the type easily, use that.
+            if ($aVariantInfo && isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
+                $aData['warnings']['WSUFFIXGIVEN'] = $aVariantInfo['warnings']['WSUFFIXGIVEN'];
+            } else {
+                $aData['warnings']['WSUFFIXGIVEN'] = $sFault;
+            }
         } else {
             // Unrecognized error.
             $aData['errors'][] = $sFault;
@@ -537,7 +544,7 @@ class LOVD_VV
             switch ($aJSON['flag']) {
                 case 'genomic_variant_warning':
                     if ($aJSON[$sVariant]['genomic_variant_error']) {
-                        $this->addFault($aData, $sVariant, $aJSON[$sVariant]['genomic_variant_error']);
+                        $this->addFault($aData, $aJSON[$sVariant]['genomic_variant_error'], $sVariant, $aVariantInfo);
 
                         // When we have errors, we don't need 'data' filled in. Just return what I have.
                         if ($aData['errors']) {
@@ -934,7 +941,7 @@ class LOVD_VV
                 // Something's wrong. Parse given warning and quit.
                 if ($aJSON['validation_warning_1']['validation_warnings']) {
                     foreach ($aJSON['validation_warning_1']['validation_warnings'] as $sError) {
-                        $this->addFault($aData, $sVariant, $sError);
+                        $this->addFault($aData, $sError, $sVariant, $aVariantInfo);
                     }
                     // When we have errors, we don't need 'data' filled in. Just return what I have.
                     if ($aData['errors']) {
