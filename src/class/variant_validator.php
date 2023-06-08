@@ -97,7 +97,15 @@ class LOVD_VV
         // VV has declared their error messages are stable.
         // This means we can parse them and rely on them not to change.
         // Add error code if possible, so we won't have to parse the error message again somewhere.
-        if (strpos($sFault, 'Invalid genome build has been specified') !== false) {
+        if ($sFault == 'Trailing digits are not permitted in HGVS variant descriptions'
+            || strpos($sFault, 'Refer to http://varnomen.hgvs.org/') !== false) {
+            // We silently skip these warnings. They are handled elsewhere.
+            return true;
+        } elseif (strpos($sFault, ' is pending therefore changes may be made to the LRG reference sequence') !== false
+            || $sFault == 'RefSeqGene record not available') {
+            // We don't care about this, either.
+            return true;
+        } elseif (strpos($sFault, 'Invalid genome build has been specified') !== false) {
             // EBUILD error.
             $aData['errors']['EBUILD'] = $sFault;
         } elseif ($sFault == 'Length implied by coordinates must equal sequence deletion length') {
@@ -135,12 +143,26 @@ class LOVD_VV
         } elseif (substr($sFault, 0, 21) == 'Fuzzy/unknown variant') {
             // EUNCERTAINPOSITIONS error.
             $aData['errors']['EUNCERTAINPOSITIONS'] = 'VariantValidator does not currently support variant descriptions with uncertain positions.';
+        } elseif (preg_match(
+            '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
+            $sFault, $aRegs)) {
+            // This is not that important, but we won't completely discard it, either.
+            $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
+        } elseif (strpos($sFault, 'Caution should be used when reporting the displayed variant descriptions') !== false
+            || strpos($sFault, 'The displayed variants may be artefacts of aligning') !== false) {
+            // Both these warnings are thrown at the same time when there are mismatches between the
+            //  genomic reference sequence (in general, the genome build) and the transcript.
+            // We could discard one and handle the other, but in this case, we're a bit more flexible.
+            // This message might be repeated when there are gapped alignments with multiple genome builds
+            //  (untested), but currently, we just store one warning message.
+            $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
         } elseif (strpos($sFault, $sVariant . ' updated to ') !== false) {
             // Recently, VV published an update that generates an error even when the variant
             //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
             //  elsewhere, so ignore them here.
             return true;
         } elseif ($sFault == 'Removing redundant reference bases from variant description') {
+            // This is only returned by verifyVariant(); verifyGenomic() doesn't return this.
             // WSUFFIXGIVEN warning. If we can get the type easily, use that.
             if ($aVariantInfo && isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
                 $aData['warnings']['WSUFFIXGIVEN'] = $aVariantInfo['warnings']['WSUFFIXGIVEN'];
@@ -1041,50 +1063,9 @@ class LOVD_VV
             // We'll assume a warning.
 
             // This can be a whole list, so loop through it.
-            foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
-                // VV throws two warnings for del100 variants, because of the '100'.
-                if ($sWarning == 'Trailing digits are not permitted in HGVS variant descriptions'
-                    || strpos($sWarning, 'Refer to http://varnomen.hgvs.org/') !== false) {
-                    // We silently skip these warnings.
-                    unset($aJSON['validation_warnings'][$nKey]);
-
-                } elseif (strpos($sWarning, ' is pending therefore changes may be made to the LRG reference sequence') !== false
-                    || $sWarning == 'RefSeqGene record not available') {
-                    // We don't care about this - we started with an NM anyway.
-                    unset($aJSON['validation_warnings'][$nKey]);
-
-                } elseif (strpos($sWarning, 'ExonBoundaryError:') !== false) {
-                    // EINVALIDBOUNDARY error. This used to throw a flag "warning", but no more, so catch it here.
-                    $aData['errors']['EINVALIDBOUNDARY'] = $sWarning;
-                    unset($aJSON['validation_warnings'][$nKey]);
-                    // Don't accept VV's change of the description.
-                    // VV starts moving coordinates around like it's an algebra equation. We don't like that.
-                    $aData['data']['DNA'] = '';
-                    $aJSON['primary_assembly_loci'] = array();
-                    unset($aData['warnings']['WCORRECTED']);
-                    unset($aData['warnings']['WROLLFORWARD']);
-
-                } elseif (preg_match(
-                    '/^A more recent version of the selected reference sequence (.+) is available \((.+)\):/',
-                    $sWarning, $aRegs)) {
-                    // This is not that important, but we won't completely discard it, either.
-                    $aData['messages']['IREFSEQUPDATED'] = 'Reference sequence ' . $aRegs[1] . ' can be updated to ' . $aRegs[2] . '.';
-                    unset($aJSON['validation_warnings'][$nKey]);
-
-                } elseif (strpos($sWarning, 'Caution should be used when reporting the displayed variant descriptions') !== false
-                    || strpos($sWarning, 'The displayed variants may be artefacts of aligning') !== false) {
-                    // Both these warnings are thrown at the same time when there are mismatches between the
-                    //  genomic reference sequence (in general, the genome build) and the transcript.
-                    // We could discard one and handle the other, but in this case, we're a bit more flexible.
-                    // This message might be repeated when there are gapped alignments with multiple genome builds
-                    //  (untested), but currently, we just store one warning message.
-                    $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
-                    unset($aJSON['validation_warnings'][$nKey]);
-                }
+            foreach ($aJSON['validation_warnings'] as $sWarning) {
+                $this->addFault($aData, $sWarning, $sVariant, $aVariantInfo);
             }
-
-            // Anything left, gets added to our list.
-            $aData['warnings'] += array_values($aJSON['validation_warnings']);
         }
 
         if ($aData['data']['DNA']) {
