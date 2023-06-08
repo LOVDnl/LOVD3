@@ -160,6 +160,8 @@ class LOVD_VV
             // This message might be repeated when there are gapped alignments with multiple genome builds
             //  (untested), but currently, we just store one warning message.
             $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
+        } elseif (strpos($sFault, 'Interval end position ') === 0) {
+            $aData['warnings']['WPOSITIONFORMAT'] = 'The positions are not given in the correct order. Please verify your description and try again.';
         } elseif ($sFault == 'Removing redundant reference bases from variant description') {
             // This is only returned by verifyVariant(); verifyGenomic() doesn't return this.
             // WSUFFIXGIVEN warning. If we can get the type easily, use that.
