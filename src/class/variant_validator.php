@@ -1021,15 +1021,6 @@ class LOVD_VV
         // Handle LRGt submissions.
         if (substr($sVariant, 0, 3) == 'LRG') {
             $aData['data']['DNA'] = $aJSON['hgvs_lrg_transcript_variant'];
-            // Also, in this case, we're not interested if new transcripts exist.
-            $aJSON['validation_warnings'] = array_filter(
-                $aJSON['validation_warnings'],
-                function ($sValue)
-                {
-                    return !preg_match('/^(Reference sequence .+ can be updated to|A more recent version of the selected reference sequence .+ is available)/', $sValue);
-                }
-            );
-
         } else {
             $aData['data']['DNA'] = $aJSON['hgvs_transcript_variant'];
         }
