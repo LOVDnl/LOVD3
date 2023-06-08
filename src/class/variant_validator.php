@@ -105,6 +105,10 @@ class LOVD_VV
             || $sFault == 'RefSeqGene record not available') {
             // We don't care about this, either.
             return true;
+        } elseif (strpos($sFault, ' automapped to ') !== false
+            || strpos($sFault, ' updated to ') !== false) {
+            // Toss this error. These are several corrections, and we handle those elsewhere.
+            return true;
         } elseif (strpos($sFault, 'Invalid genome build has been specified') !== false) {
             // EBUILD error.
             $aData['errors']['EBUILD'] = $sFault;
@@ -156,11 +160,6 @@ class LOVD_VV
             // This message might be repeated when there are gapped alignments with multiple genome builds
             //  (untested), but currently, we just store one warning message.
             $aData['warnings']['WALIGNMENTGAPS'] = 'Given alignments may contain artefacts; there is a gapped alignment between transcript and genome build.';
-        } elseif (strpos($sFault, $sVariant . ' updated to ') !== false) {
-            // Recently, VV published an update that generates an error even when the variant
-            //  description is just updated a bit (e.g., WROLLFORWARD). We are handling them
-            //  elsewhere, so ignore them here.
-            return true;
         } elseif ($sFault == 'Removing redundant reference bases from variant description') {
             // This is only returned by verifyVariant(); verifyGenomic() doesn't return this.
             // WSUFFIXGIVEN warning. If we can get the type easily, use that.
@@ -1038,23 +1037,6 @@ class LOVD_VV
         if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
             // Check why the variant returned by VV and the input variant differ.
             $this->detectDNAChangeType($aData, $sVariant, $aVariantInfo);
-        }
-
-        // Although the LOVD endpoint doesn't do this, the VV endpoint
-        //  sometimes throws warnings when variants are corrected or mapped
-        //  between systems (LRGt to NM, for instance).
-        // If we threw a warning or with these inter-system mappings,
-        //  we can remove the VV warning.
-        if (($aData['warnings'] || substr($sVariant, 0, 3) == 'LRG')
-            && $aJSON['validation_warnings']) {
-            // Selectively search for the validation warning to remove,
-            //  in case there are multiple warnings.
-            foreach ($aJSON['validation_warnings'] as $nKey => $sWarning) {
-                if (strpos($sWarning, 'automapped to') !== false) {
-                    // Toss this error.
-                    unset($aJSON['validation_warnings'][$nKey]);
-                }
-            }
         }
 
         // Any errors given?
