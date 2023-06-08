@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2023-06-02
+ * Modified    : 2023-06-08
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -217,6 +217,50 @@ class LOVD_VV
         }
         // Something went wrong...
         return false;
+    }
+
+
+
+
+
+    private function detectDNAChangeType (&$aData, $sVariant, $aVariantInfo = false)
+    {
+        if (!$aData || !is_array($aData) || !isset($aData['warnings']) || !isset($aData['errors'])
+            || !isset($aData['data']['DNA']) || $aData['data']['DNA'] == $sVariant) {
+            return false;
+        }
+
+        // Check why the variant returned by VV and the input variant differ.
+        // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
+        if ($aVariantInfo) {
+            // Use LOVD's lovd_getVariantInfo() to parse positions and type.
+            $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
+
+            if (array_diff_key($aVariantInfo, array('warnings' => array()))
+                == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
+                // Positions and type are the same, small corrections like delG to del.
+                // We let these pass silently.
+            } elseif ($aVariantInfo['type'] != $aVariantInfoCorrected['type']
+                || $aVariantInfo['range'] != $aVariantInfoCorrected['range']) {
+                // An insertion actually being a duplication.
+                // A deletion-insertion which is actually something else.
+                // A 1_1del that should be 1del.
+                $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+            } else {
+                // Positions are different, but type is the same.
+                // 3' forwarding of deletions, insertions, duplications
+                //  and deletion-insertion events.
+                $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
+                    (!$aVariantInfo['range']? ' has' : 's have') .
+                    ' been corrected.';
+            }
+
+        } else {
+            // Not running as an LOVD object, just complain here.
+            $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
+        }
+
+        return true;
     }
 
 
@@ -610,36 +654,11 @@ class LOVD_VV
 
         // Copy the (corrected) DNA value.
         $aData['data']['DNA'] = $aJSON['g_hgvs'];
+
         // If description is given but different, then apparently there's been some kind of correction.
         if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
-            // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
-            if ($aVariantInfo) {
-                // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
-
-                if (array_diff_key($aVariantInfo, array('warnings' => array()))
-                    == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
-                    // Positions and type are the same, small corrections like delG to del.
-                    // We let these pass silently.
-                } elseif ($aVariantInfo['type'] != $aVariantInfoCorrected['type']
-                    || $aVariantInfo['range'] != $aVariantInfoCorrected['range']) {
-                    // An insertion actually being a duplication.
-                    // A deletion-insertion which is actually something else.
-                    // A g.1_1del that should be g.1del.
-                    $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-                } else {
-                    // Positions are different, but type is the same.
-                    // 3' forwarding of deletions, insertions, duplications
-                    //  and deletion-insertion events.
-                    $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                        (!$aVariantInfo['range']? ' has' : 's have') .
-                        ' been corrected.';
-                }
-
-            } else {
-                // Not running as an LOVD object, just complain here.
-                $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-            }
+            // Check why the variant returned by VV and the input variant differ.
+            $this->detectDNAChangeType($aData, $sVariant, $aVariantInfo);
         }
 
         // Any errors given?
@@ -988,34 +1007,8 @@ class LOVD_VV
         }
         // If description is given but different, then apparently there's been some kind of correction.
         if ($aData['data']['DNA'] && $sVariant != $aData['data']['DNA']) {
-            // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
-            if ($aVariantInfo) {
-                // Use LOVD's lovd_getVariantInfo() to parse positions and type.
-                $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
-
-                if (array_diff_key($aVariantInfo, array('warnings' => array()))
-                    == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
-                    // Positions and type are the same, small corrections like delG to del.
-                    // We let these pass silently.
-                } elseif ($aVariantInfo['type'] != $aVariantInfoCorrected['type']
-                    || $aVariantInfo['range'] != $aVariantInfoCorrected['range']) {
-                    // An insertion actually being a duplication.
-                    // A deletion-insertion which is actually something else.
-                    // A c.1_1del that should be c.1del.
-                    $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-                } else {
-                    // Positions are different, but type is the same.
-                    // 3' forwarding of deletions, insertions, duplications
-                    //  and deletion-insertion events.
-                    $aData['warnings']['WROLLFORWARD'] = 'Variant position' .
-                        (!$aVariantInfo['range']? ' has' : 's have') .
-                        ' been corrected.';
-                }
-
-            } else {
-                // Not running as an LOVD object, just complain here.
-                $aData['warnings']['WCORRECTED'] = 'Variant description has been corrected.';
-            }
+            // Check why the variant returned by VV and the input variant differ.
+            $this->detectDNAChangeType($aData, $sVariant, $aVariantInfo);
         }
 
         // Although the LOVD endpoint doesn't do this, the VV endpoint
