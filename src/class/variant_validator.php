@@ -231,10 +231,17 @@ class LOVD_VV
         }
 
         // Check why the variant returned by VV and the input variant differ.
-        // Check type of correction; silent, WCORRECTED, or WROLLFORWARD.
+        // Check type of correction; silent, WCORRECTED, WROLLFORWARD, or WSUFFIXGIVEN.
         if ($aVariantInfo) {
             // Use LOVD's lovd_getVariantInfo() to parse positions and type.
             $aVariantInfoCorrected = lovd_getVariantInfo($aData['data']['DNA']);
+
+            // Multiple problems can occur at the same time
+            //  (e.g., NC_000004.11:g.39350045delA => NC_000004.11:g.39350048del),
+            //  and VV keeps this one silent. Check it first.
+            if (isset($aVariantInfo['warnings']['WSUFFIXGIVEN'])) {
+                $aData['warnings']['WSUFFIXGIVEN'] = $aVariantInfo['warnings']['WSUFFIXGIVEN'];
+            }
 
             if (array_diff_key($aVariantInfo, array('warnings' => array()))
                 == array_diff_key($aVariantInfoCorrected, array('warnings' => array()))) {
