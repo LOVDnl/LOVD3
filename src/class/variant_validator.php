@@ -695,9 +695,8 @@ class LOVD_VV
         if ($aJSON['genomic_variant_error']) {
             // Not a previously seen error, handled through the flag value.
             // We'll assume a warning.
-            // FIXME: Value may need cleaning!
             // FIXME: Does this ever happen? Or is this only filled in when we also have a flag?
-            $aData['warnings'][] = $aJSON['genomic_variant_error'];
+            $this->addFault($aData, $aJSON['genomic_variant_error'], $sVariant, $aVariantInfo);
         }
 
         // Mappings?
