@@ -904,7 +904,8 @@ class LOVD_VV
             if ($aVariantInfo && isset($_DB)) {
                 // Check for intronic and positions outside of the mRNA.
 
-                // Fetch transcript positions from the database.
+                // Fetch transcript positions from the database. However, we may not have this transcript,
+                //  if the library is used independently (e.g., the checkHGVS interface).
                 $aTranscript = $_DB->q('
                     SELECT position_c_mrna_start, position_c_mrna_end
                     FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?',
@@ -913,6 +914,7 @@ class LOVD_VV
 
                 $bKeepNC = (!empty($aVariantInfo['position_start_intron'])
                     || !empty($aVariantInfo['position_end_intron'])
+                    || $aTranscript === false
                     || $aVariantInfo['position_start'] < $aTranscript['position_c_mrna_start']
                     || $aVariantInfo['position_end'] > $aTranscript['position_c_mrna_end']);
 
