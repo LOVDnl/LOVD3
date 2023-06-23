@@ -276,7 +276,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     $_DATA['Transcript'] = new LOVD_transcript();
 
     $sPath = CURRENT_PATH . '?' . ACTION;
-    if (GET) {
+    if (GET
+        || empty($_POST['workID'])
+        || empty($_SESSION['work'][$sPath][$_POST['workID']])) {
         if (!isset($_SESSION['work'][$sPath])) {
             $_SESSION['work'][$sPath] = array();
         }
