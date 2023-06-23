@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-09-06
- * Modified    : 2023-06-01
+ * Modified    : 2023-06-23
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -223,8 +223,10 @@ foreach ($aVariants as $sVariant => $aVariant) {
                 $aVariant['VV']['EINTERNAL'] = 'An internal error within VariantValidator occurred when trying to validate your variant.';
             } elseif (!empty($aVV['data']['DNA'])) {
                 // We got a variant back, so VV at least understood the variant.
-                // Our VV library removed the refseq, put it back.
-                $aVV['data']['DNA'] = lovd_getVariantRefSeq($sVariant) . ':' . $aVV['data']['DNA'];
+                // When we use verifyVariant(), the transcript needs to be re-attached.
+                if (!empty($aVV['data']['transcript'])) {
+                    $aVV['data']['DNA'] = $aVV['data']['transcript'] . ':' . $aVV['data']['DNA'];
+                }
                 if ($sVariant != $aVV['data']['DNA']) {
                     // We don't check for WCORRECTED here, because the VV library accepts some changes
                     //  without setting WCORRECTED. We want to show every difference.
