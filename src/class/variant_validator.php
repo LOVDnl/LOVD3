@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2023-06-08
+ * Modified    : 2023-06-23
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1044,8 +1044,13 @@ class LOVD_VV
 
         if ($aData['data']['DNA']) {
             // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
-            $aMapping = array(
-                'DNA' => substr(strstr($aData['data']['DNA'], ':'), 1),
+            $aMapping = array_combine(
+                array(
+                    'transcript',
+                    'DNA',
+                ),
+                explode(':', $aData['data']['DNA'], 2)
+            ) + array(
                 'RNA' => 'r.(?)',
                 'protein' => '',
             );
@@ -1054,8 +1059,7 @@ class LOVD_VV
             }
 
             // Try to improve VV's predictions.
-            $sTranscript = strstr($sVariant, ':', true);
-            $this->getRNAProteinPrediction($aMapping, $sTranscript);
+            $this->getRNAProteinPrediction($aMapping, $aMapping['transcript']);
             $aData['data'] = $aMapping;
         }
 
