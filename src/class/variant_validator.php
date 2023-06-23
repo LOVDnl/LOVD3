@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2023-06-08
+ * Modified    : 2023-06-23
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -904,7 +904,8 @@ class LOVD_VV
             if ($aVariantInfo && isset($_DB)) {
                 // Check for intronic and positions outside of the mRNA.
 
-                // Fetch transcript positions from the database.
+                // Fetch transcript positions from the database. However, we may not have this transcript,
+                //  if the library is used independently (e.g., the checkHGVS interface).
                 $aTranscript = $_DB->q('
                     SELECT position_c_mrna_start, position_c_mrna_end
                     FROM ' . TABLE_TRANSCRIPTS . ' WHERE id_ncbi = ?',
@@ -913,6 +914,7 @@ class LOVD_VV
 
                 $bKeepNC = (!empty($aVariantInfo['position_start_intron'])
                     || !empty($aVariantInfo['position_end_intron'])
+                    || $aTranscript === false
                     || $aVariantInfo['position_start'] < $aTranscript['position_c_mrna_start']
                     || $aVariantInfo['position_end'] > $aTranscript['position_c_mrna_end']);
 
@@ -1044,8 +1046,13 @@ class LOVD_VV
 
         if ($aData['data']['DNA']) {
             // We silently ignore transcripts here that gave us an error, but not for the liftover feature.
-            $aMapping = array(
-                'DNA' => substr(strstr($aData['data']['DNA'], ':'), 1),
+            $aMapping = array_combine(
+                array(
+                    'transcript',
+                    'DNA',
+                ),
+                explode(':', $aData['data']['DNA'], 2)
+            ) + array(
                 'RNA' => 'r.(?)',
                 'protein' => '',
             );
@@ -1054,8 +1061,7 @@ class LOVD_VV
             }
 
             // Try to improve VV's predictions.
-            $sTranscript = strstr($sVariant, ':', true);
-            $this->getRNAProteinPrediction($aMapping, $sTranscript);
+            $this->getRNAProteinPrediction($aMapping, $aMapping['transcript']);
             $aData['data'] = $aMapping;
         }
 
