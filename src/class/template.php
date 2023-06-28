@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-03-27
- * Modified    : 2023-01-27
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-28
+ * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -372,7 +372,9 @@ class LOVD_Template
     <TD width="42" align="right">
 <?php
         if (!(defined('NOT_INSTALLED') || defined('MISSING_CONF') || defined('MISSING_STAT'))) {
-            if ((time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
+            // When we've just installed (update_checked_date is NULL) or when it's been 24 hours, check for updates.
+            if (empty($_STAT['update_checked_date'])
+                || (time() - strtotime($_STAT['update_checked_date'])) > (60*60*24)) {
                 // Check for updates!
                 $sImgURL = 'check_update?icon';
                 $sImgAlt = 'Checking for LOVD updates...';
