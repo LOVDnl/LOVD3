@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2023-02-02
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-28
+ * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
@@ -515,9 +515,14 @@ class LOVD_GenomeVariant extends LOVD_Custom
                     if (LOVD_plus) {
                         $sLink = '<A href="variants/DBID/' . $zData['VariantOnGenome/DBID'] .'">See all ' . $n . ' reported entries</A>';
                     }
-                    // This is against our coding policy of never modifying actual contents of values (we always create a copy with _ appended), but now I simply can't without
-                    // modifying the column list manually. If only array_splice() would work on associative arrays... I'm not going to create a workaround here.
-                    $zData['VariantOnGenome/DBID'] .= ' <SPAN style="float:right">' . $sLink . '</SPAN>';
+                    // We have a policy of never modifying actual contents of values; create a copy with an underscore appended.
+                    // Let this new column take the place of the original DBID field.
+                    // But only do this when we're the first prepareData() to run.
+                    if (!isset($this->aColumnsViewEntry['VariantOnGenome/DBID_'])) {
+                        lovd_arrayInsertAfter('VariantOnGenome/DBID', $this->aColumnsViewEntry, 'VariantOnGenome/DBID_', $this->aColumnsViewEntry['VariantOnGenome/DBID']);
+                        unset($this->aColumnsViewEntry['VariantOnGenome/DBID']);
+                    }
+                    $zData['VariantOnGenome/DBID_'] = $zData['VariantOnGenome/DBID'] . ' <SPAN style="float:right">' . $sLink . '</SPAN>';
                 }
             }
 
