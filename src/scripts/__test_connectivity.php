@@ -62,7 +62,14 @@ print("
 ================================================================================
 Contacting HGNC over HTTP, using " . ($bFopenWrappers? 'our file() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return IVD gene data:
 ");
-var_dump(lovd_php_file('http://rest.genenames.org/search/symbol/IVD', false, '', 'Accept: application/json'));
+$aOutput = lovd_php_file('http://rest.genenames.org/search/symbol/IVD', false, '', 'Accept: application/json');
+if (!is_array($aOutput)) {
+    var_dump($aOutput);
+} else {
+    $sOutput = implode($aOutput);
+    var_dump($sOutput);
+    var_dump(json_decode($sOutput, true));
+}
 
 // Testing connection to Mutalyzer.
 $sURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $_CONF['refseq_build'] . '&gene=IVD';
@@ -70,12 +77,26 @@ print("
 ================================================================================
 Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using fsockopen() fallback, should return IVD mapping data:
 ");
-var_dump(lovd_php_file($sURL));
+$aOutput = lovd_php_file($sURL);
+if (!is_array($aOutput)) {
+    var_dump($aOutput);
+} else {
+    $sOutput = implode($aOutput);
+    var_dump($sOutput);
+    var_dump(json_decode($sOutput, true));
+}
 print("
 ================================================================================
 Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
 ");
-var_dump(file($sURL, FILE_IGNORE_NEW_LINES));
+$aOutput = file($sURL, FILE_IGNORE_NEW_LINES);
+if (!is_array($aOutput)) {
+    var_dump($aOutput);
+} else {
+    $sOutput = implode($aOutput);
+    var_dump($sOutput);
+    var_dump(json_decode($sOutput, true));
+}
 if ($bCurl) {
     print("
 ================================================================================
