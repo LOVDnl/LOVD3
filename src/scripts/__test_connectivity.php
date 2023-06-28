@@ -68,12 +68,12 @@ var_dump(lovd_php_file('http://rest.genenames.org/search/symbol/IVD', false, '',
 $sURL = str_replace('/services', '', $_CONF['mutalyzer_soap_url']) . '/json/getGeneLocation?build=' . $_CONF['refseq_build'] . '&gene=IVD';
 print("
 ================================================================================
-Contacting Mutalyzer over HTTPS, using fsockopen() fallback, should return IVD mapping data:
+Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using fsockopen() fallback, should return IVD mapping data:
 ");
 var_dump(lovd_php_file($sURL));
 print("
 ================================================================================
-Contacting Mutalyzer over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
+Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
 ");
 var_dump(file($sURL, FILE_IGNORE_NEW_LINES));
 if ($bCurl) {
@@ -89,5 +89,5 @@ print("
 ================================================================================
 Contacting LOVD server over HTTPS, using our file() wrapper, testing SNI_server_name vs peer_name settings, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : 'return a large positive number') . ":
 ");
-var_dump(strlen(implode("\n", lovd_php_file('https://grenada.lumc.nl/'))));
+var_dump(strlen(implode("\n", lovd_php_file('https://www.LOVD.nl/'))));
 ?>
