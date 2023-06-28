@@ -10,6 +10,7 @@ ini_set('display_errors', 1);
 
 $bFopenWrappers = ini_get('allow_url_fopen');
 $bProxy = (bool) $_CONF['proxy_host'];
+$bCurl = function_exists('curl_init');
 
 print('PHP VERSION : ' . PHP_VERSION_ID);
 
@@ -43,6 +44,12 @@ Proxy server " . ($bProxyCanBeBypassed? 'CAN' : 'CAN NOT') . " be bypassed.
 ");
 }
 
+// Check Curl.
+print("
+================================================================================
+" . ($bCurl? "Curl available." : "Curl not available.") . "
+");
+
 // Testing connection to file on LOVD.nl.
 print("
 ================================================================================
@@ -69,6 +76,13 @@ print("
 Contacting Mutalyzer over HTTPS, using non-context file() call, should " . (!$bFopenWrappers? 'fail since fopen wrappers are off' : ($bProxy && !$bProxyCanBeBypassed? 'fail since the proxy is ignored' : 'return IVD mapping data')) . ":
 ");
 var_dump(file($sURL, FILE_IGNORE_NEW_LINES));
+if ($bCurl) {
+    print("
+================================================================================
+Contacting Mutalyzer at ${_CONF['mutalyzer_soap_url']} over Curl, should return IVD mapping data:
+");
+    var_dump(lovd_callMutalyzer('getGeneLocation', array('build' => $_CONF['refseq_build'], 'gene' => 'IVD')));
+}
 
 // Checking SNI_server_name / peer_name.
 print("
