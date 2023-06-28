@@ -2740,7 +2740,8 @@ function lovd_hideEmail ($s)
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Obscure email addresses from spambots.
 
-    $a_replace = array(45 => '-', '.',
+    $a_replace = array(
+        45 => '-', '.',
         48 => '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         64 => '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
         95 => '_',

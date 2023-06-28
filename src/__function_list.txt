@@ -42,11 +42,9 @@
 4.0.0 defined
 4.0.0 die
 4.0.0 dirname
-4.0.0 each
 4.0.0 empty
 4.0.0 end
 4.0.0 error_reporting
-4.0.0 exec
 4.0.0 exit
 4.0.0 explode
 4.0.0 fclose

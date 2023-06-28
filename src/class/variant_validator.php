@@ -558,7 +558,7 @@ class LOVD_VV
         //  than a database, in case this object will ever be pulled out of LOVD.
         $sVariantNC = strstr($sVariant, ':', true);
         $sBuild = '';
-        foreach ($_SETT['human_builds'] as $sCode => $aBuild) {
+        foreach ($_SETT['human_builds'] as $aBuild) {
             if (isset($aBuild['ncbi_sequences'])) {
                 if (in_array($sVariantNC, $aBuild['ncbi_sequences'])) {
                     // We pick the NCBI name here, because for chrM we actually
