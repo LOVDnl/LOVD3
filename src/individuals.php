@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2022-12-14
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-28
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -562,10 +562,10 @@ if (PATH_COUNT == 2 && ctype_digit($_PE[1]) && ACTION == 'delete') {
 
     $aVariantsRemovable = $_DB->q('
         SELECT s2v.variantid, MAX(s2.individualid)
-        FROM lovd_v3_screenings AS s
-          INNER JOIN lovd_v3_screenings2variants AS s2v ON (s.id = s2v.screeningid)
-          LEFT OUTER JOIN lovd_v3_screenings2variants AS s2v2 ON (s2v.variantid = s2v2.variantid AND s2v.screeningid != s2v2.screeningid)
-          LEFT OUTER JOIN lovd_v3_screenings AS s2 ON (s2v2.screeningid = s2.id AND s2.individualid != ?)
+        FROM ' . TABLE_SCREENINGS . ' AS s
+          INNER JOIN ' . TABLE_SCR2VAR . ' AS s2v ON (s.id = s2v.screeningid)
+          LEFT OUTER JOIN ' . TABLE_SCR2VAR . ' AS s2v2 ON (s2v.variantid = s2v2.variantid AND s2v.screeningid != s2v2.screeningid)
+          LEFT OUTER JOIN ' . TABLE_SCREENINGS . ' AS s2 ON (s2v2.screeningid = s2.id AND s2.individualid != ?)
         WHERE s.individualid = ?
         GROUP BY s2v.variantid
         HAVING MAX(s2.individualid) IS NULL', array($nID, $nID))->fetchAllColumn();

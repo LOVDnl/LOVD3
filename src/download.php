@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-06-10
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
  *
@@ -757,7 +757,13 @@ foreach ($aObjects as $sObject => $aSettings) {
     // Fetch and print the data.
     foreach ($aSettings['data'] as $z) {
         // Quote data.
-        $z = array_map('addslashes', $z);
+        $z = array_map(
+            function ($sVal)
+            {
+                return addslashes(isset($sVal)? $sVal : '');
+            },
+            $z
+        );
 
         foreach ($aColumns as $key => $sCol) {
             if (!isset($aSettings['hide_columns'][$sCol])) {

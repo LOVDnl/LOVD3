@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -276,7 +276,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
     $_DATA['Transcript'] = new LOVD_transcript();
 
     $sPath = CURRENT_PATH . '?' . ACTION;
-    if (GET) {
+    if (GET
+        || empty($_POST['workID'])
+        || empty($_SESSION['work'][$sPath][$_POST['workID']])) {
         if (!isset($_SESSION['work'][$sPath])) {
             $_SESSION['work'][$sPath] = array();
         }
@@ -386,7 +388,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 } else {
                     // Get UD from mutalyzer.
                     $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                    if (!$sRefseqUD) {
+                    if (!$sRefseqUD || isset($_GET['VV'])) {
                         // The future is VV. However, as we're currently still using
                         //  Mutalyzer for mapping, only use VV when Mutalyzer fails.
                         $_BAR->setMessage('Collecting all available transcripts...');
@@ -434,6 +436,20 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     $_BAR->setProgress($nProgress += 17);
 
                     $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
+                    if (!$aTranscripts['id']) {
+                        // Mutalyzer found nothing. This could be simply their error. Better try VV.
+                        // But for this, we have to reload.
+                        $_BAR->setMessage('Mutalyzer failed to find transcripts. Trying again using VV...');
+                        print('
+                        <script type="text/javascript">
+                            // Redirect to use VV.
+                            $("form").attr("action", $("form").attr("action") + "&VV");
+                            // Don\'t lose the gene symbol.
+                            $("form").append(\'<input type="hidden" name="hgnc_id" value="' . htmlspecialchars($_POST['hgnc_id']) . '">\');
+                            $("form").submit();
+                        </script>');
+                        exit;
+                    }
                 }
 
                 $_BAR->setProgress(100);

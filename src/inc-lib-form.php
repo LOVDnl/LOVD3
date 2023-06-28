@@ -1231,5 +1231,4 @@ function utf8_encode_array ($Data)
         return $Data;
     }
 }
-
 ?>

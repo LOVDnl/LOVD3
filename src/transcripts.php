@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2022-12-14
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -278,7 +278,7 @@ if (ACTION == 'create') {
                                                                   'transcriptsAdded' => $aTranscripts['added'],
                                                                 );
 
-        if (!$aTranscripts['id']) {
+        if (!$aTranscripts['id'] || isset($_GET['VV'])) {
             // Mutalyzer doesn't see any transcripts at all.
             // The future is VV. However, as we're currently still using
             //  Mutalyzer for mapping, only use VV when Mutalyzer fails.
