@@ -1409,7 +1409,9 @@ class LOVD_API_GA4GH
                                INNER JOIN ' . TABLE_TRANSCRIPTS . ' AS t ON (vot.transcriptid = t.id)
                              WHERE vot.id = vog.id), "")
                         )
-                        ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`, vog.id SEPARATOR ";;") AS variants
+                        ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`, vog.id SEPARATOR ";;") AS variants,
+                      i.created_date,
+                      i.edited_date
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid AND p.statusid >= ?)
@@ -1602,6 +1604,14 @@ class LOVD_API_GA4GH
                         $aIndividual['phenotypes'],
                         SORT_REGULAR)
                 );
+
+                // Leave out dates when they're missing.
+                if ($aSubmission['created_date']) {
+                    $aIndividual['creation_date'] = array('value' => date('c', strtotime($aSubmission['created_date'])));
+                }
+                if ($aSubmission['edited_date']) {
+                    $aIndividual['modification_date'] = array('value' => date('c', strtotime($aSubmission['edited_date'])));
+                }
 
                 if (!empty($aSubmission['remarks'])) {
                     $aIndividual['comments'] = $this->addComment(array(), $aSubmission['remarks']);
