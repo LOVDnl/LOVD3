@@ -1517,6 +1517,10 @@ class LOVD_API_GA4GH
                                 'term' => trim($sPhenotype),
                                 'inheritance_pattern' => $aInheritance,
                             );
+
+                        } else {
+                            // Nothing to do here.
+                            continue;
                         }
                     }
 
