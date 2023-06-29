@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-02-16
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-29
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -107,9 +107,9 @@ class LOVD_Phenotype extends LOVD_Custom
                         'status' => array('Phenotype data status', $_SETT['user_level_settings']['see_nonpublic_data']),
                         'license_' => 'Database submission license',
                         'created_by_' => 'Created by',
-                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => 'Date created',
                         'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => 'Date last edited',
                       ));
 
         // List of columns and (default?) order for viewing a list of entries.

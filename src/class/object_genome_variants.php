@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2023-06-28
+ * Modified    : 2023-06-29
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -130,9 +130,9 @@ class LOVD_GenomeVariant extends LOVD_Custom
                 'status' => array('Variant data status', $_SETT['user_level_settings']['see_nonpublic_data']),
                 'license_' => 'Database submission license',
                 'created_by_' => 'Created by',
-                'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'created_date_' => 'Date created',
                 'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
+                'edited_date_' => 'Date last edited',
             )
         );
         if (!LOVD_plus) {

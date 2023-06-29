@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2023-06-23
+ * Modified    : 2023-06-29
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -114,9 +114,9 @@ class LOVD_Transcript extends LOVD_Object
                         'exon_table' => 'Exon/intron information',
                         'remarks' => 'Remarks',
                         'created_by_' => array('Created by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'created_date_' => array('Date created', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'created_date_' => 'Date created',
                         'edited_by_' => array('Last edited by', $_SETT['user_level_settings']['see_nonpublic_data']),
-                        'edited_date_' => array('Date last edited', $_SETT['user_level_settings']['see_nonpublic_data']),
+                        'edited_date_' => 'Date last edited',
                       );
 
         // List of columns and (default?) order for viewing a list of entries.
