@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2023-02-15
- * For LOVD    : 3.0-29
+ * Modified    : 2023-06-29
+ * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -960,7 +960,9 @@ class LOVD_API_GA4GH
                        IFNULL(
                          CONCAT(
                            IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
-                         ), "")
+                         ), ""), "||",
+                       IFNULL(vog.created_date, ""), "||",
+                       IFNULL(vog.edited_date, "")
                      )
                    ) ORDER BY vog.id SEPARATOR ";;") AS variants,
                  MIN(NULLIF(vog.created_date, "0000-00-00 00:00:00")) AS created_date,
@@ -1142,7 +1144,9 @@ class LOVD_API_GA4GH
                         $sRemarks,
                         $sVOTs,
                         $sCreator,
-                        $sOwner
+                        $sOwner,
+                        $sCreatedDate,
+                        $sEditedDate
                     ) = explode('||', $sVariant);
 
                     // Ignore the full variant entry when the license isn't
@@ -1177,6 +1181,8 @@ class LOVD_API_GA4GH
                             ),
                         )),
                         'pathogenicities' => array(),
+                        'creation_date' => array(),
+                        'modification_date' => array(),
                     );
 
                     if (!$aVariant['aliases']) {
@@ -1187,6 +1193,18 @@ class LOVD_API_GA4GH
                         current($this->convertEffectsToVML($nID . ':' . $sEffects)),
                         array_values($this->convertClassificationToVML($nID . ':' . $sClassification . ':' . $sClassificationMethod))
                     );
+
+                    // Leave out dates when they're missing.
+                    if ($sCreatedDate) {
+                        $aVariant['creation_date']['value'] = date('c', strtotime($sCreatedDate));
+                    } else {
+                        unset($aVariant['creation_date']);
+                    }
+                    if ($sEditedDate) {
+                        $aVariant['modification_date']['value'] = date('c', strtotime($sEditedDate));
+                    } else {
+                        unset($aVariant['modification_date']);
+                    }
 
                     // For GV shared type "SUMMARY records", overwrite the data_source.
                     if ($sOrigin && $sOrigin == 'summary record') {
