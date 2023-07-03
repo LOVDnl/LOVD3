@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2021-04-22
- * Modified    : 2023-06-30
+ * Modified    : 2023-07-03
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -961,8 +961,8 @@ class LOVD_API_GA4GH
                          CONCAT(
                            IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                          ), ""), "||",
-                       IFNULL(vog.created_date, ""), "||",
-                       IFNULL(vog.edited_date, "")
+                       IFNULL(NULLIF(vog.created_date, "0000-00-00 00:00:00"), ""), "||",
+                       IFNULL(NULLIF(vog.edited_date, "0000-00-00 00:00:00"), "")
                      )
                    ) ORDER BY vog.id SEPARATOR ";;") AS variants,
                  MIN(NULLIF(vog.created_date, "0000-00-00 00:00:00")) AS created_date,
@@ -1410,8 +1410,8 @@ class LOVD_API_GA4GH
                              WHERE vot.id = vog.id), "")
                         )
                         ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`, vog.id SEPARATOR ";;") AS variants,
-                      i.created_date,
-                      i.edited_date
+                      IFNULL(NULLIF(i.created_date, "0000-00-00 00:00:00"), "") AS created_date,
+                      IFNULL(NULLIF(i.edited_date, "0000-00-00 00:00:00"), "") AS edited_date
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid AND p.statusid >= ?)
