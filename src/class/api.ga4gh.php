@@ -962,7 +962,7 @@ class LOVD_API_GA4GH
                            IFNULL(uo.orcid_id, ""), "##", uo.name, "##", uo.email
                          ), ""), "||",
                        IFNULL(NULLIF(vog.created_date, "0000-00-00 00:00:00"), ""), "||",
-                       IFNULL(NULLIF(vog.edited_date, "0000-00-00 00:00:00"), "")
+                       IFNULL(NULLIF(IFNULL(vog.edited_date, vog.created_date), "0000-00-00 00:00:00"), "")
                      )
                    ) ORDER BY vog.id SEPARATOR ";;") AS variants,
                  MIN(NULLIF(vog.created_date, "0000-00-00 00:00:00")) AS created_date,
@@ -1411,7 +1411,7 @@ class LOVD_API_GA4GH
                         )
                         ORDER BY vog.chromosome, vog.position_g_start, vog.position_g_end, vog.`VariantOnGenome/DNA`, vog.id SEPARATOR ";;") AS variants,
                       IFNULL(NULLIF(i.created_date, "0000-00-00 00:00:00"), "") AS created_date,
-                      IFNULL(NULLIF(i.edited_date, "0000-00-00 00:00:00"), "") AS edited_date
+                      IFNULL(NULLIF(IFNULL(i.edited_date, i.created_date), "0000-00-00 00:00:00"), "") AS edited_date
                     FROM ' . TABLE_INDIVIDUALS . ' AS i
                       LEFT OUTER JOIN ' . TABLE_IND2DIS . ' AS i2d ON (i.id = i2d.individualid)
                       LEFT OUTER JOIN ' . TABLE_PHENOTYPES . ' AS p ON (i.id = p.individualid AND p.statusid >= ?)
