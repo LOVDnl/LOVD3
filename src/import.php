@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-09-19
- * Modified    : 2022-12-14
- * For LOVD    : 3.0-29
+ * Modified    : 2023-07-05
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
  *               M. Kroon <m.kroon@lumc.nl>
@@ -1573,7 +1573,7 @@ if (POST || $_FILES) { // || $_FILES is in use for the automatic loading of file
                         $aLine[$sCol] = $sDate;
                     } elseif (!$zData || in_array($sCol, $aColumns)) {
                         if ($aLine[$sCol] && !lovd_matchDate($aLine[$sCol], true)) {
-                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" is not a correct date format, use the format YYYY-MM-DD HH:MM:SS.');
+                            lovd_errorAdd('import', 'Error (' . $sCurrentSection . ', line ' . $nLine . '): ' . $sCol . ' value "' . htmlspecialchars($aLine[$sCol]) . '" is not a valid date, use a valid date in the format YYYY-MM-DD HH:MM:SS.');
                         } elseif (($sCol == 'created_date' || $aLine['edited_by']) && !$aLine[$sCol]) {
                             // Edited_date is only filled in if empty and edited_by is filled in.
                             $aLine[$sCol] = $sDate;
