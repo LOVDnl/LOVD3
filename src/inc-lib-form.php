@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2023-02-03
- * For LOVD    : 3.0-29
+ * Modified    : 2023-07-05
+ * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -578,7 +578,26 @@ function lovd_matchDate ($s, $bTime = false)
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Matches a string to the date pattern, one that MySQL can understand.
 
-    return (preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}' . ($bTime? ' [0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]' : '') . '$/', $s));
+    $bFormat = preg_match('/^[0-9]{4}[.\/-][0-9]{2}[.\/-][0-9]{2}' . ($bTime? ' [0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]' : '') . '$/', $s);
+    if (!$bFormat) {
+        return false;
+    }
+
+    // We'll need this a few times.
+    $sDate = substr($s, 0, 10);
+
+    // We need a valid date, always.
+    if (strtotime($s) === false) {
+        return false;
+    }
+
+    // Finally, since strtotime() allows 31 days in months that have 30, do a better check.
+    list($nYear, $nMonth, $nDay) = explode('-', $sDate);
+    if (!checkdate($nMonth, $nDay, $nYear)) {
+        return false;
+    }
+
+    return true;
 }
 
 
