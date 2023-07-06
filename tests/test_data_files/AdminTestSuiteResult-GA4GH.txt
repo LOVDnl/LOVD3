@@ -140,6 +140,9 @@
                         "creation_date": {
                             "value": "0000-00-00T00:00:00+00:00"
                         },
+                        "modification_date": {
+                            "value": "0000-00-00T00:00:00+00:00"
+                        },
                         "db_xrefs": [
                             {
                                 "source": "pubmed",
@@ -201,6 +204,12 @@
                                         }
                                     }
                                 ],
+                                "creation_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
+                                "modification_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
                                 "db_xrefs": [
                                     {
                                         "source": "pubmed",
@@ -294,6 +303,12 @@
                                         }
                                     }
                                 ],
+                                "creation_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
+                                "modification_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
                                 "db_xrefs": [
                                     {
                                         "source": "pubmed",
@@ -438,6 +453,9 @@
                         "creation_date": {
                             "value": "0000-00-00T00:00:00+00:00"
                         },
+                        "modification_date": {
+                            "value": "0000-00-00T00:00:00+00:00"
+                        },
                         "db_xrefs": [
                             {
                                 "source": "pubmed",
@@ -499,6 +517,12 @@
                                         }
                                     }
                                 ],
+                                "creation_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
+                                "modification_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
                                 "db_xrefs": [
                                     {
                                         "source": "pubmed",
@@ -592,6 +616,12 @@
                                         }
                                     }
                                 ],
+                                "creation_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
+                                "modification_date": {
+                                    "value": "0000-00-00T00:00:00+00:00"
+                                },
                                 "db_xrefs": [
                                     {
                                         "source": "pubmed",
