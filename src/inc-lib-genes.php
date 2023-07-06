@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2011-01-25
- * Modified    : 2021-04-15
- * For LOVD    : 3.0-27
+ * Modified    : 2023-07-06
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2021 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -164,6 +164,18 @@ function lovd_getGeneInfoFromHGNC ($sHgncId, $bRecursion = false)
         }
         return false;
     }
+
+    // 2023-07-06; Sometimes, the HGNC sends a subset of fields back.
+    foreach (
+        array(
+            'status' => 'Approved',
+            'locus_group' => 'protein-coding gene',
+        ) as $sField => $sValue) {
+        if (!isset($aGene[$sField])) {
+            $aGene[$sField] = $sValue;
+        }
+    }
+
 
 
 

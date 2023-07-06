@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2023-02-14
- * For LOVD    : 3.0-29
+ * Modified    : 2023-07-05
+ * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -590,7 +590,7 @@ class LOVD_Object
                     switch ($sMySQLType) {
                         case 'DATE':
                             if (!lovd_matchDate($sFieldvalue)) {
-                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a date in the format YYYY-MM-DD, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
+                                lovd_errorAdd($sFieldname, 'The field \'' . $sHeader . '\' must contain a valid date in the format YYYY-MM-DD, "' . htmlspecialchars($sFieldvalue) . '" does not match.');
                             }
                             break;
                         case 'DATETIME':

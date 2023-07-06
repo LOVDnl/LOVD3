@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-03-04
- * Modified    : 2023-02-01
- * For LOVD    : 3.0-29
+ * Modified    : 2023-07-05
+ * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -411,7 +411,7 @@ if (PATH_COUNT == 1 && ACTION == 'data_type_wizard') {
 
             // Format for the DATE/DATETIME column types.
             if ($_POST['form_type'] == 'date' && !lovd_matchDate($_POST['default_val'], !empty($_POST['time']))) {
-                lovd_errorAdd('default_val', 'The \'Default value\' for the date field should be like YYYY-MM-DD' . (empty($_POST['time'])? '.' : ' HH:MM:SS.'));
+                lovd_errorAdd('default_val', 'The \'Default value\' for the date field should be a valid date in the format YYYY-MM-DD' . (empty($_POST['time'])? '.' : ' HH:MM:SS.'));
             }
         }
 
