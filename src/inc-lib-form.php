@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-21
- * Modified    : 2023-07-05
+ * Modified    : 2023-07-06
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -573,7 +573,7 @@ function lovd_buildOptionTable ($aOptionsList = array())
 
 
 
-function lovd_matchDate ($s, $bTime = false)
+function lovd_matchDate ($s, $bTime = false, $bNoZeroDate = false)
 {
     // Function kindly provided by Ileos.nl in the interest of Open Source.
     // Matches a string to the date pattern, one that MySQL can understand.
@@ -593,7 +593,7 @@ function lovd_matchDate ($s, $bTime = false)
 
     // Finally, since strtotime() allows 31 days in months that have 30, do a better check.
     list($nYear, $nMonth, $nDay) = explode('-', $sDate);
-    if (!checkdate($nMonth, $nDay, $nYear)) {
+    if (!checkdate($nMonth, $nDay, $nYear) && !(!$bNoZeroDate && $sDate == '0000-00-00')) {
         return false;
     }
 
