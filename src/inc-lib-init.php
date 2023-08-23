@@ -2430,8 +2430,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                 ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $sDeleted . '>' . $sInserted . '".';
                         } else {
                             // We're not going to check here if this is a delAinsAT here that should be a shifted ins
-                            //  or even check for insertions that should be dups. VV will handle that if we need it.
-                            // Simply tell them to rewrite it.
+                            //  or even check for insertions that should be dups. lovd_fixHGVS() has some logic that can
+                            //  handle that. Since our function doesn't depend on lovd_fixHGVS(), simply throw a message
+                            //  telling the user to rewrite their input. If lovd_fixHGVS() will do a better job, the
+                            //  interface can present its result.
                             $aResponse['warnings']['WSUFFIXFORMAT'] =
                                 'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                                 ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "delins' . $sInserted . '".';
