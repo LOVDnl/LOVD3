@@ -1715,6 +1715,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_100)delA[50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_100)del50', array(
                 'position_start' => 1,
                 'position_end' => 100,
@@ -1824,6 +1835,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "N[30_50]" to "N[(30_50)]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[30_50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "A[30_50]" to "A[(30_50)]".',
                 ),
                 'errors' => array(),
                 'messages' => array(

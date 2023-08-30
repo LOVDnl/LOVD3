@@ -2384,32 +2384,51 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $nSuffixMinLength :
                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
-            } elseif (preg_match('/^N\[([0-9]+)_([0-9]+)\]$/i', $aVariant['suffix'], $aRegs)) {
+            } elseif (preg_match('/^([A-Z]+)\[([0-9]+)_([0-9]+)\]$/i', $aVariant['suffix'], $aRegs)) {
                 // g.(100_200)delN[50_60].
-                $bCaseOK = (substr($aVariant['suffix'], 0, 1) == 'N');
-                list(, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
+                list(, $sSequence, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                 if ($nSuffixMinLength > $nSuffixMaxLength) {
                     list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                 }
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    strtoupper($sSequence)
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+                }
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
                     'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                    ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
+                    ' Please rewrite "' . $aVariant['suffix'] . '" to "' . $sSequence . '[' .
                     ($nSuffixMinLength == $nSuffixMaxLength?
                         $nSuffixMinLength :
                         '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
-            } elseif (preg_match('/^N\[([0-9]+|\(([0-9]+)_([0-9]+)\))\]$/i', $aVariant['suffix'], $aRegs)) {
+            } elseif (preg_match('/^([A-Z]+)\[([0-9]+|\(([0-9]+)_([0-9]+)\))\]$/i', $aVariant['suffix'], $aRegs)) {
                 // g.123_124delN[2], g.(100_200)delN[(50_60)].
-                $bCaseOK = (substr($aVariant['suffix'], 0, 1) == 'N');
-                if (count($aRegs) == 2) {
-                    list(, $nSuffixMinLength) = $aRegs;
-                } else {
-                    list(,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    strtoupper($aRegs[1])
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                }
 
-                    if ($nSuffixMinLength > $nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength) {
+                if (!isset($aRegs[3])) {
+                    list(,, $nSuffixMinLength) = $aRegs;
+                } else {
+                    // Range was given.
+                    list(, $sSequence,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                    if ($nSuffixMinLength >= $nSuffixMaxLength) {
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                            ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
+                            ' Please rewrite "' . $aVariant['suffix'] . '" to "' . $sSequence . '[' .
                             ($nSuffixMinLength == $nSuffixMaxLength?
                                 $nSuffixMinLength :
                                 '(' . $nSuffixMaxLength . '_' . $nSuffixMinLength . ')') . ']".';
@@ -2431,7 +2450,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
             if ($bCheckHGVS
-                && (isset($aResponse['warnings']['WSUFFIXFORMAT']) || isset($aResponse['warnings']['WWRONGCASE']))) {
+                && (isset($aResponse['errors']['EINVALIDNUCLEOTIDES'])
+                    || isset($aResponse['warnings']['WSUFFIXFORMAT']) || isset($aResponse['warnings']['WWRONGCASE']))) {
                 return false;
             }
 
