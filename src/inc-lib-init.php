@@ -1669,7 +1669,49 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
         }
 
-        if (!count($aResponse['errors'])) {
+        // This code is based on the deletion suffix check code.
+        foreach (array_filter(preg_split('/(?<=])/', strtoupper($aVariant['type']))) as $sRepeat) {
+            if (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/i', $sRepeat, $aRegs)) {
+                // ...N[50_60].
+                list(, $sSequence, $nSuffixLength, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength > $nSuffixMaxLength) {
+                    list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                }
+                $aResponse['warnings']['WREPEATLENGTHFORMAT'] =
+                    'The repeat length format does not follow HGVS guidelines.' .
+                    ' Please rewrite "' . $sRepeat . '" to "' . $sSequence . '[' .
+                    ($nSuffixMinLength == $nSuffixMaxLength ?
+                        $nSuffixMinLength :
+                        '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+                break; // We can only handle one, anyway.
+
+            } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/i', $sRepeat, $aRegs)) {
+                // ...N[2], ...N[(50_60)].
+                if (isset($aRegs[4])) {
+                    // Range was given.
+                    list(, $sSequence, $nSuffixLength, , $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                    if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength >= $nSuffixMaxLength) {
+                        list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                        $aResponse['warnings']['WREPEATLENGTHFORMAT'] =
+                            'The repeat length format does not follow HGVS guidelines.' .
+                            ' Please rewrite "' . $sRepeat . '" to "' . $sSequence . '[' .
+                            ($nSuffixMinLength == $nSuffixMaxLength ?
+                                $nSuffixMinLength :
+                                '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
+                        break; // We can only handle one, anyway.
+                    }
+                }
+
+            } else {
+                // Something else. That can't be, because above are all the allowed options.
+                $aResponse['errors']['EREPEATLENGTHFORMAT'] =
+                    'The repeat length format does not follow HGVS guidelines.';
+                break; // We can only handle one, anyway.
+            }
+        }
+
+        // At this point, any warning or error is bad.
+        if (!count($aResponse['errors']) && !count($aResponse['warnings'])) {
             // Only when there are no errors...
             $aResponse['warnings']['WNOTSUPPORTED'] =
                 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';

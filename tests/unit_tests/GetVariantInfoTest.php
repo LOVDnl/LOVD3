@@ -822,6 +822,66 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1AC[21_20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines. Please rewrite "AC[21_20]" to "AC[(20_21)]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(20_21)]GT[10_10]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines. Please rewrite "GT[10_10]" to "GT[10]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(20_21)]GT[(10_11)]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(?_21)]GT[(10_?)]A[?]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1AC[(??)]', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'repeat',
+                'range' => false,
+                'warnings' => array(),
+                'errors' => array(
+                    'EREPEATLENGTHFORMAT' => 'The repeat length format does not follow HGVS guidelines.',
+                ),
+            )),
+            array('g.1_2AC[20]GT[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(
+                    'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
+                ),
+                'errors' => array(),
+            )),
             array('g.1_2AN[20]UZ[10]', array(
                 'position_start' => 1,
                 'position_end' => 2,
