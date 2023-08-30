@@ -850,6 +850,28 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123N=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '=',
+                'range' => false,
+                'warnings' => array(
+                    'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123U=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '=',
+                'range' => false,
+                'warnings' => array(
+                    'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
 
             // Unknown variants.
             array('c.?', array(

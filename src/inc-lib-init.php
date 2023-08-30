@@ -1389,7 +1389,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
         '((?:[A-Z]+|\.)>(?:[A-Z]+|\.)' .                     //  | (substitutions)
         '|([ACGTU]+\[[0-9]+])+' .                            //  | (repeat sequence)
-        '|[ACGTU]*=(\/{1,2}[ACGTU]*>[ACGTRYSWKMBDHUVN]+)?' . //  | (wild types, mosaics, or chimerics)
+        '|[A-Z]*=(\/{1,2}[A-Z]*>[A-Z]+)?' .                  //  | (wild types, mosaics, or chimerics)
         '|ins|dup|con|delins|del|inv|sup|\?' .               //  V
         '|\|(gom|lom|met=|.+))' .                            // 20. Type of variant.
 
@@ -1608,6 +1608,25 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             $aResponse['type'] = 'chimeric';
         } else {
             $aResponse['type'] = '=';
+        }
+
+        // Check if only correct bases have been used.
+        // Variant type has already been checked for case problems.
+        $sRefBases = strstr($aVariant['type'], '=', true);
+        $sAltBases = '';
+        // For mosaic/chimeric variants that also indicate the presence of a substitution.
+        if (preg_match('/([A-Z]*)>([A-Z]+)/', $aVariant['type'], $aRegs)) {
+            $sRefBases .= $aRegs[1];
+            $sAltBases .= $aRegs[2];
+        }
+        $sUnknownBases =
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/', '', $sRefBases) .
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/', '', $sAltBases);
+        if ($sUnknownBases) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
         }
 
     } elseif (strpos($aVariant['type'], '>')) {
@@ -1886,8 +1905,8 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
     }
 
     // Making sure wild type descriptions don't provide nucleotides
-    // (e.g. c.123A=, which should be c.123=).
-    if ($aResponse['type'] == '=' && preg_match('/[ACGT]/', $sVariant)) {
+    //  (e.g. c.123A=, which should be c.123=).
+    if ($aResponse['type'] == '=' && preg_match('/^[A-Z]/', $aVariant['type'])) {
         if ($bCheckHGVS) {
             return false;
         }
