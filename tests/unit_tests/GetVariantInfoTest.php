@@ -1854,6 +1854,44 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_100)delA[?_50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "A[?_50]" to "A[(?_50)]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)dela[30_?]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "a[30_?]" to "A[(30_?)]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[?]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(100_200)_(400_500)delEX5', array(
                 'position_start' => 200,
                 'position_end' => 400,
