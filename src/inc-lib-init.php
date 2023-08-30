@@ -1387,13 +1387,13 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
         '\)))?' .
 
-        '((?:[A-Z]+|\.)>(?:[A-Z]+|\.)' .                     //  | (substitutions)
-        '|([ACGTU]+\[[0-9]+])+' .                            //  | (repeat sequence)
-        '|[A-Z]*=(\/{1,2}[A-Z]*>[A-Z]+)?' .                  //  | (wild types, mosaics, or chimerics)
-        '|ins|dup|con|delins|del|inv|sup|\?' .               //  V
-        '|\|(gom|lom|met=|.+))' .                            // 20. Type of variant.
+        '(con|delins|del|dup|ins|inv|sup|\?' .   // 20. Type of variant.
+        '|(?:[A-Z]+|\.)>(?:[A-Z]+|\.)' .         //     (substitutions)
+        '|([A-Z]+\[[0-9_()?]+])+' .              //     (repeat sequence)
+        '|\|(gom|lom|met=|.+)' .                 //     (types starting with a pipe)
+        '|[A-Z]*=(\/{1,2}[A-Z]*>[A-Z]+)?)' .     //     (wild types, mosaics, or chimerics)
 
-        '(.*)))/i',                                          // 24. Suffix.
+        '(.*)))/i',                              // 24. Suffix.
 
         $sVariant, $aMatches);
 
@@ -1655,8 +1655,27 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif (substr($aVariant['type'], -1) == ']') {
         $aResponse['type'] = 'repeat';
-        $aResponse['warnings']['WNOTSUPPORTED'] =
-            'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+
+        // We'll have to do all the checking here, before we call this a valid format.
+        // Variant type has already been checked for case problems.
+
+        // Check if only correct bases have been used.
+        $sUnknownBases = preg_replace(
+            '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+            '',
+            preg_replace('/\[[^\]]+\]/', '', $aVariant['type'])
+        );
+        if ($sUnknownBases) {
+            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+        }
+
+        if (!count($aResponse['errors'])) {
+            // Only when there are no errors...
+            $aResponse['warnings']['WNOTSUPPORTED'] =
+                'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.';
+        } elseif ($bCheckHGVS) {
+            return false;
+        }
 
     } elseif ($aVariant['type'] == '?') {
         $aResponse['type'] = NULL;

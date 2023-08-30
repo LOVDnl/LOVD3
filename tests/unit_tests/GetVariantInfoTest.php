@@ -449,6 +449,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_2insU[5_10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
             array('g.1_2insN[(5_10)]', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -456,6 +466,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(),
                 'errors' => array(),
+            )),
+            array('g.1_2insU[(5_10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
             array('g.1_2insN[(10_5)]', array(
                 'position_start' => 1,
@@ -801,6 +821,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'WNOTSUPPORTED' => 'Although this variant is a valid HGVS description, this syntax is currently not supported for mapping and validation.',
                 ),
                 'errors' => array(),
+            )),
+            array('g.1_2AN[20]UZ[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'repeat',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U", "Z".',
+                ),
             )),
 
             // Mosaicism and chimerism.
