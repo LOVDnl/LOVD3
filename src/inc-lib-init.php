@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-08-23
+ * Modified    : 2023-08-30
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2261,7 +2261,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 // g.123_124del2.
                 $nSuffixMinLength = $aVariant['suffix'];
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' . $nSuffixMinLength . ']".';
 
             } elseif (preg_match('/^[ACGTNU]+$/i', $aVariant['suffix'])) {
@@ -2281,7 +2281,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                 }
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
                     (!$nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength?
                         $nSuffixMinLength :
@@ -2295,7 +2295,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                 }
                 $aResponse['warnings']['WSUFFIXFORMAT'] =
-                    'The length of the variant is not formatted following the HGVS guidelines.' .
+                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
                     ($nSuffixMinLength == $nSuffixMaxLength?
                         $nSuffixMinLength :
@@ -2311,7 +2311,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
                     if ($nSuffixMinLength > $nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength) {
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The length of the variant is not formatted following the HGVS guidelines.' .
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                             ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' .
                             ($nSuffixMinLength == $nSuffixMaxLength?
                                 $nSuffixMinLength :
