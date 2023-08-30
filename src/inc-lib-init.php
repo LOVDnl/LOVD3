@@ -35,6 +35,10 @@
 //  this in $_SETT because tests need it (and don't include inc-init.php).
 $_LIBRARIES = array(
     'regex_patterns' => array(
+        'bases' => array(
+            'ref' => '[ACGTN]',
+            'alt' => '[ACGTMRWSYKVHDBN]',
+        ),
         'refseq' => array(
             'basic' => '/^[A-Z_.t0-9()-]+$/',
             'strict'  =>
@@ -1383,7 +1387,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 '([-+]([0-9]+|\?))?' .           // 18. Latest intronic end position.
         '\)))?' .
 
-        '((?:[ACGTU]+|\.)>(?:[ACGTRYSWKMBDHUVN]+|\.)' .      //  | (substitution)
+        '((?:[A-Z]+|\.)>(?:[A-Z]+|\.)' .                     //  | (substitutions)
         '|([ACGTU]+\[[0-9]+])+' .                            //  | (repeat sequence)
         '|[ACGTU]*=(\/{1,2}[ACGTU]*>[ACGTRYSWKMBDHUVN]+)?' . //  | (wild types, mosaics, or chimerics)
         '|ins|dup|con|delins|del|inv|sup|\?' .               //  V
@@ -1413,7 +1417,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         'latest_end'              => (!isset($aMatches[17])?  0 : $aMatches[17]),
         'latest_intronic_end'     => (!isset($aMatches[18])?  0 : (int) str_replace('?', '1', $aMatches[18])),
         'type'                    => (!isset($aMatches[20])? '' :
-            (preg_match('/(^[ACTG]*=|[>\[])/i', $aMatches[20])? strtoupper($aMatches[20]) : strtolower($aMatches[20]))),
+            (preg_match('/(^[A-Z]*=|[>\[])/i', $aMatches[20])? strtoupper($aMatches[20]) : strtolower($aMatches[20]))),
         'suffix'                  => (!isset($aMatches[24])? '' : $aMatches[24]),
     ));
 
@@ -1608,6 +1612,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     } elseif (strpos($aVariant['type'], '>')) {
         $aResponse['type'] = 'subst';
+
+        // Check if only correct bases have been used.
+        // Variant type has already been checked for case problems.
+        list($sRefBases, $sAltBases) = explode('>', str_replace('.', '', $aVariant['type']), 2);
+        $sUnknownBases =
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/', '', $sRefBases) .
+            preg_replace('/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/', '', $sAltBases);
+        if ($sUnknownBases) {
+            if ($bCheckHGVS) {
+                return false;
+            }
+            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', str_split($sUnknownBases)) . '".';
+        }
 
     } elseif ($aVariant['type'] == 'con') {
         if ($bCheckHGVS) {
