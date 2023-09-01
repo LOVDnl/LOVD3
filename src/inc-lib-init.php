@@ -2274,7 +2274,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
                     // Looping through all possible variants.
                     // Some have specific errors, so we handle these first.
-                    if (preg_match('/^([ACGTN]+)\[([0-9]+|\?)_([0-9]+|\?)\]$/', $sInsertion, $aRegs)) {
+                    if (preg_match('/^[A-Z]+$/i', $sInsertion)) {
+                        // g.1_2insAA.
+                        // Check if only correct bases have been used.
+                        $sUnknownBases = preg_replace(
+                            '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                            '',
+                            strtoupper($sInsertion)
+                        );
+                        if ($sUnknownBases) {
+                            $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                        }
+
+                    } elseif (preg_match('/^([ACGTN]+)\[([0-9]+|\?)_([0-9]+|\?)\]$/', $sInsertion, $aRegs)) {
                         // c.1_2insN[10_20].
                         if ($bCheckHGVS) {
                             return false;
@@ -2309,11 +2321,10 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         }
 
                     } elseif (!(
-                        (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                            // so no c.1_2ins[A]
-                            && (preg_match('/^[ACGTN]+$/', $sInsertion)                                                // c.1_2insATG
-                                || (preg_match(                                                                        // c.1_2ins15+1_16-1
-                                    '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
-                                    && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) // if positions are simple, is A < B?
+                        (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                       // so no c.1_2ins[A]
+                            && (preg_match(                                                                       // c.1_2ins15+1_16-1
+                                '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
+                                && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3]))) // if positions are simple, is A < B?
                         ||
                         ($bSuffixIsSurroundedByBrackets && strpos($sInsertion, ':')
                             && ( // If we have brackets and we find a colon, we expect a full position or inversion.
@@ -2326,6 +2337,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         }
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
+                    }
+                    if ($bCheckHGVS
+                        && (isset($aResponse['errors']['EINVALIDNUCLEOTIDES'])
+                            || isset($aResponse['warnings']['WSUFFIXFORMAT']))) {
+                        return false;
                     }
                 }
             }
