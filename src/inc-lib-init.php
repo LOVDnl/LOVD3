@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-08-30
+ * Modified    : 2023-09-01
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1547,15 +1547,19 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         $aVariant['type'] = str_replace('bsrc', 'bsrC', $aVariant['type']);
     }
     // Now check.
-    if ((isset($aMatches[1]) && $aVariant['prefix'] != $aMatches[1])
-        || (isset($aMatches[20]) && $aVariant['type'] != $aMatches[20])) {
-        // There's a case problem.
-        if ($bCheckHGVS) {
-            return false;
-        }
+    if ((isset($aMatches[1]) && $aVariant['prefix'] != $aMatches[1])) {
+        // There's a case problem in the prefix.
+        $aResponse['warnings']['WWRONGCASE'] =
+            'This is not a valid HGVS description, due to characters being in the wrong case.' .
+            ' Please rewrite "' . $aMatches[1] . '." to "' . $aVariant['prefix'] . '.".';
+    } elseif (isset($aMatches[20]) && $aVariant['type'] != $aMatches[20]) {
+        // There's a case problem in the variant type.
         $aResponse['warnings']['WWRONGCASE'] =
             'This is not a valid HGVS description, due to characters being in the wrong case.' .
             ' Please check the use of upper- and lowercase characters.';
+    }
+    if (isset($aResponse['warnings']['WWRONGCASE']) && $bCheckHGVS) {
+        return false;
     }
 
     // Storing the variant type.
