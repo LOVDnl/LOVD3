@@ -187,6 +187,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.123a>c', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'subst',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "a>c" to "A>C".',
+                ),
+                'errors' => array(),
+            )),
             array('g.123.>.', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -373,6 +383,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => false,
                 'warnings' => array(
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1DELA', array(
+                'position_start' => 1,
+                'position_end' => 1,
+                'type' => 'del',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "DEL" to "del".',
                     'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(),
@@ -956,6 +977,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => '=',
                 'range' => false,
                 'warnings' => array(
+                    'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
+            array('g.123u=', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => '=',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "u=" to "U=".',
                     'WBASESGIVEN' => 'When using "=", please remove the original sequence before the "=".',
                 ),
                 'errors' => array(
@@ -2559,7 +2593,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'dup',
                 'range' => false,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters.',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "DUP" to "dup".',
                 ),
                 'errors' => array(),
             )),

@@ -1536,7 +1536,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
     // Clean position string. We'll use it for reporting later on.
     if ($aVariant['positions']) {
-        $aVariant['positions'] = strstr($aVariant['positions'], $aVariant['type'], true);
+        $aVariant['positions'] = stristr($aVariant['positions'], $aVariant['type'], true);
         // And now with more precision.
         $aResponse['range'] = (strpos($aVariant['positions'], '_') !== false);
     }
@@ -1556,7 +1556,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
         // There's a case problem in the variant type.
         $aResponse['warnings']['WWRONGCASE'] =
             'This is not a valid HGVS description, due to characters being in the wrong case.' .
-            ' Please check the use of upper- and lowercase characters.';
+            ' Please rewrite "' . $aMatches[20] . '" to "' . $aVariant['type'] . '".';
     }
     if (isset($aResponse['warnings']['WWRONGCASE']) && $bCheckHGVS) {
         return false;
