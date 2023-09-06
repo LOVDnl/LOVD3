@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-09-01
+ * Modified    : 2023-09-06
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2268,10 +2268,18 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
             } else {
                 $bSuffixIsSurroundedByBrackets = ($aVariant['suffix'][0] == '[' && substr($aVariant['suffix'], -1) == ']');
-                $bMultipleInsertionsInSuffix = strpos($aVariant['suffix'], ';');
+                $aInsertions = explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
+                    substr($aVariant['suffix'], 1, -1)));
+                $bMultipleInsertionsInSuffix = (count($aInsertions) > 1);
+                $bRefSeqInSuffix = strpos($aVariant['suffix'], ':');
 
-                foreach (explode(';', (!$bSuffixIsSurroundedByBrackets? $aVariant['suffix'] :
-                        substr($aVariant['suffix'], 1, -1))) as $sInsertion) {
+                // Check for, e.g., c.1_2ins[A].
+                if ($bSuffixIsSurroundedByBrackets && !$bMultipleInsertionsInSuffix && !$bRefSeqInSuffix) {
+                    $aResponse['warnings']['WSUFFIXFORMAT'] =
+                        'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. Only use square brackets for complex insertions.';
+                }
+
+                foreach ($aInsertions as $sInsertion) {
                     // Looping through all possible variants.
                     // Some have specific errors, so we handle these first.
                     if (preg_match('/^[A-Z]+$/i', $sInsertion)) {
@@ -2321,10 +2329,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         }
 
                     } elseif (!(
-                        (!(!$bMultipleInsertionsInSuffix && $bSuffixIsSurroundedByBrackets)                       // so no c.1_2ins[A]
-                            && (preg_match(                                                                       // c.1_2ins15+1_16-1
-                                '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
-                                && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3]))) // if positions are simple, is A < B?
+                        (preg_match(                                                                       // c.1_2ins15+1_16-1
+                            '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
+                            && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])) // if positions are simple, is A < B?
                         ||
                         ($bSuffixIsSurroundedByBrackets && strpos($sInsertion, ':')
                             && ( // If we have brackets and we find a colon, we expect a full position or inversion.
