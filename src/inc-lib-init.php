@@ -2282,8 +2282,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 foreach ($aInsertions as $sInsertion) {
                     // Looping through all possible variants.
                     // Some have specific errors, so we handle these first.
+                    $bCaseOK = true;
                     if (preg_match('/^[A-Z]+$/i', $sInsertion)) {
                         // g.1_2insAA.
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
+
                         // Check if only correct bases have been used.
                         $sUnknownBases = preg_replace(
                             '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
@@ -2299,6 +2302,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         if ($bCheckHGVS) {
                             return false;
                         }
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
                         list(, $sSequence, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
@@ -2311,6 +2315,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
                     } elseif (preg_match('/^([ACGTN]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', $sInsertion, $aRegs)) {
                         // c.1_2insN[40] or ..N[(1_2)].
+                        $bCaseOK = ($sInsertion == strtoupper($sInsertion));
                         if (isset($aRegs[4])) {
                             // Range was given.
                             list(, $sSequence, $nSuffixLength,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
@@ -2345,9 +2350,26 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $aResponse['warnings']['WSUFFIXFORMAT'] =
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
                     }
+                    if (!$bCaseOK) {
+                        // Wrong case in the suffix.
+                        // Don't add a suggestion when we already throw a WSUFFIXFORMAT because that one contains a better fix.
+                        if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
+                            // Wrong case only.
+                            $aResponse['warnings']['WWRONGCASE'] =
+                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
+                                ($bRefSeqInSuffix? '' : // Don't uppercase the whole suffix when there's a refseq in there.
+                                    ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . strtoupper($aVariant['suffix']) . '".');
+                        } elseif (!isset($aResponse['warnings']['WWRONGCASE'])) {
+                            // There's already a detailed warning on what to replace. Throw a general warning only.
+                            $aResponse['warnings']['WWRONGCASE'] =
+                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
+                                ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
+                        }
+                    }
                     if ($bCheckHGVS
                         && (isset($aResponse['errors']['EINVALIDNUCLEOTIDES'])
-                            || isset($aResponse['warnings']['WSUFFIXFORMAT']))) {
+                            || isset($aResponse['warnings']['WSUFFIXFORMAT'])
+                            || isset($aResponse['warnings']['WWRONGCASE']))) {
                         return false;
                     }
                 }

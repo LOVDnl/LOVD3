@@ -418,6 +418,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.1_2insa', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "insa" to "insA".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1_2insN', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -435,6 +445,24 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(
                     'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
                 ),
+            )),
+            array('g.1_2insa[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "insa[10]" to "insA[10]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insA[10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
             )),
             array('g.1_2insN[10]', array(
                 'position_start' => 1,
@@ -1629,12 +1657,14 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
-            array('g.1_2ins[NC_123456.1:g.1_10;U]', array(
+            array('g.1_2ins[NC_123456.1:g.1_10;a;U]', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
                 'range' => true,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case.',
+                ),
                 'errors' => array(
                     'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
                 ),
