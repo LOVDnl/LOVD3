@@ -513,7 +513,9 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'position_end' => 2,
                 'type' => 'ins',
                 'range' => true,
-                'warnings' => array(),
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "U[5_10]" to "U[(5_10)]".',
+                ),
                 'errors' => array(
                     'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
                 ),
