@@ -2425,15 +2425,20 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' . $nSuffixMinLength . ']".';
 
-            } elseif (preg_match('/^[ACGTNU]+$/i', $aVariant['suffix'])) {
+            } elseif (preg_match('/^[A-Z]+$/i', $aVariant['suffix'])) {
                 // g.123_124delAA.
                 $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
-                if (strpos(strtoupper($aVariant['suffix']), 'U') !== false) {
-                    $aResponse['warnings']['WSUFFIXFORMAT'] =
-                        'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                        ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . str_replace('U', 'T', strtoupper($aVariant['suffix'])) . '".';
-                }
                 $nSuffixMinLength = strlen($aVariant['suffix']);
+
+                // Check if only correct bases have been used.
+                $sUnknownBases = preg_replace(
+                    '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                    '',
+                    strtoupper($aVariant['suffix'])
+                );
+                if ($sUnknownBases) {
+                    $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                }
 
             } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $aVariant['suffix'], $aRegs)) {
                 // g.123_124del(2), g.(100_200)del(50_60).
@@ -2502,7 +2507,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             }
             if (!$bCaseOK) {
                 if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
-                    // Wrong case only, no U-characters detected.
+                    // Wrong case only.
                     $aResponse['warnings']['WWRONGCASE'] =
                         'This is not a valid HGVS description, due to characters being in the wrong case.' .
                         ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $aVariant['type'] . strtoupper($aVariant['suffix']) . '".';
