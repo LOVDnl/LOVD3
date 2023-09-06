@@ -2299,11 +2299,11 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
 
                     } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($sInsertion), $aRegs)) {
                         // c.1_2insN[10_20].
-                        if ($bCheckHGVS) {
-                            return false;
-                        }
                         $bCaseOK = ($sInsertion == strtoupper($sInsertion));
-                        list(, $sSequence, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                        list(, $sSequence, $nSuffixLength, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
+                        if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength > $nSuffixMaxLength) {
+                            list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                        }
 
                         // Check if only correct bases have been used.
                         $sUnknownBases = preg_replace(
@@ -2319,9 +2319,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             ' Please rewrite "' . $sInsertion . '" to "' . $sSequence . '[' .
                             ($nSuffixMinLength == $nSuffixMaxLength?
                                 $nSuffixMinLength :
-                                '(' . (strpos($sInsertion, '?') !== false || $nSuffixMinLength < $nSuffixMaxLength?
-                                    $nSuffixMinLength . '_' . $nSuffixMaxLength :
-                                    min($nSuffixMinLength, $nSuffixMaxLength) . '_' . max($nSuffixMinLength, $nSuffixMaxLength)) . ')') . ']".';
+                                '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']".';
 
                     } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)|\(([0-9]+|\?)_([0-9]+|\?)\))\]$/', strtoupper($sInsertion), $aRegs)) {
                         // c.1_2insN[40] or ..N[(1_2)].
@@ -2340,9 +2338,6 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             // Range was given.
                             list(, $sSequence, $nSuffixLength,, $nSuffixMinLength, $nSuffixMaxLength) = $aRegs;
                             if (strpos($nSuffixLength, '?') === false && $nSuffixMinLength >= $nSuffixMaxLength) {
-                                if ($bCheckHGVS) {
-                                    return false;
-                                }
                                 list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
                                 $aResponse['warnings']['WSUFFIXFORMAT'] =
                                     'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
