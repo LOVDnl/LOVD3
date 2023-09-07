@@ -2425,7 +2425,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
                     ' Please rewrite "' . $aVariant['suffix'] . '" to "N[' . $nSuffixMinLength . ']".';
 
-            } elseif (preg_match('/^[A-Z]+$/i', $aVariant['suffix'])) {
+            } elseif (stripos($aVariant['suffix'], 'ins') === false && preg_match('/^[A-Z]+$/i', $aVariant['suffix'])) {
                 // g.123_124delAA.
                 $bCaseOK = ($aVariant['suffix'] == strtoupper($aVariant['suffix']));
                 $nSuffixMinLength = strlen($aVariant['suffix']);
