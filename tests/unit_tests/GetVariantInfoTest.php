@@ -749,6 +749,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123deluinsG', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGTYPE' => 'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "deluinsG" to "U>G".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                ),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
+            )),
             array('g.123delAinsGG', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -2784,6 +2797,18 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123DELAINST', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "DEL" to "del".',
+                    'WWRONGTYPE' =>
+                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "DELAINST" to "A>T".',
+                ),
+                'errors' => array(),
+            )),
             array('g.123delainsu', array(
                 'position_start' => 123,
                 'position_end' => 123,
@@ -2792,9 +2817,11 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(
                     'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
                     'WWRONGTYPE' =>
-                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainsu" to "A>T".',
+                        'A deletion-insertion of one base to one base should be described as a substitution. Please rewrite "delainsu" to "A>U".',
                 ),
-                'errors' => array(),
+                'errors' => array(
+                    'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
+                ),
             )),
             array('g. 123_124insA', array(
                 'position_start' => 123,

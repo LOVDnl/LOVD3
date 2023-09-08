@@ -2603,26 +2603,46 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $aResponse['warnings']['WSUFFIXFORMAT'] =
                         'The length of the variant is not formatted following the HGVS guidelines.' .
                         ' When indicating an uncertain position like this, the length or sequence of the variant must be provided.';
-                } elseif ($aVariant['type'] == 'del' && strpos(strtolower($aVariant['suffix']), 'ins')) {
+                } elseif ($aVariant['type'] == 'del' && stripos($aVariant['suffix'], 'ins')) {
                     // A very special case; deletions where the suffix contains "ins". This is usually a delNinsN case.
                     // We can have this rewritten, but only when the length matches. We'll use a recursive call to find
                     //  out if that's OK. Based on that, we'll devise our answer.
-                    list($sDeleted, $sInserted) = array_map('strtoupper', explode('ins', str_replace('u', 't', strtolower($aVariant['suffix'])), 2));
+                    list($sDeleted, $sInserted) = array_map('strtoupper', explode('ins', strtolower($aVariant['suffix']), 2));
+
+                    // Check for a proper case.
+                    $bCaseOK = ($aVariant['suffix'] == $sDeleted . 'ins' . $sInserted);
+                    if (!$bCaseOK && !isset($aResponse['warnings']['WWRONGCASE'])) {
+                        // Don't overwrite an existing WWRONGCASE, that complained about the variant type itself.
+                        $aResponse['warnings']['WWRONGCASE'] =
+                            'This is not a valid HGVS description, due to characters being in the wrong case.' .
+                            ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
+                    }
+
+                    // Check if only correct bases have been used.
+                    $sUnknownBases = preg_replace(
+                        '/' . $_LIBRARIES['regex_patterns']['bases']['ref'] . '+/',
+                        '',
+                        $sDeleted
+                    ) . preg_replace(
+                        '/' . $_LIBRARIES['regex_patterns']['bases']['alt'] . '+/',
+                        '',
+                        $sInserted
+                    );
+                    if ($sUnknownBases) {
+                        $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
+                    }
+
+                    // Check the deleted part, by checking simply everything before "ins".
                     $aDeletion = lovd_getVariantInfo(str_replace($aVariant['suffix'], $sDeleted, $sVariant), $sTranscriptID);
                     // If the suffix matches the variant's length, or the suffix is unparseable, then we'll get a WSUFFIXGIVEN.
-                    if (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXGIVEN'])) {
+                    // We'll also allow the presence of a WWRONGCASE.
+                    if (!array_diff(array_keys($aDeletion['warnings']), array('WSUFFIXGIVEN', 'WWRONGCASE'))) {
                         $aResponse['type'] = 'delins';
-                        $bCaseOK = ($aVariant['suffix'] == $sDeleted . 'ins' . $sInserted);
-                        if (!$bCaseOK) {
-                            $aResponse['warnings']['WWRONGCASE'] =
-                                'This is not a valid HGVS description, due to characters being in the wrong case.' .
-                                ' Please check the use of upper- and lowercase characters after "' . $aVariant['type'] . '".';
-                        }
-                        if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[ACGTN]$/', $sDeleted)) {
+                        if (strlen($sDeleted) == 1 && strlen($sInserted) == 1 && preg_match('/^[A-Z]$/', $sDeleted)) {
                             // Another special case; a delins that should have been a substitution.
                             $aResponse['warnings']['WWRONGTYPE'] =
                                 'A deletion-insertion of one base to one base should be described as a substitution.' .
-                                ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . $sDeleted . '>' . $sInserted . '".';
+                                ' Please rewrite "' . substr($sVariant, stripos($sVariant, $aVariant['type'])) . '" to "' . $sDeleted . '>' . $sInserted . '".';
                         } else {
                             // We're not going to check here if this is a delAinsAT here that should be a shifted ins
                             //  or even check for insertions that should be dups. lovd_fixHGVS() has some logic that can
