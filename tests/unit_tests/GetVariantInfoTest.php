@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2023-09-06
+ * Modified    : 2023-09-08
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1641,6 +1641,46 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.1_2insN[5]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[?]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(5_10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(?_10)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(5_?)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('g.1_2ins[A]', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -1940,6 +1980,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_100)delA[(30_50)]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_100)delA[?_50]', array(
                 'position_start' => 1,
                 'position_end' => 100,
@@ -1948,6 +1999,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(
                     'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "A[?_50]" to "A[(?_50)]".',
                 ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
+            array('g.(1_100)delA[(?_50)]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(),
                 'errors' => array(),
                 'messages' => array(
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
