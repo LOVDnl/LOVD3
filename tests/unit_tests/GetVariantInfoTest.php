@@ -772,6 +772,68 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 ),
                 'errors' => array(),
             )),
+            array('g.123delAinsAG', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123delAinsAG" to "g.123_124insG".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123delAAinsGA', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range shorter than the given length of the variant. Please adjust the positions if the variant length is certain, or remove the variant length.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123delAAinsGG', array(
+                'position_start' => 123,
+                'position_end' => 123,
+                'type' => 'delins',
+                'range' => false,
+                'warnings' => array(
+                    'WSUFFIXINVALIDLENGTH' => 'The positions indicate a range shorter than the given length of the variant. Please adjust the positions if the variant length is certain, or remove the variant length.',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_124delAAinsAA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123_124delAAinsAA" to "g.123_124=".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_124delaainsGA', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123_124delaainsGA" to "g.123A>G".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.123_124delAAinsggaa', array(
+                'position_start' => 123,
+                'position_end' => 124,
+                'type' => 'delins',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
+                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "g.123_124delAAinsggaa" to "g.122_123insGG".',
+                ),
+                'errors' => array(),
+            )),
             array('g.100_200con400_500', array(
                 'position_start' => 100,
                 'position_end' => 200,

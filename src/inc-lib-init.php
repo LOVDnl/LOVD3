@@ -2644,14 +2644,44 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                                 'A deletion-insertion of one base to one base should be described as a substitution.' .
                                 ' Please rewrite "' . substr($sVariant, stripos($sVariant, $aVariant['type'])) . '" to "' . $sDeleted . '>' . $sInserted . '".';
                         } else {
-                            // We're not going to check here if this is a delAinsAT here that should be a shifted ins
-                            //  or even check for insertions that should be dups. lovd_fixHGVS() has some logic that can
-                            //  handle that. Since our function doesn't depend on lovd_fixHGVS(), simply throw a message
-                            //  telling the user to rewrite their input. If lovd_fixHGVS() will do a better job, the
-                            //  interface can present its result.
-                            $aResponse['warnings']['WSUFFIXFORMAT'] =
-                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                                ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "delins' . $sInserted . '".';
+                            // The deleted and/or the inserted part is not 1 base long.
+                            if (function_exists('lovd_fixHGVS')
+                                && strlen($sDeleted) && preg_match('/^[A-Z]+$/', $sDeleted . $sInserted)) {
+                                // We have to intervene here; we can't give a generic warning that may be incorrect,
+                                //  because lovd_fixHGVS() will simply perform the suggested fix and think it's all OK.
+                                //  To make sure that we handle delAinsAA cases and related, activate the part of
+                                //  lovd_fixHGVS() that generates the proper variant description.
+                                $sFixedVariant = lovd_fixHGVS(
+                                    str_ireplace(
+                                        $aVariant['type'] . $aVariant['suffix'],
+                                        $sDeleted . '>' . $sInserted,
+                                        $sVariant
+                                    )
+                                );
+                                $aFixedVariant = lovd_getVariantInfo($sFixedVariant, $sTranscriptID);
+                                if (empty($aFixedVariant['errors']) && empty($aFixedVariant['warnings'])) {
+                                    // The suggested fix is correct HGVS. If the variant is pretty much the same, we
+                                    //  only mention the last part of the variant in our output. Otherwise, the whole
+                                    //  variant description is mentioned.
+                                    if (stripos($sFixedVariant, $aVariant['prefix'] . '.' . $aVariant['positions'] . $aVariant['type']) === 0) {
+                                        // Very similar variants.
+                                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                            ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "' . strstr($sFixedVariant, $aFixedVariant['type']) . '".';
+                                    } else {
+                                        $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                            ' Please rewrite "' . $sVariant . '" to "' . $sFixedVariant . '".';
+                                    }
+                                }
+                            }
+
+                            if (!isset($aResponse['warnings']['WSUFFIXFORMAT'])) {
+                                // The above code didn't result in a better fix, so provide our default.
+                                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                    ' Please rewrite "' . $aVariant['type'] . $aVariant['suffix'] . '" to "delins' . $sInserted . '".';
+                            }
                         }
 
                     } elseif (count($aDeletion['warnings']) == 1 && isset($aDeletion['warnings']['WSUFFIXINVALIDLENGTH'])) {
