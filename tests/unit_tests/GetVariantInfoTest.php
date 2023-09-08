@@ -1724,12 +1724,52 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('g.1_2insN[5_10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[5_10]" to "N[(5_10)]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[?_10]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[?_10]" to "N[(?_10)]".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[5_?]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[5_?]" to "N[(5_?)]".',
+                ),
+                'errors' => array(),
+            )),
             array('g.1_2insN[?]', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(),
+                'errors' => array(),
+            )),
+            array('g.1_2insN[(5_5)]', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Please rewrite "N[(5_5)]" to "N[5]".',
+                ),
                 'errors' => array(),
             )),
             array('g.1_2insN[(5_10)]', array(
