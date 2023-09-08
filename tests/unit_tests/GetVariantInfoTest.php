@@ -2718,6 +2718,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(
                     'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagatt" to "delGAGAGATT".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(),
             )),
@@ -2727,8 +2728,8 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'del',
                 'range' => true,
                 'warnings' => array(
-                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please check the use of upper- and lowercase characters after "del".',
-                    'WSUFFIXFORMAT' => 'The part after "del" does not follow HGVS guidelines. Please rewrite "delgagagauu" to "delGAGAGATT".',
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "delgagagauu" to "delGAGAGAUU".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(
                     'EINVALIDNUCLEOTIDES' => 'This variant description contains invalid nucleotides: "U".',
@@ -2741,6 +2742,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => true,
                 'warnings' => array(
                     'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "deln[8]" to "delN[8]".',
+                    'WSUFFIXGIVEN' => 'Nothing should follow "del".',
                 ),
                 'errors' => array(),
             )),

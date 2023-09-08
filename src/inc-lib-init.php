@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-09-06
+ * Modified    : 2023-09-08
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2411,7 +2411,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
             // All other variants should get their suffix checked first, before
             //  we warn that it shouldn't be there. Because if it contains a
             //  different type of error, we should report that first.
-            // Case problems are not checked yet. So it's important to do that here.
+            // Case problems in the suffix are not checked yet. So it's important to do that here.
             $bCaseOK = true;
 
             // First check all length issues. Can we parse the suffix into a
@@ -2519,8 +2519,9 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
             }
             if ($bCheckHGVS
+                // We deliberately ignore WWRONGCASE here, as we want to analyze the suffix even more.
                 && (isset($aResponse['errors']['EINVALIDNUCLEOTIDES'])
-                    || isset($aResponse['warnings']['WSUFFIXFORMAT']) || isset($aResponse['warnings']['WWRONGCASE']))) {
+                    || isset($aResponse['warnings']['WSUFFIXFORMAT']))) {
                 return false;
             }
 
@@ -2570,7 +2571,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         $aResponse['warnings']['WSUFFIXINVALIDLENGTH'] =
                             'The positions indicate a range longer than the given length of the variant.' .
                             ' Please adjust the positions if the variant length is certain, or remove the variant length.';
-                    } elseif (!isset($aResponse['warnings']['WWRONGCASE'])) {
+                    } else {
                         // Length is not (partially) larger, is not (partially) smaller, so must be equal.
                         // This is where the suffix becomes unnecessary.
                         $aResponse['warnings']['WSUFFIXGIVEN'] = 'Nothing should follow "' . $aVariant['type'] . '".';
@@ -2647,15 +2648,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.';
                     }
                 }
+            }
 
-                if ($bCheckHGVS
-                    && (isset($aResponse['warnings']['WSUFFIXFORMAT'])
-                        || isset($aResponse['warnings']['WSUFFIXGIVEN'])
-                        || isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH'])
-                        || isset($aResponse['warnings']['WWRONGCASE'])
-                        || isset($aResponse['warnings']['WWRONGTYPE']))) {
-                    return false;
-                }
+            if ($bCheckHGVS
+                && (isset($aResponse['warnings']['WSUFFIXFORMAT'])
+                    || isset($aResponse['warnings']['WSUFFIXGIVEN'])
+                    || isset($aResponse['warnings']['WSUFFIXINVALIDLENGTH'])
+                    || isset($aResponse['warnings']['WWRONGCASE'])
+                    || isset($aResponse['warnings']['WWRONGTYPE']))) {
+                return false;
             }
         }
     }
