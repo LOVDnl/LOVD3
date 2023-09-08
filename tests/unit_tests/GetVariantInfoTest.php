@@ -1852,6 +1852,19 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                     'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
                 ),
             )),
+            array('g.(1_100)dela[50]', array(
+                'position_start' => 1,
+                'position_end' => 100,
+                'type' => 'del',
+                'range' => true,
+                'warnings' => array(
+                    'WWRONGCASE' => 'This is not a valid HGVS description, due to characters being in the wrong case. Please rewrite "dela[50]" to "delA[50]".',
+                ),
+                'errors' => array(),
+                'messages' => array(
+                    'IPOSITIONRANGE' => 'This variant description contains uncertain positions.',
+                ),
+            )),
             array('g.(1_100)del50', array(
                 'position_start' => 1,
                 'position_end' => 100,

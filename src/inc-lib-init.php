@@ -2534,6 +2534,14 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     $nSuffixMaxLength = $nSuffixMinLength;
                 }
 
+                // To make sure we can handle questionmarks used in lengths, reset them to numeric values.
+                if ($nSuffixMinLength == '?') {
+                    $nSuffixMinLength = 1;
+                }
+                if ($nSuffixMaxLength == '?') {
+                    $nSuffixMaxLength = $nVariantLength;
+                }
+
                 if (isset($aResponse['messages']['IUNCERTAINRANGE'])) {
                     // Variants with three or more positions. We have the inner positions stored; we know nothing about
                     //  the outer range currently, so we can not check this.
