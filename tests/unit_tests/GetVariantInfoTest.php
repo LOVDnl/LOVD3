@@ -851,7 +851,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'range' => false,
                 'warnings' => array(
                     'WWRONGTYPE' => 'A conversion should be described as a deletion-insertion. Please rewrite "con" to "delins".',
-                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "con" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC_000001.10:100_200".',
                 ),
                 'errors' => array(),
             )),
@@ -1850,7 +1850,17 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Failed to recognize a valid sequence or position in "NC123456.1:g.1_10".',
+                ),
+                'errors' => array(),
+            )),
+            array('g.1_2insNC_123456.1:g.1_10', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Use square brackets for complex insertions.',
                 ),
                 'errors' => array(),
             )),

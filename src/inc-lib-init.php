@@ -2367,17 +2367,29 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             }
                         }
 
+                    } elseif (strpos($sInsertion, ':') !== false) {
+                        // This part has a refseq?
+                        // Require brackets around the insertion and either a valid position or a valid inversion.
+                        $sVariantInInsertion = (substr($sInsertion, -3) == 'inv'? $sInsertion : $sInsertion . 'del');
+                        if (!lovd_getVariantInfo($sVariantInInsertion, false, true)) {
+                            // Not a valid description. We might still be able to fix this, but we don't know right now.
+                            // We could try to tell the difference, but in this case, we'll just store a warning.
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                ' Failed to recognize a valid sequence or position in "' . $sInsertion . '".';
+                        } else {
+                            // Let's only throw this warning when the above error isn't present.
+                            //  The user may not have meant to send a complex variant.
+                            if (!$bSuffixIsSurroundedByBrackets) {
+                                $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                    'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. Use square brackets for complex insertions.';
+                            }
+                        }
+
                     } elseif (!(
                         (preg_match(                                                                       // c.1_2ins15+1_16-1
                             '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
-                            && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])) // if positions are simple, is A < B?
-                        ||
-                        ($bSuffixIsSurroundedByBrackets && strpos($sInsertion, ':')
-                            && ( // If we have brackets and we find a colon, we expect a full position or inversion.
-                                (substr($sInsertion, -3) == 'inv' && lovd_getVariantInfo($sInsertion, false, true))
-                                || lovd_getVariantInfo($sInsertion . 'del', false, true)
-                            )
-                        ))) {
+                            && !(ctype_digit($aRegs[1]) && ctype_digit($aRegs[3]) && $aRegs[1] > $aRegs[3])))) { // if positions are simple, is A < B?
                         if ($bCheckHGVS) {
                             return false;
                         }
