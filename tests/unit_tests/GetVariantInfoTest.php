@@ -490,6 +490,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'warnings' => array(),
                 'errors' => array(),
             )),
+            array('c.1_2ins50+10_*10-20', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'position_start_intron' => 0,
+                'position_end_intron' => 0,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(),
+            )),
             array('g.1_2ins[NC_123456.1:g.1_10]', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -869,7 +879,7 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'delins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "delins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "delins" does not follow HGVS guidelines. The positions are not given in the correct order. Please verify your description and try again.',
                 ),
                 'errors' => array(),
             )),
@@ -1715,6 +1725,26 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(
                     'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Do you mean to indicate inserted positions (e.g., "ins10_20") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[10]")?',
                 ),
+            )),
+            array('g.1_2ins0_10', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. This variant description contains an invalid position: "0". Please verify your description and try again.',
+                ),
+            )),
+            array('g.1_2ins10_5', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. The positions are not given in the correct order. Please verify your description and try again.',
+                ),
+                'errors' => array(),
             )),
             array('g.1_2ins(5_10)', array(
                 'position_start' => 1,

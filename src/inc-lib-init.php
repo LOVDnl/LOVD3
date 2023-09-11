@@ -2386,6 +2386,22 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             }
                         }
 
+                    } elseif (preg_match('/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)) {
+                        // c.1_2ins10_20 or c.1_2ins10+1_*20-1.
+                        // Instead of writing our own logic here, re-use our own function.
+                        $sVariantInInsertion = $aVariant['prefix'] . '.' . $aRegs[0] . ($aRegs[6] ?? 'del');
+                        $aVariantInInsertion = lovd_getVariantInfo($sVariantInInsertion, false);
+                        // We can expect any error here. EFALSEUTR, EPOSITIONFORMAT, WPOSITIONFORMAT, a combination, etc.
+                        if ($aVariantInInsertion['errors']) {
+                            $aResponse['errors']['ESUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. ' .
+                                current($aVariantInInsertion['errors']);
+                        } elseif ($aVariantInInsertion['warnings']) {
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines. ' .
+                                current($aVariantInInsertion['warnings']);
+                        }
+
                     } elseif (!(
                         (preg_match(                                                                       // c.1_2ins15+1_16-1
                             '/^([-*]?[0-9]+([-+][0-9]+)?)_([-*]?[0-9]+([-+]([0-9]+))?)(inv)?$/', $sInsertion, $aRegs)
