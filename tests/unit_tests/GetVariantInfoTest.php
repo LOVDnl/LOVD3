@@ -1752,9 +1752,29 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'type' => 'ins',
                 'range' => true,
                 'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
+                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Do you mean to indicate inserted positions (e.g., "ins5_10") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[(5_10)]")?',
                 ),
                 'errors' => array(),
+            )),
+            array('g.1_2ins(0_5)', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. This variant description contains an invalid position or length: "0". Do you mean to indicate inserted positions (e.g., "ins100_200") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[(100_200)]")?',
+                ),
+            )),
+            array('g.1_2ins(5_0)', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. This variant description contains an invalid position or length: "0". Do you mean to indicate inserted positions (e.g., "ins100_200") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[100]")?',
+                ),
             )),
             array('g.1_2insN[5]', array(
                 'position_start' => 1,

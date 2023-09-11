@@ -2306,15 +2306,31 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                             ' Do you mean to indicate inserted positions (e.g., "ins' . $sInsertion . '_' . ((int) $sInsertion[0] + 1) . substr($sInsertion, 1) . '")' .
                             ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' . $sInsertion . ']")?';
 
-                    } elseif (preg_match('/^\(([0-9]+)\)$/', $sInsertion, $aRegs)) {
-                        // c.1_2ins(10). We'll assume here that this is a length.
-                        $sInsertion = $aRegs[1]; // We don't use this variable outside of this loop, anyway.
-                        // Even though we choose to throw a warning here and fixHGVS() actually rewrites
-                        //  ins(10) into insN[10], we still want to provide both choices in the warning message.
-                        $aResponse['warnings']['WSUFFIXFORMAT'] =
-                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
-                            ' Do you mean to indicate inserted positions (e.g., "ins' . $sInsertion . '_' . ((int) $sInsertion[0] + 1) . substr($sInsertion, 1) . '")' .
-                            ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' . $sInsertion . ']")?';
+                    } elseif (preg_match('/^\(([0-9]+)(?:_([0-9]+))?\)$/', $sInsertion, $aRegs)) {
+                        // c.1_2ins(10) or c.1_2ins(10_20). We'll assume here that this is a length.
+                        list(, $nSuffixMinLength, $nSuffixMaxLength) = array_pad($aRegs, 3, '');
+                        if ($nSuffixMaxLength && $nSuffixMinLength > $nSuffixMaxLength) {
+                            list($nSuffixMinLength, $nSuffixMaxLength) = array($nSuffixMaxLength, $nSuffixMinLength);
+                        }
+                        // First, disallow any zero-values.
+                        if ($nSuffixMinLength === '0' || $nSuffixMaxLength === '0') {
+                            $aResponse['errors']['ESUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                ' This variant description contains an invalid position or length: "0". Do you mean to indicate inserted positions (e.g., "ins100_200")' .
+                                ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' . (!$nSuffixMaxLength? '100' : '(100_200)') . ']")?';
+                        } else {
+                            // Even though we choose to throw a warning here and fixHGVS() actually rewrites
+                            //  ins(10) into insN[10], we still want to provide both choices in the warning message.
+                            $aResponse['warnings']['WSUFFIXFORMAT'] =
+                                'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                                ' Do you mean to indicate inserted positions (e.g., "ins' . $nSuffixMinLength . '_' .
+                                ($nSuffixMaxLength && $nSuffixMinLength != $nSuffixMaxLength ?
+                                    $nSuffixMaxLength : ((int)$nSuffixMinLength[0] + 1) . substr($nSuffixMinLength, 1)) . '")' .
+                                ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' .
+                                (!$nSuffixMaxLength || $nSuffixMinLength == $nSuffixMaxLength ?
+                                    $nSuffixMinLength :
+                                    '(' . $nSuffixMinLength . '_' . $nSuffixMaxLength . ')') . ']")?';
+                        }
 
                     } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($sInsertion), $aRegs)) {
                         // c.1_2insN[10_20].
