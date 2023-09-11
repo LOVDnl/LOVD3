@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2017-08-18
- * Modified    : 2023-09-08
+ * Modified    : 2023-09-11
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1706,6 +1706,16 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
             )),
 
             // Challenging insertions.
+            array('g.1_2ins10', array(
+                'position_start' => 1,
+                'position_end' => 2,
+                'type' => 'ins',
+                'range' => true,
+                'warnings' => array(),
+                'errors' => array(
+                    'ESUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines. Do you mean to indicate inserted positions (e.g., "ins10_20") or an inserted fragment with an unknown sequence but a given length (e.g., "insN[10]")?',
+                ),
+            )),
             array('g.1_2ins(5_10)', array(
                 'position_start' => 1,
                 'position_end' => 2,
@@ -1835,16 +1845,6 @@ class GetVariantInfoTest extends PHPUnit_Framework_TestCase
                 'errors' => array(),
             )),
             array('g.1_2insNC123456.1:g.1_10', array(
-                'position_start' => 1,
-                'position_end' => 2,
-                'type' => 'ins',
-                'range' => true,
-                'warnings' => array(
-                    'WSUFFIXFORMAT' => 'The part after "ins" does not follow HGVS guidelines.',
-                ),
-                'errors' => array(),
-            )),
-            array('g.1_2ins340', array(
                 'position_start' => 1,
                 'position_end' => 2,
                 'type' => 'ins',

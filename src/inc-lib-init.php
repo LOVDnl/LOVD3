@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2009-10-19
- * Modified    : 2023-09-08
+ * Modified    : 2023-09-11
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -2280,7 +2280,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                 }
 
                 foreach ($aInsertions as $sInsertion) {
-                    // Looping through all possible variants.
+                    // Looping through all possible suffixes.
                     // Some have specific errors, so we handle these first.
                     $bCaseOK = true;
                     if (preg_match('/^[A-Z]+$/i', $sInsertion)) {
@@ -2296,6 +2296,15 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                         if ($sUnknownBases) {
                             $aResponse['errors']['EINVALIDNUCLEOTIDES'] = 'This variant description contains invalid nucleotides: "' . implode('", "', array_unique(str_split($sUnknownBases))) . '".';
                         }
+
+                    } elseif (ctype_digit($sInsertion)) {
+                        // c.1_2ins10.
+                        // We don't know if this should be a position or a length.
+                        // Because we don't know, this is an error, and not a warning.
+                        $aResponse['errors']['ESUFFIXFORMAT'] =
+                            'The part after "' . $aVariant['type'] . '" does not follow HGVS guidelines.' .
+                            ' Do you mean to indicate inserted positions (e.g., "ins' . $sInsertion . '_' . ((int) $sInsertion[0] + 1) . substr($sInsertion, 1) . '")' .
+                            ' or an inserted fragment with an unknown sequence but a given length (e.g., "insN[' . $sInsertion . ']")?';
 
                     } elseif (preg_match('/^([A-Z]+)\[(([0-9]+|\?)_([0-9]+|\?))\]$/', strtoupper($sInsertion), $aRegs)) {
                         // c.1_2insN[10_20].
