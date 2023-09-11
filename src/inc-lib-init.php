@@ -2446,6 +2446,7 @@ function lovd_getVariantInfo ($sVariant, $sTranscriptID = '', $bCheckHGVS = fals
                     }
                     if ($bCheckHGVS
                         && (isset($aResponse['errors']['EINVALIDNUCLEOTIDES'])
+                            || isset($aResponse['errors']['ESUFFIXFORMAT'])
                             || isset($aResponse['warnings']['WSUFFIXFORMAT'])
                             || isset($aResponse['warnings']['WWRONGCASE']))) {
                         return false;
