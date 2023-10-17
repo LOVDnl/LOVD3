@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2022-11-22
+ * Modified    : 2023-10-17
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -1061,7 +1061,7 @@ class LOVD_API_Submissions
                     // This user is allowed to send only variants, and we have this indeed.
                     // However, to keep the code clean and consistent, I'll need to reconstruct the "normal" data structure.
                     $aInput['lsdb']['individual'] = array(
-                        array(
+                        -1 => array(
                             'variant' => $aInput['lsdb']['variant'],
                         ),
                     );
