@@ -1318,27 +1318,33 @@ class LOVD_API_Submissions
 
                     // Check variant_detection, if present.
                     if (isset($aVariant['variant_detection'])) {
-                        foreach ($aVariant['variant_detection'] as $iScreening => $aScreening) {
-                            $nScreening = $iScreening + 1; // We start counting at 1, like most humans do.
-                            if (empty($aScreening['@template']) || empty($aScreening['@technique'])) {
-                                // No template or technique, no way.
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': Missing required VariantDetection @template or @technique elements.';
-                            } else {
-                                if (!isset($this->aValueMappings['@template'][$aScreening['@template']])) {
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection template \'' . $aScreening['@template'] . '\' not understood. ' .
-                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['@template']));
-                                }
-                                // Compare all the techniques. Here, we'll allow semi-colon separated values, since LOVD stores it like that, too.
-                                $aOptions = explode(';', $aScreening['@technique']);
-                                foreach ($aOptions as $sOption) {
-                                    $sOption = trim($sOption); // Trim whitespace to ensure match independent of whitespace.
-                                    if ($sOption && !in_array($sOption, $aScreeningTechniques)) {
-                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection technique \'' . $sOption . '\' not understood. ' .
-                                            'Options: ' . implode(', ', $aScreeningTechniques);
+                        if (!$this->bFullSubmission) {
+                            // Variant-only submission, but variant_detection is included. We won't be able to store this.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found variant_detection element but this is a variant-only submission. ' .
+                                'Please remove the variant_detection element.';
+                        } else {
+                            foreach ($aVariant['variant_detection'] as $iScreening => $aScreening) {
+                                $nScreening = $iScreening + 1; // We start counting at 1, like most humans do.
+                                if (empty($aScreening['@template']) || empty($aScreening['@technique'])) {
+                                    // No template or technique, no way.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': Missing required VariantDetection @template or @technique elements.';
+                                } else {
+                                    if (!isset($this->aValueMappings['@template'][$aScreening['@template']])) {
+                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection template \'' . $aScreening['@template'] . '\' not understood. ' .
+                                            'Options: ' . implode(', ', array_keys($this->aValueMappings['@template']));
+                                    }
+                                    // Compare all the techniques. Here, we'll allow semi-colon separated values, since LOVD stores it like that, too.
+                                    $aOptions = explode(';', $aScreening['@technique']);
+                                    foreach ($aOptions as $sOption) {
+                                        $sOption = trim($sOption); // Trim whitespace to ensure match independent of whitespace.
+                                        if ($sOption && !in_array($sOption, $aScreeningTechniques)) {
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection technique \'' . $sOption . '\' not understood. ' .
+                                                'Options: ' . implode(', ', $aScreeningTechniques);
+                                        }
                                     }
                                 }
+                                // We currently don't parse the technique. We just accept anything.
                             }
-                            // We currently don't parse the technique. We just accept anything.
                         }
                     }
 
