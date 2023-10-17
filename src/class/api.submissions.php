@@ -1170,6 +1170,12 @@ class LOVD_API_Submissions
                             // Value not recognized.
                             $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Evidence Code: Term code \'' . $aVariant['evidence_code']['@term'] . '\' not recognized. ' .
                                 'Options: ' . implode(', ', array_keys($this->aValueMappings['variant_evidence'])) . '.';
+                        } elseif ($this->bFullSubmission) {
+                            // We have a valid evidence_code, but this is a full submission.
+                            // VarioML does not have this restriction, but we don't allow evidence codes in full submissions,
+                            //  because all of our current evidence codes generate variant-only submissions.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found evidence_code element but this is a full submission and evidence codes are meant for variant-only submissions. ' .
+                                'Please remove the evidence_code element.';
                         }
                     }
 
