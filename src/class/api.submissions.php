@@ -118,6 +118,12 @@ class LOVD_API_Submissions
             '2' => 'F',
             '9' => '', // This assumes it's not a mandatory field.
         ),
+        'variant_evidence' => array(
+            'classification_record' => '',
+            'in_silico' => '',
+            'in_vitro' => '',
+            'summary_record' => '',
+        ),
     );
     // The length of the accessions are checked if source is provided. Should
     //  always be numeric.
@@ -1154,6 +1160,17 @@ class LOVD_API_Submissions
                         // Value not recognized.
                         $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Copy count code \'' . $aVariant['@copy_count'] . '\' not recognized. ' .
                             'Options: ' . implode(', ', array_keys($this->aValueMappings['@copy_count'])) . '.';
+                    }
+
+                    if (isset($aVariant['evidence_code'])) {
+                        if (empty($aVariant['evidence_code']['@term'])) {
+                            // No term, no way.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Evidence Code: Missing required @term element.';
+                        } elseif (!isset($this->aValueMappings['variant_evidence'][$aVariant['evidence_code']['@term']])) {
+                            // Value not recognized.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Evidence Code: Term code \'' . $aVariant['evidence_code']['@term'] . '\' not recognized. ' .
+                                'Options: ' . implode(', ', array_keys($this->aValueMappings['variant_evidence'])) . '.';
+                        }
                     }
 
                     // Check genetic_origin, if present.
