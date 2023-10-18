@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2022-11-22
+ * Modified    : 2023-10-18
  * For LOVD    : 3.0-29
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -117,6 +117,12 @@ class LOVD_API_Submissions
             '1' => 'M',
             '2' => 'F',
             '9' => '', // This assumes it's not a mandatory field.
+        ),
+        'variant_evidence' => array(
+            'classification_record' => 'CLASSIFICATION record',
+            'in_silico' => 'In silico',
+            'in_vitro' => 'In vitro (cloned)',
+            'summary_record' => 'SUMMARY record',
         ),
     );
     // The length of the accessions are checked if source is provided. Should
@@ -486,8 +492,12 @@ class LOVD_API_Submissions
                 $aVOG['created_by'] = $this->zAuth['id'];
                 $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
 
-                // Add genetic_origin, if present. This may also affect the 'allele' field.
-                if (isset($aVariant['genetic_origin'])) {
+                // Set VariantOnGenome/Genetic_origin.
+                if (isset($aVariant['evidence_code'])) {
+                    // Based on the evidence_code element...
+                    $aVOG['VariantOnGenome/Genetic_origin'] = $this->aValueMappings['variant_evidence'][$aVariant['evidence_code']['@term']];
+                } elseif (isset($aVariant['genetic_origin'])) {
+                    // ... or based on the genetic_origin element. This may also affect the 'allele' field.
                     $aVOG['VariantOnGenome/Genetic_origin'] = $this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']];
 
                     // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
@@ -1039,6 +1049,12 @@ class LOVD_API_Submissions
                 'Verify your lovd and lovd_auth_token values. Also check if your token has perhaps expired.';
             $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
             return false;
+        } else {
+            // Load curated DBs.
+            $this->zAuth['curates'] = array();
+            if ($this->zAuth['level'] < LEVEL_MANAGER) {
+                $this->zAuth['curates'] = $_DB->q('SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = ? AND allow_edit = 1', array($aAuth['id']))->fetchAllColumn();
+            }
         }
 
         // An authenticated user may have the permission to just submit variants.
@@ -1061,7 +1077,7 @@ class LOVD_API_Submissions
                     // This user is allowed to send only variants, and we have this indeed.
                     // However, to keep the code clean and consistent, I'll need to reconstruct the "normal" data structure.
                     $aInput['lsdb']['individual'] = array(
-                        array(
+                        -1 => array(
                             'variant' => $aInput['lsdb']['variant'],
                         ),
                     );
@@ -1156,37 +1172,61 @@ class LOVD_API_Submissions
                             'Options: ' . implode(', ', array_keys($this->aValueMappings['@copy_count'])) . '.';
                     }
 
+                    if (isset($aVariant['evidence_code'])) {
+                        if (empty($aVariant['evidence_code']['@term'])) {
+                            // No term, no way.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Evidence Code: Missing required @term element.';
+                        } elseif (!isset($this->aValueMappings['variant_evidence'][$aVariant['evidence_code']['@term']])) {
+                            // Value not recognized.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Evidence Code: Term code \'' . $aVariant['evidence_code']['@term'] . '\' not recognized. ' .
+                                'Options: ' . implode(', ', array_keys($this->aValueMappings['variant_evidence'])) . '.';
+                        } elseif ($this->bFullSubmission) {
+                            // We have a valid evidence_code, but this is a full submission.
+                            // VarioML does not have this restriction, but we don't allow evidence codes in full submissions,
+                            //  because all of our current evidence codes generate variant-only submissions.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found evidence_code element but this is a full submission and evidence codes are meant for variant-only submissions. ' .
+                                'Please remove the evidence_code element.';
+                        }
+                    }
+
                     // Check genetic_origin, if present.
                     if (isset($aVariant['genetic_origin'])) {
-                        if (empty($aVariant['genetic_origin']['@term'])) {
-                            // No term, no way.
-                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Missing required @term element.';
-                        } elseif (!isset($this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']])) {
-                            // Value not recognized.
-                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Term code \'' . $aVariant['genetic_origin']['@term'] . '\' not recognized. ' .
-                                'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_origin'])) . '.';
-                        }
-
-                        // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
-                        // FIXME: When @copy_count is 2, and the variant is homozygous, we ignore the source. Should we let the user know?
-                        if (isset($aVariant['genetic_origin']['source'])) {
-                            if (empty($aVariant['genetic_origin']['source']['@term'])) {
+                        if (!$this->bFullSubmission) {
+                            // Variant-only submission, but genetic_origin is included. We would be able to store this, but it won't make sense.
+                            // Also, genetic_origin isn't allowed for some variant-only submissions, i.e., if they have evidence_code set.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found genetic_origin element but this is a variant-only submission. ' .
+                                'Please remove the genetic_origin element.';
+                        } else {
+                            if (empty($aVariant['genetic_origin']['@term'])) {
                                 // No term, no way.
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Missing required @term element.';
-                            } elseif (!isset($this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Missing required @term element.';
+                            } elseif (!isset($this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']])) {
                                 // Value not recognized.
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Term code \'' . $aVariant['genetic_origin']['source']['@term'] . '\' not recognized. ' .
-                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_source'])) . '.';
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Term code \'' . $aVariant['genetic_origin']['@term'] . '\' not recognized. ' .
+                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_origin'])) . '.';
                             }
 
-                            if (isset($aVariant['genetic_origin']['evidence_code'])) {
-                                if (empty($aVariant['genetic_origin']['evidence_code']['@term'])) {
+                            // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
+                            // FIXME: When @copy_count is 2, and the variant is homozygous, we ignore the source. Should we let the user know?
+                            if (isset($aVariant['genetic_origin']['source'])) {
+                                if (empty($aVariant['genetic_origin']['source']['@term'])) {
                                     // No term, no way.
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Missing required @term element.';
-                                } elseif (!isset($this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']])) {
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Missing required @term element.';
+                                } elseif (!isset($this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']])) {
                                     // Value not recognized.
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Term code \'' . $aVariant['genetic_origin']['evidence_code']['@term'] . '\' not recognized. ' .
-                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_evidence'])) . '.';
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Term code \'' . $aVariant['genetic_origin']['source']['@term'] . '\' not recognized. ' .
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_source'])) . '.';
+                                }
+
+                                if (isset($aVariant['genetic_origin']['evidence_code'])) {
+                                    if (empty($aVariant['genetic_origin']['evidence_code']['@term'])) {
+                                        // No term, no way.
+                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Missing required @term element.';
+                                    } elseif (!isset($this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']])) {
+                                        // Value not recognized.
+                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Term code \'' . $aVariant['genetic_origin']['evidence_code']['@term'] . '\' not recognized. ' .
+                                            'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_evidence'])) . '.';
+                                    }
                                 }
                             }
                         }
@@ -1318,27 +1358,33 @@ class LOVD_API_Submissions
 
                     // Check variant_detection, if present.
                     if (isset($aVariant['variant_detection'])) {
-                        foreach ($aVariant['variant_detection'] as $iScreening => $aScreening) {
-                            $nScreening = $iScreening + 1; // We start counting at 1, like most humans do.
-                            if (empty($aScreening['@template']) || empty($aScreening['@technique'])) {
-                                // No template or technique, no way.
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': Missing required VariantDetection @template or @technique elements.';
-                            } else {
-                                if (!isset($this->aValueMappings['@template'][$aScreening['@template']])) {
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection template \'' . $aScreening['@template'] . '\' not understood. ' .
-                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['@template']));
-                                }
-                                // Compare all the techniques. Here, we'll allow semi-colon separated values, since LOVD stores it like that, too.
-                                $aOptions = explode(';', $aScreening['@technique']);
-                                foreach ($aOptions as $sOption) {
-                                    $sOption = trim($sOption); // Trim whitespace to ensure match independent of whitespace.
-                                    if ($sOption && !in_array($sOption, $aScreeningTechniques)) {
-                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection technique \'' . $sOption . '\' not understood. ' .
-                                            'Options: ' . implode(', ', $aScreeningTechniques);
+                        if (!$this->bFullSubmission) {
+                            // Variant-only submission, but variant_detection is included. We won't be able to store this.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found variant_detection element but this is a variant-only submission. ' .
+                                'Please remove the variant_detection element.';
+                        } else {
+                            foreach ($aVariant['variant_detection'] as $iScreening => $aScreening) {
+                                $nScreening = $iScreening + 1; // We start counting at 1, like most humans do.
+                                if (empty($aScreening['@template']) || empty($aScreening['@technique'])) {
+                                    // No template or technique, no way.
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': Missing required VariantDetection @template or @technique elements.';
+                                } else {
+                                    if (!isset($this->aValueMappings['@template'][$aScreening['@template']])) {
+                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection template \'' . $aScreening['@template'] . '\' not understood. ' .
+                                            'Options: ' . implode(', ', array_keys($this->aValueMappings['@template']));
+                                    }
+                                    // Compare all the techniques. Here, we'll allow semi-colon separated values, since LOVD stores it like that, too.
+                                    $aOptions = explode(';', $aScreening['@technique']);
+                                    foreach ($aOptions as $sOption) {
+                                        $sOption = trim($sOption); // Trim whitespace to ensure match independent of whitespace.
+                                        if ($sOption && !in_array($sOption, $aScreeningTechniques)) {
+                                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': VariantDetection #' . $nScreening . ': VariantDetection technique \'' . $sOption . '\' not understood. ' .
+                                                'Options: ' . implode(', ', $aScreeningTechniques);
+                                        }
                                     }
                                 }
+                                // We currently don't parse the technique. We just accept anything.
                             }
-                            // We currently don't parse the technique. We just accept anything.
                         }
                     }
 
@@ -1491,6 +1537,9 @@ class LOVD_API_Submissions
 
                             // Also update the whole data array.
                             $aInput['lsdb']['individual'][$iIndividual]['variant'][$iVariant]['seq_changes']['variant'] = $aVariant['seq_changes']['variant'];
+
+                            // Reset the gene list as well, we sometimes need it later.
+                            $aGenesExisting = array_intersect_key($aGenesExisting, $aVariant['seq_changes']['variant']);
                         }
 
 
@@ -1600,6 +1649,22 @@ class LOVD_API_Submissions
                                     }
                                 }
                             }
+                        }
+                    }
+
+
+
+                    // For summary annotation records specifically, they can only be added by curators.
+                    // The API setting that allows variant-only submissions is not enough.
+                    if (isset($aVariant['evidence_code']) && isset($aVariant['evidence_code']['@term'])
+                        && $aVariant['evidence_code']['@term'] == 'summary_record') {
+                        // Allow this for Curators only. Variant must be linked to at least one of this Curator's genes.
+                        if ($this->zAuth['level'] < LEVEL_MANAGER && !array_intersect($this->zAuth['curates'], $aGenesExisting)) {
+                            // Not a Manager or higher, and not a Curator, either.
+                            // FIXME: We could have simply used lovd_isAuthorized(), if we would have used $_AUTH. Why we don't, I don't know.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found a summary annotation record, but you\'re not authorized to submit this summary annotation record. ' .
+                                'Make sure the summary annotation record is mapped to a gene to which you have Curator rights.' .
+                                (!$aGenesExisting? '' : ' Currently, this variant is mapped to: ' . implode(', ', $aGenesExisting) . '.');
                         }
                     }
                 }
