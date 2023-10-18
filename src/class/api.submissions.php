@@ -119,10 +119,10 @@ class LOVD_API_Submissions
             '9' => '', // This assumes it's not a mandatory field.
         ),
         'variant_evidence' => array(
-            'classification_record' => '',
-            'in_silico' => '',
-            'in_vitro' => '',
-            'summary_record' => '',
+            'classification_record' => 'CLASSIFICATION record',
+            'in_silico' => 'In silico',
+            'in_vitro' => 'In vitro (cloned)',
+            'summary_record' => 'SUMMARY record',
         ),
     );
     // The length of the accessions are checked if source is provided. Should
@@ -492,8 +492,12 @@ class LOVD_API_Submissions
                 $aVOG['created_by'] = $this->zAuth['id'];
                 $aVOG['VariantOnGenome/DNA'] = $aVariant['name']['#text'];
 
-                // Add genetic_origin, if present. This may also affect the 'allele' field.
-                if (isset($aVariant['genetic_origin'])) {
+                // Set VariantOnGenome/Genetic_origin.
+                if (isset($aVariant['evidence_code'])) {
+                    // Based on the evidence_code element...
+                    $aVOG['VariantOnGenome/Genetic_origin'] = $this->aValueMappings['variant_evidence'][$aVariant['evidence_code']['@term']];
+                } elseif (isset($aVariant['genetic_origin'])) {
+                    // ... or based on the genetic_origin element. This may also affect the 'allele' field.
                     $aVOG['VariantOnGenome/Genetic_origin'] = $this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']];
 
                     // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
