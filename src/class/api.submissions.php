@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2016-11-22
- * Modified    : 2023-10-17
+ * Modified    : 2023-10-18
  * For LOVD    : 3.0-29
  *
  * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1045,6 +1045,12 @@ class LOVD_API_Submissions
                 'Verify your lovd and lovd_auth_token values. Also check if your token has perhaps expired.';
             $this->API->nHTTPStatus = 401; // Send 401 Unauthorized.
             return false;
+        } else {
+            // Load curated DBs.
+            $this->zAuth['curates'] = array();
+            if ($this->zAuth['level'] < LEVEL_MANAGER) {
+                $this->zAuth['curates'] = $_DB->q('SELECT geneid FROM ' . TABLE_CURATES . ' WHERE userid = ? AND allow_edit = 1', array($aAuth['id']))->fetchAllColumn();
+            }
         }
 
         // An authenticated user may have the permission to just submit variants.
@@ -1527,6 +1533,9 @@ class LOVD_API_Submissions
 
                             // Also update the whole data array.
                             $aInput['lsdb']['individual'][$iIndividual]['variant'][$iVariant]['seq_changes']['variant'] = $aVariant['seq_changes']['variant'];
+
+                            // Reset the gene list as well, we sometimes need it later.
+                            $aGenesExisting = array_intersect_key($aGenesExisting, $aVariant['seq_changes']['variant']);
                         }
 
 
@@ -1636,6 +1645,22 @@ class LOVD_API_Submissions
                                     }
                                 }
                             }
+                        }
+                    }
+
+
+
+                    // For summary annotation records specifically, they can only be added by curators.
+                    // The API setting that allows variant-only submissions is not enough.
+                    if (isset($aVariant['evidence_code']) && isset($aVariant['evidence_code']['@term'])
+                        && $aVariant['evidence_code']['@term'] == 'summary_record') {
+                        // Allow this for Curators only. Variant must be linked to at least one of this Curator's genes.
+                        if ($this->zAuth['level'] < LEVEL_MANAGER && !array_intersect($this->zAuth['curates'], $aGenesExisting)) {
+                            // Not a Manager or higher, and not a Curator, either.
+                            // FIXME: We could have simply used lovd_isAuthorized(), if we would have used $_AUTH. Why we don't, I don't know.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found a summary annotation record, but you\'re not authorized to submit this summary annotation record. ' .
+                                'Make sure the summary annotation record is mapped to a gene to which you have Curator rights.' .
+                                (!$aGenesExisting? '' : ' Currently, this variant is mapped to: ' . implode(', ', $aGenesExisting) . '.');
                         }
                     }
                 }
