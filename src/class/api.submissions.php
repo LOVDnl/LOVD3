@@ -1181,35 +1181,42 @@ class LOVD_API_Submissions
 
                     // Check genetic_origin, if present.
                     if (isset($aVariant['genetic_origin'])) {
-                        if (empty($aVariant['genetic_origin']['@term'])) {
-                            // No term, no way.
-                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Missing required @term element.';
-                        } elseif (!isset($this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']])) {
-                            // Value not recognized.
-                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Term code \'' . $aVariant['genetic_origin']['@term'] . '\' not recognized. ' .
-                                'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_origin'])) . '.';
-                        }
-
-                        // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
-                        // FIXME: When @copy_count is 2, and the variant is homozygous, we ignore the source. Should we let the user know?
-                        if (isset($aVariant['genetic_origin']['source'])) {
-                            if (empty($aVariant['genetic_origin']['source']['@term'])) {
+                        if (!$this->bFullSubmission) {
+                            // Variant-only submission, but genetic_origin is included. We would be able to store this, but it won't make sense.
+                            // Also, genetic_origin isn't allowed for some variant-only submissions, i.e., if they have evidence_code set.
+                            $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Found genetic_origin element but this is a variant-only submission. ' .
+                                'Please remove the genetic_origin element.';
+                        } else {
+                            if (empty($aVariant['genetic_origin']['@term'])) {
                                 // No term, no way.
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Missing required @term element.';
-                            } elseif (!isset($this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']])) {
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Missing required @term element.';
+                            } elseif (!isset($this->aValueMappings['genetic_origin'][$aVariant['genetic_origin']['@term']])) {
                                 // Value not recognized.
-                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Term code \'' . $aVariant['genetic_origin']['source']['@term'] . '\' not recognized. ' .
-                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_source'])) . '.';
+                                $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Term code \'' . $aVariant['genetic_origin']['@term'] . '\' not recognized. ' .
+                                    'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_origin'])) . '.';
                             }
 
-                            if (isset($aVariant['genetic_origin']['evidence_code'])) {
-                                if (empty($aVariant['genetic_origin']['evidence_code']['@term'])) {
+                            // Find possible source and evidence codes. Evidence codes will be ignored unless there is a source.
+                            // FIXME: When @copy_count is 2, and the variant is homozygous, we ignore the source. Should we let the user know?
+                            if (isset($aVariant['genetic_origin']['source'])) {
+                                if (empty($aVariant['genetic_origin']['source']['@term'])) {
                                     // No term, no way.
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Missing required @term element.';
-                                } elseif (!isset($this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']])) {
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Missing required @term element.';
+                                } elseif (!isset($this->aValueMappings['genetic_source'][$aVariant['genetic_origin']['source']['@term']])) {
                                     // Value not recognized.
-                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Term code \'' . $aVariant['genetic_origin']['evidence_code']['@term'] . '\' not recognized. ' .
-                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_evidence'])) . '.';
+                                    $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Source: Term code \'' . $aVariant['genetic_origin']['source']['@term'] . '\' not recognized. ' .
+                                        'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_source'])) . '.';
+                                }
+
+                                if (isset($aVariant['genetic_origin']['evidence_code'])) {
+                                    if (empty($aVariant['genetic_origin']['evidence_code']['@term'])) {
+                                        // No term, no way.
+                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Missing required @term element.';
+                                    } elseif (!isset($this->aValueMappings['genetic_evidence'][$aVariant['genetic_origin']['evidence_code']['@term']])) {
+                                        // Value not recognized.
+                                        $this->API->aResponse['errors'][] = 'VarioML error: Individual #' . $nIndividual . ': Variant #' . $nVariant . ': Genetic Origin: Evidence Code: Term code \'' . $aVariant['genetic_origin']['evidence_code']['@term'] . '\' not recognized. ' .
+                                            'Options: ' . implode(', ', array_keys($this->aValueMappings['genetic_evidence'])) . '.';
+                                    }
                                 }
                             }
                         }
