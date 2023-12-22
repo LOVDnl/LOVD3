@@ -4,8 +4,8 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2012-11-08
- * Modified    : 2022-11-22
- * For LOVD    : 3.0-29
+ * Modified    : 2023-12-22
+ * For LOVD    : 3.0-30
  *
  * Supported URIs:
  *  3.0-26       /api/rest.php/get_frequencies (POST)
@@ -40,7 +40,7 @@
  *  3.0-27 (v2)  /api/v#/ga4gh/table/variants/data:hg19:chr1:123456-234567 (GET/HEAD)
  *  3.0-18 (v1)  /api/v#/submissions (POST) (/v# is optional)
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -738,12 +738,12 @@ if ($sDataType == 'variants') {
             'position_start' => 'chr' . $zData['chromosome'] . ':' . ($zData['sense']? $zData['position_g_mrna_start'] : $zData['position_g_mrna_end']),
             'position_end' => 'chr' . $zData['chromosome'] . ':' . ($zData['sense']? $zData['position_g_mrna_end'] : $zData['position_g_mrna_start']),
             'refseq_genomic' => $zData['refseq_genomic'],
-            'refseq_mrna' => explode(';', $zData['id_ncbi']),
+            'refseq_mrna' => explode(';', ($zData['id_ncbi'] ?? '')),
             'refseq_build' => $_CONF['refseq_build'],
             'created_by' => $zData['created_by'],
             'created_date' => date('c', strtotime($zData['created_date'])),
             'curators' => explode(';', $zData['curators']),
-            'updated_date' => date('c', strtotime($zData['updated_date'])),
+            'updated_date' => date('c', strtotime(($zData['updated_date'] ?? ''))),
         );
 
         return $aReturn;
