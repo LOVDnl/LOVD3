@@ -104,7 +104,7 @@ list($sDataType, $sSymbol, $nID) = array(
 
 // Check if gene exists.
 if ($sSymbol) {
-    $sSymbol = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE id = ?', array($sSymbol))->fetchColumn();
+    $sSymbol = $_DB->q('SELECT id FROM ' . TABLE_GENES . ' WHERE ' . (ctype_digit($sSymbol)? 'id_hgnc' : 'id') . ' = ?', array($sSymbol))->fetchColumn();
     if (!$sSymbol) {
         header('HTTP/1.0 404 Not Found');
         die('This gene does not exist.');
