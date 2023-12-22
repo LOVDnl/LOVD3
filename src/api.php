@@ -391,7 +391,7 @@ if ($sDataType == 'variants') {
           GREATEST(MAX(t.position_g_mrna_start),
           MAX(t.position_g_mrna_end)) AS position_g_mrna_end, g.refseq_genomic,
           GROUP_CONCAT(DISTINCT t.id_ncbi ORDER BY (SELECT COUNT(*) FROM ' . TABLE_VARIANTS_ON_TRANSCRIPTS . ' WHERE transcriptid = t.id) DESC,
-          t.id ASC SEPARATOR ";") AS id_ncbi, g.id_entrez,
+          t.id ASC SEPARATOR ";") AS id_ncbi, g.id_hgnc, g.id_entrez,
           g.created_date, g.updated_date, u.name AS created_by,
           GROUP_CONCAT(DISTINCT cur.name SEPARATOR ";") AS curators
         FROM ' . TABLE_GENES . ' AS g
@@ -728,6 +728,7 @@ if ($sDataType == 'variants') {
         // The Atom data will also use these transformations, but may have less fields and in a different order.
         $aReturn = array(
             'id' => $zData['id'],
+            'hgnc_id' => $zData['id_hgnc'],
             'entrez_id' => $zData['id_entrez'],
             'symbol' => $zData['id'],
             'name' => $zData['name'],
