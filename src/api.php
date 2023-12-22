@@ -295,6 +295,8 @@ if ($sDataType == 'variants') {
                  vog.`VariantOnGenome/DNA`,
                  GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'REPLACE(vot.`VariantOnTranscript/DNA`, ";;", ";")
                    ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
+                 GROUP_CONCAT(DISTINCT t.id_ncbi, "##", vot.`VariantOnTranscript/DNA`, "##", IFNULL(vot.`VariantOnTranscript/RNA`, "r.(?)"), "##", IFNULL(vot.`VariantOnTranscript/Protein`, "p.?")
+                   ORDER BY t.id_ncbi SEPARATOR "$$") AS `__variants_on_transcripts`,
                  vog.`VariantOnGenome/DBID`,
                  GROUP_CONCAT(DISTINCT uc.name SEPARATOR ";") AS _created_by,
                  MIN(vog.created_date) AS created_date,
@@ -611,6 +613,19 @@ if ($sDataType == 'variants') {
                 $_CONF['refseq_build'] => 'chr' . $sChromosome . ':' .
                     $zData['VariantOnGenome/DNA'],
             ),
+            'variants_on_transcripts' => call_user_func_array(
+                'array_merge',
+                array_map(
+                function ($sValue)
+                {
+                    $a = explode('##', $sValue);
+                    return [
+                        $a[0] => array_combine(
+                            ['DNA', 'RNA', 'protein'],
+                            array_slice($a, 1)
+                        )
+                    ];
+                }, explode('$$', $zData['__variants_on_transcripts']))),
             'Variant/DNA' => explode(';;', $zData['__VariantOnTranscript/DNA']),
             'Variant/DBID' => $zData['Variant/DBID'],
             'Times_reported' => $zData['Times'],
