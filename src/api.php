@@ -293,7 +293,7 @@ if ($sDataType == 'variants') {
                  GROUP_CONCAT(DISTINCT LEFT(vog.effectid, 1) SEPARATOR ";") AS effect_reported,
                  GROUP_CONCAT(DISTINCT RIGHT(vog.effectid, 1) SEPARATOR ";") AS effect_concluded,
                  vog.`VariantOnGenome/DNA`,
-                 GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'vot.`VariantOnTranscript/DNA`
+                 GROUP_CONCAT(DISTINCT ' . ($nRefSeqID? '' : 't.id_ncbi, ":", ') . 'REPLACE(vot.`VariantOnTranscript/DNA`, ";;", ";")
                    ORDER BY t.id_ncbi SEPARATOR ";;") AS `__VariantOnTranscript/DNA`,
                  vog.`VariantOnGenome/DBID`,
                  GROUP_CONCAT(DISTINCT uc.name SEPARATOR ";") AS _created_by,
