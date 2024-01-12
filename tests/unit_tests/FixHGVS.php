@@ -36,7 +36,7 @@
 require_once 'src/inc-lib-init.php'; // For the dependency on lovd_getVariantInfo().
 require_once 'src/inc-lib-variants.php'; // For lovd_fixHGVS().
 
-class FixHGVSTest extends PHPUnit_Framework_TestCase
+class FixHGVSTest extends PHPUnit\Framework\TestCase
 {
 
     /**

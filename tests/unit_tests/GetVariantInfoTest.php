@@ -32,7 +32,7 @@
 
 require_once 'src/inc-lib-init.php';
 
-class GetVariantInfoTest extends PHPUnit_Framework_TestCase
+class GetVariantInfoTest extends PHPUnit\Framework\TestCase
 {
     /**
      * @dataProvider dataProviderGetVariantInfo
