@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2023-06-23
+ * Modified    : 2024-01-23
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -350,13 +350,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
 
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
-
-                // Get LRG if it exists
-                $aRefseqGenomic = array();
-                $_BAR->setMessage('Checking for LRG...');
-                if ($sLRG = lovd_getLRGbyGeneSymbol($sSymbol)) {
-                    $aRefseqGenomic[] = $sLRG;
-                }
 
                 // Get NG if it exists
                 $_BAR->setMessage('Checking for NG...');
@@ -767,10 +760,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     $sPath = $_PE[0] . '?' . ACTION;
     if (GET) {
         $aRefseqGenomic = array();
-        // Get LRG if it exists
-        if ($sLRG = lovd_getLRGbyGeneSymbol($sID)) {
-            $aRefseqGenomic[] = $sLRG;
-        }
         // Get NG if it exists
         if ($sNG = lovd_getNGbyGeneSymbol($sID)) {
             $aRefseqGenomic[] = $sNG;

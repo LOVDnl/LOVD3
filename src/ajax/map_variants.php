@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-01-15
- * Modified    : 2022-12-14
- * For LOVD    : 3.0-29
+ * Modified    : 2024-01-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2022 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
  *               Ivar Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
@@ -475,13 +475,10 @@ if (!empty($aVariants)) {
                 }
                 list($sHgncID, $sSymbol, $sGeneName, $sChromLocation, $sLocusType, $sEntrez, $sOmim, $sRefseq1, $sRefseq2) = array_values($aGeneInfoFromHgnc);
 
-                // Get LRG if it exists.
-                if (!$sRefseqGenomic = lovd_getLRGbyGeneSymbol($sSymbol)) {
-                    // No LRG, get NG if it exists.
-                    if (!$sRefseqGenomic = lovd_getNGbyGeneSymbol($sSymbol)) {
-                        // Also no NG, use the NC instead.
-                        $sRefseqGenomic = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
-                    }
+                // Get NG if it exists.
+                if (!$sRefseqGenomic = lovd_getNGbyGeneSymbol($sSymbol)) {
+                    // No NG, use the NC instead.
+                    $sRefseqGenomic = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
                 }
 
                 // Get UD.

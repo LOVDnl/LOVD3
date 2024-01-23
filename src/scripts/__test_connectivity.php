@@ -38,7 +38,7 @@ if ($bProxy) {
     // Dump proxy settings.
     var_dump($_CONF['proxy_host'], $_CONF['proxy_port'], $_CONF['proxy_username'], str_repeat('*', strlen($_CONF['proxy_password'])));
     // Check if proxy can be bypassed.
-    $bProxyCanBeBypassed = (bool) @file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt');
+    $bProxyCanBeBypassed = (bool) @file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt');
     print("
 Proxy server " . ($bProxyCanBeBypassed? 'CAN' : 'CAN NOT') . " be bypassed.
 ");
@@ -55,7 +55,7 @@ print("
 ================================================================================
 Opening remote file over HTTP, using " . ($bFopenWrappers? 'our file() since wrapper is enabled' : 'fsockopen() fallback since wrapper is disabled') . ", should return large positive number:
 ");
-var_dump(strlen(implode("\n", lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt'))));
+var_dump(strlen(implode("\n", lovd_php_file('http://www.lovd.nl/mirrors/ncbi/NG_list.txt'))));
 
 // Testing connection to HGNC.
 print("

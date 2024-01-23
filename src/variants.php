@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2023-02-03
- * For LOVD    : 3.0-29
+ * Modified    : 2024-01-23
+ * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Jerry Hoogenboom <J.Hoogenboom@LUMC.nl>
@@ -1881,7 +1881,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         $sChromBand = $aMatches[2];
                                     }
 
-                                    // Get the complete LRG/NG list from LOVD.nl, all at once. Saves us a lot of queries because we need to look up quite some genes.
+                                    // Get the complete NG list from LOVD.nl, all at once. Saves us a lot of queries because we need to look up quite some genes.
                                     if (empty($aNgMapping)) {
                                         $aNgMapping = array();
                                         $_BAR->setMessage('Loading genomic reference list...', 'done');
@@ -1892,15 +1892,6 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                         foreach ($aLines as $sLine) {
                                             if (preg_match('/(\w+)\s+(NG_\d+\.\d+)/', $sLine, $aMatches)) {
                                                 $aNgMapping[$aMatches[1]] = $aMatches[2];
-                                            }
-                                        }
-
-                                        // Overwrite with any existing LRG's.
-                                        // FIXME; Implement cache, so we don't request this file for every gene.
-                                        $aLines = lovd_php_file('http://www.lovd.nl/mirrors/lrg/LRG_list.txt');
-                                        foreach ($aLines as $sLine) {
-                                            if (preg_match('/(LRG_\d+)\s+(\w+)/', $sLine, $aMatches)) {
-                                                $aNgMapping[$aMatches[2]] = $aMatches[1];
                                             }
                                         }
 
