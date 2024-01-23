@@ -304,6 +304,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Gene Symbol must be unique.
                 // Enforced in the table, but we want to handle this gracefully.
                 // When numeric, we search the id_hgnc field. When not, we search the id (gene symbol) field.
+                if (preg_match('/^HGNC:([0-9]+)$/', trim($_POST['hgnc_id']), $aRegs)) {
+                    $_POST['hgnc_id'] = $aRegs[1];
+                }
                 $zGene = $_DB->q(
                     'SELECT id, id_hgnc FROM ' . TABLE_GENES . ' WHERE id' . (!ctype_digit($_POST['hgnc_id'])? '' : '_hgnc') . ' = ?',
                     array($_POST['hgnc_id']))->fetchAssoc();
