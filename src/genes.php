@@ -354,16 +354,16 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Now we're still in the <BODY> so the progress bar can add <SCRIPT> tags as much as it wants.
                 flush();
 
-                // Get NG if it exists
+                // Get NG if it exists.
                 $_BAR->setMessage('Checking for NG...');
-                $_BAR->setProgress($nProgress += 16);
+                $_BAR->setProgress($nProgress += 25);
                 if ($sNG = lovd_getNGbyGeneSymbol($sSymbol)) {
                     $aRefseqGenomic[] = $sNG;
                 }
 
-                // Get NC from LOVD
+                // Get NC from LOVD.
                 $_BAR->setMessage('Checking for NC...');
-                $_BAR->setProgress($nProgress += 17);
+                $_BAR->setProgress($nProgress += 25);
 
                 if ($sChromLocation == 'mitochondria') {
                     $sChromosome = 'M';
@@ -374,78 +374,29 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     $sChromBand = $aMatches[2];
                 }
                 $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
+                // Bypass Mutalyzer. Just use the NC for transcript reference sequences.
+                $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
-                $_BAR->setMessage('Making a gene slice of the NC...');
-                $_BAR->setProgress($nProgress += 16);
-                // 2014-05-23; 3.0-11; Don't bother trying to get an UD for a mitochondrial gene, the NCBI uses different names and you will never get it...
-                if ($sChromosome == 'M') {
-                    // Instead of the UD, we just use the NC, it's small enough.
-                    $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
-                } else {
-                    // Get UD from mutalyzer.
-                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
-                    if (!$sRefseqUD || isset($_GET['VV'])) {
-                        // The future is VV. However, as we're currently still using
-                        //  Mutalyzer for mapping, only use VV when Mutalyzer fails.
-                        $_BAR->setMessage('Collecting all available transcripts...');
-                        $_BAR->setProgress($nProgress += 17);
-                        require ROOT_PATH . 'class/variant_validator.php';
-                        $_VV = new LOVD_VV();
-                        $aData = $_VV->getTranscriptsByGene($sSymbol);
-                        $aTranscripts = array();
-                        foreach ($aData['data'] as $sTranscript => $aTranscript) {
-                            // Look for transcripts with genomic locations on this build.
-                            if (!$aTranscript['genomic_positions'] || !isset($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome])) {
-                                continue;
-                            }
-                            $aTranscripts[$sTranscript] = array(
-                                'name' => $aTranscript['name'],
-                                'id_protein_ncbi' => $aTranscript['id_ncbi_protein'],
-                                'position_g_mrna_start' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['start'],
-                                'position_g_mrna_end' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['end'],
-                                'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
-                                'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
-                                'position_c_cds_end' => $aTranscript['transcript_positions']['cds_length'],
-                            );
-                        }
-                        if ($aTranscripts) {
-                            $sRefseqUD = 'VV';
-                        }
+                $_BAR->setMessage('Collecting all available transcripts...');
+                $_BAR->setProgress($nProgress += 25);
+                require ROOT_PATH . 'class/variant_validator.php';
+                $_VV = new LOVD_VV();
+                $aData = $_VV->getTranscriptsByGene('HGNC:' . $sHgncID);
+                $aTranscripts = array();
+                foreach ($aData['data'] as $sTranscript => $aTranscript) {
+                    // Look for transcripts with genomic locations on this build.
+                    if (!$aTranscript['genomic_positions'] || !isset($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome])) {
+                        continue;
                     }
-                    if (!$sRefseqUD) {
-                        // Function may return false or an empty string. For instance a type of gene we don't support.
-                        // To prevent further problems (getting transcripts), let's handle this nicely, shall we?
-                        // Going through the previous symbols won't make sense here because
-                        //  downstream functions will also need to know that old name.
-                        // We're not investing in this Mutalyzer connection anymore.
-                        $_BAR->setMessage('Failed to retrieve gene reference sequence. This could be a temporary error, but it is likely that this gene is not supported by LOVD.', 'done');
-                        $_BAR->setMessageVisibility('done', true);
-                        die('</BODY>' . "\n" .
-                            '</HTML>' . "\n");
-                    }
-                }
-
-                if ($sRefseqUD != 'VV') {
-                    // Get all transcripts and info.
-                    // FIXME: When changing code here, check in transcripts?create if you need to make changes there, too.
-                    $_BAR->setMessage('Collecting all available transcripts...');
-                    $_BAR->setProgress($nProgress += 17);
-
-                    $aTranscripts = $_DATA['Transcript']->getTranscriptPositions($sRefseqUD, $sSymbol, $sGeneName, $nProgress);
-                    if (!$aTranscripts['id']) {
-                        // Mutalyzer found nothing. This could be simply their error. Better try VV.
-                        // But for this, we have to reload.
-                        $_BAR->setMessage('Mutalyzer failed to find transcripts. Trying again using VV...');
-                        print('
-                        <script type="text/javascript">
-                            // Redirect to use VV.
-                            $("form").attr("action", $("form").attr("action") + "&VV");
-                            // Don\'t lose the gene symbol.
-                            $("form").append(\'<input type="hidden" name="hgnc_id" value="' . htmlspecialchars($_POST['hgnc_id']) . '">\');
-                            $("form").submit();
-                        </script>');
-                        exit;
-                    }
+                    $aTranscripts[$sTranscript] = array(
+                        'name' => $aTranscript['name'],
+                        'id_protein_ncbi' => $aTranscript['id_ncbi_protein'],
+                        'position_g_mrna_start' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['start'],
+                        'position_g_mrna_end' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['end'],
+                        'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                        'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
+                        'position_c_cds_end' => $aTranscript['transcript_positions']['cds_length'],
+                    );
                 }
 
                 $_BAR->setProgress(100);
