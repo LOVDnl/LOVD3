@@ -285,7 +285,7 @@ if (ACTION == 'create') {
                 'chromTransEnd' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']]['end'],
                 'cTransStart' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                 'cTransEnd' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
-                'cCDSStop' => $aTranscript['transcript_positions']['cds_length'],
+                'cCDSStop' => ($aTranscript['transcript_positions']['cds_length'] ?: 0),
             );
         }
 
