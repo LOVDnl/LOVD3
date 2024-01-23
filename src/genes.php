@@ -374,8 +374,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     $sChromBand = $aMatches[2];
                 }
                 $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
-                // Bypass Mutalyzer. Just use the NC for transcript reference sequences.
-                $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
                 $_BAR->setMessage('Collecting all available transcripts...');
                 $_BAR->setProgress($nProgress += 25);
@@ -749,12 +747,6 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                             'refseq_url', 'disclaimer', 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_date',
                             'edited_by', 'edited_date',
                             );
-
-            if (empty($zData['refseq_UD'])) {
-                $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sID);
-                $_POST['refseq_UD'] = $sRefseqUD;
-                $aFields[] = 'refseq_UD';
-            }
 
             // In case this gene misses some IDs that should have been added
             //  when it was created, see if we can find these now.
