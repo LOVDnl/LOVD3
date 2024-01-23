@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2023-06-23
+ * Modified    : 2024-01-23
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmer  : Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *
  *
@@ -416,6 +416,11 @@ class LOVD_VV
         $aJSON = $this->callVV('VariantValidator/tools/gene2transcripts', array(
             'id' => $sSymbol,
         ));
+        if ($aJSON && is_array($aJSON) && count($aJSON) == 1 && isset($aJSON[0])) {
+            // Handle https://github.com/openvar/variantValidator/issues/579.
+            // The output was suddenly a list instead of the expected object.
+            $aJSON = current($aJSON);
+        }
         if (!$aJSON || empty($aJSON['transcripts'])) {
             // Failure.
             return false;
