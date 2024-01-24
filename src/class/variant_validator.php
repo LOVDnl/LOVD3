@@ -445,6 +445,7 @@ class LOVD_VV
                                     'cds_length' => null,
                                     'length' => null,
                                 ],
+                                'select' => false,
                             ],
                         ],
                     ]
@@ -495,7 +496,8 @@ class LOVD_VV
                     'cds_start' => $aTranscript['coding_start'],
                     'cds_length' => (!$aTranscript['coding_end']? NULL : ($aTranscript['coding_end'] - $aTranscript['coding_start'] + 1)),
                     'length' => $aTranscript['length'],
-                )
+                ),
+                'select' => ($aTranscript['annotations']['db_xref']['select'] ?? false),
             );
         }
 

@@ -287,6 +287,7 @@ if (ACTION == 'create') {
                 'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                 'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                 'position_c_cds_end' => ($aTranscript['transcript_positions']['cds_length'] ?: 0),
+                'select' => $aTranscript['select'],
             );
         }
         $_SESSION['work'][$sPathBase][$_POST['workID']]['values'] = array(
@@ -346,7 +347,7 @@ if (ACTION == 'create') {
                         'name' => $zData['transcripts'][$sTranscript]['name'],
                         'id_ncbi' => $sTranscript,
                         'id_protein_ncbi' => $zData['transcripts'][$sTranscript]['id_protein_ncbi'],
-                        'remarks' => '', // FIXME: Add info about MANE here?
+                        'remarks' => (empty($zData['transcripts'][$sTranscript]['select'])? '' : $zData['transcripts'][$sTranscript]['select'] . ' select'),
                         'position_c_mrna_start' => $zData['transcripts'][$sTranscript]['position_c_mrna_start'],
                         'position_c_mrna_end' => $zData['transcripts'][$sTranscript]['position_c_mrna_end'],
                         'position_c_cds_end' => $zData['transcripts'][$sTranscript]['position_c_cds_end'],
@@ -408,6 +409,9 @@ if (ACTION == 'create') {
     foreach ($zData['transcripts'] as $sTranscript => $aTranscript) {
         $aTranscriptsForm[$sTranscript] = lovd_shortenString($aTranscript['name'], 50);
         $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
+        if ($aTranscript['select']) {
+            $aTranscriptsForm[$sTranscript] .= ' (' . $aTranscript['select'] . ' select)';
+        }
     }
     asort($aTranscriptsForm);
 

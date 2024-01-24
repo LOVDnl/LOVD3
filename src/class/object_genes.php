@@ -370,6 +370,9 @@ class LOVD_Gene extends LOVD_Object
             foreach ($zData['transcripts'] as $sTranscript => $aTranscript) {
                 $aTranscriptsForm[$sTranscript] = lovd_shortenString($aTranscript['name'], 50);
                 $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
+                if ($aTranscript['select']) {
+                    $aTranscriptsForm[$sTranscript] .= ' (' . $aTranscript['select'] . ' select)';
+                }
             }
             asort($aTranscriptsForm);
         } else {

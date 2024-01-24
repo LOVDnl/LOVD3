@@ -396,6 +396,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                         'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                         'position_c_cds_end' => ($aTranscript['transcript_positions']['cds_length'] ?: 0),
+                        'select' => $aTranscript['select'],
                     );
                 }
 
@@ -531,7 +532,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                             'name' => $zData['transcripts'][$sTranscript]['name'],
                             'id_ncbi' => $sTranscript,
                             'id_protein_ncbi' => $zData['transcripts'][$sTranscript]['id_protein_ncbi'],
-                            'remarks' => '', // FIXME: Add info about MANE here?
+                            'remarks' => (empty($zData['transcripts'][$sTranscript]['select'])? '' : $zData['transcripts'][$sTranscript]['select'] . ' select'),
                             'position_c_mrna_start' => $zData['transcripts'][$sTranscript]['position_c_mrna_start'],
                             'position_c_mrna_end' => $zData['transcripts'][$sTranscript]['position_c_mrna_end'],
                             'position_c_cds_end' => $zData['transcripts'][$sTranscript]['position_c_cds_end'],
