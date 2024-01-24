@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2024-01-23
+ * Modified    : 2024-01-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -365,16 +365,11 @@ class LOVD_Gene extends LOVD_Object
         } else {
             $aSelectRefseqGenomic = array_combine($zData['genomic_references'], $zData['genomic_references']);
         }
-        $aTranscriptNames = array();
         $aTranscriptsForm = array();
         if (!empty($zData['transcripts'])) {
-            foreach ($zData['transcripts'] as $sTranscript) {
-                // Until revision 679 the transcript version was not used in the index and removed with preg_replace.
-                // Can not figure out why version is not included. Therefore, for now we will do without preg_replace.
-                if (!isset($aTranscriptNames[$sTranscript])) {
-                    $aTranscriptsForm[$sTranscript] = lovd_shortenString($zData['transcriptNames'][$sTranscript], 50);
-                    $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
-                }
+            foreach ($zData['transcripts'] as $sTranscript => $aTranscript) {
+                $aTranscriptsForm[$sTranscript] = lovd_shortenString($aTranscript['name'], 50);
+                $aTranscriptsForm[$sTranscript] .= str_repeat(')', substr_count($aTranscriptsForm[$sTranscript], '(')) . ' (' . $sTranscript . ')';
             }
             asort($aTranscriptsForm);
         } else {

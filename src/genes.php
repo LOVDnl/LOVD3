@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-15
- * Modified    : 2024-01-23
+ * Modified    : 2024-01-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -402,51 +402,16 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 $_BAR->setMessageVisibility('done', true);
                 $_SESSION['work'][$sPath][$_POST['workID']]['step'] = '2';
                 $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array(
-                                                                  'id' => $sSymbol,
-                                                                  'name' => $sGeneName,
-                                                                  'chromosome' => $sChromosome,
-                                                                  'chrom_band' => $sChromBand,
-                                                                  'id_hgnc' => $sHgncID,
-                                                                  'id_entrez' => $sEntrez,
-                                                                  'id_omim' => $nOmim,
-                                                                  'genomic_references' => $aRefseqGenomic,
-                                                                  'refseq_UD' => ($sRefseqUD == 'VV'? array_pop($aRefseqGenomic) : $sRefseqUD), // FIXME: When we get rid of Mutalyzer, get rid of this.
-                                                                );
-                if (!empty($aTranscripts)) {
-                    if ($sRefseqUD == 'VV') {
-                        // FIXME: When we're switching to VV, fix this ridiculous format.
-                        $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcripts'] = array_keys($aTranscripts);
-                        $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array_merge($_SESSION['work'][$sPath][$_POST['workID']]['values'], array(
-                            'transcriptMutalyzer' => array(),
-                            'transcriptsProtein' => array(),
-                            'transcriptNames' => array(),
-                            'transcriptPositions' => array(),
-                        ));
-
-                        foreach ($aTranscripts as $sTranscript => $aTranscript) {
-                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptMutalyzer'][$sTranscript] = 0;
-                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptsProtein'][$sTranscript] = $aTranscript['id_protein_ncbi'];
-                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptNames'][$sTranscript] = $aTranscript['name'];
-                            $_SESSION['work'][$sPath][$_POST['workID']]['values']['transcriptPositions'][$sTranscript] = array(
-                                'chromTransStart' => $aTranscript['position_g_mrna_start'],
-                                'chromTransEnd' => $aTranscript['position_g_mrna_end'],
-                                'cTransStart' => $aTranscript['position_c_mrna_start'],
-                                'cTransEnd' => $aTranscript['position_c_mrna_end'],
-                                'cCDSStop' => $aTranscript['position_c_cds_end'],
-                            );
-                        }
-
-                    } else {
-                        // FIXME: This data format makes no sense. Redo this once we're switching to VV.
-                        $_SESSION['work'][$sPath][$_POST['workID']]['values'] = array_merge($_SESSION['work'][$sPath][$_POST['workID']]['values'], array(
-                            'transcripts' => $aTranscripts['id'],
-                            'transcriptMutalyzer' => $aTranscripts['mutalyzer'],
-                            'transcriptsProtein' => $aTranscripts['protein'],
-                            'transcriptNames' => $aTranscripts['name'],
-                            'transcriptPositions' => $aTranscripts['positions'],
-                        ));
-                    }
-                }
+                    'id' => $sSymbol,
+                    'name' => $sGeneName,
+                    'chromosome' => $sChromosome,
+                    'chrom_band' => $sChromBand,
+                    'id_hgnc' => $sHgncID,
+                    'id_entrez' => $sEntrez,
+                    'id_omim' => $nOmim,
+                    'genomic_references' => $aRefseqGenomic,
+                    'transcripts' => $aTranscripts,
+                );
 
                 print('<SCRIPT type="text/javascript">' . "\n" .
                       '  document.forms[\'createGene\'].submit();' . "\n" .
@@ -560,59 +525,30 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                         if (!$sTranscript) {
                             continue;
                         }
-                        // FIXME; If else statement is temporary. Now we only use the transcript object to save the transcripts for mitochondrial genes.
-                        // Later all transcripts will be saved like this. For the sake of clarity this will be done in a separate commit.
-                        if ($zData['chromosome'] == 'M') {
-                            $zDataTranscript = array(
-                                'geneid' => $_POST['id'],
-                                'name' => $zData['transcriptNames'][$sTranscript],
-                                'id_mutalyzer' => $zData['transcriptMutalyzer'][$sTranscript],
-                                'id_ncbi' => $sTranscript,
-                                'id_ensembl' => '',
-                                'id_protein_ncbi' => $zData['transcriptsProtein'][$sTranscript],
-                                'id_protein_ensembl' => '',
-                                'id_protein_uniprot' => '',
-                                'remarks' => '',
-                                'position_c_mrna_start' => $zData['transcriptPositions'][$sTranscript]['cTransStart'],
-                                'position_c_mrna_end' => $zData['transcriptPositions'][$sTranscript]['cTransEnd'],
-                                'position_c_cds_end' => $zData['transcriptPositions'][$sTranscript]['cCDSStop'],
-                                'position_g_mrna_start' => $zData['transcriptPositions'][$sTranscript]['chromTransStart'],
-                                'position_g_mrna_end' => $zData['transcriptPositions'][$sTranscript]['chromTransEnd'],
-                                'created_date' => date('Y-m-d H:i:s'),
-                                'created_by' => $_POST['created_by'],
-                            );
+                        $zDataTranscript = array(
+                            'geneid' => $_POST['id'],
+                            'name' => $zData['transcripts'][$sTranscript]['name'],
+                            'id_ncbi' => $sTranscript,
+                            'id_protein_ncbi' => $zData['transcripts'][$sTranscript]['id_protein_ncbi'],
+                            'remarks' => '', // FIXME: Add info about MANE here?
+                            'position_c_mrna_start' => $zData['transcripts'][$sTranscript]['position_c_mrna_start'],
+                            'position_c_mrna_end' => $zData['transcripts'][$sTranscript]['position_c_mrna_end'],
+                            'position_c_cds_end' => $zData['transcripts'][$sTranscript]['position_c_cds_end'],
+                            'position_g_mrna_start' => $zData['transcripts'][$sTranscript]['position_g_mrna_start'],
+                            'position_g_mrna_end' => $zData['transcripts'][$sTranscript]['position_g_mrna_end'],
+                            'created_date' => date('Y-m-d H:i:s'),
+                            'created_by' => $_POST['created_by'],
+                        );
 
-                            if (!$_DATA['Transcript']->insertEntry($zDataTranscript, array_keys($zDataTranscript))) {
-                                // Silent error.
-                                lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
-                                continue;
-                            }
-
-                            $aSuccessTranscripts[] = $sTranscript;
-                            $_DATA['Transcript']->turnOffMappingDone($_POST['chromosome'], $zData['transcriptPositions'][$sTranscript]);
-
-                        } else {
-                            // Gather transcript information from session.
-                            // Until revision 679 the transcript version was not used in the index.
-                            // Can not figure out why version is not included. Therefore, for now we will do without.
-                            $nMutalyzerID = $zData['transcriptMutalyzer'][$sTranscript];
-                            $sTranscriptProtein = $zData['transcriptsProtein'][$sTranscript];
-                            $sTranscriptName = $zData['transcriptNames'][$sTranscript];
-                            $aTranscriptPositions = $zData['transcriptPositions'][$sTranscript];
-                            // Add transcript to gene.
-                            $q = $_DB->q('INSERT INTO ' . TABLE_TRANSCRIPTS . '(id, geneid, name, id_mutalyzer, id_ncbi, id_ensembl, id_protein_ncbi, id_protein_ensembl, id_protein_uniprot, remarks, position_c_mrna_start, position_c_mrna_end, position_c_cds_end, position_g_mrna_start, position_g_mrna_end, created_date, created_by) ' .
-                                             'VALUES(NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)',
-                                             array($_POST['id'], $sTranscriptName, $nMutalyzerID, $sTranscript, '', $sTranscriptProtein, '', '', '', $aTranscriptPositions['cTransStart'], $aTranscriptPositions['cTransEnd'], $aTranscriptPositions['cCDSStop'], $aTranscriptPositions['chromTransStart'], $aTranscriptPositions['chromTransEnd'], $_POST['created_by']));
-                            if (!$q) {
-                                // Silent error.
-                                lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
-                            } else {
-                                $aSuccessTranscripts[] = $sTranscript;
-
-                                // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
-                                $_DATA['Transcript']->turnOffMappingDone($_POST['chromosome'], $aTranscriptPositions);
-                            }
+                        if (!$_DATA['Transcript']->insertEntry($zDataTranscript, array_keys($zDataTranscript))) {
+                            // Silent error.
+                            lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
+                            continue;
                         }
+
+                        $aSuccessTranscripts[] = $sTranscript;
+                        // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
+                        $_DATA['Transcript']->turnOffMappingDone($_POST['chromosome'], $zData['transcripts'][$sTranscript]);
                     }
                 }
 

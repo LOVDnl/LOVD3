@@ -4,10 +4,10 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-20
- * Modified    : 2023-06-29
+ * Modified    : 2024-01-24
  * For LOVD    : 3.0-30
  *
- * Copyright   : 2004-2023 Leiden University Medical Center; http://www.LUMC.nl/
+ * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
  * Programmers : Ivar C. Lugtenburg <I.C.Lugtenburg@LUMC.nl>
  *               Ivo F.A.C. Fokkema <I.F.A.C.Fokkema@LUMC.nl>
  *               Daan Asscheman <D.Asscheman@LUMC.nl>
@@ -353,9 +353,9 @@ class LOVD_Transcript extends LOVD_Object
      * This method turns off the MAPPING_DONE flag for a variant within the range of a transcript.
      * Automatic mapping will pick them up again.
      * @param string $sChromosome Search for variants which are on this chromosome.
-     * @param array $aTranscriptPositions Array with start and end positions of the transcript.
+     * @param array $aTranscript Array with transcript information, including the positions.
      **/
-    public function turnOffMappingDone ($sChromosome, $aTranscriptPositions)
+    public function turnOffMappingDone ($sChromosome, $aTranscript)
     {
         global $_DB;
 
@@ -366,12 +366,12 @@ class LOVD_Transcript extends LOVD_Object
                            (position_g_end BETWEEN ? AND ?) OR
                            (position_g_start < ? AND position_g_end > ?))',
                          array($sChromosome,
-                               $aTranscriptPositions['chromTransStart'],
-                               $aTranscriptPositions['chromTransEnd'],
-                               $aTranscriptPositions['chromTransStart'],
-                               $aTranscriptPositions['chromTransEnd'],
-                               $aTranscriptPositions['chromTransStart'],
-                               $aTranscriptPositions['chromTransEnd']));
+                               $aTranscript['position_g_mrna_start'],
+                               $aTranscript['position_g_mrna_end'],
+                               $aTranscript['position_g_mrna_start'],
+                               $aTranscript['position_g_mrna_end'],
+                               $aTranscript['position_g_mrna_start'],
+                               $aTranscript['position_g_mrna_end']));
         if ($q->rowCount()) {
             // If we have changed variants, turn on mapping immediately.
             $_SESSION['mapping']['time_complete'] = 0;
