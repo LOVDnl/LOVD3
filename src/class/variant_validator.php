@@ -489,6 +489,8 @@ class LOVD_VV
             }
 
             $aData['data'][$aTranscript['reference']] = array(
+                'gene_symbol' => $aJSON['current_symbol'],
+                'gene_hgnc' => substr(strstr($aJSON['hgnc'] ?? '', ':'), 1),
                 'name' => $sName,
                 'id_ncbi_protein' => $aTranscript['translation'],
                 'genomic_positions' => $aGenomicPositions,
