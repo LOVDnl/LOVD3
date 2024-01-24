@@ -522,11 +522,8 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 // Add transcripts.
                 $aSuccessTranscripts = array();
                 if (!empty($_POST['active_transcripts'])) {
-                    foreach ($_POST['active_transcripts'] as $sTranscript) {
-                        // 2014-06-11; 3.0-11; Add check on $sTranscript to make sure a selected "No transcripts found" doesn't cause a lot of errors here.
-                        if (!$sTranscript) {
-                            continue;
-                        }
+                    // Filter the array to make sure a selected "No transcripts found" doesn't cause a lot of errors here.
+                    foreach (array_filter($_POST['active_transcripts']) as $sTranscript) {
                         $zDataTranscript = array(
                             'geneid' => $_POST['id'],
                             'name' => $zData['transcripts'][$sTranscript]['name'],

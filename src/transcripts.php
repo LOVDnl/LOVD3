@@ -320,7 +320,7 @@ if (ACTION == 'create') {
     require ROOT_PATH . 'inc-lib-form.php';
     // FIXME; $aData would have been a better name.
     $zData = $_SESSION['work'][$sPathBase][$_POST['workID']]['values'];
-    if (count($_POST) > 1) {
+    if (!empty($_POST['active_transcripts'])) {
         // Transcripts have been selected.
         lovd_errorClean();
 
@@ -335,45 +335,42 @@ if (ACTION == 'create') {
             $_POST['created_by'] = $_AUTH['id'];
             $_POST['created_date'] = date('Y-m-d H:i:s');
 
-            // FIXME; shouldn't this check be done before looping through active_transcripts above? This setup allows submission of the form when selecting "No transcripts available".
-            if (!empty($_POST['active_transcripts']) && $_POST['active_transcripts'][0] != '') {
-                $aSuccessTranscripts = array();
-                foreach ($_POST['active_transcripts'] as $sTranscript) {
-                    if (!$sTranscript) {
-                        continue;
-                    }
-                    $zDataTranscript = array(
-                        'geneid' => $zData['gene']['id'],
-                        'name' => $zData['transcripts'][$sTranscript]['name'],
-                        'id_ncbi' => $sTranscript,
-                        'id_protein_ncbi' => $zData['transcripts'][$sTranscript]['id_protein_ncbi'],
-                        'remarks' => (empty($zData['transcripts'][$sTranscript]['select'])? '' : $zData['transcripts'][$sTranscript]['select'] . ' select'),
-                        'position_c_mrna_start' => $zData['transcripts'][$sTranscript]['position_c_mrna_start'],
-                        'position_c_mrna_end' => $zData['transcripts'][$sTranscript]['position_c_mrna_end'],
-                        'position_c_cds_end' => $zData['transcripts'][$sTranscript]['position_c_cds_end'],
-                        'position_g_mrna_start' => $zData['transcripts'][$sTranscript]['position_g_mrna_start'],
-                        'position_g_mrna_end' => $zData['transcripts'][$sTranscript]['position_g_mrna_end'],
-                        'created_date' => date('Y-m-d H:i:s'),
-                        'created_by' => $_POST['created_by'],
-                    );
-
-                    if (!$_DATA->insertEntry($zDataTranscript, array_keys($zDataTranscript))) {
-                        // Silent error.
-                        lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
-                        continue;
-                    }
-
-                    $aSuccessTranscripts[] = $sTranscript;
-                    // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
-                    $_DATA->turnOffMappingDone($zData['gene']['chromosome'], $zData['transcripts'][$sTranscript]);
+            $aSuccessTranscripts = array();
+            foreach ($_POST['active_transcripts'] as $sTranscript) {
+                if (!$sTranscript) {
+                    continue;
                 }
-                if (count($aSuccessTranscripts)) {
-                    lovd_writeLog('Event', LOG_EVENT, 'Transcript information entries successfully added to gene ' . $zData['gene']['id'] . ' - ' . $zData['gene']['name']);
+                $zDataTranscript = array(
+                    'geneid' => $zData['gene']['id'],
+                    'name' => $zData['transcripts'][$sTranscript]['name'],
+                    'id_ncbi' => $sTranscript,
+                    'id_protein_ncbi' => $zData['transcripts'][$sTranscript]['id_protein_ncbi'],
+                    'remarks' => (empty($zData['transcripts'][$sTranscript]['select'])? '' : $zData['transcripts'][$sTranscript]['select'] . ' select'),
+                    'position_c_mrna_start' => $zData['transcripts'][$sTranscript]['position_c_mrna_start'],
+                    'position_c_mrna_end' => $zData['transcripts'][$sTranscript]['position_c_mrna_end'],
+                    'position_c_cds_end' => $zData['transcripts'][$sTranscript]['position_c_cds_end'],
+                    'position_g_mrna_start' => $zData['transcripts'][$sTranscript]['position_g_mrna_start'],
+                    'position_g_mrna_end' => $zData['transcripts'][$sTranscript]['position_g_mrna_end'],
+                    'created_date' => date('Y-m-d H:i:s'),
+                    'created_by' => $_POST['created_by'],
+                );
+
+                if (!$_DATA->insertEntry($zDataTranscript, array_keys($zDataTranscript))) {
+                    // Silent error.
+                    lovd_writeLog('Error', LOG_EVENT, 'Transcript information entry ' . $sTranscript . ' - ' . ' - could not be added to gene ' . $_POST['id']);
+                    continue;
                 }
 
-                // Change updated date for gene.
-                lovd_setUpdatedDate($sGene);
+                $aSuccessTranscripts[] = $sTranscript;
+                // Turn off the MAPPING_DONE flags for variants within range of this transcript, so that automatic mapping will pick them up again.
+                $_DATA->turnOffMappingDone($zData['gene']['chromosome'], $zData['transcripts'][$sTranscript]);
             }
+            if (count($aSuccessTranscripts)) {
+                lovd_writeLog('Event', LOG_EVENT, 'Transcript information entries successfully added to gene ' . $zData['gene']['id'] . ' - ' . $zData['gene']['name']);
+            }
+
+            // Change updated date for gene.
+            lovd_setUpdatedDate($sGene);
 
             unset($_SESSION['work'][$sPathBase][$_POST['workID']]);
 
