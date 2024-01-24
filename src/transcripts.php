@@ -269,7 +269,9 @@ if (ACTION == 'create') {
 
         require ROOT_PATH . 'class/variant_validator.php';
         $_VV = new LOVD_VV();
-        $aData = $_VV->getTranscriptsByGene('HGNC:' . $zGene['id_hgnc']);
+        // VV's getTranscriptsByGene doesn't like HGNC IDs of MT-* genes.
+        // https://github.com/openvar/variantValidator/issues/578
+        $aData = $_VV->getTranscriptsByGene((substr($zGene['id'], 0, 3) == 'MT-'? $zGene['id'] : 'HGNC:' . $zGene['id_hgnc']));
         $aTranscripts = array();
         foreach ($aData['data'] as $sTranscript => $aTranscript) {
             // Look for transcripts with genomic locations on this build.
@@ -280,8 +282,8 @@ if (ACTION == 'create') {
             $aTranscripts[$sTranscript] = array(
                 'name' => $aTranscript['name'],
                 'id_protein_ncbi' => $aTranscript['id_ncbi_protein'],
-                'position_g_mrna_start' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']]['start'],
-                'position_g_mrna_end' => $aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']]['end'],
+                'position_g_mrna_start' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']]['start'] ?: 0),
+                'position_g_mrna_end' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']]['end'] ?: 0),
                 'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                 'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                 'position_c_cds_end' => ($aTranscript['transcript_positions']['cds_length'] ?: 0),

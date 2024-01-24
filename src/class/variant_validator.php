@@ -411,7 +411,7 @@ class LOVD_VV
     public function getTranscriptsByGene ($sSymbol)
     {
         // Returns the available transcripts for the given gene.
-        global $_SETT;
+        global $_CONF, $_SETT;
 
         $aJSON = $this->callVV('VariantValidator/tools/gene2transcripts', array(
             'id' => $sSymbol,
@@ -423,6 +423,33 @@ class LOVD_VV
         }
         if (!$aJSON || empty($aJSON['transcripts'])) {
             // Failure.
+            // OK, but... what if we were working on chrM? And VV doesn't support these yet?
+            if ($aJSON && isset($aJSON['current_symbol']) && substr($aJSON['current_symbol'], 0, 3) == 'MT-') {
+                return array_merge(
+                    $this->aResponse,
+                    [
+                        'data' => [
+                            $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences']['M'] . '(' . $aJSON['current_symbol'] . ')' => [
+                                'name' => 'transcript variant 1',
+                                'id_ncbi_protein' => '',
+                                'genomic_positions' => [
+                                    $_CONF['refseq_build'] => [
+                                        'M' => [
+                                            'start' => null,
+                                            'end' => null,
+                                        ]
+                                    ]
+                                ],
+                                'transcript_positions' => [
+                                    'cds_start' => null,
+                                    'cds_length' => null,
+                                    'length' => null,
+                                ],
+                            ],
+                        ],
+                    ]
+                );
+            }
             return array_merge($this->aResponse, ['errors' => 'No transcripts found.']);
         }
 
