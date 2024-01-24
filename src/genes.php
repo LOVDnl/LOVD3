@@ -413,6 +413,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     'id_entrez' => $sEntrez,
                     'id_omim' => $nOmim,
                     'genomic_references' => $aRefseqGenomic,
+                    'refseq_UD' => array_pop($aRefseqGenomic),
                     'transcripts' => $aTranscripts,
                 );
 
@@ -471,7 +472,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             if (!lovd_error()) {
                 // Fields to be used.
                 $aFields = array(
-                                'id', 'name', 'chromosome', 'chrom_band', 'imprinting', 'refseq_genomic', 'reference', 'url_homepage',
+                                'id', 'name', 'chromosome', 'chrom_band', 'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage',
                                 'url_external', 'allow_download', 'id_hgnc', 'id_entrez', 'id_omim', 'show_hgmd',
                                 'show_genecards', 'show_genetests', 'show_orphanet', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer',
                                 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
@@ -484,6 +485,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 }
                 $_POST['id'] = $zData['id'];
                 $_POST['name'] = $zData['name'];
+                $_POST['refseq_UD'] = $zData['refseq_UD'];
                 $_POST['chromosome'] = $zData['chromosome'];
                 $_POST['id_hgnc'] = $zData['id_hgnc'];
                 $_POST['id_entrez'] = ($zData['id_entrez']?: '');
@@ -647,11 +649,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
     $sPath = $_PE[0] . '?' . ACTION;
     if (GET) {
         $aRefseqGenomic = array();
-        // Get NG if it exists
+        // Get NG if it exists.
         if ($sNG = lovd_getNGbyGeneSymbol($sID)) {
             $aRefseqGenomic[] = $sNG;
         }
-        // Get NC from LOVD
+        // Get NC from LOVD.
         $aRefseqGenomic[] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
 
         if (!isset($_SESSION['work'][$sPath])) {
@@ -682,6 +684,11 @@ if (PATH_COUNT == 2 && preg_match('/^[a-z][a-z0-9#@-]*$/i', $_PE[1]) && ACTION =
                             'refseq_url', 'disclaimer', 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_date',
                             'edited_by', 'edited_date',
                             );
+
+            if (empty($zData['refseq_UD'])) {
+                $_POST['refseq_UD'] = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$zData['chromosome']];
+                $aFields[] = 'refseq_UD';
+            }
 
             // In case this gene misses some IDs that should have been added
             //  when it was created, see if we can find these now.
