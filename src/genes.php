@@ -468,7 +468,7 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
             if (!lovd_error()) {
                 // Fields to be used.
                 $aFields = array(
-                                'id', 'name', 'chromosome', 'chrom_band', 'imprinting', 'refseq_genomic', 'refseq_UD', 'reference', 'url_homepage',
+                                'id', 'name', 'chromosome', 'chrom_band', 'imprinting', 'refseq_genomic', 'reference', 'url_homepage',
                                 'url_external', 'allow_download', 'id_hgnc', 'id_entrez', 'id_omim', 'show_hgmd',
                                 'show_genecards', 'show_genetests', 'show_orphanet', 'note_index', 'note_listing', 'refseq', 'refseq_url', 'disclaimer',
                                 'disclaimer_text', 'header', 'header_align', 'footer', 'footer_align', 'created_by', 'created_date',
@@ -481,7 +481,6 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                 }
                 $_POST['id'] = $zData['id'];
                 $_POST['name'] = $zData['name'];
-                $_POST['refseq_UD'] = $zData['refseq_UD'];
                 $_POST['chromosome'] = $zData['chromosome'];
                 $_POST['id_hgnc'] = $zData['id_hgnc'];
                 $_POST['id_entrez'] = ($zData['id_entrez']?: '');
