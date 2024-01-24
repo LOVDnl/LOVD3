@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2024-01-23
+ * Modified    : 2024-01-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -423,7 +423,7 @@ class LOVD_VV
         }
         if (!$aJSON || empty($aJSON['transcripts'])) {
             // Failure.
-            return false;
+            return array_merge($this->aResponse, ['errors' => 'No transcripts found.']);
         }
 
         $aData = $this->aResponse;
