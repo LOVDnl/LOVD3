@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2024-01-23
+ * Modified    : 2024-01-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -231,6 +231,7 @@ if (ACTION == 'create') {
 
 
     // Form has not been submitted yet, build $_SESSION array with transcript data for this gene.
+    $aTranscriptsAdded = $_DB->q('SELECT id_ncbi FROM ' . TABLE_TRANSCRIPTS . ' WHERE geneid = ? ORDER BY id_ncbi', array($sGene))->fetchAllColumn();
     if (!POST) {
         if (!isset($_SESSION['work'][$sPathBase])) {
             $_SESSION['work'][$sPathBase] = array();
@@ -272,7 +273,8 @@ if (ACTION == 'create') {
         $aTranscripts = array();
         foreach ($aData['data'] as $sTranscript => $aTranscript) {
             // Look for transcripts with genomic locations on this build.
-            if (!$aTranscript['genomic_positions'] || !isset($aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']])) {
+            if (!$aTranscript['genomic_positions'] || !isset($aTranscript['genomic_positions'][$_CONF['refseq_build']][$zGene['chromosome']])
+                || in_array($sTranscript, $aTranscriptsAdded)) {
                 continue;
             }
             // FIXME: When we're switching to VV, fix this ridiculous format.
@@ -320,8 +322,8 @@ if (ACTION == 'create') {
 
         // Check if transcripts are in the list, so no data manipulation from user!
         foreach ($_POST['active_transcripts'] as $sTranscript) {
-            if ($sTranscript && (!in_array($sTranscript, $zData['transcripts']) || in_array($sTranscript, $zData['transcriptsAdded']))) {
-                return lovd_errorAdd('active_transcripts', 'Please select a proper transcriptomic reference from the selection box.');
+            if ($sTranscript && (!in_array($sTranscript, $zData['transcripts']) || in_array($sTranscript, $aTranscriptsAdded))) {
+                lovd_errorAdd('active_transcripts', 'Please select a proper transcriptomic reference from the selection box.');
             }
         }
 
