@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2024-01-23
+ * Modified    : 2024-01-24
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -1905,9 +1905,7 @@ if (PATH_COUNT == 2 && $_PE[1] == 'upload' && ACTION == 'create') {
                                     } else {
                                         $sRefseqGenomic = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
                                     }
-
-                                    // Get UDID from Mutalyzer.
-                                    $sRefseqUD = lovd_getUDForGene($_CONF['refseq_build'], $sSymbol);
+                                    $sRefseqUD = $_SETT['human_builds'][$_CONF['refseq_build']]['ncbi_sequences'][$sChromosome];
 
                                     // Not adding the gene just yet, but we remember its data...
                                     // FIXME: Need to define all fields here to prevent problems with strict mode on. Most of these fields however, can just allow for NULL values.
