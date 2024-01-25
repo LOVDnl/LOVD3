@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2020-03-09
- * Modified    : 2024-01-24
+ * Modified    : 2024-01-25
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -408,10 +408,18 @@ class LOVD_VV
 
 
 
-    public function getTranscriptsByGene ($sSymbol)
+    public function getTranscriptsByID ($sSymbol)
     {
-        // Returns the available transcripts for the given gene.
+        // Returns the available transcripts for the given gene or transcript.
+        // When a transcript has been passed, it returns only that transcript (any version).
         global $_CONF, $_SETT;
+
+        $bTranscript = preg_match('/^[NX][MR]_[0-9.]+$/', $sSymbol);
+        // For now, let's remove the version to just match anything.
+        // VV's output does not depend on this, but our checks further down do.
+        if ($bTranscript) {
+            $sSymbol = strstr($sSymbol, '.', true);
+        }
 
         $aJSON = $this->callVV('VariantValidator/tools/gene2transcripts', array(
             'id' => $sSymbol,
@@ -456,6 +464,11 @@ class LOVD_VV
 
         $aData = $this->aResponse;
         foreach ($aJSON['transcripts'] as $aTranscript) {
+            // If we requested a single transcript, show only those.
+            if ($bTranscript && strpos($aTranscript['reference'], $sSymbol . '.') === false) {
+                continue;
+            }
+
             // Clean name.
             $sName = preg_replace(
                 array(
@@ -503,7 +516,7 @@ class LOVD_VV
             );
         }
 
-        ksort($aData['data']);
+        ksort($aData['data'], SORT_NATURAL);
         return $aData;
     }
 

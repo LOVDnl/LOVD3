@@ -4,7 +4,7 @@
  * LEIDEN OPEN VARIATION DATABASE (LOVD)
  *
  * Created     : 2010-12-21
- * Modified    : 2024-01-24
+ * Modified    : 2024-01-25
  * For LOVD    : 3.0-30
  *
  * Copyright   : 2004-2024 Leiden University Medical Center; http://www.LUMC.nl/
@@ -269,9 +269,9 @@ if (ACTION == 'create') {
 
         require ROOT_PATH . 'class/variant_validator.php';
         $_VV = new LOVD_VV();
-        // VV's getTranscriptsByGene doesn't like HGNC IDs of MT-* genes.
+        // VV's gene2transcripts doesn't like HGNC IDs of MT-* genes.
         // https://github.com/openvar/variantValidator/issues/578
-        $aData = $_VV->getTranscriptsByGene((substr($zGene['id'], 0, 3) == 'MT-'? $zGene['id'] : 'HGNC:' . $zGene['id_hgnc']));
+        $aData = $_VV->getTranscriptsByID((substr($zGene['id'], 0, 3) == 'MT-'? $zGene['id'] : 'HGNC:' . $zGene['id_hgnc']));
         $aTranscripts = array();
         foreach ($aData['data'] as $sTranscript => $aTranscript) {
             // Look for transcripts with genomic locations on this build.
