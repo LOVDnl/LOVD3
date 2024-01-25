@@ -390,9 +390,9 @@ if (PATH_COUNT == 1 && ACTION == 'create') {
                     }
                     $aTranscripts[$sTranscript] = array(
                         'name' => $aTranscript['name'],
-                        'id_protein_ncbi' => $aTranscript['id_ncbi_protein'],
-                        'position_g_mrna_start' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['start'] ?: 0),
-                        'position_g_mrna_end' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['end'] ?: 0),
+                        'id_protein_ncbi' => ($aTranscript['id_ncbi_protein'] ?? ''),
+                        'position_g_mrna_start' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['start'] ?? 0),
+                        'position_g_mrna_end' => ($aTranscript['genomic_positions'][$_CONF['refseq_build']][$sChromosome]['end'] ?? 0),
                         'position_c_mrna_start' => -$aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                         'position_c_mrna_end' => $aTranscript['transcript_positions']['length'] - $aTranscript['transcript_positions']['cds_start'] + 1, // FIXME; Fix the database, the VV model is more logical.
                         'position_c_cds_end' => ($aTranscript['transcript_positions']['cds_length'] ?: 0),
